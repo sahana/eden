@@ -26,9 +26,13 @@ class S3MainMenu(default.S3MainMenu):
         )
 
         # Additional menus
-        #current.menu.personal = cls.menu_personal()
+        current.menu.personal = cls.menu_personal()
+        current.menu.lang = cls.menu_lang()
+        current.menu.about = cls.menu_about()
+        current.menu.org = cls.menu_org()
+
+        # @todo:
         #current.menu.dashboard = cls.menu_dashboard()
-        #current.menu.org = cls.menu_org()
 
         return main_menu
 
@@ -157,6 +161,8 @@ class S3MainMenu(default.S3MainMenu):
         ]
 
     # -------------------------------------------------------------------------
+    # @todo: restore for homepage?
+    #
     #@classmethod
     #def menu_dashboard(cls):
         #""" Dashboard Menu (at bottom of page) """
@@ -274,65 +280,82 @@ class S3MainMenu(default.S3MainMenu):
         #return dashboard
 
     # -------------------------------------------------------------------------
-    #@classmethod
-    #def menu_org(cls):
-        #""" Custom Organisation Menu """
+    @classmethod
+    def menu_org(cls):
+        """ Custom Organisation Menu """
 
-        #OM = S3OrgMenuLayout
-        #return OM()
+        OM = S3OrgMenuLayout
+        return OM()
 
     # -------------------------------------------------------------------------
-    #@classmethod
-    #def menu_personal(cls):
-        #""" Custom Personal Menu """
+    @classmethod
+    def menu_lang(cls):
 
-        #auth = current.auth
-        #s3 = current.response.s3
-        #settings = current.deployment_settings
+        s3 = current.response.s3
 
-        ## Language selector
-        #menu_lang = ML("Language", right=True)
-        #for language in s3.l10n_languages.items():
-            #code, name = language
-            #menu_lang(
-                #ML(name, translate=False, lang_code=code, lang_name=name)
-            #)
+        # Language selector
+        menu_lang = ML("Language", right=True)
+        for language in s3.l10n_languages.items():
+            code, name = language
+            menu_lang(
+                ML(name, translate=False, lang_code=code, lang_name=name)
+            )
+        return menu_lang
 
-        #if not auth.is_logged_in():
-            #request = current.request
-            #login_next = URL(args=request.args, vars=request.vars)
-            #if request.controller == "default" and \
-            #request.function == "user" and \
-            #"_next" in request.get_vars:
-                #login_next = request.get_vars["_next"]
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_personal(cls):
+        """ Custom Personal Menu """
 
-            #self_registration = settings.get_security_self_registration()
-            #menu_personal = MP()(
-                        #MP("Register", c="default", f="user",
-                           #m="register", check=self_registration),
-                        #MP("Login", c="default", f="user",
-                           #m="login", vars=dict(_next=login_next)),
-                        #MP("Lost Password", c="default", f="user",
-                           #m="retrieve_password"),
-                        #menu_lang
-            #)
-        #else:
-            #s3_has_role = auth.s3_has_role
-            #is_org_admin = lambda i: s3_has_role("ORG_ADMIN") and \
-                                     #not s3_has_role("ADMIN")
-            #menu_personal = MP()(
-                        #MP("Administration", c="admin", f="index",
-                           #check=s3_has_role("ADMIN")),
-                        #MP("Administration", c="admin", f="user",
-                           #check=is_org_admin),
-                        #MP("Profile", c="default", f="person"),
-                        #MP("Change Password", c="default", f="user",
-                           #m="change_password"),
-                        #MP("Logout", c="default", f="user",
-                           #m="logout"),
-                        #menu_lang,
-            #)
-        #return menu_personal
+        auth = current.auth
+        s3 = current.response.s3
+        settings = current.deployment_settings
+
+        if not auth.is_logged_in():
+            request = current.request
+            login_next = URL(args=request.args, vars=request.vars)
+            if request.controller == "default" and \
+            request.function == "user" and \
+            "_next" in request.get_vars:
+                login_next = request.get_vars["_next"]
+
+            self_registration = settings.get_security_self_registration()
+            menu_personal = MP()(
+                        MP("Register", c="default", f="user",
+                           m="register", check=self_registration),
+                        MP("Login", c="default", f="user",
+                           m="login", vars=dict(_next=login_next)),
+                        MP("Lost Password", c="default", f="user",
+                           m="retrieve_password"),
+            )
+        else:
+            s3_has_role = auth.s3_has_role
+            is_org_admin = lambda i: s3_has_role("ORG_ADMIN") and \
+                                     not s3_has_role("ADMIN")
+            menu_personal = MP()(
+                        MP("Administration", c="admin", f="index",
+                           check=s3_has_role("ADMIN")),
+                        MP("Administration", c="admin", f="user",
+                           check=is_org_admin),
+                        MP("Profile", c="default", f="person"),
+                        MP("Change Password", c="default", f="user",
+                           m="change_password"),
+                        MP("Logout", c="default", f="user",
+                           m="logout"),
+            )
+        return menu_personal
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_about(cls):
+
+        menu_about = MA(c="default")(
+            MA("About Us", f="about"),
+            MA("Contact", f="contact"),
+            MA("Help", f="help"),
+            MA("Privacy", f="privacy"),
+        )
+        return menu_about
 
 # =============================================================================
 class S3OptionsMenu(default.S3OptionsMenu):

@@ -103,8 +103,38 @@ $column-gutter: rem-calc(20);
 // $warning-color: #f08a24;
 // $info-color: #a0d3e8;
 
-// $white       : #FFFFFF;
-// $ghost       : #FAFAFA;
+$white       : #FFFFFF;
+
+// Red
+$rcred       : #CC0000;
+$brightred   : #EE3224;
+$blood       : #7A1600;
+
+// Orange
+$paleorange   : #FFF0E0;
+$orange       : #FEDAC0;
+$brightorange : #FBBA8D;
+$darkorange   : #F47D30;
+
+// Blue
+$skyblue      : #B9E5FA;
+$lightblue    : #6DCFF6;
+$seablue      : #00AEEF;
+$nightblue    : #003F5F;
+
+// Green
+$palegreen    : #E2F1CF;
+$lightgreen   : #C6E39F;
+$grass        : #8DC63F;
+$olive        : #566C11;
+$greenish     : #ABB588;
+
+// Grey
+$grey         : #BFCFD7;
+$steel        : #809FAF;
+$darksteel    : #4D4D4D;
+
+$ghost       : #FAFAFA;
 // $snow        : #F9F9F9;
 // $vapor       : #F6F6F6;
 // $white-smoke : #F5F5F5;
@@ -1122,20 +1152,20 @@ $column-gutter: rem-calc(20);
 // $include-html-nav-classes: $include-html-classes;
 
 // We use this to control padding.
-// $side-nav-padding: rem-calc(14 0);
+$side-nav-padding: 0;
 
 // We use these to control list styles.
-// $side-nav-list-type: none;
+$side-nav-list-type: none;
 // $side-nav-list-position: inside;
-// $side-nav-list-margin: rem-calc(0 0 7 0);
+$side-nav-list-margin: rem-calc(0 0 3 0);
 
 // We use these to control link styles.
-// $side-nav-link-color: $primary-color;
-// $side-nav-link-color-active: scale-color($side-nav-link-color, $lightness: 30%);
-// $side-nav-link-color-hover: scale-color($side-nav-link-color, $lightness: 30%);
+$side-nav-link-color: #666666;
+$side-nav-link-color-active: $white;
+$side-nav-link-color-hover: $brightred;
 // $side-nav-link-bg-hover: hsla(0, 0, 0, 0.025);
 // $side-nav-link-margin: 0;
-// $side-nav-link-padding: rem-calc(7 14);
+$side-nav-link-padding: rem-calc(4 8);
 // $side-nav-font-size: rem-calc(14);
 // $side-nav-font-weight: $font-weight-normal;
 // $side-nav-font-weight-active: $side-nav-font-weight;
@@ -1203,11 +1233,11 @@ $column-gutter: rem-calc(20);
 
 // We use this to control the definition
 // $sub-nav-font-family: $body-font-family;
-// $sub-nav-font-size: rem-calc(14);
+$sub-nav-font-size: rem-calc(12);
 // $sub-nav-font-color: $aluminum;
 // $sub-nav-font-weight: $font-weight-normal;
 // $sub-nav-text-decoration: none;
-// $sub-nav-padding: rem-calc(3 16);
+$sub-nav-padding: rem-calc(2 6);
 // $sub-nav-border-radius: 3px;
 // $sub-nav-font-color-hover: scale-color($sub-nav-font-color, $lightness: -25%);
 
@@ -1219,7 +1249,7 @@ $column-gutter: rem-calc(20);
 // $sub-nav-active-padding: $sub-nav-padding;
 // $sub-nav-active-cursor: default;
 
-// $sub-nav-item-divider: "";
+$sub-nav-item-divider: "|";
 // $sub-nav-item-divider-margin: rem-calc(12);
 
 // 29. Switch
@@ -1361,11 +1391,11 @@ $column-gutter: rem-calc(20);
 // $include-html-top-bar-classes: $include-html-classes;
 
 // Background color for the top bar
-// $topbar-bg-color: $oil;
+$topbar-bg-color: $darksteel;
 // $topbar-bg: $topbar-bg-color;
 
 // Height and margin
-// $topbar-height: 45px;
+$topbar-height: 40px;
 // $topbar-margin-bottom: 0;
 
 // Controlling the styles for the title in the top bar
@@ -1373,27 +1403,27 @@ $column-gutter: rem-calc(20);
 // $topbar-title-font-size: rem-calc(17);
 
 // Style the top bar dropdown elements
-// $topbar-dropdown-bg: $oil;
-// $topbar-dropdown-link-color: $white;
-// $topbar-dropdown-link-bg: $oil;
+$topbar-dropdown-bg: $topbar-bg-color;
+$topbar-dropdown-link-color: $white;
+$topbar-dropdown-link-bg: $topbar-dropdown-bg;
 // $topbar-dropdown-link-weight: $font-weight-normal;
 // $topbar-dropdown-toggle-size: 5px;
-// $topbar-dropdown-toggle-color: $white;
+$topbar-dropdown-toggle-color: $topbar-dropdown-link-color;
 // $topbar-dropdown-toggle-alpha: 0.4;
 
 // Set the link colors and styles for top-level nav
-// $topbar-link-color: $white;
-// $topbar-link-color-hover: $white;
-// $topbar-link-color-active: $white;
-// $topbar-link-color-active-hover: $white;
+$topbar-link-color: $topbar-dropdown-link-color;
+$topbar-link-color-hover: $topbar-dropdown-link-color;
+$topbar-link-color-active: $topbar-dropdown-link-color;
+$topbar-link-color-active-hover: $topbar-dropdown-link-color;
 // $topbar-link-weight: $font-weight-normal;
 // $topbar-link-font-size: rem-calc(13);
 // $topbar-link-hover-lightness: -10%; // Darken by 10%
 // $topbar-link-bg: $topbar-bg;
-// $topbar-link-bg-color-hover: $charcoal;
-// $topbar-link-bg-hover: #272727;
-// $topbar-link-bg-active: $primary-color;
-// $topbar-link-bg-active-hover: scale-color($primary-color, $lightness: -14%);
+// $topbar-link-bg-color-hover: scale-color($topbar-bg-color, $lightness: -14%);
+$topbar-link-bg-hover: scale-color($topbar-bg-color, $lightness: +20%);
+$topbar-link-bg-active: scale-color($topbar-bg-color, $lightness: +15%);
+$topbar-link-bg-active-hover: scale-color($topbar-bg-color, $lightness: +20%);
 // $topbar-link-font-family: $body-font-family;
 // $topbar-link-text-transform: none;
 // $topbar-link-padding: $topbar-height / 3;
@@ -1407,16 +1437,16 @@ $column-gutter: rem-calc(20);
 // $topbar-dropdown-label-text-transform: uppercase;
 // $topbar-dropdown-label-font-weight: $font-weight-bold;
 // $topbar-dropdown-label-font-size: rem-calc(10);
-// $topbar-dropdown-label-bg: $oil;
+// $topbar-dropdown-label-bg: $blood;
 
 // Top menu icon styles
 // $topbar-menu-link-transform: uppercase;
 // $topbar-menu-link-font-size: rem-calc(13);
 // $topbar-menu-link-weight: $font-weight-bold;
-// $topbar-menu-link-color: $white;
-// $topbar-menu-icon-color: $white;
-// $topbar-menu-link-color-toggled: $jumbo;
-// $topbar-menu-icon-color-toggled: $jumbo;
+$topbar-menu-link-color: $topbar-dropdown-link-color;
+$topbar-menu-icon-color: $topbar-dropdown-link-color;
+$topbar-menu-link-color-toggled: $topbar-dropdown-link-color;
+$topbar-menu-icon-color-toggled: $topbar-dropdown-link-color;
 
 // Transitions and breakpoint styles
 // $topbar-transition-speed: 300ms;

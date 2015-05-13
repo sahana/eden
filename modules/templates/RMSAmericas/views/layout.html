@@ -69,27 +69,32 @@
 <body>
  <div class='row main-title'>
     <div class='medium-6 columns'>
-        <div class="org-logo"></div>
-        <div class="system-title">
-            <h4 class="system-name"><span class="system-acronym">RMS</span> Resource Management System</h4>
-            <h6 class="org-name subheader hide-for-small">IFRC</h6>
-        </div>
+     <a href='{{=URL(c="default", f="index")}}'>
+      {{org_menu = current.menu.org.render() if current.menu.org else ("", "")}}
+      <div class="org-logo">{{=org_menu[1]}}</div>
+      <div class="system-title">
+       <h4 class="system-name"><span class="system-acronym">RMS</span> {{=T("Resource Management System")}}</h4>
+       <h6 class="org-name subheader hide-for-small">{{=org_menu[0]}}</h6>
+      </div>
+     </a>
     </div>
-    <div class='medium-6 columns'>
-        <dl class="sub-nav personal-menu">
-            <dd class="active"><a href="#">Administration</a></dd>
-            <dd><a href="#">Profile</a></dd>
-            <dd><a href="#">Change Password</a></dd>
-            <dd class="hide-for-small-only"><a href="#">Logout</a></dd>
-        </dl>
+    <div class='large-5 medium-4 columns'>
+      {{=current.menu.personal}}
+    </div>
+    <div class='large-1 medium-2 columns'>
+      {{=current.menu.lang}}
     </div>
  </div>
  <div class='row main-navigation'>
-  {{=current.menu.main}}
+    <div class='small-12 columns'>
+      {{=current.menu.main}}
+    </div>
  </div>
  <div class='row main-content'>
   {{if current.menu.options is not None:}}
-  <a id='menu-options-toggle' class='tiny secondary button show-for-small' data-status='off' data-off='{{=T("Show Options")}}' data-on='{{=T("Hide Options")}}'>{{=T("Show Options")}}</a>
+  <div class='small-12 columns'>
+   <a id='menu-options-toggle' class='tiny secondary button show-for-small' data-status='off' data-off='{{=T("Show Options")}}' data-on='{{=T("Hide Options")}}'>{{=T("Show Options")}}</a>
+  </div>
   <div class='medium-3 large-2 columns hide-for-small' id='menu-options'>
    {{=current.menu.options}}
   </div>
