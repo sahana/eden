@@ -1,0 +1,44 @@
+.org-logo {
+    vertical-align: top;
+    display: inline-block;
+    padding: 0.5rem 0.5rem 0.5rem 0;
+}
+.system-title {
+    display: inline-block;
+}
+.system-title h5 {
+    color: #333333;
+}
+.system-title h6 {
+    color: #999999;
+}
+.system-name {
+    margin-bottom: 0;
+}
+.system-acronym {
+    font-weight: bold;
+}
+.org-name {
+    margin-bottom: 0.125rem;
+    line-height: 1rem;
+    margin-bottom: 0.5rem;
+}
+.personal-menu {
+    padding: 1.0rem 0.5rem 0 0;
+    margin-bottom: 0.125rem;
+}
+.language-selector {
+    display: block;
+    margin-top: 0.625rem;
+    margin-bottom: 0.125rem;
+}
+.sub-nav.about-menu {
+    margin-left: 0;
+}
+/* Comment these two for a white header and free top bar: */
+/*.main-title {
+    background-color: #FEFAF0;
+}
+.main-navigation {
+    background-color: #4D4D4D;
+}*/

@@ -29,9 +29,22 @@ line_comments = (environment == :production) ? false : true
 # Post-process production versions
 if environment == :production
     on_stylesheet_saved do |f|
-        # Rename into *.min.css and move up one folder
-        FileUtils.mv f, "#{File.dirname(File.dirname(f))}/#{File.basename(f,'.*')}.min.css"
-        # Remove the "prod" folder
-        FileUtils.rm_rf(File.dirname(f))
+        if File.basename(f,'.*') == "style"
+            # Drop it - gets minified later via css.cfg
+            File.delete(f)
+            # Remove the "prod" folder
+            FileUtils.rm_rf(File.dirname(f))
+        else
+            # Rename into *.min.css and move up one folder
+            FileUtils.mv f, "#{File.dirname(File.dirname(f))}/#{File.basename(f,'.*')}.min.css"
+            # Remove the "prod" folder
+            FileUtils.rm_rf(File.dirname(f))
+        end
+    end
+else
+    on_stylesheet_saved do |f|
+        if File.basename(f,'.*') == "style"
+            FileUtils.mv f, "#{File.dirname(File.dirname(f))}/#{File.basename(f,'.*')}.css"
+        end
     end
 end
