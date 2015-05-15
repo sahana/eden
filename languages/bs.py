@@ -7352,7 +7352,7 @@
 'Short Title / ID': 'Kratki naslov / ID',
 'short<6cm': 'kratak<6cm',
 'Show': 'Prikaži',
-'Show _MENU_ entries': 'Prikaži _MENU_ članova',
+'Show %(number)s entries': 'Prikaži %(number)s članova',
 'Show author picture?': 'Prikaži sliku autora',
 'Show Checklist': 'Prikaži kontrolnu listu',
 'Show Details': 'Prikaži detalje',

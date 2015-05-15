@@ -98,6 +98,15 @@ table.dataTable {
     }
 }
 
+body.rtl {
+    .dt-export-options {
+        float: left;
+    }
+    .list_formats div {
+        float: left;
+    }
+}
+
 /* Empty-sections */
 .empty {
     font-style: italic;

@@ -781,8 +781,17 @@ table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, tab
   margin: 0 0.085rem;
 }
 
-/* Empty-sections */
 /* line 102, ../scss/custom/_tables.scss */
+body.rtl .dt-export-options {
+  float: left;
+}
+/* line 105, ../scss/custom/_tables.scss */
+body.rtl .list_formats div {
+  float: left;
+}
+
+/* Empty-sections */
+/* line 111, ../scss/custom/_tables.scss */
 .empty {
   font-style: italic;
   font-size: 0.8em;
@@ -824,54 +833,61 @@ table.dataTable.dtr-inline.collapsed tbody tr.parent td:first-child::before, tab
   margin-right: 1.0rem;
 }
 
+/* line 31, ../scss/custom/_widgets.scss */
+body.rtl #list-btn-add {
+  float: left;
+  margin-left: 1.0rem;
+  margin-right: 0;
+}
+
 /* Summary tabs */
-/* line 32, ../scss/custom/_widgets.scss */
+/* line 38, ../scss/custom/_widgets.scss */
 .ui-tabs .ui-tabs-panel {
   padding: 0.5em;
 }
 
-/* line 35, ../scss/custom/_widgets.scss */
+/* line 41, ../scss/custom/_widgets.scss */
 #summary-tabs {
   margin-top: 10px;
 }
-/* line 37, ../scss/custom/_widgets.scss */
+/* line 43, ../scss/custom/_widgets.scss */
 #summary-tabs.ui-widget-content {
   background: none;
   border: none;
 }
 
-/* line 43, ../scss/custom/_widgets.scss */
+/* line 49, ../scss/custom/_widgets.scss */
 #summary-tab-headers .ui-tabs-nav {
   border: none;
   margin: 0 10px;
 }
-/* line 47, ../scss/custom/_widgets.scss */
+/* line 53, ../scss/custom/_widgets.scss */
 #summary-tab-headers a {
   border-color: #CCC;
 }
-/* line 50, ../scss/custom/_widgets.scss */
+/* line 56, ../scss/custom/_widgets.scss */
 #summary-tab-headers .ui-tabs-active a {
   border-bottom: 1px solid white;
 }
-/* line 53, ../scss/custom/_widgets.scss */
+/* line 59, ../scss/custom/_widgets.scss */
 #summary-tab-headers li {
   margin-right: 5px;
   box-shadow: none;
 }
 
-/* line 60, ../scss/custom/_widgets.scss */
+/* line 66, ../scss/custom/_widgets.scss */
 #summary-sections .x-panel-body {
   border: none;
   border-radius: 4px;
 }
 
 /* Date picker */
-/* line 67, ../scss/custom/_widgets.scss */
+/* line 73, ../scss/custom/_widgets.scss */
 input.date.hasDatepicker {
   display: inline-block;
 }
 
-/* line 70, ../scss/custom/_widgets.scss */
+/* line 76, ../scss/custom/_widgets.scss */
 .ui-datepicker-trigger {
   background-color: transparent;
   background-image: url("../../img/bootstrap/calendar.gif");
@@ -879,19 +895,19 @@ input.date.hasDatepicker {
 }
 
 /* Range filter widgets */
-/* line 77, ../scss/custom/_widgets.scss */
+/* line 83, ../scss/custom/_widgets.scss */
 .range-filter-label label {
   font-size: 1.0em;
 }
 
-/* line 81, ../scss/custom/_widgets.scss */
+/* line 87, ../scss/custom/_widgets.scss */
 .range-filter-widget input.date-filter-input {
   width: auto;
   float: left;
   margin-right: 2px;
 }
 
-/* line 87, ../scss/custom/_widgets.scss */
+/* line 93, ../scss/custom/_widgets.scss */
 .btn.date-clear-btn {
   font-size: 0.85em;
   padding: 0.325em;
@@ -899,7 +915,7 @@ input.date.hasDatepicker {
 }
 
 /* ImageCropWidget */
-/* line 94, ../scss/custom/_widgets.scss */
+/* line 100, ../scss/custom/_widgets.scss */
 .imagecrop-btn {
   font-size: 1em;
   margin-left: 0.2em;
@@ -907,36 +923,36 @@ input.date.hasDatepicker {
 }
 
 /* pr_Contacts widgets */
-/* line 101, ../scss/custom/_widgets.scss */
+/* line 107, ../scss/custom/_widgets.scss */
 .pr-contacts-wrapper h3 {
   margin-top: 0.5rem;
   padding-bottom: 0 !important;
 }
 
-/* line 105, ../scss/custom/_widgets.scss */
+/* line 111, ../scss/custom/_widgets.scss */
 .pr-contact-actions {
   margin-bottom: 0.5rem;
 }
 
-/* line 108, ../scss/custom/_widgets.scss */
+/* line 114, ../scss/custom/_widgets.scss */
 .pr-contact,
 .pr-emergency-contact {
   padding: 0.5rem;
 }
 
-/* line 112, ../scss/custom/_widgets.scss */
+/* line 118, ../scss/custom/_widgets.scss */
 .pr-contact-priority,
 .pr-contact-details {
   display: inline-block;
 }
 
-/* line 116, ../scss/custom/_widgets.scss */
+/* line 122, ../scss/custom/_widgets.scss */
 .pr-contact-subtitle {
   font-size: 0.8rem;
   font-style: italic;
 }
 
-/* line 120, ../scss/custom/_widgets.scss */
+/* line 126, ../scss/custom/_widgets.scss */
 .pr-contact-priority {
   border: thin solid #2ba6cb;
   border-radius: 2px;
@@ -947,7 +963,7 @@ input.date.hasDatepicker {
   padding: 0 0.25rem 0.125rem;
   vertical-align: top;
 }
-/* line 129, ../scss/custom/_widgets.scss */
+/* line 135, ../scss/custom/_widgets.scss */
 .pr-contact-priority input[type=submit] {
   color: black;
   line-height: 1.2rem;
@@ -955,58 +971,58 @@ input.date.hasDatepicker {
 }
 
 /* Data Lists (including profile) */
-/* line 138, ../scss/custom/_widgets.scss */
+/* line 144, ../scss/custom/_widgets.scss */
 .dl .dl-header {
   float: none;
   text-align: right;
 }
-/* line 142, ../scss/custom/_widgets.scss */
+/* line 148, ../scss/custom/_widgets.scss */
 .dl .card_1_line {
   height: auto;
 }
-/* line 145, ../scss/custom/_widgets.scss */
+/* line 151, ../scss/custom/_widgets.scss */
 .dl .empty_card-holder {
   text-align: center;
 }
-/* line 148, ../scss/custom/_widgets.scss */
+/* line 154, ../scss/custom/_widgets.scss */
 .dl .dl-row {
   border: 0;
 }
-/* line 151, ../scss/custom/_widgets.scss */
+/* line 157, ../scss/custom/_widgets.scss */
 .dl .dl-1-cols {
   width: 100%;
 }
 
-/* line 156, ../scss/custom/_widgets.scss */
+/* line 162, ../scss/custom/_widgets.scss */
 .dl-item .dropdown .caret {
   margin-left: 0.2rem;
   margin-top: 0.4rem;
 }
-/* line 160, ../scss/custom/_widgets.scss */
+/* line 166, ../scss/custom/_widgets.scss */
 .dl-item .attachments {
   margin-right: 0.2rem;
 }
 
-/* line 164, ../scss/custom/_widgets.scss */
+/* line 170, ../scss/custom/_widgets.scss */
 h4.profile-sub-header {
   background-color: #EFEFEF;
   padding: 0.1rem 0.3rem;
   font-size: 1.2rem;
 }
 
-/* line 169, ../scss/custom/_widgets.scss */
+/* line 175, ../scss/custom/_widgets.scss */
 .profile .dl-header {
   display: none;
 }
 
 /* Comment feeds */
-/* line 174, ../scss/custom/_widgets.scss */
+/* line 180, ../scss/custom/_widgets.scss */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
 }
 
 /* Iframe Map (Location Represent links) */
-/* line 179, ../scss/custom/_widgets.scss */
+/* line 185, ../scss/custom/_widgets.scss */
 #close-iframe-map {
   padding: 7px;
   margin-top: 5px;
@@ -1051,52 +1067,79 @@ h4.profile-sub-header {
   margin-bottom: 0.5rem;
 }
 
-/* line 26, ../scss/custom/_misc.scss */
+/* line 27, ../scss/custom/_misc.scss */
 .personal-menu {
+  float: right;
   clear: right;
-  padding-top: 0.5rem;
+  padding-top: 0;
   margin-bottom: 0.125rem;
 }
-/* line 30, ../scss/custom/_misc.scss */
+/* line 32, ../scss/custom/_misc.scss */
 .personal-menu li a {
   padding: 0 0.375rem;
 }
 
-/* line 34, ../scss/custom/_misc.scss */
+/* line 36, ../scss/custom/_misc.scss */
 .language-selector {
+  float: right;
   display: block;
   margin-top: 0.625rem;
   margin-bottom: 0.125rem;
 }
 
-/* line 39, ../scss/custom/_misc.scss */
+/* line 42, ../scss/custom/_misc.scss */
 .sub-nav.about-menu {
   margin-left: 0;
+  margin-right: 0;
 }
 
-/* line 42, ../scss/custom/_misc.scss */
+/* line 46, ../scss/custom/_misc.scss */
 #dashboard > li {
   display: inline-block;
 }
 
-/* line 45, ../scss/custom/_misc.scss */
+/* line 49, ../scss/custom/_misc.scss */
 .home-map,
 .home-cms {
   margin: 1rem 0;
 }
 
-/* line 49, ../scss/custom/_misc.scss */
+/* line 53, ../scss/custom/_misc.scss */
 .home-map {
   border: 1px solid #999999;
 }
 
-/* line 52, ../scss/custom/_misc.scss */
+/* line 56, ../scss/custom/_misc.scss */
 .username {
   color: #666666;
-  padding: 0.5rem 0.5rem 0 0;
+  padding: 0.5rem 0;
+  padding-right: 0.5rem;
   font-size: 0.7rem;
+  float: right;
 }
-/* line 56, ../scss/custom/_misc.scss */
+/* line 61, ../scss/custom/_misc.scss */
 .username i.icon {
   padding-left: 0.2rem;
+  padding-right: 0;
+}
+
+/* line 69, ../scss/custom/_misc.scss */
+body.rtl .personal-menu {
+  clear: left;
+  float: left;
+}
+/* line 73, ../scss/custom/_misc.scss */
+body.rtl .language-selector {
+  float: left;
+}
+/* line 76, ../scss/custom/_misc.scss */
+body.rtl .username {
+  padding-left: 0.5rem;
+  padding-right: 0;
+  float: left;
+}
+/* line 79, ../scss/custom/_misc.scss */
+body.rtl .username i.icon {
+  padding-left: 0;
+  padding-right: 0.2rem;
 }

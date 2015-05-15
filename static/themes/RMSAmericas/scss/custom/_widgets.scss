@@ -28,6 +28,12 @@
     margin-right: 1.0rem;
 }
 
+body.rtl #list-btn-add {
+    float: left;
+    margin-left: 1.0rem;
+    margin-right: 0;
+}
+
 /* Summary tabs */
 .ui-tabs .ui-tabs-panel {
     padding: 0.5em;

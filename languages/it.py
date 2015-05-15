@@ -5083,7 +5083,7 @@
 'Short Description': 'Descrizione breve',
 'short<6cm': 'Corto<6 cm',
 'Show': 'Mostra',
-'Show _MENU_ entries': 'Mostra le voci _MENU_',
+'Show %(number)s entries': 'Mostra le voci %(number)s',
 'Show Checklist': 'Mostra Controllo',
 'Show Details': 'Mostra dettagli',
 'Show Map': 'Mostra mappa',

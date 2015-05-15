@@ -91,6 +91,8 @@ class S3MainMenuLayout(S3NavigationItem):
                     else:
                         left.append(item)
                 right.reverse()
+                if current.response.s3.rtl:
+                    right, left = left, right
                 return NAV(UL(LI(A(" ",
                                    _href=URL(c="default", f="index"),
                                    ),
@@ -163,7 +165,7 @@ class S3PersonalMenuLayout(S3NavigationItem):
             # The menu
             items = item.render_components()
             if items:
-                return TAG["ul"](items, _class="sub-nav personal-menu right")
+                return TAG["ul"](items, _class="sub-nav personal-menu")
             else:
                 return "" # menu is empty
         else:
@@ -225,7 +227,7 @@ class S3LanguageMenuLayout(S3NavigationItem):
                                     # @ToDo T:
                                     _title="Language Selection",
                                     _onchange="S3.reloadWithQueryStringVars({'_language':$(this).val()});")
-                form = FORM(select, _class="language-selector right",
+                form = FORM(select, _class="language-selector",
                                     _name="_language",
                                     _action="",
                                     _method="get")

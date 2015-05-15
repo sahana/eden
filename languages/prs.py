@@ -2632,7 +2632,7 @@
 'Short Title / ID': 'عنوان کوتاه(ID)',
 'short<6cm': 'کوتاه> 6cm',
 'Show': 'نمایش دادن',
-'Show _MENU_ entries': 'نمایش _ ورودی های_ منو',
+'Show %(number)s entries': 'نمایش %(number)s منو',
 'Show on Map': 'نمایش دادن روی نقشه',
 'Show Pivot Table': 'نمایش جدول اصلی',
 'Show Table': 'نمایش دادن جدول',

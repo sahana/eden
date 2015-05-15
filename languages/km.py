@@ -2509,7 +2509,7 @@
 'Short Title / ID': 'មុខងារ /លេខសម្គាល់ខ្លីៗ',
 'Show Pivot Table': 'បង្ហាញតារាង Pivot ',
 'Show Table': 'បង្ហាញ​តារាង',
-'Show _MENU_ entries': 'បង្ហាញ​ធាតុ _MENU_',
+'Show %(number)s entries': 'បង្ហាញ​ធាតុ %(number)s',
 'Show on Map': 'បង្ហាញ​នៅ​លើ​ផែនទី',
 'Show totals': 'បង្ហាញ​ចំនួន​សរុប',
 'Show': 'បង្ហាញ',

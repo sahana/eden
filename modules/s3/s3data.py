@@ -234,7 +234,7 @@ class S3DataTable(object):
                    '''i18n.infoEmpty="%s"''' % T("Showing 0 to 0 of 0 entries"),
                    '''i18n.infoFiltered="%s"''' % T("(filtered from _MAX_ total entries)"),
                    '''i18n.infoThousands="%s"''' % current.deployment_settings.get_L10n_thousands_separator(),
-                   '''i18n.lengthMenu="%s"''' % T("Show _MENU_ entries"),
+                   '''i18n.lengthMenu="%s"''' % (T("Show %(number)s entries") % {"number": "_MENU_"}),
                    '''i18n.loadingRecords="%s"''' % T("Loading"),
                    '''i18n.processing="%s"''' % T("Processing"),
                    '''i18n.search="%s"''' % T("Search"),

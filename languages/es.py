@@ -5831,7 +5831,7 @@
 'Show Report': 'Mostrar Informe',
 'Show Table': 'Mostrar Tabla',
 'Show totals': 'Mostrar totales',
-'Show _MENU_ entries': 'Mostrar entradas _MENU_',
+'Show %(number)s entries': 'Mostrar entradas %(number)s',
 'Showing 0 to 0 of 0 entries': 'Mostrando 0-0 de 0 entradas',
 'Showing _START_ to _END_ of _TOTAL_ entries': 'Mostrando _START_ a _END_ de entradas _TOTAL_',
 'sides': 'lados',

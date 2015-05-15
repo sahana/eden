@@ -2629,7 +2629,7 @@
 'Short Title / ID': 'لنډ عنوان/ تذکړه',
 'short<6cm': 'لنډ > 6 سانتی متر',
 'Show': 'ښکارول',
-'Show _MENU_ entries': 'ښکارول - لست - ثبتونه',
+'Show %(number)s entries': 'ښکارول %(number)s ثبتونه',
 'Show on Map': 'په نقشه کی ښکاره کړی',
 'Show Pivot Table': 'ښکارول تاویدونکی چوکات',
 'Show Table': 'ښکارول د چوکات',

@@ -1100,7 +1100,7 @@
 "Shelter": "Sığınak",
 "Show Options": "Seçenekleri Göster",
 "Show Table": "Tabloyu Göster",
-"Show _MENU_ entries": "Gösterilecek kayıt _MENU_",
+"Show %(number)s entries": "Gösterilecek kayıt %(number)s",
 "Show on Map": "Haritada Göster",
 "Show totals": "Toplamları göster",
 "Show": "Göster",
