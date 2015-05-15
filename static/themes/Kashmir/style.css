@@ -621,6 +621,13 @@ table.dataTable .selected-action {
   margin: 0 0.085rem;
 }
 
+body.rtl .dt-export-options {
+  float: left;
+}
+body.rtl .list_formats div {
+  float: left;
+}
+
 /* Empty-sections */
 .empty {
   font-style: italic;
@@ -656,6 +663,12 @@ table.dataTable .selected-action {
 #list-btn-add {
   float: right;
   margin-right: 1.0rem;
+}
+
+body.rtl #list-btn-add {
+  float: left;
+  margin-left: 1.0rem;
+  margin-right: 0;
 }
 
 /* Summary tabs */
