@@ -904,7 +904,7 @@ class S3AddPersonWidget2(FormWidget):
         if delay != 800:
             data["delay"] = delay
         chars = settings.get_ui_autocomplete_min_chars()
-        if chars != 800:
+        if chars != 2:
             data["chars"] = chars
         fields = []
         fappend = fields.append
