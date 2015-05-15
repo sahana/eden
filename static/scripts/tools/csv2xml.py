@@ -134,6 +134,9 @@ def csv2tree(source,
                             quotechar=quotechar)
 
     for i, r in enumerate(reader):
+        # Skip empty rows
+        if not any(r.values()):
+            continue
         if i == 0:
             # Auto-detect hashtags
             items = dict((k, s3_unicode(v.strip()))

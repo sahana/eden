@@ -2582,11 +2582,14 @@ class S3XML(S3Codec):
                                     quotechar=quotechar)
             ROW = TAG.row
             for i, r in enumerate(reader):
+                # Skip empty rows
+                if not any(r.values()):
+                    continue
                 if i == 0:
                     # Auto-detect hashtags
                     items = dict((k, s3_unicode(v.strip()))
                                  for k, v in r.items() if k and v and v.strip())
-                    if all(v[0] == '#' for v in items.values()):
+                    if all(v[0] == "#" for v in items.values()):
                         hashtags.update(items)
                         continue
                 row = SubElement(root, ROW)

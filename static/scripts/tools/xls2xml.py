@@ -214,6 +214,10 @@ def xls2tree(source,
             types = s.row_types(ridx, *cols)
             values = s.row_values(ridx, *cols)
 
+            # Skip empty rows
+            if not any(v != "" for v in values):
+                continue
+
             if header_row and record_idx == 0:
                 # Read column headers
                 if not fields:
