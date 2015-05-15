@@ -101,8 +101,8 @@ def index():
              "opacity": 0.5,
              }
     map_wrapper = gis.show_map(feature_resources=(areas,),
-                               catalogue_layers = False,
-                               collapsed = True,
+                               catalogue_layers = True,
+                               #collapsed = True,
                                )
     map_wrapper["_style"] = "width:100%;"
     output["map"] = map_wrapper
