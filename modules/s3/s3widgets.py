@@ -897,9 +897,10 @@ class S3AddPersonWidget2(FormWidget):
 
         # Fields
         # (id, label, widget, required)
-        fattr = {"_data-c": controller,
-                 "_data-f": fn,
-                 }
+        data = {"c": controller,
+                "f": fn,
+                "delay": settings.get_ui_autocomplete_delay(),
+                }
         fields = []
         fappend = fields.append
 
@@ -913,7 +914,7 @@ class S3AddPersonWidget2(FormWidget):
         # - can search for an existing person
         # - can create a new person
         # - multiple names get assigned to first, middle, last
-        fappend(("full_name", T("Name"), INPUT(**fattr), True))
+        fappend(("full_name", T("Name"), INPUT(data=data), True))
 
         if date_of_birth:
             fappend(("date_of_birth", date_of_birth.label,

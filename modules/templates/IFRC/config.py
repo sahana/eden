@@ -920,6 +920,16 @@ def config(settings):
 
     settings.auth.realm_entity_types = auth_realm_entity_types
 
+    def ui_autocomplete_delay(default):
+        """ Delay in milliseconds before autocomplete starts searching """
+
+        root_org = current.auth.root_org_name()
+        if root_org == ARCS:
+            return 800
+        return default
+
+    settings.hrm.use_code = hrm_use_code
+
     # -------------------------------------------------------------------------
     def customise_asset_asset_controller(**attr):
 

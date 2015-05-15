@@ -1813,6 +1813,15 @@ class S3Config(Storage):
         """
         return self.ui.get("report_auto_submit", 800)
 
+    def get_ui_autocomplete_delay(self):
+        """
+            Time in milliseconds after the last keystroke in an AC field
+            to start the search
+
+            @todo: currently only applied in S3AddPersonWidget2
+        """
+        return self.__lazy(self.ui, "autocomplete_delay", 450)
+
     def get_ui_use_button_icons(self):
         """
             Use icons on action buttons (requires corresponding CSS)
@@ -2808,7 +2817,7 @@ class S3Config(Storage):
 
     def get_org_sector(self):
         """
-            Whether to use an Organization Sector field 
+            Whether to use an Organization Sector field
         """
         return self.org.get("sector", False)
 

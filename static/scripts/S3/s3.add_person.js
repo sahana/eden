@@ -380,7 +380,7 @@
 
         dummy_input.autocomplete({
             // @ToDo: Configurable options
-            delay: 450,
+            delay: $(this).data('delay') || 450,
             minLength: 2,
             source: function(request, response) {
                 // Patch the source so that we can handle No Matches
