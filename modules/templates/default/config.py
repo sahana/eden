@@ -371,6 +371,11 @@ def config(settings):
     # Uncomment to Disable the Postcode selector in the LocationSelector
     #settings.gis.postcode_selector = False
 
+    # Increase these if having scalability issues or slow connections
+    #settings.ui.autocomplete_delay = 800
+    #settings.ui.autocomplete_min_chars = 2
+    #settings.ui.filter_auto_submit = 800
+    #settings.ui.report_auto_submit = 800
     # Enable this for a UN-style deployment
     #settings.ui.cluster = True
     # Enable this to use the label 'Camp' instead of 'Shelter'

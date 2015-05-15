@@ -899,8 +899,13 @@ class S3AddPersonWidget2(FormWidget):
         # (id, label, widget, required)
         data = {"c": controller,
                 "f": fn,
-                "delay": settings.get_ui_autocomplete_delay(),
                 }
+        delay = settings.get_ui_autocomplete_delay()
+        if delay != 800:
+            data["delay"] = delay
+        chars = settings.get_ui_autocomplete_min_chars()
+        if chars != 800:
+            data["chars"] = chars
         fields = []
         fappend = fields.append
 
@@ -1054,8 +1059,7 @@ class S3AutocompleteWidget(FormWidget):
                  filter = "",       # REST filter
                  link_filter = "",
                  post_process = "",
-                 delay = 450,       # milliseconds
-                 min_length = 2):   # Increase this for large deployments
+                 ):
 
         self.module = module
         self.resourcename = resourcename
@@ -1063,8 +1067,6 @@ class S3AutocompleteWidget(FormWidget):
         self.filter = filter
         self.link_filter = link_filter
         self.post_process = post_process
-        self.delay = delay
-        self.min_length = min_length
 
         # @ToDo: Refreshes all dropdowns as-necessary
         self.post_process = post_process or ""
@@ -1072,6 +1074,8 @@ class S3AutocompleteWidget(FormWidget):
     def __call__(self, field, value, **attributes):
 
         s3 = current.response.s3
+        settings = current.deployment_settings
+
         default = dict(
             _type = "text",
             value = (value != None and str(value)) or "",
@@ -1099,14 +1103,14 @@ class S3AutocompleteWidget(FormWidget):
 
         options = ""
         post_process = self.post_process
-        delay = self.delay
-        min_length = self.min_length
+        delay = settings.get_ui_autocomplete_delay()
+        min_length = settings.get_ui_autocomplete_min_chars()
         if min_length != 2:
             options = ''',"%(postprocess)s",%(delay)s,%(min_length)s''' % \
                 dict(postprocess = post_process,
                      delay = delay,
                      min_length = min_length)
-        elif delay != 450:
+        elif delay != 800:
             options = ''',"%(postprocess)s",%(delay)s''' % \
                 dict(postprocess = post_process,
                      delay = delay)
@@ -2566,17 +2570,15 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
 
     def __init__(self,
                  post_process = "",
-                 delay = 450,   # milliseconds
-                 min_length=2,  # Increase this for large deployments
                  group = "",    # Filter to staff/volunteers/deployables
                  ):
 
         self.post_process = post_process
-        self.delay = delay
-        self.min_length = min_length
         self.group = group
 
     def __call__(self, field, value, **attributes):
+
+        settings = current.deployment_settings
 
         group = self.group
         if not group and current.request.controller == "deploy":
@@ -2610,13 +2612,22 @@ class S3HumanResourceAutocompleteWidget(FormWidget):
         else:
             represent = ""
 
-        script = '''S3.autocomplete.hrm('%(group)s','%(input)s',"%(postprocess)s",%(delay)s,%(min_length)s)''' % \
+        delay = settings.get_ui_autocomplete_delay()
+        min_length = settings.get_ui_autocomplete_min_chars()
+
+        script = '''S3.autocomplete.hrm('%(group)s','%(input)s',"%(postprocess)s"''' % \
             dict(group = group,
                  input = real_input,
                  postprocess = self.post_process,
-                 delay = self.delay,
-                 min_length = self.min_length,
                  )
+        if delay != 800:
+            script = "%s,%s" % (script, delay)
+            if min_length != 2:
+                script = "%s,%s" % (script, min_length)
+        elif min_length != 2:
+            script = "%s,,%s" % (script, min_length)
+        script = "%s)" % script
+
         current.response.s3.jquery_ready.append(script)
 
         return TAG[""](INPUT(_id=dummy_input,
@@ -3016,15 +3027,15 @@ class S3LocationAutocompleteWidget(FormWidget):
     def __init__(self,
                  level = "",
                  post_process = "",
-                 delay = 450,     # milliseconds
-                 min_length = 2): # Increase this for large deployments
+                 ): # Increase this for large deployments
 
         self.level = level
         self.post_process = post_process
-        self.delay = delay
-        self.min_length = min_length
 
     def __call__(self, field, value, **attributes):
+
+        settings = current.deployment_settings
+
         level = self.level
         if isinstance(level, list):
             levels = ""
@@ -3064,16 +3075,19 @@ class S3LocationAutocompleteWidget(FormWidget):
         else:
             represent = ""
 
+        delay = settings.get_ui_autocomplete_delay()
+        min_length = settings.get_ui_autocomplete_min_chars()
+
         # Mandatory part
         script = '''S3.autocomplete.location("%s"''' % real_input
         # Optional parts
         if self.post_process:
             # We need all
-            script = '''%s,'%s',%s,%s,"%s"''' % (script, level, self.min_length, self.delay, self.post_process)
-        elif self.delay:
-            script = '''%s,"%s",%s,%s''' % (script, level, self.min_length, self.delay)
-        elif self.min_length:
-            script = '''%s,"%s",%s''' % (script, level, self.min_length)
+            script = '''%s,'%s',%s,%s,"%s"''' % (script, level, min_length, delay, self.post_process)
+        elif delay != 800:
+            script = '''%s,"%s",%s,%s''' % (script, level, min_length, delay)
+        elif min_length != 2:
+            script = '''%s,"%s",%s''' % (script, level, min_length)
         elif levels:
             script = '''%s,"%s"''' % (script, level)
         # Close
@@ -6676,12 +6690,9 @@ class S3OrganisationAutocompleteWidget(FormWidget):
     def __init__(self,
                  post_process = "",
                  default_from_profile = False,
-                 delay = 450,       # milliseconds
-                 min_length = 2):   # Increase this for large deployments
+                 ):
 
         self.post_process = post_process
-        self.delay = delay
-        self.min_length = min_length
         self.tablename = "org_organisation"
         self.default_from_profile = default_from_profile
 
@@ -6695,8 +6706,6 @@ class S3OrganisationAutocompleteWidget(FormWidget):
             return value
 
         return S3GenericAutocompleteTemplate(self.post_process,
-                                             self.delay,
-                                             self.min_length,
                                              field,
                                              value,
                                              attributes,
@@ -6768,14 +6777,10 @@ class S3PersonAutocompleteWidget(FormWidget):
                  function = "person_search",
                  post_process = "",
                  hideerror = False,
-                 delay = 450,     # milliseconds
-                 min_length = 2,  # Increase this for large deployments
                  ajax_filter = "",
                  ):
 
         self.post_process = post_process
-        self.delay = delay
-        self.min_length = min_length
         self.c = controller
         self.f = function
         self.hideerror = hideerror
@@ -6819,8 +6824,10 @@ class S3PersonAutocompleteWidget(FormWidget):
                  )
         options = ""
         post_process = self.post_process
-        delay = self.delay
-        min_length = self.min_length
+
+        settings = current.deployment_settings
+        delay = settings.get_ui_autocomplete_delay()
+        min_length = settings.get_ui_autocomplete_min_chars()
 
         if self.ajax_filter:
             options = ''',"%(ajax_filter)s"''' % \
@@ -6831,7 +6838,7 @@ class S3PersonAutocompleteWidget(FormWidget):
                 dict(postprocess = post_process,
                      delay = delay,
                      min_length = min_length)
-        elif delay != 450:
+        elif delay != 800:
             options += ''',"%(postprocess)s",%(delay)s''' % \
                 dict(postprocess = post_process,
                      delay = delay)
@@ -6865,12 +6872,9 @@ class S3PentityAutocompleteWidget(FormWidget):
                  types = None,
                  post_process = "",
                  hideerror = False,
-                 delay = 450,     # milliseconds
-                 min_length = 2): # Increase this for large deployments
+                 ):
 
         self.post_process = post_process
-        self.delay = delay
-        self.min_length = min_length
         self.c = controller
         self.f = function
         self.types = None
@@ -6927,8 +6931,11 @@ class S3PentityAutocompleteWidget(FormWidget):
 
         options = ""
         post_process = self.post_process
-        delay = self.delay
-        min_length = self.min_length
+
+        settings = current.deployment_settings
+        delay = settings.get_ui_autocomplete_delay()
+        min_length = settings.get_ui_autocomplete_min_chars()
+
         if types:
             options = ''',"%(postprocess)s",%(delay)s,%(min_length)s,%(types)s''' % \
                 dict(postprocess = post_process,
@@ -6940,7 +6947,7 @@ class S3PentityAutocompleteWidget(FormWidget):
                 dict(postprocess = post_process,
                      delay = delay,
                      min_length = min_length)
-        elif delay != 450:
+        elif delay != 800:
             options = ''',"%(postprocess)s",%(delay)s''' % \
                 dict(postprocess = post_process,
                      delay = delay)
@@ -7001,14 +7008,10 @@ class S3SiteAutocompleteWidget(FormWidget):
 
     def __init__(self,
                  post_process = "",
-                 delay = 450, # milliseconds
-                 min_length = 2,
                  ):
 
         self.auth = current.auth
         self.post_process = post_process
-        self.delay = delay
-        self.min_length = min_length
 
     def __call__(self, field, value, **attributes):
 
@@ -7046,21 +7049,34 @@ class S3SiteAutocompleteWidget(FormWidget):
         else:
             represent = ""
 
+        
+
         s3 = current.response.s3
         site_types = current.auth.org_site_types
         for instance_type in site_types:
             # Change from T()
             site_types[instance_type] = s3_unicode(site_types[instance_type])
         site_types = '''S3.org_site_types=%s''' % json.dumps(site_types, separators=SEPARATORS)
+
+        settings = current.deployment_settings
+        delay = settings.get_ui_autocomplete_delay()
+        min_length = settings.get_ui_autocomplete_min_chars()
+
         js_global = s3.js_global
         if site_types not in js_global:
             js_global.append(site_types)
-        script = '''S3.autocomplete.site('%(input)s',"%(postprocess)s",%(delay)s,%(min_length)s)''' % \
+        script = '''S3.autocomplete.site('%(input)s',"%(postprocess)s"''' % \
             dict(input = real_input,
                  postprocess = self.post_process,
-                 delay = self.delay,
-                 min_length = self.min_length,
                  )
+        if delay != 800:
+            script = "%s,%s" % (script, delay)
+            if min_length != 2:
+                script = "%s,%s" % (script, min_length)
+        elif min_length != 2:
+            script = "%s,,%s" % (script, min_length)
+        script = "%s)" % script
+        
         s3.jquery_ready.append(script)
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",

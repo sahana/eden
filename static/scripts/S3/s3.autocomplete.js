@@ -55,7 +55,7 @@
 
         // Optional args
         if (delay == 'undefined') {
-            delay = 450;
+            delay = 800;
         }
         if (min_length == 'undefined') {
             min_length = 2;
@@ -193,7 +193,7 @@
         var throbber = $('#' + dummy + '_throbber');
 
         if (delay == 'undefined') {
-            delay = 450;
+            delay = 800;
         }
         if (min_length == 'undefined') {
             min_length = 2;
@@ -423,7 +423,7 @@
             url += '?level=' + level;
         }
         if (delay == 'undefined') {
-            delay = 450;
+            delay = 800;
         }
         if (min_length == 'undefined') {
             min_length = 2;
@@ -581,7 +581,7 @@
 
         // Optional args
         if (delay == 'undefined') {
-            delay = 450;
+            delay = 800;
         }
         if (min_length == 'undefined') {
             min_length = 2;
@@ -716,7 +716,7 @@
 
         // Optional args
         if (delay == 'undefined') {
-            delay = 450;
+            delay = 800;
         }
         if (min_length == 'undefined') {
             min_length = 2;
@@ -898,7 +898,7 @@
 
         // Optional args
         if (delay == 'undefined') {
-            delay = 450;
+            delay = 800;
         }
         if (min_length == 'undefined') {
             min_length = 2;
@@ -1072,7 +1072,7 @@
 
         // Optional args
         if (delay == 'undefined') {
-            delay = 450;
+            delay = 800;
         }
         if (min_length == 'undefined') {
             min_length = 2;
@@ -1335,7 +1335,7 @@
 
         // Optional args
         if (delay == 'undefined') {
-            delay = 450;
+            delay = 800;
         }
         if (min_length == 'undefined') {
             min_length = 2;

@@ -379,9 +379,8 @@
         real_input.data('url', url);
 
         dummy_input.autocomplete({
-            // @ToDo: Configurable options
-            delay: $(this).data('delay') || 450,
-            minLength: 2,
+            delay: $(this).data('delay') || 800,
+            minLength: $(this).data('chars') || 2,
             source: function(request, response) {
                 // Patch the source so that we can handle No Matches
                 $.ajax({
