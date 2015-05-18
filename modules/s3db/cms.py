@@ -302,6 +302,7 @@ class S3ContentModel(S3Model):
                              "location": "location_id",
                              "organisation": "created_by$organisation_id",
                              },
+                  deduplicate = self.cms_post_duplicate,
                   filter_actions = [{"label": "Open Table",
                                      "icon": "table",
                                      "function": "newsfeed",
@@ -576,6 +577,39 @@ class S3ContentModel(S3Model):
                          replies = form_vars.replies,
                          roles_permitted = form_vars.roles_permitted,
                          )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cms_post_duplicate(item):
+        """
+            CMS Post Import - Update Detection (primarily for non-blog
+            contents such as homepage, module index pages, summary pages,
+            or online documentation):
+                - same name and series => same post
+
+            @param item: the import item
+
+            @todo: if no name present => use cms_post_module component
+                   to identify updates (also requires deduplication of
+                   cms_post_module component)
+        """
+
+        data = item.data
+
+        name = data.get("name")
+        series_id = data.get("series_id")
+
+        if not name:
+            return
+
+        table = item.table
+        query = (table.name == name) & \
+                (table.series_id == series_id)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
