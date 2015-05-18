@@ -2247,7 +2247,7 @@ class GIS(object):
             - used by GIS.get_location_data() and S3PivotTable.geojson()
 
             @ToDo: Support multiple locations for a single resource
-                   (e.g. a Project wworking in multiple Communities)
+                   (e.g. a Project working in multiple Communities)
         """
 
         db = current.db
@@ -6093,7 +6093,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                   "cluster_attribute",     # Optional
                   "cluster_distance",      # Optional
                   "cluster_threshold"      # Optional
-                }]
+                  }]
             @param feature_resources: REST URLs for (filtered) resources to overlay onto the map & their options (List of Dicts):
                 [{"name"      : T("MyLabel"), # A string: the label for the layer
                   "id"        : "search",     # A string: the id for the layer (for manipulation by JavaScript)
@@ -6112,11 +6112,11 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                   "cluster_threshold",        # Optional (overrides layer_id if-set)
                   "dir",                      # Optional (overrides layer_id if-set)
                   "style",                    # Optional (overrides layer_id if-set)
-                }]
+                  }]
             @param wms_browser: WMS Server's GetCapabilities & options (dict)
                 {"name": T("MyLabel"),     # Name for the Folder in LayerTree
                  "url": string             # URL of GetCapabilities
-                }
+                 }
             @param catalogue_layers: Show all the enabled Layers from the GIS Catalogue
                                      Defaults to False: Just show the default Base layer
             @param legend: True: Show the GeoExt Legend panel, False: No Panel, "float": New floating Legend Panel
@@ -6135,7 +6135,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             @param mgrs: Use the MGRS Control to select PDFs
                 {"name": string,           # Name for the Control
                  "url": string             # URL of PDF server
-                }
+                 }
                 @ToDo: Also add MGRS Search support: http://gxp.opengeo.org/master/examples/mgrs.html
             @param window: Have viewport pop out of page into a resizable window
             @param window_hide: Have the window hidden by default, ready to appear (e.g. on clicking a button)

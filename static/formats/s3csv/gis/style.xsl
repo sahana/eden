@@ -10,6 +10,7 @@
          Config...............string..........Configuration Name (required only if want to restrict to a specific config / override default config)
          Layer................string..........Layer Name
          Layer Type...........string..........Layer Type (only needed if not gis_layer_feature)
+         Record...............string..........Layer Record. @ToDo: make this useful by providing a way to look this up (hard-coded record IDs aren't useful)
          Aggregate............string..........Style Aggregate
          Marker...............string..........Style Marker Name
          GPS Marker...........string..........Style GPS Marker
@@ -91,6 +92,9 @@
                         <xsl:value-of select="concat($LayerType, $Layer)"/>
                     </xsl:attribute>
                 </reference>
+            </xsl:if>
+            <xsl:if test="col[@field='Record']!=''">
+                <data field="record"><xsl:value-of select="col[@field='Record']"/></data>
             </xsl:if>
             <xsl:if test="col[@field='Aggregate']!=''">
                 <data field="aggregate"><xsl:value-of select="col[@field='Aggregate']"/></data>

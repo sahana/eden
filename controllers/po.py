@@ -92,13 +92,20 @@ def index():
     # Map of areas covered
     # @todo: auto-focus/zoom to show all (accessible) areas, alternatively
     #        fix to Canterbury in NZRC config
+    ftable = s3db.gis_layer_feature
+    query = (ftable.controller == "po") & \
+            (ftable.function == "area")
+    layer_id = db(query).select(ftable.layer_id,
+                                limitby=(0, 1)
+                                ).first().layer_id
     areas = {"name": T("Areas Covered"),
              "id": "areas",
              "active": True,
-             "tablename": "po_area",
-             "url": "area.geojson",
-             "style": '{"fill":"2288CC"}',
-             "opacity": 0.5,
+             "layer_id": layer_id,
+             #"tablename": "po_area",
+             #"url": "area.geojson",
+             #"style": '{"fill":"2288CC"}',
+             #"opacity": 0.5,
              }
     map_wrapper = gis.show_map(feature_resources=(areas,),
                                catalogue_layers = True,

@@ -3027,7 +3027,7 @@ class S3LocationAutocompleteWidget(FormWidget):
     def __init__(self,
                  level = "",
                  post_process = "",
-                 ): # Increase this for large deployments
+                 ):
 
         self.level = level
         self.post_process = post_process
@@ -3088,7 +3088,7 @@ class S3LocationAutocompleteWidget(FormWidget):
             script = '''%s,"%s",%s,%s''' % (script, level, min_length, delay)
         elif min_length != 2:
             script = '''%s,"%s",%s''' % (script, level, min_length)
-        elif levels:
+        elif level:
             script = '''%s,"%s"''' % (script, level)
         # Close
         script = "%s)" % script

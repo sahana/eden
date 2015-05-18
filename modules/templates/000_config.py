@@ -233,7 +233,7 @@ settings.import_template()
 #        restricted = False,
 #        module_type = 10,
 #    )
-# Disable a module which is nromally used by the template
+# Disable a module which is normally used by the template
 # - NB Only templates with adaptive menus will work nicely with this!
 #del settings.modules["irs"]
 
