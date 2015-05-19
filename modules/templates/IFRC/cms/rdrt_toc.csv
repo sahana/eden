@@ -2,22 +2,10 @@ Name,Title,Body
 RDRT,"RDRT Online Manual","<div class=""online-documentation"">
 <h3>Missions</h3>
 <ul>
-  <li><a href=""{{name:RDRTMissionProfile}}"">Mission Profile</a></li>
+  <li><a href=""{{name:RDRTMissionsSummary}}"">Navigating Missions</a></li>
 </ul>
 <h3>Alerts</h3>
-<h4>Create an Alert</h4>
 <ul>
-  <li><a href=""{{name:RDRTMissionProfileCreateAlert}}"">from Mission Profile</a></li>
-  <li><a href=""{{name:RDRTCreateAlert}}"">from Alerts Menu</a></li>
-</ul>
-<h4>Alert Recipients</h4>
-<ul>
-  <li><a href=""{{name:RDRTAlertAddRecipients}}"">Add Recipients to an Alert</a></li>
-  <li><a href=""{{name:RDRTAlertRemoveRecipients}}"">Remove Recipients from an Alert</a></li>
-</ul>
-<h4>Send an Alert</h4>
-<ul>
-  <li><a href=""{{name:RDRTMissionProfileSendAlert}}"">from Mission Profile</a></li>
-  <li><a href=""{{name:RDRTSendAlert}}"">from Alert View</a></li>
+  <li><a href=""{{name:RDRTSendAlert}}"">Creating and Sending Alerts</a></li>
 </ul>
 </div>"

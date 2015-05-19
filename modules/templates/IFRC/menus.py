@@ -405,6 +405,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           ),
                         M("Import Members", c="deploy", f="person", m="import"),
                    ),
+                   M("Online Manual", c="deploy", f="index"),
                )
 
     # -------------------------------------------------------------------------
