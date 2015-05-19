@@ -93,16 +93,18 @@ def index():
     ftable = s3db.gis_layer_feature
     query = (ftable.controller == "po") & \
             (ftable.function == "area")
-    layer_id = db(query).select(ftable.layer_id, limitby=(0, 1)).first()
+    layer = db(query).select(ftable.layer_id, limitby=(0, 1)).first()
 
-    if layer_id:
-        layer_id = layer_id.layer_id
+    if layer:
+        # We can take advantage of per-feature styling
+        layer_id = layer.layer_id
         areas = {"name": T("Areas Covered"),
                  "id": "areas",
                  "active": True,
                  "layer_id": layer_id,
                  }
     else:
+        # All features will be styled the same
         areas = {"name": T("Areas Covered"),
                  "id": "areas",
                  "active": True,
@@ -112,10 +114,10 @@ def index():
                  "opacity": 0.5,
                  }
     map_wrapper = gis.show_map(feature_resources=(areas,),
-                               catalogue_layers = True,
-                               #collapsed = True,
+                               #catalogue_layers = True,
+                               collapsed = True,
                                )
-    map_wrapper["_style"] = "width:100%;"
+    #map_wrapper["_style"] = "width:100%"
     output["map"] = map_wrapper
 
     return output

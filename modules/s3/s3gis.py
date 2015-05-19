@@ -7679,6 +7679,7 @@ class LayerArcREST(Layer):
                 transparent = (self.transparent, (True,)),
                 base = (self.base, (False,)),
                 _base = (self._base, (False,)),
+                format = (self.img_format, ("png",)),
             )
 
             return output

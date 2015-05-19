@@ -1818,6 +1818,11 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         } else {
             var isBaseLayer = false;
         }
+        if (undefined != layer.format) {
+            var format = layer.format;
+        } else {
+            var format = 'png';
+        }
         if (undefined != layer.transparent) {
             var transparent = layer.transparent;
         } else {
@@ -1836,6 +1841,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                 layers: 'show:' + layers,
                 isBaseLayer: isBaseLayer,
                 transparent: transparent,
+                format: format,
                 dir: dir,
                 // This is used to Save State
                 s3_layer_id: layer.id,

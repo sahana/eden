@@ -3291,6 +3291,12 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # ArcGIS REST
         #
+        # If exporting data via the Query interface use WHERE 1=1
+        # Can then convert to GeoJSON using:
+        # ogr2ogr -f GeoJSON standard.geojson proprietary.json" OGRGeoJSON
+        #
+        arc_img_formats = ("png", "png8", "png24", "jpg", "pdf", "bmp", "gif", "svg", "svgz", "emf", "ps", "png32")
+
         tablename = "gis_layer_arcrest"
         define_table(tablename,
                      layer_id,
@@ -3319,6 +3325,11 @@ class S3MapModel(S3Model):
                            default = True,
                            label = TRANSPARENT,
                            represent = s3_yes_no_represent,
+                           ),
+                     Field("img_format", length=32,
+                           default = "png",
+                           label = FORMAT,
+                           requires = IS_EMPTY_OR(IS_IN_SET(arc_img_formats)),
                            ),
                      s3_role_required(),       # Single Role
                      #s3_roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)

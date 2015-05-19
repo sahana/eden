@@ -1,0 +1,2 @@
+Name,Description,URL,File,Projection,Marker,Style,Opacity,Popup Format,Folder,Config,Enabled,Visible,Cluster Distance,Cluster Threshold,Refresh
+Residential Red Zone,CERA Land Check Zones,http://rms.ifrc.org/eden/static/Canterbury_Red_Zone.geojson,,4326,,"{'fill':'FF0000'}",0.5,,,NZ,True,False,,0,0
