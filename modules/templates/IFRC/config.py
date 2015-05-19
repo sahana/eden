@@ -3284,6 +3284,38 @@ def config(settings):
     }
 
     # -------------------------------------------------------------------------
+    def customise_po_household_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+            if r.component_name == "contact":
+                ctable = r.component.table
+                # Hide contact description field
+                field = ctable.contact_description
+                field.readable = field.writable = False
+                # Label "Value" as "Number"
+                # @note: ambiguous in translation (do this for NZRC only?)
+                field = ctable.value
+                field.label = current.T("Number")
+                # Do not require international phone number format
+                settings = current.deployment_settings
+                settings.msg.require_international_phone_numbers = False
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_po_household_controller = customise_po_household_controller
+
+    # -------------------------------------------------------------------------
     def project_project_postprocess(form):
         """
             When using Project Monitoring (i.e. HNRC) then create the entries
