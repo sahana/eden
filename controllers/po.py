@@ -90,23 +90,27 @@ def index():
                             )
 
     # Map of areas covered
-    # @todo: auto-focus/zoom to show all (accessible) areas, alternatively
-    #        fix to Canterbury in NZRC config
     ftable = s3db.gis_layer_feature
     query = (ftable.controller == "po") & \
             (ftable.function == "area")
-    layer_id = db(query).select(ftable.layer_id,
-                                limitby=(0, 1)
-                                ).first().layer_id
-    areas = {"name": T("Areas Covered"),
-             "id": "areas",
-             "active": True,
-             "layer_id": layer_id,
-             #"tablename": "po_area",
-             #"url": "area.geojson",
-             #"style": '{"fill":"2288CC"}',
-             #"opacity": 0.5,
-             }
+    layer_id = db(query).select(ftable.layer_id, limitby=(0, 1)).first()
+
+    if layer_id:
+        layer_id = layer_id.layer_id
+        areas = {"name": T("Areas Covered"),
+                 "id": "areas",
+                 "active": True,
+                 "layer_id": layer_id,
+                 }
+    else:
+        areas = {"name": T("Areas Covered"),
+                 "id": "areas",
+                 "active": True,
+                 "tablename": "po_area",
+                 "url": "area.geojson",
+                 "style": '{"fill":"2288CC"}',
+                 "opacity": 0.5,
+                 }
     map_wrapper = gis.show_map(feature_resources=(areas,),
                                catalogue_layers = True,
                                #collapsed = True,
@@ -152,7 +156,7 @@ def area():
                                     left=left,
                                     error_message=T("Agency is required")
                                     )
-        
+
         return True
     s3.prep = prep
 
@@ -232,6 +236,60 @@ def household():
     s3.postp = postp
 
     return s3_rest_controller(rheader = s3db.po_rheader)
+
+# -----------------------------------------------------------------------------
+def due_followups():
+    """ RESTful Controller for Due Follow-ups """
+
+    # CRUD Strings
+    s3.crud_strings["po_household_followup"] = Storage(
+        title_display = T("Follow-up Details"),
+        title_list = T("Due Follow-ups"),
+        title_update = T("Edit Follow-up Details"),
+        label_list_button = T("List Follow-ups"),
+        msg_record_modified = T("Follow-up Details updated"),
+        msg_list_empty = T("No due follow-ups"),
+    )
+
+    # Filter Widgets
+    from s3 import S3DateFilter, S3OptionsFilter, S3TextFilter
+    filter_widgets = [S3TextFilter(["household_id$location_id$addr_street",
+                                    "followup_required",
+                                    "comments",
+                                    ],
+                                    label = T("Search"),
+                                   ),
+                      S3OptionsFilter("household_id$area_id"),
+                      S3DateFilter("household_id$date_visited",
+                                   label = T("Date visited"),
+                                   hidden = True,
+                                   ),
+                      S3DateFilter("followup_date",
+                                   hidden=True,
+                                   ),
+                      ]
+
+    s3db.configure("po_household_followup",
+                   insertable = False,
+                   deletable = False,
+                   filter_widgets = filter_widgets,
+                   list_fields = ["followup_date",
+                                  "household_id$area_id",
+                                  "household_id",
+                                  "followup_required",
+                                  "comments",
+                                  ],
+                   )
+
+    def prep(r):
+        if not r.record:
+            query = (FS("followup_date") <= datetime.datetime.utcnow().date()) & \
+                    (FS("evaluation") == None)
+            r.resource.add_filter(query)
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("po", "household_followup")
 
 # -----------------------------------------------------------------------------
 def organisation():

@@ -32,6 +32,7 @@ __all__ = ("OutreachAreaModel",
            "OutreachReferralModel",
            "po_rheader",
            "po_organisation_onaccept",
+           "po_due_followups",
            )
 
 from ..s3 import *
@@ -629,11 +630,14 @@ class OutreachHouseholdModel(S3Model):
                          (ftable.deleted != True))
         row = current.db(htable.id == record_id).select(htable.id,
                                                         htable.followup,
+                                                        htable.realm_entity,
                                                         ftable.id,
                                                         left=left,
                                                         limitby=(0, 1)).first()
         if row and row[htable.followup] and not row[ftable.id]:
-            ftable.insert(household_id=row[htable.id])
+            ftable.insert(household_id=row[htable.id],
+                          realm_entity=row[htable.realm_entity],
+                          )
 
 # =============================================================================
 class OutreachReferralModel(S3Model):
@@ -883,5 +887,15 @@ def po_organisation_onaccept(form):
     row = current.db(query).select(rtable.id, limitby=(0, 1)).first()
     if not row:
         rtable.insert(organisation_id=organisation_id)
+
+# =============================================================================
+def po_due_followups():
+    """ Number of due follow-ups """
+
+    query = (FS("followup_date") <= datetime.datetime.utcnow().date()) & \
+            (FS("evaluation") == None)
+    resource = current.s3db.resource("po_household_followup", filter=query)
+
+    return resource.count()
 
 # END =========================================================================

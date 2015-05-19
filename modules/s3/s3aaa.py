@@ -8218,12 +8218,7 @@ class S3RoleManager(S3Method):
             return select
         instance_type_nice = table.instance_type.represent
 
-        types = ("org_group",
-                 "org_organisation",
-                 "org_office",
-                 "inv_warehouse",
-                 "pr_group",
-                 )
+        types = current.deployment_settings.get_auth_realm_entity_types()
 
         if is_admin:
             pe_ids = []
