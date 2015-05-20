@@ -384,8 +384,28 @@ class OutreachHouseholdModel(S3Model):
         reports = ((T("Number of Households Visited"), "count(id)"),
                    )
 
+        # Custom Form
+        crud_form = S3SQLCustomForm("area_id",
+                                    "location_id",
+                                    "date_visited",
+                                    "followup",
+                                    S3SQLInlineComponent("contact",
+                                                         label = T("Contact Information"),
+                                                         fields = ["priority",
+                                                                   (T("Type"), "contact_method"),
+                                                                   (T("Number"), "value"),
+                                                                   "comments",
+                                                                   ],
+                                                         orderby = "priority",
+                                                         ),
+                                    "household_social.language",
+                                    "household_social.community",
+                                    "comments",
+                                    )
+
         configure(tablename,
                   create_next = self.household_create_next,
+                  crud_form = crud_form,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.household_onaccept,
@@ -589,7 +609,7 @@ class OutreachHouseholdModel(S3Model):
         if r.function == "area":
             if follow_up:
                 return URL(f="household",
-                           args=["[id]", "contact"],
+                           args=["[id]", "person"],
                            vars=next_vars,
                            )
             else:
@@ -600,7 +620,7 @@ class OutreachHouseholdModel(S3Model):
         else:
             if follow_up:
                 return r.url(target="[id]",
-                             component="contact",
+                             component="person",
                              method="",
                              vars=next_vars,
                              )
@@ -838,8 +858,8 @@ def po_rheader(r, tabs=[]):
             if not tabs:
                 tabs = [(T("Basic Details"), "")]
                 if record.followup:
-                    tabs.extend([(T("Contact Information"), "contact"),
-                                 (T("Social Information"), "household_social"),
+                    tabs.extend([#(T("Contact Information"), "contact"),
+                                 #(T("Social Information"), "household_social"),
                                  (T("Members"), "person"),
                                  (T("Dwelling"), "household_dwelling"),
                                  (T("Follow-up Details"), "household_followup"),

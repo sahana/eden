@@ -3284,6 +3284,25 @@ def config(settings):
     }
 
     # -------------------------------------------------------------------------
+    def household_inject_form_script(r, record):
+        """
+            Inject JS for progressive revelation of household form,
+            to be called from prep
+
+            @param r: the S3Request
+            @param record: the household record
+        """
+
+        if r.interactive:
+            s3 = current.response.s3
+            script = "/%s/static/themes/IFRC/js/po.js" % current.request.application
+            if script not in s3.scripts:
+                s3.scripts.append(script)
+            if record and record.followup:
+                s3.jquery_ready.append('''$.showHouseholdComponents(true)''');
+        return
+
+    # -------------------------------------------------------------------------
     def customise_po_household_controller(**attr):
 
         s3 = current.response.s3
@@ -3296,24 +3315,46 @@ def config(settings):
                 result = standard_prep(r)
             else:
                 result = True
-            if r.component_name == "contact":
-                ctable = r.component.table
-                # Hide contact description field
-                field = ctable.contact_description
-                field.readable = field.writable = False
-                # Label "Value" as "Number"
-                # @note: ambiguous in translation (do this for NZRC only?)
-                field = ctable.value
-                field.label = current.T("Number")
-                # Do not require international phone number format
-                settings = current.deployment_settings
-                settings.msg.require_international_phone_numbers = False
+            # Do not require international phone number format
+            settings = current.deployment_settings
+            settings.msg.require_international_phone_numbers = False
+            # Inject JS for household form
+            household_inject_form_script(r, r.record)
             return result
         s3.prep = custom_prep
 
         return attr
 
     settings.customise_po_household_controller = customise_po_household_controller
+
+    # -------------------------------------------------------------------------
+    def customise_po_area_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+            if r.component_name == "household":
+                # Do not require international phone number format
+                settings = current.deployment_settings
+                settings.msg.require_international_phone_numbers = False
+                # Inject JS for household form
+                if r.component_id:
+                    records = r.component.load()
+                    if records:
+                        household_inject_form_script(r, records[0])
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_po_area_controller = customise_po_area_controller
 
     # -------------------------------------------------------------------------
     def project_project_postprocess(form):

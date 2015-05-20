@@ -524,6 +524,16 @@ button.alert-send-btn:enabled {
     font-weight: bold;
 }
 
+/* These form rows will only be revealed when follow-up checkbox is checked */
+#po_household_sub_defaultcontact__row,
+#po_household_sub_defaultcontact__row1,
+#po_household_sub_household_social_language__row,
+#po_household_sub_household_social_language__row1,
+#po_household_sub_household_social_community__row,
+#po_household_sub_household_social_community__row1 {
+    display: none;
+}
+
 /* Online Documentation (@todo: move into separate CSS file?) */
 .online-documentation {
     font-size: 0.9rem;
