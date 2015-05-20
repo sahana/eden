@@ -33,6 +33,7 @@ __all__ = ("S3ContentModel",
            "S3ContentOrgGroupModel",
            "S3ContentUserModel",
            "cms_index",
+           "cms_documentation",
            "cms_rheader",
            "cms_customise_post_fields",
            "cms_post_list_layout",
@@ -1084,6 +1085,46 @@ def cms_index(module, resource=None, page_name=None, alt_function=None):
 
     response.view = "index.html"
     return dict(item=item, report=report)
+
+# =============================================================================
+def cms_documentation(r, default_page, default_url):
+    """
+        Render an online documentation page, to be called from prep
+
+        @param r: the S3Request
+        @param default_page: the default page name
+        @param default_url: the default URL if no contents found
+    """
+
+    row = r.record
+    if not row:
+        # Find the CMS page
+        name = r.get_vars.get("name", default_page)
+        table = r.resource.table
+        query = (table.name == name) & (table.deleted != True)
+        row = current.db(query).select(table.id,
+                                        table.title,
+                                        table.body,
+                                        limitby=(0, 1)).first()
+    if not row:
+        if name != default_page:
+            # Error - CMS page not found
+            r.error(404, current.T("Page not found"),
+                    next=URL(args=current.request.args, vars={}),
+                    )
+        else:
+            # No CMS contents for module homepage found at all
+            # => redirect to default page (preserving all errors)
+            from s3 import s3_redirect_default
+            s3_redirect_default(default_url)
+
+    # Render the page
+    from s3 import S3XMLContents
+    return {"bypass": True,
+            "output": {"title": row.title,
+                       "contents": S3XMLContents(row.body),
+                       },
+            }
 
 # =============================================================================
 class S3CMS(S3Method):

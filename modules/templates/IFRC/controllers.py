@@ -6,6 +6,8 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
+from s3 import S3CustomController
+
 # =============================================================================
 class index():
     """ Custom Home Page """
@@ -210,45 +212,39 @@ $('#single-col').css('padding', 0)'''
         return dict(map=map)
 
 # =============================================================================
+class docs(S3CustomController):
+    """
+        Custom controller to display online documentation, accessible
+        for anonymous users (e.g. information how to register/login)
+    """
+
+    def __call__(self):
+
+        response = current.response
+
+        def prep(r):
+            default_url = URL(f="index", args=[], vars={})
+            return current.s3db.cms_documentation(r, "HELP", default_url)
+        response.s3.prep = prep
+        output = current.rest_controller("cms", "post")
+
+        # Custom view
+        self._view("IFRC", "docs.html")
+
+        return output
+
+# =============================================================================
 def deploy_index():
     """
-        Custom module homepage for deploy (=RDRT), renders the CMS page
-        with the name given in the URL query variable "name" (defaults
-        to "RDRT")
+        Custom module homepage for deploy (=RDRT) to display online
+        documentation for the module
     """
 
     response = current.response
 
-    DEFAULT_PAGE = "RDRT"
-
     def prep(r):
-        row = r.record
-        if not row:
-            # Find the CMS page
-            name = r.get_vars.get("name", DEFAULT_PAGE)
-            table = r.resource.table
-            query = (table.name == name) & (table.deleted != True)
-            row = current.db(query).select(table.id,
-                                           table.title,
-                                           table.body,
-                                           limitby=(0, 1)).first()
-        if row:
-            # Render the page
-            from s3 import S3XMLContents
-            return {"bypass": True,
-                    "output": {"title": row.title,
-                               "contents": S3XMLContents(row.body),
-                               },
-                    }
-        else:
-            if name != DEFAULT_PAGE:
-                # Error - CMS page not found
-                r.error(404, current.T("Page not found"), next=URL(vars={}))
-            else:
-                # No CMS contents for module homepage found at all
-                # => redirect to default page (preserving all errors)
-                from s3 import s3_redirect_default
-                s3_redirect_default(URL(f="mission", args="summary", vars={}))
+        default_url = URL(f="mission", args="summary", vars={})
+        return current.s3db.cms_documentation(r, "RDRT", default_url)
     response.s3.prep = prep
     output = current.rest_controller("cms", "post")
 

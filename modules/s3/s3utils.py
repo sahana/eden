@@ -1804,13 +1804,23 @@ def URL2(a=None, c=None, r=None):
 
 # =============================================================================
 class S3CustomController(object):
+    """
+        Base class for custom controllers (template/controllers.py),
+        implements common helper functions
+    """
 
     @classmethod
-    def _view(cls, theme, name):
+    def _view(cls, template, filename):
+        """
+            Use a custom view template
+
+            @param template: the name of template (determines the path)
+            @param filename: the name of the view template file
+        """
 
         view = os.path.join(current.request.folder,
                             current.deployment_settings.get_template_location(),
-                            "templates", theme, "views", name)
+                            "templates", template, "views", filename)
         try:
             # Pass view as file not str to work in compiled mode
             current.response.view = open(view, "rb")

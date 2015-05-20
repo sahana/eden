@@ -7049,7 +7049,7 @@ class S3SiteAutocompleteWidget(FormWidget):
         else:
             represent = ""
 
-        
+
 
         s3 = current.response.s3
         site_types = current.auth.org_site_types
@@ -7076,7 +7076,7 @@ class S3SiteAutocompleteWidget(FormWidget):
         elif min_length != 2:
             script = "%s,,%s" % (script, min_length)
         script = "%s)" % script
-        
+
         s3.jquery_ready.append(script)
         return TAG[""](INPUT(_id=dummy_input,
                              _class="string",
@@ -7743,6 +7743,9 @@ class S3XMLContents(object):
         {{c:org,f:organisation}} - c and f tokens override controller and
                                    function of the current page, in this
                                    example like /org/organisation
+        {{args:arg,arg}}         - override the current request's URL args
+                                   (this should come last in the expression)
+        {{noargs}}               - strip all URL args
 
         @note: does not check permissions for the result URLs
     """
@@ -7767,25 +7770,40 @@ class S3XMLContents(object):
         """
 
         # Parse the expression
-        parameters = {}
         tokens = match.group(1).split(",")
+
+        args = True
+        parameters = {}
+        arguments = []
+        collect_args = False
         for token in tokens:
             if not token:
                 continue
             elif ":" in token:
+                collect_args = False
                 key, value = token.split(":")
             else:
                 key, value = token, None
+            key = key.strip()
             if not value:
-                continue
-            parameters[key.strip()] = value.strip()
+                if key == "noargs":
+                    args = False
+                elif collect_args:
+                    arguments.append(key)
+            elif key == "args":
+                arguments.append(value.strip())
+                collect_args = True
+            else:
+                parameters[key] = value.strip()
 
         # Construct the URL
         request = current.request
         c = parameters.pop("c", request.controller)
         f = parameters.pop("f", request.function)
-
-        return URL(c=c, f=f, vars=parameters, host=True)
+        if not arguments:
+            arguments = request.args
+        args = arguments if args else []
+        return URL(c=c, f=f, args=args, vars=parameters, host=True)
 
     # -------------------------------------------------------------------------
     def xml(self):
