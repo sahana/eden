@@ -231,6 +231,8 @@ class docs(S3CustomController):
         # Custom view
         self._view("IFRC", "docs.html")
 
+        current.menu.dashboard = None
+
         return output
 
 # =============================================================================

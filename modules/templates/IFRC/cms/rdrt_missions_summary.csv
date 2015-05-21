@@ -7,18 +7,18 @@ RDRT missions registered in the RMS database. To open the
 Missions Summary, choose ""Missions"" from the RDRT menu
 at the top:
 </p>
-<img src=""{{c:static,f:themes}}/IFRC/img/cms/menu_top_missions.png""></img>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/menu_top_missions.png""></img>
 <p>
 If you already are in the RDRT module, you can also choose ""Missions""
 in the left menu:
 </p>
-<img src=""{{c:static,f:themes}}/IFRC/img/cms/menu_side_missions.png""></img>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/menu_side_missions.png""></img>
 
 <h3>Finding Missions</h3>
 <p>
 You can find a particular mission in the list by using filters:
 </p>
-<img src=""{{c:static,f:themes}}/IFRC/img/cms/missions_summary.png""></img>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/missions_summary.png""></img>
 <p>
 Click the pencil in the Mission row to open the Mission Profile.
 
@@ -34,6 +34,6 @@ of a mission, including:
     <li>Member Deployments</li>
     <li>Mission Documents</li>
 </ul>
-<img src=""{{c:static,f:themes}}/IFRC/img/cms/mission_profile.png""></img>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/mission_profile.png""></img>
 <p><a href=""{{name:RDRT}}"">Back to table of contents</a></p>
 </div>"
