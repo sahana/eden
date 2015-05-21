@@ -1795,7 +1795,7 @@ class S3ResourceHeader:
                     tr.append(TH("%s: " % label))
                     v = value
                     if not isinstance(v, basestring) and \
-                       not isinstance(value, A):
+                       not isinstance(value, DIV):
                         try:
                             v = unicode(v)
                         except:

@@ -769,9 +769,7 @@ class S3BudgetKitModel(S3Model):
         #
         tablename = "budget_kit_item"
         define_table(tablename,
-                     # This is a component, so needs to be a super_link
-                     # - can't override field name, ondelete or requires
-                     self.super_link("budget_entity_id", "budget_entity"),
+                     budget_kit_id(),
                      budget_item_id(),
                      Field("quantity", "integer", notnull=True,
                            default = 1,
@@ -1536,29 +1534,26 @@ class S3BudgetMonitoringModel(S3Model):
         query = (table.budget_entity_id == budget_entity_id)  & \
                 (table.deleted == False) & \
                 (table.end_date < end_date)
-        max_field = table.end_date.max()
-        record = db(query).select(max_field,
+        record = db(query).select(table.end_date,
                                   limitby=(0, 1),
-                                  orderby=max_field,
+                                  orderby=~(table.end_date),
                                   ).first()
-        if record and record[max_field] != start_date:
+        if record and record.end_date != start_date:
             # Update this record's start_date
-            db(table.id == record_id).update(start_date = record[max_field])
+            db(table.id == record_id).update(start_date = record.end_date)
 
         # Locate the immediately succeeding record
         query = (table.budget_entity_id == budget_entity_id)  & \
                 (table.deleted == False) & \
                 (table.end_date > end_date)
-        min_field = table.end_date.min()
         record = db(query).select(table.id,
                                   table.start_date,
-                                  min_field, # Needed for orderby on Postgres
                                   limitby=(0, 1),
-                                  orderby=min_field,
+                                  orderby=table.end_date,
                                   ).first()
-        if record and record["budget_monitoring.start_date"] != end_date:
+        if record and record.start_date != end_date:
             # Update that record's start_date
-            db(table.id == record["budget_monitoring.id"]).update(start_date = end_date)
+            record.update_record(start_date = end_date)
 
     # -------------------------------------------------------------------------
     @staticmethod
