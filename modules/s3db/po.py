@@ -400,6 +400,9 @@ class OutreachHouseholdModel(S3Model):
                                                          ),
                                     "household_social.language",
                                     "household_social.community",
+                                    "household_dwelling.dwelling_type",
+                                    "household_dwelling.type_of_use",
+                                    "household_dwelling.repair_status",
                                     "comments",
                                     )
 
@@ -521,9 +524,10 @@ class OutreachHouseholdModel(S3Model):
                      Field("language",
                            label = T("Main Language"),
                            represent = S3Represent(options=languages),
-                           requires = IS_ISO639_2_LANGUAGE_CODE(select=None,
-                                                                sort=True,
-                                                                ),
+                           requires = IS_EMPTY_OR(
+                                        IS_ISO639_2_LANGUAGE_CODE(select=None,
+                                                                  sort=True,
+                                                                  )),
                            ),
                      Field("community", "text",
                            label = T("Community Connections"),
@@ -860,8 +864,8 @@ def po_rheader(r, tabs=[]):
                 if record.followup:
                     tabs.extend([#(T("Contact Information"), "contact"),
                                  #(T("Social Information"), "household_social"),
+                                 #(T("Dwelling"), "household_dwelling"),
                                  (T("Members"), "person"),
-                                 (T("Dwelling"), "household_dwelling"),
                                  (T("Follow-up Details"), "household_followup"),
                                  (T("Referrals"), "organisation_household"),
                                  ])

@@ -17,12 +17,21 @@
                            '#po_household_sub_household_social_language__row',
                            '#po_household_sub_household_social_language__row1',
                            '#po_household_sub_household_social_community__row',
-                           '#po_household_sub_household_social_community__row1'
+                           '#po_household_sub_household_social_community__row1',
+                           '#po_household_sub_household_dwelling_dwelling_type__row',
+                           '#po_household_sub_household_dwelling_dwelling_type__row1',
+                           '#po_household_sub_household_dwelling_type_of_use__row',
+                           '#po_household_sub_household_dwelling_type_of_use__row1',
+                           '#po_household_sub_household_dwelling_repair_status__row',
+                           '#po_household_sub_household_dwelling_repair_status__row1'
                            ];
-        if (status) {
-            $(toggle_rows.join(',')).removeClass('hide').show();
+
+        var rows = toggle_rows.join(',');
+        var hasError = $(rows).find('.error').length;
+        if (status || hasError) {
+            $(rows).removeClass('hide').show();
         } else {
-            $(toggle_rows.join(',')).hide();
+            $(rows).hide();
         }
     };
 })(jQuery);
