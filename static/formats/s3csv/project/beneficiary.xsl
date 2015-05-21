@@ -82,14 +82,12 @@
 
         <xsl:if test="$Value!='' or $TargetValue!=''">
             <resource name="project_beneficiary">
-                <xsl:if test="$ProjectName!='' and $ActivityName !=''">
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('BNFNumber:',
-                                                     $ProjectName, '/',
-                                                     $ActivityName, '/',
-                                                     $BeneficiaryType)"/>
-                    </xsl:attribute>
-                </xsl:if>
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('BNFNumber:',
+                                                 $ProjectName, '/',
+                                                 $ActivityName, '/',
+                                                 $BeneficiaryType)"/>
+                </xsl:attribute>
 
                 <reference field="parameter_id" resource="project_beneficiary_type">
                     <xsl:attribute name="tuid">
