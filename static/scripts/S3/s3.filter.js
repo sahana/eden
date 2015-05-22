@@ -914,16 +914,11 @@ S3.search = {};
             t = $('#' + target_id);
             if (t.hasClass('dl')) {
                 t.datalist('ajaxReload', target_data['queries']);
-//                 dlAjaxReload(target_id, target_data['queries']);
             } else if (t.hasClass('dataTable')) {
                 // Refresh Data
                 var dt = t.dataTable(),
-                    dtAjax = t.DataTable().ajax,
                     dtAjaxURL = target_data['ajaxurl'];
-                // Use legacy Ajax format (required by back-end)
-                $.fn.dataTable.ext.legacy.ajax = true;
-                dtAjax.url(dtAjaxURL);
-                dtAjax.reload(null, true);
+                dt.fnReloadAjax(dtAjaxURL);
                 updateFormatURLs(dt, queries);
                 $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
                     $(this).val(dtAjaxURL);
@@ -1520,15 +1515,10 @@ S3.search = {};
                     continue;
                 } else if (t.hasClass('dl')) {
                     t.datalist('ajaxReload', queries);
-//                     dlAjaxReload(target_id, queries);
                 } else if (t.hasClass('dataTable')) {
                     var dt = t.dataTable(),
-                        dtAjax = t.DataTable().ajax,
                         dtAjaxURL = dt_ajaxurl[target_id];
-                    // Use legacy Ajax format (required by back-end)
-                    $.fn.dataTable.ext.legacy.ajax = true;
-                    dtAjax.url(dtAjaxURL);
-                    dtAjax.reload(null, true);
+                    dt.fnReloadAjax(dtAjaxURL);
                     updateFormatURLs(dt, queries);
                     $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
                         $(this).val(dtAjaxURL);
