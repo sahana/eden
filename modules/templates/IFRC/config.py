@@ -3340,15 +3340,17 @@ def config(settings):
                 result = standard_prep(r)
             else:
                 result = True
+            # Do not require international phone number format
+            settings = current.deployment_settings
+            settings.msg.require_international_phone_numbers = False
             if r.component_name == "household":
-                # Do not require international phone number format
-                settings = current.deployment_settings
-                settings.msg.require_international_phone_numbers = False
                 # Inject JS for household form
+                record = None
                 if r.component_id:
                     records = r.component.load()
                     if records:
-                        household_inject_form_script(r, records[0])
+                        record = records[0]
+                household_inject_form_script(r, record)
             return result
         s3.prep = custom_prep
 

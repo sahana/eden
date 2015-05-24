@@ -623,7 +623,7 @@ class OutreachHouseholdModel(S3Model):
                              )
         else:
             if follow_up:
-                return r.url(target="[id]",
+                return r.url(id="[id]",
                              component="person",
                              method="",
                              vars=next_vars,
