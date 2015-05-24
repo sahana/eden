@@ -19,10 +19,10 @@
         <table>
             <tr>
                 <td>
-                    <div id='chart1' style='width:260px; height:200px;'></div>
+                    <div id='chart1' style='display:inline-block;'></div>
                 </td>
                 <td>
-                    <div id='chart2' style='width:260px; height:200px;'></div>
+                    <div id='chart2' style='display:inline-block;'></div>
                 </td>
             </tr>
         </table>
@@ -88,7 +88,7 @@ $(document).ready(function(){
         var plot1 = $.jqplot('chart1', [gender], {
           title: 'Persons by Gender',
           seriesDefaults:{renderer:$.jqplot.PieRenderer, rendererOptions:{diameter:100}},
-          legend:{show:true, escapeHtml:true}
+          legend:{show:true, escapeHtml:true, labels:['unknown']}
         });
     }
 
