@@ -20,10 +20,11 @@ def index():
     output = {"module_name": module_name}
 
     # Extract summary information
+    atable = s3db.po_area
     htable = s3db.po_household
     rtable = s3db.po_organisation_household
     ftable = s3db.po_household_followup
-    atable = s3db.po_referral_organisation
+    otable = s3db.po_referral_organisation
 
     # => Number of households
     query = (htable.deleted != True)
@@ -40,11 +41,11 @@ def index():
     total_referrals = row[count]
 
     # => Number of agencies involved
-    query = (atable.deleted != True) & \
+    query = (otable.deleted != True) & \
             (rtable.deleted != True) & \
-            (rtable.organisation_id == atable.organisation_id)
-    count = atable.id.count()
-    rows = db(query).select(atable.id, groupby=atable.id)
+            (rtable.organisation_id == otable.organisation_id)
+    count = otable.id.count()
+    rows = db(query).select(otable.id, groupby=otable.id)
     total_agencies = len(rows)
 
     # => Number of follow ups (broken down into pending/completed)
@@ -63,9 +64,19 @@ def index():
             follow_ups_completed += row[count]
     total_follow_ups = follow_ups_pending + follow_ups_completed
 
+    # => Number of unsuccessful visits
+    query = (atable.deleted != True)
+    total = atable.unsuccessful_visits.sum()
+    result = db(query).select(total).first()
+    total_unsuccessful_visits = result[total]
+
     # Summary
     output["summary"] = DIV(DIV(LABEL("%s: " % T("Total Households Visited")),
                                 SPAN(total_households),
+                                _class="po-summary-info",
+                                ),
+                            DIV(LABEL("%s: " % T("Unsuccessful Visits")),
+                                SPAN(total_unsuccessful_visits),
                                 _class="po-summary-info",
                                 ),
                             DIV(LABEL("%s: " % T("Follow-ups")),
