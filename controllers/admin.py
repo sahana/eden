@@ -1092,14 +1092,17 @@ def result():
 
     file_list = UL()
     static_path = os.path.join(request.folder, "static", "test")
-    for filename in os.listdir(static_path):
-        link = A(filename,
-                 _href = URL(c = "static",
-                             f = "test",
-                             args = [filename]
-                             )
-                 )
-        file_list.append(link)
+    try:
+        for filename in os.listdir(static_path):
+            link = A(filename,
+                    _href = URL(c = "static",
+                                f = "test",
+                                args = [filename]
+                                )
+                    )
+            file_list.append(link)
+    except OSError:
+        pass
     return dict(file_list=file_list)
 
 # -----------------------------------------------------------------------------
@@ -1109,7 +1112,10 @@ def result_automated():
     """
     file_list_automated = UL()
     static_path = os.path.join(request.folder, "static", "test_automated")
-    filenames = os.listdir(static_path)
+    try:
+        filenames = os.listdir(static_path)
+    except OSError:
+        return dict(file_list_automated=file_list_automated)
     filenames.reverse()
     for filename in filenames:
         link = A(filename,
@@ -1129,7 +1135,10 @@ def result_smoke():
 
     file_list_smoke = UL()
     static_path = os.path.join(request.folder, "static", "test_smoke")
-    filenames = os.listdir(static_path)
+    try:
+        filenames = os.listdir(static_path)
+    except OSError:
+        return dict(file_list_smoke=file_list_smoke)
     filenames.reverse()
     for filename in filenames:
         link = A(filename,
@@ -1149,7 +1158,10 @@ def result_roles():
 
     file_list_roles = UL()
     static_path = os.path.join(request.folder, "static", "test_roles")
-    filenames = os.listdir(static_path)
+    try:
+        filenames = os.listdir(static_path)
+    except OSError:
+        return dict(file_list_roles=file_list_roles)
     filenames.reverse()
     for filename in filenames:
         link = A(filename,
