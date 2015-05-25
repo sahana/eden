@@ -2082,19 +2082,19 @@ class S3XML(S3Codec):
                 attributes = child.attrib
                 if native:
                     if tag == TAG.resource:
-                        resource = attributes[ATTRIBUTE.name]
+                        resource = attributes.get(ATTRIBUTE.name)
                         tag = "%s_%s" % (PREFIX.resource, resource)
                         collapse = False
                     elif tag == TAG.options:
-                        r = attributes[ATTRIBUTE.resource]
+                        r = attributes.get(ATTRIBUTE.resource)
                         tag = "%s_%s" % (PREFIX.options, r)
                         single = is_single(TAG.options, ATTRIBUTE.resource, r)
                     elif tag == TAG.reference:
-                        f = attributes[ATTRIBUTE.field]
+                        f = attributes.get(ATTRIBUTE.field)
                         tag = "%s_%s" % (PREFIX.reference, f)
                         single = is_single(TAG.reference, ATTRIBUTE.field, f)
                     elif tag == TAG.data:
-                        tag = attributes[ATTRIBUTE.field]
+                        tag = attributes.get(ATTRIBUTE.field)
                         single = is_single(TAG.data, ATTRIBUTE.field, tag)
                 else:
                     for s in iterchildren(tag=tag):

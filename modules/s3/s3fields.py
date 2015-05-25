@@ -590,7 +590,7 @@ class S3Represent(object):
                     self.table = table
                 if self.linkto is None and self.show_link:
                     c, f = tablename.split("_", 1)
-                    self.linkto = URL(c=c, f=f, args=["[id]"])
+                    self.linkto = URL(c=c, f=f, args=["[id]"], extension="")
 
         # What type of renderer do we use?
         labels = self.labels
