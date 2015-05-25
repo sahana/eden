@@ -29,8 +29,10 @@
          @ToDo: Support Facilities other than Offices
 
     *********************************************************************** -->
+    <xsl:import href="person.xsl"/>
+    <xsl:import href="../commons.xsl"/>
+
     <xsl:output method="xml"/>
-    <xsl:include href="./person.xsl"/>
 
     <!-- ****************************************************************** -->
     <!-- Index for faster processing & deduplication -->
@@ -61,11 +63,7 @@
             <!-- Organisations -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisations',
                                                                    col[@field='Organisation'])[1])]">
-                <xsl:call-template name="Organisation">
-                    <xsl:with-param name="OrgName">
-                        <xsl:value-of select="col[@field='Organisation']/text()"/>
-                    </xsl:with-param>
-                </xsl:call-template>
+                <xsl:call-template name="Organisation"/>
             </xsl:for-each>
 
             <!-- Sites -->
@@ -331,20 +329,6 @@
         </resource>
 
     </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <!-- Defined in person.xsl
-    <xsl:template name="Organisation">
-        <xsl:variable name="OrganisationName" select="col[@field='Organisation']/text()"/>
-
-        <resource name="org_organisation">
-            <xsl:attribute name="tuid">
-                <xsl:value-of select="$OrganisationName"/>
-            </xsl:attribute>
-            <data field="name"><xsl:value-of select="$OrganisationName"/></data>
-        </resource>
-
-    </xsl:template> -->
 
     <!-- ****************************************************************** -->
     <xsl:template name="Site">
