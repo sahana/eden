@@ -64,19 +64,19 @@ def index():
             follow_ups_completed += row[count]
     total_follow_ups = follow_ups_pending + follow_ups_completed
 
-    # => Number of unsuccessful visits
+    # => Number of attempted visits
     query = (atable.deleted != True)
-    total = atable.unsuccessful_visits.sum()
+    total = atable.attempted_visits.sum()
     result = db(query).select(total).first()
-    total_unsuccessful_visits = result[total]
+    total_attempted_visits = result[total] or 0
 
     # Summary
     output["summary"] = DIV(DIV(LABEL("%s: " % T("Total Households Visited")),
                                 SPAN(total_households),
                                 _class="po-summary-info",
                                 ),
-                            DIV(LABEL("%s: " % T("Unsuccessful Visits")),
-                                SPAN(total_unsuccessful_visits),
+                            DIV(LABEL("%s: " % T("Attempted Visits")),
+                                SPAN(total_attempted_visits),
                                 _class="po-summary-info",
                                 ),
                             DIV(LABEL("%s: " % T("Follow-ups")),
