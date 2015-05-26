@@ -1,9 +1,4 @@
 {{extend "layout.html"}}
-{{if s3.debug:}}
-<link href="/{{=appname}}/static/styles/plugins/jquery.jqplot.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-{{else:}}
-<link href="/{{=appname}}/static/styles/plugins/jquery.jqplot.min.css" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
-{{pass}}
 <div id='home'>
 {{=H2(module_name)}}
 <div style='margin:20px auto; width:96%; max-width:1000px;'>
@@ -19,41 +14,5 @@
             <li>{{=A(T("Get incoming recovery requests as RSS feed"), _href=URL(c="dvi", f="recreq.rss", vars={"recreq.status":"1"}))}}</li>
         </ul>
     </div>
-    <div style='width:30%; float:right;'>
-        {{=H4("%s: %s" % (T("Bodies recovered"), total))}}
-        <div id='charts' style='padding-top: 10px;'>
-            <table>
-                <tr>
-                    <td>
-                        <div id='chart1' style='width:300px; height:300px;'></div>
-                    </td>
-                </tr>
-            </table>
-        </div>
-    </div>
 </div>
 </div><!-- home -->
-{{if s3.debug:}}
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jquery.jqplot.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pieRenderer.js"></script>
-<!-- @ToDo: Replace with https://github.com/SlexAxton/yepnope.js -->
-<!--[if IE]><script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/excanvas.js"></script><![endif]-->
-{{else:}}
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jquery.jqplot.min.js"></script>
-<script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/jqplot_plugins/jqplot.pieRenderer.min.js"></script>
-<!--[if IE]><script language="javascript" type="text/javascript" src="/{{=appname}}/static/scripts/S3/excanvas.min.js"></script><![endif]-->
-{{pass}}
-<script type="text/javascript" language="javascript">//<![CDATA[
-$(document).ready(function(){
-    var status = {{try:}}{{=XML(status)}}{{except:}}0{{pass}};
-
-    if ( status ) {
-        var plot1 = $.jqplot('chart1', [status], {
-          title: 'Identification Progress',
-          seriesDefaults:{renderer:$.jqplot.PieRenderer,
-                          rendererOptions:{diameter:150,showDataLabels:true,dataLabels:'value'}},
-          legend:{show:true, escapeHtml:true}
-        });
-    }
-});
-//]]></script>
