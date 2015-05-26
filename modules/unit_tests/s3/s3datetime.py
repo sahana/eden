@@ -94,6 +94,56 @@ class S3DateRepresentationTests(unittest.TestCase):
         self.assertEqual(rstr, "2015-05-03")
 
     # -------------------------------------------------------------------------
+    def testDatetimeRepresentDefaultFormat(self):
+        """ Test date representation with default format """
+
+        settings = current.deployment_settings
+        date_format = settings.get_L10n_date_format()
+
+        assertEqual = self.assertEqual
+        represent = S3DateTime.date_represent
+
+        date = datetime.date(2015, 5, 3)
+        try:
+            settings.L10n.date_format = "%Y-%m-%d"
+            assertEqual(represent(date), "2015-05-03")
+
+            settings.L10n.date_format = "%m/%d/%y"
+            assertEqual(represent(date), "05/03/15")
+
+            settings.L10n.date_format = "%a %d %b, %Y"
+            assertEqual(represent(date), "Sun 03 May, 2015")
+
+            settings.L10n.date_format = "%d-%b-%Y"
+            assertEqual(represent(date), "03-May-2015")
+
+        finally:
+            # Restore default format
+            settings.L10n.date_format = date_format
+
+    # -------------------------------------------------------------------------
+    def testDatetimeRepresentDefaultFormat(self):
+        """ Test custom formatting of dates (=overriding L10n setting) """
+
+        settings = current.deployment_settings
+        date_format = settings.get_L10n_date_format()
+
+        assertEqual = self.assertEqual
+        represent = S3DateTime.date_represent
+
+        date = datetime.date(2015, 5, 3)
+        try:
+            # Set default format
+            settings.L10n.date_format = "%Y-%m-%d"
+
+            # Override default format in call
+            assertEqual(represent(date, format="%a %d %b, %Y"), "Sun 03 May, 2015")
+
+        finally:
+            # Restore default format
+            settings.L10n.date_format = date_format
+
+    # -------------------------------------------------------------------------
     def testDateRepresentDestructive(self):
         """ Destructive tests for S3DateTime.date_represent """
 
