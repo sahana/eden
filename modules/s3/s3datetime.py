@@ -86,8 +86,14 @@ class S3DateTime(object):
                 dtstr = date.strftime(str(format))
             except ValueError:
                 # Dates < 1900 not supported by strftime
-                dtstr = date.isoformat().split("T")[0]
-                current.log.warning("Date cannot be formatted - using isoformat", dtstr)
+                #dtstr = date.isoformat().split("T")[0]
+                #current.log.warning("Date cannot be formatted - using isoformat", dtstr)
+                year = date.year
+                eformat = str(format).replace("%Y", "{{Y}}").replace("%y", "{{y}}")
+                dtstr = date.replace(year=1900).strftime(eformat)
+                dtstr = dtstr.replace("{{Y}}", "%d" % year) \
+                             .replace("{{y}}", "%02d" % (year % 100))
+                return dtstr
             except AttributeError:
                 # Invalid argument type
                 raise TypeError("date_represent: invalid argument type: %s" % type(date))

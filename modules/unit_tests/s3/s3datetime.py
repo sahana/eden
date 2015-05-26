@@ -162,9 +162,17 @@ class S3DateRepresentationTests(unittest.TestCase):
         with assertRaises(TypeError):
             rstr = represent("Invalid Type", utc=True)
 
-        date = datetime.datetime(1874, 6, 7, 12, 0, 0)
+    # -------------------------------------------------------------------------
+    def testEarlyDateRepresent(self):
+        """ Test early dates representation (<1900) """
+
+        date = datetime.date(1685, 3, 31)
         rstr = S3DateTime.date_represent(date)
-        self.assertEqual(rstr, "1874-06-07")
+        self.assertEqual(rstr, "1685-03-31")
+
+        date = datetime.date(1473, 2, 19)
+        rstr = S3DateTime.date_represent(date, format="%d-%b-%Y")
+        self.assertEqual(rstr, "19-Feb-1473")
 
     # -------------------------------------------------------------------------
     def testDatetimeRepresent(self):
