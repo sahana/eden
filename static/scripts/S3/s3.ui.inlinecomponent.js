@@ -1167,6 +1167,16 @@
                         if (input.is('[type="hidden"]') && !input.data('input') || !input.is(':visible')) {
                             continue;
                         }
+                        // Treat SELECTs as empty if only the default value is selected
+                        if (input.prop('tagName') == 'SELECT') {
+                            var tokens = input.attr('id').split('_');
+                            tokens.pop();
+                            tokens.push('default');
+                            var defaultInput = $('#' + tokens.join('_'));
+                            if (defaultInput.length && defaultInput.val() == input.val()) {
+                                continue;
+                            }
+                        }
                         if ((input.attr('type') != 'checkbox' && input.val()) || input.prop('checked')) {
                             empty = false;
                             break;
