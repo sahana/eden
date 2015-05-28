@@ -368,6 +368,10 @@ class OutreachHouseholdModel(S3Model):
                                        label = T("Follow-up Date"),
                                        hidden = True,
                                        ),
+                          S3OptionsFilter("household_followup.completed",
+                                          cols = 2,
+                                          hidden = True,
+                                          ),
                           S3OptionsFilter("organisation_household.organisation_id",
                                           hidden = True,
                                           ),
@@ -379,6 +383,7 @@ class OutreachHouseholdModel(S3Model):
                        "date_visited",
                        "followup",
                        "household_followup.followup_date",
+                       "household_followup.completed",
                        "organisation_household.organisation_id",
                        "comments",
                        )
@@ -387,6 +392,7 @@ class OutreachHouseholdModel(S3Model):
         report_axes = ["area_id",
                        "followup",
                        "organisation_household.organisation_id",
+                       "household_followup.completed",
                        "household_followup.evaluation",
                        ]
         reports = ((T("Number of Households Visited"), "count(id)"),
@@ -571,6 +577,11 @@ class OutreachHouseholdModel(S3Model):
                              ),
                      Field("followup", "text",
                            label = T("Follow-up made"),
+                           ),
+                     Field("completed", "boolean",
+                           default = False,
+                           label = "Follow-up completed",
+                           represent = s3_yes_no_represent,
                            ),
                      Field("evaluation",
                            label = T("Evaluation"),
@@ -925,7 +936,7 @@ def po_due_followups():
     """ Number of due follow-ups """
 
     query = (FS("followup_date") <= datetime.datetime.utcnow().date()) & \
-            (FS("evaluation") == None)
+            (FS("completed") != True)
     resource = current.s3db.resource("po_household_followup", filter=query)
 
     return resource.count()

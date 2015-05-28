@@ -54,14 +54,14 @@ def index():
             (htable.deleted != True) & \
             (htable.followup == True)
     count = ftable.id.count()
-    evaluation = ftable.evaluation
-    rows = db(query).select(evaluation, count, groupby=evaluation)
+    completed = ftable.completed
+    rows = db(query).select(completed, count, groupby=completed)
     follow_ups_pending, follow_ups_completed = 0, 0
     for row in rows:
-        if row[evaluation] is None:
-            follow_ups_pending += row[count]
-        else:
+        if row[completed]:
             follow_ups_completed += row[count]
+        else:
+            follow_ups_pending += row[count]
     total_follow_ups = follow_ups_pending + follow_ups_completed
 
     # => Number of attempted visits
@@ -297,7 +297,7 @@ def due_followups():
     def prep(r):
         if not r.record:
             query = (FS("followup_date") <= datetime.datetime.utcnow().date()) & \
-                    (FS("evaluation") == None)
+                    (FS("completed") != True)
             r.resource.add_filter(query)
         return True
     s3.prep = prep
