@@ -119,7 +119,8 @@ class S3MainMenu(default.S3MainMenu):
             homepage("member")(
                 MM("Members", c="member", f="membership", m="summary"),
             ),
-            homepage("inv", "supply", "req", check=inv)(
+            #homepage("inv", "supply", "req", check=inv)(
+            homepage("inv", "supply", "req")(
                 #MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
                 MM("Warehouses", c="inv", f="warehouse", m="summary"),
                 #MM(inv_recv_list, c="inv", f="recv", check=multi_warehouse),
