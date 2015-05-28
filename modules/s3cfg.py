@@ -73,6 +73,7 @@ class S3Config(Storage):
                     "km": "%d-%m-%Y",
                     "ko": "%Y-%m-%d",
                     #"mn": "",
+                    #"my": "",
                     #"ne": "",
                     "prs": "%Y/%m/%d",
                     "ps": "%Y/%m/%d",
@@ -102,6 +103,7 @@ class S3Config(Storage):
              "km": ["unifont", "unifont"],
              "ko": ["unifont", "unifont"],
              "mn": ["unifont", "unifont"],
+             "my": ["unifont", "unifont"],
              "ne": ["unifont", "unifont"],
              "prs": ["unifont", "unifont"],
              "ps": ["unifont", "unifont"],
@@ -1301,6 +1303,7 @@ class S3Config(Storage):
                                                        ("km", "ភាសាខ្មែរ"),         # Khmer
                                                        ("ko", "한국어"),
                                                        ("mn", "Монгол хэл"),   # Mongolian
+                                                       #("my", "မြန်မာစာ"),        # Burmese
                                                        ("ne", "नेपाली"),          # Nepali
                                                        ("prs", "دری"),         # Dari
                                                        ("ps", "پښتو"),         # Pashto

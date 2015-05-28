@@ -84,10 +84,6 @@ class S3MainMenu(default.S3MainMenu):
             else:
                 return True
 
-        def outreach(item):
-            return root_org == "New Zealand Red Cross" or \
-                   root_org is None and has_role(ADMIN)
-
         def vol(item):
             return root_org != "Honduran Red Cross" or \
                    has_role(ORG_ADMIN)
@@ -118,9 +114,9 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Training Courses", c="vol", f="course"),
                 MM("Certificate List", c="vol", f="certificate", check=use_certs),
             ),
-            homepage("member")(
-                MM("Members", c="member", f="membership", m="summary"),
-            ),
+            #homepage("member")(
+            #    MM("Members", c="member", f="membership", m="summary"),
+            #),
             homepage("inv", "supply", "req", check=inv)(
                 MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
                 MM(inv_recv_list, c="inv", f="recv", check=multi_warehouse),
@@ -133,151 +129,32 @@ class S3MainMenu(default.S3MainMenu):
                 M("Requests", c="req", f="req")(),
                 #M("Commitments", f="commit")(),
             ),
-            homepage("asset")(
-                MM("Assets", c="asset", f="asset", m="summary"),
-                MM("Items", c="asset", f="item", m="summary"),
-            ),
-            homepage("survey")(
-                MM("Assessment Templates", c="survey", f="template"),
-                MM("Disaster Assessments", c="survey", f="series"),
-            ),
+            #homepage("asset")(
+            #    MM("Assets", c="asset", f="asset", m="summary"),
+            #    MM("Items", c="asset", f="item", m="summary"),
+            #),
+            #homepage("survey")(
+            #    MM("Assessment Templates", c="survey", f="template"),
+            #    MM("Disaster Assessments", c="survey", f="series"),
+            #),
             homepage("project")(
                 MM("Projects", c="project", f="project", m="summary"),
-                MM("Communities", c="project", f="location"),
-                MM("Outreach", c="po", f="index", check=outreach),
+                MM("Locations", c="project", f="location"),
+                #MM("Outreach", c="po", f="index", check=outreach),
             ),
-            homepage("vulnerability")(
-                MM("Map", c="vulnerability", f="index"),
-            ),
-            homepage("event")(
-                MM("Events", c="event", f="event"),
-                MM("Incident Reports", c="event", f="incident_report"),
-            ),
-            homepage("deploy", name="RDRT", f="mission", m="summary",
-                     vars={"~.status__belongs": "2"})(
-                MM("Missions", c="deploy", f="mission", m="summary"),
-                MM("Members", c="deploy", f="human_resource", m="summary"),
-            ),
+            #homepage("vulnerability")(
+            #    MM("Map", c="vulnerability", f="index"),
+            #),
+            #homepage("event")(
+            #    MM("Events", c="event", f="event"),
+            #    MM("Incident Reports", c="event", f="incident_report"),
+            #),
+            #homepage("deploy", name="RDRT", f="mission", m="summary",
+            #         vars={"~.status__belongs": "2"})(
+            #    MM("Missions", c="deploy", f="mission", m="summary"),
+            #    MM("Members", c="deploy", f="human_resource", m="summary"),
+            #),
         ]
-
-    # -------------------------------------------------------------------------
-    # @todo: restore? (at least for homepage? => needs re-design then)
-    #
-    #@classmethod
-    #def menu_dashboard(cls):
-    #    """ Dashboard Menu (at bottom of page) """
-
-    #    DB = S3DashBoardMenuLayout
-    #    auth = current.auth
-    #    request = current.request
-    #    controller = request.controller
-
-    #    has_role = auth.s3_has_role
-    #    root_org = auth.root_org_name()
-    #    system_roles = current.session.s3.system_roles
-    #    #ADMIN = system_roles.ADMIN
-    #    ORG_ADMIN = system_roles.ORG_ADMIN
-
-    #    def hrm(item):
-    #        return root_org != "Honduran Red Cross" or \
-    #               has_role(ORG_ADMIN)
-
-    #    def inv(item):
-    #        return root_org != "Honduran Red Cross" or \
-    #               has_role("hn_wh_manager") or \
-    #               has_role("hn_national_wh_manager") or \
-    #               has_role(ORG_ADMIN)
-
-    #    def vol(item):
-    #        return root_org != "Honduran Red Cross" or \
-    #               has_role(ORG_ADMIN)
-
-    #    if controller == "vol":
-    #        dashboard = DB()(
-    #            DB("Volunteers",
-    #               c="vol",
-    #               image = "graphic_staff_wide.png",
-    #               title = "Volunteers")(
-    #               DB("Manage Volunteer Data", f="volunteer", m="summary"),
-    #               DB("Manage Teams Data", f="group"),
-    #            ),
-    #            DB("Catalogs",
-    #               c="hrm",
-    #               image="graphic_catalogue.png",
-    #               title="Catalogs")(
-    #               DB("Certificates", f="certificate"),
-    #               DB("Training Courses", f="course"),
-    #               #DB("Skills", f="skill"),
-    #               DB("Job Titles", f="job_title")
-    #            ))
-    #    elif controller in ("hrm", "org"):
-    #        dashboard = DB()(
-    #            DB("Staff",
-    #               c="hrm",
-    #               image = "graphic_staff_wide.png",
-    #               title = "Staff")(
-    #               DB("Manage Staff Data", f="staff", m="summary"),
-    #               DB("Manage Teams Data", f="group"),
-    #            ),
-    #            DB("Offices",
-    #               c="org",
-    #               image = "graphic_office.png",
-    #               title = "Offices")(
-    #               DB("Manage Offices Data", f="office"),
-    #               DB("Manage National Society Data", f="organisation",
-    #                  vars=red_cross_filter
-    #                  ),
-    #            ),
-    #            DB("Catalogs",
-    #               c="hrm",
-    #               image="graphic_catalogue.png",
-    #               title="Catalogs")(
-    #               DB("Certificates", f="certificate"),
-    #               DB("Training Courses", f="course"),
-    #               #DB("Skills", f="skill"),
-    #               DB("Job Titles", f="job_title")
-    #            ))
-
-    #    elif controller == "default" and request.function == "index":
-
-    #        dashboard = DB(_id="dashboard")(
-    #            DB("Staff", c="hrm", f="staff", m="summary",
-    #               check = hrm,
-    #               image = "graphic_staff.png",
-    #               title = "Staff",
-    #               text = "Add new and manage existing staff."),
-    #            DB("Volunteers", c="vol", f="volunteer", m="summary",
-    #               check = vol,
-    #               image = "graphic_volunteers.png",
-    #               title = "Volunteers",
-    #               text = "Add new and manage existing volunteers."),
-    #            DB("Members", c="member", f="membership", m="summary",
-    #               image = "graphic_members.png",
-    #               title = "Members",
-    #               text = "Add new and manage existing members."),
-    #            DB("Warehouses", c="inv", f="warehouse", m="summary",
-    #               check = inv,
-    #               image = "graphic_warehouse.png",
-    #               title = "Warehouses",
-    #               text = "Stocks and relief items."),
-    #            DB("Assets", c="asset", f="index",
-    #               image = "graphic_assets.png",
-    #               title = "Assets",
-    #               text = "Manage office inventories and assets."),
-    #            DB("Assessments", c="survey", f="index",
-    #               image = "graphic_assessments.png",
-    #               title = "Assessments",
-    #               text = "Design, deploy & analyze surveys."),
-    #            DB("Projects", c="project", f="project", m="summary",
-    #               image = "graphic_tools.png",
-    #               title = "Projects",
-    #               text = "Tracking and analysis of Projects and Activities.")
-    #        )
-
-    #    else:
-    #        dashboard = None
-
-    #    return dashboard
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -543,16 +420,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
         teams = settings.get_hrm_teams()
         use_teams = lambda i: teams
 
-        not_vnrc = lambda i: root_org != "Viet Nam Red Cross"
-        skills_menu = lambda i: root_org in ("Afghan Red Crescent Society",
-                                             "Indonesian Red Cross Society (Palang Merah Indonesia)",
-                                             "Viet Nam Red Cross",
-                                             )
-
-        check_org_dependent_field = lambda tablename, fieldname: \
-            settings.set_org_dependent_field(tablename, fieldname,
-                                             enable_field = False)
-
         return M(c="vol")(
                     M("Volunteers", f="volunteer", m="summary",
                       check=[manager_mode])(
@@ -574,15 +441,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #    M("Create", m="create"),
                     #),
                     M("Volunteer Role Catalog", f="job_title",
-                      check=[manager_mode, not_vnrc])(
+                      check=[manager_mode])(
                         M("Create", m="create"),
                         M("Import", m="import", p="create", check=is_org_admin),
                     ),
-                    M("Skill Catalog", f="skill",
-                      check=[manager_mode, skills_menu])(
-                        M("Create", m="create"),
-                        #M("Skill Provisions", f="skill_provision"),
-                    ),
+                    #M("Skill Catalog", f="skill",
+                    #  check=[manager_mode])(
+                    #    M("Create", m="create"),
+                    #    #M("Skill Provisions", f="skill_provision"),
+                    #),
                     M("Training Events", f="training_event",
                       check=manager_mode)(
                         M("Create", m="create"),
@@ -606,21 +473,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     M("Awards", f="award",
                       check=[manager_mode, is_org_admin])(
-                        M("Create", m="create"),
-                    ),
-                    M("Volunteer Cluster Type", f="cluster_type",
-                      check = check_org_dependent_field("vol_volunteer_cluster",
-                                                        "vol_cluster_type_id"))(
-                        M("Create", m="create"),
-                    ),
-                    M("Volunteer Cluster", f="cluster",
-                      check = check_org_dependent_field("vol_volunteer_cluster",
-                                                        "vol_cluster_id"))(
-                        M("Create", m="create"),
-                    ),
-                    M("Volunteer Cluster Position", f="cluster_position",
-                      check = check_org_dependent_field("vol_volunteer_cluster",
-                                                        "vol_cluster_position_id"))(
                         M("Create", m="create"),
                     ),
                     M("Reports", f="volunteer", m="report",
@@ -797,66 +649,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def event():
-        """ Event Management """
-
-        return M()(
-                    M("Events", c="event", f="event")(
-                        M("Create", m="create"),
-                    ),
-                    M("Event Types", c="event", f="event_type")(
-                        M("Create", m="create"),
-                        #M("Import", m="import", p="create"),
-                    ),
-                    M("Incident Reports", c="event", f="incident_report", m="summary")(
-                        M("Create", m="create"),
-                    ),
-                    M("Incident Types", c="event", f="incident_type")(
-                        M("Create", m="create"),
-                        #M("Import", m="import", p="create"),
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def deploy():
-        """ RDRT Alerting and Deployments """
-
-        return M()(M("Missions",
-                     c="deploy", f="mission", m="summary")(
-                        M("Create", m="create"),
-                        M("Active Missions", m="summary",
-                          vars={"~.status__belongs": "2"}),
-                   ),
-                   M("Alerts",
-                     c="deploy", f="alert")(
-                        M("Create", m="create"),
-                        M("InBox",
-                          c="deploy", f="email_inbox",
-                        ),
-                        M("Settings",
-                          c="deploy", f="email_channel",
-                          p="update", t="msg_email_channel",
-                          ),
-                   ),
-                   M("Deployments",
-                     c="deploy", f="assignment", m="summary"
-                   ),
-                   M("Sectors",
-                     c="deploy", f="job_title", restrict=["ADMIN"],
-                   ),
-                   M("RDRT Members",
-                     c="deploy", f="human_resource", m="summary")(
-                        M("Add Member",
-                          c="deploy", f="application", m="select",
-                          p="create", t="deploy_application",
-                          ),
-                        M("Import Members", c="deploy", f="person", m="import"),
-                   ),
-               )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def project():
         """ PROJECT / Project Tracking & Management """
 
@@ -874,7 +666,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
              M("Projects", f="project", m="summary")(
                 M("Create", m="create"),
              ),
-             M("Communities", f="location")(
+             M("Locations", f="location")(
                 # Better created from tab (otherwise Activity Type filter won't work)
                 #M("Create", m="create"),
                 M("Map", m="map"),

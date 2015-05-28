@@ -52,47 +52,48 @@ class S3MainMenu(default.S3MainMenu):
 
         use_certs = lambda i: current.deployment_settings.get_hrm_use_certificates()
 
-        def hrm(item):
-            return root_org != "Honduran Red Cross" or \
-                   has_role(ORG_ADMIN)
+        #def hrm(item):
+        #    return root_org != "Honduran Red Cross" or \
+        #           has_role(ORG_ADMIN)
 
-        def inv(item):
-            return root_org != "Honduran Red Cross" or \
-                   has_role("hn_wh_manager") or \
-                   has_role("hn_national_wh_manager") or \
-                   has_role(ORG_ADMIN)
+        #def inv(item):
+        #    return root_org != "Honduran Red Cross" or \
+        #           has_role("hn_wh_manager") or \
+        #           has_role("hn_national_wh_manager") or \
+        #           has_role(ORG_ADMIN)
 
-        def basic_warehouse(i):
-            if root_org == "Honduran Red Cross"  and \
-               not (has_role("hn_national_wh_manager") or \
-                    has_role(ORG_ADMIN)):
-                # Hide menu entries which user shouldn't need access to
-                return False
-            else:
-                return True
+        #def basic_warehouse(i):
+        #    if root_org == "Honduran Red Cross"  and \
+        #       not (has_role("hn_national_wh_manager") or \
+        #            has_role(ORG_ADMIN)):
+        #        # Hide menu entries which user shouldn't need access to
+        #        return False
+        #    else:
+        #        return True
 
-        def multi_warehouse(i):
-            if root_org == "Honduran Red Cross" and \
-               not (has_role("hn_national_wh_manager") or \
-                    has_role(ORG_ADMIN)):
-                # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
-                return False
-            else:
-                return True
+        #def multi_warehouse(i):
+        #    if root_org == "Honduran Red Cross" and \
+        #       not (has_role("hn_national_wh_manager") or \
+        #            has_role(ORG_ADMIN)):
+        #        # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
+        #        return False
+        #    else:
+        #        return True
 
         def outreach(item):
             return root_org == "New Zealand Red Cross" or \
                    root_org is None and has_role(ADMIN)
 
-        def vol(item):
-            return root_org != "Honduran Red Cross" or \
-                   has_role(ORG_ADMIN)
+        #def vol(item):
+        #    return root_org != "Honduran Red Cross" or \
+        #           has_role(ORG_ADMIN)
 
         return [
             homepage("gis")(
             ),
             homepage("hrm", "org", name=T("Staff"),
-                     vars=dict(group="staff"), check=hrm)(
+                     #vars=dict(group="staff"), check=hrm)(
+                     vars=dict(group="staff"))(
                 MM("Staff", c="hrm", f="staff", m="summary"),
                 MM("Teams", c="hrm", f="group"),
                 MM("National Societies", c="org", f="organisation",
@@ -104,7 +105,8 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Training Courses", c="hrm", f="course"),
                 MM("Certificate List", c="hrm", f="certificate", check=use_certs),
             ),
-            homepage("vol", name=T("Volunteers"), check=vol)(
+            #homepage("vol", name=T("Volunteers"), check=vol)(
+            homepage("vol", name=T("Volunteers"))(
                 MM("Volunteers", c="vol", f="volunteer", m="summary"),
                 MM("Teams", c="vol", f="group"),
                 MM("Volunteer Roles", c="vol", f="job_title"),
@@ -118,16 +120,23 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Members", c="member", f="membership", m="summary"),
             ),
             homepage("inv", "supply", "req", check=inv)(
-                MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
-                MM(inv_recv_list, c="inv", f="recv", check=multi_warehouse),
-                MM("Sent Shipments", c="inv", f="send", check=multi_warehouse),
-                MM("Items", c="supply", f="item", check=basic_warehouse),
-                MM("Catalogs", c="supply", f="catalog", check=basic_warehouse),
-                #MM("Item Categories", c="supply", f="item_category"),
-                M("Suppliers", c="inv", f="supplier", check=basic_warehouse)(),
-                M("Facilities", c="inv", f="facility", check=basic_warehouse)(),
+                #MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
+                MM("Warehouses", c="inv", f="warehouse", m="summary"),
+                #MM(inv_recv_list, c="inv", f="recv", check=multi_warehouse),
+                MM(inv_recv_list, c="inv", f="recv"),
+                #MM("Sent Shipments", c="inv", f="send", check=multi_warehouse),
+                MM("Sent Shipments", c="inv", f="send"),
+                #MM("Items", c="supply", f="item", check=basic_warehouse),
+                MM("Items", c="supply", f="item"),
+                #MM("Catalogs", c="supply", f="catalog", check=basic_warehouse),
+                MM("Catalogs", c="supply", f="catalog"),
+                ##MM("Item Categories", c="supply", f="item_category"),
+                #M("Suppliers", c="inv", f="supplier", check=basic_warehouse)(),
+                M("Suppliers", c="inv", f="supplier")(),
+                #M("Facilities", c="inv", f="facility", check=basic_warehouse)(),
+                M("Facilities", c="inv", f="facility")(),
                 M("Requests", c="req", f="req")(),
-                #M("Commitments", f="commit")(),
+                ##M("Commitments", f="commit")(),
             ),
             homepage("asset")(
                 MM("Assets", c="asset", f="asset", m="summary"),
@@ -172,19 +181,19 @@ class S3MainMenu(default.S3MainMenu):
         #ADMIN = system_roles.ADMIN
         ORG_ADMIN = system_roles.ORG_ADMIN
 
-        def hrm(item):
-            return root_org != "Honduran Red Cross" or \
-                   has_role(ORG_ADMIN)
+        #def hrm(item):
+        #    return root_org != "Honduran Red Cross" or \
+        #           has_role(ORG_ADMIN)
 
-        def inv(item):
-            return root_org != "Honduran Red Cross" or \
-                   has_role("hn_wh_manager") or \
-                   has_role("hn_national_wh_manager") or \
-                   has_role(ORG_ADMIN)
+        #def inv(item):
+        #    return root_org != "Honduran Red Cross" or \
+        #           has_role("hn_wh_manager") or \
+        #           has_role("hn_national_wh_manager") or \
+        #           has_role(ORG_ADMIN)
 
-        def vol(item):
-            return root_org != "Honduran Red Cross" or \
-                   has_role(ORG_ADMIN)
+        #def vol(item):
+        #    return root_org != "Honduran Red Cross" or \
+        #           has_role(ORG_ADMIN)
 
         if controller == "vol":
             dashboard = DB()(
@@ -236,12 +245,12 @@ class S3MainMenu(default.S3MainMenu):
 
             dashboard = DB(_id="dashboard")(
                 DB("Staff", c="hrm", f="staff", m="summary",
-                   check = hrm,
+                   #check = hrm,
                    image = "graphic_staff.png",
                    title = "Staff",
                    text = "Add new and manage existing staff."),
                 DB("Volunteers", c="vol", f="volunteer", m="summary",
-                   check = vol,
+                   #check = vol,
                    image = "graphic_volunteers.png",
                    title = "Volunteers",
                    text = "Add new and manage existing volunteers."),
@@ -250,7 +259,7 @@ class S3MainMenu(default.S3MainMenu):
                    title = "Members",
                    text = "Add new and manage existing members."),
                 DB("Warehouses", c="inv", f="warehouse", m="summary",
-                   check = inv,
+                   #check = inv,
                    image = "graphic_warehouse.png",
                    title = "Warehouses",
                    text = "Stocks and relief items."),
@@ -582,7 +591,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         #use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
         root_org = auth.root_org_name()
         def use_adjust(i):
-            if root_org in ("Australian Red Cross", "Honduran Red Cross"):
+            #if root_org in ("Australian Red Cross", "Honduran Red Cross"):
+            if root_org == "Australian Red Cross":
                 # Australian & Honduran RC use proper Logistics workflow
                 return True
             else:
@@ -594,29 +604,29 @@ class S3OptionsMenu(default.S3OptionsMenu):
         #        return False
         #    else:
         #        return True
-        def basic_warehouse(i):
-            if root_org == "Honduran Red Cross"  and \
-               not (has_role("hn_national_wh_manager") or \
-                    has_role(ORG_ADMIN)):
-                # Hide menu entries which user shouldn't need access to
-                return False
-            else:
-                return True
-        def multi_warehouse(i):
-            if root_org == "Honduran Red Cross"  and \
-               not (has_role("hn_national_wh_manager") or \
-                    has_role(ORG_ADMIN)):
-                # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
-                # & other things that HNRC
-                return False
-            else:
-                return True
-        def use_kits(i):
-            if root_org == "Honduran Red Cross":
-                # Honduran RC use Kits
-                return True
-            else:
-                return False
+        #def basic_warehouse(i):
+        #    if root_org == "Honduran Red Cross"  and \
+        #       not (has_role("hn_national_wh_manager") or \
+        #            has_role(ORG_ADMIN)):
+        #        # Hide menu entries which user shouldn't need access to
+        #        return False
+        #    else:
+        #        return True
+        #def multi_warehouse(i):
+        #    if root_org == "Honduran Red Cross"  and \
+        #       not (has_role("hn_national_wh_manager") or \
+        #            has_role(ORG_ADMIN)):
+        #        # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
+        #        # & other things that HNRC
+        #        return False
+        #    else:
+        #        return True
+        #def use_kits(i):
+        #    if root_org == "Honduran Red Cross":
+        #        # Honduran RC use Kits
+        #        return True
+        #    else:
+        #        return False
         def use_types(i):
             if root_org == "Nepal Red Cross Society":
                 # Nepal RC use Warehouse Types
@@ -627,14 +637,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         return M()(
                     #M("Home", f="index"),
-                    M("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse)(
+                    #M("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse)(
+                    M("Warehouses", c="inv", f="warehouse", m="summary")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
                     M("Warehouse Stock", c="inv", f="inv_item", args="summary")(
                         M("Search Shipped Items", f="track_item"),
                         M("Adjust Stock Levels", f="adj", check=use_adjust),
-                        M("Kitting", f="kitting", check=use_kits),
+                        #M("Kitting", f="kitting", check=use_kits),
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
                     M("Reports", c="inv", f="inv_item")(
@@ -650,14 +661,17 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         # M("Summary of Releases", c="inv", f="track_item",
                         #  vars=dict(report="rel")),
                     ),
-                    M(inv_recv_list, c="inv", f="recv", check=multi_warehouse)(
+                    #M(inv_recv_list, c="inv", f="recv", check=multi_warehouse)(
+                    M(inv_recv_list, c="inv", f="recv")(
                         M("Create", m="create"),
                     ),
-                    M("Sent Shipments", c="inv", f="send", check=multi_warehouse)(
+                    #M("Sent Shipments", c="inv", f="send", check=multi_warehouse)(
+                    M("Sent Shipments", c="inv", f="send")(
                         M("Create", m="create"),
                         M("Search Shipped Items", f="track_item"),
                     ),
-                    M("Items", c="supply", f="item", m="summary", check=basic_warehouse)(
+                    #M("Items", c="supply", f="item", m="summary", check=basic_warehouse)(
+                    M("Items", c="supply", f="item", m="summary")(
                         M("Create", m="create"),
                         M("Import", f="catalog_item", m="import", p="create"),
                     ),
@@ -669,18 +683,21 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #  restrict=[ADMIN])(
                     #    M("Create", m="create"),
                     #),
-                    M("Catalogs", c="supply", f="catalog", check=basic_warehouse)(
+                    #M("Catalogs", c="supply", f="catalog", check=basic_warehouse)(
+                    M("Catalogs", c="supply", f="catalog")(
                         M("Create", m="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M("Suppliers", c="inv", f="supplier", check=basic_warehouse)(
+                    #M("Suppliers", c="inv", f="supplier", check=basic_warehouse)(
+                    M("Suppliers", c="inv", f="supplier")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Facilities", c="inv", f="facility", check=basic_warehouse)(
+                    #M("Facilities", c="inv", f="facility", check=basic_warehouse)(
+                    M("Facilities", c="inv", f="facility")(
                         M("Create", m="create", t="org_facility"),
                     ),
                     M("Facility Types", c="inv", f="facility_type",
@@ -711,12 +728,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def project():
         """ PROJECT / Project Tracking & Management """
 
-        root_org = current.auth.root_org_name()
-        def community_volunteers(i):
-            if root_org == "Honduran Red Cross":
-                return True
-            else:
-                return False
+        #root_org = current.auth.root_org_name()
+        #def community_volunteers(i):
+        #    if root_org == "Honduran Red Cross":
+        #        return True
+        #    else:
+        #        return False
 
         menu = M(c="project")(
              M("Programs", f="programme")(
@@ -730,8 +747,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 #M("Create", m="create"),
                 M("Map", m="map"),
                 M("Community Contacts", f="location_contact"),
-                M("Community Volunteers", f="volunteer",
-                  check=community_volunteers),
+                #M("Community Volunteers", f="volunteer",
+                #  check=community_volunteers),
              ),
             M("Reports", f="location", m="report")(
                 M("3W", f="location", m="report"),

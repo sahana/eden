@@ -266,10 +266,11 @@ def config(settings):
         ("es", "Español"),
         #("fr", "Français"),
         ("km", "ភាសាខ្មែរ"),        # Khmer
-        ("mn", "Монгол хэл"),   # Mongolian
+        ("mn", "Монгол хэл"),  # Mongolian
+        ("my", "မြန်မာစာ"),        # Burmese
         ("ne", "नेपाली"),          # Nepali
-        ("prs", "دری"),         # Dari
-        ("ps", "پښتو"),         # Pashto
+        ("prs", "دری"),        # Dari
+        ("ps", "پښتو"),        # Pashto
         #("th", "ภาษาไทย"),        # Thai
         ("vi", "Tiếng Việt"),   # Vietnamese
         ("zh-cn", "中文 (简体)"),
@@ -301,7 +302,6 @@ def config(settings):
     AURC = "Australian Red Cross"
     BRCS = "Bangladesh Red Crescent Society"
     CVTL = "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"
-    HNRC = "Honduran Red Cross"
     NRCS = "Nepal Red Cross Society"
     NZRC = "New Zealand Red Cross"
     PMI = "Indonesian Red Cross Society (Palang Merah Indonesia)"
@@ -328,8 +328,6 @@ def config(settings):
             currencies["AUD"] = T("Australian Dollars")
         elif root_org == BRCS:
             currencies["BDT"] = T("Taka")
-        elif root_org == HNRC:
-            currencies["HNL"] = T("Honduran Lempira")
         elif root_org == NRCS:
             currencies["NPR"] = T("Nepalese Rupee"),
         elif root_org == NZRC:
@@ -357,8 +355,6 @@ def config(settings):
             default = "AUD"
         elif root_org == BRCS:
             default = "BDT"
-        elif root_org == HNRC:
-            default = "HNL"
         elif root_org == NRCS:
             default = "NPR"
         elif root_org == NZRC:
@@ -485,6 +481,79 @@ def config(settings):
     settings.hrm.use_skills = False
     # Activity types for experience record
     settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
+
+    # -----------------------------------------------------------------------------
+    # Projects
+    # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
+    settings.project.mode_3w = True
+    # Uncomment this to use DRR (Disaster Risk Reduction) extensions
+    settings.project.mode_drr = True
+    # Uncomment this to use Activity Types for Activities & Projects
+    settings.project.activity_types = True
+    # Uncomment this to use Codes for projects
+    settings.project.codes = True
+    # Uncomment this to call project locations 'Communities'
+    settings.project.community = True
+    # Uncomment this to enable Hazards in 3W projects
+    settings.project.hazards = True
+    # Uncomment this to use multiple Budgets per project
+    settings.project.multiple_budgets = True
+    # Uncomment this to use multiple Organisations per project
+    settings.project.multiple_organisations = True
+    # Uncomment this to enable Programmes in projects
+    settings.project.programmes = True
+    # Uncomment this to enable Themes in 3W projects
+    settings.project.themes = True
+    # Uncomment this to customise
+    # Links to Filtered Components for Donors & Partners
+    settings.project.organisation_roles = {
+        1: T("Host National Society"),
+        2: T("Partner"),
+        3: T("Donor"),
+        #4: T("Customer"), # T("Beneficiary")?
+        #5: T("Supplier"),
+        9: T("Partner National Society"),
+    }
+
+    # -----------------------------------------------------------------------------
+    # Inventory Management
+    settings.inv.show_mode_of_transport = True
+    settings.inv.send_show_time_in = True
+    #settings.inv.collapse_tabs = True
+    # Uncomment if you need a simpler (but less accountable) process for managing stock levels
+    settings.inv.direct_stock_edits = True
+    settings.inv.org_dependent_warehouse_types = True
+    # Settings for HNRC:
+    #settings.inv.stock_count = False
+    #settings.inv.item_status = {#0: current.messages["NONE"], # Not defined yet
+    #                            0: T("Good"),
+    #                            1: T("Damaged"),
+    #                            #1: T("Dump"),
+    #                            #2: T("Sale"),
+    #                            #3: T("Reject"),
+    #                            #4: T("Surplus")
+    #                            }
+    #settings.inv.recv_types = {#0: current.messages["NONE"], In Shipment Types
+    #                           #11: T("Internal Shipment"), In Shipment Types
+    #                           32: T("Donation"),
+    #                           34: T("Purchase"),
+    #                           36: T("Consignment"), # Borrowed
+    #                           37: T("In Transit"),  # Loaning warehouse space to another agency
+    #                           }
+
+    # -----------------------------------------------------------------------------
+    # Request Management
+    # Uncomment to disable Inline Forms in Requests module
+    settings.req.inline_forms = False
+    settings.req.req_type = ["Stock"]
+    settings.req.use_commit = False
+    # Should Requests ask whether Transportation is required?
+    settings.req.ask_transport = True
+    settings.req.pack_values = False
+    # Disable Request Matching as we don't want users making requests to see what stock is available
+    #settings.req.prompt_match = False # HNRC
+    # Uncomment to disable Recurring Request
+    #settings.req.recurring = False # HNRC
 
     # =============================================================================
     # Template Modules
@@ -1567,13 +1636,10 @@ def config(settings):
         if r.controller == "vol":
             T = current.T
             root_org = current.auth.root_org_name()
-            if root_org == HNRC:
+            if root_org == VNRC:
                 settings.hrm.use_certificates = False
-                current.s3db.hrm_human_resource.status.requires = {1: T("Active"),
-                                                                   2: T("Inactive"),
-                                                                   }
-            elif root_org == VNRC:
-                settings.hrm.use_certificates = False
+                settings.hrm.use_regions = False
+
             elif root_org == NRCS:
                 # Expose volunteer_type field with these options:
                 types = {"PROGRAMME": T("Program Volunteer"),
@@ -1865,14 +1931,6 @@ def config(settings):
                     branches = False,
                     )
 
-        root_org = current.auth.root_org_name()
-        if root_org == HNRC:
-            # Don't show RDRT in the list
-            table.type.requires = IS_IN_SET({1: T("Staff"),
-                                             2: T("Volunteer"),
-                                             3: T("Both")
-                                             })
-
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
@@ -2026,21 +2084,6 @@ def config(settings):
         from gluon import URL
         from s3 import s3_redirect_default
 
-        # Special cases for different NS
-        root_org = current.auth.root_org_name()
-        if root_org == HNRC:
-            auth = current.auth
-            if auth.user and auth.user.site_id and \
-               not auth.s3_has_role(current.session.s3.system_roles.ORG_ADMIN):
-                # Redirect to this Warehouse
-                table = current.s3db.inv_warehouse
-                wh = current.db(table.site_id == auth.user.site_id).select(table.id,
-                                                                           limitby=(0, 1)
-                                                                           ).first()
-                if wh:
-                    s3_redirect_default(URL(c="inv", f="warehouse",
-                                            args=[wh.id, "inv_item"]))
-
         # Redirect to Warehouse Summary Page
         s3_redirect_default(URL(c="inv", f="warehouse", args="summary"))
 
@@ -2051,8 +2094,8 @@ def config(settings):
 
         # Special cases for different NS
         root_org = current.auth.root_org_name()
-        if root_org in (AURC, HNRC):
-            # Australian & Honduran RC use proper Logistics workflow
+        if root_org == AURC:
+            # Australian use proper Logistics workflow
             settings.inv.direct_stock_edits = False
             current.s3db.configure("inv_inv_item",
                                    create = False,
@@ -2092,13 +2135,9 @@ def config(settings):
 
         # Special cases for different NS
         root_org = current.auth.root_org_name()
-        if root_org in (AURC, HNRC):
-            # Australian & Honduran RC use proper Logistics workflow
+        if root_org == AURC:
+            # Australian RC use proper Logistics workflow
             settings.inv.direct_stock_edits = False
-            if root_org == HNRC:
-                settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
-                settings.inv.recv_tab_label = "Received/Incoming Shipments"
-                settings.inv.send_tab_label = "Sent Shipments"
         if root_org != NRCS:
             # Only Nepal RC use Warehouse Types
             s3db = current.s3db
@@ -2257,50 +2296,6 @@ def config(settings):
         return attr
 
     settings.customise_member_membership_type_controller = customise_member_membership_type_controller
-
-    # -----------------------------------------------------------------------------
-    def customise_org_facility_resource(r, tablename):
-
-        root_org = current.auth.root_org_name()
-        if root_org != HNRC:
-            return
-        settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
-        # Simplify Form
-        s3db = current.s3db
-        table = s3db.org_facility
-        table.code.readable = table.code.writable = False
-        table.opening_times.readable = table.opening_times.writable = False
-        table.website.readable = table.website.writable = False
-        field = s3db.org_site_facility_type.facility_type_id
-        field.readable = field.writable = False
-        # Simplify Search Fields
-        from s3 import S3TextFilter, S3OptionsFilter, S3LocationFilter
-        # Which levels of Hierarchy are we using?
-        levels = current.gis.get_relevant_hierarchy_levels()
-        text_fields = ["name",
-                       #"code",
-                       "comments",
-                       "organisation_id$name",
-                       "organisation_id$acronym",
-                       ]
-        for level in levels:
-            lfield = "location_id$%s" % level
-            text_fields.append(lfield)
-
-        s3db.configure("org_facility",
-                       filter_widgets = [
-                            S3TextFilter(text_fields,
-                                         label = T("Search"),
-                                         ),
-                            S3OptionsFilter("organisation_id"),
-                            S3LocationFilter("location_id",
-                                             levels = levels,
-                                             ),
-                            ]
-                       )
-
-
-    settings.customise_org_facility_resource = customise_org_facility_resource
 
     # -----------------------------------------------------------------------------
     def customise_org_office_controller(**attr):
@@ -2652,8 +2647,6 @@ def config(settings):
             s3db.pr_person.last_name.requires = None
             settings.hrm.use_skills = True
             settings.hrm.vol_active = True
-        elif root_org == HNRC:
-            settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
         elif root_org == PMI:
             settings.hrm.use_skills = True
             settings.hrm.staff_experience = "experience"
@@ -3224,17 +3217,6 @@ def config(settings):
             return s3db.hrm_rheader(r)
 
     # -----------------------------------------------------------------------------
-    def customise_supply_item_category_resource(r, tablename):
-
-        root_org = current.auth.root_org_name()
-        if root_org == HNRC:
-            # Not using Assets Module
-            field = current.s3db.supply_item_category.can_be_asset
-            field.readable = field.writable = False
-
-    settings.customise_supply_item_category_resource = customise_supply_item_category_resource
-
-    # -----------------------------------------------------------------------------
     def customise_survey_series_controller(**attr):
 
         # Organisation needs to be an NS/Branch
@@ -3246,42 +3228,6 @@ def config(settings):
         return attr
 
     settings.customise_survey_series_controller = customise_survey_series_controller
-
-    # -----------------------------------------------------------------------------
-    # Projects
-    # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
-    settings.project.mode_3w = True
-    # Uncomment this to use DRR (Disaster Risk Reduction) extensions
-    settings.project.mode_drr = True
-    # Uncomment this to use Activity Types for Activities & Projects
-    settings.project.activity_types = True
-    # Uncomment this to use Codes for projects
-    settings.project.codes = True
-    # Uncomment this to call project locations 'Communities'
-    settings.project.community = True
-    # Uncomment this to enable Hazards in 3W projects
-    settings.project.hazards = True
-    # Uncomment this to enable Indicators in projects
-    # Just HNRC
-    #settings.project.indicators = True
-    # Uncomment this to use multiple Budgets per project
-    settings.project.multiple_budgets = True
-    # Uncomment this to use multiple Organisations per project
-    settings.project.multiple_organisations = True
-    # Uncomment this to enable Programmes in projects
-    settings.project.programmes = True
-    # Uncomment this to enable Themes in 3W projects
-    settings.project.themes = True
-    # Uncomment this to customise
-    # Links to Filtered Components for Donors & Partners
-    settings.project.organisation_roles = {
-        1: T("Host National Society"),
-        2: T("Partner"),
-        3: T("Donor"),
-        #4: T("Customer"), # T("Beneficiary")?
-        #5: T("Supplier"),
-        9: T("Partner National Society"),
-    }
 
     # -------------------------------------------------------------------------
     def household_inject_form_script(r, record):
@@ -3358,73 +3304,6 @@ def config(settings):
 
     settings.customise_po_area_controller = customise_po_area_controller
 
-    # -------------------------------------------------------------------------
-    def project_project_postprocess(form):
-        """
-            When using Project Monitoring (i.e. HNRC) then create the entries
-        """
-
-        db = current.db
-        s3db = current.s3db
-        project_id = form.vars.id
-        # Read Budget Entity ID, Start Date and End Date
-        ptable = s3db.project_project
-        project = db(ptable.id == project_id).select(ptable.budget_entity_id,
-                                                     ptable.name,
-                                                     ptable.start_date,
-                                                     ptable.end_date,
-                                                     limitby=(0, 1)
-                                                     ).first()
-        if not project:
-            return
-
-        # Copy Project Name to Budget Name
-        budget_entity_id = project.budget_entity_id
-        btable = s3db.budget_budget
-        query = (btable.budget_entity_id == budget_entity_id)
-        budget = db(query).select(btable.id, # Needed for update_record
-                                  # If we want to provide smoothed default expected values
-                                  #btable.total_budget,
-                                  btable.currency,
-                                  # Assume Monthly
-                                  #btable.monitoring_frequency,
-                                  limitby=(0, 1)
-                                  ).first()
-        if not budget:
-            return
-        try:
-            budget.update_record(name = project.name)
-        except:
-            # unique=True violation
-            budget.update_record(name = "Budget for %s" % project.name)
-
-        # Create Monitoring Data entries
-        # Assume Monthly
-        #monitoring_frequency = budget.monitoring_frequency
-        #if not monitoring_frequency:
-        #    return
-        #total_budget = budget.total_budget
-        currency = budget.currency
-        start_date = project.start_date
-        end_date = project.end_date
-        if not start_date or not end_date:
-            return
-        # Create entries for the 1st of every month between start_date and end_date
-        from dateutil import rrule
-        dates = list(rrule.rrule(rrule.MONTHLY, bymonthday=1, dtstart=start_date, until=end_date))
-        mtable = s3db.budget_monitoring
-        for d in dates:
-            mtable.insert(budget_entity_id = budget_entity_id,
-                          # @ToDo: This needs to be modified whenever entries are manually edited
-                          # Set/update this in budget_monitoring_onaccept
-                          # - also check here that we don't exceed overall budget
-                          start_date = start_date,
-                          end_date = d,
-                          currency = currency,
-                          )
-            # Start date relates to previous entry
-            start_date = d
-
     # -----------------------------------------------------------------------------
     def customise_project_project_controller(**attr):
 
@@ -3464,57 +3343,13 @@ def config(settings):
         # Custom Crud Form
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
-        # Special cases for different NS
-        root_org = current.auth.root_org_name()
-        if root_org == HNRC:
-            HFA = None
-            # @ToDo: Use Inter-American Framework instead (when extending to Zone office)
-            # @ToDo: Add 'Business Line' (when extending to Zone office)
-            settings.project.details_tab = True
-            settings.project.community_volunteers = True
-            # Done in a more structured way instead
-            objectives = None
-            outputs = None
-            settings.project.goals = True
-            settings.project.indicators = True
-            settings.project.outcomes = True
-            settings.project.outputs = True
-            # Use Budget module instead of ProjectAnnualBudget
-            settings.project.multiple_budgets = False
-            settings.project.budget_monitoring = True
-            # Require start/end dates
-            table.start_date.requires = table.start_date.requires.other
-            table.end_date.requires = table.end_date.requires.other
-            budget = S3SQLInlineComponent(
-                "budget",
-                label = T("Budget"),
-                #link = False,
-                multiple = False,
-                fields = ["total_budget",
-                          "currency",
-                          #"monitoring_frequency",
-                          ],
-            )
-            btable = s3db.budget_budget
-            # Need to provide a name
-            import random, string
-            btable.name.default = "".join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(16))
-            btable.monitoring_frequency.default = 3 # Monthly
-            postprocess = project_project_postprocess
-            list_fields = s3db.get_config("project_project", "list_fields")
-            list_fields += [(T("Monthly Status"), "current_status_by_indicators"),
-                            (T("Cumulative Status"), "overall_status_by_indicators"),
-                            ]
-        else:
-            HFA = "drr.hfa"
-            objectives = "objectives"
-            outputs = S3SQLInlineComponent(
-                "output",
-                label = T("Outputs"),
-                fields = ["name", "status"],
-            )
-            budget = None
-            postprocess = None
+        HFA = "drr.hfa"
+        objectives = "objectives"
+        outputs = S3SQLInlineComponent(
+            "output",
+            label = T("Outputs"),
+            fields = ["name", "status"],
+        )
 
         if settings.get_project_programmes():
             # Inject inline link for programmes including AddResourceLink
@@ -3542,7 +3377,7 @@ def config(settings):
             "status_id",
             "start_date",
             "end_date",
-            budget,
+            #budget,
             #S3SQLInlineComponent(
             #    "location",
             #    label = T("Locations"),
@@ -3640,7 +3475,7 @@ def config(settings):
             #"budget",
             #"currency",
             "comments",
-            postprocess = postprocess,
+            #postprocess = postprocess,
         )
 
         s3db.configure(tablename,
@@ -3811,47 +3646,6 @@ def config(settings):
                                )
 
     settings.customise_project_location_resource = customise_project_location_resource
-
-    # -----------------------------------------------------------------------------
-    # Inventory Management
-    settings.inv.show_mode_of_transport = True
-    settings.inv.send_show_time_in = True
-    #settings.inv.collapse_tabs = True
-    # Uncomment if you need a simpler (but less accountable) process for managing stock levels
-    settings.inv.direct_stock_edits = True
-    settings.inv.org_dependent_warehouse_types = True
-    # Settings for HNRC:
-    settings.inv.stock_count = False
-    settings.inv.item_status = {#0: current.messages["NONE"], # Not defined yet
-                                0: T("Good"),
-                                1: T("Damaged"),
-                                #1: T("Dump"),
-                                #2: T("Sale"),
-                                #3: T("Reject"),
-                                #4: T("Surplus")
-                                }
-    settings.inv.recv_types = {#0: current.messages["NONE"], In Shipment Types
-                               #11: T("Internal Shipment"), In Shipment Types
-                               32: T("Donation"),
-                               34: T("Purchase"),
-                               36: T("Consignment"), # Borrowed
-                               37: T("In Transit"),  # Loaning warehouse space to another agency
-                               }
-
-
-    # -----------------------------------------------------------------------------
-    # Request Management
-    # Uncomment to disable Inline Forms in Requests module
-    settings.req.inline_forms = False
-    settings.req.req_type = ["Stock"]
-    settings.req.use_commit = False
-    # Should Requests ask whether Transportation is required?
-    settings.req.ask_transport = True
-    settings.req.pack_values = False
-    # Disable Request Matching as we don't wwant users making requests to see what stock is available
-    settings.req.prompt_match = False
-    # Uncomment to disable Recurring Request
-    settings.req.recurring = False # HNRC
 
     # -----------------------------------------------------------------------------
     def customise_req_commit_controller(**attr):

@@ -138,7 +138,8 @@ def config(settings):
     #    ("km", "ភាសាខ្មែរ"),
     #    ("ko", "한국어"),
     #    ("mn", "Монгол хэл"), # Mongolian
-    #    ("ne", "नेपाली"),                         #  Nepali
+    #    ("my", "မြန်မာစာ"),       # Burmese
+    #    ("ne", "नेपाली"),                               #  Nepali
     #    ("prs", "دری"),       # Dari
     #    ("ps", "پښتو"),       # Pashto
     #    ("pt", "Português"),
