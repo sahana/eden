@@ -1368,6 +1368,15 @@ class S3Config(Storage):
     def get_L10n_firstDOW(self):
         return self.L10n.get("firstDOW", 1)
 
+    def get_L10n_calendar(self):
+        """
+            Which calendar to use (lazy setting)
+
+            Currently supported calendars:
+            - "Gregorian"
+        """
+        return self.__lazy(self.L10n, "calendar", None)
+
     def get_L10n_lat_lon_format(self):
         """
             This is used to format latitude and longitude fields when they are

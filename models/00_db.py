@@ -142,6 +142,9 @@ s3_has_role = auth.s3_has_role
 s3_has_permission = auth.s3_has_permission
 s3_logged_in_person = auth.s3_logged_in_person
 
+# Calendar
+current.calendar = s3base.S3Calendar()
+
 # CRUD
 s3.crud = Storage()
 
