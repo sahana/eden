@@ -403,6 +403,12 @@ class S3TestCalendar(S3Calendar):
         current.response.s3.calendar_test_parse = self.CALENDAR
         return super(S3TestCalendar, self)._parse(dtstr, dtfmt)
 
+    def _format(self, dt, dtfmt):
+        """ Custom _format to set a marker if called """
+
+        current.response.s3.calendar_test_format = self.CALENDAR
+        return super(S3TestCalendar, self)._format(dt, dtfmt)
+
     def _gdate(self, timetuple):
         """ Custom _gdate to set a marker if called """
 
@@ -522,16 +528,17 @@ class S3CalendarTests(unittest.TestCase):
         # Register the custom class
         c._calendars[CALENDAR] = S3TestCalendar
 
-        # Reset marker
+        # Call parse_date
         s3.calendar_test_parse = None
         s3.calendar_test_gdate = None
-
-        # Call parse_date
         c.parse_date("2014-09-21", dtfmt = "%Y-%m-%d")
-
-        # Verify markers
         assertEqual(s3.calendar_test_parse, S3TestCalendar.CALENDAR)
         assertEqual(s3.calendar_test_gdate, S3TestCalendar.CALENDAR)
+
+        # Call format_date
+        s3.calendar_test_format = None
+        c.format_date(datetime.date(1977,3,15), dtfmt = "%Y-%m-%d")
+        assertEqual(s3.calendar_test_format, S3TestCalendar.CALENDAR)
 
     # -------------------------------------------------------------------------
     def testParsing(self):
@@ -707,6 +714,105 @@ class S3CalendarTests(unittest.TestCase):
         dtstr = "Invalid Value"
         dt = parse(dtstr)
         assertEqual(dt, None)
+
+    # -------------------------------------------------------------------------
+    def testDateFormatting(self):
+        """ Test S3Calendar.format_date """
+
+        c = S3Calendar()
+        render = c.format_date
+
+        assertEqual = self.assertEqual
+        assertRaises = self.assertRaises
+
+        # Test with ISOFORMAT
+        dt = datetime.date(1925, 11, 21)
+        dtstr = render(dt)
+        assertEqual(dtstr, "1925-11-21")
+
+        # Test with local format
+        settings = current.deployment_settings
+        date_format = settings.get_L10n_date_format()
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            dt = datetime.date(1983, 5, 8)
+            dtstr = render(dt, local=True)
+            assertEqual(dtstr, "08/05/1983")
+        finally:
+            settings.L10n.date_format = date_format
+
+        # Test with format override
+        dt = datetime.date(2004, 1, 9)
+        dtstr = render(dt, dtfmt="%d.%m.%Y")
+        assertEqual(dtstr, "09.01.2004")
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            dtstr = render(dt, dtfmt="%d.%m.%Y", local=True)
+            assertEqual(dtstr, "09.01.2004")
+        finally:
+            settings.L10n.date_format = date_format
+
+        # Test with None
+        dt = None
+        dtstr = render(dt)
+        assertEqual(dtstr, current.messages.NONE)
+
+        # Test with invalid type
+        dt = 96
+        with assertRaises(TypeError):
+            render(dt)
+
+    # -------------------------------------------------------------------------
+    def testDateTimeParsing(self):
+        """ Test S3Calendar.parse_datetime """
+
+        c = S3Calendar()
+        render = c.format_datetime
+
+        assertEqual = self.assertEqual
+        assertRaises = self.assertRaises
+
+        # Test with ISOFORMAT
+        dt = datetime.datetime(1925, 11, 21, 13, 1, 41)
+        dtstr = render(dt)
+        assertEqual(dtstr, "1925-11-21T13:01:41")
+
+        # Test with local format
+        settings = current.deployment_settings
+        date_format = settings.get_L10n_date_format()
+        time_format = settings.get_L10n_time_format()
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            settings.L10n.time_format = "%H.%M"
+            dt = datetime.datetime(1964, 8, 24, 13, 21, 0)
+            dtstr = render(dt, local=True)
+            assertEqual(dtstr, "24/08/1964 13.21")
+        finally:
+            settings.L10n.date_format = date_format
+            settings.L10n.time_format = time_format
+
+        # Test with format override
+        dt = datetime.datetime(2004, 1, 9, 10, 13, 44)
+        dtstr = render(dt, dtfmt="%d.%m.%Y %H:%M:%S")
+        assertEqual(dtstr, "09.01.2004 10:13:44")
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            settings.L10n.time_format = "%H.%M"
+            dtstr = render(dt,  dtfmt="%d.%m.%Y %H:%M:%S", local=True)
+            assertEqual(dtstr, "09.01.2004 10:13:44")
+        finally:
+            settings.L10n.date_format = date_format
+            settings.L10n.time_format = time_format
+
+        # Test with None
+        dt = None
+        dtstr = render(dt)
+        assertEqual(dtstr, current.messages.NONE)
+
+        # Test with invalid type
+        dt = 96
+        with assertRaises(TypeError):
+            render(dt)
 
 # =============================================================================
 def run_suite(*test_classes):

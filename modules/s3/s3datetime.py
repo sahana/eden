@@ -86,19 +86,7 @@ class S3DateTime(object):
                 offset = cls.get_offset_value(current.session.s3.utc_offset)
                 if offset:
                     date = date + datetime.timedelta(seconds=offset)
-            try:
-                dtstr = date.strftime(str(format))
-            except ValueError:
-                # Dates < 1900 not supported by strftime
-                year = date.year
-                eformat = str(format).replace("%Y", "{{Y}}").replace("%y", "{{y}}")
-                dtstr = date.replace(year=1900).strftime(eformat)
-                dtstr = dtstr.replace("{{Y}}", "%d" % year) \
-                             .replace("{{y}}", "%02d" % (year % 100))
-                return dtstr
-            except AttributeError:
-                # Invalid argument type
-                raise TypeError("date_represent: invalid argument type: %s" % type(date))
+            dtstr = current.calendar.format_date(date, dtfmt=format, local=True)
         else:
             dtstr = current.messages["NONE"]
 
@@ -236,7 +224,7 @@ class S3Calendar(object):
             @return: a time tuple like (y, m, d, hh, mm, ss)
         """
 
-        # Gregorian Calendar just uses strptime
+        # Gregorian Calendar uses strptime
         try:
             timetuple = time.strptime(dtstr, dtfmt)
         except ValueError, e:
@@ -246,6 +234,35 @@ class S3Calendar(object):
             except ValueError:
                 raise e
         return timetuple[:6]
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _format(dt, dtfmt):
+        """
+            Get a string representation for a datetime.datetime according
+            to this calendar and dtfmt, to be implemented by subclass
+
+            @param dt: the datetime.datetime
+            @param dtfmt: the datetime format (strftime)
+
+            @return: the string representation (str)
+
+            @raises TypeError: for invalid argument types
+        """
+
+        # Gregorian Calendar uses strftime
+        fmt = str(dtfmt)
+        try:
+            dtstr = dt.strftime(fmt)
+        except ValueError:
+            # Dates < 1900 not supported by strftime
+            year = "%04i" % dt.year
+            fmt = fmt.replace("%Y", year).replace("%y", year[-2:])
+            dtstr = dt.replace(year=1900).strftime(fmt)
+        except AttributeError:
+            # Invalid argument type
+            raise TypeError("invalid argument type: %s" % type(dt))
+        return dtstr
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -274,30 +291,6 @@ class S3Calendar(object):
 
         # Gregorian Calendar does nothing here
         return timetuple
-
-    # -------------------------------------------------------------------------
-    # Methods to be implemented by subclasses:
-    # -------------------------------------------------------------------------
-    def _format_date(self, dt):
-        """
-            Format a date according to this calendar
-
-            @param dt: the date (datetime.date or datetime.datetime)
-            @return: the date as string
-        """
-
-        raise NotImplementedError
-
-    # -------------------------------------------------------------------------
-    def _format_datetime(self, dt):
-        """
-            Format a datetime according to this calendar
-
-            @param dt: the datetime (datetime.datetime)
-            @return: the datetime as string
-        """
-
-        raise NotImplementedError
 
     # -------------------------------------------------------------------------
     # Common Interface Methods (should not be implemented by subclasses):
@@ -400,7 +393,7 @@ class S3Calendar(object):
         return dt
 
     # -------------------------------------------------------------------------
-    def format_date(self, dt):
+    def format_date(self, dt, dtfmt=None, local=False):
         """
             Format a date according to this calendar
 
@@ -408,10 +401,29 @@ class S3Calendar(object):
             @return: the date as string
         """
 
-        return self.calendar._format_date(dt)
+        if dt is None:
+            return current.messages["NONE"]
+
+        # Default format
+        if dtfmt is None:
+            if local:
+                dtfmt = current.deployment_settings.get_L10n_date_format()
+            else:
+                dtfmt = "%Y-%m-%d" # ISO Date Format
+
+        # Deal with T's
+        try:
+            dtfmt = str(dtfmt)
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            dtfmt = s3_unicode(dtfmt).encode("utf-8")
+
+        # Use the current calendar
+        calendar = self.calendar
+
+        return calendar._format(dt, dtfmt)
 
     # -------------------------------------------------------------------------
-    def format_datetime(self, dt):
+    def format_datetime(self, dt, dtfmt=None, local=False):
         """
             Format a datetime according to this calendar
 
@@ -419,7 +431,26 @@ class S3Calendar(object):
             @return: the datetime as string
         """
 
-        return self.calendar._format_datetime(dt)
+        if dt is None:
+            return current.messages["NONE"]
+
+        # Default format
+        if dtfmt is None:
+            if local:
+                dtfmt = current.deployment_settings.get_L10n_datetime_format()
+            else:
+                dtfmt = ISOFORMAT # ISO Date/Time Format
+
+        # Deal with T's
+        try:
+            dtfmt = str(dtfmt)
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            dtfmt = s3_unicode(dtfmt).encode("utf-8")
+
+        # Use the current calendar
+        calendar = self.calendar
+
+        return calendar._format(dt, dtfmt)
 
     # -------------------------------------------------------------------------
     # Base class methods (should not be implemented by subclasses):
