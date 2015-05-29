@@ -36,7 +36,6 @@ __all__ = ("ISOFORMAT",
            "s3_format_datetime",
            "s3_decode_iso_datetime",
            "s3_encode_iso_datetime",
-           "s3_encode_local_datetime",
            "s3_utc",
            "s3_get_utc_offset",
            )
@@ -449,8 +448,7 @@ class S3Calendar(object):
             dtfmt = s3_unicode(dtfmt).encode("utf-8")
 
         # Remove microseconds
-        # - for the case that the calendar falls back to .isoformat,
-        #   and for consistency with s3_encode_local_datetime()
+        # - for the case that the calendar falls back to .isoformat
         try:
            dt = dt.replace(microsecond=0)
         except AttributeError:
@@ -590,23 +588,6 @@ def s3_encode_iso_datetime(dt):
     """
     dx = dt - datetime.timedelta(microseconds=dt.microsecond)
     return dx.isoformat()
-
-# =============================================================================
-# Local Format Date/Time
-#
-def s3_encode_local_datetime(dt, fmt=None):
-    """
-        Convert a datetime object into a local date/time formatted
-        string, omitting microseconds
-
-        @param dt: the datetime object
-    """
-    if fmt is None:
-        format = current.deployment_settings.get_L10n_datetime_format()
-    else:
-        format = fmt
-    dx = dt - datetime.timedelta(microseconds=dt.microsecond)
-    return dx.strftime(str(format))
 
 # =============================================================================
 # Time Zone Handling
