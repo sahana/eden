@@ -69,11 +69,11 @@ class S3DateTime(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def date_represent(cls, date, format=None, utc=False):
+    def date_represent(cls, dt, format=None, utc=False):
         """
             Represent the date according to deployment settings &/or T()
 
-            @param date: the date
+            @param dt: the date (datetime.date or datetime.datetime)
             @param format: the format (overrides deployment setting)
             @param utc: the date is given in UTC
         """
@@ -81,12 +81,36 @@ class S3DateTime(object):
         if not format:
             format = current.deployment_settings.get_L10n_date_format()
 
-        if date:
-            if utc and isinstance(date, datetime.datetime):
+        if dt:
+            if utc and isinstance(dt, datetime.datetime):
                 offset = cls.get_offset_value(current.session.s3.utc_offset)
                 if offset:
-                    date = date + datetime.timedelta(seconds=offset)
-            dtstr = current.calendar.format_date(date, dtfmt=format, local=True)
+                    dt = dt + datetime.timedelta(seconds=offset)
+            dtstr = current.calendar.format_date(dt, dtfmt=format, local=True)
+        else:
+            dtstr = current.messages["NONE"]
+
+        return dtstr
+
+    # -----------------------------------------------------------------------------
+    @classmethod
+    def datetime_represent(cls, dt, format=None, utc=False):
+        """
+            Represent the datetime according to deployment settings &/or T()
+
+            @param dt: the datetime
+            @param utc: the datetime is given in UTC
+        """
+
+        if format is None:
+            format = current.deployment_settings.get_L10n_datetime_format()
+
+        if dt:
+            if utc and isinstance(dt, datetime.datetime):
+                offset = cls.get_offset_value(current.session.s3.utc_offset)
+                if offset:
+                    dt = dt + datetime.timedelta(seconds=offset)
+            dtstr = current.calendar.format_datetime(dt, dtfmt=format, local=True)
         else:
             dtstr = current.messages["NONE"]
 
@@ -126,26 +150,6 @@ class S3DateTime(object):
             except AttributeError:
                 # Invalid argument type
                 raise TypeError("time_represent: invalid argument type: %s" % type(time))
-        else:
-            return current.messages["NONE"]
-
-    # -----------------------------------------------------------------------------
-    @classmethod
-    def datetime_represent(cls, dt, utc=False):
-        """
-            Represent the datetime according to deployment settings &/or T()
-
-            @param dt: the datetime
-            @param utc: the datetime is given in UTC
-        """
-
-        if dt and utc:
-            offset = cls.get_offset_value(current.session.s3.utc_offset)
-            if offset:
-                dt = dt + datetime.timedelta(seconds=offset)
-
-        if dt:
-            return s3_encode_local_datetime(dt)
         else:
             return current.messages["NONE"]
 
@@ -417,10 +421,7 @@ class S3Calendar(object):
         except (UnicodeDecodeError, UnicodeEncodeError):
             dtfmt = s3_unicode(dtfmt).encode("utf-8")
 
-        # Use the current calendar
-        calendar = self.calendar
-
-        return calendar._format(dt, dtfmt)
+        return self.calendar._format(dt, dtfmt)
 
     # -------------------------------------------------------------------------
     def format_datetime(self, dt, dtfmt=None, local=False):
@@ -447,10 +448,15 @@ class S3Calendar(object):
         except (UnicodeDecodeError, UnicodeEncodeError):
             dtfmt = s3_unicode(dtfmt).encode("utf-8")
 
-        # Use the current calendar
-        calendar = self.calendar
+        # Remove microseconds
+        # - for the case that the calendar falls back to .isoformat,
+        #   and for consistency with s3_encode_local_datetime()
+        try:
+           dt = dt.replace(microsecond=0)
+        except AttributeError:
+           pass
 
-        return calendar._format(dt, dtfmt)
+        return self.calendar._format(dt, dtfmt)
 
     # -------------------------------------------------------------------------
     # Base class methods (should not be implemented by subclasses):
