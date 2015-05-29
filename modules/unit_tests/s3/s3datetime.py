@@ -222,6 +222,159 @@ class DateRepresentationTests(unittest.TestCase):
             session.s3.utc_offset = utc_offset
 
 # =============================================================================
+class DateTimeRepresentationTests(unittest.TestCase):
+    """ Test S3DateTime.datetime_represent """
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        settings = current.deployment_settings
+
+        self.date_format = settings.get_L10n_date_format()
+        self.time_format = settings.get_L10n_time_format()
+        current.deployment_settings.L10n.date_format = "%Y-%m-%d"
+        current.deployment_settings.L10n.time_format = "%H:%M:%S"
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        settings = current.deployment_settings
+
+        settings.L10n.date_format = self.date_format
+        settings.L10n.time_format = self.time_format
+
+    # -------------------------------------------------------------------------
+    def testDateTimeRepresent(self):
+        """ Test datetime representation """
+
+        assertEqual = self.assertEqual
+        represent = S3DateTime.datetime_represent
+
+        dt = datetime.datetime(2015, 5, 3, 11, 38, 55)
+        dtstr = represent(dt)
+        assertEqual(dtstr, "2015-05-03 11:38:55")
+
+    # -------------------------------------------------------------------------
+    def testDateTimeRepresentDestructive(self):
+        """ Test datetime representation (destructive) """
+
+        assertEqual = self.assertEqual
+        assertRaises = self.assertRaises
+
+        represent = S3DateTime.datetime_represent
+
+        dt = None
+        dtstr = represent(dt)
+        assertEqual(dtstr, current.messages.NONE)
+
+        with assertRaises(TypeError):
+            dtstr = represent(15)
+
+        with assertRaises(TypeError):
+            dtstr = represent("Invalid Type", utc=True)
+
+    # -------------------------------------------------------------------------
+    def testTZAwareDateTimeRepresent(self):
+        """ Test datetime representation (timezone-aware) """
+
+        session = current.session
+
+        utc = dateutil.tz.tzutc()
+
+        assertEqual = self.assertEqual
+        represent = S3DateTime.datetime_represent
+
+        utc_offset = session.s3.utc_offset
+        try:
+            # Within same date
+            dt = datetime.datetime(1973, 4, 21, 15, 30, 0, tzinfo=utc)
+            session.s3.utc_offset = +2
+            dtstr = represent(dt, utc=True)
+            assertEqual(dtstr, "1973-04-21 17:30:00")
+
+            # Across date (eastern timezone)
+            dt = datetime.datetime(1993, 6, 17, 22, 0, 0, tzinfo=utc)
+            session.s3.utc_offset = +6
+            dtstr = represent(dt, utc=True)
+            assertEqual(dtstr, "1993-06-18 04:00:00")
+
+            # Across date (western timezone)
+            dt = datetime.datetime(1995, 4, 1, 03, 0, 0, tzinfo=utc)
+            session.s3.utc_offset = -8
+            dtstr = represent(dt, utc=True)
+            assertEqual(dtstr, "1995-03-31 19:00:00")
+
+            # ...with utc=False (to verify the effectiveness of the parameter)
+            dt = datetime.datetime(1995, 4, 1, 03, 0, 0, tzinfo=utc)
+            session.s3.utc_offset = -8
+            dtstr = represent(dt, utc=False)
+            assertEqual(dtstr, "1995-04-01 03:00:00")
+
+        finally:
+            # Restore offset
+            session.s3.utc_offset = utc_offset
+
+    # -------------------------------------------------------------------------
+    def testDatetimeRepresentDefaultFormat(self):
+        """ Test date representation with default format """
+
+        settings = current.deployment_settings
+        assertEqual = self.assertEqual
+        represent = S3DateTime.datetime_represent
+
+        dt = datetime.datetime(2015, 5, 3, 13, 38, 13)
+
+        settings.L10n.date_format = "%Y-%m-%d"
+        settings.L10n.time_format = "%H:%M:%S"
+        assertEqual(represent(dt), "2015-05-03 13:38:13")
+
+        settings.L10n.date_format = "%m/%d/%y"
+        settings.L10n.time_format = "%I:%M %p"
+        assertEqual(represent(dt), "05/03/15 01:38 PM")
+
+    # -------------------------------------------------------------------------
+    def testDatetimeRepresentCustomFormat(self):
+        """ Test date representation with custom format (=override L10n setting) """
+
+        settings = current.deployment_settings
+        assertEqual = self.assertEqual
+        represent = S3DateTime.datetime_represent
+
+        dt = datetime.datetime(2015, 5, 3, 13, 38, 13)
+
+        settings.L10n.date_format = "%Y-%m-%d"
+        settings.L10n.time_format = "%H:%M:%S"
+        assertEqual(represent(dt), "2015-05-03 13:38:13")
+        assertEqual(represent(dt, format="%m/%d/%y %I:%M %p"), "05/03/15 01:38 PM")
+
+    # -------------------------------------------------------------------------
+    def testEarlyDateTimeRepresent(self):
+        """ Test early dates representation (<1900) """
+
+        assertEqual = self.assertEqual
+        represent = S3DateTime.datetime_represent
+
+        dt = datetime.datetime(1685, 3, 31, 14, 03, 19)
+
+        dtstr = represent(dt)
+        assertEqual(dtstr, "1685-03-31 14:03:19")
+
+        dt = datetime.datetime(1473, 2, 19, 5, 45, 0)
+        rstr = represent(dt, format="%d-%b-%Y %H:%M")
+        assertEqual(rstr, "19-Feb-1473 05:45")
+
+    # -------------------------------------------------------------------------
+    def testMicrosecondElimination(self):
+        """ Verify elimination of microseconds in datetime_represent """
+
+        assertEqual = self.assertEqual
+        represent = S3DateTime.datetime_represent
+
+        dt = datetime.datetime(2015, 5, 3, 11, 38, 55, 99)
+        dtstr = represent(dt, format="%m/%d/%y %I:%M %f")
+        assertEqual(dtstr, "05/03/15 11:38 000000")
+
+# =============================================================================
 class TimeRepresentationTests(unittest.TestCase):
     """ Test S3DateTime.time_represent """
 
@@ -834,6 +987,7 @@ if __name__ == "__main__":
         S3DateTimeTests,
         DateRepresentationTests,
         TimeRepresentationTests,
+        DateTimeRepresentationTests,
     )
 
 # END ========================================================================
