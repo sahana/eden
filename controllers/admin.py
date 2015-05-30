@@ -1102,7 +1102,7 @@ def result():
                     )
             file_list.append(link)
     except OSError:
-        pass
+        response.warning = T("No test results available")
     return dict(file_list=file_list)
 
 # -----------------------------------------------------------------------------
@@ -1115,6 +1115,7 @@ def result_automated():
     try:
         filenames = os.listdir(static_path)
     except OSError:
+        response.warning = T("No test results available")
         return dict(file_list_automated=file_list_automated)
     filenames.reverse()
     for filename in filenames:
@@ -1138,6 +1139,7 @@ def result_smoke():
     try:
         filenames = os.listdir(static_path)
     except OSError:
+        response.warning = T("No test results available")
         return dict(file_list_smoke=file_list_smoke)
     filenames.reverse()
     for filename in filenames:
@@ -1161,6 +1163,7 @@ def result_roles():
     try:
         filenames = os.listdir(static_path)
     except OSError:
+        response.warning = T("No test results available")
         return dict(file_list_roles=file_list_roles)
     filenames.reverse()
     for filename in filenames:
