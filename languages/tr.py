@@ -1464,4 +1464,5 @@
 "Award":"Ödül",
 "Create Award":"Ödül Ekle",
 "Country Code":"Ülke Kodu",
+"Add Skill":"Beceri Ekle",
 }
