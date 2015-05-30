@@ -7,7 +7,7 @@
 """
 
 # Debug why Eclipse breakpoints are ignored
-# http://stackoverflow.com/questions/9486871/pydev-breakpoints-not-working
+# http://stackoverflow.com/questions/29852426/pydev-ignoring-breakpoints
 #import sys
 #def trace_func(frame, event, arg):
 #    print 'Context: ', frame.f_code.co_name, '\tFile:', frame.f_code.co_filename, '\tLine:', frame.f_lineno, '\tEvent:', event
