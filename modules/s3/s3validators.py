@@ -62,9 +62,9 @@ __all__ = ("single_phone_number_pattern",
            "QUANTITY_INV_ITEM",
            )
 
+import datetime
 import re
 import time
-from datetime import datetime, timedelta
 
 JSONErrors = (NameError, TypeError, ValueError, AttributeError, KeyError)
 try:
@@ -2532,6 +2532,7 @@ class IS_UTC_DATETIME(Validator):
     def __init__(self,
                  format=None,
                  error_message=None,
+                 offset_error=None,
                  utc_offset=None,
                  minimum=None,
                  maximum=None):
@@ -2545,19 +2546,22 @@ class IS_UTC_DATETIME(Validator):
 
         self.minimum = minimum
         self.maximum = maximum
-        delta = timedelta(seconds=self.delta())
+        delta = datetime.timedelta(seconds=self.delta())
         min_local = minimum and minimum + delta or None
         max_local = maximum and maximum + delta or None
 
+        T = current.T
         if error_message is None:
             if minimum is None and maximum is None:
-                error_message = current.T("enter date and time")
+                error_message = T("enter date and time")
             elif minimum is None:
-                error_message = current.T("enter date and time on or before %(max)s")
+                error_message = T("enter date and time on or before %(max)s")
             elif maximum is None:
-                error_message = current.T("enter date and time on or after %(min)s")
+                error_message = T("enter date and time on or after %(min)s")
             else:
-                error_message = current.T("enter date and time in range %(min)s %(max)s")
+                error_message = T("enter date and time in range %(min)s %(max)s")
+        if offset_error is None:
+            offset_error = T("Invalid UTC offset")
 
         if min_local:
             min = min_local.strftime(format)
@@ -2567,79 +2571,109 @@ class IS_UTC_DATETIME(Validator):
             max = max_local.strftime(format)
         else:
             max = ""
-        self.error_message = error_message % dict(min = min,
-                                                  max = max)
+
+        self.error_message = error_message % dict(min = min, max = max)
+        self.offset_error = offset_error
 
     # -------------------------------------------------------------------------
     def delta(self, utc_offset=None):
+        """
+            Compute the delta in seconds for the current UTC offset
 
-        if utc_offset is not None:
-            self.utc_offset = utc_offset
-        if self.utc_offset is None:
-            self.utc_offset = current.session.s3.utc_offset
-        offset, error = IS_UTC_OFFSET()(self.utc_offset)
+            @param utc_offset: the offset (override defaults)
+            @return: the offset in seconds
+        """
+
+        if utc_offset is None:
+            # Fall back to validator default
+            utc_offset = self.utc_offset
+        if utc_offset is None:
+            # Fall back to session default
+            utc_offset = current.session.s3.utc_offset
+
+        offset, error = IS_UTC_OFFSET()(utc_offset)
         if error:
-            self.utc_offset = "+0000" # fallback to UTC
-        else:
-            self.utc_offset = offset
-        delta = S3DateTime.get_offset_value(self.utc_offset)
-        return delta
+            offset = 0 # fallback to UTC
+
+        return S3DateTime.get_offset_value(utc_offset)
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
+        """
+            Validate a value, and convert it into a datetime.datetime object
 
-        val = value.strip()
+            @param value: the value to validate
+            @return: tuple (value, error)
+        """
 
-        # Get UTC offset
-        if len(val) > 5 and val[-5] in ("+", "-") and val[-4:].isdigit():
-            # UTC offset specified in dtstr
-            dtstr = val[0:-5].strip()
-            utc_offset = val[-5:]
-        else:
-            # use default UTC offset
-            dtstr = val
-            utc_offset = self.utc_offset
+        if isinstance(value, basestring):
 
-        # Offset must be in range -2359 to +2359
-        offset = self.delta(utc_offset=utc_offset)
-        if offset < -86340 or offset > 86340:
-            return (val, self.error_message)
+            val = value.strip()
 
-        # Convert into datetime object
-        try:
-            (y, m, d, hh, mm, ss, t0, t1, t2) = \
-                time.strptime(dtstr, self.format)
-            dt = datetime(y, m, d, hh, mm, ss)
-        except:
-            try:
-                (y, m, d, hh, mm, ss, t0, t1, t2) = \
-                    time.strptime(dtstr + ":00", self.format)
-                dt = datetime(y, m, d, hh, mm, ss)
-            except:
+            # Split date/time and UTC offset
+            if len(val) > 5 and val[-5] in ("+", "-") and val[-4:].isdigit():
+                dtstr, utc_offset = val[0:-5].strip(), val[-5:]
+            else:
+                dtstr, utc_offset = val, None
+
+            # Convert into datetime object
+            dt = current.calendar.parse_datetime(dtstr,
+                                                 dtfmt=self.format,
+                                                 local=True,
+                                                 )
+            if dt is None:
                 return(value, self.error_message)
+        elif isinstance(value, datetime.datetime):
+            dt = value
+            utc_offset = None
+        elif isinstance(value, datetime.date):
+            # Default to 0:00 hours in the current timezone
+            dt = datetime.datetime.combine(value, datetime.time(0, 0, 0))
+            utc_offset = None
+        else:
+            # Invalid type
+            return value, self.error_message
+
+        # Convert to UTC and make tz-naive
+        if dt.tzinfo:
+            offset = dt.tzinfo.utcoffset(dt)
+            dt = dt.replace(tzinfo=None)
+        else:
+            offset = self.delta(utc_offset=utc_offset)
+            # Offset must be in range -2359 to +2359
+            if not -86340 < offset < 86340:
+                return (val, self.offset_error)
+            offset = datetime.timedelta(seconds=offset)
+        dt_utc = dt - offset
 
         # Validate
-        dt_utc = dt - timedelta(seconds=offset)
         if self.minimum and dt_utc < self.minimum or \
            self.maximum and dt_utc > self.maximum:
             return (dt_utc, self.error_message)
-        else:
-            return (dt_utc, None)
+
+        return (dt_utc, None)
 
     # -------------------------------------------------------------------------
     def formatter(self, value):
+        """
+            Format a datetime value as string
 
-        format = self.format
-        offset = self.delta()
+            @param value: the value
+        """
 
         if not value:
-            return "-"
-        elif offset:
-            dt = value + timedelta(seconds=offset)
-            return dt.strftime(format)
+            result = current.messages["NONE"]
         else:
-            dt = value
-            return dt.strftime(format) + "+0000"
+            offset = self.delta()
+            if offset:
+                dt = value + datetime.timedelta(seconds=offset)
+            else:
+                dt = value
+            result = current.calendar.format_datetime(dt,
+                                                      dtfmt=self.format,
+                                                      local=True,
+                                                      )
+        return result
 
 # =============================================================================
 class IS_ACL(IS_IN_SET):

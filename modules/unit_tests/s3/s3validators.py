@@ -64,6 +64,13 @@ class ISONEOFLazyRepresentationTests(unittest.TestCase):
         self.orgs = orgs
 
     # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.deployment_settings.org.branches = False
+        current.auth.override = False
+        current.db.rollback()
+
+    # -------------------------------------------------------------------------
     def testIsOneOfBuildSet(self):
 
         renderer = S3Represent(lookup="org_organisation")
@@ -129,17 +136,11 @@ class ISONEOFLazyRepresentationTests(unittest.TestCase):
             self.assertEqual(options[str(org.id)], org.name)
         self.assertEqual(renderer.queries, 0) # using default query
 
-    # -------------------------------------------------------------------------
-    def tearDown(self):
-
-        current.deployment_settings.org.branches = False
-        current.auth.override = False
-        current.db.rollback()
-
 # =============================================================================
 class IS_PHONE_NUMBER_Tests(unittest.TestCase):
     """ Test IS_PHONE_NUMBER single phone number validator """
 
+    # -------------------------------------------------------------------------
     def testStandardNotationRequirement(self):
         """ Test phone number validation with standard notation requirement """
 
@@ -197,6 +198,7 @@ class IS_PHONE_NUMBER_Tests(unittest.TestCase):
         value, error = validate(number)
         assertNotEqual(error, None)
 
+    # -------------------------------------------------------------------------
     def testInternationalFormat(self):
         """ Test phone number validation with international notation requirement """
 
@@ -258,6 +260,255 @@ class IS_PHONE_NUMBER_Tests(unittest.TestCase):
         settings.msg.require_international_phone_numbers = current_setting
 
 # =============================================================================
+class IS_UTC_DATETIME_Tests(unittest.TestCase):
+    """ Test IS_UTC_DATETIME validator """
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        settings = current.deployment_settings
+
+        # Make sure date and time formats are standard
+        self.date_format = settings.get_L10n_date_format()
+        self.time_format = settings.get_L10n_time_format()
+        current.deployment_settings.L10n.date_format = "%Y-%m-%d"
+        current.deployment_settings.L10n.time_format = "%H:%M:%S"
+
+        # Set timezone to UTC
+        session = current.session
+        self.utc_offset = session.s3.utc_offset
+        session.s3.utc_offset = 0
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        settings = current.deployment_settings
+
+        # Reset date and time format settings
+        settings.L10n.date_format = self.date_format
+        settings.L10n.time_format = self.time_format
+
+        # Reset time zone
+        current.session.s3.utc_offset = self.utc_offset
+
+    # -------------------------------------------------------------------------
+    def testValidation(self):
+        """ Test validation with valid datetime string """
+
+        validate = IS_UTC_DATETIME()
+
+        assertEqual = self.assertEqual
+
+        # Test timezone-naive string
+        dtstr = "2011-11-19 14:00:00"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 14, 0, 0))
+
+        # Test timezone-aware string
+        dtstr = "2011-11-19 14:00:00+0500"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 9, 0, 0))
+
+        # Change time zone
+        current.session.s3.utc_offset = -8
+
+        # Test timezone-naive string
+        dtstr = "2011-11-19 14:00:00"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 22, 0, 0))
+
+        # Test timezone-aware string
+        dtstr = "2011-11-19 14:00:00+0500"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 9, 0, 0))
+
+    # -------------------------------------------------------------------------
+    def testValidationWithDateTime(self):
+        """ Test validation with datetime """
+
+        validate = IS_UTC_DATETIME()
+
+        class EAST5(datetime.tzinfo):
+            def utcoffset(self, dt):
+                return datetime.timedelta(hours=5)
+
+        assertEqual = self.assertEqual
+
+        # Test timezone-naive datetime
+        dt = datetime.datetime(2011, 11, 19, 14, 0, 0)
+        value, error = validate(dt)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 14, 0, 0))
+
+        # Test timezone-aware datetime
+        dt = datetime.datetime(2011, 11, 19, 14, 0, 0, tzinfo=EAST5())
+        value, error = validate(dt)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 9, 0, 0))
+
+        # Change time zone
+        current.session.s3.utc_offset = -8
+
+        # Test timezone-naive datetime
+        dt = datetime.datetime(2011, 11, 19, 14, 0, 0)
+        value, error = validate(dt)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 22, 0, 0))
+
+        # Test timezone-aware datetime
+        dt = datetime.datetime(2011, 11, 19, 14, 0, 0, tzinfo=EAST5())
+        value, error = validate(dt)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 9, 0, 0))
+
+    # -------------------------------------------------------------------------
+    def testValidationWithDate(self):
+        """ Test validation with date """
+
+        validate = IS_UTC_DATETIME()
+
+        class EAST5(datetime.tzinfo):
+            def utcoffset(self, dt):
+                return datetime.timedelta(hours=5)
+
+        assertEqual = self.assertEqual
+
+        # Check that date defaults to 0:00 hours UTC
+        dt = datetime.date(2011, 11, 19)
+        value, error = validate(dt)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 0, 0, 0))
+
+        # Change time zone
+        current.session.s3.utc_offset = -8
+
+        # Check that date defaults to 0:00 hours in the current timezone
+        dt = datetime.date(2011, 11, 19)
+        value, error = validate(dt)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 8, 0, 0))
+
+    # -------------------------------------------------------------------------
+    def testValidationDestructive(self):
+        """ Test validation with invalid input """
+
+        validate = IS_UTC_DATETIME()
+
+        assertEqual = self.assertEqual
+
+        # Test with invalid datetime string
+        dtstr = "Invalid Value"
+        value, error = validate(dtstr)
+        assertEqual(error, validate.error_message)
+        assertEqual(value, dtstr)
+
+        # Test with invalid type
+        dtstr = 33
+        value, error = validate(dtstr)
+        assertEqual(error, validate.error_message)
+        assertEqual(value, dtstr)
+
+        # Test with None
+        dtstr = None
+        value, error = validate(dtstr)
+        assertEqual(error, validate.error_message)
+        assertEqual(value, dtstr)
+
+        # Test invalid UTC offset
+        dtstr = "2011-11-19 14:00:00+3600"
+        value, error = validate(dtstr)
+        assertEqual(error, validate.offset_error)
+        assertEqual(value, dtstr)
+
+    # -------------------------------------------------------------------------
+    def testDefaultFormat(self):
+        """ Test validation with default format """
+
+        # Set default format
+        current.deployment_settings.L10n.date_format = "%d/%m/%Y"
+        current.deployment_settings.L10n.time_format = "%H:%M"
+
+        # Instantiate with default format
+        validate = IS_UTC_DATETIME()
+
+        assertEqual = self.assertEqual
+
+        # Test valid string
+        dtstr = "19/11/2011 14:00"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 14, 0, 0))
+
+        # Test invalid string
+        dtstr = "2011-11-19 14:00:00"
+        value, error = validate(dtstr)
+        assertEqual(error, validate.error_message)
+        assertEqual(value, dtstr)
+
+    # -------------------------------------------------------------------------
+    def testCustomFormat(self):
+        """ Test validation with custom format (overriding settings) """
+
+        # Set default format
+        current.deployment_settings.L10n.date_format = "%d/%m/%Y"
+        current.deployment_settings.L10n.time_format = "%H:%M:%S"
+
+        # Instantiate with override format
+        validate = IS_UTC_DATETIME(format="%d.%m.%Y %I:%M %p")
+
+        assertEqual = self.assertEqual
+
+        # Test valid string
+        dtstr = "19.11.2011 02:00 PM"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 14, 0, 0))
+
+        # Test invalid string
+        dtstr = "2011-11-19 14:00:00"
+        value, error = validate(dtstr)
+        assertEqual(error, validate.error_message)
+        assertEqual(value, dtstr)
+
+    # -------------------------------------------------------------------------
+    def testFormatter(self):
+        """ Test formatter """
+
+        validate = IS_UTC_DATETIME()
+
+        assertEqual = self.assertEqual
+
+        # Test with None
+        dt = None
+        dtstr = validate.formatter(dt)
+        assertEqual(dtstr, current.messages["NONE"])
+
+        # Test without UTC offset
+        dt = datetime.datetime(2011, 11, 19, 14, 0, 0)
+        dtstr = validate.formatter(dt)
+        assertEqual(dtstr, "2011-11-19 14:00:00")
+
+        # Change time zone
+        current.session.s3.utc_offset = -8
+
+        # Test with default UTC offset
+        dt = datetime.datetime(2011, 11, 19, 14, 0, 0)
+        dtstr = validate.formatter(dt)
+        assertEqual(dtstr, "2011-11-19 06:00:00")
+
+        # Test with UTC offset and format override
+        validate = IS_UTC_DATETIME(utc_offset="+0200",
+                                   format="%d.%m.%Y %I:%M %p",
+                                   )
+        dt = datetime.datetime(2011, 11, 19, 14, 0, 0)
+        dtstr = validate.formatter(dt)
+        assertEqual(dtstr, "19.11.2011 04:00 PM")
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -277,6 +528,7 @@ if __name__ == "__main__":
         ISLonTest,
         ISONEOFLazyRepresentationTests,
         IS_PHONE_NUMBER_Tests,
+        IS_UTC_DATETIME_Tests,
     )
 
 # END ========================================================================
