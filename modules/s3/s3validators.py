@@ -2509,24 +2509,18 @@ class IS_UTC_OFFSET(Validator):
 # =============================================================================
 class IS_UTC_DATETIME(Validator):
     """
-        Validates a given value as datetime string and returns the
-        corresponding UTC datetime.
+        Validates a given date/time and returns it as timezone-naive
+        datetime object in UTC. Accepted input types are strings (in
+        local format), datetime.datetime and datetime.date.
 
         Example:
             - INPUT(_type="text", _name="name", requires=IS_UTC_DATETIME())
 
-        @param format:          strptime/strftime format template string, for
-                                directives refer to your strptime implementation
-        @param error_message:   error message to be returned
-        @param utc_offset:      offset to UTC in seconds, if not specified, the
-                                value is considered to be UTC
-        @param minimum:         the minimum acceptable datetime
-        @param maximum:         the maximum acceptable datetime
-
-        @note:
-            datetime has to be in the ISO8960 format YYYY-MM-DD hh:mm:ss,
-            with an optional trailing UTC offset specified as +/-HHMM
-            (+ for eastern, - for western timezones)
+        @note: a date/time string must be in local format, and can have
+               an optional trailing UTC offset specified as +/-HHMM
+               (+ for eastern, - for western timezones)
+        @note: if passed a datetime.date, it assumes 0:00 hours with the
+               current session's UTC offset
     """
 
     def __init__(self,
@@ -2536,20 +2530,28 @@ class IS_UTC_DATETIME(Validator):
                  utc_offset=None,
                  minimum=None,
                  maximum=None):
+        """
+            Constructor
+
+            @param format: strptime/strftime format template string, for
+                           directives refer to your strptime implementation
+            @param error_message: error message for invalid date/times
+            @param offset_error: error message for invalid UTC offset
+            @param utc_offset: offset to UTC in seconds, defaults to the
+                               current session's UTC offset
+            @param minimum: the minimum acceptable date/time
+            @param maximum: the maximum acceptable date/time
+        """
 
         if format is None:
-            self.format = format = str(current.deployment_settings.get_L10n_datetime_format())
+            self.format = dtfmt = str(current.deployment_settings.get_L10n_datetime_format())
         else:
-            self.format = format = str(format)
-
-        self.utc_offset = utc_offset
+            self.format = dtfmt = str(format)
 
         self.minimum = minimum
         self.maximum = maximum
-        delta = datetime.timedelta(seconds=self.delta())
-        min_local = minimum and minimum + delta or None
-        max_local = maximum and maximum + delta or None
 
+        # Default error messages
         T = current.T
         if error_message is None:
             if minimum is None and maximum is None:
@@ -2563,16 +2565,24 @@ class IS_UTC_DATETIME(Validator):
         if offset_error is None:
             offset_error = T("Invalid UTC offset")
 
-        if min_local:
-            min = min_local.strftime(format)
-        else:
-            min = ""
-        if max_local:
-            max = max_local.strftime(format)
-        else:
-            max = ""
+        # Localized minimum/maximum
+        self.utc_offset = utc_offset
+        delta = datetime.timedelta(seconds=self.delta())
 
-        self.error_message = error_message % dict(min = min, max = max)
+        format_datetime = current.calendar.format_datetime
+        represent = lambda dt: format_datetime(dt, dtfmt=dtfmt, local=True)
+        if minimum:
+            mindt = represent(minimum + delta)
+        else:
+            mindt = ""
+
+        if maximum:
+            maxdt = represent(maximum + delta)
+        else:
+            maxdt = ""
+
+        # Store error messages
+        self.error_message = error_message % {"min": mindt, "max": maxdt}
         self.offset_error = offset_error
 
     # -------------------------------------------------------------------------
@@ -2600,7 +2610,8 @@ class IS_UTC_DATETIME(Validator):
     # -------------------------------------------------------------------------
     def __call__(self, value):
         """
-            Validate a value, and convert it into a datetime.datetime object
+            Validate a value, and convert it into a timezone-naive
+            datetime.datetime object as necessary
 
             @param value: the value to validate
             @return: tuple (value, error)

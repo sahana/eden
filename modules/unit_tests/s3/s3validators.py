@@ -508,6 +508,52 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         dtstr = validate.formatter(dt)
         assertEqual(dtstr, "19.11.2011 04:00 PM")
 
+    # -------------------------------------------------------------------------
+    def testLocalizedErrorMessages(self):
+        """ Test localized date/time in default error messages """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+
+        # Set default format
+        current.deployment_settings.L10n.date_format = "%d/%m/%Y"
+        current.deployment_settings.L10n.time_format = "%I:%M %p"
+
+        # Change time zone
+        current.session.s3.utc_offset = +3
+
+        # Minimum/maximum
+        mindt = datetime.datetime(2011, 11, 19, 14, 0, 0)
+        maxdt = datetime.datetime(2011, 11, 20, 22, 0, 0)
+
+        # Test minimum error
+        validate = IS_UTC_DATETIME(minimum=mindt)
+        msg = validate.error_message
+        assertEqual(validate.minimum, mindt)
+        assertTrue(msg.find("19/11/2011 05:00 PM") != -1)
+
+        # Test maximum error
+        validate = IS_UTC_DATETIME(maximum=maxdt)
+        msg = validate.error_message
+        assertEqual(validate.maximum, maxdt)
+        assertTrue(msg.find("21/11/2011 01:00 AM") != -1)
+
+        # Test minimum error with custom format
+        validate = IS_UTC_DATETIME(minimum=mindt,
+                                   format="%Y-%m-%d %H:%M",
+                                   )
+        msg = validate.error_message
+        assertEqual(validate.minimum, mindt)
+        assertTrue(msg.find("2011-11-19 17:00") != -1)
+
+        # Test maximum error with custom format
+        validate = IS_UTC_DATETIME(maximum=maxdt,
+                                   format="%Y-%m-%d %H:%M",
+                                   )
+        msg = validate.error_message
+        assertEqual(validate.maximum, maxdt)
+        assertTrue(msg.find("2011-11-21 01:00") != -1)
+
 # =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
