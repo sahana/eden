@@ -113,8 +113,8 @@ def staff():
                 if r.method == "import":
                     # Redirect to person controller
                     redirect(URL(f="person",
-                                args="import",
-                                vars={"group": "staff"}))
+                                 args="import",
+                                 vars={"group": "staff"}))
                 elif not r.component and r.method != "delete":
                     # Configure site_id
                     field = table.site_id

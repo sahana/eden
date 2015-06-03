@@ -1550,7 +1550,7 @@ class S3ProjectActivityOrganisationModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1622,7 +1622,7 @@ class S3ProjectActivitySectorModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1717,7 +1717,7 @@ class S3ProjectAnnualBudgetModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ProjectBeneficiaryModel(S3Model):
@@ -1736,7 +1736,7 @@ class S3ProjectBeneficiaryModel(S3Model):
 
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Project Beneficiary Model needs Stats module enabling")
-            return dict()
+            return {}
 
         T = current.T
         db = current.db
@@ -2059,7 +2059,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2188,7 +2188,7 @@ class S3ProjectCampaignModel(S3Model):
 
         if not current.deployment_settings.has_module("stats"):
             # Campaigns Model needs Stats module enabling
-            return dict()
+            return {}
 
         T = current.T
         db = current.db
@@ -2448,7 +2448,7 @@ class S3ProjectCampaignModel(S3Model):
         )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ProjectFrameworkModel(S3Model):
@@ -2588,7 +2588,7 @@ class S3ProjectFrameworkModel(S3Model):
         )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ProjectHazardModel(S3Model):
@@ -2681,7 +2681,7 @@ class S3ProjectHazardModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2793,7 +2793,7 @@ class S3ProjectHRModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2834,7 +2834,7 @@ class S3ProjectIndicatorModel(S3Model):
 
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Project Indicator Model needs Stats module enabling")
-            return dict()
+            return {}
 
         T = current.T
         db = current.db
@@ -3071,7 +3071,7 @@ class S3ProjectIndicatorModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -3606,7 +3606,7 @@ class S3ProjectOrganisationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5162,7 +5162,7 @@ class S3ProjectSectorModel(S3Model):
         )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ProjectStatusModel(S3Model):
@@ -5470,7 +5470,7 @@ class S3ProjectThemeModel(S3Model):
         )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5585,7 +5585,7 @@ class S3ProjectDRRModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5759,7 +5759,7 @@ class S3ProjectDRRPPModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -7159,7 +7159,7 @@ class S3ProjectTaskHRMModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ProjectTaskIReportModel(S3Model):
@@ -7192,7 +7192,7 @@ class S3ProjectTaskIReportModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod

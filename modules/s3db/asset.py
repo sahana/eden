@@ -868,7 +868,7 @@ class S3AssetHRModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3AssetTeamModel(S3Model):
@@ -897,7 +897,7 @@ class S3AssetTeamModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3AssetTelephoneModel(S3Model):
@@ -962,7 +962,7 @@ class S3AssetTelephoneModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 def asset_get_current_log(asset_id):

@@ -232,7 +232,7 @@ class S3PatientModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class patient_PatientRepresent(S3Represent):

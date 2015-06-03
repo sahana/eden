@@ -704,7 +704,7 @@ class S3OrgAuthModel(S3Model):
                           *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        return dict()
+        return {}
 
 # =============================================================================
 class S3PersonModel(S3Model):
@@ -2656,7 +2656,7 @@ class S3PersonImageModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2940,7 +2940,7 @@ class S3PersonIdentityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3097,7 +3097,7 @@ class S3PersonEducationModel(S3Model):
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3241,9 +3241,8 @@ class S3PersonDetailsModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_DETAILS = T("Add Person's Details")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_DETAILS,
+            label_create = T("Add Person's Details"),
             title_display = T("Person's Details"),
             title_list = T("Persons' Details"),
             title_update = T("Edit Person's Details"),
@@ -3260,7 +3259,7 @@ class S3PersonDetailsModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -6499,7 +6498,7 @@ def pr_descendants(pe_ids, skip=None, root=True):
     nodes = set()
     ogetattr = object.__getattribute__
 
-    result = dict()
+    result = {}
 
     skip.update(pe_ids)
     for row in rows:

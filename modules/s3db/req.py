@@ -2162,7 +2162,7 @@ class S3RequestRecurringModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3RequestSummaryModel(S3Model):
@@ -2278,7 +2278,7 @@ class S3RequestSummaryModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3RequestTaskModel(S3Model):
@@ -2306,7 +2306,7 @@ class S3RequestTaskModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3CommitModel(S3Model):
@@ -3122,7 +3122,7 @@ class S3CommitPersonModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3202,7 +3202,7 @@ class S3CommitSkillModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3728,7 +3728,7 @@ def req_match(rheader=None):
     request = current.request
     settings = current.deployment_settings
 
-    output = dict()
+    output = {}
 
     viewing = request.get_vars.get("viewing", None)
     if not viewing:

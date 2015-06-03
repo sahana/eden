@@ -862,7 +862,7 @@ class S3ContentMapModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ContentOrgModel(S3Model):
@@ -890,7 +890,7 @@ class S3ContentOrgModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ContentOrgGroupModel(S3Model):
@@ -914,7 +914,7 @@ class S3ContentOrgGroupModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ContentUserModel(S3Model):
@@ -938,7 +938,7 @@ class S3ContentUserModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 def cms_rheader(r, tabs=[]):
