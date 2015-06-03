@@ -1301,7 +1301,6 @@ class S3DateWidget(FormWidget):
                  default_interval = None,
                  default_explicit = False,
                  ):
-
         """
             Constructor
 
@@ -1320,20 +1319,30 @@ class S3DateWidget(FormWidget):
         self.default_interval = default_interval
         self.default_explicit = default_explicit
 
+    # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
+        """
+            Widget builder
+
+            @param field: the Field
+            @param value: the current value
+            @param attributes: the HTML attributes for the widget
+        """
 
         # Need to convert value into ISO-format
         # (widget expects ISO, but value comes in custom format)
-        settings = current.deployment_settings
-        _format = settings.get_L10n_date_format()
-        v, error = IS_DATE_IN_RANGE(format=_format)(value)
-        if not error:
-            value = v.isoformat()
+        dt = current.calendar.parse_date(value, local=True)
+        if dt:
+            value = dt.isoformat()
 
         request = current.request
+        settings = current.deployment_settings
+
         s3 = current.response.s3
+
         jquery_ready = s3.jquery_ready
         language = current.session.s3.language
+
         if language in settings.date_formats:
             # Localise if we have configured a Date Format and we have a jQueryUI options file
             # Do we have a suitable locale file?
@@ -1359,7 +1368,12 @@ class S3DateWidget(FormWidget):
             # default: "yy-mm-dd"
             format = str(self.format)
         else:
-            format = _format.replace("%Y", "yy").replace("%y", "y").replace("%m", "mm").replace("%d", "dd").replace("%b", "M")
+            dtfmt = settings.get_L10n_date_format()
+            format = dtfmt.replace("%Y", "yy") \
+                          .replace("%y", "y") \
+                          .replace("%m", "mm") \
+                          .replace("%d", "dd") \
+                          .replace("%b", "M")
 
         default = dict(_type = "text",
                        value = (value != None and str(value)) or "",

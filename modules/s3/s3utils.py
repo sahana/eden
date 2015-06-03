@@ -1963,23 +1963,33 @@ class S3TypeConverter(object):
         if isinstance(b, datetime.datetime):
             return b
         elif isinstance(b, basestring):
+            # NB: converting from string (e.g. URL query) assumes the string
+            #     is specified for the local time zone, unless a timezone is
+            #     explicitly specified in the string (e.g. trailing Z in ISO)
+            dt = None
             try:
-                # ISO Format is standard (e.g. in URLs)
+                # Try ISO Format (e.g. filter widgets)
                 (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(b, ISOFORMAT)
             except ValueError:
+                # Fall back to default format (deployment setting)
+                dt = b
+            else:
+                dt = datetime.datetime(y, m, d, hh, mm, ss)
+            # Validate and convert to UTC (assuming local timezone)
+            from s3validators import IS_UTC_DATETIME
+            dt, error = IS_UTC_DATETIME()(dt)
+            if error:
+                # dateutil as last resort
+                # NB: this can process ISOFORMAT with time zone specifier,
+                #     returning a timezone-aware datetime, which is then
+                #     properly converted by IS_UTC_DATETIME
                 try:
-                    # Try localized datetime format
-                    tfmt = str(current.deployment_settings.get_L10n_datetime_format())
-                    (y, m, d, hh, mm, ss, t0, t1, t2) = time.strptime(b, tfmt)
-                except ValueError:
-                    # dateutil as last resort
-                    try:
-                        dt = s3_decode_iso_datetime(b)
-                    except:
-                        raise ValueError
-                    else:
-                        return dt
-            return datetime.datetime(y, m, d, hh, mm, ss)
+                    dt = s3_decode_iso_datetime(b)
+                except:
+                    raise ValueError
+                else:
+                    dt, error = IS_UTC_DATETIME()(dt)
+            return dt
         else:
             raise TypeError
 
@@ -1991,11 +2001,14 @@ class S3TypeConverter(object):
         if isinstance(b, datetime.date):
             return b
         elif isinstance(b, basestring):
-            format = current.deployment_settings.get_L10n_date_format()
-            validator = IS_DATE(format=format)
-            value, error = validator(b)
+            # NB: converting from string (e.g. URL query) assumes
+            #     the string is specified for the local time zone,
+            #     specify an ISOFORMAT date/time with explicit time zone
+            #     (e.g. trailing Z) to override this assumption
+            from s3validators import IS_UTC_DATE
+            value, error = IS_UTC_DATE()(b)
             if error:
-                # May be specified as datetime-string?
+                # Maybe specified as datetime-string?
                 value = cls._datetime(b).date()
             return value
         else:

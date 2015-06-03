@@ -46,7 +46,7 @@ from s3dal import Query, SQLCustomType
 from s3datetime import S3DateTime
 from s3navigation import S3ScriptItem
 from s3utils import s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, S3MarkupStripper
-from s3validators import IS_ONE_OF, IS_UTC_DATETIME
+from s3validators import IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
 from s3widgets import S3DateWidget, S3DateTimeWidget
 
 try:
@@ -1207,89 +1207,84 @@ def s3_date(name="date", **attr):
         future = None
 
     T = current.T
-    now = current.response.s3.local_date or current.request.utcnow.date()
+    now = current.request.utcnow.date()
 
     if "default" in attr and attr["default"] == "now":
         attr["default"] = now
+
     if "label" not in attr:
         attr["label"] = T("Date")
+
     if "represent" not in attr:
         attr["represent"] = lambda d: S3DateTime.date_represent(d, utc=True)
+
     if "requires" not in attr:
-        date_format = current.deployment_settings.get_L10n_date_format()
+
         if past is None and future is None:
-            requires = IS_DATE(format=date_format)
+            requires = IS_UTC_DATE()
         else:
             current_month = now.month
             if past is None:
                 future_month = now.month + future
                 if future_month <= 12:
-                    max = now.replace(month=future_month)
+                    maximum = now.replace(month=future_month)
                 else:
                     current_year = now.year
                     years = int(future_month/12)
                     future_year = current_year + years
                     future_month = future_month - (years * 12)
                     if future_month:
-                        max = now.replace(year=future_year,
-                                          month=future_month)
+                        maximum = now.replace(year=future_year,
+                                              month=future_month,
+                                              )
                     else:
-                        max = now.replace(year=future_year)
-                requires = IS_DATE_IN_RANGE(
-                    format=date_format,
-                    maximum=max,
-                    error_message=T("Date must be %(max)s or earlier!")
-                    )
+                        maximum = now.replace(year=future_year)
+                requires = IS_UTC_DATE(maximum=maximum)
             elif future is None:
                 if past < current_month:
-                    min = now.replace(month=current_month - past)
+                    minimum = now.replace(month=current_month - past)
                 else:
                     current_year = now.year
                     past_years = int(past/12)
                     past_months = past - (past_years * 12)
                     past_month = current_month - past_months
                     if past_month:
-                        min = now.replace(year=current_year - past_years,
-                                          month=past_month)
+                        minimum = now.replace(year=current_year - past_years,
+                                              month=past_month,
+                                              )
                     else:
-                        min = now.replace(year=current_year - past_years)
-                requires = IS_DATE_IN_RANGE(
-                    format=date_format,
-                    minimum=min,
-                    error_message=T("Date must be %(min)s or later!")
-                    )
+                        minimum = now.replace(year=current_year - past_years)
+                requires = IS_UTC_DATE(minimum=minimum)
             else:
                 future_month = now.month + future
                 if future_month <= 12:
-                    max = now.replace(month=future_month)
+                    maximum = now.replace(month=future_month)
                 else:
                     current_year = now.year
                     years = int(future_month/12)
                     future_year = now.year + years
                     future_month = future_month - (years * 12)
                     if future_month:
-                        max = now.replace(year=future_year,
-                                          month=future_month)
+                        maximum = now.replace(year=future_year,
+                                              month=future_month,
+                                              )
                     else:
-                        max = now.replace(year=future_year)
+                        maximum = now.replace(year=future_year)
                 if past < current_month:
-                    min = now.replace(month=current_month - past)
+                    minimum = now.replace(month=current_month - past)
                 else:
                     current_year = now.year
                     past_years = int(past/12)
                     past_months = past - (past_years * 12)
                     past_month = current_month - past_months
                     if past_month:
-                        min = now.replace(year=current_year - past_years,
-                                          month=past_month)
+                        minimum = now.replace(year=current_year - past_years,
+                                              month=past_month,
+                                              )
                     else:
-                        min = now.replace(year=current_year - past_years)
-                requires = IS_DATE_IN_RANGE(
-                    format=date_format,
-                    maximum=max,
-                    minimum=min,
-                    error_message=T("Date must be between %(min)s and %(max)s!")
-                    )
+                        minimum = now.replace(year=current_year - past_years)
+                requires = IS_UTC_DATE(minimum=minimum, maximum=maximum)
+
         if "empty" in attr:
             if attr["empty"] is False:
                 attr["requires"] = requires
@@ -1425,27 +1420,16 @@ def s3_datetime(name="date", **attr):
         if "requires" not in attr:
             dateformat = current.deployment_settings.get_L10n_date_format()
             if past is None and future is None:
-                requires = IS_DATE(format=dateformat)
+                requires = IS_UTC_DATE()
             elif past is None:
-                msg = current.T("Date must be %(max)s or earlier!")
-                requires = IS_DATE_IN_RANGE(format=dateformat,
-                                            maximum=latest.date(),
-                                            error_message=msg,
-                                            )
+                requires = IS_UTC_DATE(maximum=latest.date())
             elif future is None:
-                msg = current.T("Date must be %(min)s or later!")
-                requires = IS_DATE_IN_RANGE(format=dateformat,
-                                            minimum=earliest.date(),
-                                            error_message=msg,
-                                            )
+                requires = IS_UTC_DATE(minimum=earliest.date())
             else:
                 attr["widget"] = S3DateWidget(past=past, future=future)
-                msg = current.T("Date must be between %(min)s and %(max)s!")
-                requires = IS_DATE_IN_RANGE(format=dateformat,
-                                            maximum=latest.date(),
-                                            minimum=earliest.date(),
-                                            error_message=msg,
-                                            )
+                requires = IS_UTC_DATE(maximum=latest.date(),
+                                       minimum=earliest.date(),
+                                       )
 
     elif widget is None or widget == "datetime":
 
@@ -1454,7 +1438,6 @@ def s3_datetime(name="date", **attr):
 
         # Validator
         if "requires" not in attr:
-            datetime_format = current.deployment_settings.get_L10n_datetime_format()
             earliest = limits.get("min")
             if not earliest:
                 past = limits.get("past")
@@ -1466,26 +1449,15 @@ def s3_datetime(name="date", **attr):
                 if future is not None:
                     latest = now + datetime.timedelta(hours=future)
             if earliest and latest:
-                msg = current.T("Date must be between %(min)s and %(max)s!")
-                requires = IS_UTC_DATETIME(format=datetime_format,
-                                           minimum=earliest,
+                requires = IS_UTC_DATETIME(minimum=earliest,
                                            maximum=latest,
-                                           error_message=msg,
                                            )
             elif earliest:
-                msg = current.T("Date must be %(min)s or later!")
-                requires = IS_UTC_DATETIME(format=datetime_format,
-                                           minimum=earliest,
-                                           error_message=msg,
-                                           )
+                requires = IS_UTC_DATETIME(minimum=earliest)
             elif latest:
-                msg = current.T("Date must be %(max)s or earlier!")
-                requires = IS_UTC_DATETIME(format=datetime_format,
-                                           maximum=latest,
-                                           error_message=msg,
-                                           )
+                requires = IS_UTC_DATETIME(maximum=latest)
             else:
-                requires = IS_UTC_DATETIME(format=datetime_format)
+                requires = IS_UTC_DATETIME()
 
     if "requires" not in attr and requires is not None:
         empty = attr.pop("empty", None)

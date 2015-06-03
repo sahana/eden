@@ -80,7 +80,7 @@ except ImportError:
 
 from gluon import *
 #from gluon import current
-#from gluon.validators import IS_DATE_IN_RANGE, IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
+#from gluon.validators import IS_MATCH, IS_NOT_IN_DB, IS_IN_SET, IS_INT_IN_RANGE, IS_FLOAT_IN_RANGE, IS_EMAIL
 from gluon.storage import Storage
 from gluon.validators import Validator
 
@@ -2552,36 +2552,25 @@ class IS_UTC_DATETIME(Validator):
 
         self.minimum = minimum
         self.maximum = maximum
+        self.utc_offset = utc_offset
 
         # Default error messages
         T = current.T
         if error_message is None:
             if minimum is None and maximum is None:
-                error_message = T("enter date and time")
+                error_message = T("Date is required!")
             elif minimum is None:
-                error_message = T("enter date and time on or before %(max)s")
+                error_message = T("Date must be %(max)s or earlier!")
             elif maximum is None:
-                error_message = T("enter date and time on or after %(min)s")
+                error_message = T("Date must be %(min)s or later!")
             else:
-                error_message = T("enter date and time in range %(min)s %(max)s")
+                error_message = T("Date must be between %(min)s and %(max)s!")
         if offset_error is None:
-            offset_error = T("Invalid UTC offset")
+            offset_error = T("Invalid UTC offset!")
 
         # Localized minimum/maximum
-        self.utc_offset = utc_offset
-        delta = datetime.timedelta(seconds=self.delta())
-
-        format_datetime = current.calendar.format_datetime
-        represent = lambda dt: format_datetime(dt, dtfmt=dtfmt, local=True)
-        if minimum:
-            mindt = represent(minimum + delta)
-        else:
-            mindt = ""
-
-        if maximum:
-            maxdt = represent(maximum + delta)
-        else:
-            maxdt = ""
+        mindt = self.formatter(minimum) if minimum else ""
+        maxdt = self.formatter(maximum) if maximum else ""
 
         # Store error messages
         self.error_message = error_message % {"min": mindt, "max": maxdt}
@@ -2728,36 +2717,25 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
 
         self.minimum = minimum
         self.maximum = maximum
+        self.utc_offset = utc_offset
 
         # Default error messages
         T = current.T
         if error_message is None:
             if minimum is None and maximum is None:
-                error_message = T("enter date")
+                error_message = T("Date is required!")
             elif minimum is None:
-                error_message = T("enter date on or before %(max)s")
+                error_message = T("Date must be %(max)s or earlier!")
             elif maximum is None:
-                error_message = T("enter date on or after %(min)s")
+                error_message = T("Date must be %(min)s or later!")
             else:
-                error_message = T("enter date in range %(min)s %(max)s")
+                error_message = T("Date must be between %(min)s and %(max)s!")
         if offset_error is None:
-            offset_error = T("Invalid UTC offset")
+            offset_error = T("Invalid UTC offset!")
 
         # Localized minimum/maximum
-        self.utc_offset = utc_offset
-        delta = datetime.timedelta(seconds=self.delta())
-
-        format_date = current.calendar.format_date
-        represent = lambda dt: format_date(dt, dtfmt=dtfmt, local=True)
-        if minimum:
-            mindt = represent(minimum + delta)
-        else:
-            mindt = ""
-
-        if maximum:
-            maxdt = represent(maximum + delta)
-        else:
-            maxdt = ""
+        mindt = self.formatter(minimum) if minimum else ""
+        maxdt = self.formatter(maximum) if maximum else ""
 
         # Store error messages
         self.error_message = error_message % {"min": mindt, "max": maxdt}
@@ -2831,12 +2809,13 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
 
         offset = self.delta()
         if offset:
+            delta = datetime.timedelta(seconds=offset)
             if not isinstance(value, datetime.datetime):
-                # Convert to standard time 08:00 hours
-                value = datetime.datetime.combine(value,
-                                                  datetime.time(8, 0, 0),
-                                                  )
-            value += datetime.timedelta(seconds=offset)
+                combine = datetime.datetime.combine
+                # Compute the break point
+                bp = (combine(value, datetime.time(8, 0, 0)) - delta).time()
+                value = combine(value, bp)
+            value += delta
 
         result = current.calendar.format_date(value,
                                               dtfmt=self.format,

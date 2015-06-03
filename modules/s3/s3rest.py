@@ -54,9 +54,8 @@ except ImportError:
 from gluon import *
 # Here are dependencies listed for reference:
 #from gluon.globals import current
-#from gluon.html import A, DIV, URL
+#from gluon.html import URL
 #from gluon.http import HTTP, redirect
-#from gluon.validators import IS_EMPTY_OR, IS_NOT_IN_DB, IS_DATE, IS_TIME
 from gluon.storage import Storage
 
 from s3datetime import s3_parse_datetime

@@ -683,9 +683,7 @@ class S3DateFilter(S3RangeFilter):
                     raise SyntaxError("%s: _id parameter required " \
                                       "when rendered without resource." % \
                                       self.__class__.__name__)
-            dtformat = current.deployment_settings.get_L10n_date_format()
-            field = Field(fname, ftype,
-                          requires = IS_DATE_IN_RANGE(format = dtformat))
+            field = Field(fname, ftype, requires = IS_UTC_DATE())
             field.tablename = field._tablename = tname
 
         # Options

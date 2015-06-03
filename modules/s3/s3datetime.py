@@ -81,10 +81,16 @@ class S3DateTime(object):
             format = current.deployment_settings.get_L10n_date_format()
 
         if dt:
-            if utc and isinstance(dt, datetime.datetime):
+            if utc:
                 offset = cls.get_offset_value(current.session.s3.utc_offset)
                 if offset:
-                    dt = dt + datetime.timedelta(seconds=offset)
+                    delta = datetime.timedelta(seconds=offset)
+                    if not isinstance(dt, datetime.datetime):
+                        combine = datetime.datetime.combine
+                        # Compute the break point
+                        bp = (combine(dt, datetime.time(8, 0, 0)) - delta).time()
+                        dt = combine(dt, bp)
+                    dt = dt + delta
             dtstr = current.calendar.format_date(dt, dtfmt=format, local=True)
         else:
             dtstr = current.messages["NONE"]
@@ -105,9 +111,14 @@ class S3DateTime(object):
             format = current.deployment_settings.get_L10n_datetime_format()
 
         if dt:
-            if utc and isinstance(dt, datetime.datetime):
+            if utc:
                 offset = cls.get_offset_value(current.session.s3.utc_offset)
                 if offset:
+                    delta = datetime.timedelta(seconds=offset)
+                    if not isinstance(dt, datetime.datetime):
+                        combine = datetime.datetime.combine
+                        bp = (combine(dt, datetime.time(8, 0, 0)) - delta).time()
+                        dt = combine(dt, bp)
                     dt = dt + datetime.timedelta(seconds=offset)
             dtstr = current.calendar.format_datetime(dt, dtfmt=format, local=True)
         else:
@@ -449,10 +460,8 @@ class S3Calendar(object):
 
         # Remove microseconds
         # - for the case that the calendar falls back to .isoformat
-        try:
+        if isinstance(dt, datetime.datetime):
            dt = dt.replace(microsecond=0)
-        except AttributeError:
-           pass
 
         return self.calendar._format(dt, dtfmt)
 
@@ -642,10 +651,6 @@ def s3_get_utc_offset():
         offset = current.deployment_settings.L10n.utc_offset
 
     session.s3.utc_offset = offset
-
-    seconds = datetime.timedelta(seconds=S3DateTime.get_offset_value(offset))
-    current.response.s3.local_date = (request.utcnow + seconds).date()
-
     return offset
 
 # END =========================================================================

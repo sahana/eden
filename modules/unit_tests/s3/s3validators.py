@@ -271,8 +271,8 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         # Make sure date and time formats are standard
         self.date_format = settings.get_L10n_date_format()
         self.time_format = settings.get_L10n_time_format()
-        current.deployment_settings.L10n.date_format = "%Y-%m-%d"
-        current.deployment_settings.L10n.time_format = "%H:%M:%S"
+        settings.L10n.date_format = "%Y-%m-%d"
+        settings.L10n.time_format = "%H:%M:%S"
 
         # Set timezone to UTC
         session = current.session
@@ -574,7 +574,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
 
         # Make sure date format is standard
         self.date_format = settings.get_L10n_date_format()
-        current.deployment_settings.L10n.date_format = "%Y-%m-%d"
+        settings.L10n.date_format = "%Y-%m-%d"
 
         # Set timezone to UTC
         session = current.session
@@ -675,6 +675,57 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         value, error = validate(dt)
         assertEqual(error, None)
         assertEqual(value, datetime.date(2011, 11, 18))
+
+    # -------------------------------------------------------------------------
+    def testParseRepresent(self):
+        """ Parsing-Representation consistency test """
+
+        # Representation of a parsed string must give the same string
+
+        assertEqual = self.assertEqual
+
+        validate = IS_UTC_DATE()
+        represent = S3DateTime.date_represent
+
+        current.session.s3.utc_offset = -10
+
+        dtstr = "1998-03-21"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        representation = validate.formatter(value)
+        assertEqual(representation, dtstr)
+        representation = represent(value)
+        assertEqual(representation, dtstr)
+
+        current.session.s3.utc_offset = 0
+
+        dtstr = "1998-03-21"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        representation = validate.formatter(value)
+        assertEqual(representation, dtstr)
+        representation = represent(value)
+        assertEqual(representation, dtstr)
+
+        current.session.s3.utc_offset = 6
+
+        dtstr = "1998-03-21"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        representation = validate.formatter(value)
+        assertEqual(representation, dtstr)
+        representation = represent(value)
+        assertEqual(representation, dtstr)
+
+        current.session.s3.utc_offset = 11
+
+        dtstr = "1998-03-21"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        representation = validate.formatter(value)
+        assertEqual(representation, dtstr)
+        representation = represent(value, utc=True)
+        assertEqual(representation, dtstr)
 
     # -------------------------------------------------------------------------
     def testValidationWithDate(self):
@@ -822,18 +873,34 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(dtstr, "2011-11-19")
 
         # Change time zone
-        current.session.s3.utc_offset = -9
+        current.session.s3.utc_offset = +6
 
-        # Test with default UTC offset (9 hours West, previous day)
+        # Test with default UTC offset (6 hours East, same day)
         dt = datetime.date(2011, 11, 19)
         dtstr = validate.formatter(dt)
-        assertEqual(dtstr, "2011-11-18")
+        assertEqual(dtstr, "2011-11-19")
 
-        # Test with UTC offset and format override (8 hours East, next day)
-        validate = IS_UTC_DATETIME(utc_offset="+0800",
-                                   format="%d.%m.%Y",
-                                   )
+        # Change time zone
+        current.session.s3.utc_offset = +9
+
+        # Test with default UTC offset (9 hours East, next day)
+        dt = datetime.date(2011, 11, 19)
+        dtstr = validate.formatter(dt)
+        assertEqual(dtstr, "2011-11-20")
+
+        # Test with UTC offset and format override (12 hours East, next day)
+        validate = IS_UTC_DATE(utc_offset="+1200",
+                               format="%d.%m.%Y",
+                               )
+        dt = datetime.datetime(2011, 11, 19, 8, 0, 0)
+        dtstr = validate.formatter(dt)
+        assertEqual(dtstr, "19.11.2011")
+
         dt = datetime.datetime(2011, 11, 19, 18, 0, 0)
+        dtstr = validate.formatter(dt)
+        assertEqual(dtstr, "20.11.2011")
+
+        dt = datetime.date(2011, 11, 19)
         dtstr = validate.formatter(dt)
         assertEqual(dtstr, "20.11.2011")
 

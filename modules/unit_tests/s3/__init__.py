@@ -16,6 +16,7 @@ from unit_tests.s3.s3resource import *
 from unit_tests.s3.s3rest import *
 from unit_tests.s3.s3sync import *
 from unit_tests.s3.s3timeplot import *
+from unit_tests.s3.s3utils import *
 from unit_tests.s3.s3validators import *
 from unit_tests.s3.s3widgets import *
 from unit_tests.s3.s3xml import *

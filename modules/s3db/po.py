@@ -562,7 +562,7 @@ class OutreachHouseholdModel(S3Model):
                       "W": T("worse"),
                       }
 
-        twoweeks = s3.local_date + datetime.timedelta(days=14)
+        twoweeks = current.request.utcnow + datetime.timedelta(days=14)
 
         tablename = "po_household_followup"
         define_table(tablename,
