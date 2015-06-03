@@ -1636,11 +1636,7 @@ def config(settings):
         if r.controller == "vol":
             T = current.T
             root_org = current.auth.root_org_name()
-            if root_org == VNRC:
-                settings.hrm.use_certificates = False
-                settings.hrm.use_regions = False
-
-            elif root_org == NRCS:
+            if root_org == NRCS:
                 # Expose volunteer_type field with these options:
                 types = {"PROGRAMME": T("Program Volunteer"),
                          "GOVERNANCE": T("Governance Volunteer"),
@@ -1665,14 +1661,21 @@ def config(settings):
                                   user_org_and_children_default_filter,
                                   tablename = "hrm_human_resource")
 
+        s3db = current.s3db
+
+        # Special cases for different NS
         arcs = False
         vnrc = False
         root_org = current.auth.root_org_name()
         if root_org == VNRC:
+            vnrc = True
             settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
+            # @ToDo: Make this use the same lookup as in ns_only to check if user can see HRs from multiple NS
+            settings.org.regions = False
+            settings.hrm.use_certificates = False
+            s3db.hrm_human_resource.site_id.represent = s3db.org_SiteRepresent(show_type = False)
 
         if controller == "vol":
-            # Special cases for different NS
             if root_org == ARCS:
                 arcs = True
                 settings.L10n.mandatory_lastname = False
@@ -1680,14 +1683,10 @@ def config(settings):
                 settings.hrm.vol_active = True
             elif root_org in (CVTL, PMI, PRC):
                 settings.hrm.vol_active = vol_active
-            elif root_org == VNRC:
-                vnrc = True
-                # @ToDo: Make this use the same lookup as in ns_only to check if user can see HRs from multiple NS
-                settings.org.regions = False
+
         #elif vnrc:
         #    settings.org.site_label = "Office/Center"
 
-        s3db = current.s3db
         s3db.org_organisation.root_organisation.label = T("National Society")
 
         s3 = current.response.s3
@@ -1754,6 +1753,7 @@ def config(settings):
                                                               ))
 
             if controller == "deploy":
+                # Custom setting for RDRT
 
                 # Custom profile widgets for hrm_competency ("skills"):
                 from s3 import FS
@@ -2846,7 +2846,7 @@ def config(settings):
                     db = current.db
                     dtable = s3db.pr_person_details
 
-                    # Context-dependend form fields
+                    # Context-dependent form fields
                     if controller in ("pr", "hrm", "vol"):
                         # Provinces of Viet Nam
                         ltable = s3db.gis_location
@@ -3016,7 +3016,7 @@ def config(settings):
                                                       "awarding_body",
                                                       "award_type_id",
                                                       ],
-                                        orderby = "hrm_award.date desc"
+                                       orderby = "hrm_award.date desc"
                                        )
                         # Custom list_fields for hrm_disciplinary_action
                         s3db.configure("hrm_disciplinary_action",
@@ -3024,7 +3024,7 @@ def config(settings):
                                                       "disciplinary_body",
                                                       "disciplinary_type_id",
                                                       ],
-                                        orderby = "hrm_disciplinary_action.date desc"
+                                       orderby = "hrm_disciplinary_action.date desc"
                                        )
                         # Custom form for hrm_human_resource
                         from s3 import S3SQLCustomForm, S3SQLInlineComponent

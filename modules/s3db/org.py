@@ -1113,7 +1113,7 @@ class S3OrganisationNameModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1661,7 +1661,7 @@ class S3OrganisationGroupPersonModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3OrganisationGroupTeamModel(S3Model):
@@ -1694,7 +1694,7 @@ class S3OrganisationGroupTeamModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1773,7 +1773,7 @@ class S3OrganisationLocationModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1810,7 +1810,7 @@ class S3OrganisationResourceModel(S3Model):
         #settings = current.deployment_settings
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Organisation Resource Model needs Stats module enabling")
-            return dict()
+            return {}
 
         T = current.T
         #auth = current.auth
@@ -1951,7 +1951,7 @@ class S3OrganisationResourceModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3OrganisationSectorModel(S3Model):
@@ -2381,7 +2381,7 @@ class S3OrganisationServiceModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2453,7 +2453,7 @@ class S3OrganisationSummaryModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3OrganisationTagModel(S3Model):
@@ -2493,7 +2493,7 @@ class S3OrganisationTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2550,7 +2550,7 @@ class S3OrganisationTeamModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2622,7 +2622,7 @@ class S3OrganisationTypeTagModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3192,7 +3192,7 @@ class S3SiteDetailsModel(S3Model):
                      *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3FacilityModel(S3Model):
@@ -4383,7 +4383,7 @@ class S3OfficeSummaryModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3OfficeTypeTagModel(S3Model):
@@ -4418,7 +4418,7 @@ class S3OfficeTypeTagModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 def org_organisation_address(row):
@@ -4638,7 +4638,7 @@ def org_region_options(zones=False):
 
     represent = current.s3db.org_region_represent
     if represent is None:
-        return dict()
+        return {}
 
     db = current.db
     rtable = db.org_region

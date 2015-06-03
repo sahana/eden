@@ -1016,7 +1016,7 @@ class S3IncidentReportModel(S3Model):
                             )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventResourceModel(S3Model):
@@ -1036,7 +1036,7 @@ class S3EventResourceModel(S3Model):
 
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Event Resource Model needs Stats module enabling")
-            return dict()
+            return {}
 
         T = current.T
         super_link = self.super_link
@@ -1185,7 +1185,7 @@ class S3EventResourceModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3IncidentReportOrganisationGroupModel(S3Model):
@@ -1216,7 +1216,7 @@ class S3IncidentReportOrganisationGroupModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3IncidentTypeModel(S3Model):
@@ -1384,7 +1384,7 @@ class S3IncidentTypeTagModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventActivityModel(S3Model):
@@ -1409,7 +1409,7 @@ class S3EventActivityModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventAlertModel(S3Model):
@@ -1507,7 +1507,7 @@ class S3EventAlertModel(S3Model):
             msg_list_empty = T("No Recipients currently defined"))
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventAssetModel(S3Model):
@@ -1594,7 +1594,7 @@ class S3EventAssetModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1667,7 +1667,7 @@ class S3EventCMSModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventHRModel(S3Model):
@@ -1760,7 +1760,7 @@ class S3EventHRModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1796,7 +1796,7 @@ class S3EventImpactModel(S3Model):
 
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Event Impact Model needs Stats module enabling")
-            return dict()
+            return {}
 
         #T = current.T
 
@@ -1818,7 +1818,7 @@ class S3EventImpactModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1902,7 +1902,7 @@ class S3EventIReportModel(S3Model):
             msg_list_empty = T("No Incident Reports currently registered in this incident"))
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventMapModel(S3Model):
@@ -1942,7 +1942,7 @@ class S3EventMapModel(S3Model):
             msg_list_empty = T("No Map Profiles currently registered in this incident"))
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventOrganisationModel(S3Model):
@@ -1999,7 +1999,7 @@ class S3EventOrganisationModel(S3Model):
             msg_list_empty = T("No Organizations currently registered in this incident"))
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventSiteModel(S3Model):
@@ -2101,7 +2101,7 @@ class S3EventSiteModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2171,7 +2171,7 @@ class S3EventSitRepModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2242,7 +2242,7 @@ class S3EventTaskModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2321,7 +2321,7 @@ class S3EventShelterModel(S3Model):
                 )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 def event_notification_dispatcher(r, **attr):

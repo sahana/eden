@@ -982,13 +982,13 @@ class ContactTracingModel(S3Model):
             msg_list_empty = T("No Exposure Information currently registered"))
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
 
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod

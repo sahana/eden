@@ -1431,7 +1431,7 @@ class S3SurveyFormatterModel(S3Model):
                        )
 
         # ---------------------------------------------------------------------
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1752,7 +1752,7 @@ class S3SurveySeriesModel(S3Model):
             rheader = rheader(r)
             output = dict(rheader=rheader)
         else:
-            output = dict()
+            output = {}
         if r.env.request_method == "POST" \
            or "mode" in r.vars:
             # This means that the user has selected the questions and
@@ -1872,7 +1872,7 @@ class S3SurveySeriesModel(S3Model):
             return cached
 
         # The cached version doesn't exist so regenerate it
-        output = dict()
+        output = {}
         get_vars = current.request.get_vars
         if "labelQuestion" in get_vars:
             label_question = get_vars.labelQuestion
@@ -1905,7 +1905,7 @@ class S3SurveySeriesModel(S3Model):
         s3 = current.response.s3
 
         # Draw the chart
-        output = dict()
+        output = {}
         rvars = r.vars
         if "viewing" in rvars:
             dummy, series_id = rvars.viewing.split(".")
@@ -2134,7 +2134,7 @@ $('#chart_btn').click(function(){
             rheader = rheader(r)
             output = dict(rheader=rheader)
         else:
-            output = dict()
+            output = {}
         crud_strings = s3.crud_strings["survey_series"]
         viewing = r.get_vars.get("viewing", None)
         if viewing:
@@ -3298,7 +3298,7 @@ class S3SurveyTranslateModel(S3Model):
                        onaccept = self.translate_onaccept,
                        )
         # ---------------------------------------------------------------------
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3355,7 +3355,7 @@ class S3SurveyTranslateModel(S3Model):
             try:
                 strings = read_dict(lang_filename)
             except IOError:
-                strings = dict()
+                strings = {}
             for row in xrange(1, language_sheet.nrows):
                 original = language_sheet.cell_value(row, 0)
                 translation = language_sheet.cell_value(row, 1)
@@ -3438,7 +3438,7 @@ class survey_TranslateDownload(S3Method):
             from gluon.languages import read_dict
             strings = read_dict(lang_filename)
         except IOError:
-            strings = dict()
+            strings = {}
 
         output = StringIO()
 
@@ -4711,7 +4711,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
         self.startPosn = (0, 0)
         self.xlsWidgetSize = (6, 0)
         self.xlsMargin = [0, 0]
-        self.langDict = dict()
+        self.langDict = {}
         self.label = True
         self.labelLeft = True
         # The instance variables when the widget is associated with a question
@@ -5047,7 +5047,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
                       matrix,
                       row,
                       col,
-                      langDict=dict(),
+                      langDict={},
                       answerMatrix=None
                       ):
         """
@@ -5622,7 +5622,7 @@ class S3QuestionTypeOptionWidget(S3QuestionTypeAbstractWidget):
                       matrix,
                       row,
                       col,
-                      langDict=dict(),
+                      langDict={},
                       answerMatrix=None
                       ):
         """
@@ -6193,7 +6193,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                       matrix,
                       row,
                       col,
-                      langDict=dict(),
+                      langDict={},
                       answerMatrix=None,
                       ):
         """
@@ -6439,7 +6439,7 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
                       matrix,
                       row,
                       col,
-                      langDict=dict(),
+                      langDict={},
                       answerMatrix=None,
                       style={}
                      ):

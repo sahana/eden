@@ -1520,7 +1520,7 @@ class S3StatsPeopleModel(S3Model):
                      *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # ---------------------------------------------------------------------
     @staticmethod

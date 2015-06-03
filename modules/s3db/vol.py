@@ -220,7 +220,7 @@ class S3VolunteerAwardModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3VolunteerClusterModel(S3Model):

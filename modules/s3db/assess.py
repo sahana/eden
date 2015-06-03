@@ -130,7 +130,7 @@ class S3Assess24HModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3AssessBuildingModel(S3Model):

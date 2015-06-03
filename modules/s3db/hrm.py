@@ -1303,7 +1303,7 @@ class S3HRSiteModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1700,18 +1700,25 @@ class S3HRInsuranceModel(S3Model):
         self.define_table(tablename,
                           self.hrm_human_resource_id(),
                           Field("type",
-                                requires = IS_IN_SET(insurance_types),
+                                label = T("Type"),
                                 represent = insurance_type_represent,
+                                requires = IS_IN_SET(insurance_types),
                                 ),
                           Field("insurance_number",
                                 length = 128,
+                                label = T("Insurance Number"),
                                 ),
                           Field("insurer",
                                 length = 255,
+                                label = T("Insurer"),
                                 ),
                           Field("provider",
                                 length = 255,
+                                label = T("Provider"),
                                 ),
+                          #Field("beneficiary",
+                          #      label = T("Beneficiary"),
+                          #      ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -1758,14 +1765,14 @@ class S3HRContractModel(S3Model):
 
         T = current.T
 
-        contract_terms = {"SHORT": T("short-term"),
-                          "LONG": T("long-term"),
-                          "PERMANENT": T("permanent")
+        contract_terms = {"SHORT": T("Short-term"),
+                          "LONG": T("Long-term"),
+                          "PERMANENT": T("Permanent")
                           }
         contract_term_represent = S3Represent(options = contract_terms)
 
-        hours_models = {"PARTTIME": T("part-time"),
-                        "FULLTIME": T("full-time"),
+        hours_models = {"PARTTIME": T("Part-time"),
+                        "FULLTIME": T("Full-time"),
                         }
         hours_model_represent = S3Represent(options = hours_models)
 
@@ -3755,7 +3762,7 @@ class S3HRAppraisalModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3983,7 +3990,7 @@ class S3HRExperienceModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3HRAwardModel(S3Model):
@@ -4027,7 +4034,9 @@ class S3HRAwardModel(S3Model):
         define_table(tablename,
                      self.pr_person_id(),
                      s3_date(),
-                     Field("awarding_body"),
+                     Field("awarding_body",
+                           label = T("Awarding Body"),
+                           ),
                      Field("award_type_id", "reference hrm_award_type",
                            label = T("Award Type"),
                            represent = award_type_represent,
@@ -4054,7 +4063,7 @@ class S3HRAwardModel(S3Model):
             msg_list_empty = T("Currently no awards registered"))
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5344,7 +5353,7 @@ def hrm_human_resource_onaccept(form):
         record.update_record(**data)
 
     if user and organisation_id:
-        profile = dict()
+        profile = {}
         if not user.organisation_id:
             # Set the Organisation in the Profile, if not already set
             profile["organisation_id"] = organisation_id

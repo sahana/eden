@@ -55,13 +55,13 @@ class S3HierarchyModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     def defaults(self):
         """ Safe defaults if module is disabled """
 
-        return dict()
+        return {}
 
 
 # END =========================================================================

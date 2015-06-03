@@ -31,8 +31,8 @@ __all__ = ("S3CAPModel",
            "cap_info_labels",
            "cap_alert_is_template",
            "cap_rheader",
-           "cap_gis_location_xml_post_parse",
-           "cap_gis_location_xml_post_render",
+           #"cap_gis_location_xml_post_parse",
+           #"cap_gis_location_xml_post_render",
            )
 
 import datetime
