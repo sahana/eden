@@ -414,8 +414,21 @@ class S3CAPModel(S3Model):
                         method = "import_feed",
                         action = CAPImportFeed())
 
-        if crud_strings["cap_template"]:
+        if current.request.function == "template":
             crud_strings[tablename] = crud_strings["cap_template"]
+            ADD_ALERT_TPL = T("Create Template")
+            crud_strings[tablename] = Storage(
+                label_create = ADD_ALERT_TPL,
+                title_display = T("Template"),
+                title_list = T("Templates"),
+                title_update = T("Edit Template"), # If already-published, this should create a new "Update" alert instead of modifying the original
+                title_upload = T("Import Templates"),
+                label_list_button = T("List Templates"),
+                label_delete_button = T("Delete Template"),
+                msg_record_created = T("Template created"),
+                msg_record_modified = T("Template modified"),
+                msg_record_deleted = T("Template deleted"),
+                msg_list_empty = T("No templates to show"))
         else:
             ADD_ALERT = T("Create Alert")
             crud_strings[tablename] = Storage(
