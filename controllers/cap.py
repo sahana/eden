@@ -278,7 +278,7 @@ def template():
             field.requires = None
         for f in ["status", "scope"]:
             atable[f].requires = None
-        atable.template_title.required = True
+        atable.template_title.requires = IS_NOT_EMPTY()
         atable.status.readable = atable.status.writable = False
         itable = db.cap_info
         for f in ["urgency", "certainty",
