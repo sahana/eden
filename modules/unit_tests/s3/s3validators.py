@@ -694,7 +694,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(error, None)
         representation = validate.formatter(value)
         assertEqual(representation, dtstr)
-        representation = represent(value)
+        representation = represent(value, utc=True)
         assertEqual(representation, dtstr)
 
         current.session.s3.utc_offset = 0
@@ -704,7 +704,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(error, None)
         representation = validate.formatter(value)
         assertEqual(representation, dtstr)
-        representation = represent(value)
+        representation = represent(value, utc=True)
         assertEqual(representation, dtstr)
 
         current.session.s3.utc_offset = 6
@@ -714,7 +714,7 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertEqual(error, None)
         representation = validate.formatter(value)
         assertEqual(representation, dtstr)
-        representation = represent(value)
+        representation = represent(value, utc=True)
         assertEqual(representation, dtstr)
 
         current.session.s3.utc_offset = 11
