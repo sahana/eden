@@ -957,14 +957,15 @@
         if (tableConfig['pagination'] == 'true') {
             // Server-side Pagination is True
             // Cache the pages to reduce server-side calls
-            var serverSide = true;
-            var processing = true;
-            ajax_urls[selector.slice(1)] = tableConfig['ajaxUrl'];
-            var pageLength = tableConfig['pageLength'];
+            var serverSide = true,
+                processing = true,
+                pageLength = tableConfig['pageLength'];
             //var data = {'length': pageLength,
             //            'start': 0,
             //            'draw': 1
             //            };
+
+            ajax_urls[selector.slice(1)] = tableConfig['ajaxUrl'];
 
             if ($(selector + '_dataTable_cache').length > 0) {
                 var cache = $.parseJSON($(selector + '_dataTable_cache').val());
@@ -979,9 +980,9 @@
             // end of pagination code
         } else {
             // No Pagination
-            var serverSide = false;
-            var processing = false;
-            var pageLength = tableConfig['pageLength'];
+            var serverSide = false,
+                processing = false,
+                pageLength = tableConfig['pageLength'];
             fnAjax[t] = null;
         } // end of no pagination code
 
@@ -1005,6 +1006,9 @@
             'searchDelay': 450,
             'searching': tableConfig['searching'] == 'true', // formerly bFilter
             'serverSide': serverSide, // formerly bServerSide
+            'search': {
+                'smart': serverSide // workaround for dataTables bug: smart search crashing with empty search string
+            },
             'language': { // formerly oLanguage
                 'aria': { // formerly oAria
                     'sortAscending': ': ' + i18n.sortAscending,  // formerly sSortAscending
