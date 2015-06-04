@@ -271,14 +271,14 @@ def template():
             redirect(URL(c="cap", f="template", args=[_id]))
 
     def prep(r):
-        for f in ["identifier", "msg_type"]:
+        for f in ["identifier", "msg_type", "incidents"]:
             field = atable[f]
             field.writable = False
             field.readable = False
             field.requires = None
         for f in ["status", "scope"]:
             atable[f].requires = None
-        atable.template_title.required = True
+        atable.template_title.requires = IS_NOT_EMPTY()
         atable.status.readable = atable.status.writable = False
         itable = db.cap_info
         for f in ["urgency", "certainty",
@@ -291,20 +291,6 @@ def template():
 
         for f in ["category", "event"]:
             itable[f].required = False
-
-        ADD_ALERT_TPL = T("Create Template")
-        s3.crud_strings["cap_template"] = Storage(
-            label_create = ADD_ALERT_TPL,
-            title_display = T("Template"),
-            title_list = T("Templates"),
-            title_update = T("Edit Template"), # If already-published, this should create a new "Update" alert instead of modifying the original
-            title_upload = T("Import Templates"),
-            label_list_button = T("List Templates"),
-            label_delete_button = T("Delete Template"),
-            msg_record_created = T("Template created"),
-            msg_record_modified = T("Template modified"),
-            msg_record_deleted = T("Template deleted"),
-            msg_list_empty = T("No templates to show"))
 
         if r.representation == "html":
             alert_fields_comments()
@@ -358,35 +344,7 @@ def area():
     return output
 
 # -----------------------------------------------------------------------------
-def area_location():
-    """
-        REST controller for CAP area location
-        - shouldn't ever be called
-    """
 
-    def prep(r):
-        if r.interactive:
-            # Don't allow changing the area_id.
-            altable = s3db.cap_area_location
-            afield = altable.area_id
-            afield.readable = False
-            afield.writable = False
-
-            # Hide the location hierarchy fields in the location widget.
-            #ltable = s3db.gis_location
-            #for f in ["L0", "L1", "L2", "L3", "L4", "L5"]:
-            #    field = ltable[f]
-            #    field.readable = False
-            #    field.writable = False
-            #    field.requires = None
-        return True
-    s3.prep = prep
-
-    output = s3_rest_controller("cap", "area_location",
-                                rheader = s3db.cap_rheader)
-    return output
-
-# -----------------------------------------------------------------------------
 def alert_fields_comments():
     """
         Add comments to Alert fields

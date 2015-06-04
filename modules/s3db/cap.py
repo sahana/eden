@@ -414,8 +414,21 @@ class S3CAPModel(S3Model):
                         method = "import_feed",
                         action = CAPImportFeed())
 
-        if crud_strings["cap_template"]:
+        if current.request.function == "template":
             crud_strings[tablename] = crud_strings["cap_template"]
+            ADD_ALERT_TPL = T("Create Template")
+            crud_strings[tablename] = Storage(
+                label_create = ADD_ALERT_TPL,
+                title_display = T("Template"),
+                title_list = T("Templates"),
+                title_update = T("Edit Template"), # If already-published, this should create a new "Update" alert instead of modifying the original
+                title_upload = T("Import Templates"),
+                label_list_button = T("List Templates"),
+                label_delete_button = T("Delete Template"),
+                msg_record_created = T("Template created"),
+                msg_record_modified = T("Template modified"),
+                msg_record_deleted = T("Template deleted"),
+                msg_list_empty = T("No templates to show"))
         else:
             ADD_ALERT = T("Create Alert")
             crud_strings[tablename] = Storage(
@@ -780,13 +793,12 @@ class S3CAPModel(S3Model):
 
         crud_form = S3SQLCustomForm("name",
                                     "info_id",
-                                    # Not yet working with default formstyle or multiple=True
-                                    #S3SQLInlineComponent("location",
-                                    #                     name = "location",
-                                    #                     label = "",
-                                    #                     multiple = False,
-                                    #                     fields = [("", "location_id")],
-                                    #                     ),
+                                    S3SQLInlineComponent("location",
+                                                         name = "location",
+                                                         label = "",
+                                                         multiple = True,
+                                                         fields = [("", "location_id")],
+                                                         ),
                                     S3SQLInlineComponent("tag",
                                                          name = "tag",
                                                          label = "",
@@ -833,9 +845,8 @@ class S3CAPModel(S3Model):
         # with irrelevant locations.
         tablename = "cap_area_location"
         define_table(tablename,
-                     alert_id(readable = False,
-                              writable = False,
-                              ),
+                     # @ToDo: remove alert_id from here
+                     alert_id(),
                      area_id(),
                      self.gis_location_id(
                         widget = S3LocationSelector(points = False,
@@ -847,25 +858,6 @@ class S3CAPModel(S3Model):
                                                     ),
                         ),
                      )
-
-        # CRUD Strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Add Location"),
-            title_display = T("Alert Location"),
-            title_list = T("Locations"),
-            title_update = T("Edit Location"),
-            subtitle_list = T("List Locations"),
-            label_list_button = T("List Locations"),
-            label_delete_button = T("Delete Location"),
-            msg_record_created = T("Location added"),
-            msg_record_modified = T("Location updated"),
-            msg_record_deleted = T("Location deleted"),
-            msg_list_empty = T("No locations currently defined for this alert"))
-
-        configure(tablename,
-                  # Shouldn't be required if all UI actions go through alert controller & XSLT configured appropriately
-                  create_onaccept = update_alert_id(tablename),
-                  )
 
         # ---------------------------------------------------------------------
         # Area Tags
@@ -1140,19 +1132,9 @@ def cap_rheader(r):
                                        _target="_blank",
                                        )
 
-                    table = s3db.cap_area
-                    query = (table.alert_id == record_id)
-                    row = current.db(query).select(table.id,
-                                                   limitby=(0, 1)).first()
-                    if row:
-                        # We have an Area, so we can add Locations
-                        location_tab = (T("Location"), "location")
-                    else:
-                        location_tab = ""
                     tabs = [(T("Alert Details"), None),
                             (T("Information"), "info"),
                             (T("Area"), "area"),
-                            location_tab,
                             (T("Resource Files"), "resource"),
                             ]
 
@@ -1172,7 +1154,7 @@ def cap_rheader(r):
             elif tablename == "cap_area":
                 # Shouldn't ever be called
                 tabs = [(T("Area"), None),
-                        (T("Locations"), "location"),
+                        #T("Locations"), "location"),
                         #(T("Geocodes"), "tag"),
                         ]
                 rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -1194,16 +1176,6 @@ def cap_rheader(r):
                                     ),
                               rheader_tabs
                               )
-
-            elif tablename == "cap_area_location":
-                # Shouldn't ever be called
-                # We need the rheader only for the link back to the area.
-                rheader = DIV(TABLE(TR(TH("%s: " % T("Area")),
-                                       TD(A(s3db.cap_area_represent(record.area_id),
-                                            _href=URL(c="cap", f="area",
-                                                      args=[record.area_id, "update"]))),
-                                       ),
-                                    ))
 
             elif tablename == "cap_info":
                 # Shouldn't ever be called
@@ -1276,56 +1248,30 @@ def update_alert_id(tablename):
         db = current.db
         table = db[tablename]
 
-        if tablename == "cap_area_location":
-            area_id = form_vars.get("area_id", None)
-            if not area_id:
-                # Get the full record
-                item = db(table.id == _id).select(table.alert_id,
-                                                  table.area_id,
-                                                  limitby=(0, 1)).first()
-                try:
-                    alert_id = item.alert_id
-                    area_id = item.area_id
-                except:
-                    # Nothing we can do
-                    return
-                if alert_id:
-                    # Nothing to do
-                    return
-
-            atable = db.cap_area
-            area = db(atable.id == area_id).select(atable.alert_id,
-                                                   limitby=(0, 1)).first()
+        info_id = form_vars.get("info_id", None)
+        if not info_id:
+            # Get the full record
+            item = db(table.id == _id).select(table.alert_id,
+                                                table.info_id,
+                                                limitby=(0, 1)).first()
             try:
-                alert_id = area.alert_id
+                alert_id = item.alert_id
+                info_id = item.info_id
             except:
                 # Nothing we can do
                 return
-        else:
-            info_id = form_vars.get("info_id", None)
-            if not info_id:
-                # Get the full record
-                item = db(table.id == _id).select(table.alert_id,
-                                                  table.info_id,
-                                                  limitby=(0, 1)).first()
-                try:
-                    alert_id = item.alert_id
-                    info_id = item.info_id
-                except:
-                    # Nothing we can do
-                    return
-                if alert_id:
-                    # Nothing to do
-                    return
-
-            itable = db.cap_info
-            info = db(itable.id == info_id).select(itable.alert_id,
-                                                   limitby=(0, 1)).first()
-            try:
-                alert_id = info.alert_id
-            except:
-                # Nothing we can do
+            if alert_id:
+                # Nothing to do
                 return
+
+        itable = db.cap_info
+        info = db(itable.id == info_id).select(itable.alert_id,
+                                                limitby=(0, 1)).first()
+        try:
+            alert_id = info.alert_id
+        except:
+            # Nothing we can do
+            return
 
         db(table.id == _id).update(alert_id = alert_id)
 
