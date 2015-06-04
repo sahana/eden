@@ -271,7 +271,8 @@ def template():
             redirect(URL(c="cap", f="template", args=[_id]))
 
     def prep(r):
-        for f in ["identifier", "msg_type"]:
+        # because template incidents value is not copied to the alert
+        for f in ["identifier", "msg_type", "incidents"]:
             field = atable[f]
             field.writable = False
             field.readable = False
@@ -345,19 +346,19 @@ def area():
     return output
 
 # -----------------------------------------------------------------------------
-def area_location():
-    """
-        REST controller for CAP area location
-        - shouldn't ever be called
-    """
+#def area_location():
+#    """
+#        REST controller for CAP area location
+#        - shouldn't ever be called
+#    """
 
-    def prep(r):
-        if r.interactive:
+#    def prep(r):
+#        if r.interactive:
             # Don't allow changing the area_id.
-            altable = s3db.cap_area_location
-            afield = altable.area_id
-            afield.readable = False
-            afield.writable = False
+#            altable = s3db.cap_area_location
+#            afield = altable.area_id
+#            afield.readable = False
+#            afield.writable = False
 
             # Hide the location hierarchy fields in the location widget.
             #ltable = s3db.gis_location
@@ -366,12 +367,12 @@ def area_location():
             #    field.readable = False
             #    field.writable = False
             #    field.requires = None
-        return True
-    s3.prep = prep
+#        return True
+#    s3.prep = prep
 
-    output = s3_rest_controller("cap", "area_location",
-                                rheader = s3db.cap_rheader)
-    return output
+#    output = s3_rest_controller("cap", "area_location",
+#                                rheader = s3db.cap_rheader)
+#    return output
 
 # -----------------------------------------------------------------------------
 def alert_fields_comments():
