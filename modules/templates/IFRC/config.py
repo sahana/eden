@@ -1334,6 +1334,19 @@ def config(settings):
             else:
                 result = True
 
+            if r.interactive and not current.auth.s3_has_role("RDRT_ADMIN"):
+                # Limit write-access to these fields to RDRT Admins:
+                fields = ("name",
+                          "event_type_id",
+                          "location_id",
+                          "code",
+                          "status",
+                          )
+                table = r.resource.table
+                for f in fields:
+                    if f in table:
+                        table[f].writable = False
+
             if not r.component and r.method == "create":
                 # Org is always IFRC
                 otable = s3db.org_organisation
