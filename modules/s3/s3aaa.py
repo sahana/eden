@@ -6201,23 +6201,21 @@ class S3Permission(object):
             # We do not use ACLs at all (allow all)
             return None
         else:
-            acls = Storage()
+            acls = {}
 
         db = current.db
         table = self.table
 
         c = c or self.controller
         f = f or self.function
-        if self.page_restricted(c=c, f=f):
-            page_restricted = True
-        else:
-            page_restricted = False
+        page_restricted = self.page_restricted(c=c, f=f)
 
         # Get all roles
         if realms:
-            roles = realms.keys()
+            roles = set(realms.keys())
             if delegations:
-                roles += [d for d in delegations if d not in roles]
+                for role in delegations:
+                    roles.add(role)
         else:
             # No roles available (deny all)
             return acls
@@ -6316,14 +6314,14 @@ class S3Permission(object):
             acl = (row["uacl"], row["oacl"])
             for e in entities:
                 if e not in acls:
-                    acls[e] = Storage({rtype:acl})
+                    acls[e] = {rtype: acl}
                 elif rtype in acls[e]:
                     acls[e][rtype] = most_permissive(acls[e][rtype], acl)
                 else:
                     acls[e][rtype] = acl
 
         if ANY in acls:
-            default = Storage(acls[ANY])
+            default = dict(acls[ANY])
         else:
             default = None
 
@@ -6359,7 +6357,7 @@ class S3Permission(object):
 
                     # What ACLs do we have for the receiver?
                     if receiver in acls:
-                        dacls = Storage(acls[receiver])
+                        dacls = dict(acls[receiver])
                     elif default is not None:
                         dacls = default
                     else:
@@ -6383,7 +6381,7 @@ class S3Permission(object):
                                         dacls[t] = acls[e][t]
                         acls[e] = dacls
 
-        acl = acls[ANY] or Storage()
+        acl = acls.get(ANY, {})
 
         # Default page ACL
         if "c" in acl:
@@ -6406,7 +6404,7 @@ class S3Permission(object):
 
         # Fall back to default page acl
         if not acls and not (t and self.use_tacls):
-            acls[ANY] = Storage(c=default_page_acl)
+            acls[ANY] = {"c": default_page_acl}
 
         # Order by precedence
         s3db = current.s3db
@@ -6421,7 +6419,7 @@ class S3Permission(object):
             #    role realm (=could be tens or hundreds of thousands)
             ancestors = set(s3db.pr_realm(entity))
 
-        result = Storage()
+        result = {}
         for e in acls:
             # Skip irrelevant ACLs
             if entity and e != entity and e != ANY:
