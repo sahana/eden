@@ -1067,7 +1067,7 @@ def config(settings):
                                     S3SQLInlineComponent(
                                         "item",
                                         label = T("Items"),
-                                        fields = ["item_id",
+                                        fields = ("item_id",
                                                   "quantity",
                                                   "sn",
                                                   # These are too wide for the screen & hence hide the AddResourceLinks
@@ -1076,7 +1076,7 @@ def config(settings):
                                                   #"purchase_price",
                                                   #"purchase_currency",
                                                   "comments",
-                                                  ],
+                                                  ),
                                         ),
                                     S3SQLInlineComponent(
                                         "group",

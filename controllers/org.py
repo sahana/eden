@@ -221,6 +221,66 @@ def organisation_list_represent(l):
         return NONE
 
 # -----------------------------------------------------------------------------
+def capacity_indicator():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def capacity_assessment():
+    """ RESTful CRUD controller """
+
+    S3SQLInlineComponent = s3base.S3SQLInlineComponent
+
+    crud_fields = ["organisation_id",
+                   "date",
+                   "person_id",
+                   ]
+    cappend = crud_fields.append
+
+    table = s3db.org_capacity_indicator
+    rows = db(table.deleted != True).select(table.id,
+                                            table.section,
+                                            table.header,
+                                            table.number,
+                                            table.name,
+                                            orderby = table.number,
+                                            )
+
+    subheadings = {}
+
+    section = None
+    for row in rows:
+        name = "number%s" % row.number
+        if row.section != section:
+            label = section = row.section
+            #subheadings[T(section)] = "sub_%sdata" % name
+        else:
+            label = ""
+        cappend(S3SQLInlineComponent("data",
+                                     name = name,
+                                     label = label,
+                                     fields = ((row.header, "indicator_id"),
+                                               "rating",
+                                               "ranking",
+                                               ),
+                                     filterby = dict(field = "indicator_id",
+                                                     options = row.id
+                                                     ),
+                                     multiple = False,
+                                     ),
+                )
+
+    crud_form = s3base.S3SQLCustomForm(*crud_fields)
+
+    s3db.configure("org_capacity_assessment",
+                   crud_form = crud_form,
+                   subheadings = subheadings,
+                   )
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def office():
     """ RESTful CRUD controller """
 

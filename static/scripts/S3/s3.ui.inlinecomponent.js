@@ -498,9 +498,11 @@
                     }
                 } else {
                     // Field is Read-only
-                    if (typeof original != 'undefined') {
+                    if (original !== null) {
                         // Keep current value
                         value = original[fieldname]['value'];
+                    } else if (typeof(data.defaults[fieldname]) != 'undefined') {
+                        value = data.defaults[fieldname].value;
                     } else {
                         value = '';
                     }

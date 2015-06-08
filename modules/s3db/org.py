@@ -30,6 +30,7 @@
 __all__ = ("S3OrganisationModel",
            "S3OrganisationNameModel",
            "S3OrganisationBranchModel",
+           "S3OrganisationCapacityModel",
            "S3OrganisationGroupModel",
            "S3OrganisationGroupPersonModel",
            "S3OrganisationGroupTeamModel",
@@ -1350,6 +1351,96 @@ class S3OrganisationBranchModel(S3Model):
                                                limitby=(0, 1)).first()
         if record:
             org_update_affiliations("org_organisation_branch", record)
+
+# =============================================================================
+class S3OrganisationCapacityModel(S3Model):
+    """
+        (Branch) Organisational Capacity Assessment
+    """
+
+    names = ("org_capacity_indicator",
+             "org_capacity_assessment",
+             "org_capacity_assessment_data",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Indicators
+        #
+        tablename = "org_capacity_indicator"
+        define_table(tablename,
+                     Field("section"),
+                     Field("header"),
+                     Field("number", "integer"),
+                     Field("name"),
+                     *s3_meta_fields()
+                     )
+
+        # ---------------------------------------------------------------------
+        # (Branch) Organisational Capacity Assessment
+        #
+        tablename = "org_capacity_assessment"
+        define_table(tablename,
+                     self.org_organisation_id(empty=False),
+                     s3_date(future=0),
+                     self.pr_person_id(label = T("Lead Facilitator")),
+                     s3_comments(),
+                     *s3_meta_fields()
+                     )
+
+        current.response.s3.crud_strings[tablename] = Storage(
+                label_create = T("Create Assessment"),
+                title_display = T("Assessment Details"),
+                title_list = T("Assessments"),
+                title_update = T("Edit Assessment"),
+                label_list_button = T("List Assessments"),
+                label_delete_button = T("Delete Assessment"),
+                msg_record_created = T("Assessment added"),
+                msg_record_modified = T("Assessment updated"),
+                msg_record_deleted = T("Assessment removed"),
+                msg_list_empty = T("No Assessments currently registered"))
+
+        # Components
+        self.add_components(tablename,
+                            org_capacity_assessment_data = {"name": "data",
+                                                            "joinby": "assessment_id",
+                                                            },
+                            )
+
+        # ---------------------------------------------------------------------
+        # (Branch) Organisational Capacity Assessment Data
+        #
+        tablename = "org_capacity_assessment_data"
+        define_table(tablename,
+                     Field("assessment_id", "reference org_capacity_assessment",
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("indicator_id", "reference org_capacity_indicator",
+                           represent = S3Represent(lookup="org_capacity_indicator",
+                                                   fields=["number", "name"],
+                                                   field_sep=". "),
+                           writable = False,
+                           ),
+                     Field("rating",
+                           label = T("Rating"),
+                           requires = IS_IN_SET(("A","B","C","D","E","F")),
+                           ),
+                     Field("ranking", "integer",
+                           label = T("Ranking"),
+                           requires = IS_IN_SET((1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)),
+                           ),
+                     *s3_meta_fields()
+                     )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class S3OrganisationGroupModel(S3Model):
