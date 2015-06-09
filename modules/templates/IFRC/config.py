@@ -2311,6 +2311,19 @@ def config(settings):
     settings.customise_member_membership_type_controller = customise_member_membership_type_controller
 
     # -----------------------------------------------------------------------------
+    def customise_org_capacity_assessment_controller(**attr):
+
+        # Organisation needs to be an NS/Branch
+        ns_only("org_capacity_assessment",
+                required = True,
+                branches = True,
+                )
+
+        return attr
+
+    settings.customise_org_capacity_assessment_controller = customise_org_capacity_assessment_controller
+
+    # -----------------------------------------------------------------------------
     def customise_org_office_controller(**attr):
 
         s3 = current.response.s3

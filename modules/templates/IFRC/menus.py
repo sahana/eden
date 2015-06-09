@@ -721,8 +721,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org(self):
         """ Organisation Management """
 
-        # Same as HRM
-        return self.hrm()
+        if current.request.function == "capacity_assessment":
+            # Use Survey
+            return self.survey()
+        else:
+            # Use HRM
+            return self.hrm()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -805,6 +809,50 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         # Same as Inventory
         return self.inv()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def survey():
+        """ SURVEY / Survey """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        # Do we have a series_id?
+        series_id = False
+        get_vars = Storage()
+        try:
+            series_id = int(current.request.args[0])
+        except:
+            try:
+                (dummy, series_id) = current.request.get_vars["viewing"].split(".")
+                series_id = int(series_id)
+            except:
+                pass
+        if series_id:
+            get_vars.viewing = "survey_complete.%s" % series_id
+
+        return M(c="survey")(
+                    M("Branch Organisation Capacity Assessments", c="org", f="capacity_assessment")(
+                        M("Create", m="create"),
+                    ),
+                    M("Assessment Templates", f="template")(
+                        M("Create", m="create"),
+                    ),
+                    #M("Section", f="section")(
+                    #    M("Create", args="create"),
+                    #),
+                    M("Disaster Assessments", f="series")(
+                        M("Create", m="create"),
+                    ),
+                    M("Administration", f="admin", restrict=[ADMIN])(
+                        M("Import Templates", f="question_list",
+                          m="import", p="create"),
+                        M("Import Template Layout", f="formatter",
+                          m="import", p="create"),
+                        M("Import Completed Assessment Forms", f="complete",
+                          m="import", p="create", vars=get_vars, check=series_id),
+                    ),
+                )
 
     # -------------------------------------------------------------------------
     @staticmethod
