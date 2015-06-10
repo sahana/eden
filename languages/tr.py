@@ -1465,4 +1465,7 @@
 "Create Award":"Ödül Ekle",
 "Country Code":"Ülke Kodu",
 "Add Skill":"Beceri Ekle",
+"Vehicles":"Araçlar",
+"Availability":"Uygunluk",
+"Weekends only":"Sadece haftasonları"
 }

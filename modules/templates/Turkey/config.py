@@ -132,6 +132,7 @@ def config(settings):
     def customise_pr_person_resource(r, tablename):
 
         s3db = current.s3db
+        
         table = s3db.pr_person_details
         table.place_of_birth.readable = True
         table.place_of_birth.writable = True        
@@ -166,11 +167,64 @@ def config(settings):
                                     "person_details.military_service",
                                     "comments",
                                     )
+        
         s3db.configure("pr_person",
-                       crud_form = crud_form,
+                       crud_form = crud_form,                       
                        )
 
     settings.customise_pr_person_resource = customise_pr_person_resource
+    
+    def customise_hrm_human_resource_controller(**attr):
+        """ Configure hrm_human_resource """  
+        s3 = current.response.s3
+        auth = current.auth      
+        ADMIN = current.session.s3.system_roles.ADMIN
+        is_admin = auth.s3_has_role(ADMIN)       
+        standard_prep = s3.prep  
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+            if r.controller == "vol":
+                s3db = current.s3db
+                list_fields = ["person_id",]
+                if is_admin :
+                    list_fields.append("organisation_id")
+                list_fields.extend(((settings.get_ui_label_mobile_phone(), "phone.value"),))
+                list_fields.extend(((T("Email"), "email.value"),))                
+                list_fields.append("location_id$L1")
+                list_fields.append("location_id$L2")
+                list_fields.append("location_id$L3")
+                
+                from s3 import S3TextFilter, S3OptionsFilter, S3LocationFilter
+                filter_widgets = [S3TextFilter(["person_id$first_name",
+                                      "person_id$middle_name",
+                                      "person_id$last_name",
+                                      ],
+                                     label = T("Search"),
+                                     ),
+                                  ]
+                if is_admin :
+                    filter_widgets.append(S3OptionsFilter("organisation_id"))
+                filter_widgets.append(S3LocationFilter("location_id",
+                                         label = T("Location"),                                         
+                                         #hidden = True,
+                                         ),
+                                      )
+                filter_widgets.append(S3OptionsFilter("person_id$gender"))
+                    
+                s3db.configure("hrm_human_resource",                       
+                       list_fields = list_fields,
+                       filter_widgets = filter_widgets,
+                       )
+            return result
+        
+        s3.prep = custom_prep  
+        return attr
+    
+    settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
     def vol_rheader(r):
         if r.representation != "html":
