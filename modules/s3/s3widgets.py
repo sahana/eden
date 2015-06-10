@@ -39,6 +39,7 @@ __all__ = ("S3ACLWidget",
            "S3AutocompleteWidget",
            "S3BooleanWidget",
            "S3ColorPickerWidget",
+           "S3CalendarWidget",
            "S3DateWidget",
            "S3DateTimeWidget",
            "S3EmbeddedComponentWidget",
@@ -1286,6 +1287,173 @@ class S3ColorPickerWidget(FormWidget):
         s3.jquery_ready.append(script)
 
         return widget
+
+# =============================================================================
+class S3CalendarWidget(FormWidget):
+    """
+        Widget to select a date from a popup calendar, with
+        optional time input
+
+        @status: work in progress
+    """
+
+    def __init__(self,
+                 calendar=None,
+                 date_format=None,
+                 time_format=None,
+                 separator=None,
+                 timepicker=False,
+                 month_selector=False,
+                 year_selector=True,
+                 week_number=False,
+                 buttons=True,
+                 ):
+        """
+            Constructor
+
+            @param calendar: which calendar to use (override default)
+
+            @param date_format: the date format (override default)
+            @param time_format: the time format (override default)
+            @param separator: date-time separator (override default)
+
+            @param timepicker: show a time picker
+
+            @param month_selector: show a months drop-down
+            @param year_selector: show a years drop-down
+            @param week_number: show the week number in the calendar
+            @param buttons: show the button panel
+        """
+
+        self.calendar = calendar
+        self.timepicker = timepicker
+
+        self.date_format = date_format
+        self.time_format = time_format
+        self.separator = separator
+
+        # showButtonPanel
+
+        # monthSelector
+        # yearSelector
+
+        # weeknumber
+
+        self._class = "s3-calendar-widget datetimepicker"
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attributes):
+        """
+            Widget builder
+
+            @param field: the Field
+            @param value: the current value
+            @param attributes: the HTML attributes for the widget
+        """
+
+        # Modify class as required
+        _class = self._class
+
+        # Format value according to calendarFormat?
+
+        # Default attributes
+        defaults = {"_type": "text",
+                    "_class": _class,
+                    "value": value,
+                    "requires": field.requires,
+                    }
+        attr = self._attributes(field, defaults, **attributes)
+
+        # Real input ID
+        input_id = attr.get("_id")
+        if not input_id:
+            if isinstance(field, Field):
+                input_id = str(field).replace(".", "_")
+            else:
+                input_id = field.name.replace(".", "_")
+            attr["_id"] = input_id
+
+
+        # Real input name attribute
+        input_name = attr.get("_name")
+        if not input_name:
+            input_name = field.name.replace(".", "_")
+            attr["_name"] = input_name
+
+        # Container ID
+        container_id = "%s-calendar-widget" % input_id
+
+        # Script options
+        settings = current.deployment_settings
+
+        calendar = self.calendar or current.calendar.name
+        calendar = calendar.lower() if calendar else "gregorian"
+
+        date_format = self.date_format or \
+                      settings.get_L10n_date_format()
+        time_format = self.time_format or \
+                      settings.get_L10n_time_format()
+        separator = self.separator or \
+                    settings.get_L10n_datetime_separator()
+
+        options = {"calendar": calendar,
+                   "dateFormat": date_format,
+                   "timeFormat": time_format,
+                   "separator": separator,
+                   "timepicker": True if self.timepicker else False,
+                   }
+
+        # Inject JS
+        self.inject_script(input_id, options)
+
+        # Construct real input
+        real_input = INPUT(**attr)
+
+        # Construct and return the widget
+        return TAG[""](DIV(real_input,
+                           _id=container_id,
+                           _class="calendar-widget-container",
+                           ),
+                       )
+
+    # -------------------------------------------------------------------------
+    def inject_script(self, selector, options):
+        """
+            Helper function to inject the document-ready-JavaScript for
+            this widget.
+
+            @param field: the Field
+            @param value: the current value
+            @param attr: the HTML attributes for the widget
+        """
+
+        if not selector:
+            return
+
+        s3 = current.response.s3
+        appname = current.request.application
+
+        # Global scripts
+        if s3.debug or True: # @todo: add minified script configuration
+            scripts = ("jquery.plugin.js",
+                       "calendars/jquery.calendars.all.js",
+                       "calendars/jquery.calendars.lang.js",
+                       "calendars/jquery.calendars.picker.lang.js",
+                       "calendars/jquery.calendars.picker.ext.js",
+                       "S3/s3.ui.calendar.js",
+                       )
+        else:
+            scripts = (#"S3/s3.ui.calendars.min.js",
+                       )
+        for script in scripts:
+            path = "/%s/static/scripts/%s" % (appname, script)
+            if path not in s3.scripts:
+                s3.scripts.append(path)
+
+        # jQuery-ready script
+        script = '''$('#%(selector)s').calendarWidget(%(options)s);''' % \
+                 {"selector": selector, "options": json.dumps(options)}
+        s3.jquery_ready.append(script)
 
 # =============================================================================
 class S3DateWidget(FormWidget):
