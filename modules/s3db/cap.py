@@ -35,6 +35,7 @@ __all__ = ("S3CAPModel",
            #"cap_gis_location_xml_post_render",
            )
 
+import socket
 import datetime
 import urllib2          # Needed for quoting & error handling on fetch
 try:
@@ -315,6 +316,7 @@ class S3CAPModel(S3Model):
                            ),
                      Field("source",
                            label = T("Source"),
+                           default = self.generate_source,
                            ),
                      Field("scope",
                            label = T("Scope"),
@@ -959,6 +961,14 @@ class S3CAPModel(S3Model):
             return ""
 
         return "%s/%d" % (current.xml.domain, user_id)
+    
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def generate_source():
+        """
+            Generate a source for CAP alert
+        """
+        return "%s@%s" % (current.xml.domain, socket.gethostbyname(socket.gethostname()))
 
     # -------------------------------------------------------------------------
     @staticmethod
