@@ -90,6 +90,17 @@ settings.auth.hmac_key = "akeytochange"
 # Minimum Password Length
 #settings.auth.password_min_length = 8
 
+# CAP Settings
+# Change for different authority and organisations
+# See http://alerting.worldweather.org/ for prefix and oid
+settings.cap.identifier_prefix = "PAGASA-DOST"
+settings.cap.identifier_oid = "2.49.0.0.608.0"
+settings.cap.identifier_suffix = "alert"
+# Change this for the offset period in days that the alert will be effective for
+# Expire Date = Effective Date + expire_offset
+# Default is 2 days
+#settings.cap.expire_offset = 2
+
 # Email settings
 # Outbound server
 #settings.mail.server = "127.0.0.1:25"
