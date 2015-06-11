@@ -1302,11 +1302,12 @@ class S3CalendarWidget(FormWidget):
                  date_format=None,
                  time_format=None,
                  separator=None,
-                 timepicker=False,
                  month_selector=False,
                  year_selector=True,
                  week_number=False,
                  buttons=True,
+                 timepicker=False,
+                 minute_step=5,
                  ):
         """
             Constructor
@@ -1317,27 +1318,28 @@ class S3CalendarWidget(FormWidget):
             @param time_format: the time format (override default)
             @param separator: date-time separator (override default)
 
-            @param timepicker: show a time picker
-
             @param month_selector: show a months drop-down
             @param year_selector: show a years drop-down
             @param week_number: show the week number in the calendar
             @param buttons: show the button panel
+
+            @param timepicker: show a timepicker
+            @param minute_step: minute-step for the timepicker slider
         """
 
         self.calendar = calendar
-        self.timepicker = timepicker
 
         self.date_format = date_format
         self.time_format = time_format
         self.separator = separator
 
-        # showButtonPanel
-
         # monthSelector
         # yearSelector
+        self.week_number = week_number
+        # showButtonPanel
 
-        # weeknumber
+        self.timepicker = timepicker
+        self.minute_step = minute_step
 
         self._class = "s3-calendar-widget datetimepicker"
 
@@ -1396,11 +1398,16 @@ class S3CalendarWidget(FormWidget):
         separator = self.separator or \
                     settings.get_L10n_datetime_separator()
 
+        firstDOW = settings.get_L10n_firstDOW()
+
         options = {"calendar": calendar,
                    "dateFormat": date_format,
                    "timeFormat": time_format,
                    "separator": separator,
-                   "timepicker": True if self.timepicker else False,
+                   "firstDOW": firstDOW,
+                   "weekNumber": self.week_number,
+                   "timepicker": self.timepicker,
+                   "minuteStep": self.minute_step,
                    }
 
         # Inject JS

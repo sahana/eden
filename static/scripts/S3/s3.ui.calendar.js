@@ -15,6 +15,38 @@
     var calendarWidgetID = 0;
 
     /**
+     * Hack for calendarsPicker: do not close upon select if we have a timepicker,
+     * always also pick up the time before updating the real input during onSelect
+     */
+    $.calendarsPicker._base_selectDate = $.calendarsPicker.selectDate;
+    $.calendarsPicker.selectDate = function(elem, target) {
+
+        var inst = this._getInst(elem),
+            timepicker = inst.timepicker,
+            was_inline;
+
+        if (timepicker) {
+            // Pretend that this instance is inline to keep it open after selection
+            was_inline = inst.inline;
+            inst.inline = true;
+            // FIXME: does not highlight the selected date! (base version does not either)
+            this._base_selectDate(elem, target);
+            inst.inline = was_inline;
+
+            // Pick up the time
+            inst.pickUpTime = true;
+            $.datepicker._selectDate(timepicker);
+            inst.pickUpTime = false;
+
+            // _updateInput not called while inline, so do it now
+            // (also triggers the onSelect-callback)
+            this._updateInput(elem);
+        } else {
+            this._base_selectDate(elem, target);
+        }
+    };
+
+    /**
      * calendarWidget
      */
     $.widget('s3.calendarWidget', {
@@ -22,22 +54,39 @@
         /**
          * Default options
          *
-         * @todo document options
+         * @prop {string} calendar - the calendar to use
+         *
+         * @prop {string} dateFormat - the date format (Python strftime)
+         * @prop {string} timeFormat - the time format (Python strftime)
+         * @prop {string} separator - the separator between date and time
+         *
+         * @prop {bool} monthSelector - show a drop-down to select the month
+         * @prop {bool} yearSelector - show a drop-down to select the year
+         * @prop {bool} showButtons - show the button panel
+         *
+         * @prop {bool} weekNumber - show the week number in the calendar
+         * @prop {number} firstDOW - the first day of the week (0=Sunday, 1=Monday, ...)
+         *
+         * @prop {bool} timepicker - show a timepicker
+         * @prop {number} minuteStep - the minute-step for the timepicker slider
          */
         options: {
 
             calendar: 'gregorian',
-            timepicker: false,
 
-            dateFormat: 'yy-mm-dd',
-            timeFormat: 'HH:mm',
+            dateFormat: '%Y-%m-%d',
+            timeFormat: '%H:%M',
             separator: ' ',
 
-            weekNumber: false,
-            showButtonPanel: true,
             monthSelector: false,
             yearSelector: true,
-            firstDOW: 1
+            showButtons: true,
+
+            weekNumber: false,
+            firstDOW: 1,
+
+            timepicker: false,
+            minuteStep: 5
         },
 
         /**
@@ -67,9 +116,8 @@
          */
         _destroy: function() {
 
-            // Remove the hidden inputs
-            this.dateInput.remove();
-            this.timeInput.remove();
+            // Remove any existing hidden inputs
+            this._removeHiddenInputs();
 
             // Call prototype method
             $.Widget.prototype.destroy.call(this);
@@ -87,14 +135,7 @@
             this._unbindEvents();
 
             // Remove any existing hidden inputs
-            if (this.dateInput) {
-                this.dateInput.remove();
-                this.dateInput = null;
-            }
-            if (this.timeInput) {
-                this.timeInput.remove();
-                this.timeInput = null;
-            }
+            this._removeHiddenInputs();
 
             if (opts.calendar == 'gregorian') {
                 this._datePicker();
@@ -120,22 +161,28 @@
                 var timeFormat = this._transformTimeFormat()
 
                 el.datetimepicker({
-                    // @todo: complete options
-                    changeMonth: opts.monthSelector,
-                    changeYear: opts.yearSelector,
                     dateFormat: dateFormat,
                     timeFormat: timeFormat,
-                    separator: opts.separator
+                    separator: opts.separator,
+                    firstDay: opts.firstDOW,
+                    showWeek: opts.weekNumber,
+
+                    changeMonth: opts.monthSelector,
+                    changeYear: opts.yearSelector,
+                    stepMinute: opts.minuteStep,
+                    showSecond: false
                 });
 
             } else {
                 // $.datepicker
 
                 el.datepicker({
-                    // @todo: complete options
+                    dateFormat: dateFormat,
+                    firstDay: opts.firstDOW,
+                    showWeek: opts.weekNumber,
+
                     changeMonth: opts.monthSelector,
-                    changeYear: opts.yearSelector,
-                    dateFormat: dateFormat
+                    changeYear: opts.yearSelector
                 });
             }
             this._clickFocus(el);
@@ -156,7 +203,13 @@
             $.calendarsPicker.setDefaults($.calendarsPicker.regionalOptions['']);
 
             // Configure themeRoller
-            $.calendarsPicker.setDefaults({renderer: $.calendarsPicker.themeRollerRenderer});
+            var renderer;
+            if (opts.weekNumber) {
+                renderer = $.calendarsPicker.themeRollerWeekOfYearRenderer;
+            } else {
+                renderer = $.calendarsPicker.themeRollerRenderer;
+            }
+            $.calendarsPicker.setDefaults({renderer: renderer});
 
             if (opts.timepicker) {
                 // $.calendarsPicker with injected $.timepicker and split inputs
@@ -170,16 +223,28 @@
                 // Instantiate calendarsPicker
                 var self = this;
                 this.dateInput.calendarsPicker({
-                    // @todo: complete options
-                    changeMonth: opts.monthSelector || opts.yearSelector,
                     dateFormat: dateFormat,
+                    firstDay: opts.firstDOW,
 
+                    changeMonth: opts.monthSelector || opts.yearSelector,
+
+                    defaultDate: +0, // drawDate will automatically be min/max adjusted
                     showTrigger: '<div>',
                     onSelect: function(input) {
                         self._updateInput();
                     },
                     onShow: function(picker, calendar, inst) {
                         self._injectTimePicker(picker, calendar, inst);
+                    },
+                    onClose: function() {
+                        var inst = this;
+                        if (inst.name != 'calendarsPicker') {
+                            inst = $.calendarsPicker._getInst(this);
+                        }
+                        if (inst.timepicker) {
+                            inst.timepicker.remove();
+                            inst.timepicker = null;
+                        }
                     }
                 });
 
@@ -187,9 +252,10 @@
                 // $.calendarsPicker
 
                 el.calendarsPicker({
-                    // @todo: complete options
-                    changeMonth: opts.monthSelector || opts.yearSelector,
-                    dateFormat: dateFormat
+                    dateFormat: dateFormat,
+                    firstDay: opts.firstDOW,
+
+                    changeMonth: opts.monthSelector || opts.yearSelector
                 });
             }
             this._clickFocus(el);
@@ -201,19 +267,44 @@
          */
         _injectTimePicker: function(picker, calendar, inst) {
 
+            if (inst.timepicker) {
+                return;
+            }
+
             var self = this,
+                opts = this.options,
+                dateFormat = this._transformDateFormat('calendarsPicker'),
                 timeFormat = this._transformTimeFormat();
 
-            picker.find('.ui-datepicker-group').each(function() {
-                var input = $('<div>').insertAfter($(this));
+            picker.find('.ui-datepicker-group').first().each(function() {
+                var input = $('<div>').insertAfter($(this)),
+                    lock = false;
                 input.timepicker({
                     timeFormat: timeFormat,
+                    stepMinute: opts.minuteStep,
+                    showSecond: false,
+
                     showButtonPanel: false,
                     onSelect: function(input) {
                         self.timeInput.val(input);
-                        self._updateInput();
+                        // Pick up the date unless we're called from inside selectDate
+                        if (!inst.pickUpTime) {
+                            var dates = self.dateInput.calendarsPicker('getDate'),
+                                datestr;
+                            if (dates.length) {
+                                datestr = dates[0].formatDate(dateFormat);
+                            } else {
+                                // Fall back to drawDate if no date has yet been selected
+                                datestr = inst.drawDate.formatDate(dateFormat);
+                            }
+                            // Update the dateInput
+                            self.dateInput.val(datestr);
+                            // Update the real input
+                            self._updateInput();
+                        }
                     }
                 });
+                inst.timepicker = input;
                 input.find('.ui-timepicker-div .ui-widget-header').remove();
             });
         },
@@ -254,6 +345,9 @@
 
         /**
          * Update the real input from the hidden date and time inputs
+         *
+         * @todo: always pick up both date and time even if one of them
+         *        hasn't been selected yet
          */
         _updateInput: function() {
 
@@ -262,6 +356,21 @@
                 time = this.timeInput.val();
 
             el.val(this._join(date, time));
+        },
+
+        /**
+         * Remove any existing hidden inputs
+         */
+        _removeHiddenInputs: function() {
+
+            if (this.dateInput) {
+                this.dateInput.remove();
+                this.dateInput = null;
+            }
+            if (this.timeInput) {
+                this.timeInput.remove();
+                this.timeInput = null;
+            }
         },
 
         /**
