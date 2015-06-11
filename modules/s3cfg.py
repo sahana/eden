@@ -2107,6 +2107,12 @@ class S3Config(Storage):
         """
         return self.cap.get("identifier_suffix", "")
 
+    def get_cap_expire_offset(self):
+        """
+            Offset period for expiration
+        """
+        return self.cap.get("expire_offset", 2)
+    
     def get_cap_codes(self):
         """
             Default codes for CAP alerts

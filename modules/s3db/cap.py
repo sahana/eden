@@ -567,7 +567,9 @@ class S3CAPModel(S3Model):
                            represent = S3KeyValueWidget.represent,
                            widget = S3KeyValueWidget(),
                            ),
-                     s3_datetime("effective"),
+                     s3_datetime("effective",
+                                 default = "now"
+                                 ),
                      s3_datetime("onset"),
                      s3_datetime("expires",
                                  past = 0,
