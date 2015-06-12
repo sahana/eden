@@ -1433,7 +1433,9 @@ class S3OrganisationCapacityModel(S3Model):
                            ),
                      Field("ranking", "integer",
                            label = T("Ranking"),
-                           requires = IS_IN_SET((1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET((1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)),
+                                      ),
                            ),
                      *s3_meta_fields()
                      )
