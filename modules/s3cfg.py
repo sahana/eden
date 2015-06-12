@@ -2094,6 +2094,12 @@ class S3Config(Storage):
             Prefix to be prepended to identifiers of CAP alerts
         """
         return self.cap.get("identifier_prefix", "")
+    
+    def get_cap_identifier_oid(self):
+        """
+            OID for the CAP issuing authority 
+        """
+        return self.cap.get("identifier_oid", "") 
 
     def get_cap_identifier_suffix(self):
         """
@@ -2101,6 +2107,12 @@ class S3Config(Storage):
         """
         return self.cap.get("identifier_suffix", "")
 
+    def get_cap_expire_offset(self):
+        """
+            Offset period for expiration
+        """
+        return self.cap.get("expire_offset", 2)
+    
     def get_cap_codes(self):
         """
             Default codes for CAP alerts
