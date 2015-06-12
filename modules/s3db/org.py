@@ -1412,6 +1412,11 @@ class S3OrganisationCapacityModel(S3Model):
                                                             },
                             )
 
+        # Custom Report Method
+        self.set_method("org", "capacity_assessment",
+                        method = "custom_report",
+                        action = self.org_capacity_report)
+
         # ---------------------------------------------------------------------
         # (Branch) Organisational Capacity Assessment Data
         #
@@ -1441,6 +1446,94 @@ class S3OrganisationCapacityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_capacity_report(r, **attr):
+        """
+            Custom Report Method
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Read all the Topics
+        itable = s3db.org_capacity_indicator
+        topics = db(itable.deleted == False).select(itable.id,
+                                                    itable.number,
+                                                    itable.section,
+                                                    itable.name,
+                                                    orderby = itable.number,
+                                                    )
+        indicators = []
+        iappend = indicators.append
+        rows = []
+        rappend = rows.append
+        section = None
+        for t in topics:
+            if t.section != section:
+                section = t.section
+                rappend(TR(TD(section)))
+            rappend(TR(TD(t.name)))
+            iappend(t.id)
+
+        # Read all the Ratings
+        dtable = s3db.org_capacity_assessment_data
+        ratings = db(dtable.deleted == False).select(dtable.organisation_id,
+                                                     dtable.date,
+                                                     dtable.indicator_id,
+                                                     dtable.rating,
+                                                     dtable.ranking,
+                                                     # We will just include the most recent
+                                                     orderby = ~dtable.date,
+                                                     )
+        consolidated = {"A":0,
+                        "B":0,
+                        "C":0,
+                        "D":0,
+                        "E":0,
+                        "F":0,
+                        }
+        branches = []
+        bappend = branches.append
+        for rt in ratings:
+            o = t.organisation_id
+            if o not in branches:
+                bappend(o)
+                for i in indicators:
+                    consolidated
+
+        orepresent = org_OrganisationRepresent(parent=False,
+                                               acronym=False)
+        branches = [TH(orepresent(o)) for o in branches]
+
+        items = TABLE(THEAD(TR(TH("TOPICS", _rowspan=2),
+                               TH("Consolidated Ratings", _colspan=6),
+                               ),
+                            TR(TH(),
+                               TH("A"),
+                               TH("B"),
+                               TH("C"),
+                               TH("D"),
+                               TH("E"),
+                               TH("F"),
+                               *branches
+                               ),
+                            ),
+                      TBODY(*rows),
+                      )
+
+        output = dict(items=items)
+
+        # Maintain RHeader for consistency
+        if attr.get("rheader"):
+            rheader = attr["rheader"](r)
+            if rheader:
+                output["rheader"] = rheader
+
+        output["title"] = current.T("Branch Organisational Capacity Assessment")
+        current.response.view = "org/capacity_report.html"
+        return output
 
 # =============================================================================
 class S3OrganisationGroupModel(S3Model):
