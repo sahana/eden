@@ -281,6 +281,15 @@ def capacity_assessment():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def capacity_assessment_data():
+    """
+        RESTful CRUD controller
+        - just used for the custom_report method
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def office():
     """ RESTful CRUD controller """
 
