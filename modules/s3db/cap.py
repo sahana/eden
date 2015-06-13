@@ -315,6 +315,7 @@ class S3CAPModel(S3Model):
                            ),
                      Field("source",
                            label = T("Source"),
+                           default = self.generate_source,
                            ),
                      Field("scope",
                            label = T("Scope"),
@@ -567,7 +568,9 @@ class S3CAPModel(S3Model):
                            represent = S3KeyValueWidget.represent,
                            widget = S3KeyValueWidget(),
                            ),
-                     s3_datetime("effective"),
+                     s3_datetime("effective",
+                                 default = "now",
+                                 ),
                      s3_datetime("onset"),
                      s3_datetime("expires",
                                  past = 0,
@@ -930,7 +933,7 @@ class S3CAPModel(S3Model):
                         limitby=(0, 1),
                         orderby=~table.id).first()
 
-        _time = datetime.datetime.strftime(datetime.datetime.utcnow(), "%Y/%m/%dT%H:%M:%S")
+        _time = datetime.datetime.strftime(datetime.datetime.utcnow(), "%Y%m%d")
         if r:
             next_id = int(r.id) + 1
         else:
@@ -939,10 +942,11 @@ class S3CAPModel(S3Model):
         # Format: prefix-time+-timezone+sequence-suffix
         settings = current.deployment_settings
         prefix = settings.get_cap_identifier_prefix() or current.xml.domain
+        oid = settings.get_cap_identifier_oid()
         suffix = settings.get_cap_identifier_suffix()
 
-        return "%s-%s-%d%s%s" % \
-                    (prefix, _time, next_id, ["", "-"][bool(suffix)], suffix)
+        return "%s-%s-%s-%03d%s%s" % \
+                    (prefix, oid, _time, next_id, ["", "-"][bool(suffix)], suffix)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -956,6 +960,16 @@ class S3CAPModel(S3Model):
             return ""
 
         return "%s/%d" % (current.xml.domain, user_id)
+    
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def generate_source():
+        """
+            Generate a source for CAP alert
+        """
+        settings = current.deployment_settings
+        public_url = settings.get_base_public_url()
+        return "%s@%s" % (current.xml.domain, public_url)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1039,7 +1053,7 @@ class S3CAPModel(S3Model):
         if info:
             alert_id = info.alert_id
             if alert_id and cap_alert_is_template(alert_id):
-                info.update(is_template = True)
+                db(itable.id == info_id).update(is_template = True)
 
         return True
 
