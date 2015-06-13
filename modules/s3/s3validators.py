@@ -121,6 +121,7 @@ s3_phone_requires = IS_MATCH(multi_phone_number_pattern,
 # =============================================================================
 class IS_JSONS3(Validator):
     """
+    Web2Py IS_JSON validator extended for CSV imports
     Example:
         Used as::
 
