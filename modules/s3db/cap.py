@@ -967,7 +967,8 @@ class S3CAPModel(S3Model):
         """
             Generate a source for CAP alert
         """
-        return "%s@%s" % (current.xml.domain, current.deployment_settings.get_base_public_url())
+        return "%s@%s" % (current.xml.domain, 
+                          current.deployment_settings.get_base_public_url())
 
     # -------------------------------------------------------------------------
     @staticmethod
