@@ -3186,6 +3186,13 @@ class S3PersonDetailsModel(S3Model):
                                 readable = False,
                                 writable = False,
                                 ),
+                          Field("year_of_birth",
+                                label = T("Year of Birth"),
+                                # Enable as-required in template
+                                # (used when this is all that is available: normally use Date of Birth)
+                                readable = False,
+                                writable = False,
+                                ),
                           Field("hometown",
                                 label = T("Home Town"),
                                 # Enable as-required in template

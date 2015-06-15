@@ -764,16 +764,32 @@
                 }
                 var order_len = request.order.length;
                 if (order_len) {
+                    // Number of sorting columns
                     sendData.push({'name': 'iSortingCols',
                                    'value': order_len
                                    });
-                    for (var i=0; i < order_len; i++) {
-                        var _order = request.order[i];
+                    var columnConfigs = columns[t],
+                        columnConfig,
+                        ordering,
+                        i;
+                    // Declare non-sortable columns (required by server to interpret
+                    // column indices correctly)
+                    for (i = 0; i < columnConfigs.length; i++) {
+                        columnConfig = columnConfigs[i];
+                        if (columnConfig && !columnConfig.bSortable) {
+                            sendData.push({'name': 'bSortable_' + i,
+                                           'value': 'false'
+                                           });
+                        }
+                    }
+                    // Declare sort-column indices and sorting directions
+                    for (i = 0; i < order_len; i++) {
+                        ordering = request.order[i];
                         sendData.push({'name': 'iSortCol_' + i,
-                                       'value': _order.column
+                                       'value': ordering.column
                                        });
                         sendData.push({'name': 'sSortDir_' + i,
-                                       'value': _order.dir
+                                       'value': ordering.dir
                                        });
                     }
                 }

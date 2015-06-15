@@ -2309,7 +2309,7 @@ def config(settings):
         return attr
 
     settings.customise_member_membership_type_controller = customise_member_membership_type_controller
-
+    
     # -----------------------------------------------------------------------------
     def customise_org_capacity_assessment_controller(**attr):
 
