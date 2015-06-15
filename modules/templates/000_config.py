@@ -240,6 +240,17 @@ settings.import_template()
 # After 1st_run, set this for Production to save 1x DAL hit/request
 #settings.base.prepopulate = 0
 
+# CAP Settings
+# Change for different authority and organisations
+# See http://alerting.worldweather.org/ for prefix and oid
+#settings.cap.identifier_prefix = "PAGASA-DOST"
+#settings.cap.identifier_oid = "2.49.0.0.608.0"
+#settings.cap.identifier_suffix = "alert"
+# Change this for the offset period in days that the alert will be effective for
+# Expire Date = Effective Date + expire_offset
+# Default is 2 days
+#settings.cap.expire_offset = 2
+
 # =============================================================================
 # A version number to tell update_check if there is a need to refresh the
 # running copy of this file
