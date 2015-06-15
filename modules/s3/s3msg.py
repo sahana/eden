@@ -1575,6 +1575,10 @@ class S3Msg(object):
                 sinsert(channel_id=channel_id,
                         status=error)
                 return error
+            except poplib.error_proto, e:
+                # Something else went wrong - probably transient (have seen '-ERR EOF' here)
+                current.log.error("Email poll failed: %s" % e)
+                return
 
             try:
                 # Attempting APOP authentication...
