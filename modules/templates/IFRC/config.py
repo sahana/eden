@@ -2312,14 +2312,14 @@ def config(settings):
 
     
     # -----------------------------------------------------------------------------
-    def customise_msg_email_inbox_controller(**attr):
+    def customise_msg_email_controller(**attr):
 
         # Date really, really, really needs to be sortable here!
         settings.L10n.date_format = "%Y-%m-%d"
 
         return attr
 
-    settings.customise_msg_email_inbox_controller = customise_msg_email_inbox_controller
+    settings.customise_msg_email_controller = customise_msg_email_controller
 
     # -----------------------------------------------------------------------------
     def customise_org_capacity_assessment_controller(**attr):
