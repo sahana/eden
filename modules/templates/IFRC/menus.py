@@ -721,7 +721,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def org(self):
         """ Organisation Management """
 
-        if current.request.function == "capacity_assessment":
+        if current.request.function in ("capacity_assessment", "capacity_assessment_data"):
             # Use Survey
             return self.survey()
         else:
@@ -834,6 +834,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="survey")(
                     M("Branch Organisation Capacity Assessments", c="org", f="capacity_assessment")(
                         M("Create", m="create"),
+                        M("Report", f="capacity_assessment_data", m="custom_report"),
                     ),
                     M("Assessment Templates", f="template")(
                         M("Create", m="create"),

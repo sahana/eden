@@ -2314,10 +2314,36 @@ def config(settings):
     def customise_org_capacity_assessment_controller(**attr):
 
         # Organisation needs to be an NS/Branch
-        ns_only("org_capacity_assessment",
-                required = True,
-                branches = True,
-                )
+        #ns_only("org_capacity_assessment",
+        #        required = True,
+        #        branches = True,
+        #        )
+
+        # Hard-code to ARCS (@ToDo: Use root_org once evaluation completed)
+        from s3 import IS_ONE_OF
+        db = current.db
+        s3db = current.s3db
+        otable = s3db.org_organisation
+        arcs = db(otable.name == "Afghan Red Crescent Society").select(otable.id,
+                                                                       limitby=(0, 1)
+                                                                       ).first()
+        if not arcs:
+            # Prepop not done, bail
+            return attr
+
+        btable = s3db.org_organisation_branch
+        rows = db(btable.organisation_id == arcs.id).select(btable.branch_id)
+        filter_opts = [row.branch_id for row in rows]
+
+        f = s3db.org_capacity_assessment.organisation_id
+        f.label = T("Branch")
+        f.widget = None
+        f.requires = IS_ONE_OF(db, "org_organisation.id",
+                               s3db.org_OrganisationRepresent(parent=False, acronym=False),
+                               filterby = "id",
+                               filter_opts = filter_opts,
+                               orderby = "org_organisation.name",
+                               sort = True)
 
         return attr
 

@@ -1412,11 +1412,6 @@ class S3OrganisationCapacityModel(S3Model):
                                                             },
                             )
 
-        # Custom Report Method
-        self.set_method("org", "capacity_assessment",
-                        method = "custom_report",
-                        action = self.org_capacity_report)
-
         # ---------------------------------------------------------------------
         # (Branch) Organisational Capacity Assessment Data
         #
@@ -1438,10 +1433,17 @@ class S3OrganisationCapacityModel(S3Model):
                            ),
                      Field("ranking", "integer",
                            label = T("Ranking"),
-                           requires = IS_IN_SET((1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET((1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)),
+                                      ),
                            ),
                      *s3_meta_fields()
                      )
+
+        # Custom Report Method
+        self.set_method("org", "capacity_assessment_data",
+                        method = "custom_report",
+                        action = self.org_capacity_report)
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1451,79 +1453,13 @@ class S3OrganisationCapacityModel(S3Model):
     @staticmethod
     def org_capacity_report(r, **attr):
         """
-            Custom Report Method
+            Custom Report Method for Organisation Capacity Assessment Data
         """
 
-        db = current.db
-        s3db = current.s3db
+        T = current.T
 
-        # Read all the Topics
-        itable = s3db.org_capacity_indicator
-        topics = db(itable.deleted == False).select(itable.id,
-                                                    itable.number,
-                                                    itable.section,
-                                                    itable.name,
-                                                    orderby = itable.number,
-                                                    )
-        indicators = []
-        iappend = indicators.append
-        rows = []
-        rappend = rows.append
-        section = None
-        for t in topics:
-            if t.section != section:
-                section = t.section
-                rappend(TR(TD(section)))
-            rappend(TR(TD(t.name)))
-            iappend(t.id)
-
-        # Read all the Ratings
-        dtable = s3db.org_capacity_assessment_data
-        ratings = db(dtable.deleted == False).select(dtable.organisation_id,
-                                                     dtable.date,
-                                                     dtable.indicator_id,
-                                                     dtable.rating,
-                                                     dtable.ranking,
-                                                     # We will just include the most recent
-                                                     orderby = ~dtable.date,
-                                                     )
-        consolidated = {"A":0,
-                        "B":0,
-                        "C":0,
-                        "D":0,
-                        "E":0,
-                        "F":0,
-                        }
-        branches = []
-        bappend = branches.append
-        for rt in ratings:
-            o = t.organisation_id
-            if o not in branches:
-                bappend(o)
-                for i in indicators:
-                    consolidated
-
-        orepresent = org_OrganisationRepresent(parent=False,
-                                               acronym=False)
-        branches = [TH(orepresent(o)) for o in branches]
-
-        items = TABLE(THEAD(TR(TH("TOPICS", _rowspan=2),
-                               TH("Consolidated Ratings", _colspan=6),
-                               ),
-                            TR(TH(),
-                               TH("A"),
-                               TH("B"),
-                               TH("C"),
-                               TH("D"),
-                               TH("E"),
-                               TH("F"),
-                               *branches
-                               ),
-                            ),
-                      TBODY(*rows),
-                      )
-
-        output = dict(items=items)
+        output = dict(title = T("Branch Organisational Capacity Assessment"))
+        current.response.view = "org/capacity_report.html"
 
         # Maintain RHeader for consistency
         if attr.get("rheader"):
@@ -1531,8 +1467,109 @@ class S3OrganisationCapacityModel(S3Model):
             if rheader:
                 output["rheader"] = rheader
 
-        output["title"] = current.T("Branch Organisational Capacity Assessment")
-        current.response.view = "org/capacity_report.html"
+        # Read all the permitted data
+        resource = r.resource
+        resource.load()
+        rows = resource._rows
+
+        if not len(rows):
+            output["items"] = T("No Assessment Data Found")
+            return output
+
+        db = current.db
+        s3db = current.s3db
+
+        # Read all the Indicators
+        itable = s3db.org_capacity_indicator
+        indicators = db(itable.deleted == False).select(itable.id,
+                                                        itable.number,
+                                                        itable.section,
+                                                        itable.name,
+                                                        orderby = itable.number,
+                                                        )
+
+        # Find all the Assessments
+        assessments = [row.assessment_id for row in rows]
+        atable = s3db.org_capacity_assessment
+        assessments = db(atable.id.belongs(assessments)).select(atable.id,
+                                                                atable.organisation_id,
+                                                                #atable.date,
+                                                                # We will just include the most recent for each organisation
+                                                                orderby = ~atable.date,
+                                                                )
+
+        # Find all the Organisations and the Latest Assessments
+        latest_assessments = {}
+        orgs = {}
+        for a in assessments:
+            o = a.organisation_id
+            if o not in orgs:
+                latest_assessments[a.id] = o
+                orgs[o] = {}
+
+        # Calculate the Consolidated Ratings & populate the individual ratings
+        consolidated = {}
+        for i in indicators:
+            consolidated[i.id] = {"A": 0,
+                                  "B": 0,
+                                  "C": 0,
+                                  "D": 0,
+                                  "E": 0,
+                                  "F": 0,
+                                  }
+        for row in rows:
+            a = row.assessment_id
+            if a in latest_assessments:
+                indicator = row.indicator_id
+                rating = row.rating
+                # Update the Consolidated
+                consolidated[indicator][row.rating] += 1
+                # Lookup which org this data belongs to
+                o = latest_assessments[a]
+                # Populate the Individual
+                orgs[o][indicator] = row.rating
+
+        # Build the output table
+        rows = []
+        rappend = rows.append
+        section = None
+        for i in indicators:
+            if i.section != section:
+                section = i.section
+                rappend(TR(TD(section), _class="odd"))
+            title = TD("%s. %s" % (i.number, i.name))
+            row = TR(title)
+            append = row.append
+            indicator_id = i.id
+            values = consolidated[indicator_id]
+            for v in ("A", "B", "C", "D", "E", "F"):
+                append(TD(values[v]))
+            for o in orgs:
+                rating = orgs[o].get(indicator_id, "")
+                append(TD(rating))
+            rappend(row)
+
+        orepresent = org_OrganisationRepresent(parent=False,
+                                               acronym=False)
+        orgs = [TH(orepresent(o)) for o in orgs]
+
+        items = TABLE(THEAD(TR(TH("TOPICS", _rowspan=2),
+                               TH("Consolidated Ratings", _colspan=6),
+                               ),
+                            TR(TH("A"),
+                               TH("B"),
+                               TH("C"),
+                               TH("D"),
+                               TH("E"),
+                               TH("F"),
+                               *orgs
+                               ),
+                            ),
+                      TBODY(*rows),
+                      )
+
+        output["items"] = items
+
         return output
 
 # =============================================================================
