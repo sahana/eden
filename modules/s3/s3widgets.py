@@ -1302,10 +1302,16 @@ class S3CalendarWidget(FormWidget):
                  date_format=None,
                  time_format=None,
                  separator=None,
+                 minimum=None,
+                 maximum=None,
+                 past=None,
+                 future=None,
+                 past_months=None,
+                 future_months=None,
                  month_selector=False,
                  year_selector=True,
                  week_number=False,
-                 buttons=True,
+                 buttons=None,
                  timepicker=False,
                  minute_step=5,
                  ):
@@ -1318,10 +1324,18 @@ class S3CalendarWidget(FormWidget):
             @param time_format: the time format (override default)
             @param separator: date-time separator (override default)
 
+            @param minimum: the minimum selectable date/time (overrides past)
+            @param maximum: the maximum selectable date/time (overrides future)
+            @param past: how many hours into the past are selectable (overrides past_months)
+            @param future: how many hours into the future are selectable (overrides future_months)
+            @param past_months: how many months into the past are selectable
+            @param future_months: how many months into the future are selectable
+
             @param month_selector: show a months drop-down
             @param year_selector: show a years drop-down
             @param week_number: show the week number in the calendar
-            @param buttons: show the button panel
+            @param buttons: show the button panel (defaults to True if
+                            the widget has a timepicker, else False)
 
             @param timepicker: show a timepicker
             @param minute_step: minute-step for the timepicker slider
@@ -1333,10 +1347,17 @@ class S3CalendarWidget(FormWidget):
         self.time_format = time_format
         self.separator = separator
 
-        # monthSelector
-        # yearSelector
+        self.minimum = minimum
+        self.maximum = maximum
+        self.past = past
+        self.future = future
+        self.past_months = past_months
+        self.future_months = future_months
+
+        self.month_selector = month_selector
+        self.year_selector = year_selector
         self.week_number = week_number
-        # showButtonPanel
+        self.buttons = buttons if buttons is not None else timepicker
 
         self.timepicker = timepicker
         self.minute_step = minute_step
@@ -1400,15 +1421,21 @@ class S3CalendarWidget(FormWidget):
 
         firstDOW = settings.get_L10n_firstDOW()
 
+        extremes = self.extremes()
+
         options = {"calendar": calendar,
                    "dateFormat": date_format,
                    "timeFormat": time_format,
                    "separator": separator,
                    "firstDOW": firstDOW,
+                   "monthSelector": self.month_selector,
+                   "yearSelector": self.year_selector,
+                   "showButtons": self.buttons,
                    "weekNumber": self.week_number,
                    "timepicker": self.timepicker,
                    "minuteStep": self.minute_step,
                    }
+        options.update(extremes)
 
         # Inject JS
         self.inject_script(input_id, options)
@@ -1422,6 +1449,58 @@ class S3CalendarWidget(FormWidget):
                            _class="calendar-widget-container",
                            ),
                        )
+
+    # -------------------------------------------------------------------------
+    def extremes(self):
+        """
+            Compute the minimum/maximum selectable date/time.
+
+            @return: a dict {minDateTime, maxDateTime} with the options
+                     as ISO-formatted strings in local time, to be passed
+                     as-is to s3.calendarwidget
+        """
+
+        extremes = {}
+        now = current.request.utcnow
+
+        offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
+
+        # Minimum
+        earliest = None
+        if self.minimum:
+            earliest = self.minimum
+            if isinstance(earliest, datetime.date):
+                # Consistency with S3Calendar
+                earliest = datetime.datetime.combine(earliest, datetime.time(8, 0, 0))
+        elif self.past:
+            earliest = now - datetime.timedelta(hours=self.past)
+        elif self.past_months:
+            earliest = now - relativedelta(months=self.past_months)
+        else:
+            earliest = now - datetime.timedelta(hours=876000)
+        if earliest is not None:
+            if offset:
+                earliest += datetime.timedelta(seconds=offset)
+            extremes["minDateTime"] = earliest.isoformat()
+
+        # Maximum
+        if self.maximum:
+            latest = self.maximum
+            if isinstance(latest, datetime.date):
+                # Consistency with S3Calendar
+                latest = datetime.datetime.combine(latest, datetime.time(8, 0, 0))
+        elif self.future:
+            latest = now + datetime.timedelta(hours=self.future)
+        elif self.future_months:
+            latest = now + relativedelta(months=self.future_months)
+        else:
+            latest = now + datetime.timedelta(hours=876000)
+        if latest is not None:
+            if offset:
+                latest += datetime.timedelta(seconds=offset)
+            extremes["maxDateTime"] = latest.isoformat()
+
+        return extremes
 
     # -------------------------------------------------------------------------
     def inject_script(self, selector, options):
