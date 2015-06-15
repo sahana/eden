@@ -1384,6 +1384,9 @@ class deploy_Inbox(S3Method):
         else:
             limit = None
         filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+        if not orderby:
+            # Most recent messages on top
+            orderby = "msg_email.date desc"
         resource.add_filter(filter)
 
         # Extract the data
@@ -1397,7 +1400,7 @@ class deploy_Inbox(S3Method):
 
         # Instantiate the data table
         filteredrows = data["numrows"]
-        dt = S3DataTable(data["rfields"], data["rows"])
+        dt = S3DataTable(data["rfields"], data["rows"], orderby=orderby)
         dt_id = "datatable"
 
         # Bulk actions
@@ -1555,6 +1558,15 @@ def deploy_apply(r, **attr):
             limit = 4 * display_length
         else:
             limit = None
+        # Sorting by person_id requires introspection => use datatable_filter
+        if r.representation != "aadata":
+            get_vars = dict(get_vars)
+            dt_sorting = {"iSortingCols": "1",
+                          "bSortable_0": "false",
+                          "iSortCol_0": "1",
+                          "sSortDir_0": "asc",
+                          }
+            get_vars.update(dt_sorting)
         filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
         resource.add_filter(filter)
         data = resource.select(list_fields,
@@ -1565,7 +1577,7 @@ def deploy_apply(r, **attr):
                                count=True,
                                represent=True)
         filteredrows = data["numrows"]
-        dt = S3DataTable(data["rfields"], data["rows"])
+        dt = S3DataTable(data["rfields"], data["rows"], orderby=orderby)
         dt_id = "datatable"
 
         # Bulk actions
@@ -1770,6 +1782,15 @@ def deploy_alert_select_recipients(r, **attr):
         limit = 4 * display_length
     else:
         limit = None
+    # Sorting by person_id requires introspection => use datatable_filter
+    if r.representation != "aadata":
+        get_vars = dict(get_vars)
+        dt_sorting = {"iSortingCols": "1",
+                      "bSortable_0": "false",
+                      "iSortCol_0": "1",
+                      "sSortDir_0": "desc",
+                      }
+        get_vars.update(dt_sorting)
     filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
     resource.add_filter(filter)
     data = resource.select(list_fields,
@@ -1781,7 +1802,7 @@ def deploy_alert_select_recipients(r, **attr):
                            represent=True)
 
     filteredrows = data["numrows"]
-    dt = S3DataTable(data["rfields"], data["rows"])
+    dt = S3DataTable(data["rfields"], data["rows"], orderby=orderby)
     dt_id = "datatable"
 
     # Bulk actions
@@ -1978,7 +1999,7 @@ def deploy_response_select_mission(r, **attr):
                            represent=True)
 
     filteredrows = data["numrows"]
-    dt = S3DataTable(data["rfields"], data["rows"])
+    dt = S3DataTable(data["rfields"], data["rows"], orderby=orderby)
     dt_id = "datatable"
 
     if r.representation == "html":
