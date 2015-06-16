@@ -1310,6 +1310,8 @@ class S3CalendarWidget(FormWidget):
                  future_months=None,
                  month_selector=False,
                  year_selector=True,
+                 min_year=None,
+                 max_year=None,
                  week_number=False,
                  buttons=None,
                  timepicker=False,
@@ -1333,6 +1335,9 @@ class S3CalendarWidget(FormWidget):
 
             @param month_selector: show a months drop-down
             @param year_selector: show a years drop-down
+            @param min_year: the minimum selectable year (can be relative to now like "-10")
+            @param max_year: the maximum selectable year (can be relative to now like "+10")
+
             @param week_number: show the week number in the calendar
             @param buttons: show the button panel (defaults to True if
                             the widget has a timepicker, else False)
@@ -1356,6 +1361,9 @@ class S3CalendarWidget(FormWidget):
 
         self.month_selector = month_selector
         self.year_selector = year_selector
+        self.min_year = min_year
+        self.max_year = max_year
+
         self.week_number = week_number
         self.buttons = buttons if buttons is not None else timepicker
 
@@ -1458,9 +1466,9 @@ class S3CalendarWidget(FormWidget):
 
             @param time_format: the user time format
 
-            @return: a dict {minDateTime, maxDateTime, defaultValue} with the
-                     min/max options as ISO-formatted strings, and the
-                     defaultValue in user-format, all in local time, to be
+            @return: a dict {minDateTime, maxDateTime, defaultValue, yearRange}
+                     with the min/max options as ISO-formatted strings, and the
+                     defaultValue in user-format (all in local time), to be
                      passed as-is to s3.calendarwidget
         """
 
@@ -1469,8 +1477,11 @@ class S3CalendarWidget(FormWidget):
 
         offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
 
+        pyears, fyears = 10, 10
+
         # Minimum
         earliest = None
+        fallback = False
         if self.minimum:
             earliest = self.minimum
             if isinstance(earliest, datetime.date):
@@ -1481,14 +1492,19 @@ class S3CalendarWidget(FormWidget):
         elif self.past_months:
             earliest = now - relativedelta(months=self.past_months)
         else:
+            fallback = True
             earliest = now - datetime.timedelta(hours=876000)
         if earliest is not None:
+            if not fallback:
+                pyears = abs(earliest.year - now.year)
             earliest = earliest.replace(microsecond=0)
             if offset:
                 earliest += datetime.timedelta(seconds=offset)
             extremes["minDateTime"] = earliest.isoformat()
 
         # Maximum
+        latest = None
+        fallback = False
         if self.maximum:
             latest = self.maximum
             if isinstance(latest, datetime.date):
@@ -1499,8 +1515,11 @@ class S3CalendarWidget(FormWidget):
         elif self.future_months:
             latest = now + relativedelta(months=self.future_months)
         else:
+            fallback = True
             latest = now + datetime.timedelta(hours=876000)
         if latest is not None:
+            if not fallback:
+                fyears = abs(latest.year - now.year)
             latest = latest.replace(microsecond=0)
             if offset:
                 latest += datetime.timedelta(seconds=offset)
@@ -1534,6 +1553,15 @@ class S3CalendarWidget(FormWidget):
             # Convert into user format (time part only)
             default = rounded.strftime(time_format)
             extremes["defaultValue"] = default
+
+        # Year range
+        min_year = self.min_year
+        if not min_year:
+            min_year = "-%s" % pyears
+        max_year = self.max_year
+        if not max_year:
+            max_year = "+%s" % fyears
+        extremes["yearRange"] = "%s:%s" % (min_year, max_year)
 
         return extremes
 

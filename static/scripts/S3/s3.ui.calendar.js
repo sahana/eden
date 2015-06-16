@@ -18,6 +18,9 @@
      * Hack for timepicker add-on to dynamically change minTime/maxTime when
      * the minimum or maximum date is selected in calendarsPicker (replicates
      * the minDateTime/maxDateTime option of $.datetimepicker).
+     *
+     * @param {object} inst - the calendarsPicker instance
+     * @param {jQuery} timepicker - the timepicker input div
      */
     var limitTimePicker = function(inst, timepicker) {
 
@@ -54,6 +57,24 @@
     };
 
     /**
+     * Hack for timepicker add-on to force-select the time (without date selection)
+     *
+     * @param {object} inst - the calendarsPicker instance
+     * @param {jQuery} timepicker - the timepicker input div
+     */
+    var selectTimePicker = function(inst, timepicker) {
+
+        // Pick up the time (set flag to prevent infinite recursion)
+        inst.pickUpTime = true;
+        $.datepicker._selectDate(timepicker);
+        inst.pickUpTime = false;
+
+        // timepicker._selectDate restores the header we had previously
+        // removed :/ so remove it again...
+        timepicker.find('.ui-timepicker-div .ui-widget-header').remove();
+    };
+
+    /**
      * Hack for calendarsPicker: do not close upon select if we have a timepicker,
      * always also pick up the time before updating the real input during onSelect
      */
@@ -79,14 +100,8 @@
             // Re-apply limits for timepicker
             limitTimePicker(inst, timepicker);
 
-            // Pick up the time (set flag to prevent infinite recursion)
-            inst.pickUpTime = true;
-            $.datepicker._selectDate(timepicker);
-            inst.pickUpTime = false;
-
-            // timepicker._selectDate restores the header we had previously
-            // removed :/ so remove it again...
-            timepicker.find('.ui-timepicker-div .ui-widget-header').remove();
+            // Pick up the time
+            selectTimePicker(inst, timepicker);
 
             // calendarsPicker._updateInput not called while inline, so do
             // it now (this also triggers the onSelect-callback to update
@@ -153,6 +168,7 @@
          *
          * @prop {bool} monthSelector - show a drop-down to select the month
          * @prop {bool} yearSelector - show a drop-down to select the year
+         * @prop {string} yearRange - the range of selectable years ("min:max" or "-past:+future")
          * @prop {bool} showButtons - show the button panel
          *
          * @prop {bool} weekNumber - show the week number in the calendar
@@ -183,6 +199,7 @@
 
             monthSelector: false,
             yearSelector: true,
+            yearRange: '-10:+10',
             showButtons: true,
 
             weekNumber: false,
@@ -312,6 +329,7 @@
 
                     changeMonth: opts.monthSelector,
                     changeYear: opts.yearSelector,
+                    yearRange: opts.yearRange,
                     showButtonPanel: opts.showButtons,
                     stepMinute: opts.minuteStep,
                     showSecond: false
@@ -328,6 +346,7 @@
 
                     changeMonth: opts.monthSelector,
                     changeYear: opts.yearSelector,
+                    yearRange: opts.yearRange,
                     showButtonPanel: opts.showButtons
                 });
             }
@@ -424,6 +443,7 @@
                     firstDay: opts.firstDOW,
 
                     changeMonth: opts.monthSelector || opts.yearSelector,
+                    yearRange: opts.yearRange,
 
                     minDate: minDate,
                     maxDate: maxDate,
@@ -457,6 +477,7 @@
                     firstDay: opts.firstDOW,
 
                     changeMonth: opts.monthSelector || opts.yearSelector,
+                    yearRange: opts.yearRange,
 
                     minDate: minDate,
                     maxDate: maxDate
@@ -561,6 +582,52 @@
             }
             this.dateInput.val(datestr);
             return datestr;
+        },
+
+        /**
+         * Action when the real input field is changed by the user, for
+         * calendarsPicker/timepicker combination (limited functionality)
+         *
+         * @param {event} event - the jQuery event
+         */
+        _manualInput: function(event) {
+
+            if (!this.dateInput || !this.options.timepicker) {
+                // No embedded timepicker => nothing to do (phew! :))
+                return;
+            }
+
+            var el = $(this.element),
+                inst = this.dateInput.data('calendarsPicker'),
+                timepicker = inst.timepicker,
+                currentDate = this.dateInput.val(),
+                currentTime = this.timeInput.val(),
+                values = this._split(el.val());
+
+            // Handle the time part first
+            if (values.time != currentTime) {
+                // Time Input has changed => update the hidden time input
+                this.timeInput.val(values.time);
+                // Try to parse the input time
+                var timeFormat = this._transformTimeFormat(),
+                    selectedTime = $.datepicker.parseTime(timeFormat, values.time);
+                // If successful, update the timepicker and force-select to sanitize the value
+                if (selectedTime !== false && timepicker) {
+                    timepicker.timepicker('setTime', new Date(1970, 1, 1, selectedTime.hour, selectedTime.minute, selectedTime.second));
+                    selectTimePicker(inst, timepicker);
+                }
+            }
+
+            // Now deal with the date
+            var selectedDate = values.date;
+            if (selectedDate != currentDate) {
+                // Update the dateInput and re-direct the event to the calendarsWidget
+                event.target = this.dateInput;
+                this.dateInput.val(selectedDate).trigger(event);
+            }
+
+            // Update the real input from sanitized values
+            this._updateInput();
         },
 
         /**
@@ -733,6 +800,15 @@
             if (this.dateInput || this.timeInput) {
                 el.bind('focus' + ns, function() {
                     self.dateInput.calendarsPicker('show');
+                });
+                el.bind('keypress' + ns, function(event) {
+                    self._manualInput(event);
+                });
+                el.bind('keydown' + ns, function(event) {
+                    self._manualInput(event);
+                });
+                el.bind('keyup' + ns, function(event) {
+                    self._manualInput(event);
                 });
                 // Change-event for date and time inputs
                 this.dateInput.bind('change' + ns, function() {
