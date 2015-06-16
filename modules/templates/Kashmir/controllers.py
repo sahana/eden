@@ -41,7 +41,7 @@ class index(S3CustomController):
         AUTHENTICATED = system_roles.AUTHENTICATED
 
         # Login/Registration forms
-        self_registration = current.deployment_settings.get_security_self_registration()
+        self_registration = current.deployment_settings.get_security_registration_visible()
         registered = False
         login_form = None
         login_div = None

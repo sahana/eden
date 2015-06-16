@@ -65,7 +65,7 @@ class index(S3CustomController):
         output["item"] = item
 
         # Login/Registration forms
-        self_registration = settings.get_security_self_registration()
+        self_registration = settings.get_security_registration_visible()
         registered = False
         login_form = None
         login_div = None

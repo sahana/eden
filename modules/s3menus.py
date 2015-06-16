@@ -201,7 +201,7 @@ class S3MainMenu(object):
                "_next" in request.get_vars:
                 login_next = request.get_vars["_next"]
 
-            self_registration = current.deployment_settings.get_security_self_registration()
+            self_registration = current.deployment_settings.get_security_registration_visible()
             if self_registration == "index":
                 register = MM("Register", c="default", f="index", m="register",
                                vars=dict(_next=login_next),

@@ -567,7 +567,7 @@ Thank you"""
             buttons = []
 
             # Self-registration action link
-            self_registration = deployment_settings.get_security_self_registration()
+            self_registration = deployment_settings.get_security_registration_visible()
             if self_registration and register_link:
                 if self_registration == "index":
                     # Custom Registration page
