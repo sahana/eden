@@ -316,7 +316,7 @@ class S3MainMenu(default.S3MainMenu):
             "_next" in request.get_vars:
                 login_next = request.get_vars["_next"]
 
-            self_registration = settings.get_security_self_registration()
+            self_registration = settings.get_security_registration_visible()
             menu_personal = MP()(
                         MP("Register", c="default", f="user",
                            m="register", check=self_registration),

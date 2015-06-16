@@ -394,10 +394,18 @@ class S3Config(Storage):
 
         """
         return self.security.get("self_registration", True)
+
+    def get_security_registration_visible(self):
+        visible = self.get_security_self_registration() and \
+                  self.security.get("registration_visible", True)
+        return visible
+
     def get_auth_registration_requires_verification(self):
         return self.auth.get("registration_requires_verification", False)
+
     def get_auth_registration_requires_approval(self):
         return self.auth.get("registration_requires_approval", False)
+
     def get_auth_always_notify_approver(self):
         return self.auth.get("always_notify_approver", True)
 

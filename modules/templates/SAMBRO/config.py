@@ -23,6 +23,9 @@ def config(settings):
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "SAMBRO"
 
+    # The Registration functionality shouldn't be visible to the Public
+    settings.security.registration_visible = False
+
     # GeoNames username
     settings.gis.geonames_username = "eden_test"
 
