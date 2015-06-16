@@ -2018,7 +2018,7 @@ def deploy_response_select_mission(r, **attr):
 
         s3 = response.s3
         s3.actions = [dict(label=str(T("Select Mission")),
-                           _class="action-btn",
+                           _class="action-btn link",
                            url=URL(f="email_inbox",
                                    args=[r.id, "select"],
                                    vars=action_vars,
@@ -2087,7 +2087,7 @@ def deploy_response_select_mission(r, **attr):
             id = "deploy_response_human_resource_id__row"
             # @ToDo: deployment_setting for 'Member' label
             title = T("Select Member")
-            label = "%s:" % title
+            label = LABEL("%s:" % title)
             field = s3db.deploy_response.human_resource_id
             # @ToDo: Get fancier & auto-click if there is just a single Mission
             script = \
@@ -2106,13 +2106,13 @@ def deploy_response_select_mission(r, **attr):
             widget = widget(field, None)
             comment = DIV(_class="tooltip",
                           _title="%s|%s" % (title,
-                                            current.messages.AUTOCOMPLETE_HELP))
+                                            current.messages.AUTOCOMPLETE_HELP),
+                          )
             # @ToDo: Handle non-callable formstyles
             row = s3.crud.formstyle(id, label, widget, comment)
             if isinstance(row, tuple):
-                row = TAG[""](row[0],
-                              row[1],
-                              )
+                row = TAG[""](row[0], row[1])
+
         # Any attachments?
         if atts:
             attachments = TABLE(TR(TH("%s: " % T("Attachments"))))
@@ -2125,7 +2125,7 @@ def deploy_response_select_mission(r, **attr):
         else:
             attachments = ""
         # @ToDo: Add Reply button
-        rheader = DIV(row,
+        rheader = DIV(FORM(row, _class="select-member-form"),
                       TABLE(TR(TH("%s: " % T("From")),
                                from_address,
                                ),

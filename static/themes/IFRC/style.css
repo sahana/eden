@@ -85,7 +85,6 @@ table th label {
 }
 table td {
     padding: 10px;
-    vertical-align: top;
 }
 table td:first-child {
     background-color: #fff;
@@ -503,6 +502,19 @@ button.alert-send-btn:enabled {
 
 .profile-sub-header .icon {
     margin-right: 8px;
+}
+
+/* RDRT Custom Form in deploy_response_select_mission */
+form.select-member-form .tooltip {
+    display: inline-block;
+    vertical-align: text-bottom;
+}
+form.select-member-form {
+    margin-bottom: 0.5rem;
+}
+form.select-member-form label {
+    font-weight: bold;
+    padding-right: 0.3rem;
 }
 
 .po-summary {
