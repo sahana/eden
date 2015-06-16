@@ -1421,7 +1421,7 @@ class S3CalendarWidget(FormWidget):
 
         firstDOW = settings.get_L10n_firstDOW()
 
-        extremes = self.extremes()
+        extremes = self.extremes(time_format=time_format)
 
         options = {"calendar": calendar,
                    "dateFormat": date_format,
@@ -1451,13 +1451,17 @@ class S3CalendarWidget(FormWidget):
                        )
 
     # -------------------------------------------------------------------------
-    def extremes(self):
+    def extremes(self, time_format=None):
         """
-            Compute the minimum/maximum selectable date/time.
+            Compute the minimum/maximum selectable date/time, as well as
+            the default time (=the minute-step closest to now)
 
-            @return: a dict {minDateTime, maxDateTime} with the options
-                     as ISO-formatted strings in local time, to be passed
-                     as-is to s3.calendarwidget
+            @param time_format: the user time format
+
+            @return: a dict {minDateTime, maxDateTime, defaultValue} with the
+                     min/max options as ISO-formatted strings, and the
+                     defaultValue in user-format, all in local time, to be
+                     passed as-is to s3.calendarwidget
         """
 
         extremes = {}
@@ -1479,6 +1483,7 @@ class S3CalendarWidget(FormWidget):
         else:
             earliest = now - datetime.timedelta(hours=876000)
         if earliest is not None:
+            earliest = earliest.replace(microsecond=0)
             if offset:
                 earliest += datetime.timedelta(seconds=offset)
             extremes["minDateTime"] = earliest.isoformat()
@@ -1496,9 +1501,39 @@ class S3CalendarWidget(FormWidget):
         else:
             latest = now + datetime.timedelta(hours=876000)
         if latest is not None:
+            latest = latest.replace(microsecond=0)
             if offset:
                 latest += datetime.timedelta(seconds=offset)
             extremes["maxDateTime"] = latest.isoformat()
+
+        # Default date/time
+        if self.timepicker and time_format:
+            # Pick a start date/time
+            if earliest <= now <= latest:
+                start = now
+            elif now < earliest:
+                start = earliest
+            elif now > latest:
+                start = latest
+            # Round to the closest minute-step
+            step = self.minute_step * 60
+            seconds = (start - start.min).seconds
+            rounding = (seconds + step / 2) // step * step
+            rounded = start + datetime.timedelta(0,
+                                                 rounding - seconds,
+                                                 -start.microsecond,
+                                                 )
+            # Limits
+            if rounded < earliest:
+                rounded = earliest
+            elif rounded > latest:
+                rounded = latest
+            # Translate into local time
+            if offset:
+                rounded += datetime.timedelta(seconds=offset)
+            # Convert into user format (time part only)
+            default = rounded.strftime(time_format)
+            extremes["defaultValue"] = default
 
         return extremes
 
