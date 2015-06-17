@@ -1,0 +1,68 @@
+Name,Title,Body
+RDRTInbox,"RDRT: InBox","<div class=""online-documentation"">
+<h3>Opening the InBox</h3>
+<p>
+To open the InBox, use the ""InBox"" link in the left menu:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/side_menu_inbox.png""></img>
+<p>
+The InBox view shows all incoming response messages to RDRT Alerts which could
+not automatically be linked to a mission.
+</p>
+<p>
+It is useful to check the InBox from time to time after you have sent out
+a new alert.
+</p>
+
+<h3>How to link a Response Message to a Mission</h3>
+<p>
+Click on the ""Link to Mission"" button for the respective message in the InBox:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/inbox_messages.png""></img>
+<p>
+This opens a page with the message details at the top, and a list of missions
+underneath:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/inbox_select_mission.png""></img>
+<p>
+If the sender email address of the response message is not registered for
+any RDRT roster member, you will see a small input box at the top of the
+link-to-mission dialog:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/inbox_unknown_sender.png""></img>
+<p>
+You can use this input box to manually identify the member who sent the
+message: type in a few letters of the member's name to see a list of
+possible matches, then select the member from that drop-down:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/inbox_select_member.png""></img>
+<p>
+If you forget to choose a member before linking the message to a mission,
+you can still do this later in the <a href=""{{name:RDRTResponses}}"">mission profile</a>.
+</p>
+<p>
+Finally, to link the message to a mission, click the ""Select Mission"" button
+in the respective row. This will link the response message to that mission, so
+that it will now appear in the <a href=""{{name:RDRTResponses}}"">responses
+section of the mission profile</a>:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/inbox_linked_message.png""></img>
+<p>
+Note that once the message has been linked to a mission, it will no
+longer appear in the InBox.
+</p>
+
+<h3>How to delete Messages from the InBox</h3>
+<p>
+If you want to delete a message from the InBox, click on the delete-icon:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/inbox_delete_message.png""></img>
+<p>
+You can also delete multiple messages at once: check the boxes in the
+leftmost column to select the messages you want to delete, and then click
+the ""Delete""-button at the top.
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/inbox_bulk_delete.png""></img>
+
+<p><a href=""{{name:RDRT}}"">Back to table of contents</a></p>
+</div>"
