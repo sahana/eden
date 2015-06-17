@@ -1583,7 +1583,7 @@ class S3CalendarWidget(FormWidget):
         appname = current.request.application
 
         # Global scripts
-        if s3.debug or True: # @todo: add minified script configuration
+        if s3.debug:
             scripts = ("jquery.plugin.js",
                        "calendars/jquery.calendars.all.js",
                        "calendars/jquery.calendars.lang.js",
@@ -1592,7 +1592,8 @@ class S3CalendarWidget(FormWidget):
                        "S3/s3.ui.calendar.js",
                        )
         else:
-            scripts = (#"S3/s3.ui.calendars.min.js",
+            scripts = ("jquery.plugin.min.js",
+                       "S3/s3.ui.calendar.min.js",
                        )
         for script in scripts:
             path = "/%s/static/scripts/%s" % (appname, script)
