@@ -1295,6 +1295,10 @@ class S3CalendarWidget(FormWidget):
         optional time input
 
         @status: work in progress
+
+        @note: this widget must be combined with the IS_UTC_DATE or
+               IS_UTC_DATETIME validators to have the value properly
+               converted from/to local timezone and format.
     """
 
     def __init__(self,
@@ -1385,8 +1389,6 @@ class S3CalendarWidget(FormWidget):
         # Modify class as required
         _class = self._class
 
-        # Format value according to calendarFormat?
-
         # Default attributes
         defaults = {"_type": "text",
                     "_class": _class,
@@ -1418,7 +1420,7 @@ class S3CalendarWidget(FormWidget):
         settings = current.deployment_settings
 
         calendar = self.calendar or current.calendar.name
-        calendar = calendar.lower() if calendar else "gregorian"
+        calendar = calendar if calendar and calendar != "Gregorian" else ""
 
         date_format = self.date_format or \
                       settings.get_L10n_date_format()
@@ -1582,20 +1584,86 @@ class S3CalendarWidget(FormWidget):
         s3 = current.response.s3
         appname = current.request.application
 
+        request = current.request
+        s3 = current.response.s3
+        jquery_ready = s3.jquery_ready
+
+        datepicker_l10n = None
+        calendars_type = None
+        calendars_l10n = None
+        calendars_picker_l10n = None
+
+        # Paths to localization files
+        datepicker_l10n_path = os.path.join(request.folder, "static", "scripts", "ui", "i18n")
+        calendars_l10n_path = os.path.join(request.folder, "static", "scripts", "calendars", "i18n")
+
+        calendar = options["calendar"].lower()
+        if calendar != "gregorian":
+            # Include the right calendar script
+            filename = "jquery.calendars.%s.js" % calendar
+            lscript = os.path.join(calendars_l10n_path, filename)
+            if os.path.exists(lscript):
+                calendars_type = "calendars/i18n/%s" % filename
+
+        language = current.session.s3.language
+        if language in current.deployment_settings.date_formats:
+            # Localise if we have configured a Date Format and we have a jQueryUI options file
+
+            # Do we have a suitable locale file?
+            if language in ("prs", "ps"):
+                # Dari & Pashto use Farsi
+                language = "fa"
+            #elif language == "ur":
+            #    # Urdu uses Arabic
+            #    language = "ar"
+            elif "-" in language:
+                parts = language.split("_", 1)
+                language = "%s-%s" % (parts[0], parts[1].upper())
+
+            # datePicker regional
+            filename = "datepicker-%s.js" % language
+            path = os.path.join(datepicker_l10n_path, filename)
+            if os.path.exists(path):
+                datepicker_l10n = "ui/i18n/%s" % filename
+
+            if calendar != "gregorian" and language:
+                # calendars regional
+                filename = "jquery.calendars.%s-%s.js" % (calendar, language)
+                path = os.path.join(calendars_l10n_path, filename)
+                if os.path.exists(path):
+                    calendars_l10n = "calendars/i18n/%s" % filename
+                # calendarsPicker regional
+                filename = "jquery.calendars.picker-%s.js" % language
+                path = os.path.join(calendars_l10n_path, filename)
+                if os.path.exists(path):
+                    calendars_picker_l10n = "calendars/i18n/%s" % filename
+        else:
+            language = ""
+
+        options["language"] = language
+
         # Global scripts
         if s3.debug:
             scripts = ("jquery.plugin.js",
                        "calendars/jquery.calendars.all.js",
-                       "calendars/jquery.calendars.lang.js",
-                       "calendars/jquery.calendars.picker.lang.js",
                        "calendars/jquery.calendars.picker.ext.js",
                        "S3/s3.ui.calendar.js",
+                       datepicker_l10n,
+                       calendars_type,
+                       calendars_l10n,
+                       calendars_picker_l10n,
                        )
         else:
             scripts = ("jquery.plugin.min.js",
                        "S3/s3.ui.calendar.min.js",
+                       datepicker_l10n,
+                       calendars_type,
+                       calendars_l10n,
+                       calendars_picker_l10n,
                        )
         for script in scripts:
+            if not script:
+                continue
             path = "/%s/static/scripts/%s" % (appname, script)
             if path not in s3.scripts:
                 s3.scripts.append(path)

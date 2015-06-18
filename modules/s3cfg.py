@@ -74,7 +74,7 @@ class S3Config(Storage):
                     "ko": "%Y-%m-%d",
                     #"mn": "",
                     #"my": "",
-                    #"ne": "",
+                    "ne": "%d/%m/%Y",
                     "prs": "%Y/%m/%d",
                     "ps": "%Y/%m/%d",
                     "pt": "%d/%m/%Y",
