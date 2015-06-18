@@ -7,16 +7,27 @@
   <a class='button small alert has-icon' href='{{=URL(args="create", vars=r.get_vars)}}'><img src='/{{=appname}}/static/themes/{{=response.s3.theme}}/img/icons/{{=s3db.get_config(r.tablename, "icon")}}.png' width='20' height='20'>{{=response.s3.crud_strings[r.tablename].label_create}}</a>
  </div>
 </header>
+{{try:}}{{filter_form=filter_form}}
+<div class="row">
+ <div class="large-4 large-push-8 columns">
+  <a class="button tiny right js-filter-toggle hide-for-medium-down">{{=T("Filter")}}</a>
+  <a class="button tiny left js-filter-toggle hide-for-large-up">{{=T("Filter")}}</a>
+ </div>
+ <div class="large-8 large-pull-4 columns">
+  <div id='filter-form' class='form-container'>
+   {{=filter_form}}
+  </div>
+ </div>
+</div>
+{{except:}}{{pass}}
 <div id='summary-tabs' class='row'>
  <div id='summary-tab-headers' class='row tabs-header'>
   {{try:}}{{=tabs}}{{except:}}{{pass}}
  </div>
  <div id='summary-sections' class='row tabs-content'>
-  <div id='filter-form' class='form-container'>
-   {{try:}}{{=filter_form}}{{except:}}{{pass}}
-  </div>
   {{try:}}{{for section in sections:}}{{=section}}{{pass}}{{except:}}{{pass}}
  </div>
 </div>
 {{include "dataTables.html"}}
+{{s3.scripts.append("/%s/static/themes/CRMT/js/filtertoggle.js" % appname)}}
 

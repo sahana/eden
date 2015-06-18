@@ -90,7 +90,7 @@ button.ui-multiselect {
 }
 #summary-tab-headers {
     padding-bottom: 0;
-    padding-top: 24px;
+/*     padding-top: 24px; */
 }
 #summary-sections {
     background: none repeat scroll 0 0 #ffffff;
@@ -127,11 +127,40 @@ table.dataTable tr.odd {
     margin-bottom: 0.5rem;
     margin-top: 0.2rem;
 }
+.dataTables_length select {
+    display: inline-block;
+    width: auto;
+    height: auto;
+    margin: 0 0.3rem;
+    padding: 0.2rem 0.5rem;
+    vertical-align: text-bottom;
+}
 .form-container form .dataTables_length label select {
     font-family: Lato,"Helvetica Neue",Helvetica,Roboto,Arial,sans-serif;
     font-size: 0.875rem;
     margin: 0 0 1rem;
     padding: 0.5rem;
+}
+#filter-form,
+.js-filter-toggle {
+    margin-top: 1.2rem;
+}
+#filter-form {
+    padding: 1rem 1rem 0.5rem 0.5rem;
+    overflow: visible;
+}
+.filter-controls {
+    padding-top: 0.375rem;
+}
+.no-options-available {
+    display: block;
+    padding: 0.4625rem 0;
+}
+.range-filter-widget input {
+    display: inline-block;
+}
+.range-filter-widget button.ui-datepicker-trigger {
+    vertical-align: middle;
 }
 
 div.dataTables_length {
@@ -200,9 +229,9 @@ table.dataTable .action-btn.read:before {
     margin-right; 0;
     top: 6px;
 }
-.filter-controls {
+/*.filter-controls {
     float: right;
-}
+}*/
 .filter-clear {
     background: none repeat scroll 0 0 transparent;
     box-shadow: 0 0 0 2px #56b0b3 inset;
@@ -320,7 +349,7 @@ aside .form-container input[type="radio"] {
 aside .form-container input[type=radio] + label:before {
     content: "";
     display: inline-block;
-    width: 6px; 
+    width: 6px;
     height: 6px;
     vertical-align: middle;
     margin-right: 8px;
@@ -428,11 +457,11 @@ aside .form-container input[type=radio] + label:before {
 .slick-next:hover:before {
     background-color: #37518B;
 }
-.slick-prev:before { 
-    content: "\f10a"; 
+.slick-prev:before {
+    content: "\f10a";
 }
-.slick-next:before { 
-    content: "\f10b"; 
+.slick-next:before {
+    content: "\f10b";
 }
 .slick-dots {
     position: static;
