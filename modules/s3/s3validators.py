@@ -3773,6 +3773,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                 ("pt", "Portuguese"),
                 #("pra", "Prakrit languages"),
                 #("pro", "Provençal, Old (to 1500)"),
+                ("prs", "Dari"),
                 #("pus", "Pushto; Pashto"),
                 ("ps", "Pushto; Pashto"),
                 #("qaa-qtz", "Reserved for local use"),
