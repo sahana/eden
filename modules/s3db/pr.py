@@ -887,6 +887,7 @@ class S3PersonModel(S3Model):
         crud_form = S3SQLCustomForm("first_name",
                                     "middle_name",
                                     "last_name",
+                                    "person_details.year_of_birth",
                                     "date_of_birth",
                                     "initials",
                                     "preferred_name",
@@ -1504,15 +1505,27 @@ class S3PersonModel(S3Model):
         if current.request.controller == "vol":
             dtable = s3db.pr_person_details
             fields.append(dtable.occupation)
+            # @ToDo: deployment_settings? Args passed into fn?
+            fields += [dtable.father_name,
+                       dtable.grandfather_name,
+                       dtable.year_of_birth,
+                       ]
             left = dtable.on(dtable.person_id == ptable.id)
 
         row = db(ptable.id == id).select(left=left,
                                          *fields).first()
         if left:
-            occupation = row["pr_person_details.occupation"]
+            details = row["pr_person_details"]
+            occupation = details.occupation
+            father_name = details.father_name
+            grandfather_name = details.grandfather_name
+            year_of_birth = details.year_of_birth
             row = row["pr_person"]
         else:
             occupation = None
+            father_name = None
+            grandfather_name = None
+            year_of_birth = None
         if tablename == "org_site":
             name = s3_fullname(row)
         if request_dob:
@@ -1574,6 +1587,12 @@ class S3PersonModel(S3Model):
             item["dob"] = represent(date_of_birth)
         if occupation:
             item["occupation"] = occupation
+        if father_name:
+            item["father_name"] = father_name
+        if grandfather_name:
+            item["grandfather_name"] = grandfather_name
+        if year_of_birth:
+            item["year_of_birth"] = year_of_birth
         output = json.dumps(item, separators=SEPARATORS)
 
         current.response.headers["Content-Type"] = "application/json"
@@ -2229,6 +2248,7 @@ class S3ContactModel(S3Model):
                            ),
                      Field("address",
                            label = T("Address"),
+                           # Enable as-required in templates
                            readable = False,
                            writable = False,
                            ),
@@ -3084,7 +3104,7 @@ class S3PersonEducationModel(S3Model):
                                       # Normally accessed via component
                                       #"person_id",
                                       "year",
-                                      "level",
+                                      "level_id",
                                       "award",
                                       "major",
                                       "grade",
@@ -3186,8 +3206,11 @@ class S3PersonDetailsModel(S3Model):
                                 readable = False,
                                 writable = False,
                                 ),
-                          Field("year_of_birth",
+                          Field("year_of_birth", "integer",
                                 label = T("Year of Birth"),
+                                requires = IS_EMPTY_OR(
+                                    IS_INT_IN_RANGE(1900, current.request.now.year)
+                                    ),
                                 # Enable as-required in template
                                 # (used when this is all that is available: normally use Date of Birth)
                                 readable = False,

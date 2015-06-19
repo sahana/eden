@@ -3073,6 +3073,10 @@ class S3Config(Storage):
         """ Include Date of Birth in the AddPersonWidget[2] """
         return self.pr.get("request_dob", True)
 
+    def get_pr_request_email(self):
+        """ Include Email in the AddPersonWidget2 """
+        return self.pr.get("request_email", True)
+
     def get_pr_request_gender(self):
         """ Include Gender in the AddPersonWidget[2] """
         return self.pr.get("request_gender", True)

@@ -430,6 +430,7 @@ def config(settings):
          "pr_person_details.mother_name"             : (BRCS, ),
          "pr_person_details.father_name"             : (ARCS, BRCS),
          "pr_person_details.grandfather_name"        : (ARCS, ),
+         "pr_person_details.year_of_birth"           : (ARCS, ),
          "pr_person_details.affiliations"            : (PRC, ),
          "pr_person_details.company"                 : (PRC, ),
          "vol_details.availability"                  : (VNRC, ),
@@ -1692,6 +1693,7 @@ def config(settings):
             if root_org == ARCS:
                 arcs = True
                 settings.L10n.mandatory_lastname = False
+                settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
                 settings.hrm.use_skills = True
                 settings.hrm.vol_active = True
             elif root_org in (CVTL, PMI, PRC):
@@ -1720,16 +1722,19 @@ def config(settings):
                     limit_filter_opts = True,
                     )
 
+            table = s3db.hrm_human_resource
+
             if arcs:
                 field = s3db.vol_details.card
                 field.readable = field.writable = True
             elif vnrc:
-                field = r.table.job_title_id
+                field = table.job_title_id
                 field.readable = field.writable = False
 
             if not vnrc:
                 from s3 import S3OptionsFilter
-                filter_widgets = s3db.get_config("hrm_human_resource", "filter_widgets")
+                filter_widgets = s3db.get_config("hrm_human_resource",
+                                                 "filter_widgets")
                 filter_widgets.insert(-1, S3OptionsFilter("training.course_id$course_sector.sector_id",
                                                           label = T("Training Sector"),
                                                           hidden = True,
@@ -1740,12 +1745,53 @@ def config(settings):
 
             if controller == "vol":
                 if root_org == ARCS:
-                    field = s3db.hrm_human_resource.person_id
-                    from s3 import S3AddPersonWidget2
+                    settings.pr.request_email = False
+                    field = table.person_id
+                    from s3 import S3AddPersonWidget2, IS_ADD_PERSON_WIDGET2, S3SQLCustomForm, S3SQLInlineComponent
+                    field.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
                     field.widget = S3AddPersonWidget2(controller = "vol",
                                                       father_name = True,
                                                       grandfather_name = True,
+                                                      year_of_birth = True,
                                                       )
+                    table.code.label = T("Volunteer ID")
+                    # Emergency Contact Name isn't required
+                    s3db.pr_contact_emergency.name.requires = None
+                    crud_form = S3SQLCustomForm("organisation_id",
+                                                "code",
+                                                "person_id",
+                                                S3SQLInlineComponent("contact_emergency",
+                                                                     label = T("Emergency Contact Number"),
+                                                                     fields = [("", "phone"),
+                                                                               ],
+                                                                     link = False,
+                                                                     multiple = False,
+                                                                     ),
+                                                S3SQLInlineComponent("home_address",
+                                                                     label = T("Address"),
+                                                                     fields = [("", "location_id"),
+                                                                               ],
+                                                                     default = {"type": 1}, # Current Home Address
+                                                                     link = False,
+                                                                     multiple = False,
+                                                                     ),
+                                                S3SQLInlineComponent("education",
+                                                                     label = T("Education"),
+                                                                     fields = [(T("Education Level"), "level_id"),
+                                                                               "institute",
+                                                                               ],
+                                                                     link = False,
+                                                                     multiple = False,
+                                                                     ),
+                                                "job_title_id",
+                                                "start_date",
+                                                "details.active",
+                                                (T("Remarks"), "comments"),
+                                                )
+                    s3db.configure("hrm_human_resource",
+                                   crud_form = crud_form,
+                                   )
+
                 elif root_org == NRCS:
                     pos = 6
                     # Add volunteer type to list_fields
@@ -2544,7 +2590,10 @@ def config(settings):
 
         # Special cases for different NS
         root_org = current.auth.root_org_name()
-        if root_org == VNRC:
+        if root_org == ARCS:
+            # Name isn't required
+            r.table.name.requires = None
+        elif root_org == VNRC:
             address = r.table.address
             address.readable = address.writable = True
 
@@ -2695,6 +2744,7 @@ def config(settings):
         if root_org == ARCS:
             arcs = True
             settings.L10n.mandatory_lastname = False
+            settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
             # Override what has been set in the model already
             s3db.pr_person.last_name.requires = None
             settings.hrm.use_skills = True
@@ -2836,7 +2886,8 @@ def config(settings):
                     field.comment = None
                 elif arcs:
                     # Don't enable Legacy Freetext field
-                    pass
+                    # Only Highest-level of Education is captured
+                    s3db.pr_education.level_id.label = T("Education Level")
                 else:
                     # Enable Legacy Freetext field
                     field = s3db.pr_education.level
@@ -2861,7 +2912,9 @@ def config(settings):
                                                     "status",
                                                     "comments",
                                                     )
-                        s3db.configure("hrm_human_resource", crud_form=crud_form)
+                        s3db.configure("hrm_human_resource",
+                                       crud_form = crud_form,
+                                       )
                     else:
                         # Use default form (legacy)
                         s3db.clear_config("hrm_human_resource", "crud_form")
@@ -3112,7 +3165,8 @@ def config(settings):
                                        "comments",
                                        ]
                         s3db.configure("hrm_human_resource",
-                                       crud_form = S3SQLCustomForm(*crud_fields))
+                                       crud_form = S3SQLCustomForm(*crud_fields),
+                                       )
 
                 elif component_name == "address":
                     settings.gis.building_name = False

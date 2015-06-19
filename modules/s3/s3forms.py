@@ -60,7 +60,7 @@ from gluon.tools import callback
 from gluon.validators import Validator
 
 from s3query import FS
-from s3utils import s3_mark_required, s3_represent_value, s3_store_last_record_id, s3_strip_markup, s3_unicode, s3_validate
+from s3utils import s3_debug, s3_mark_required, s3_represent_value, s3_store_last_record_id, s3_strip_markup, s3_unicode, s3_validate
 from s3widgets import S3Selector
 
 # Compact JSON encoding
@@ -2743,7 +2743,18 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         # Check whether the component is a link table and we're linking to that via something like pr_person from hrm_human_resource
                         fkey = component.fkey
                         if fkey != "id" and fkey in component.fields and fkey not in values:
-                            values[fkey] = master[pkey]
+                            if fkey == "pe_id" and pkey == "person_id":
+                                # Need to lookup the pe_id manually (bad that we need this special case, must be a better way but this works for now)
+                                ptable = s3db.pr_person
+                                person = db(ptable.id == master[pkey]).select(ptable.pe_id,
+                                                                              limitby=(0, 1)
+                                                                              ).first()
+                                if person:
+                                    values["pe_id"] = person.pe_id
+                                else:
+                                    s3_debug("S3Forms", "Cannot find person with ID: %s" % master[pkey])
+                            else:
+                                values[fkey] = master[pkey]
 
                     # Apply defaults
                     for f, v in defaults.iteritems():
@@ -2752,7 +2763,11 @@ class S3SQLInlineComponent(S3SQLSubForm):
 
                     # Create the new record
                     # use _table in case we are using an alias
-                    record_id = component._table.insert(**values)
+                    try:
+                        record_id = component._table.insert(**values)
+                    except:
+                        s3_debug("S3Forms", "Cannot insert values %s into table: %s" % (values, component._table))
+                        raise
 
                     # Post-process create
                     if record_id:

@@ -1201,7 +1201,7 @@ $('#js-toggle-filters').click(function(){$('.data-filter').slideToggle()})
                                            S3SQLInlineComponent("facility",
                                                     label = T("Organization's Addresses"),
                                                     fields = [("", "location_id"),
-                                                            ],
+                                                              ],
                                                     columns = (10,),
                                                     multiple = True,
                                            ))

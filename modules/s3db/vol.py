@@ -1087,6 +1087,7 @@ def vol_person_controller():
                 set_org_dependent_field("pr_person_details", "father_name")
                 set_org_dependent_field("pr_person_details", "grandfather_name")
                 set_org_dependent_field("pr_person_details", "mother_name")
+                set_org_dependent_field("pr_person_details", "year_of_birth")
                 set_org_dependent_field("pr_person_details", "affiliations")
                 set_org_dependent_field("pr_person_details", "company")
 

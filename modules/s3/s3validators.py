@@ -2072,13 +2072,17 @@ class IS_ADD_PERSON_WIDGET2(Validator):
     """
 
     def __init__(self,
-                 error_message=None,
-                 allow_empty=False):
+                 error_message = None,
+                 allow_empty = False,
+                 first_name_only = None,
+                 ):
         """
             Constructor
 
             @param error_message: alternative error message
             @param allow_empty: allow the selector to be left empty
+            @param first_name_only: put all name elements into first_name field
+                                    None => activate if RTL otherwise don't
 
             @note: This validator can *not* be used together with IS_EMPTY_OR,
                    because when a new person gets entered, the submitted value
@@ -2090,6 +2094,7 @@ class IS_ADD_PERSON_WIDGET2(Validator):
 
         self.error_message = error_message
         self.allow_empty = allow_empty
+        self.first_name_only = first_name_only
 
         # Tell s3_mark_required that this validator doesn't accept NULL values
         self.mark_required = not allow_empty
@@ -2097,7 +2102,8 @@ class IS_ADD_PERSON_WIDGET2(Validator):
     # -------------------------------------------------------------------------
     def __call__(self, value):
 
-        if current.response.s3.bulk:
+        s3 = current.response.s3
+        if s3.bulk:
             # Pointless in imports
             return (value, None)
 
@@ -2327,7 +2333,19 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 return (None, error)
 
             # Separate the Name into components
-            first_name, middle_name, last_name = name_split(fullname)
+            if self.first_name_only is None:
+                # Activate if using RTL
+                if s3.rtl:
+                    first_name_only = True
+                else:
+                    first_name_only = False
+            else:
+                first_name_only = self.first_name_only
+            if first_name_only:
+                first_name = fullname
+                middle_name = last_name = None
+            else:
+                first_name, middle_name, last_name = name_split(fullname)
             post_vars["first_name"] = first_name
             post_vars["middle_name"] = middle_name
             post_vars["last_name"] = last_name
@@ -2376,6 +2394,8 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                     details["father_name"] = post_vars.father_name
                 if post_vars.grandfather_name:
                     details["grandfather_name"] = post_vars.grandfather_name
+                if post_vars.year_of_birth:
+                    details["year_of_birth"] = post_vars.year_of_birth
                 if details:
                     details["person_id"] = person_id
                     s3db.pr_person_details.insert(**details)
