@@ -211,6 +211,17 @@ settings.frontpage.rss = [
 # Maximum number of features for a Map Layer
 #settings.gis.max_features = 1000
 
+# CAP Settings
+# Change for different authority and organisations
+# See http://alerting.worldweather.org/ for prefix and oid
+#settings.cap.identifier_prefix = "PAGASA-DOST"
+#settings.cap.identifier_oid = "2.49.0.0.608.0"
+#settings.cap.identifier_suffix = "alert"
+# Change this for the offset period in days that the alert will be effective for
+# Expire Date = Effective Date + expire_offset
+# Default is 2 days
+#settings.cap.expire_offset = 2
+
 # =============================================================================
 # Import the settings from the Template
 # - note: invalid settings are ignored
