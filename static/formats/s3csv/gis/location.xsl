@@ -233,9 +233,24 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="resource">
+        <xsl:param name="arg"/>
+        <xsl:param name="item"/>
+
+        <xsl:choose>
+            <xsl:when test="$arg='alt_name'">
+                <resource name="gis_location_name_alt">
+                    <data field="name_alt"><xsl:value-of select="$item"/></data>
+                </resource>
+            </xsl:when>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="L0">
 
         <xsl:variable name="l0" select="col[@field='L0']/text()"/>
+        <xsl:variable name="l0_alt" select="col[@field='L0 alt_name']/text()"/>
         <xsl:variable name="code" select="col[@field='ISO2']/text()"/>
 
         <xsl:if test="$l0!='' and $code!=''">
@@ -288,10 +303,21 @@
                             </resource>
                         </xsl:if>
                         <!-- Alt Name -->
-                        <xsl:if test="col[@field='L0 alt_name']!=''">
-                            <resource name="gis_location_name_alt">
-                                <data field="name_alt"><xsl:value-of select="col[@field='L0 alt_name']"/></data>
-                            </resource>
+                        <xsl:if test="$l0_alt!=''">
+                            <xsl:choose>
+                                <xsl:when test="contains($l0_alt, ',')">
+                                    <!-- Comma-separated list -->
+                                    <xsl:call-template name="splitList">
+                                        <xsl:with-param name="list"><xsl:value-of select="$l0_alt"/></xsl:with-param>
+                                        <xsl:with-param name="arg">alt_name</xsl:with-param>
+                                    </xsl:call-template>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <resource name="gis_location_name_alt">
+                                        <data field="name_alt"><xsl:value-of select="$l0_alt"/></data>
+                                    </resource>
+                                </xsl:otherwise>
+                            </xsl:choose>
                         </xsl:if>
                         <!-- L10n -->
                         <xsl:for-each select="col[starts-with(@field, 'L0 L10n')]">
@@ -318,6 +344,7 @@
                 </xsl:call-template>
             </xsl:variable>
             <xsl:variable name="l1" select="col[@field='L1']/text()"/>
+            <xsl:variable name="l1_alt" select="col[@field='L1 alt_name']/text()"/>
             <xsl:variable name="start" select="col[@field='Start Date']/text()"/>
             <xsl:variable name="end" select="col[@field='End Date']/text()"/>
 
@@ -359,10 +386,21 @@
                     </reference>
                 </xsl:if>
                 <!-- Alt Name -->
-                <xsl:if test="col[@field='L1 alt_name']!=''">
-                    <resource name="gis_location_name_alt">
-                        <data field="name_alt"><xsl:value-of select="col[@field='L1 alt_name']"/></data>
-                    </resource>
+                <xsl:if test="$l1_alt!=''">
+                    <xsl:choose>
+                        <xsl:when test="contains($l1_alt, ',')">
+                            <!-- Comma-separated list -->
+                            <xsl:call-template name="splitList">
+                                <xsl:with-param name="list"><xsl:value-of select="$l1_alt"/></xsl:with-param>
+                                <xsl:with-param name="arg">alt_name</xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <resource name="gis_location_name_alt">
+                                <data field="name_alt"><xsl:value-of select="$l1_alt"/></data>
+                            </resource>
+                        </xsl:otherwise>
+                    </xsl:choose>
                 </xsl:if>
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L1 KV')]">
@@ -427,6 +465,7 @@
             </xsl:variable>
             <xsl:variable name="l1" select="col[@field='L1']/text()"/>
             <xsl:variable name="l2" select="col[@field='L2']/text()"/>
+            <xsl:variable name="l2_alt" select="col[@field='L2 alt_name']/text()"/>
             <xsl:variable name="start" select="col[@field='Start Date']/text()"/>
             <xsl:variable name="end" select="col[@field='End Date']/text()"/>
 
@@ -478,10 +517,21 @@
                     </xsl:when>
                 </xsl:choose>
                 <!-- Alt Name -->
-                <xsl:if test="col[@field='L2 alt_name']!=''">
-                    <resource name="gis_location_name_alt">
-                        <data field="name_alt"><xsl:value-of select="col[@field='L2 alt_name']"/></data>
-                    </resource>
+                <xsl:if test="$l2_alt!=''">
+                    <xsl:choose>
+                        <xsl:when test="contains($l2_alt, ',')">
+                            <!-- Comma-separated list -->
+                            <xsl:call-template name="splitList">
+                                <xsl:with-param name="list"><xsl:value-of select="$l2_alt"/></xsl:with-param>
+                                <xsl:with-param name="arg">alt_name</xsl:with-param>
+                            </xsl:call-template>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <resource name="gis_location_name_alt">
+                                <data field="name_alt"><xsl:value-of select="$l2_alt"/></data>
+                            </resource>
+                        </xsl:otherwise>
+                    </xsl:choose>
                 </xsl:if>
                 <!-- Arbitrary Tags -->
                 <xsl:for-each select="col[starts-with(@field, 'L2 KV')]">
