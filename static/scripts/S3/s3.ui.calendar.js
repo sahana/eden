@@ -314,6 +314,10 @@
                 opts = this.options,
                 dateFormat = this._transformDateFormat();
 
+            if (opts.language) {
+                $.datepicker.setDefaults($.datepicker.regional[opts.language]);
+            }
+
             if (opts.timepicker) {
                 // $.datetimepicker
                 el.datetimepicker({

@@ -176,6 +176,22 @@ def dojs(dogis = False, warnings = True):
         # pass
     # shutil.move(outputFilenameBootstrap, "..")
 
+    # Calendar
+    print "Compressing calendar"
+    sourceDirectory = ".."
+    configFilename = "sahana.js.calendar.cfg"
+    outputFilename = "s3.ui.calendar.min.js"
+    merged = mergejs.run(sourceDirectory,
+                         None,
+                         configFilename)
+    minimized = minimize(merged)
+    open(outputFilename, "w").write(minimized)
+    try:
+        os.remove("../S3/%s" % outputFilename)
+    except:
+        pass
+    shutil.move(outputFilename, "../S3")
+
     # dataLists
     print "Compressing dataLists"
     sourceDirectory = ".."

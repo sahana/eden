@@ -11,5 +11,6 @@ RDRT,"RDRT Online Manual","<div class=""online-documentation"">
 <h3>Responses</h3>
 <ul>
   <li><a href=""{{name:RDRTResponses}}"">Reviewing Responses to Alerts</a></li>
+  <li><a href=""{{name:RDRTInbox}}"">Managing Messages in the Inbox</a></li>
 </ul>
 </div>"
