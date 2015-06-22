@@ -1714,9 +1714,10 @@ def config(settings):
 
         elif root_org == IRCS:
             settings.L10n.mandatory_lastname = False
-            settings.hrm.vol_experience = False
+            #settings.hrm.vol_experience = False
             settings.pr.request_father_name = True
             settings.pr.request_grandfather_name = True
+            settings.hrm.use_skills = True
                     
         if controller == "vol":
             if root_org == ARCS:
@@ -2774,7 +2775,8 @@ def config(settings):
             settings.hrm.use_skills = True
             settings.hrm.vol_active = True
         elif root_org == IRCS:
-            settings.hrm.vol_experience = False
+            settings.hrm.use_skills = True
+            #settings.hrm.vol_experience = False
         elif root_org == PMI:
             settings.hrm.use_skills = True
             settings.hrm.staff_experience = "experience"
