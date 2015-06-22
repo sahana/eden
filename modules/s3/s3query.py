@@ -2475,6 +2475,7 @@ class S3URLQueryParser(object):
 
         value = S3URLQuery.parse_value(second.strip())
         if op == S3ResourceQuery.LIKE:
+            selector.lower()
             if isinstance(value, basestring):
                 value = value.replace("*", "%").lower()
             elif isinstance(value, list):
