@@ -29,7 +29,7 @@ Senior Services,,org,facility,people,Building,{organisation_id} (T('Organization
 Social Services,,org,facility,people,Building,{organisation_id} (T('Organization')),organisation_id,organisation_id$service.name__typeof=Social Services,,,,Organizations,False,,30,,,
 Transportation,,gis,poi,transport,Building,{name} (T('Point')),name,~.poi_type_id$name=Transportation&~.location_id$gis_feature_type=1,,,,Points,False,,30,,,
 Transportation,,org,facility,transport,Building,{organisation_id} (T('Organization')),organisation_id,organisation_id$service.name__typeof=Transportation,,,,Organizations,False,,30,,,
-YMCA/YWCA,,org,facility,people,Building,{organisation_id} (T('Organization')),organisation_id,organisation_id$name__like=*YMCA*,,,,Organizations,False,,30,,,
+YMCA/YWCA,,org,facility,people,Building,{organisation_id} (T('Organization')),organisation_id,organisation_id$name__like=*Y*CA*,,,,Organizations,False,,30,,,
 People,,pr,person,trained,,{first_name} {last_name},"first_name,last_name",,True,,,People,False,,30,,,
 Fire Zones,,gis,poi,,,{name},name,~.poi_type_id$name=Fire Zone&~.location_id$gis_feature_type=3,,True,"{'fill':'FF0000','fillOpacity':0.5}",Areas,False,,,0,,0.9
 Team Zones,,gis,poi,,,{name},name,~.poi_type_id$name=Team Zone&~.location_id$gis_feature_type=3,,True,"{'fill':'00FF00','fillOpacity':0.5}",Areas,False,,,0,,0.9
