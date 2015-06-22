@@ -4,6 +4,10 @@
     /* With side menu
     margin: 10px -15px 0 -16px; */
     margin: 0 0 0 -16px;
+    clear: both;
+}
+.map_wrapper {
+    clear: both;
 }
 
 /* Over-ride Ext */
