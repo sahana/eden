@@ -28,7 +28,7 @@
 '1 Assessment': 'التقييم1',
 '2 different options are provided here currently:': 'يوجد خيارين مختلفين متوفرين هنا حاليا:',
 '4-7 days': '7-4 أيام',
-'8-14 days': '14-8 يوم'
+'8-14 days': '14-8 يوم',
 'A Reference Document such as a file, URL or contact person to verify this data. You can type the 1st few characters of the document name to link to an existing document.': 'وثيقة مرجعية مثل ملف ، عنوان الموقع أوشخص للاتصال به للتحقق من هذه البيانات. يمكنك كتابة أحرف قليلة من اسم وثيقة لتصل إلى مستند موجود.',
 'A brief description of the group (optional)': 'وصف موجز للمجموعة (اختياري)',
 'A file downloaded from a GPS containing a series of geographic points in XML format.': 'تم تحميل الملف من نظام تحديد المواقع الشامل(GPS) الذي يحتوي على سلسلة من النقاط الجغرافية في شكل أكس أم أل(XML).',
