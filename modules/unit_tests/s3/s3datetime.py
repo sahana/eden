@@ -967,6 +967,97 @@ class S3CalendarTests(unittest.TestCase):
         with assertRaises(TypeError):
             render(dt)
 
+    # -------------------------------------------------------------------------
+    def testGregorianJDConversion(self):
+        """ Tests for Gregorian Date to/from Julian Day conversion """
+
+        test_dates = ((1973, 4, 21, 2441793.5),
+                      (1345, 5, 13, 2212443.5),
+                      (2017, 11, 8, 2458065.5),
+                      )
+
+        c = S3Calendar()
+        gregorian_to_jd = c._gregorian_to_jd
+        jd_to_gregorian = c._jd_to_gregorian
+
+        assertEqual = self.assertEqual
+
+        for year, month, day, jd in test_dates:
+            assertEqual(gregorian_to_jd(year, month, day), jd)
+            assertEqual(jd_to_gregorian(jd), (year, month, day))
+
+# =============================================================================
+class S3PersianCalendarTests(unittest.TestCase):
+    """ Test cases for Persian (=Solar Hijri) calendar """
+
+    def setUp(self):
+
+        self.test_dates = (((1973, 4, 21), 2441793.5, (1352, 2, 1)),
+                           ((1345, 5, 13), 2212443.5, (724, 2, 23)),
+                           ((1988, 3, 1), 2447221.5, (1366, 12, 11)),
+                           ((2017, 11, 8), 2458065.5, (1396, 8, 17)),
+                           )
+
+    # -------------------------------------------------------------------------
+    def testJDConversion(self):
+        """
+            Test conversion of Solar Hijri date to JD and Gregorian date
+            (low-level routines)
+        """
+
+        test_dates = self.test_dates
+
+        assertEqual = self.assertEqual
+
+        c = S3Calendar("Persian")
+
+        gregorian_to_jd = c._gregorian_to_jd
+        jd_to_gregorian = c._jd_to_gregorian
+
+        from_jd = c.calendar.from_jd
+        to_jd = c.calendar.to_jd
+
+        for gdate, jd, cdate in test_dates:
+
+            jd_ = gregorian_to_jd(gdate[0], gdate[1], gdate[2])
+            assertEqual(jd_, jd)
+
+            cd_ = from_jd(jd_)
+            assertEqual(cd_, cdate)
+
+            jd_ = to_jd(cd_[0], cd_[1], cd_[2])
+            assertEqual(jd_, jd)
+
+            gd_ = jd_to_gregorian(jd_)
+            assertEqual(gd_, gdate)
+
+    # -------------------------------------------------------------------------
+    def testCalendarDate(self):
+        """
+            Test direct conversion between Solar Hijri and Gregorian
+            timetuples (cdate/gdate)
+        """
+
+        test_dates = self.test_dates
+
+        assertEqual = self.assertEqual
+
+        c = S3Calendar("Persian")
+        to_gregorian = c.calendar._gdate
+        from_gregorian = c.calendar._cdate
+
+        for gdate, jd, cdate in test_dates:
+
+            # Conversion from Solar Hijri to Gregorian
+            timetuple = (cdate[0], cdate[1], cdate[2], 8, 0, 0)
+            gdate_ = to_gregorian(timetuple)
+            assertEqual(gdate_[:3], gdate)
+
+            # Conversion from Gregorian to Solar Hijri
+            timetuple = (gdate[0], gdate[1], gdate[2], 8, 0, 0)
+            cdate_ = from_gregorian(timetuple)
+            assertEqual(cdate_[:3], cdate)
+
 # =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
@@ -988,6 +1079,7 @@ if __name__ == "__main__":
         DateRepresentationTests,
         TimeRepresentationTests,
         DateTimeRepresentationTests,
+        S3PersianCalendarTests,
     )
 
 # END ========================================================================

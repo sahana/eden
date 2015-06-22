@@ -49,6 +49,7 @@ except ImportError:
     import sys
     print >> sys.stderr, "ERROR: python-dateutil module needed for date handling"
     raise
+import math
 import re
 import time
 
@@ -215,13 +216,15 @@ class S3DateTime(object):
 # =============================================================================
 class S3Calendar(object):
     """
-        Calendar Base Class
+        Calendar Base Class (implementing the Gregorian Calendar)
 
         Subclasses define their own CALENDAR name, and are registered
         with this name in the calendars dict in S3Calendar._set_calendar().
     """
 
     CALENDAR = "Gregorian"
+
+    JDEPOCH = 1721425.5 # first day of this calendar as Julian Day number
 
     # -------------------------------------------------------------------------
     # Methods to be implemented by subclasses
@@ -279,32 +282,32 @@ class S3Calendar(object):
         return dtstr
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def _cdate(timetuple):
+    @classmethod
+    def from_jd(cls, jd):
         """
-            Convert a time tuple from Gregorian calendar to this calendar,
-            to be implemented by subclass
+            Convert a Julian day number to a year/month/day tuple
+            of this calendar, to be implemented by subclass
 
-            @param timetuple: time tuple (y, m, d, hh, mm, ss)
-            @return: time tuple (this calendar)
+            @param jd: the Julian day number
         """
 
-        # Gregorian Calendar does nothing here
-        return timetuple
+        # Gregorian calendar uses default method
+        return cls._jd_to_gregorian(jd)
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def _gdate(timetuple):
+    @classmethod
+    def to_jd(cls, year, month, day):
         """
-            Convert a time tuple from this calendar to Gregorian calendar,
-            to be implemented by subclass
+            Convert a year/month/day tuple of this calendar into
+            a Julian day number, to be implemented by subclass
 
-            @param timetuple: time tuple (y, m, d, hh, mm, ss)
-            @return: time tuple (Gregorian)
+            @param year: the year number
+            @param month: the month number
+            @param day: the day-of-month number
         """
 
-        # Gregorian Calendar does nothing here
-        return timetuple
+        # Gregorian calendar uses default method
+        return cls._gregorian_to_jd(year, month, day)
 
     # -------------------------------------------------------------------------
     # Common Interface Methods (should not be implemented by subclasses):
@@ -480,6 +483,7 @@ class S3Calendar(object):
 
         # Supported calendars
         self._calendars = {"Gregorian": S3Calendar,
+                           "Persian": S3PersianCalendar,
                            }
 
         if name is None:
@@ -515,6 +519,197 @@ class S3Calendar(object):
         self._calendar = calendar
 
         return calendar
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _gregorian_to_jd(year, month, day):
+        """
+            Convert a Gregorian date into a Julian day number (matching
+            jQuery calendars algorithm)
+
+            @param year: the year number
+            @param month: the month number
+            @param day: the day number
+        """
+
+        if year < 0:
+            year = year + 1
+
+        if month < 3:
+            month = month + 12
+            year = year - 1
+
+        a = math.floor(year/100)
+        b = 2 - a + math.floor(a / 4)
+
+        return math.floor(365.25 * (year + 4716)) + \
+               math.floor(30.6001 * (month + 1)) + day + b - 1524.5
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _jd_to_gregorian(jd):
+        """
+            Convert a Julian day number to a Gregorian date (matching
+            jQuery calendars algorithm)
+
+            @param jd: the Julian day number
+            @return: tuple (year, month, day)
+        """
+
+        z = math.floor(jd + 0.5)
+        a = math.floor((z - 1867216.25) / 36524.25)
+
+        a = z + 1 + a - math.floor(a / 4)
+        b = a + 1524
+        c = math.floor((b - 122.1) / 365.25)
+        d = math.floor(365.25 * c)
+        e = math.floor((b - d) / 30.6001)
+
+        day = b - d - math.floor(e * 30.6001)
+        if e > 13.5:
+            month = e - 13
+        else:
+            month = e - 1
+
+        if month > 2.5:
+            year = c - 4716
+        else:
+            year = c - 4715
+
+        if year <= 0:
+            year = year - 1
+
+        return (int(year), int(month), int(day))
+
+    # -------------------------------------------------------------------------
+    def _cdate(self, timetuple):
+        """
+            Convert a time tuple from Gregorian calendar to this calendar
+
+            @param timetuple: time tuple (y, m, d, hh, mm, ss)
+            @return: time tuple (this calendar)
+        """
+
+        if self.name == "Gregorian":
+            # Gregorian Calendar does nothing here
+            return timetuple
+
+        y, m, d, hh, mm, ss = timetuple
+        jd = self._gregorian_to_jd(y, m, d)
+        y, m, d = self.from_jd(jd)
+
+        return (y, m, d, hh, mm, ss)
+
+    # -------------------------------------------------------------------------
+    def _gdate(self, timetuple):
+        """
+            Convert a time tuple from this calendar to Gregorian calendar
+
+            @param timetuple: time tuple (y, m, d, hh, mm, ss)
+            @return: time tuple (Gregorian)
+        """
+
+        if self.name == "Gregorian":
+            # Gregorian Calendar does nothing here
+            return timetuple
+
+        y, m, d, hh, mm, ss = timetuple
+        jd = self.to_jd(y, m, d)
+        y, m, d = self._jd_to_gregorian(jd)
+
+        return (y, m, d, hh, mm, ss)
+
+# =============================================================================
+class S3PersianCalendar(S3Calendar):
+    """
+        S3Calendar subclass implementing the Solar Hijri calendar
+
+        @note: this calendar is called "Persian" in jQuery calendars despite
+               it actually implements the modern Iranian (=algorithmic Solar
+               Hijri) rather than the traditional Persian (=observation-based
+               Jalali) variant. However, we use the name "Persian" to match
+               the jQuery calendars naming of calendars, in order to avoid
+               confusion about naming differences between these two components.
+
+        @note: Afghanistan uses the same calendar, but with the names of the
+               signs of Zodiac as month names. This variant will be implemented
+               as subclass of S3PersianCalendar (=>@todo)
+    """
+
+    CALENDAR = "Persian"
+
+    JDEPOCH = 1948320.5 # first day of this calendar as Julian Day number
+
+    # -------------------------------------------------------------------------
+    # @todo: implement _parse
+
+    # -------------------------------------------------------------------------
+    # @todo: implement _format
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def from_jd(cls, jd):
+        """
+            Convert a Julian day number to a year/month/day tuple
+            of this calendar (matching jQuery calendars algorithm)
+
+            @param jd: the Julian day number
+        """
+
+        jd = math.floor(jd) + 0.5;
+
+        depoch = jd - cls.to_jd(475, 1, 1)
+
+        cycle = math.floor(depoch / 1029983)
+        cyear = math.fmod(depoch, 1029983)
+
+        if cyear != 1029982:
+            aux1 = math.floor(cyear / 366)
+            aux2 = math.fmod(cyear, 366)
+            ycycle = math.floor(((2134 * aux1) + (2816 * aux2) + 2815) / 1028522) + aux1 + 1
+        else:
+            ycycle = 2820
+
+        year = ycycle + (2820 * cycle) + 474
+        if year <= 0:
+            year -= 1
+
+        yday = jd - cls.to_jd(year, 1, 1) + 1
+        if yday <= 186:
+            month = math.ceil(yday / 31)
+        else:
+            month = math.ceil((yday - 6) / 30)
+
+        day = jd - cls.to_jd(year, month, 1) + 1
+
+        return (int(year), int(month), int(day))
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def to_jd(cls, year, month, day):
+        """
+            Convert a year/month/day tuple of this calendar into
+            a Julian day number (matching jQuery calendars algorithm)
+
+            @param year: the year number
+            @param month: the month number
+            @param day: the day-of-month number
+        """
+
+        if year >= 0:
+            ep_base = year - 474
+        else:
+            ep_base = year - 473
+        ep_year = 474 + math.fmod(ep_base, 2820)
+
+        if month <= 7:
+            mm = (month - 1) * 31
+        else:
+            mm = (month - 1) * 30 + 6
+
+        return day + mm + math.floor((ep_year * 682 - 110) / 2816) + \
+               (ep_year - 1) * 365 + math.floor(ep_base / 2820) * 1029983 + \
+               cls.JDEPOCH - 1
 
 # =============================================================================
 # Date/Time Parser and Formatter (@todo: integrate with S3Calendar)
