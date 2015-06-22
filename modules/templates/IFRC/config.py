@@ -262,6 +262,7 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # L10n (Localization) settings
     settings.L10n.languages = OrderedDict([
+        ("ar", "العربية"),
         ("en-gb", "English"),
         ("es", "Español"),
         #("fr", "Français"),
@@ -302,6 +303,7 @@ def config(settings):
     AURC = "Australian Red Cross"
     BRCS = "Bangladesh Red Crescent Society"
     CVTL = "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"
+    IRCS = "Iraqi Red Crescent Society"
     NRCS = "Nepal Red Cross Society"
     NZRC = "New Zealand Red Cross"
     PMI = "Indonesian Red Cross Society (Palang Merah Indonesia)"
@@ -328,6 +330,8 @@ def config(settings):
             currencies["AUD"] = T("Australian Dollars")
         elif root_org == BRCS:
             currencies["BDT"] = T("Taka")
+        elif root_org == IRCS:
+            currencies["IQD"] = T("Iraqi Dinar"),
         elif root_org == NRCS:
             currencies["NPR"] = T("Nepalese Rupee"),
         elif root_org == NZRC:
@@ -355,6 +359,8 @@ def config(settings):
             default = "AUD"
         elif root_org == BRCS:
             default = "BDT"
+        elif root_org == IRCS:
+            default = "IQD"
         elif root_org == NRCS:
             default = "NPR"
         elif root_org == NZRC:
@@ -370,6 +376,17 @@ def config(settings):
         return default
 
     settings.fin.currency_default = currency_default
+
+    # -----------------------------------------------------------------------------
+    def postcode_selector(default):
+        """ NS-specific selection of whether to show Postcode (lazy setting) """
+
+        root_org = current.auth.root_org_name()
+        if root_org in (ARCS, IRCS, VNRC):
+            default = False
+        return default
+
+    settings.gis.postcode_selector = postcode_selector
 
     # -----------------------------------------------------------------------------
     # Enable this for a UN-style deployment
@@ -428,8 +445,8 @@ def config(settings):
     settings.org.dependent_fields = \
         {"pr_person.middle_name"                     : (CVTL, VNRC),
          "pr_person_details.mother_name"             : (BRCS, ),
-         "pr_person_details.father_name"             : (ARCS, BRCS),
-         "pr_person_details.grandfather_name"        : (ARCS, ),
+         "pr_person_details.father_name"             : (ARCS, BRCS, IRCS),
+         "pr_person_details.grandfather_name"        : (ARCS, IRCS),
          "pr_person_details.year_of_birth"           : (ARCS, ),
          "pr_person_details.affiliations"            : (PRC, ),
          "pr_person_details.company"                 : (PRC, ),
@@ -713,6 +730,12 @@ def config(settings):
         ("deploy", Storage(
                name_nice = T("Regional Disaster Response Teams"),
                #description = "Alerting and Deployment of Disaster Response Teams",
+               restricted = True,
+               #module_type = 10,
+           )),
+        ("dvr", Storage(
+               name_nice = T("Disaster Victim Registry"),
+               #description = "Population Outreach",
                restricted = True,
                #module_type = 10,
            )),
@@ -1689,13 +1712,22 @@ def config(settings):
             settings.hrm.use_certificates = False
             s3db.hrm_human_resource.site_id.represent = s3db.org_SiteRepresent(show_type = False)
 
+        elif root_org == IRCS:
+            settings.L10n.mandatory_lastname = False
+            settings.hrm.vol_experience = False
+            settings.pr.request_father_name = True
+            settings.pr.request_grandfather_name = True
+                    
         if controller == "vol":
             if root_org == ARCS:
                 arcs = True
                 settings.L10n.mandatory_lastname = False
-                settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
                 settings.hrm.use_skills = True
                 settings.hrm.vol_active = True
+                settings.pr.request_email = False
+                settings.pr.request_father_name = True
+                settings.pr.request_grandfather_name = True
+                settings.pr.request_year_of_birth = True
             elif root_org in (CVTL, PMI, PRC):
                 settings.hrm.vol_active = vol_active
 
@@ -1745,15 +1777,8 @@ def config(settings):
 
             if controller == "vol":
                 if root_org == ARCS:
-                    settings.pr.request_email = False
-                    field = table.person_id
-                    from s3 import S3AddPersonWidget2, IS_ADD_PERSON_WIDGET2, S3SQLCustomForm, S3SQLInlineComponent
-                    field.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
-                    field.widget = S3AddPersonWidget2(controller = "vol",
-                                                      father_name = True,
-                                                      grandfather_name = True,
-                                                      year_of_birth = True,
-                                                      )
+                    from s3 import IS_ADD_PERSON_WIDGET2, S3SQLCustomForm, S3SQLInlineComponent
+                    table.person_id.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
                     table.code.label = T("Volunteer ID")
                     # Emergency Contact Name isn't required
                     s3db.pr_contact_emergency.name.requires = None
@@ -2153,8 +2178,8 @@ def config(settings):
 
         # Special cases for different NS
         root_org = current.auth.root_org_name()
-        if root_org == AURC:
-            # Australian use proper Logistics workflow
+        if root_org in (IRCS, AURC):
+            # Australian  Iraqi RC use proper Logistics workflow
             settings.inv.direct_stock_edits = False
             current.s3db.configure("inv_inv_item",
                                    create = False,
@@ -2194,8 +2219,8 @@ def config(settings):
 
         # Special cases for different NS
         root_org = current.auth.root_org_name()
-        if root_org == AURC:
-            # Australian RC use proper Logistics workflow
+        if root_org in (ARCS, AURC):
+            # Australian & Iraqi RC use proper Logistics workflow
             settings.inv.direct_stock_edits = False
         if root_org != NRCS:
             # Only Nepal RC use Warehouse Types
@@ -2744,11 +2769,12 @@ def config(settings):
         if root_org == ARCS:
             arcs = True
             settings.L10n.mandatory_lastname = False
-            settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
             # Override what has been set in the model already
             s3db.pr_person.last_name.requires = None
             settings.hrm.use_skills = True
             settings.hrm.vol_active = True
+        elif root_org == IRCS:
+            settings.hrm.vol_experience = False
         elif root_org == PMI:
             settings.hrm.use_skills = True
             settings.hrm.staff_experience = "experience"
@@ -2811,7 +2837,6 @@ def config(settings):
             #except:
             #    # Must be already removed
             #    pass
-            settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
             settings.hrm.use_skills = True
             settings.hrm.vol_experience = "both"
             settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"

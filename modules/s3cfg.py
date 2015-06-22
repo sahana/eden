@@ -1189,7 +1189,7 @@ class S3Config(Storage):
         """
             Display Postcode form field when selecting Locations
         """
-        return self.gis.get("postcode_selector", True)
+        return self.__lazy(self.gis, "postcode_selector", default=True)
 
     def get_gis_print(self):
         """
@@ -3077,6 +3077,14 @@ class S3Config(Storage):
         """ Include Email in the AddPersonWidget2 """
         return self.pr.get("request_email", True)
 
+    def get_pr_request_father_name(self):
+        """ Include Father Name in the AddPersonWidget2 """
+        return self.pr.get("request_father_name", True)
+
+    def get_pr_request_grandfather_name(self):
+        """ Include GrandFather Name in the AddPersonWidget2 """
+        return self.pr.get("request_grandfather_name", True)
+
     def get_pr_request_gender(self):
         """ Include Gender in the AddPersonWidget[2] """
         return self.pr.get("request_gender", True)
@@ -3084,6 +3092,10 @@ class S3Config(Storage):
     def get_pr_request_home_phone(self):
         """ Include Home Phone in the AddPersonWidget2 """
         return self.pr.get("request_home_phone", False)
+
+    def get_pr_request_year_of_birth(self):
+        """ Include Year of Birth in the AddPersonWidget2 """
+        return self.pr.get("request_year_of_birth", False)
 
     def get_pr_name_format(self):
         """ Format with which to represent Person Names """

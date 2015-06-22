@@ -318,8 +318,6 @@ class S3LocationModel(S3Model):
                                       requires = IS_EMPTY_OR(IS_LOCATION()),
                                       sortby = "name",
                                       widget = S3LocationSelector(show_address=True,
-                                                                  show_map=settings.get_gis_map_selector(),
-                                                                  show_postcode=settings.get_gis_postcode_selector(),
                                                                   ),
                                       # Alternate LocationSelector for when you don't have the Location Hierarchy available to load
                                       #requires = IS_EMPTY_OR(

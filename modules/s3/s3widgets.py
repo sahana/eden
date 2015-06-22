@@ -634,9 +634,9 @@ class S3AddPersonWidget2(FormWidget):
 
     def __init__(self,
                  controller = None,
-                 father_name = False,
-                 grandfather_name = False,
-                 year_of_birth = False, # Whether to use Year of Birth (as well as, or instead of, Date of Birth)
+                 father_name = None,
+                 grandfather_name = None,
+                 year_of_birth = None, # Whether to use Year of Birth (as well as, or instead of, Date of Birth)
                  ):
 
         # Controller to retrieve the person or hrm record
@@ -710,12 +710,15 @@ class S3AddPersonWidget2(FormWidget):
         settings = current.deployment_settings
 
         date_of_birth = None
-        year_of_birth = None
+        year_of_birth = self.year_of_birth
 
         dtable = None
         ptable = s3db.pr_person
 
-        if self.year_of_birth:
+        if year_of_birth is None:
+            # Use Global deployment_setting
+            settings.get_pr_request_year_of_birth()
+        if year_of_birth:
             dtable = s3db.pr_person_details
             year_of_birth = dtable.year_of_birth
 
@@ -734,8 +737,8 @@ class S3AddPersonWidget2(FormWidget):
 
         emailRequired = settings.get_hrm_email_required()
         occupation = None
-        father_name = None
-        grandfather_name = None
+        father_name = self.father_name
+        grandfather_name = self.grandfather_name
 
         if controller == "hrm":
             pass
@@ -743,8 +746,16 @@ class S3AddPersonWidget2(FormWidget):
         elif controller == "vol":
             dtable = s3db.pr_person_details
             occupation = dtable.occupation
-            father_name = dtable.father_name if self.father_name else None
-            grandfather_name = dtable.grandfather_name if self.grandfather_name else None
+            if father_name is None:
+                # Use Global deployment_setting
+                father_name = settings.get_pr_request_father_name()
+            if father_name:
+                father_name = dtable.father_name
+            if grandfather_name is None:
+                # Use Global deployment_setting
+                grandfather_name  = settings.get_pr_request_grandfather_name()
+            if grandfather_name:
+                grandfather_name = dtable.grandfather_name
 
         elif controller == "patient":
             controller = "pr"
@@ -4728,11 +4739,11 @@ class S3LocationSelector(S3Selector):
                  hide_lx = True,
                  reverse_lx = False,
                  show_address = False,
-                 show_postcode = False,
+                 show_postcode = None,
                  show_latlon = None,
                  latlon_mode = "decimal",
                  latlon_mode_toggle = True,
-                 show_map = True,
+                 show_map = None,
                  open_map_on_load = False,
                  feature_required = False,
                  lines = False,
@@ -4782,6 +4793,8 @@ class S3LocationSelector(S3Selector):
                                                 creation of record if a dupe is found
         """
 
+        settings = current.deployment_settings
+
         self._initlx = True
         self._levels = levels
         self._required_levels = required_levels
@@ -4794,7 +4807,7 @@ class S3LocationSelector(S3Selector):
         self.prevent_duplicate_addresses = prevent_duplicate_addresses
 
         if show_latlon is None:
-            show_latlon = current.deployment_settings.get_gis_latlon_selector()
+            show_latlon = settings.get_gis_latlon_selector()
         self.show_latlon = show_latlon
         self.latlon_mode = latlon_mode
         if show_latlon:
@@ -4814,6 +4827,8 @@ class S3LocationSelector(S3Selector):
             self.feature_required = required
         else:
             self.feature_required = None
+        if show_map is None:
+            setttings = settings.get_gis_map_selector()
         self.show_map = show_map
         self.open_map_on_load = show_map and open_map_on_load
 
@@ -5019,7 +5034,10 @@ class S3LocationSelector(S3Selector):
                                                  )
 
         # Postcode INPUT
-        show_postcode = self.show_postcode and settings.get_gis_postcode_selector()
+        show_postcode = self.show_postcode
+        if show_postcode is None:
+            # Use global setting
+            show_postcode = settings.get_gis_postcode_selector()
         if show_postcode:
             postcode = values.get("postcode")
             components["postcode"] = manual_input(fieldname,

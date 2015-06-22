@@ -33,6 +33,7 @@ from gluon import *
 from gluon.storage import Storage
 from gluon.tools import callback
 from ..s3 import *
+from s3layouts import S3AddResourceLink
 
 # =============================================================================
 class S3DVRModel(S3Model):
@@ -41,63 +42,111 @@ class S3DVRModel(S3Model):
             &/or Distributions of Relief Items
     """
 
-    names = ("dvr_case",)
+    names = ("dvr_need",
+             "dvr_case",
+             "dvr_case_need",
+             )
 
     def model(self):
 
         T = current.T
+        db = current.db
 
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Needs
+        #
+        tablename = "dvr_need"
+        define_table(tablename,
+                     Field("name",
+                           label = T("name"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_NEED = T("Create Need")
+        crud_strings[tablename] = Storage(
+            label_create = ADD_NEED,
+            title_display = T("Need Details"),
+            title_list = T("Needs"),
+            title_update = T("Edit Need"),
+            label_list_button = T("List Needs"),
+            label_delete_button = T("Delete Need"),
+            msg_record_created = T("Need added"),
+            msg_record_modified = T("Need updated"),
+            msg_record_deleted = T("Need deleted"),
+            msg_list_empty = T("No Needs found")
+        )
+
+        represent = S3Represent(lookup=tablename, translate=True)
+        need_id = S3ReusableField("need_id", "reference %s" % tablename,
+                                  label = T("Need"),
+                                  ondelete = "RESTRICT",
+                                  represent = represent,
+                                  requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "dvr_need.id",
+                                                          represent)),
+                                  comment=S3AddResourceLink(c="dvr",
+                                                            f="need",
+                                                            label=ADD_NEED),
+                                  )
 
         # ---------------------------------------------------------------------
         # Case
         #
-        dvr_damage_opts = {
-            1: T("Very High"),
-            2: T("High"),
-            3: T("Medium"),
-            4: T("Low"),
-        }
+        #dvr_damage_opts = {
+        #    1: T("Very High"),
+        #    2: T("High"),
+        #    3: T("Medium"),
+        #    4: T("Low"),
+        #}
 
-        dvr_status_opts = {
-            1: T("Open"),
-            2: T("Accepted"),
-            3: T("Rejected"),
-        }
+        #dvr_status_opts = {
+        #    1: T("Open"),
+        #    2: T("Accepted"),
+        #    3: T("Rejected"),
+        #}
 
         tablename = "dvr_case"
-        self.define_table(tablename,
-                          # @ToDo: Option to autogenerate these, like Waybills, et al
-                          Field("reference",
-                                label = T("Case Number")),
-                          self.pr_person_id(
-                            # @ToDo: Modify this to update location_id if the selected person has a Home Address already
-                            comment=None,
-                            requires=IS_ADD_PERSON_WIDGET2(),
-                            widget=S3AddPersonWidget2(controller="pr"),
-                          ),
-                          self.gis_location_id(label = T("Home Address")),
-                          Field("damage", "integer",
-                                requires = IS_EMPTY_OR(IS_IN_SET(dvr_damage_opts)),
-                                represent = lambda opt: \
-                                    dvr_damage_opts.get(opt, UNKNOWN_OPT),
-                                label= T("Damage Assessment")),
-                          Field("insurance", "boolean",
-                                represent = s3_yes_no_represent,
-                                label = T("Insurance")),
-                          Field("status", "integer",
-                                default = 1,
-                                requires = IS_EMPTY_OR(IS_IN_SET(dvr_status_opts)),
-                                represent = lambda opt: \
-                                    dvr_status_opts.get(opt, UNKNOWN_OPT),
-                                label= T("Status")),
-                          s3_comments(),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     # @ToDo: Option to autogenerate these, like Waybills, et al
+                     Field("reference",
+                           label = T("Case Number"),
+                           ),
+                     self.pr_person_id(
+                        # @ToDo: Modify this to update location_id if the selected person has a Home Address already
+                        comment=None,
+                        requires=IS_ADD_PERSON_WIDGET2(),
+                        widget=S3AddPersonWidget2(controller="pr"),
+                     ),
+                     #Field("damage", "integer",
+                     #      label= T("Damage Assessment"),
+                     #      represent = lambda opt: \
+                     #           dvr_damage_opts.get(opt, UNKNOWN_OPT),
+                     #      requires = IS_EMPTY_OR(IS_IN_SET(dvr_damage_opts)),
+                     #      ),
+                     #Field("insurance", "boolean",
+                     #      label = T("Insurance"),
+                     #      represent = s3_yes_no_represent,
+                     #      ),
+                     #Field("status", "integer",
+                     #      default = 1,
+                     #      label = T("Status"),
+                     #      represent = lambda opt: \
+                     #           dvr_status_opts.get(opt, UNKNOWN_OPT),
+                     #      requires = IS_EMPTY_OR(IS_IN_SET(dvr_status_opts)),
+                     #      ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD Strings
-        ADD_CASE = T("Create Case")
-        current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_CASE,
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Case"),
             title_display = T("Case Details"),
             title_list = T("Cases"),
             title_update = T("Edit Case"),
@@ -109,68 +158,85 @@ class S3DVRModel(S3Model):
             msg_list_empty = T("No Cases found")
         )
 
+        represent = S3Represent(lookup=tablename, fields=("reference",))
+        case_id = S3ReusableField("case_id", "reference %s" % tablename,
+                                  label = T("Case"),
+                                  ondelete = "RESTRICT",
+                                  represent = represent,
+                                  requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "dvr_case.id",
+                                                          represent)),
+                                  )
+
+        self.add_components(tablename,
+                            dvr_need = "need_id",
+                            pr_address = ({"name": "current_address",
+                                           "link": "pr_person",
+                                           "joinby": "id",
+                                           "key": "pe_id",
+                                           "fkey": "pe_id",
+                                           "pkey": "person_id",
+                                           "filterby": "type",
+                                           "filterfor": ("1",),
+                                           },
+                                          {"name": "permanent_address",
+                                           "link": "pr_person",
+                                           "joinby": "id",
+                                           "key": "pe_id",
+                                           "fkey": "pe_id",
+                                           "pkey": "person_id",
+                                           "filterby": "type",
+                                           "filterfor": ("2",),
+                                           },
+                                          ),
+                            )
+
+        crud_form = S3SQLCustomForm("reference",
+                                    "person_id",
+                                    S3SQLInlineComponent("current_address",
+                                                         label = T("Current Address"),
+                                                         fields = [("", "location_id"),
+                                                                   ],
+                                                         default = {"type": 1}, # Current Home Address
+                                                         link = False,
+                                                         multiple = False,
+                                                         ),
+                                    S3SQLInlineComponent("permanent_address",
+                                                         comment = T("If Displaced"),
+                                                         label = T("Normal Address"),
+                                                         fields = [("", "location_id"),
+                                                                   ],
+                                                         default = {"type": 2}, # Permanent Home Address
+                                                         link = False,
+                                                         multiple = False,
+                                                         ),
+                                    S3SQLInlineLink("need",
+                                                    field = "need_id",
+                                                    ),
+                                    "comments",
+                                    )
+        
         self.configure(tablename,
-                       onaccept=self.dvr_case_onaccept,
-                    )
+                       crud_form = crud_form,
+                       )
+
+        # ---------------------------------------------------------------------
+        # Cases <> Needs
+        #
+        tablename = "dvr_case_need"
+        define_table(tablename,
+                     case_id(empty = False,
+                             ondelete = "CASCADE",
+                             ),
+                     need_id(empty = False,
+                             ondelete = "CASCADE",
+                             ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return Storage()
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def dvr_case_onaccept(form):
-        """
-            Link the location_id to the Home Address
-            @ToDo: Check Security of records (use S3Resource?)
-        """
-
-        vars = form.vars
-
-        if "location_id" in vars and vars.location_id:
-            person_id = vars.person_id
-            db = current.db
-            s3db = current.s3db
-            ptable = db.pr_person
-            atable = s3db.pr_address
-            query = (ptable.id == person_id)
-            left = atable.on((atable.pe_id == ptable.pe_id) & \
-                             (atable.type == 1))
-            person = db(query).select(ptable.pe_id,
-                                      atable.id,
-                                      atable.location_id,
-                                      left=left).first()
-            if person:
-                _config = current.s3db.get_config
-                pe_id = person["pr_person"].pe_id
-                if not person["pr_address"].id:
-                    # Create Home Address from location_id
-                    _vars = Storage(pe_id=pe_id,
-                                    location_id=vars.location_id,
-                                    type=1 # Home Address
-                                    )
-                    id = atable.insert(**_vars)
-                    _vars.update(id=id)
-                    _form = Storage(vars=_vars)
-                    onaccept = _config("pr_address", "create_onaccept") or \
-                               _config("pr_address", "onaccept")
-                    callback(onaccept, _form, tablename="pr_address")
-                else:
-                    # Update Home Address from location_id
-                    id = person["pr_address"].id
-                    query = (atable.type == 1) & \
-                            (atable.id == id)
-                    db(query).update(location_id = vars.location_id)
-                    onaccept = _config("pr_address", "update_onaccept") or \
-                               _config("pr_address", "onaccept")
-                    _vars = Storage(id=id,
-                                    pe_id=pe_id,
-                                    location_id=vars.location_id,
-                                    type=1 # Home Address
-                                    )
-                    _form = Storage(vars=_vars)
-                    callback(onaccept, _form, tablename="pr_address")
-        return
+        return {}
 
 # END =========================================================================
