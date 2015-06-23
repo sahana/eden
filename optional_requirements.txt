@@ -35,3 +35,5 @@ ansible>=1.6.2
 PyYAML>=3.11
 # Warning: Setup unresolved dependency: boto required for Setup Module
 boto>=2.32.1
+# Warning: S3 unresolved dependency: pyparsing required for Calendar Support and Advanced URL Queries
+pyparsing>=2.0.1

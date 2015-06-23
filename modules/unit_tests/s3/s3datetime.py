@@ -568,6 +568,12 @@ class S3TestCalendar(S3Calendar):
         current.response.s3.calendar_test_gdate = self.CALENDAR
         return super(S3TestCalendar, self)._gdate(timetuple)
 
+    def _cdate(self, timetuple):
+        """ Custom _gdate to set a marker if called """
+
+        current.response.s3.calendar_test_cdate = self.CALENDAR
+        return super(S3TestCalendar, self)._cdate(timetuple)
+
 # =============================================================================
 class S3CalendarTests(unittest.TestCase):
     """ Test S3Calendar base class """
@@ -690,8 +696,9 @@ class S3CalendarTests(unittest.TestCase):
 
         # Call format_date
         s3.calendar_test_format = None
-        c.format_date(datetime.date(1977,3,15), dtfmt = "%Y-%m-%d")
+        c.format_date(datetime.date(1977, 3, 15), dtfmt = "%Y-%m-%d")
         assertEqual(s3.calendar_test_format, S3TestCalendar.CALENDAR)
+        assertEqual(s3.calendar_test_cdate, S3TestCalendar.CALENDAR)
 
     # -------------------------------------------------------------------------
     def testParsing(self):
@@ -916,8 +923,8 @@ class S3CalendarTests(unittest.TestCase):
             render(dt)
 
     # -------------------------------------------------------------------------
-    def testDateTimeParsing(self):
-        """ Test S3Calendar.parse_datetime """
+    def testDateTimeFormatting(self):
+        """ Test S3Calendar.format_datetime """
 
         c = S3Calendar()
         render = c.format_datetime
@@ -1058,6 +1065,392 @@ class S3PersianCalendarTests(unittest.TestCase):
             cdate_ = from_gregorian(timetuple)
             assertEqual(cdate_[:3], cdate)
 
+    # -------------------------------------------------------------------------
+    def testDateParsing(self):
+        """ Test S3Calendar.parse_date """
+
+        c = S3Calendar("Persian")
+        parse = c.parse_date
+
+        assertEqual = self.assertEqual
+
+        # Test with ISOFORMAT
+        dtstr = "1304-08-30"
+        dt = parse(dtstr)
+        assertEqual(dt, datetime.date(1925, 11, 21))
+
+        # Test with local format
+        settings = current.deployment_settings
+        date_format = settings.get_L10n_date_format()
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            dtstr = "18/02/1362"
+            dt = parse(dtstr, local=True)
+            assertEqual(dt, datetime.date(1983, 5, 8))
+        finally:
+            settings.L10n.date_format = date_format
+
+        # Test with format override
+        dtstr = "19.10.1382"
+        dt = parse(dtstr, dtfmt="%d.%m.%Y")
+        assertEqual(dt, datetime.date(2004, 1, 9))
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            dt = parse(dtstr, dtfmt="%d.%m.%Y", local=True)
+            assertEqual(dt, datetime.date(2004, 1, 9))
+        finally:
+            settings.L10n.date_format = date_format
+
+        # Test with None
+        dtstr = None
+        dt = parse(dtstr)
+        assertEqual(dt, None)
+
+        # Test with invalid type
+        dtstr = 96
+        dt = parse(dtstr)
+        assertEqual(dt, None)
+
+        # Test with invalid value
+        dtstr = "Invalid Value"
+        dt = parse(dtstr)
+        assertEqual(dt, None)
+
+    # -------------------------------------------------------------------------
+    def testDateTimeParsing(self):
+        """ Test S3Calendar.parse_datetime """
+
+        c = S3Calendar("Persian")
+        parse = c.parse_datetime
+
+        assertEqual = self.assertEqual
+
+        # Test with ISOFORMAT
+        dtstr = "1304-08-30T13:01:41"
+        dt = parse(dtstr)
+        assertEqual(dt, datetime.datetime(1925, 11, 21, 13, 1, 41))
+
+        # Test with local format
+        settings = current.deployment_settings
+        date_format = settings.get_L10n_date_format()
+        time_format = settings.get_L10n_time_format()
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            settings.L10n.time_format = "%H.%M"
+            dtstr = "02/06/1343 13.21"
+            dt = parse(dtstr, local=True)
+            assertEqual(dt, datetime.datetime(1964, 8, 24, 13, 21, 0))
+        finally:
+            settings.L10n.date_format = date_format
+            settings.L10n.time_format = time_format
+
+        # Test with format override
+        dtstr = "19.10.1382 10:13:44"
+        dt = parse(dtstr, dtfmt="%d.%m.%Y %H:%M:%S")
+        assertEqual(dt, datetime.datetime(2004, 1, 9, 10, 13, 44))
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            settings.L10n.time_format = "%H.%M"
+            dt = parse(dtstr,  dtfmt="%d.%m.%Y %H:%M:%S", local=True)
+            assertEqual(dt, datetime.datetime(2004, 1, 9, 10, 13, 44))
+        finally:
+            settings.L10n.date_format = date_format
+            settings.L10n.time_format = time_format
+
+        # Test with None
+        dtstr = None
+        dt = parse(dtstr)
+        assertEqual(dt, None)
+
+        # Test with invalid type
+        dtstr = 96
+        dt = parse(dtstr)
+        assertEqual(dt, None)
+
+        # Test with invalid value
+        dtstr = "Invalid Value"
+        dt = parse(dtstr)
+        assertEqual(dt, None)
+
+    # -------------------------------------------------------------------------
+    def testDateFormatting(self):
+        """ Test S3Calendar.format_date """
+
+        c = S3Calendar("Persian")
+        render = c.format_date
+
+        assertEqual = self.assertEqual
+        assertRaises = self.assertRaises
+
+        # Test with ISOFORMAT
+        dt = datetime.date(1925, 11, 21)
+        dtstr = render(dt)
+        assertEqual(dtstr, "1304-08-30")
+
+        # Test with local format
+        settings = current.deployment_settings
+        date_format = settings.get_L10n_date_format()
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            dt = datetime.date(1983, 5, 8)
+            dtstr = render(dt, local=True)
+            assertEqual(dtstr, "18/02/1362")
+        finally:
+            settings.L10n.date_format = date_format
+
+        # Test with format override
+        dt = datetime.date(2004, 2, 9)
+        dtstr = render(dt, dtfmt="%d-%b-%Y")
+        assertEqual(dtstr, "20-Bah-1382")
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            dtstr = render(dt, dtfmt="%d.%B %Y", local=True)
+            assertEqual(dtstr, "20.Bahman 1382")
+        finally:
+            settings.L10n.date_format = date_format
+
+        # Test with None
+        dt = None
+        dtstr = render(dt)
+        assertEqual(dtstr, current.messages.NONE)
+
+        # Test with invalid type
+        dt = 96
+        with assertRaises(TypeError):
+            render(dt)
+
+    # -------------------------------------------------------------------------
+    def testDateTimeFormatting(self):
+        """ Test S3Calendar.format_datetime """
+
+        c = S3Calendar("Persian")
+        render = c.format_datetime
+
+        assertEqual = self.assertEqual
+        assertRaises = self.assertRaises
+
+        # Test with ISOFORMAT
+        dt = datetime.datetime(1925, 11, 21, 13, 1, 41)
+        dtstr = render(dt)
+        assertEqual(dtstr, "1304-08-30T13:01:41")
+
+        # Test with local format
+        settings = current.deployment_settings
+        date_format = settings.get_L10n_date_format()
+        time_format = settings.get_L10n_time_format()
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            settings.L10n.time_format = "%H.%M"
+            dt = datetime.datetime(1964, 8, 24, 13, 21, 0)
+            dtstr = render(dt, local=True)
+            assertEqual(dtstr, "02/06/1343 13.21")
+        finally:
+            settings.L10n.date_format = date_format
+            settings.L10n.time_format = time_format
+
+        # Test with format override
+        dt = datetime.datetime(2004, 1, 9, 10, 13, 44)
+        dtstr = render(dt, dtfmt="%d.%m.%Y %H:%M:%S")
+        assertEqual(dtstr, "19.10.1382 10:13:44")
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            settings.L10n.time_format = "%H.%M"
+            dtstr = render(dt,  dtfmt="%d.%B %Y %H:%M:%S", local=True)
+            assertEqual(dtstr, "19.Day 1382 10:13:44")
+        finally:
+            settings.L10n.date_format = date_format
+            settings.L10n.time_format = time_format
+
+        # Test with None
+        dt = None
+        dtstr = render(dt)
+        assertEqual(dtstr, current.messages.NONE)
+
+        # Test with invalid type
+        dt = 96
+        with assertRaises(TypeError):
+            render(dt)
+
+# =============================================================================
+class S3DateTimeParserTests(unittest.TestCase):
+    """ Tests for S3DateTimeParser """
+
+    # -------------------------------------------------------------------------
+    def testConstruction(self):
+        """ Test parser construction """
+
+        assertRaises = self.assertRaises
+
+        c = S3Calendar()
+        dtfmt = "%Y-%m-%d"
+
+        # TypeError for invalid argument lists
+        with assertRaises(TypeError):
+            parser = S3DateTimeParser()
+
+        with assertRaises(TypeError):
+            # Invalid format
+            parser = S3DateTimeParser(c)
+
+        with assertRaises(TypeError):
+            # Calendar required
+            parser = S3DateTimeParser(None, dtfmt)
+
+        with assertRaises(TypeError):
+            # Invalid format type
+            parser = S3DateTimeParser(c, 8)
+
+        parser = S3DateTimeParser(c, dtfmt)
+
+    # -------------------------------------------------------------------------
+    def testDateParsing(self):
+        """ Test date parsing """
+
+        assertEqual = self.assertEqual
+        assertRaises = self.assertRaises
+
+        now = current.request.utcnow
+
+        test_dates = (("%Y-%m-%d", "2009-04-16", (2009, 4, 16, 0, 0, 0)),
+                      ("%d.%m.%Y", "1.8.1936", (1936, 8, 1, 0, 0, 0)),
+                      ("%d/%m/%y", None, "TypeError"),
+                      ("%d/%m/%y", "16.04.1678", "ValueError"),
+                      ("%d/%m/%Y", "31/04/1678", (1678, 5, 1, 0, 0, 0)),
+                      ("%d/%m/%Y", "16/04/1678", (1678, 4, 16, 0, 0, 0)),
+                      ("%d/%m/%Y", "03/4/1785", (1785, 4, 3, 0, 0, 0)),
+                      ("%d/%m/%y", "16/04/78", (2078, 4, 16, 0, 0, 0)),
+                      ("%d/%m", "16/04", (now.year, 4, 16, 0, 0, 0)),
+                      ("%d.%B", "16.January", (now.year, 1, 16, 0, 0, 0)),
+                      ("%d-%b-%Y", "27-Mar-2005", (2005, 3, 27, 0, 0, 0)),
+                      )
+
+        c = S3Calendar()
+
+        for dtfmt, string, timetuple in test_dates:
+
+            parser = S3DateTimeParser(c, dtfmt)
+
+            if timetuple == "ValueError":
+                with assertRaises(ValueError):
+                    result = parser.parse(string)
+            elif timetuple == "TypeError":
+                with assertRaises(TypeError):
+                    result = parser.parse(string)
+            else:
+                result = parser.parse(string)
+                assertEqual(result, timetuple)
+
+    # -------------------------------------------------------------------------
+    def testDateTimeParsing(self):
+        """ Test date+time parsing """
+
+        assertEqual = self.assertEqual
+        assertRaises = self.assertRaises
+
+        now = current.request.utcnow
+
+        test_dates = (("%Y-%m-%d %H:%M:%S", "2009-04-16 13:54:20", (2009, 4, 16, 13, 54, 20)),
+                      ("%d.%m.%Y %H:%M", "1.8.1936 15:38", (1936, 8, 1, 15, 38, 0)),
+                      ("%d/%m/%Y %H:%M", None, "TypeError"),
+                      ("%d/%m/%Y %H:%M", "16/04/1678", "ValueError"),
+                      ("%d/%m/%Y %H:%M", "16/04/1678 23:59", (1678, 4, 16, 23, 59, 0)),
+                      ("%d/%m %I:%M %p", "16/04 12:30 am", (now.year, 4, 16, 0, 30, 0)),
+                      ("%d/%m %I:%M %p", "8/4 12:30 am", (now.year, 4, 8, 0, 30, 0)),
+                      ("%d-%b-%Y %I:%M %p", "31-Apr-2005 0:30am", (2005, 5, 1, 0, 30, 0)),
+                      )
+
+        c = S3Calendar()
+
+        for dtfmt, string, timetuple in test_dates:
+
+            parser = S3DateTimeParser(c, dtfmt)
+
+            if timetuple == "ValueError":
+                with assertRaises(ValueError):
+                    result = parser.parse(string)
+            elif timetuple == "TypeError":
+                with assertRaises(TypeError):
+                    result = parser.parse(string)
+            else:
+                result = parser.parse(string)
+                assertEqual(result, timetuple)
+
+    # -------------------------------------------------------------------------
+    def testDateParsingPersian(self):
+        """ Test date parsing """
+
+        assertEqual = self.assertEqual
+        assertRaises = self.assertRaises
+
+        now = current.request.utcnow
+        today = (now.year, now.month, now.day, 0, 0, 0)
+
+        c = S3Calendar("Persian")
+        cyear, cmonth, cday = c.calendar._cdate(today)[:3]
+
+        test_dates = (("%Y-%m-%d", "1352-02-01", (1352, 2, 1, 0, 0, 0)),
+                      ("%d.%m.%Y", "18.5.1384", (1384, 5, 18, 0, 0, 0)),
+                      ("%d/%m/%y", None, "TypeError"),
+                      ("%d/%m/%y", "32.04.1378", "ValueError"),
+                      ("%d.%m.%Y", "32.04.1378", "ValueError"),
+                      ("%d/%m/%y", "31/7/84", (1384, 8, 1, 0, 0, 0)),
+                      ("%d/%m/%y", "30/12/84", (1385, 1, 1, 0, 0, 0)),
+                      ("%d/%m/%Y", "16/04/78", (78, 4, 16, 0, 0, 0)),
+                      ("%d.%B", "16. Shahrivar", (cyear, 6, 16, 0, 0, 0)),
+                      ("%d-%b-%Y", "27-Tir-1393", (1393, 4, 27, 0, 0, 0)),
+                      )
+
+        for dtfmt, string, timetuple in test_dates:
+
+            parser = S3DateTimeParser(c, dtfmt)
+
+            if timetuple == "ValueError":
+                with assertRaises(ValueError):
+                    result = parser.parse(string)
+            elif timetuple == "TypeError":
+                with assertRaises(TypeError):
+                    result = parser.parse(string)
+            else:
+                result = parser.parse(string)
+                assertEqual(result, timetuple)
+
+    # -------------------------------------------------------------------------
+    def testDateTimeParsingPersian(self):
+        """ Test date+time parsing """
+
+        assertEqual = self.assertEqual
+        assertRaises = self.assertRaises
+
+        now = current.request.utcnow
+        today = (now.year, now.month, now.day, 0, 0, 0)
+
+        c = S3Calendar("Persian")
+        cyear, cmonth, cday = c.calendar._cdate(today)[:3]
+
+        test_dates = (("%Y-%m-%d %H:%M:%S", "1352-2-1 17:34:20", (1352, 2, 1, 17, 34, 20)),
+                      ("%d.%m.%Y %H:%M", "1.8.1394 15:38", (1394, 8, 1, 15, 38, 0)),
+                      ("%d/%m/%Y %H:%M", None, "TypeError"),
+                      ("%d/%m/%Y %H:%M", "16/04/1378", "ValueError"),
+                      ("%d/%m/%Y %H:%M", "16/04/1378 23:59", (1378, 4, 16, 23, 59, 0)),
+                      ("%d/%m %I:%M %p", "16/07 12:30 am", (cyear, 7, 16, 0, 30, 0)),
+                      ("%d/%m %I:%M %p", "8/4 12:30 am", (cyear, 4, 8, 0, 30, 0)),
+                      ("%d-%b-%Y %I:%M %p", "18-Aba-1393 0:30am", (1393, 8, 18, 0, 30, 0)),
+                      )
+
+        for dtfmt, string, timetuple in test_dates:
+
+            parser = S3DateTimeParser(c, dtfmt)
+
+            if timetuple == "ValueError":
+                with assertRaises(ValueError):
+                    result = parser.parse(string)
+            elif timetuple == "TypeError":
+                with assertRaises(TypeError):
+                    result = parser.parse(string)
+            else:
+                result = parser.parse(string)
+                assertEqual(result, timetuple)
+
 # =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
@@ -1080,6 +1473,7 @@ if __name__ == "__main__":
         TimeRepresentationTests,
         DateTimeRepresentationTests,
         S3PersianCalendarTests,
+        S3DateTimeParserTests,
     )
 
 # END ========================================================================

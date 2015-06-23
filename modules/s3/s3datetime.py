@@ -32,6 +32,8 @@
 __all__ = ("ISOFORMAT",
            "S3DateTime",
            "S3Calendar",
+           "S3DateTimeParser",
+           "S3DateTimeFormatter",
            "s3_parse_datetime",
            "s3_format_datetime",
            "s3_decode_iso_datetime",
@@ -160,7 +162,7 @@ class S3DateTime(object):
                 return time.strftime(str(format))
             except AttributeError:
                 # Invalid argument type
-                raise TypeError("time_represent: invalid argument type: %s" % type(time))
+                raise TypeError("Invalid argument type: %s" % type(time))
         else:
             return current.messages["NONE"]
 
@@ -224,63 +226,26 @@ class S3Calendar(object):
 
     CALENDAR = "Gregorian"
 
+    # -------------------------------------------------------------------------
+    # Constants to be implemented by subclasses
+    # -------------------------------------------------------------------------
+
     JDEPOCH = 1721425.5 # first day of this calendar as Julian Day number
+
+    MONTH_NAME = ("January", "February", "March",
+                  "April", "May", "June",
+                  "July", "August", "September",
+                  "October", "November", "December",
+                  )
+
+    MONTH_ABBR = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+                  )
+
+    MONTH_DAYS = (31, (28, 29), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
     # -------------------------------------------------------------------------
     # Methods to be implemented by subclasses
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _parse(dtstr, dtfmt):
-        """
-            Convert a datetime string into a time tuple (time.struct_time),
-            to be implemented by subclass (e.g. using pyparsing).
-
-            @param dtstr: the datetime string
-            @param dtfmt: the datetime format (strptime)
-
-            @return: a time tuple like (y, m, d, hh, mm, ss)
-        """
-
-        # Gregorian Calendar uses strptime
-        try:
-            timetuple = time.strptime(dtstr, dtfmt)
-        except ValueError, e:
-            # Seconds missing?
-            try:
-                timetuple = time.strptime(dtstr + ":00", dtfmt)
-            except ValueError:
-                raise e
-        return timetuple[:6]
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _format(dt, dtfmt):
-        """
-            Get a string representation for a datetime.datetime according
-            to this calendar and dtfmt, to be implemented by subclass
-
-            @param dt: the datetime.datetime
-            @param dtfmt: the datetime format (strftime)
-
-            @return: the string representation (str)
-
-            @raises TypeError: for invalid argument types
-        """
-
-        # Gregorian Calendar uses strftime
-        fmt = str(dtfmt)
-        try:
-            dtstr = dt.strftime(fmt)
-        except ValueError:
-            # Dates < 1900 not supported by strftime
-            year = "%04i" % dt.year
-            fmt = fmt.replace("%Y", year).replace("%y", year[-2:])
-            dtstr = dt.replace(year=1900).strftime(fmt)
-        except AttributeError:
-            # Invalid argument type
-            raise TypeError("invalid argument type: %s" % type(dt))
-        return dtstr
-
     # -------------------------------------------------------------------------
     @classmethod
     def from_jd(cls, jd):
@@ -310,7 +275,7 @@ class S3Calendar(object):
         return cls._gregorian_to_jd(year, month, day)
 
     # -------------------------------------------------------------------------
-    # Common Interface Methods (should not be implemented by subclasses):
+    # Common Interface Methods (must not be implemented by subclasses):
     # -------------------------------------------------------------------------
     @property
     def name(self):
@@ -469,7 +434,7 @@ class S3Calendar(object):
         return self.calendar._format(dt, dtfmt)
 
     # -------------------------------------------------------------------------
-    # Base class methods (should not be implemented by subclasses):
+    # Base class methods (must not be implemented by subclasses):
     # -------------------------------------------------------------------------
     def __init__(self, name=None):
         """
@@ -495,6 +460,8 @@ class S3Calendar(object):
         else:
             self._set_calendar(name)
 
+        self._parser = None
+
     # -------------------------------------------------------------------------
     def _set_calendar(self, name=None):
         """
@@ -519,6 +486,127 @@ class S3Calendar(object):
         self._calendar = calendar
 
         return calendar
+
+    # -------------------------------------------------------------------------
+    def _get_parser(self, dtfmt):
+
+        # Gregorian calendar does not use a parser
+        if self.name == "Gregorian":
+            return None
+
+        # Configure the parser
+        parser = self._parser
+        if parser is None:
+            parser = S3DateTimeParser(self, dtfmt)
+        else:
+            parser.set_format(dtfmt)
+        self._parser = parser
+
+        return parser
+
+    # -------------------------------------------------------------------------
+    def _parse(self, dtstr, dtfmt):
+
+        # Get the parser
+        parser = self._get_parser(dtfmt)
+
+        if not parser:
+            # Gregorian calendar - use strptime
+            try:
+                timetuple = time.strptime(dtstr, dtfmt)
+            except ValueError, e:
+                # Seconds missing?
+                try:
+                    timetuple = time.strptime(dtstr + ":00", dtfmt)
+                except ValueError:
+                    raise e
+            return timetuple[:6]
+
+        # Use calendar-specific parser
+        return parser.parse(dtstr)
+
+    # -------------------------------------------------------------------------
+    def _format(self, dt, dtfmt):
+        """
+            Get a string representation for a datetime.datetime according
+            to this calendar and dtfmt, to be implemented by subclass
+
+            @param dt: the datetime.datetime
+            @param dtfmt: the datetime format (strftime)
+
+            @return: the string representation (str)
+
+            @raises TypeError: for invalid argument types
+        """
+
+        if self.name == "Gregorian":
+            # Gregorian Calendar uses strftime
+            fmt = str(dtfmt)
+            try:
+                dtstr = dt.strftime(fmt)
+            except ValueError:
+                # Dates < 1900 not supported by strftime
+                year = "%04i" % dt.year
+                fmt = fmt.replace("%Y", year).replace("%y", year[-2:])
+                dtstr = dt.replace(year=1900).strftime(fmt)
+            except AttributeError:
+                # Invalid argument type
+                raise TypeError("Invalid argument type: %s" % type(dt))
+
+        else:
+            if not isinstance(dt, datetime.datetime):
+                try:
+                    timetuple = (dt.year, dt.month, dt.day, 0, 0, 0)
+                except AttributeError:
+                    # Invalid argument type
+                    raise TypeError("Invalid argument type: %s" % type(dt))
+            else:
+                timetuple = (dt.year, dt.month, dt.day,
+                             dt.hour, dt.minute, dt.second,
+                             )
+
+            formatter = S3DateTimeFormatter(self)
+            dtstr = formatter.render(self._cdate(timetuple), dtfmt)
+
+        return dtstr
+
+    # -------------------------------------------------------------------------
+    def _cdate(self, timetuple):
+        """
+            Convert a time tuple from Gregorian calendar to this calendar
+
+            @param timetuple: time tuple (y, m, d, hh, mm, ss)
+            @return: time tuple (this calendar)
+        """
+
+        if self.name == "Gregorian":
+            # Gregorian Calendar does nothing here
+            return timetuple
+
+        y, m, d, hh, mm, ss = timetuple
+        jd = self._gregorian_to_jd(y, m, d)
+        y, m, d = self.from_jd(jd)
+
+        return (y, m, d, hh, mm, ss)
+
+    # -------------------------------------------------------------------------
+    def _gdate(self, timetuple):
+        """
+            Convert a time tuple from this calendar to Gregorian calendar
+
+            @param timetuple: time tuple (y, m, d, hh, mm, ss)
+            @return: time tuple (Gregorian)
+        """
+
+        if self.name == "Gregorian":
+            # Gregorian Calendar does nothing here
+            return timetuple
+
+        y, m, d, hh, mm, ss = timetuple
+        jd = self.to_jd(y, m, d)
+        y, m, d = self._jd_to_gregorian(jd)
+
+        return (y, m, d, hh, mm, ss)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -581,44 +669,6 @@ class S3Calendar(object):
 
         return (int(year), int(month), int(day))
 
-    # -------------------------------------------------------------------------
-    def _cdate(self, timetuple):
-        """
-            Convert a time tuple from Gregorian calendar to this calendar
-
-            @param timetuple: time tuple (y, m, d, hh, mm, ss)
-            @return: time tuple (this calendar)
-        """
-
-        if self.name == "Gregorian":
-            # Gregorian Calendar does nothing here
-            return timetuple
-
-        y, m, d, hh, mm, ss = timetuple
-        jd = self._gregorian_to_jd(y, m, d)
-        y, m, d = self.from_jd(jd)
-
-        return (y, m, d, hh, mm, ss)
-
-    # -------------------------------------------------------------------------
-    def _gdate(self, timetuple):
-        """
-            Convert a time tuple from this calendar to Gregorian calendar
-
-            @param timetuple: time tuple (y, m, d, hh, mm, ss)
-            @return: time tuple (Gregorian)
-        """
-
-        if self.name == "Gregorian":
-            # Gregorian Calendar does nothing here
-            return timetuple
-
-        y, m, d, hh, mm, ss = timetuple
-        jd = self.to_jd(y, m, d)
-        y, m, d = self._jd_to_gregorian(jd)
-
-        return (y, m, d, hh, mm, ss)
-
 # =============================================================================
 class S3PersianCalendar(S3Calendar):
     """
@@ -636,16 +686,29 @@ class S3PersianCalendar(S3Calendar):
                as subclass of S3PersianCalendar (=>@todo)
     """
 
+    # -------------------------------------------------------------------------
+    # Constants to be implemented by subclasses
+    # -------------------------------------------------------------------------
+
     CALENDAR = "Persian"
 
     JDEPOCH = 1948320.5 # first day of this calendar as Julian Day number
 
-    # -------------------------------------------------------------------------
-    # @todo: implement _parse
+    MONTH_NAME = ('Farvardin', 'Ordibehesht', 'Khordad',
+                  'Tir', 'Mordad', 'Shahrivar',
+                  'Mehr', 'Aban', 'Azar',
+                  'Day', 'Bahman', 'Esfand',
+                  )
+
+
+    MONTH_ABBR = ('Far', 'Ord', 'Kho', 'Tir', 'Mor', 'Sha',
+                  'Meh', 'Aba', 'Aza', 'Day', 'Bah', 'Esf',
+                  )
+
+    MONTH_DAYS = (31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, (29, 30))
 
     # -------------------------------------------------------------------------
-    # @todo: implement _format
-
+    # Methods to be implemented by subclasses
     # -------------------------------------------------------------------------
     @classmethod
     def from_jd(cls, jd):
@@ -661,11 +724,11 @@ class S3PersianCalendar(S3Calendar):
         depoch = jd - cls.to_jd(475, 1, 1)
 
         cycle = math.floor(depoch / 1029983)
-        cyear = math.fmod(depoch, 1029983)
+        cyear = depoch % 1029983
 
         if cyear != 1029982:
             aux1 = math.floor(cyear / 366)
-            aux2 = math.fmod(cyear, 366)
+            aux2 = cyear % 366
             ycycle = math.floor(((2134 * aux1) + (2816 * aux2) + 2815) / 1028522) + aux1 + 1
         else:
             ycycle = 2820
@@ -700,16 +763,388 @@ class S3PersianCalendar(S3Calendar):
             ep_base = year - 474
         else:
             ep_base = year - 473
-        ep_year = 474 + math.fmod(ep_base, 2820)
+        ep_year = 474 + (ep_base % 2820)
 
         if month <= 7:
             mm = (month - 1) * 31
         else:
             mm = (month - 1) * 30 + 6
 
-        return day + mm + math.floor((ep_year * 682 - 110) / 2816) + \
+        result = day + mm + math.floor((ep_year * 682 - 110) / 2816) + \
                (ep_year - 1) * 365 + math.floor(ep_base / 2820) * 1029983 + \
                cls.JDEPOCH - 1
+
+        return result
+
+# =============================================================================
+class S3DateTimeParser(object):
+    """ Date/Time Parser for non-Gregorian calendars """
+
+    def __init__(self, calendar, dtfmt=None):
+        """
+            Constructor
+
+            @param calendar: the calendar
+            @param dtfmt: the date/time format
+        """
+
+        # Get the effective calendar
+        if not calendar:
+            raise TypeError("Invalid calendar: %s (%s)" % (calendar, type(calendar)))
+        self.calendar = calendar.calendar
+
+        self.grammar = None
+        self.rules = None
+
+        self.set_format(dtfmt)
+
+    # -------------------------------------------------------------------------
+    def parse(self, string):
+        """
+            Parse a date/time string
+
+            @param string: the date/time string
+            @return: a timetuple (y, m, d, hh, mm, ss)
+        """
+
+        if not isinstance(string, basestring):
+            raise TypeError("Invalid argument type: expected str, got %s" % type(string))
+        try:
+            result = self.grammar.parseString(string)
+        except self.ParseException:
+            raise ValueError("Invalid date/time: %s" % string)
+
+        return self._validate(result)
+
+    # -------------------------------------------------------------------------
+    def set_format(self, dtfmt):
+        """
+            Update the date/time format for this parser, and generate
+            the corresponding pyparsing grammar
+
+            @param dtfmt: the date/time format
+        """
+
+        if not isinstance(dtfmt, basestring):
+            raise TypeError("Invalid date/time format: %s (%s)" % (dtfmt, type(dtfmt)))
+
+        import pyparsing as pp
+        self.ParseException = pp.ParseException
+
+        from s3utils import s3_unicode
+
+        # Get the rules
+        rules = self.rules
+        if rules is None:
+            rules = self.rules = self._get_rules()
+
+        # Interpret the format
+        result = []
+        sequence = []
+
+        def close(s):
+            s = "".join(s).strip()
+            if s:
+                result.append(pp.Suppress(pp.Literal(s)))
+
+        rule = False
+        for c in s3_unicode(dtfmt):
+            if rule and c in rules:
+                # Close previous sequence
+                sequence.pop()
+                close(sequence)
+                # Append control rule
+                result.append(rules[c])
+                # Start new sequence
+                sequence = []
+                # Close rule
+                rule = False
+                continue
+
+            if c == "%" and not rule:
+                rule = True
+            else:
+                rule = False
+            sequence.append(c)
+        if sequence:
+            close(sequence)
+
+        if result:
+            grammar = result[0]
+            for item in result[1:]:
+                grammar += item
+        else:
+            # Default = ignore everything
+            grammar = pp.Suppress(pp.Regex(".*"))
+
+        self.grammar = grammar
+        return grammar
+
+    # -------------------------------------------------------------------------
+    def _validate(self, parse_result):
+        """
+            Validate the parse result and convert it into a time tuple
+
+            @param parse_result: the parse result
+            @return: a timetuple (y, m, d, hh, mm, ss)
+        """
+
+        calendar = self.calendar
+
+        # Get the current date
+        now = current.request.utcnow
+        today = (now.year, now.month, now.day, 0, 0, 0)
+
+        # Convert today into current calendar
+        cyear, cmonth, cday = calendar._cdate(today)[:3]
+
+        # Year
+        year = parse_result.get("year4")
+        if year is None:
+            year = parse_result.get("year2")
+            if year is None:
+                # Fall back to current year of the calendar
+                year = cyear
+            else:
+                # Add the current century of the calendar
+                current_century = int(cyear / 100) * 100
+                year = current_century + year
+
+        # Month
+        month = parse_result.get("month") or cmonth
+
+        # Day of Month
+        day = parse_result.get("day") or 1
+
+        # Correct the date by converting to JD and back
+        year, month, day = calendar.from_jd(calendar.to_jd(year, month, day))
+
+        # Hours
+        hour = parse_result.get("hour24")
+        if hour is None:
+            # 12 hours?
+            hour = parse_result.get("hour12")
+            if hour is None:
+                hour = 0
+            else:
+                # Do we have am or pm?
+                if hour == 12:
+                    hour = 0
+                if parse_result.get("ampm", "AM") == "PM":
+                    hour += 12
+
+        # Minute
+        minute = parse_result.get("minute") or 0
+
+        # Second
+        second = parse_result.get("second") or 0
+
+        return (year, month, day, hour, minute, second)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _parse_int(s, l, tokens):
+        """ Parser helper to convert a token into an integer number """
+
+        try:
+            return int(tokens[0])
+        except (TypeError, ValueError):
+            return None
+
+    # -------------------------------------------------------------------------
+    def _get_rules(self):
+        """
+            Generate the general pyparsing rules for this calendar
+
+            @return: the rules dict
+
+            rules = {"d": Day of the month as a zero-padded decimal number
+                     "b": Month as locale’s abbreviated name
+                     "B": Month as locale’s full name
+                     "m": Month as a zero-padded decimal number
+                     "y": Year without century as a zero-padded decimal number
+                     "Y": Year with century as a decimal number
+                     "H": Hour (24-hour clock) as a zero-padded decimal number
+                     "I": Hour (12-hour clock) as a zero-padded decimal number
+                     "p": Locale’s equivalent of either AM or PM
+                     "M": Minute as a zero-padded decimal number
+                     "S": Second as a zero-padded decimal number
+                     }
+
+            @todo: support day-of-week options (recognize but suppress when parsing)
+        """
+
+        import pyparsing as pp
+
+        T = current.T
+        calendar = self.calendar
+
+        oneOf = pp.oneOf
+        parse_int = self._parse_int
+
+        def numeric(minimum, maximum):
+            """ Helper to define rules for zero-padded numeric values """
+            zp = " ".join("%02d" % i \
+                 for i in xrange(minimum, min(10, maximum + 1)))
+            np = " ".join("%d" % i \
+                 for i in xrange(minimum, maximum + 1))
+            return (oneOf(zp) ^ oneOf(np)).setParseAction(parse_int)
+
+        # Day
+        month_days = calendar.MONTH_DAYS
+        days = [(max(d) if isinstance(d, tuple) else d) for d in month_days]
+        day = numeric(1, max(days)).setResultsName("day")
+
+        # Month
+        CaselessLiteral = pp.CaselessLiteral
+        replaceWith = pp.replaceWith
+        # ...numeric
+        num_months = len(calendar.MONTH_NAME)
+        month = numeric(1, num_months).setResultsName("month")
+        # ...name
+        expr = None
+        for i, m in enumerate(calendar.MONTH_NAME):
+            month_number = str(i+1)
+            month_literal = CaselessLiteral(m)
+            month_t = str(T(m))
+            if month_t != m:
+                month_literal |= CaselessLiteral(month_t)
+            month_literal.setParseAction(replaceWith(month_number))
+            expr = (expr | month_literal) if expr else month_literal
+        month_name = expr.setParseAction(parse_int).setResultsName("month")
+        # ...abbreviation
+        expr = None
+        for i, m in enumerate(calendar.MONTH_ABBR):
+            month_number = str(i+1)
+            month_literal = CaselessLiteral(m)
+            month_t = str(T(m))
+            if month_t != m:
+                month_literal |= CaselessLiteral(month_t)
+            month_literal.setParseAction(replaceWith(month_number))
+            expr = (expr | month_literal) if expr else month_literal
+        month_abbr = expr.setParseAction(parse_int).setResultsName("month")
+
+        # Year
+        Word = pp.Word
+        nums = pp.nums
+        # ...without century
+        year2 = Word(nums, min=1, max=2)
+        year2 = year2.setParseAction(parse_int).setResultsName("year2")
+        # ...with century
+        year4 = Word(nums, min=1, max=4)
+        year4 = year4.setParseAction(parse_int).setResultsName("year4")
+
+        # Hour
+        hour24 = numeric(0, 23).setResultsName("hour24")
+        hour12 = numeric(0, 12).setResultsName("hour12")
+
+        # Minute
+        minute = numeric(0, 59).setResultsName("minute")
+
+        # Second
+        second = numeric(0, 59).setResultsName("second")
+
+        # AM/PM
+        am = ("AM", str(T("AM")), "am", str(T("am")))
+        am = oneOf(" ".join(am)).setParseAction(pp.replaceWith("AM"))
+        pm = ("PM", str(T("PM")), "pm", str(T("pm")))
+        pm = oneOf(" ".join(pm)).setParseAction(pp.replaceWith("PM"))
+        ampm = (am ^ pm).setResultsName("ampm")
+
+        rules = {"d": day,
+                 "b": month_abbr,
+                 "B": month_name,
+                 "m": month,
+                 "y": year2,
+                 "Y": year4,
+                 "H": hour24,
+                 "I": hour12,
+                 "p": ampm,
+                 "M": minute,
+                 "S": second,
+                 }
+
+        return rules
+
+# =============================================================================
+class S3DateTimeFormatter(object):
+    """ Date/Time Formatter for non-Gregorian calendars """
+
+    def __init__(self, calendar):
+        """
+            Constructor
+
+            @param calendar: the calendar
+        """
+
+        # Get the effective calendar
+        if not calendar:
+            raise TypeError("Invalid calendar: %s (%s)" % (calendar, type(calendar)))
+        self.calendar = calendar.calendar
+
+    # -------------------------------------------------------------------------
+    def render(self, timetuple, dtfmt):
+        """
+            Render a timetuple as string according to the given format
+
+            @param timetuple: the timetuple (y, m, d, hh, mm, ss)
+            @param dtfmt: the date/time format (string)
+
+            @todo: support day-of-week options
+        """
+
+        y, m, d, hh, mm, ss = timetuple
+
+        T = current.T
+        calendar = self.calendar
+
+        from s3utils import s3_unicode
+
+        rules = {"d": "%02d" % d,
+                 "b": T(calendar.MONTH_ABBR[m - 1]),
+                 "B": T(calendar.MONTH_NAME[m - 1]),
+                 "m": "%02d" % m,
+                 "y": "%02d" % (y % 100),
+                 "Y": "%04d" % y,
+                 "H": "%02d" % hh,
+                 "I": "%02d" % ((hh % 12) or 12),
+                 "p": T("AM") if hh < 12 else T("PM"),
+                 "M": "%02d" % mm,
+                 "S": "%02d" % ss,
+                 }
+
+        # Interpret the format
+        result = []
+        sequence = []
+
+        def close(s):
+            s = "".join(s)
+            if s:
+                result.append(s)
+
+        rule = False
+        for c in s3_unicode(dtfmt):
+            if rule and c in rules:
+                # Close previous sequence
+                sequence.pop()
+                close(sequence)
+                # Append control rule
+                result.append(s3_unicode(rules[c]))
+                # Start new sequence
+                sequence = []
+                # Close rule
+                rule = False
+                continue
+
+            if c == "%" and not rule:
+                rule = True
+            else:
+                rule = False
+            sequence.append(c)
+        if sequence:
+            close(sequence)
+
+        return "".join(result)
 
 # =============================================================================
 # Date/Time Parser and Formatter (@todo: integrate with S3Calendar)
