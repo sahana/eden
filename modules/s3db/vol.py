@@ -148,15 +148,17 @@ class S3VolunteerAwardModel(S3Model):
         tablename = "vol_award"
         define_table(tablename,
                      Field("name",
-                           label = T("Name")),
+                           label = T("Name"),
+                           ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately
                      self.org_organisation_id(default = root_org,
                                               readable = is_admin,
                                               writable = is_admin,
                                               ),
-                     s3_comments(label=T("Description"),
-                                 comment=None),
+                     s3_comments(label = T("Description"),
+                                 comment = None,
+                                 ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -199,6 +201,12 @@ class S3VolunteerAwardModel(S3Model):
                      self.pr_person_id(empty=False),
                      award_id(),
                      s3_date(),
+                     Field("number",
+                           label = T("Number"),
+                           # Enable in templates as-required
+                           readable = False,
+                           writable = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -415,6 +423,8 @@ def vol_service_record(r, **attr):
 
     T = current.T
     db = current.db
+    settings = current.deployment_settings
+
     ptable = db.pr_person
     person_id = record.person_id
     person = db(ptable.id == person_id).select(ptable.pe_id,
@@ -433,11 +443,16 @@ def vol_service_record(r, **attr):
         otable = db.org_organisation
         org_id = record.organisation_id
         org = db(otable.id == org_id).select(otable.name,
-                                             otable.acronym,
+                                             otable.acronym, # Present for consistent cache key
                                              otable.logo,
                                              limitby=(0, 1),
                                              ).first()
-        org_name = org.name
+        if settings.get_L10n_translate_org_organisation():
+            org_name = s3db.org_OrganisationRepresent(parent=False,
+                                                      acronym=False)(org_id)
+        else:
+            org_name = org.name
+
         logo = org.logo
         if logo:
             logo = s3db.org_organisation_logo(org)
@@ -449,6 +464,7 @@ def vol_service_record(r, **attr):
                 time_expire=120
                 )
             logo = s3db.org_organisation_logo(root_org)
+
         innerTable = TABLE(TR(TH(vol_name)),
                            TR(TD(org_name)))
         person_details = TABLE(TR(TD(logo),

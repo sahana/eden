@@ -88,6 +88,12 @@ class S3MainMenu(default.S3MainMenu):
         #    return root_org != "Honduran Red Cross" or \
         #           has_role(ORG_ADMIN)
 
+        def vol_roles(item):
+            return root_org != "Iraqi Red Crescent Society"
+
+        def vol_teams(item):
+            return root_org != "Iraqi Red Crescent Society"
+
         return [
             homepage("gis")(
             ),
@@ -108,8 +114,8 @@ class S3MainMenu(default.S3MainMenu):
             #homepage("vol", name=T("Volunteers"), check=vol)(
             homepage("vol", name=T("Volunteers"))(
                 MM("Volunteers", c="vol", f="volunteer", m="summary"),
-                MM("Teams", c="vol", f="group"),
-                MM("Volunteer Roles", c="vol", f="job_title"),
+                MM("Teams", c="vol", f="group", check=vol_teams),
+                MM("Volunteer Roles", c="vol", f="job_title", check=vol_roles),
                 MM("Programs", c="vol", f="programme"),
                 #MM("Skill List", c="vol", f="skill"),
                 MM("Training Events", c="vol", f="training_event"),
@@ -877,21 +883,22 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         settings = current.deployment_settings
         use_certs = lambda i: settings.get_hrm_use_certificates()
-        show_programmes = lambda i: settings.get_hrm_vol_experience() == "programme"
+        use_skills = lambda i: settings.get_hrm_use_skills()
+        show_programmes = lambda i: settings.get_hrm_vol_experience() in ("programme", "both")
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
         teams = settings.get_hrm_teams()
         use_teams = lambda i: teams
-
-        not_vnrc = lambda i: root_org != "Viet Nam Red Cross"
-        skills_menu = lambda i: root_org in ("Afghan Red Crescent Society",
-                                             "Indonesian Red Cross Society (Palang Merah Indonesia)",
-                                             "Viet Nam Red Cross",
-                                             )
+        vol_roles = lambda i: settings.get_hrm_vol_roles() and root_org != "Viet Nam Red Cross"
 
         check_org_dependent_field = lambda tablename, fieldname: \
             settings.set_org_dependent_field(tablename, fieldname,
                                              enable_field = False)
+
+        if root_org == "Iraqi Red Crescent Society":
+            awards_label = "Recommendation Letter Types"
+        else:
+            awards_label = "Awards"
 
         return M(c="vol")(
                     M("Volunteers", f="volunteer", m="summary",
@@ -914,12 +921,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #    M("Create", m="create"),
                     #),
                     M("Volunteer Role Catalog", f="job_title",
-                      check=[manager_mode, not_vnrc])(
+                      check=[manager_mode, vol_roles])(
                         M("Create", m="create"),
                         M("Import", m="import", p="create", check=is_org_admin),
                     ),
                     M("Skill Catalog", f="skill",
-                      check=[manager_mode, skills_menu])(
+                      check=[manager_mode, use_skills])(
                         M("Create", m="create"),
                         #M("Skill Provisions", f="skill_provision"),
                     ),
@@ -944,7 +951,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Import Hours", f="programme_hours", m="import"),
                     ),
-                    M("Awards", f="award",
+                    M(awards_label, f="award",
                       check=[manager_mode, is_org_admin])(
                         M("Create", m="create"),
                     ),

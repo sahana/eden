@@ -287,8 +287,6 @@ def config(settings):
     settings.L10n.thousands_separator = ","
     # Unsortable 'pretty' date format (for use in English)
     settings.L10n.date_format = "%d-%b-%Y"
-    # Make last name in person/user records mandatory
-    settings.L10n.mandatory_lastname = True
     # Uncomment this to Translate Layer Names
     settings.L10n.translate_gis_layer = True
     # Translate Location Names
@@ -495,8 +493,6 @@ def config(settings):
     # RDRT overrides these within controller:
     # Uncomment to disable Staff experience
     settings.hrm.staff_experience = False
-    # Uncomment to disable the use of HR Skills
-    settings.hrm.use_skills = False
     # Activity types for experience record
     settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
 
@@ -960,48 +956,9 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Org-dependent settings
-    # => lazy settings because they require user authentication
+    # => lazy settings because they require user authentication and we want them to
+    #    work across multiple controllers (inc menus) without too much code
     #
-    def hide_third_gender(default):
-        """ Whether to hide the third person gender """
-
-        root_org = current.auth.root_org_name()
-        if root_org == NRCS:
-            return False
-        return default
-
-    settings.pr.hide_third_gender = hide_third_gender
-
-    def training_instructors(default):
-        """ Whether to track internal/external training instructors """
-
-        root_org = current.auth.root_org_name()
-        if root_org == NRCS:
-            return "both"
-        return default
-
-    settings.hrm.training_instructors = training_instructors
-
-    def location_filter_bulk_select_option(default):
-        """ Whether to show a bulk select option in location filters """
-
-        root_org = current.auth.root_org_name()
-        if root_org == VNRC:
-            return True
-        return default
-
-    settings.ui.location_filter_bulk_select_option = location_filter_bulk_select_option
-
-    def hrm_use_code(default):
-        """ Whether to use Staff-ID/Volunteer-ID """
-
-        root_org = current.auth.root_org_name()
-        if root_org == ARCS:
-            return True # use for both staff and volunteers
-        return default
-
-    settings.hrm.use_code = hrm_use_code
-
     def auth_realm_entity_types(default):
         """ Which entity types to use as realm entities in role manager """
 
@@ -1013,14 +970,166 @@ def config(settings):
 
     settings.auth.realm_entity_types = auth_realm_entity_types
 
+    def hide_third_gender(default):
+        """ Whether to hide the third person gender """
+
+        root_org = current.auth.root_org_name()
+        if root_org == NRCS:
+            return False
+        return True
+
+    settings.pr.hide_third_gender = hide_third_gender
+
+    def location_filter_bulk_select_option(default):
+        """ Whether to show a bulk select option in location filters """
+
+        root_org = current.auth.root_org_name()
+        if root_org == VNRC:
+            return True
+        return default
+
+    settings.ui.location_filter_bulk_select_option = location_filter_bulk_select_option
+
+    def mandatory_lastname(default):
+        """ Whether the Last Name is Mandatory """
+
+        root_org = current.auth.root_org_name()
+        if root_org in (ARCS, IRCS):
+            return False
+        return True
+
+    settings.L10n.mandatory_lastname = mandatory_lastname
+
+    def hrm_use_certificates(default):
+        """ Whether to use Certificates """
+
+        root_org = current.auth.root_org_name()
+        if root_org in (IRCS, VNRC):
+            return False
+        return True
+
+    settings.hrm.use_certificates = hrm_use_certificates
+
+    def hrm_use_code(default):
+        """ Whether to use Staff-ID/Volunteer-ID """
+
+        root_org = current.auth.root_org_name()
+        if root_org == ARCS:
+            return True # use for both staff and volunteers
+        return False
+
+    settings.hrm.use_code = hrm_use_code
+
+    def hrm_use_skills(default):
+        """ Whether to use Skills """
+
+        root_org = current.auth.root_org_name()
+        if root_org in (ARCS, IRCS, PMI, VNRC):
+            return True
+        return False
+
+    settings.hrm.use_certificates = hrm_use_certificates
+
+    def hrm_teams(default):
+        """ Whether to use Teams """
+
+        if current.request.controller == "vol":
+            root_org = current.auth.root_org_name()
+            if root_org == IRCS:
+                return False
+        return default
+
+    settings.hrm.teams = hrm_teams
+
+    def hrm_vol_active(default):
+        """ Whether & How to track Volunteers as Active """
+
+        root_org = current.auth.root_org_name()
+        if root_org in (ARCS, IRCS):
+            return True # Simple Checkbox
+        elif root_org in (CVTL, PMI, PRC):
+            return vol_active # Use formula
+        return False
+
+    settings.hrm.vol_active = hrm_vol_active
+
+    def hrm_vol_departments(default):
+        """ Whether to use Volunteer Departments """
+
+        root_org = current.auth.root_org_name()
+        if root_org == IRCS:
+            return True
+        return False
+
+    settings.hrm.vol_departments = hrm_vol_departments
+
+    def hrm_vol_experience(default):
+        """ What type(s) of experience to use for Volunteers """
+
+        root_org = current.auth.root_org_name()
+        if root_org in (IRCS, PMI, VNRC):
+            return "both"
+        return default
+
+    settings.hrm.vol_experience = hrm_vol_experience
+
+    def hrm_vol_roles(default):
+        """ Whether to use Volunteer Roles """
+
+        root_org = current.auth.root_org_name()
+        if root_org in (IRCS, VNRC):
+            return False
+        return True
+
+    settings.hrm.vol_roles = hrm_vol_roles
+
+    def pr_name_format(default):
+        """ Format to use to expand peoples' names """
+
+        root_org = current.auth.root_org_name()
+        if root_org == VNRC:
+            return "%(last_name)s %(middle_name)s %(first_name)s"
+        return default
+
+    settings.pr.name_format = pr_name_format
+
+    def pr_request_father_name(default):
+        """ Whether to request Father's Name in AddPersonWidget2 """
+
+        root_org = current.auth.root_org_name()
+        if root_org in (ARCS, BRCS, IRCS):
+            return True
+        return False
+
+    settings.pr.request_father_name = pr_request_father_name
+
+    def pr_request_grandfather_name(default):
+        """ Whether to request GrandFather's Name in AddPersonWidget2 """
+
+        root_org = current.auth.root_org_name()
+        if root_org in (ARCS, BRCS, IRCS):
+            return True
+        return False
+
+    settings.pr.request_grandfather_name = pr_request_grandfather_name
+
+    def training_instructors(default):
+        """ Whether to track internal/external training instructors """
+
+        root_org = current.auth.root_org_name()
+        if root_org == NRCS:
+            return "both"
+        return default
+
+    settings.hrm.training_instructors = training_instructors
+
     #def ui_autocomplete_delay(default):
     #    """ Delay in milliseconds before autocomplete starts searching """
     #    root_org = current.auth.root_org_name()
     #    if root_org == ARCS:
     #        return 800
     #    return default
-
-    settings.hrm.use_code = hrm_use_code
+    #settings.ui.autocomplete_delay = ui_autocomplete_delay
 
     # -------------------------------------------------------------------------
     def customise_asset_asset_controller(**attr):
@@ -1667,13 +1776,58 @@ def config(settings):
         return "".join(items)
 
     # -----------------------------------------------------------------------------
+    def customise_vol_volunteer_award_resource(r, tablename):
+
+        root_org = current.auth.root_org_name()
+        if root_org == IRCS:
+            field = current.s3db.vol_volunteer_award.number
+            field.readable = field.writable = True
+
+            current.response.s3.crud_strings["vol_volunteer_award"] = Storage(
+                label_create = T("Add Recommendation Letter"),
+                title_display = T("Recommendation Letter Details"),
+                title_list = T("Recommendation Letters"),
+                title_update = T("Edit Recommendation Letter"),
+                label_list_button = T("List Recommendation Letters"),
+                label_delete_button = T("Delete Recommendation Letter"),
+                msg_record_created = T("Recommendation Letter added"),
+                msg_record_modified = T("Recommendation Letter updated"),
+                msg_record_deleted = T("Recommendation Letter removed"),
+                msg_no_match = T("No entries found"),
+                msg_list_empty = T("Currently no recommendation letters registered"))
+
+    settings.customise_vol_volunteer_award_resource = customise_vol_volunteer_award_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_vol_award_resource(r, tablename):
+
+        root_org = current.auth.root_org_name()
+        if root_org == IRCS:
+
+            current.response.s3.crud_strings["vol_award"] = Storage(
+                label_create = T("Add Recommendation Letter Type"),
+                title_display = T("Recommendation Letter Type Details"),
+                title_list = T("Recommendation Letter Types"),
+                title_update = T("Edit Recommendation Letter Type"),
+                label_list_button = T("List Recommendation Letter Types"),
+                label_delete_button = T("Delete Recommendation Letter Type"),
+                msg_record_created = T("Recommendation Letter Type added"),
+                msg_record_modified = T("Recommendation Letter Type updated"),
+                msg_record_deleted = T("Recommendation Letter Type removed"),
+                msg_no_match = T("No entries found"),
+                msg_list_empty = T("Currently no recommendation letter types registered"))
+
+    settings.customise_vol_award_resource = customise_vol_award_resource
+
+    # -----------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
-        """ Configure hrm_human_resource """
 
         if r.controller == "vol":
             T = current.T
             root_org = current.auth.root_org_name()
-            if root_org == NRCS:
+            if root_org == IRCS:
+                current.s3db.hrm_human_resource.start_date.label = T("Appointment Date")
+            elif root_org == NRCS:
                 # Expose volunteer_type field with these options:
                 types = {"PROGRAMME": T("Program Volunteer"),
                          "GOVERNANCE": T("Governance Volunteer"),
@@ -1706,31 +1860,15 @@ def config(settings):
         root_org = current.auth.root_org_name()
         if root_org == VNRC:
             vnrc = True
-            settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
             # @ToDo: Make this use the same lookup as in ns_only to check if user can see HRs from multiple NS
             settings.org.regions = False
-            settings.hrm.use_certificates = False
             s3db.hrm_human_resource.site_id.represent = s3db.org_SiteRepresent(show_type = False)
 
-        elif root_org == IRCS:
-            settings.L10n.mandatory_lastname = False
-            #settings.hrm.vol_experience = False
-            settings.pr.request_father_name = True
-            settings.pr.request_grandfather_name = True
-            settings.hrm.use_skills = True
-                    
         if controller == "vol":
             if root_org == ARCS:
                 arcs = True
-                settings.L10n.mandatory_lastname = False
-                settings.hrm.use_skills = True
-                settings.hrm.vol_active = True
                 settings.pr.request_email = False
-                settings.pr.request_father_name = True
-                settings.pr.request_grandfather_name = True
                 settings.pr.request_year_of_birth = True
-            elif root_org in (CVTL, PMI, PRC):
-                settings.hrm.vol_active = vol_active
 
         #elif vnrc:
         #    settings.org.site_label = "Office/Center"
@@ -2063,16 +2201,13 @@ def config(settings):
 
         # Special cases for different NS
         root_org = current.auth.root_org_name()
-        if root_org == ARCS:
-            settings.L10n.mandatory_lastname = False
-            settings.hrm.vol_active = True
-        elif root_org in (CVTL, PMI, PRC):
-            settings.hrm.vol_active = vol_active
+        if root_org in (CVTL, PMI, PRC):
             settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"
-        elif root_org == VNRC:
-            settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
-            field = current.s3db.hrm_programme_hours.job_title_id
-            field.readable = field.writable = False
+        elif root_org == IRCS:
+            table = current.s3db.hrm_programme_hours
+            table.date.label = T("Direct Date")
+            table.hours.readable = table.hours.writable = False
+        #elif root_org == VNRC:
             # @ToDo
             # def vn_age_group(age):
             # settings.pr.age_group = vn_age_group
@@ -2092,15 +2227,11 @@ def config(settings):
 
         # Special cases for different NS
         root_org = current.auth.root_org_name()
-        if root_org == ARCS:
-            settings.L10n.mandatory_lastname = False
-            settings.hrm.vol_active = True
-        elif root_org in (CVTL, PMI, PRC):
-            settings.hrm.vol_active = vol_active
+        if root_org == IRCS:
+            table = current.s3db.hrm_programme_hours
+            table.date.label = T("Direct Date")
+            table.hours.readable = table.hours.writable = False
         elif root_org == VNRC:
-            settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
-            field = current.s3db.hrm_programme_hours.job_title_id
-            field.readable = field.writable = False
             # Remove link to download Template
             attr["csv_template"] = "hide"
 
@@ -2119,13 +2250,7 @@ def config(settings):
 
         # Special cases for different NS
         root_org = current.auth.root_org_name()
-        if root_org == ARCS:
-            settings.L10n.mandatory_lastname = False
-            settings.hrm.vol_active = True
-        elif root_org in (CVTL, PMI, PRC):
-            settings.hrm.vol_active = vol_active
-        elif root_org == VNRC:
-            settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
+        if root_org == VNRC:
             # Remove link to download Template
             attr["csv_template"] = "hide"
 
@@ -2138,12 +2263,7 @@ def config(settings):
 
         # Special cases for different NS
         root_org = current.auth.root_org_name()
-        if root_org == ARCS:
-            settings.L10n.mandatory_lastname = False
-            settings.hrm.vol_active = True
-        elif root_org in (CVTL, PMI, PRC):
-            settings.hrm.vol_active = vol_active
-        elif root_org == NRCS:
+        if root_org == NRCS:
             # Don't allow creating of Persons here
             from gluon import DIV
             T = current.T
@@ -2152,7 +2272,6 @@ def config(settings):
                     _title="%s|%s" % (T("Participant"),
                                       T("Type the first few characters of one of the Participant's names.")))
         elif root_org == VNRC:
-            settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
             # Remove link to download Template
             attr["csv_template"] = "hide"
 
@@ -2296,14 +2415,11 @@ def config(settings):
         # Special cases for different NS
         root_org = current.auth.root_org_name()
         nrcs = vnrc = False
-        if root_org == ARCS:
-            settings.L10n.mandatory_lastname = False
-        elif root_org == NRCS:
+        if root_org == NRCS:
             nrcs = True
             s3db.member_membership.membership_paid.label = T("Membership Approved")
         elif root_org == VNRC:
             vnrc = True
-            settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
             # Remove link to download Template
             attr["csv_template"] = "hide"
 
@@ -2649,7 +2765,6 @@ def config(settings):
                 # Special cases for different NS
                 root_org = current.auth.root_org_name()
                 if root_org == VNRC:
-                    settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
                     # Update the represent as already set
                     s3db = current.s3db
                     s3db.pr_group_membership.person_id.represent = s3db.pr_PersonRepresent()
@@ -2767,24 +2882,13 @@ def config(settings):
         arcs = False
         vnrc = False
         root_org = current.auth.root_org_name()
-        if root_org == ARCS:
-            arcs = True
-            settings.L10n.mandatory_lastname = False
-            # Override what has been set in the model already
-            s3db.pr_person.last_name.requires = None
-            settings.hrm.use_skills = True
-            settings.hrm.vol_active = True
-        elif root_org == IRCS:
-            settings.hrm.use_skills = True
-            #settings.hrm.vol_experience = False
+        if root_org == IRCS:
+            settings.hrm.activity_types =  None
+            settings.hrm.use_id = False
         elif root_org == PMI:
-            settings.hrm.use_skills = True
             settings.hrm.staff_experience = "experience"
-            settings.hrm.vol_experience = "both"
-            settings.hrm.vol_active = vol_active
             settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"
         elif root_org in (CVTL, PRC):
-            settings.hrm.vol_active = vol_active
             settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"
             if root_org == CVTL:
                 settings.member.cv_tab = True
@@ -2839,9 +2943,6 @@ def config(settings):
             #except:
             #    # Must be already removed
             #    pass
-            settings.hrm.use_skills = True
-            settings.hrm.vol_experience = "both"
-            settings.pr.name_format = "%(last_name)s %(middle_name)s %(first_name)s"
             settings.modules.pop("asset", None)
 
         if current.request.controller == "deploy":
@@ -2881,10 +2982,17 @@ def config(settings):
                                            filterby = "type",
                                            filter_opts = (4,),
                                            )
+            elif component_name == "experience":
+                if root_org == IRCS:
+                    ctable = r.component.table 
+                    ctable.hours.readable = ctable.hours.writable = False
+                    ctable.job_title_id.readable = ctable.job_title_id.writable = False
             elif component_name == "physical_description":
                 from gluon import DIV
-                dtable = r.component.table
-                dtable.medical_conditions.comment = DIV(_class="tooltip",
+                ctable = r.component.table
+                if root_org == IRCS:
+                    ctable.ethnicity.readable = ctable.ethnicity.writable = False
+                ctable.medical_conditions.comment = DIV(_class="tooltip",
                                                         _title="%s|%s" % (T("Medical Conditions"),
                                                                           T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
             elif method == "cv" or component_name == "education":
@@ -3075,9 +3183,6 @@ def config(settings):
                                    crud_form = S3SQLCustomForm(*crud_fields),
                                    )
                 if method == "record" or component_name == "human_resource":
-                    # Hide job_title_id in programme hours
-                    field = s3db.hrm_programme_hours.job_title_id
-                    field.readable = field.writable = False
                     # Hide unwanted fields in human_resource
                     htable = s3db.hrm_human_resource
                     for fname in ["job_title_id",
@@ -3232,10 +3337,6 @@ def config(settings):
                     hide_fields = set(hide_fields)
                     list_fields = (fs for fs in list_fields if fs not in hide_fields)
                     s3db.configure("pr_identity", list_fields = list_fields)
-
-                elif component_name == "hours":
-                    field = s3db.hrm_programme_hours.job_title_id
-                    field.readable = field.writable = False
 
                 elif component_name == "physical_description" or \
                      method == "import":

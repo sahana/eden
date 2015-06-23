@@ -228,10 +228,14 @@ class S3HRModel(S3Model):
         if group == "volunteer":
             not_filter_opts = (1, 4)
             code_label = T("Volunteer ID")
+            departments = settings.get_hrm_vol_departments()
+            job_titles = settings.get_hrm_vol_roles()
         else:
             # Staff
             not_filter_opts = (2, 4)
             code_label = T("Staff ID")
+            departments = True
+            job_titles = True
 
         org_dependent_job_titles = settings.get_hrm_org_dependent_job_titles()
 
@@ -419,8 +423,12 @@ class S3HRModel(S3Model):
                            label = code_label,
                            represent = lambda v: v or messages["NONE"],
                            ),
-                     job_title_id(),
-                     department_id(),
+                     job_title_id(readable = job_titles,
+                                  writable = job_titles,
+                                  ),
+                     department_id(readable = departments,
+                                   writable = departments,
+                                   ),
                      Field("essential", "boolean",
                            label = T("Essential Staff?"),
                            represent = s3_yes_no_represent,
@@ -730,7 +738,6 @@ class S3HRModel(S3Model):
 
         crud_fields = ["organisation_id",
                        "person_id",
-                       "job_title_id",
                        "start_date",
                        "end_date",
                        "status",
@@ -742,7 +749,6 @@ class S3HRModel(S3Model):
         report_fields = ["organisation_id",
                          "person_id",
                          "person_id$gender",
-                         "job_title_id",
                          (T("Training"), "training.course_id"),
                          "location_id$L1",
                          "location_id$L2",
@@ -756,6 +762,12 @@ class S3HRModel(S3Model):
         if group == "volunteer":
             # This gets copied to hrm_human_resource.location_id onaccept, faster to lookup without joins
             #location_context = "person_id$address.location_id" # When not using S3Track()
+            if settings.get_hrm_vol_roles():
+                crud_fields.insert(2, "job_title_id")
+                report_fields.extend(("job_title_id"))
+            if settings.get_hrm_vol_departments():
+                crud_fields.insert(4, "department_id")
+                report_fields.extend(("department_id"))
             crud_fields.extend(("details.volunteer_type",
                                 "details.availability",
                                 "details.card",
@@ -777,9 +789,11 @@ class S3HRModel(S3Model):
             # This gets copied to hrm_human_resource.location_id onaccept, faster to lookup without joins
             #location_context = "site_id$location_id" # When not using S3Track()
             crud_fields.insert(1, "site_id")
+            crud_fields.insert(3, "job_title_id")
             crud_fields.insert(4, "department_id")
             report_fields.extend(("site_id",
                                   "department_id",
+                                  "job_title_id",
                                   ))
             report_fields_extra = []
 
@@ -4294,6 +4308,8 @@ class S3HRProgrammeModel(S3Model):
         # =====================================================================
         # Programmes <> Persons Link Table
         #
+        vol_roles = current.deployment_settings.get_hrm_vol_roles()
+
         tablename = "hrm_programme_hours"
         define_table(tablename,
                      self.pr_person_id(
@@ -4301,8 +4317,13 @@ class S3HRProgrammeModel(S3Model):
                         represent = self.pr_PersonRepresent(show_link=True)
                         ),
                      programme_id(),
-                     self.hrm_job_title_id(),
+                     self.hrm_job_title_id(readable = vol_roles,
+                                           writable = vol_roles,
+                                           ),
                      s3_date(future=0),
+                     s3_date("end_date",
+                             label = T("End Date"),
+                             ),
                      Field("hours", "double",
                            label = T("Hours"),
                            ),

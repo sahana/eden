@@ -4979,11 +4979,13 @@ class org_OrganisationRepresent(S3Represent):
             if self.parent:
                 lptable = db.org_organisation_name.with_alias("org_parent_organisation_name")
                 fields.append(lptable.name_l10n)
-                left += [ltable.on(ltable.organisation_id == otable.id),
+                left += [ltable.on((ltable.organisation_id == otable.id) & \
+                                   (ltable.language == current.session.s3.language)),
                          lptable.on(lptable.organisation_id == btable.organisation_id),
                          ]
             else:
-                left = [ltable.on(ltable.organisation_id == otable.id),
+                left = [ltable.on((ltable.organisation_id == otable.id) & \
+                                  (ltable.language == current.session.s3.language)),
                         ]
 
         qty = len(values)
@@ -5041,7 +5043,7 @@ class org_OrganisationRepresent(S3Represent):
 
             @ToDo: Support for self.translate = True
                    need to handle the inevitable NULL values which vary in
-                   order by DB, altthough perhaps DB handline doesn't matter
+                   order by DB, altthough perhaps DB handling doesn't matter
                    here.
         """
 

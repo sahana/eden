@@ -5617,7 +5617,8 @@ class S3LocationSelector(S3Selector):
             label = labels.get(level, level)
 
             # Widget (options to be populated client-side)
-            placeholder = T("Select %(level)s") % {"level": label}
+            #placeholder = T("Select %(level)s") % {"level": label}
+            placeholder = ""
             widget = SELECT(OPTION(placeholder, _value=""),
                             _id = _id,
                             _class = _class,
