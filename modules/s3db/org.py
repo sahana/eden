@@ -318,7 +318,7 @@ class S3OrganisationModel(S3Model):
                            writable = False,
                            represent = S3Represent(lookup="org_organisation"),
                            ),
-                     Field("name", notnull=True, unique=True, # @ToDo: Remove unique=True (ARC have 3x Wayne County chapters)
+                     Field("name", notnull=True,
                            length=128, # Mayon Compatibility
                            label = T("Name"),
                            ),
@@ -920,13 +920,9 @@ class S3OrganisationModel(S3Model):
     @staticmethod
     def organisation_duplicate(item):
         """
-            Import item deduplication, match by name
-            NB: usually, this is only needed to catch cases where the
-                import item is misspelled (case mismatch), otherwise the
-                org name is a primary key and matches automatically.
-                However, if there's a spelling mistake, we would want to
-                retain the original spelling *because* the name is a
-                primary key.
+            Import item deduplication, match by name or l10_name
+
+            @ToDo: parent (for Branches)
 
             @param item: the S3ImportItem instance
         """
@@ -939,10 +935,27 @@ class S3OrganisationModel(S3Model):
                                                  table.name,
                                                  limitby=(0, 1)).first()
             if duplicate:
+                # @ToDo: Can we see the parent in the import? 
+                #if current.deployment_settings.get_org_branches():
+                #    btable = s3db.org_organisation_branch
                 item.id = duplicate.id
-                # Retain the correct spelling of the name
+                # Retain the original spelling of the name
                 item.data.name = duplicate.name
                 item.method = item.METHOD.UPDATE
+            elif current.deployment_settings.get_L10n_translate_org_organisation():
+                # See if this a name_l10n
+                ltable = current.s3db.org_organisation_name
+                query = (ltable.name_l10n == name) & \
+                        (ltable.organisation_id == table.id)
+                duplicate = current.db(query).select(table.id,
+                                                     table.name,
+                                                     limitby=(0, 1)).first()
+                if duplicate:
+                    # @ToDo: Import Log
+                    #current.log.debug("Organisation l10n Match")
+                    item.data.name = duplicate.name # Don't update the name
+                    item.id = duplicate.id
+                    item.method = item.METHOD.UPDATE
 
     # -----------------------------------------------------------------------------
     @staticmethod

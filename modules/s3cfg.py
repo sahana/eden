@@ -2684,6 +2684,13 @@ class S3Config(Storage):
         """
         return self.__lazy(self.hrm, "vol_roles", default=True)
 
+    def get_hrm_vol_service_record_manager(self):
+        """
+            What should be put into the 'Manager' field of the Volunteer Service Record
+        """
+        return self.__lazy(self.hrm, "vol_service_record_manager",
+                           default=current.T("Branch Coordinator"))
+
     # -------------------------------------------------------------------------
     # Inventory Management Settings
     #

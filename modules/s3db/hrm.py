@@ -768,6 +768,14 @@ class S3HRModel(S3Model):
             if settings.get_hrm_vol_departments():
                 crud_fields.insert(4, "department_id")
                 report_fields.extend(("department_id"))
+            if settings.get_hrm_vol_experience() in ("programme", "both"):
+                crud_fields.insert(2, S3SQLInlineComponent("programme_hours",
+                                                           label = "",
+                                                           fields = ["programme_id",
+                                                                     ],
+                                                           link = False,
+                                                           multiple = False,
+                                                           ))
             crud_fields.extend(("details.volunteer_type",
                                 "details.availability",
                                 "details.card",
@@ -2956,7 +2964,7 @@ class S3HRSkillModel(S3Model):
                      Field("number",
                            label = T("License Number"),
                            ),
-                     #Field("status", label=T("Status")),
+                     #Field("status", label = T("Status")),
                      s3_date(label = T("Expiry Date")),
                      Field("image", "upload",
                            autodelete = True,
@@ -4320,6 +4328,12 @@ class S3HRProgrammeModel(S3Model):
                      self.hrm_job_title_id(readable = vol_roles,
                                            writable = vol_roles,
                                            ),
+                     Field("contract",
+                           label = T("Contract Number"),
+                           # Enable in templates as-required
+                           #readable = False,
+                           #writable = False,
+                           ),
                      s3_date(future=0),
                      s3_date("end_date",
                              label = T("End Date"),

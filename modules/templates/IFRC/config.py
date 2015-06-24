@@ -1019,7 +1019,7 @@ def config(settings):
         """ Whether to use Staff-ID/Volunteer-ID """
 
         root_org = current.auth.root_org_name()
-        if root_org == ARCS:
+        if root_org in (ARCS, IRCS):
             return True # use for both staff and volunteers
         return False
 
@@ -1835,6 +1835,10 @@ def config(settings):
             root_org = current.auth.root_org_name()
             if root_org == IRCS:
                 current.s3db.hrm_human_resource.start_date.label = T("Appointment Date")
+                def vol_service_record_manager(default):
+                    from s3 import s3_fullname
+                    return s3_fullname(current.auth.s3_logged_in_person())
+                settings.hrm.vol_service_record_manager = vol_service_record_manager
             elif root_org == NRCS:
                 # Expose volunteer_type field with these options:
                 types = {"PROGRAMME": T("Program Volunteer"),
@@ -1964,6 +1968,52 @@ def config(settings):
                                    crud_form = crud_form,
                                    )
 
+                elif root_org == IRCS:
+                    from s3 import IS_ADD_PERSON_WIDGET2, S3SQLCustomForm, S3SQLInlineComponent
+                    table.person_id.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
+                    table.code.label = T("Appointment Number")
+                    phtable = current.s3db.hrm_programme_hours
+                    #phtable.date.label = T("Direct Date")
+                    #phtable.contract.label = T("Direct Number")
+                    phtable.contract.readable = phtable.contract.writable = True
+                    crud_form = S3SQLCustomForm("organisation_id",
+                                                "person_id",
+                                                S3SQLInlineComponent("home_address",
+                                                                     label = T("Address"),
+                                                                     fields = [("", "location_id"),
+                                                                               ],
+                                                                     default = {"type": 1}, # Current Home Address
+                                                                     link = False,
+                                                                     multiple = False,
+                                                                     ),
+                                                "department_id",
+                                                "start_date",
+                                                "code",
+                                                S3SQLInlineComponent("programme_hours",
+                                                                     label = T("Contract"),
+                                                                     fields = ["programme_id",
+                                                                               (T("Direct Date"), "date"),
+                                                                               (T("End Date"), "end_date"),
+                                                                               (T("Direct Number"), "contract"),
+                                                                               ],
+                                                                     link = False,
+                                                                     multiple = False,
+                                                                     ),
+                                                S3SQLInlineComponent("education",
+                                                                     label = T("Education"),
+                                                                     fields = [(T("Education Level"), "level_id"),
+                                                                               "institute",
+                                                                               "year",
+                                                                               ],
+                                                                     link = False,
+                                                                     multiple = False,
+                                                                     ),
+                                                "details.active",
+                                                )
+                    s3db.configure("hrm_human_resource",
+                                   crud_form = crud_form,
+                                   )
+        
                 elif root_org == NRCS:
                     pos = 6
                     # Add volunteer type to list_fields
@@ -2214,6 +2264,8 @@ def config(settings):
         elif root_org == IRCS:
             table = current.s3db.hrm_programme_hours
             table.date.label = T("Direct Date")
+            table.contract.label = T("Direct Number")
+            table.contract.readable = table.contract.writable = True
             table.hours.readable = table.hours.writable = False
         #elif root_org == VNRC:
             # @ToDo
@@ -2238,6 +2290,8 @@ def config(settings):
         if root_org == IRCS:
             table = current.s3db.hrm_programme_hours
             table.date.label = T("Direct Date")
+            table.contract.label = T("Direct Number")
+            table.contract.readable = table.contract.writable = True
             table.hours.readable = table.hours.writable = False
         elif root_org == VNRC:
             # Remove link to download Template
@@ -2547,6 +2601,13 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     def customise_org_office_controller(**attr):
+
+        # Special cases for different NS
+        root_org = current.auth.root_org_name()
+        if root_org == IRCS:
+            table = current.s3db.org_office
+            table.code.readable = table.code.writable = False
+            table.office_type_id.readable = table.office_type_id.writable = False
 
         s3 = current.response.s3
 
