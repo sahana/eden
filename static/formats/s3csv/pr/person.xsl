@@ -12,6 +12,8 @@
          Last Name......................optional.....person last name (required in some deployments)
          Initials.......................optional.....person initials
          DOB............................optional.....person date of birth
+         Year of Birth..................optional.....person_details year of birth
+         Place of Birth.................optional.....person_details place of birth
          Nationality....................optional.....person_details nationality
          Occupation.....................optional.....person_details occupation
          Company........................optional.....person_details company
@@ -19,6 +21,7 @@
          Father Name....................optional.....person_details father name
          Mother Name....................optional.....person_details mother name
          Grandfather Name...............optional.....person_details grandfather name
+         Grandmother Name...............optional.....person_details grandmother name
          Religion.......................optional.....person_details religion
          Religion other.................optional.....person_details religion_other
          Blood Type.....................optional.....pr_physical_description blood_type
@@ -153,6 +156,9 @@
                 <xsl:if test="col[@field='Grandfather Name']!=''">
                     <data field="grandfather_name"><xsl:value-of select="col[@field='Grandfather Name']"/></data>
                 </xsl:if>
+                <xsl:if test="col[@field='Grandmother Name']!=''">
+                    <data field="grandmother_name"><xsl:value-of select="col[@field='Grandmother Name']"/></data>
+                </xsl:if>
                 <xsl:if test="col[@field='Religion']!=''">
 	                <data field="religion">
                         <xsl:call-template name="lowercase">
@@ -196,7 +202,13 @@
                 <data field="nationality">
                     <xsl:value-of select="$countrycode"/>
                 </data>
-	            <xsl:if test="col[@field='Occupation']!=''">
+	            <xsl:if test="col[@field='Place of Birth']!=''">
+                    <data field="place_of_birth"><xsl:value-of select="col[@field='Place of Birth']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Year of Birth']!=''">
+                    <data field="year_of_birth"><xsl:value-of select="col[@field='Year of Birth']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Occupation']!=''">
                     <data field="occupation"><xsl:value-of select="col[@field='Occupation']"/></data>
                 </xsl:if>
                 <xsl:if test="col[@field='Company']!=''">

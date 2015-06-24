@@ -982,6 +982,7 @@ class S3InventoryTrackingModel(S3Model):
              "inv_kitting",
              "inv_kitting_item",
              "inv_track_item",
+             "inv_track_item_deleting",
              "inv_track_item_onaccept",
              )
 
@@ -2291,7 +2292,7 @@ $.filterOptionsS3({
                     if status != SHIP_STATUS_IN_PROCESS:
                         return False
                     if method == "delete":
-                        return s3.inv_track_item_deleting(r.component_id)
+                        return s3db.inv_track_item_deleting(r.component_id)
 
                 # Filter out Items which have Quantity 0, are Expired or in Bad condition
                 query = (iitable.quantity > 0) & \

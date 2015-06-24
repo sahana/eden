@@ -624,9 +624,9 @@ class S3Profile(S3CRUD):
                                 **dtargs)
 
             if dt.data:
-                empty.update(_style="display:none;")
+                empty.update(_style="display:none")
             else:
-                datatable.update(_style="display:none;")
+                datatable.update(_style="display:none")
             contents = DIV(datatable, empty, _class="dt-contents")
 
             # Link for create-popup
@@ -641,6 +641,8 @@ class S3Profile(S3CRUD):
             label = widget.get("label", "")
             if label:
                 label = current.T(label)
+            else:
+                label = S3CRUD.crud_string(tablename, "title_list")
             icon = widget.get("icon", "")
             if icon:
                 icon = ICON(icon)
@@ -1127,9 +1129,9 @@ class S3Profile(S3CRUD):
                 multiple = widget.get("multiple", True)
                 if not multiple and hasattr(create, "update"):
                     if numrows:
-                        create.update(_style="display:none;")
+                        create.update(_style="display:none")
                     else:
-                        create.update(_style="display:block;")
+                        create.update(_style="display:block")
                     # Script to hide/unhide the create-button on Ajax
                     # list updates
                     createid = create["_id"]

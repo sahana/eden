@@ -863,12 +863,13 @@ def send_cancel():
     # If they are linked to a request then the in transit total will also be reduced
     # Records can only be deleted if the status is In Process (or preparing)
     # so change the status before we delete
-    db(tracktable.send_id == send_id).update(status = inv_tracking_status["IN_PROCESS"])
+    tracking_status = s3db.inv_tracking_status
+    db(tracktable.send_id == send_id).update(status = tracking_status["IN_PROCESS"])
     track_rows = db(tracktable.send_id == send_id).select(tracktable.id)
     for track_item in track_rows:
-        s3.inv_track_item_deleting(track_item.id)
+        s3db.inv_track_item_deleting(track_item.id)
     # Now change the status to (cancelled)
-    db(tracktable.send_id == send_id).update(status = inv_tracking_status["CANCEL"])
+    db(tracktable.send_id == send_id).update(status = tracking_status["CANCEL"])
 
     session.confirmation = T("Sent Shipment canceled and items returned to Warehouse")
 

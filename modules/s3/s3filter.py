@@ -874,7 +874,8 @@ class S3LocationFilter(S3FilterWidget):
         translate = settings.get_L10n_translate_gis_location()
         if translate:
             language = current.session.s3.language
-            if language == settings.get_L10n_default_language():
+            #if language == settings.get_L10n_default_language():
+            if language == "en": # Can have a default language for system & yet still want to translate from base English
                 translate = False
         self.translate = translate
 

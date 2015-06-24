@@ -7506,8 +7506,9 @@ class hrm_CV(S3Method):
                 if form is not None:
                     profile_widgets.append(form)
             if vol and settings.get_hrm_use_awards():
-                awards_widget = dict(label = "Awards",
-                                     label_create = "Add Award",
+                awards_widget = dict(# Use CRUD Strings
+                                     #label = "Awards",
+                                     #label_create = "Add Award",
                                      type = "datatable",
                                      actions = dt_row_actions("award"),
                                      tablename = "vol_volunteer_award",
@@ -7575,6 +7576,21 @@ class hrm_CV(S3Method):
                                      pagesize = None, # all records
                                      )
                 profile_widgets.append(skills_widget)
+            # Person isn't a doc_id
+            #if settings.has_module("doc"):
+            #    docs_widget = dict(label = "Documents",
+            #                       label_create = "Add Document",
+            #                       type = "datatable",
+            #                       actions = dt_row_actions("document"),
+            #                       tablename = "doc_document",
+            #                       filter = FS("doc_id") == record.doc_id,
+            #                       icon = "attachment",
+            #                       create_controller = controller,
+            #                       create_function = "person",
+            #                       create_component = "document",
+            #                       pagesize = None, # all records
+            #                       )
+            #    profile_widgets.append(docs_widget)
 
             if r.representation == "html":
                 response = current.response

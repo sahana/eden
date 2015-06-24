@@ -5380,7 +5380,8 @@ class S3LocationSelector(S3Selector):
         settings = current.deployment_settings
         translate = settings.get_L10n_translate_gis_location()
         language = current.session.s3.language
-        if language == settings.get_L10n_default_language():
+        #if language == settings.get_L10n_default_language():
+        if language == "en": # Can have a default language for system & yet still want to translate from base English
             translate = False
 
         db = current.db
