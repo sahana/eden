@@ -966,8 +966,9 @@ class S3IncidentReportModel(S3Model):
                           #self.event_event_id(ondelete = "CASCADE"),
                           #self.event_incident_id(ondelete = "CASCADE"),
                           s3_datetime(
-                            widget = S3CalendarWidget(timepicker=True),
-                            requires = IS_UTC_DATETIME(),
+                            # Experimental:
+                            #widget = S3CalendarWidget(timepicker=True),
+                            #requires = IS_UTC_DATETIME(),
                           ),
                           Field("name", notnull=True,
                                 label = T("Title"),
