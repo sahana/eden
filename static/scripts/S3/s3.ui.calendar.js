@@ -314,12 +314,14 @@
                 opts = this.options,
                 dateFormat = this._transformDateFormat();
 
-            if (opts.language) {
-                $.datepicker.setDefaults($.datepicker.regional[opts.language]);
-            }
+            $.datepicker.setDefaults($.datepicker.regional[opts.language]);
 
             if (opts.timepicker) {
                 // $.datetimepicker
+
+                // Localize timepicker
+                $.timepicker.setDefaults($.timepicker.regional[opts.language]);
+
                 el.datetimepicker({
                     minDateTime: this.minDateTime,
                     maxDateTime: this.maxDateTime,
@@ -437,6 +439,9 @@
                     dt = this._split(value);
                 this.dateInput = $('<input type="hidden">').insertAfter(el).val(dt.date);
                 this.timeInput = $('<input type="hidden">').insertAfter(el).val(dt.time);
+
+                // Localize
+                $.timepicker.setDefaults($.timepicker.regional[opts.language]);
 
                 // Instantiate calendarsPicker
                 var self = this;

@@ -759,10 +759,10 @@ class S3AddPersonWidget2(FormWidget):
 
         elif controller == "patient":
             controller = "pr"
-        
+
         elif hrm:
             controller = "hrm"
-        
+
         else:
             controller = "pr"
             emailRequired = False
@@ -1440,7 +1440,7 @@ class S3CalendarWidget(FormWidget):
         settings = current.deployment_settings
 
         calendar = self.calendar or current.calendar.name
-        calendar = calendar if calendar and calendar != "Gregorian" else ""
+        calendar = calendar if calendar and calendar != "Gregorian" else "gregorian"
 
         date_format = self.date_format or \
                       settings.get_L10n_date_format()
@@ -1453,6 +1453,7 @@ class S3CalendarWidget(FormWidget):
 
         extremes = self.extremes(time_format=time_format)
 
+        T = current.T
         options = {"calendar": calendar,
                    "dateFormat": date_format,
                    "timeFormat": time_format,
@@ -1464,6 +1465,10 @@ class S3CalendarWidget(FormWidget):
                    "weekNumber": self.week_number,
                    "timepicker": self.timepicker,
                    "minuteStep": self.minute_step,
+                   "todayText": str(T("Today")),
+                   "nowText": str(T("Now")),
+                   "closeText": str(T("Done")),
+                   "clearText": str(T("Clear")),
                    }
         options.update(extremes)
 
@@ -1609,12 +1614,14 @@ class S3CalendarWidget(FormWidget):
         jquery_ready = s3.jquery_ready
 
         datepicker_l10n = None
+        timepicker_l10n = None
         calendars_type = None
         calendars_l10n = None
         calendars_picker_l10n = None
 
         # Paths to localization files
         datepicker_l10n_path = os.path.join(request.folder, "static", "scripts", "ui", "i18n")
+        timepicker_l10n_path = os.path.join(request.folder, "static", "scripts", "ui", "i18n")
         calendars_l10n_path = os.path.join(request.folder, "static", "scripts", "calendars", "i18n")
 
         calendar = options["calendar"].lower()
@@ -1642,6 +1649,12 @@ class S3CalendarWidget(FormWidget):
 
             # datePicker regional
             filename = "datepicker-%s.js" % language
+            path = os.path.join(timepicker_l10n_path, filename)
+            if os.path.exists(path):
+                timepicker_l10n = "ui/i18n/%s" % filename
+
+            # timePicker regional
+            filename = "jquery-ui-timepicker-%s.js" % language
             path = os.path.join(datepicker_l10n_path, filename)
             if os.path.exists(path):
                 datepicker_l10n = "ui/i18n/%s" % filename
@@ -1669,6 +1682,7 @@ class S3CalendarWidget(FormWidget):
                        "calendars/jquery.calendars.picker.ext.js",
                        "S3/s3.ui.calendar.js",
                        datepicker_l10n,
+                       timepicker_l10n,
                        calendars_type,
                        calendars_l10n,
                        calendars_picker_l10n,
@@ -1677,6 +1691,7 @@ class S3CalendarWidget(FormWidget):
             scripts = ("jquery.plugin.min.js",
                        "S3/s3.ui.calendar.min.js",
                        datepicker_l10n,
+                       timepicker_l10n,
                        calendars_type,
                        calendars_l10n,
                        calendars_picker_l10n,
