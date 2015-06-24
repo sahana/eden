@@ -13,4 +13,8 @@ RDRT,"RDRT Online Manual","<div class=""online-documentation"">
   <li><a href=""{{name:RDRTResponses}}"">Reviewing Responses to Alerts</a></li>
   <li><a href=""{{name:RDRTInbox}}"">Managing Messages in the Inbox</a></li>
 </ul>
+<h3>Roster</h3>
+<ul>
+  <li><a href=""{{name:RDRTMembersSummary}}"">Navigating the Roster</a></li>
+</ul>
 </div>"
