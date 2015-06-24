@@ -231,6 +231,7 @@ class S3StatsDemographicModel(S3Model):
     names = ("stats_demographic",
              "stats_demographic_data",
              "stats_demographic_aggregate",
+             "stats_demographic_id",
              "stats_demographic_rebuild_all_aggregates",
              "stats_demographic_update_aggregates",
              "stats_demographic_update_location_aggregate",
@@ -300,6 +301,20 @@ class S3StatsDemographicModel(S3Model):
                   super_entity = "stats_parameter",
                   )
 
+        demographic_id = super_link("parameter_id", "stats_parameter",
+                                    instance_types = ("stats_demographic",),
+                                    label = T("Demographic"),
+                                    represent = stats_parameter_represent,
+                                    readable = True,
+                                    writable = True,
+                                    empty = False,
+                                    comment = S3AddResourceLink(c="stats",
+                                                                f="demographic",
+                                                                vars = dict(child = "parameter_id"),
+                                                                title=ADD_DEMOGRAPHIC,
+                                                                ),
+                                    )
+
         # ---------------------------------------------------------------------
         # Demographic Data
         #
@@ -309,19 +324,7 @@ class S3StatsDemographicModel(S3Model):
                      super_link("data_id", "stats_data"),
                      # This is a component, so needs to be a super_link
                      # - can't override field name, ondelete or requires
-                     super_link("parameter_id", "stats_parameter",
-                                instance_types = ("stats_demographic",),
-                                label = T("Demographic"),
-                                represent = stats_parameter_represent,
-                                readable = True,
-                                writable = True,
-                                empty = False,
-                                comment = S3AddResourceLink(c="stats",
-                                                            f="demographic",
-                                                            vars = dict(child = "parameter_id"),
-                                                            title=ADD_DEMOGRAPHIC,
-                                                            ),
-                                ),
+                     demographic_id,
                      location_id(
                          requires = IS_LOCATION(),
                          widget = S3LocationAutocompleteWidget(),
@@ -522,6 +525,7 @@ class S3StatsDemographicModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return dict(
+            stats_demographic_id = demographic_id, 
             stats_demographic_rebuild_all_aggregates = self.stats_demographic_rebuild_all_aggregates,
             stats_demographic_update_aggregates = self.stats_demographic_update_aggregates,
             stats_demographic_update_location_aggregate = self.stats_demographic_update_location_aggregate,

@@ -164,7 +164,7 @@ class S3VolunteerAwardModel(S3Model):
         crud_strings[tablename] = Storage(
             label_create = T("Create Award"),
             title_display = T("Award"),
-            title_list = T("Award"),
+            title_list = T("Awards"),
             title_update = T("Edit Award"),
             title_upload = T("Import Awards"),
             label_list_button = T("List Awards"),
@@ -207,13 +207,21 @@ class S3VolunteerAwardModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
+                     Field("file", "upload",
+                           autodelete = True,
+                           label = T("Attachment"),
+                           represent = self.vol_award_file_represent,
+                           # Enable in templates as-required
+                           readable = False,
+                           writable = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
-            label_create = T("Create Award"),
+            label_create = T("Add Award"),
             title_display = T("Award"),
-            title_list = T("Award"),
+            title_list = T("Awards"),
             title_update = T("Edit Award"),
             title_upload = T("Import Awards"),
             label_list_button = T("List Awards"),
@@ -229,6 +237,23 @@ class S3VolunteerAwardModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def vol_award_file_represent(file):
+        """ File representation """
+
+        if file:
+            try:
+                # Read the filename from the file
+                filename = current.db.vol_volunteer_award.file.retrieve(file)[0]
+            except IOError:
+                return current.T("File not found")
+            else:
+                return A(filename,
+                         _href=URL(c="default", f="download", args=[file]))
+        else:
+            return current.messages["NONE"]
 
 # =============================================================================
 class S3VolunteerClusterModel(S3Model):
@@ -695,11 +720,12 @@ def vol_service_record(r, **attr):
 
     from s3.s3export import S3Exporter
     exporter = S3Exporter().pdf
+    pdf_title = T("Volunteer Service Record").encode("utf-8")
+    pdf_title = "%s - %s" % (vol_name, pdf_title)
     return exporter(r.resource,
                     request = r,
                     method = "list",
-                    pdf_title = "%s - %s" % \
-                        (vol_name, T("Volunteer Service Record")),
+                    pdf_title = pdf_title,
                     pdf_table_autogrow = "B",
                     pdf_callback = callback,
                     **attr

@@ -1004,7 +1004,12 @@ def config(settings):
         """ Whether to use Certificates """
 
         root_org = current.auth.root_org_name()
-        if root_org in (IRCS, VNRC):
+        if root_org == IRCS:
+            if current.request.controller == "vol":
+                return True
+            else:
+                return False
+        elif root_org == VNRC:
             return False
         return True
 
@@ -1780,8 +1785,11 @@ def config(settings):
 
         root_org = current.auth.root_org_name()
         if root_org == IRCS:
-            field = current.s3db.vol_volunteer_award.number
-            field.readable = field.writable = True
+            table = current.s3db.vol_volunteer_award
+            table.award_id.label = T("Recommendation Letter Type")
+            table.award_id.comment = None
+            table.number.readable = table.number.writable = True
+            table.file.readable = table.file.writable = True
 
             current.response.s3.crud_strings["vol_volunteer_award"] = Storage(
                 label_create = T("Add Recommendation Letter"),
@@ -2834,8 +2842,9 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def vnrc_cv_form(r):
 
+        from s3 import S3FixedOptionsWidget, S3SQLCustomForm
+
         T = current.T
-        from s3 import S3FixedOptionsWidget
 
         ptewidget = S3FixedOptionsWidget(("Primary",
                                           "Intermediate",
@@ -2854,7 +2863,6 @@ def config(settings):
                                          sort = False,
                                          )
 
-        from s3 import S3SQLCustomForm
         crud_form = S3SQLCustomForm((T("Political Theory Education"),
                                      "pte.value",
                                      ptewidget,
@@ -2883,7 +2891,7 @@ def config(settings):
         vnrc = False
         root_org = current.auth.root_org_name()
         if root_org == IRCS:
-            settings.hrm.activity_types =  None
+            settings.hrm.activity_types = None
             settings.hrm.use_id = False
         elif root_org == PMI:
             settings.hrm.staff_experience = "experience"

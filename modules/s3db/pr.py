@@ -3249,6 +3249,11 @@ class S3PersonDetailsModel(S3Model):
                                 readable = False,
                                 writable = False,
                                 ),
+                          Field("grandmother_name",
+                                label = T("Name of Grandmother"),
+                                readable = False,
+                                writable = False,
+                                ),
                           Field("occupation", length=128, # Mayon Compatibility
                                 label = T("Profession"),
                                 ),
