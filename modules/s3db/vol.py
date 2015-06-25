@@ -700,7 +700,7 @@ def vol_service_record(r, **attr):
         # Space for the printed document to be signed
         datestamp = S3DateTime.date_represent(current.request.now)
         datestamp = "%s: %s" % (T("Date Printed"), datestamp)
-        manager = T("Branch Coordinator")
+        manager = settings.get_hrm_vol_service_record_manager()
         signature = TABLE(TR(TH(T("Signature"))),
                           TR(TD()),
                           TR(TD(manager)),
@@ -720,8 +720,7 @@ def vol_service_record(r, **attr):
 
     from s3.s3export import S3Exporter
     exporter = S3Exporter().pdf
-    pdf_title = T("Volunteer Service Record").encode("utf-8")
-    pdf_title = "%s - %s" % (vol_name, pdf_title)
+    pdf_title = vol_name + " - " + s3_unicode(T("Volunteer Service Record")) # %-string substitution doesn't work
     return exporter(r.resource,
                     request = r,
                     method = "list",
@@ -891,53 +890,6 @@ def vol_volunteer_controller():
                         "_class": "action-btn send",
                         "label": str(T("Send Message"))
                     })
-
-            # Insert field to set the Programme
-            if vol_experience in ("programme", "both") and \
-               r.method not in ("report", "import") and \
-               "form" in output:
-                # @ToDo: Re-implement using
-                # http://eden.sahanafoundation.org/wiki/S3SQLForm
-                # NB This means adjusting IFRC/config.py too
-                sep = ": "
-                table = s3db.hrm_programme_hours
-                field = table.programme_id
-                default = field.default
-                widget = field.widget or SQLFORM.widgets.options.widget(field, default)
-                field_id = "%s_%s" % (table._tablename, field.name)
-                label = field.label
-                row_id = field_id + SQLFORM.ID_ROW_SUFFIX
-                s3_formstyle = settings.get_ui_formstyle()
-                if s3_formstyle == "bootstrap":
-                    label = LABEL(label, label and sep, _class="control-label", _for=field_id)
-                    _controls = DIV(widget, _class="controls")
-                    row = DIV(label, _controls,
-                                _class="control-group",
-                                _id=row_id,
-                                )
-                    output["form"][0].insert(4, row)
-                elif callable(s3_formstyle):
-                    label = LABEL(label, label and sep, _for=field_id,
-                                    _id=field_id + SQLFORM.ID_LABEL_SUFFIX)
-                    programme = s3_formstyle(row_id, label, widget,
-                                                field.comment)
-                    if isinstance(programme, DIV) and \
-                       "form-row" in programme["_class"]:
-                        # Foundation formstyle
-                        output["form"][0].insert(4, programme)
-                    else:
-                        try:
-                            output["form"][0].insert(4, programme[1])
-                        except:
-                            # A non-standard formstyle with just a single row
-                            pass
-                        try:
-                            output["form"][0].insert(4, programme[0])
-                        except:
-                            pass
-                else:
-                    # Unsupported
-                    raise
 
         elif r.representation == "plain":
             # Map Popups

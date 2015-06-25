@@ -738,7 +738,7 @@
         <xsl:if test="$Level!=''">
             <resource name="pr_education_level">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Level"/>
+                    <xsl:value-of select="concat('EducationLevel:',$Level)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$Level"/></data>
             </resource>
@@ -755,11 +755,11 @@
         <xsl:param name="year"/>
         <xsl:param name="institute"/>
 
-        <xsl:if test="$name and $name!=''">
+        <xsl:if test="$level!=''">
             <resource name="pr_education">
                 <reference field="level_id" resource="pr_education_level">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="$level"/>
+                        <xsl:value-of select="concat('EducationLevel:',$level)"/>
                     </xsl:attribute>
                 </reference>
                 <data field="award">
