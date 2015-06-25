@@ -46,6 +46,7 @@
          Father Name....................optional.....person_details father name
          Mother Name....................optional.....person_details mother name
          Grandfather Name...............optional.....person_details grandfather name
+         Grandmother Name...............optional.....person_details grandmother name
          Religion.......................optional.....person_details religion
          Criminal Record................optional.....person_details criminal record
          Military Service...............optional.....person_details military service
@@ -209,6 +210,9 @@
                              document('../labels.xml')/labels/column[@name='JobTitle']/match/text(),
                              concat('|', @field, '|'))])"/>
 
+    <xsl:key name="education_level" match="row"
+             use="col[@field='Education Level']"/>
+
     <xsl:key name="volunteerclusters" match="row"
              use="concat(col[@field='Volunteer Cluster Type'],
                          col[@field='Volunteer Cluster'])"/>
@@ -274,6 +278,12 @@
                 <xsl:call-template name="JobTitle">
                     <xsl:with-param name="type">resource</xsl:with-param>
                 </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Education Levels -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('education_level',
+                                                                   col[@field='Education Level'])[1])]">
+                <xsl:call-template name="EducationLevel"/>
             </xsl:for-each>
 
             <!-- Volunteer Clusters -->
@@ -719,6 +729,9 @@
                 </xsl:if>
                 <xsl:if test="col[@field='Grandfather Name']!=''">
                     <data field="grandfather_name"><xsl:value-of select="col[@field='Grandfather Name']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Grandmother Name']!=''">
+                    <data field="grandmother_name"><xsl:value-of select="col[@field='Grandmother Name']"/></data>
                 </xsl:if>
                 <xsl:if test="col[@field='Number of Children']!=''">
                     <data field="number_children"><xsl:value-of select="col[@field='Number of Children']"/></data>
@@ -1771,6 +1784,20 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
+    <xsl:template name="EducationLevel">
+        <xsl:variable name="Level" select="col[@field='Education Level']"/>
+
+        <xsl:if test="$Level!=''">
+            <resource name="pr_education_level">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('EducationLevel:',$Level)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Level"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
     <xsl:template name="Education">
 
         <xsl:param name="level"/>
@@ -1780,11 +1807,13 @@
         <xsl:param name="year"/>
         <xsl:param name="institute"/>
 
-        <xsl:if test="$name and $name!=''">
+        <xsl:if test="$level!=''">
             <resource name="pr_education">
-                <data field="level">
-                    <xsl:value-of select="$level"/>
-                </data>
+                <reference field="level_id" resource="pr_education_level">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('EducationLevel:',$level)"/>
+                    </xsl:attribute>
+                </reference>
                 <data field="award">
                     <xsl:value-of select="$name"/>
                 </data>
