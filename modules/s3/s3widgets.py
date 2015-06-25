@@ -1340,6 +1340,8 @@ class S3CalendarWidget(FormWidget):
                  buttons=None,
                  timepicker=False,
                  minute_step=5,
+                 set_min=None,
+                 set_max=None,
                  ):
         """
             Constructor
@@ -1368,6 +1370,13 @@ class S3CalendarWidget(FormWidget):
 
             @param timepicker: show a timepicker
             @param minute_step: minute-step for the timepicker slider
+
+            @param set_min: CSS selector for another S3Calendar widget for which to
+                            dynamically update the minimum selectable date/time from
+                            the selected date/time of this widget
+            @param set_max: CSS selector for another S3Calendar widget for which to
+                            dynamically update the maximum selectable date/time from
+                            the selected date/time of this widget
         """
 
         self.calendar = calendar
@@ -1393,6 +1402,9 @@ class S3CalendarWidget(FormWidget):
 
         self.timepicker = timepicker
         self.minute_step = minute_step
+
+        self.set_min = set_min
+        self.set_max = set_max
 
         self._class = "s3-calendar-widget datetimepicker"
 
@@ -1469,6 +1481,8 @@ class S3CalendarWidget(FormWidget):
                    "nowText": str(T("Now")),
                    "closeText": str(T("Done")),
                    "clearText": str(T("Clear")),
+                   "setMin": self.set_min,
+                   "setMax": self.set_max,
                    }
         options.update(extremes)
 
