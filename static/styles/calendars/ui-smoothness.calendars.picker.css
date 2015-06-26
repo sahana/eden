@@ -1,5 +1,5 @@
 /* ThemeRoller override style sheet for jQuery Calendars Picker v2.0.0. */
-.ui-datepicker {
+.calendars-popup .ui-datepicker {
         display: block;
 }
 #ui-datepicker-div,
