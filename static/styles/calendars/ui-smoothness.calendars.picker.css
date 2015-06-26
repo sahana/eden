@@ -5,7 +5,8 @@
 #ui-datepicker-div,
 .ui-datepicker-inline {
         min-width: 17em;
-        font-size: 75%;
+/*         font-size: 75%; */
+        font-size: 0.75rem;
 }
 #ui-datepicker-div {
         z-index: 100;
@@ -39,17 +40,19 @@ button.ui-datepicker-cmd {
 .ui-datepicker-cmd-prev {
         position: static;
         float: left;
-        width: 30%;
+/*         width: 30%; */
+        width: auto;
         height: auto;
         margin-left: 1%;
 }
 .ui-datepicker-cmd-next {
         position: static;
         float: right;
-        width: 30%;
+/*         width: 30%; */
+        width: auto;
         height: auto;
         margin-right: 1%;
-        text-align: right;
+/*         text-align: right; */
 }
 .ui-datepicker-cmd-current,
 .ui-datepicker-cmd-today {
@@ -79,13 +82,15 @@ button.ui-datepicker-cmd {
         min-width: 17em;
 }
 .ui-datepicker-group .ui-datepicker-header {
-        height: 1.5em;
+/*         height: 1.5em; */
+        height: auto;
         text-align: center;
 }
 .ui-datepicker select,
 .ui-datepicker-inline select {
         width: auto;
-        height: 1.66em;
+/*         height: 1.66em; */
+        margin: 0;
         border: none;
         font-weight: bold;
 }

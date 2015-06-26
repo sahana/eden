@@ -91,11 +91,18 @@
             inst.inline = true;
 
             // Run _base_selectDate
-            // FIXME: does not highlight the selected date! (base version does not either)
             this._base_selectDate(elem, target);
 
             // Reset inline flag
             inst.inline = was_inline;
+
+            if (!was_inline) {
+                // Forced inline-flag has placed the refreshed calendar
+                // contents inside the hidden input => move it into the
+                // popup so that we can see the selection ;)
+                inst.div.find('.ui-datepicker-group')
+                        .replaceWith($(elem).find('.ui-datepicker-group').first());
+            }
 
             // Re-apply limits for timepicker
             limitTimePicker(inst, timepicker);
@@ -107,6 +114,7 @@
             // it now (this also triggers the onSelect-callback to update
             // the real input)
             this._updateInput(elem);
+
         } else {
             // No timepicker (phew!), run base version
             this._base_selectDate(elem, target);
@@ -137,13 +145,16 @@
      * - remove clear-button (rendered separately)
      * - move today-button to the bottom
      * - separate out button panel so it can be turned on and off
+     * - move prev/next commands into the month header (remove separate header)
      */
     var cpLayoutButtonPanel = '{popup:start}<div class="ui-datepicker-header ui-widget-header ui-helper-clearfix ' +
                               'ui-corner-all">{button:today}{button:close}</div>{popup:end}';
+    var cpLayoutMonth = '<div class="ui-datepicker-group">' +
+                        '<div class="ui-datepicker-header ui-widget-header ui-helper-clearfix ui-corner-all">{link:prev}{monthHeader:MM yyyy}{link:next}</div>' +
+                        '<table class="ui-datepicker-calendar"><thead>{weekHeader}</thead><tbody>{weeks}</tbody></table></div>';
     var cpLayout = '<div{popup:start} id="ui-datepicker-div"{popup:end} class="ui-datepicker ui-widget ' +
                    'ui-widget-content ui-helper-clearfix ui-corner-all{inline:start} ui-datepicker-inline{inline:end}">' +
-                   '<div class="ui-datepicker-header ui-widget-header ui-helper-clearfix ui-corner-all">' +
-                   '{link:prev}{link:next}</div>{months}' +
+                   '{months}' +
                    '{buttonPanel}' +
                    '<div class="ui-helper-clearfix"></div></div>';
 
@@ -414,6 +425,7 @@
                 buttonPanel = '<div>';
             }
             renderer.picker = layout.replace('{buttonPanel}', buttonPanel);
+            renderer.month = cpLayoutMonth;
 
             // Change today-button text (consistency with datePicker)
             var currentText;
@@ -427,7 +439,10 @@
             $.calendarsPicker.setDefaults({
                 renderer: renderer,
                 todayText: currentText,
-                closeText: opts.closeText
+                closeText: opts.closeText,
+                // Render prev/next as UI icons
+                prevText: '<span class="ui-icon ui-icon-circle-triangle-w">Prev</span>',
+                nextText: '<span class="ui-icon ui-icon-circle-triangle-e">Next</span>'
             });
 
             // Split extremes into date and time values
@@ -478,6 +493,7 @@
 
                     defaultDate: +0, // drawDate will automatically be min/max adjusted
                     showTrigger: '<div>',
+
                     onSelect: function(input) {
                         self._updateInput();
                     },
@@ -560,8 +576,7 @@
                 timeFormat = this._transformTimeFormat();
 
             picker.find('.ui-datepicker-group').first().each(function() {
-                var input = $('<div>').insertAfter($(this)),
-                    lock = false;
+                var input = $('<div>').insertAfter($(this));
                 input.timepicker({
                     timeFormat: timeFormat,
                     stepMinute: opts.minuteStep,
