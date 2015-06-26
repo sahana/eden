@@ -449,6 +449,7 @@ class S3Calendar(object):
         # Supported calendars
         self._calendars = {"Gregorian": S3Calendar,
                            "Persian": S3PersianCalendar,
+                           "Afghan": S3AfghanCalendar,
                            }
 
         if name is None:
@@ -680,10 +681,6 @@ class S3PersianCalendar(S3Calendar):
                Jalali) variant. However, we use the name "Persian" to match
                the jQuery calendars naming of calendars, in order to avoid
                confusion about naming differences between these two components.
-
-        @note: Afghanistan uses the same calendar, but with the names of the
-               signs of Zodiac as month names. This variant will be implemented
-               as subclass of S3PersianCalendar (=>@todo)
     """
 
     # -------------------------------------------------------------------------
@@ -694,15 +691,15 @@ class S3PersianCalendar(S3Calendar):
 
     JDEPOCH = 1948320.5 # first day of this calendar as Julian Day number
 
-    MONTH_NAME = ('Farvardin', 'Ordibehesht', 'Khordad',
-                  'Tir', 'Mordad', 'Shahrivar',
-                  'Mehr', 'Aban', 'Azar',
-                  'Day', 'Bahman', 'Esfand',
+    MONTH_NAME = ("Farvardin", "Ordibehesht", "Khordad",
+                  "Tir", "Mordad", "Shahrivar",
+                  "Mehr", "Aban", "Azar",
+                  "Day", "Bahman", "Esfand",
                   )
 
 
-    MONTH_ABBR = ('Far', 'Ord', 'Kho', 'Tir', 'Mor', 'Sha',
-                  'Meh', 'Aba', 'Aza', 'Day', 'Bah', 'Esf',
+    MONTH_ABBR = ("Far", "Ord", "Kho", "Tir", "Mor", "Sha",
+                  "Meh", "Aba", "Aza", "Day", "Bah", "Esf",
                   )
 
     MONTH_DAYS = (31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, (29, 30))
@@ -775,6 +772,37 @@ class S3PersianCalendar(S3Calendar):
                cls.JDEPOCH - 1
 
         return result
+
+# =============================================================================
+class S3AfghanCalendar(S3PersianCalendar):
+    """
+        Afghan variant of the Solar Hijri calendar - this calendar uses
+        the same calendar rules as the "Persian" calendar, but with
+        different month names.
+
+        @note: this is using "romanized" Dari month names as translation
+               basis (rather than their actual English translation, which
+               would simply be the names of the signs of Zodiac the sun is
+               passing through in the respective months, e.g. Tawr = Taurus).
+               Transcriptions vary widely between sources, though - as do
+               the Dari and Pashto spellings :/
+    """
+
+    # -------------------------------------------------------------------------
+    # Constants to be implemented by subclasses
+    # -------------------------------------------------------------------------
+
+    CALENDAR = "Afghan"
+
+    MONTH_NAME = ("Hamal", "Tawr", "Jawza",
+                  "Saratan", "Asad", "Sonbola",
+                  "Mizan", "Aqrab", "Qaws",
+                  "Jadi", "Dalw", "Hut",
+                  )
+
+    MONTH_ABBR = ("Ham", "Taw", "Jaw", "Sar", "Asa", "Son",
+                  "Miz", "Aqr", "Qaw", "Jad", "Dal", "Hut",
+                  )
 
 # =============================================================================
 class S3DateTimeParser(object):
