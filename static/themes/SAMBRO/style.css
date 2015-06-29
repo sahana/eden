@@ -1,0 +1,223 @@
+﻿body {
+    font: normal 13px arial,sans-serif;
+    margin: 0px;
+    padding: 0px;
+}
+
+a {
+    text-decoration: none;
+}
+
+ul, li {
+    margin: 0px;
+    padding: 0px;
+    list-style: none;
+}
+
+.fa {
+    color: #FFF;
+}
+
+#sambro-menu {
+    background-color: #000;
+    height: 40px;
+    width: 100%;
+    position: relative;
+}
+
+    #sambro-menu img {
+        vertical-align: middle;
+        margin-right: 5px;
+    }
+
+    #sambro-menu ul {
+        margin: 0px;
+    }
+
+    #sambro-menu li {
+        padding: 8px;
+    }
+
+        #sambro-menu li a {
+            color: #FFF;
+        }
+
+    #sambro-menu ul.menu-right {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+    }
+
+        #sambro-menu ul.menu-right .fa {
+            margin-right: 5px;
+        }
+
+#sambro-title {
+    background-color: #FFF;
+    height: 40px;
+    width: 100%;
+    border-bottom: 1px solid #CCC;
+}
+
+    #sambro-title h1 {
+        color: #080;
+        font-size: 24px;
+        font-weight: normal;
+        margin: 10px 0px 0px 15px;
+        padding: 0px;
+    }
+
+#sambro-header {
+    position: fixed;
+    top: 0px;
+    height: 70px;
+    width: 100%;
+}
+
+#sambro-footer {
+    background-color: #EEE;
+    position: fixed;
+    height: 30px;
+    width: 100%;
+    bottom: 0px;
+    padding: 10px;
+}
+
+#sambro-body {
+    position: fixed;
+    width: 100%;
+    top: 90px;
+    bottom: 50px;
+}
+
+#sambro-left {
+    border-right: 1px solid #CCC;
+    position: absolute;
+    left: 0px;
+    width: 320px;
+    top: 0px;
+    bottom: 0px;
+}
+
+#sambro-right {
+    border-left: 1px solid #CCC;
+    position: absolute;
+    right: 0px;
+    width: 320px;
+    top: 0px;
+    bottom: 0px;
+}
+
+#sambro-center {
+    position: absolute;
+    left: 320px;
+    right: 320px;
+    top: 0px;
+    bottom: 0px;
+}
+
+div.sambro-feeds {
+    position: absolute;
+    top: 36px;
+    bottom: 0px;
+    overflow: auto;
+    padding-top: 15px;
+}
+
+    div.sambro-feeds .fa {
+        background-color: #F00;
+        color: #FFF;
+        display: inline;
+        border-radius: 30px;
+        padding: 5px;
+        position: absolute;
+        left: 10px;
+    }
+
+    div.sambro-feeds ul, div.sambro-feeds li {
+        position: relative;
+    }
+
+    div.sambro-feeds a {
+        color: #0026ff;
+        font-weight: normal;
+    }
+
+    div.sambro-feeds h3 {
+        margin: 0px;
+        padding: 0px;
+        font-size: 15px;
+    }
+
+    div.sambro-feeds li {
+        padding: 0px 20px;
+    }
+
+#sambro-left div.sambro-feeds li {
+    padding: 0px 20px 0px 40px;
+}
+
+div.sambro-feeds li div {
+    border-bottom: 1px solid #CCC;
+    padding-bottom: 5px;
+}
+
+div.sambro-feeds li p {
+    margin-bottom: 20px;
+}
+
+div.sambro-panel-title {
+    border-bottom: 1px solid #CCC;
+    border-top: 1px solid #CCC;
+    background-color: #EEE;
+    padding: 10px 10px 10px;
+    font-weight: bold;
+}
+
+span.alert-type {
+    color: #FFF;
+    padding: 1px 10px;
+    border-radius: 10px;
+}
+
+span.type-1 {
+    background-color: #080;
+}
+
+span.type-2 {
+    background-color: #C00;
+}
+
+span.type-3 {
+    background-color: #00A;
+}
+
+span.type-4 {
+    background-color: #F80;
+}
+
+span.type-5 {
+    background-color: #08F;
+}
+
+#sahana-icon img {
+    vertical-align: middle;
+    margin-right: 5px;
+}
+
+::-webkit-scrollbar {
+    width: 0.8em;
+    height: 0.8em;
+}
+
+::-webkit-scrollbar-button {
+    background: #CCC;
+}
+
+::-webkit-scrollbar-track-piece {
+    background: #FFF;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #CCC;
+}
