@@ -14,7 +14,7 @@ from gluon.storage import Storage
 
 from s3 import S3LocationFilter, S3OptionsFilter, S3FilterForm, S3CustomController
 
-THEME = "CAP"
+THEME = "SAMBRO"
 
 # =============================================================================
 class subscriptions(S3CustomController):
