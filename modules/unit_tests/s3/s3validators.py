@@ -454,7 +454,7 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         dtstr = "1390-08-28 14:00:00"
         value, error = validate(dtstr)
         assertEqual(error, None)
-        assertEqual(value, datetime.date(2011, 11, 19, 14, 0, 0))
+        assertEqual(value, datetime.datetime(2011, 11, 19, 14, 0, 0))
 
         dtstr_ = validate.formatter(value)
         assertEqual(dtstr_, dtstr)
@@ -466,7 +466,7 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         dtstr = "2011-11-19 14:00:00"
         value, error = validate(dtstr)
         assertEqual(error, None)
-        assertEqual(value, datetime.date(2011, 11, 19, 14, 0, 0))
+        assertEqual(value, datetime.datetime(2011, 11, 19, 14, 0, 0))
 
         dtstr_ = validate.formatter(value)
         assertEqual(dtstr_, dtstr)
