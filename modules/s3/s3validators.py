@@ -2550,6 +2550,7 @@ class IS_UTC_DATETIME(Validator):
                  error_message=None,
                  offset_error=None,
                  utc_offset=None,
+                 calendar=None,
                  minimum=None,
                  maximum=None):
         """
@@ -2561,6 +2562,8 @@ class IS_UTC_DATETIME(Validator):
             @param offset_error: error message for invalid UTC offset
             @param utc_offset: offset to UTC in seconds, defaults to the
                                current session's UTC offset
+            @param calendar: calendar to use for string evaluation, defaults
+                             to current.calendar
             @param minimum: the minimum acceptable date/time
             @param maximum: the maximum acceptable date/time
         """
@@ -2570,9 +2573,18 @@ class IS_UTC_DATETIME(Validator):
         else:
             self.format = dtfmt = str(format)
 
+        if isinstance(calendar, basestring):
+            # Instantiate calendar by name
+            from s3datetime import S3Calendar
+            calendar = S3Calendar(calendar)
+        elif calendar == None:
+            calendar = current.calendar
+        self.calendar = calendar
+
+        self.utc_offset = utc_offset
+
         self.minimum = minimum
         self.maximum = maximum
-        self.utc_offset = utc_offset
 
         # Default error messages
         T = current.T
@@ -2639,10 +2651,10 @@ class IS_UTC_DATETIME(Validator):
                 dtstr, utc_offset = val, None
 
             # Convert into datetime object
-            dt = current.calendar.parse_datetime(dtstr,
-                                                 dtfmt=self.format,
-                                                 local=True,
-                                                 )
+            dt = self.calendar.parse_datetime(dtstr,
+                                              dtfmt=self.format,
+                                              local=True,
+                                              )
             if dt is None:
                 return(value, self.error_message)
         elif isinstance(value, datetime.datetime):
@@ -2689,10 +2701,10 @@ class IS_UTC_DATETIME(Validator):
         offset = self.delta()
         if offset:
             value += datetime.timedelta(seconds=offset)
-        result = current.calendar.format_datetime(value,
-                                                  dtfmt=self.format,
-                                                  local=True,
-                                                  )
+        result = self.calendar.format_datetime(value,
+                                               dtfmt=self.format,
+                                               local=True,
+                                               )
         return result
 
 # =============================================================================
@@ -2714,6 +2726,7 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
                  format=None,
                  error_message=None,
                  offset_error=None,
+                 calendar=None,
                  utc_offset=None,
                  minimum=None,
                  maximum=None):
@@ -2724,6 +2737,8 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
                            directives refer to your strptime implementation
             @param error_message: error message for invalid date/times
             @param offset_error: error message for invalid UTC offset
+            @param calendar: calendar to use for string evaluation, defaults
+                             to current.calendar
             @param utc_offset: offset to UTC in seconds, defaults to the
                                current session's UTC offset
             @param minimum: the minimum acceptable date (datetime.date)
@@ -2735,9 +2750,18 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
         else:
             self.format = dtfmt = str(format)
 
+        if isinstance(calendar, basestring):
+            # Instantiate calendar by name
+            from s3datetime import S3Calendar
+            calendar = S3Calendar(calendar)
+        elif calendar == None:
+            calendar = current.calendar
+        self.calendar = calendar
+
+        self.utc_offset = utc_offset
+
         self.minimum = minimum
         self.maximum = maximum
-        self.utc_offset = utc_offset
 
         # Default error messages
         T = current.T
@@ -2775,10 +2799,10 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
 
         if isinstance(value, basestring):
             # Convert into date object
-            dt = current.calendar.parse_date(value.strip(),
-                                             dtfmt=self.format,
-                                             local=True,
-                                             )
+            dt = self.calendar.parse_date(value.strip(),
+                                          dtfmt=self.format,
+                                          local=True,
+                                          )
             if dt is None:
                 return(value, self.error_message)
         elif isinstance(value, datetime.datetime):
@@ -2837,10 +2861,11 @@ class IS_UTC_DATE(IS_UTC_DATETIME):
                 value = combine(value, bp)
             value += delta
 
-        result = current.calendar.format_date(value,
-                                              dtfmt=self.format,
-                                              local=True,
-                                              )
+        result = self.calendar.format_date(value,
+                                           dtfmt=self.format,
+                                           local=True,
+                                           )
+
         return result
 
 # =============================================================================

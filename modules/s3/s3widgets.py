@@ -1314,8 +1314,6 @@ class S3CalendarWidget(FormWidget):
         Widget to select a date from a popup calendar, with
         optional time input
 
-        @status: work in progress
-
         @note: this widget must be combined with the IS_UTC_DATE or
                IS_UTC_DATETIME validators to have the value properly
                converted from/to local timezone and format.

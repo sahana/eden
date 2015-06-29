@@ -6,8 +6,6 @@
  *
  * requires jQuery 1.9.1+
  * requires jQuery UI 1.10 widget factory
- *
- * work in progress...
  */
 (function($, undefined) {
 
@@ -225,6 +223,7 @@
             minuteStep: 5,
 
             clearButton: true,
+            triggerButton: true,
 
             setMin: null,
             setMax: null,
@@ -318,6 +317,19 @@
                 var clearButton = $('<button class="btn date-clear-btn" type="button">' + opts.clearText + '</button>');
                 $(el).after(clearButton);
                 this.clearButton = clearButton;
+            }
+
+            // Remove any existing trigger-button
+            if (this.triggerButton) {
+                this.triggerButton.remove();
+                this.triggerButton = null;
+            }
+
+            // Add trigger button
+            if (opts.triggerButton) {
+                var triggerButton = $('<button class="ui-datepicker-trigger" type="button">');
+                $(el).after(triggerButton);
+                this.triggerButton = triggerButton;
             }
 
             // Bind event handlers
@@ -465,6 +477,7 @@
                 maxTime = splitExtreme.time;
             }
 
+            var self = this;
             if (opts.timepicker) {
                 // $.calendarsPicker with injected $.timepicker and split inputs
 
@@ -478,7 +491,6 @@
                 $.timepicker.setDefaults($.timepicker.regional[opts.language]);
 
                 // Instantiate calendarsPicker
-                var self = this;
                 this.dateInput.calendarsPicker({
                     calendar: calendar,
 
@@ -1027,10 +1039,30 @@
                 });
             }
 
+            // Trigger-button
+            if (this.triggerButton) {
+                if (this.options.calendar == "gregorian") {
+                    this.triggerButton.bind('click' + ns, function() {
+                        el.datepicker('show');
+                    });
+                } else {
+                    var element = this.dateInput;
+                    if (!element) {
+                        element = el;
+                    }
+                    this.triggerButton.bind('click' + ns, function() {
+                        element.calendarsPicker('show');
+                    });
+                }
+            }
+
             // Clear-button
-            this.clearButton.bind('click' + ns, function() {
-                self.clear();
-            });
+            if (this.clearButton) {
+                this.clearButton.bind('click' + ns, function() {
+                    self.clear();
+                });
+            }
+
 
             return true;
         },
@@ -1058,6 +1090,11 @@
             // Clear-button
             if (this.clearButton) {
                 this.clearButton.unbind(ns);
+            }
+
+            // Trigger-button
+            if (this.triggerButton) {
+                this.triggerButton.unbind(ns);
             }
 
             return true;
