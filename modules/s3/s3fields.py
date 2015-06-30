@@ -1274,7 +1274,7 @@ def s3_date(name="date", **attr):
         for option in WIDGET_OPTIONS:
             if option in attributes:
                 if option in SUPPORTED_OPTIONS:
-                    widget_options[option] = value
+                    widget_options[option] = attributes[option]
                 del attributes[option]
 
         widget = S3DateWidget(**widget_options)
@@ -1297,7 +1297,7 @@ def s3_date(name="date", **attr):
         for option in WIDGET_OPTIONS:
             if option in attributes:
                 if option in SUPPORTED_OPTIONS:
-                    widget_options[option] = value
+                    widget_options[option] = attributes[option]
                 del attributes[option]
 
         widget = S3CalendarWidget(**widget_options)

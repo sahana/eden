@@ -935,7 +935,7 @@ class S3OrganisationModel(S3Model):
                                                  table.name,
                                                  limitby=(0, 1)).first()
             if duplicate:
-                # @ToDo: Can we see the parent in the import? 
+                # @ToDo: Can we see the parent in the import?
                 #if current.deployment_settings.get_org_branches():
                 #    btable = s3db.org_organisation_branch
                 item.id = duplicate.id
@@ -5770,17 +5770,12 @@ def org_organisation_controller():
     def postp(r, output):
         if r.interactive and r.component:
             if r.component_name == "human_resource":
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
                 # Modify action button to open staff instead of human_resource
                 # (Delete not overridden to keep errors within Tab)
                 read_url = URL(c="hrm", f="staff", args=["[id]"])
                 update_url = URL(c="hrm", f="staff", args=["[id]", "update"])
                 S3CRUD.action_buttons(r, read_url=read_url,
                                          update_url=update_url)
-            elif r.component_name == "project":
-                s3.jquery_ready.append(
-'''S3.start_end_date('project_project_start_date','project_project_end_date')''')
 
             elif r.component_name == "branch" and r.record and \
                  isinstance(output, dict) and \

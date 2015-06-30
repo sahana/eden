@@ -737,28 +737,15 @@ def person():
     # CRUD post-process
     def postp(r, output):
         if r.interactive and r.component:
-            if r.component_name == "human_resource":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-            if r.component_name == "identity":
-                # Set the minimum valid_until to the same as the valid_from
-                s3.jquery_ready.append(
-'''S3.start_end_date('pr_identity_valid_from','pr_identity_valid_until')''')
-            if r.component_name == "experience":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
-            elif r.component_name == "config":
+            if r.component_name == "config":
                 update_url = URL(c="gis", f="config",
                                  args="[id]")
                 s3_action_buttons(r, update_url=update_url)
-                s3.actions.append(
-                    dict(url=URL(c="gis", f="index",
-                                 vars={"config":"[id]"}),
-                         label=str(T("Show")),
-                         _class="action-btn")
-                )
+                s3.actions.append(dict(url=URL(c="gis", f="index",
+                                               vars={"config":"[id]"}),
+                                       label=str(T("Show")),
+                                       _class="action-btn",
+                                       ))
             elif r.component_name == "asset":
                 # Provide a link to assign a new Asset
                 # @ToDo: Proper Widget to do this inline

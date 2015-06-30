@@ -439,9 +439,11 @@ class S3HRModel(S3Model):
                      # Contract
                      s3_date("start_date",
                              label = T("Start Date"),
+                             set_min = "#hrm_human_resource_end_date",
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             set_max = "#hrm_human_resource_start_date",
                              start_field = "hrm_human_resource_start_date",
                              default_interval = 12,
                              ),
@@ -2458,13 +2460,15 @@ class S3HRSkillModel(S3Model):
                            ),
                      s3_date("start_date",
                              default = "now",
-                             label = T("Date Received")
+                             label = T("Date Received"),
+                             set_min = "#hrm_credential_end_date",
                              ),
                      s3_date("end_date",
+                             label = T("Expiry Date"),
+                             set_max = "#hrm_credential_start_date",
                              start_field = "hrm_credential_start_date",
                              default_interval = 12,
                              default_explicit = True,
-                             label = T("Expiry Date")
                              ),
                      *s3_meta_fields())
 
@@ -2625,10 +2629,12 @@ class S3HRSkillModel(S3Model):
                      s3_datetime("start_date",
                                  label = T("Start Date"),
                                  min = datetime.datetime(2000, 1, 1),
+                                 set_min = "#hrm_training_event_end_date",
                                  ),
                      s3_datetime("end_date",
                                  label = T("End Date"),
                                  min = datetime.datetime(2000, 1, 1),
+                                 set_max = "#hrm_training_event_start_date",
                                  ),
                      Field("hours", "integer",
                            label = T("Hours"),
@@ -3972,9 +3978,11 @@ class S3HRExperienceModel(S3Model):
                                 ),
                           s3_date("start_date",
                                   label = T("Start Date"),
+                                  set_min = "#hrm_experience_end_date",
                                   ),
                           s3_date("end_date",
                                   label = T("End Date"),
+                                  set_max = "#hrm_experience_start_date",
                                   start_field = "hrm_experience_start_date",
                                   default_interval = 12,
                                   ),
@@ -6263,16 +6271,6 @@ def hrm_credential_controller():
         return True
     s3.prep = prep
 
-    def postp(r,output):
-        if r.interactive:
-            if not r.component:
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_credential_start_date','hrm_credential_end_date')''')
-
-        return output
-    s3.postp = postp
-
     return current.rest_controller("hrm", "credential",
                                    # @ToDo: Create these if-required
                                    #csv_stylesheet = ("hrm", "credential.xsl"),
@@ -6890,10 +6888,6 @@ def hrm_human_resource_controller(extra_filter=None):
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-
                 if r.controller == "deploy":
                     # Application is deleted, not HR
                     deletable = True
@@ -7241,15 +7235,7 @@ def hrm_person_controller(**attr):
     # CRUD post-process
     def postp(r, output):
         if r.interactive and r.component:
-            if r.component_name == "human_resource":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-            if r.component_name == "experience":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
-            elif r.component_name == "asset":
+            if r.component_name == "asset":
                 # Provide a link to assign a new Asset
                 # @ToDo: Proper Widget to do this inline
                 output["add_btn"] = A(T("Assign Asset"),
@@ -7413,30 +7399,26 @@ def hrm_training_event_controller():
         return True
     s3.prep = prep
 
-    def postp(r, output):
-        if r.interactive:
-            if not r.component:
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_training_event_start_date','hrm_training_event_end_date')''')
-            # @ToDo: Restore once the other part is working
-            #elif r.component_name == "participant" and \
-            #     isinstance(output, dict):
-            #    showadd_btn = output.get("showadd_btn", None)
-            #    if showadd_btn:
-            #        # Add an Import button
-            #        if s3.crud.formstyle == "bootstrap":
-            #            _class = "s3_modal"
-            #        else:
-            #            _class = "action-btn s3_modal"
-            #        import_btn = S3CRUD.crud_button(label=current.T("Import Participants"),
-            #                                        _class=_class,
-            #                                        _href=URL(f="training", args="import.popup",
-            #                                                  vars={"~.training_event_id":r.id}),
-            #                                        )
-            #        output["showadd_btn"] = TAG[""](showadd_btn, import_btn)
-        return output
-    s3.postp = postp
+    #def postp(r, output):
+    #    if r.interactive:
+    #        # @ToDo: Restore once the other part is working
+    #        if r.component_name == "participant" and \
+    #            isinstance(output, dict):
+    #           showadd_btn = output.get("showadd_btn", None)
+    #           if showadd_btn:
+    #               # Add an Import button
+    #               if s3.crud.formstyle == "bootstrap":
+    #                   _class = "s3_modal"
+    #               else:
+    #                   _class = "action-btn s3_modal"
+    #               import_btn = S3CRUD.crud_button(label=current.T("Import Participants"),
+    #                                               _class=_class,
+    #                                               _href=URL(f="training", args="import.popup",
+    #                                                         vars={"~.training_event_id":r.id}),
+    #                                               )
+    #               output["showadd_btn"] = TAG[""](showadd_btn, import_btn)
+    #    return output
+    #s3.postp = postp
 
     output = current.rest_controller("hrm", "training_event",
                                      rheader = hrm_rheader)

@@ -191,10 +191,12 @@ class S3ProjectModel(S3Model):
                      self.project_status_id(),
                      # NB There is additional client-side validation for start/end date in the Controller
                      s3_date("start_date",
-                             label = T("Start Date")
+                             label = T("Start Date"),
+                             set_min = "#project_project_end_date",
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             set_max = "#project_project_start_date",
                              start_field = "project_project_start_date",
                              default_interval = 12,
                              ),
@@ -941,9 +943,11 @@ class S3ProjectActivityModel(S3Model):
                                           ),
                      s3_date("date",
                              label = T("Start Date"),
+                             set_min = "#project_activity_end_date",
                              ),
                      s3_date("end_date",
                              label = T("End Date"),
+                             set_max = "#project_activity_date",
                              start_field = "project_activity_date",
                              default_interval = 12,
                              ),
@@ -1844,10 +1848,12 @@ class S3ProjectBeneficiaryModel(S3Model):
                      s3_date("date",
                              #empty = False,
                              label = T("Start Date"),
+                             set_min = "#project_beneficiary_end_date",
                              ),
                      s3_date("end_date",
                              #empty = False,
                              label = T("End Date"),
+                             set_max = "#project_beneficiary_date",
                              start_field = "project_beneficiary_date",
                              default_interval = 12,
                              ),
@@ -4327,7 +4333,7 @@ class S3ProjectPlanningModel(S3Model):
                 total_weighting = o["total_weighting"]
                 current_status = o["current_status"] / total_weighting
                 overall_status = o["overall_status"] / total_weighting
-             
+
             # Populate Outcomes dict
             outcome_id = r.outcome_id
             weighting = r.weighting

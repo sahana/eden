@@ -874,10 +874,6 @@ def vol_volunteer_controller():
 
     def postp(r, output):
         if r.interactive and not r.component:
-            # Set the minimum end_date to the same as the start_date
-            s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-
             # Configure action buttons
             S3CRUD.action_buttons(r, deletable=settings.get_hrm_deletable())
             if settings.has_module("msg") and \
@@ -1172,9 +1168,6 @@ def vol_person_controller():
     def postp(r, output):
         if r.interactive and r.component:
             if r.component_name == "human_resource":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
                 vol_experience = settings.get_hrm_vol_experience()
                 if vol_experience in ("programme", "both") and \
                    r.method not in ("report", "import") and \
@@ -1211,10 +1204,6 @@ def vol_person_controller():
                     except:
                         pass
 
-            elif r.component_name == "experience":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
             elif r.component_name == "asset":
                 # Provide a link to assign a new Asset
                 # @ToDo: Proper Widget to do this inline
