@@ -1523,7 +1523,7 @@ class S3CalendarWidget(FormWidget):
         fallback = False
         if self.minimum:
             earliest = self.minimum
-            if isinstance(earliest, datetime.date):
+            if type(earliest) is datetime.date:
                 # Consistency with S3Calendar
                 earliest = datetime.datetime.combine(earliest, datetime.time(8, 0, 0))
         elif self.past:
@@ -1546,7 +1546,7 @@ class S3CalendarWidget(FormWidget):
         fallback = False
         if self.maximum:
             latest = self.maximum
-            if isinstance(latest, datetime.date):
+            if type(latest) is datetime.date:
                 # Consistency with S3Calendar
                 latest = datetime.datetime.combine(latest, datetime.time(8, 0, 0))
         elif self.future:

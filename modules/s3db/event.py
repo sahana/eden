@@ -965,11 +965,7 @@ class S3IncidentReportModel(S3Model):
                           # @ToDo: Use link tables?
                           #self.event_event_id(ondelete = "CASCADE"),
                           #self.event_incident_id(ondelete = "CASCADE"),
-                          s3_datetime(
-                            # Experimental:
-                            #widget = S3CalendarWidget(timepicker=True),
-                            #requires = IS_UTC_DATETIME(),
-                          ),
+                          s3_datetime(default="now"),
                           Field("name", notnull=True,
                                 label = T("Title"),
                                 ),

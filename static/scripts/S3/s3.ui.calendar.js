@@ -30,6 +30,11 @@
             dp_inst = timepicker.data('datepicker'),
             tp_inst = $.datepicker._get(dp_inst, 'timepicker');
 
+        if (!selectedDate) {
+            // Nothing selected yet => fall back to draw date
+            selectedDate = inst.drawDate;
+        }
+
         // Reset the defaults (timepicker does not expect a dynamic change!)
         tp_inst._defaults.hourMin = 0;
         tp_inst._defaults.minuteMin = 0;
