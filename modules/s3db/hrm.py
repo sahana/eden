@@ -2608,6 +2608,8 @@ class S3HRSkillModel(S3Model):
 
         tablename = "hrm_training_event"
         define_table(tablename,
+                     # Instance
+                     self.super_link("pe_id", "pr_pentity"),
                      course_id(empty = False),
                      organisation_id(label = T("Organized By")),
                      self.super_link("site_id", "org_site",
@@ -2715,6 +2717,8 @@ class S3HRSkillModel(S3Model):
                                     args=["[id]", "participant"]),
                   deduplicate = self.hrm_training_event_duplicate,
                   filter_widgets = filter_widgets,
+                  realm_entity = self.hrm_training_event_realm_entity,
+                  super_entity = "pr_pentity",
                   )
 
         # Components
@@ -3531,6 +3535,41 @@ class S3HRSkillModel(S3Model):
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_training_event_realm_entity(table, record):
+        """ Set the training_event realm entity to the root Org of the Site """
+
+        training_event_id = record.id
+        db = current.db
+        stable = db.org_site
+        query = (stable.site_id == record.site_id)
+        if current.deployment_settings.get_org_branches():
+            site = db(query).select(stable.organisation_id,
+                                    limitby=(0, 1)).first()
+            if site:
+                org_id = site.organisation_id
+                root_org = current.cache.ram(
+                    # Common key for all users of this org & vol_service_record()
+                    "root_org_%s" % org_id,
+                    lambda: current.s3db.org_root_organisation(org_id),
+                    time_expire=120
+                    )
+                otable = db.org_organisation
+                org = db(otable.id == root_org).select(otable.realm_entity,
+                                                       limitby=(0, 1)
+                                                       ).first()
+                if org:
+                    return org.realm_entity
+        else:
+            otable = db.org_organisation
+            query &= (stable.organisation_id == otable.id)
+            org = db(query).select(otable.realm_entity,
+                                   limitby=(0, 1)).first()
+            if org:
+                return org.realm_entity
+        return None
 
 # =============================================================================
 def hrm_training_onvalidation(form):
@@ -5439,7 +5478,8 @@ def hrm_compose():
 
     T = current.T
     s3db = current.s3db
-    req_vars = current.request.vars
+    req_vars = current.request.get_vars
+    pe_id = None
 
     if "human_resource.id" in req_vars:
         fieldname = "human_resource.id"
@@ -5449,24 +5489,39 @@ def hrm_compose():
         query = (htable.id == id) & \
                 (htable.person_id == table.id)
         title = T("Send a message to this person")
+        # URL to redirect to after message sent
+        url = URL(f="compose",
+                  vars={fieldname: id})
     elif "group_id" in req_vars:
         id = req_vars.group_id
         fieldname = "group_id"
         table = s3db.pr_group
         query = (table.id == id)
         title = T("Send a message to this team")
+        # URL to redirect to after message sent
+        url = URL(f="compose",
+                  vars={fieldname: id})
+    elif "training_event.id" in req_vars:
+        fieldname = "training_event.id"
+        id = req_vars.get(fieldname)
+        pe_id = req_vars.pe_id
+        title = T("Message Participants")
+        # URL to redirect to after message sent
+        url = URL(f="training_event", args=id)
+
     else:
         current.session.error = T("Record not found")
         redirect(URL(f="index"))
 
-    db = current.db
-    pe = db(query).select(table.pe_id,
-                          limitby=(0, 1)).first()
-    if not pe:
-        current.session.error = T("Record not found")
-        redirect(URL(f="index"))
+    if not pe_id:
+        db = current.db
+        pe = db(query).select(table.pe_id,
+                              limitby=(0, 1)).first()
+        if not pe:
+            current.session.error = T("Record not found")
+            redirect(URL(f="index"))
 
-    pe_id = pe.pe_id
+        pe_id = pe.pe_id
 
     if "hrm_id" in req_vars:
         # Get the individual's communications options & preference
@@ -5479,10 +5534,6 @@ def hrm_compose():
         else:
             current.session.error = T("No contact method found")
             redirect(URL(f="index"))
-
-    # URL to redirect to after message sent
-    url = URL(f="compose",
-              vars={fieldname: id})
 
     # Create the form
     output = current.msg.compose(recipient = pe_id,
@@ -6087,12 +6138,26 @@ def hrm_rheader(r, tabs=[], profile=False):
                 (T("Participants"), "participant"),
                 ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
+        if current.deployment_settings.has_module("msg") and \
+               current.auth.permission.has_permission("update", c="hrm", f="compose"):
+            # @ToDo: Be able to see who has been messaged, whether messages bounced, receive confirmation responses, etc
+            action = A(T("Message Participants"),
+                       _href = URL(f = "compose",
+                                   vars = {"training_event.id": record.id,
+                                           "pe_id": record.pe_id,
+                                           },
+                                   ),
+                       _class = "action-btn send"
+                       )
+        else:
+            action = None
         rheader = DIV(TABLE(TR(TH("%s: " % table.course_id.label),
                                table.course_id.represent(record.course_id)),
                             TR(TH("%s: " % table.site_id.label),
                                table.site_id.represent(record.site_id)),
                             TR(TH("%s: " % table.start_date.label),
                                table.start_date.represent(record.start_date)),
+                            TR(TH(action, _colspan=2)),
                             ),
                       rheader_tabs)
 

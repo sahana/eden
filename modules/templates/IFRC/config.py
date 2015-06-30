@@ -2954,6 +2954,9 @@ def config(settings):
         if root_org == IRCS:
             settings.hrm.activity_types = None
             settings.hrm.use_id = False
+            table = s3db.pr_person
+            table.initials.readable = table.initials.writable = False
+            table.preferred_name.readable = table.preferred_name.writable = False
         elif root_org == PMI:
             settings.hrm.staff_experience = "experience"
             settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"

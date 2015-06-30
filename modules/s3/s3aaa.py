@@ -4915,7 +4915,7 @@ $.filterOptionsS3({
         if not current.deployment_settings.get_org_branches():
             return org_id
         return current.cache.ram(
-                    # Common key for all users of this org & vol_service_record()
+                    # Common key for all users of this org & vol_service_record() & hrm_training_event_realm_entity()
                     "root_org_%s" % org_id,
                     lambda: current.s3db.org_root_organisation(org_id),
                     time_expire=120

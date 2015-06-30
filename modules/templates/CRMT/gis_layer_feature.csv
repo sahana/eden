@@ -8,7 +8,7 @@ Organizations,used for Summary View,org,organisation,organization,Building,{name
 All Organizations,,org,facility,facility,Building,{organisation_id} (T('Organization')),organisation_id,,,,,Organizations,False,,30,,,
 Arts and Recreation,,gis,poi,arts,Building,{name} (T('Point')),name,~.poi_type_id$name=Arts and Recreation&~.location_id$gis_feature_type=1,,,,Points,False,,30,,,
 Arts and Recreation,,org,facility,arts,Building,{organisation_id} (T('Organization')),organisation_id,organisation_id$service.name__typeof=Arts and Recreation,,,,Organizations,False,,30,,,
-Churches,,org,facility,education,Building,{organisation_id} (T('Church')),organisation_id,organisation_id$service.name__typeof=Churches,,,,Organizations,False,,30,,,
+Churches,,org,facility,church,Building,{organisation_id} (T('Church')),organisation_id,organisation_id$service.name__typeof=Churches,,,,Organizations,False,,30,,,
 Communications,,gis,poi,communications,Building,{name} (T('Point')),name,~.poi_type_id$name=Communications&~.location_id$gis_feature_type=1,,,,Points,False,,30,,,
 Communications,,org,facility,communications,Building,{organisation_id} (T('Organization')),organisation_id,organisation_id$service.name__typeof=Communications,,,,Organizations,False,,30,,,
 Community Groups,,org,facility,people,Building,{organisation_id} (T('Organization')),organisation_id,organisation_id$service.name__typeof=Community Groups,,,,Organizations,False,,30,,,

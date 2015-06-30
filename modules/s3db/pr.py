@@ -166,10 +166,11 @@ class S3PersonEntity(S3Model):
                            deploy_alert = T("Deployment Alert"),
                            dvi_body = T("Body"),
                            dvi_morgue = T("Morgue"),
-                           # If we want these, then pe_id needs adding to their
-                           # tables & configuring as a super-entity
+                           # If we want this, then pe_id needs adding to the
+                           # table & configuring as a super-entity
                            #fire_station = T("Fire Station"),
                            hms_hospital = T("Hospital"),
+                           hrm_training_event = T("Training Event"),
                            inv_warehouse = T("Warehouse"),
                            org_organisation = messages.ORGANISATION,
                            org_group = org_group_label,
