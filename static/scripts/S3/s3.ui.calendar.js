@@ -1027,7 +1027,7 @@
                 selectedDate = null;
 
             if (opts.timepicker) {
-                if (opts.calendar == "gregorian") {
+                if (opts.calendar == 'gregorian') {
                     // datetimepicker
                     selectedDate = el.datetimepicker('getDate');
                 } else {
@@ -1046,7 +1046,7 @@
                     }
                 }
             } else {
-                if (opts.calendar == "gregorian") {
+                if (opts.calendar == 'gregorian') {
                     // datepicker
                     selectedDate = el.datepicker('getDate');
                 } else {
@@ -1066,6 +1066,56 @@
             }
 
             return selectedDate;
+        },
+
+        /**
+         * Set the currently selected date
+         *
+         * @param {Date} jsDate - the JS Date
+         */
+        setJSDate: function(jsDate) {
+
+            if (!jsDate) {
+                return;
+            }
+
+            var el = $(this.element),
+                opts = this.options,
+                calendar;
+
+            if (opts.timepicker) {
+                if (opts.calendar == 'gregorian') {
+                    // datetimepicker
+                    el.datetimepicker('setDate', jsDate);
+                } else {
+                    // calendarsPicker + timepicker
+                    var dateInput = this.dateInput,
+                        inst = dateInput.data('calendarsPicker');
+
+                    // Update calendarsPicker
+                    calendar = dateInput.calendarsPicker('option', 'calendar');
+                    dateInput.calendarsPicker('setDate', calendar.fromJSDate(jsDate));
+
+                    // Update timepicker
+                    if (inst && inst.timepicker) {
+                        // Set time
+                        inst.timepicker.timepicker('setTime', jsDate);
+                        // Forced select to update the timeInput after adjustment
+                        selectTimePicker(inst, inst.timepicker);
+                        // Update the real input (prevented in selectTimePicker)
+                        this._updateInput();
+                    }
+                }
+            } else {
+                if (opts.calendar == 'gregorian') {
+                    // datepicker
+                    el.datepicker('setDate', jsDate);
+                } else {
+                    // calendarsPicker
+                    calendar = el.calendarsPicker('option', 'calendar');
+                    el.calendarsPicker('setDate', calendar.fromJSDate(jsDate));
+                }
+            }
         },
 
         /**
