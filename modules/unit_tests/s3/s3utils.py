@@ -9,6 +9,7 @@ import unittest
 
 from s3.s3utils import *
 from s3.s3data import S3DataTable
+from s3.s3datetime import S3Calendar
 
 # =============================================================================
 class S3TypeConverterTests(unittest.TestCase):
@@ -30,6 +31,10 @@ class S3TypeConverterTests(unittest.TestCase):
         self.utc_offset = session.s3.utc_offset
         session.s3.utc_offset = 0
 
+        # Set calendar to Gregorian
+        self.calendar = current.calendar
+        current.calendar = S3Calendar("Gregorian")
+
     # -------------------------------------------------------------------------
     def tearDown(self):
 
@@ -41,6 +46,9 @@ class S3TypeConverterTests(unittest.TestCase):
 
         # Reset time zone
         current.session.s3.utc_offset = self.utc_offset
+
+        # Restore current calendar
+        current.calendar = self.calendar
 
     # -------------------------------------------------------------------------
     def testDate(self):
