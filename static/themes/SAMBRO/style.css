@@ -1,11 +1,15 @@
-﻿body {
+body {
+    background-color: #EEE;
     font: normal 13px arial,sans-serif;
+    font-family: "Open Sans", Helvetica, Arial, sans-serif;
     margin: 0px;
     padding: 0px;
+    color: #333;
 }
 
 a {
     text-decoration: none;
+    color: #08F;
 }
 
 ul, li {
@@ -18,11 +22,67 @@ ul, li {
     color: #FFF;
 }
 
+p {
+    font-size: 13px;
+}
+
+    p.alert-content {
+        line-height: 18px;
+    }
+
+
+.top-bar {
+    height: inherit;
+    -webkit-box-shadow: 0px 1px 0px 0px rgba(0, 0, 0, 0.08), 0px 2px 0px 0px rgba(0, 0, 0, 0.02);
+    box-shadow: 0px 1px 0px 0px rgba(0, 0, 0, 0.08), 0px 2px 0px 0px rgba(0, 0, 0, 0.02);
+}
+
+.top-bar-section ul li {
+    background: #888;
+}
+
+.top-bar-section li:not(.has-form) a:not(.button) {
+    padding: 0px 15px;
+    line-height: 45px;
+}
+
+.top-bar-section li.active:not(.has-form) a:not(.button) {
+    padding: 0 15px;
+    line-height: 45px;
+    background: #008CBA;
+}
+
+.top-bar-section ul.right ul.dropdown {
+    width: 320px;
+}
+
+    .top-bar-section ul.right ul.dropdown li {
+        width: 160px;
+        float: left;
+    }
+
+.top-bar-section .has-dropdown.hover > .dropdown, .top-bar-section .has-dropdown.not-click:hover > .dropdown {
+    display: block;
+    position: static !important;
+    height: auto;
+    width: 320px;
+    overflow: visible;
+    clip: auto;
+    position: absolute !important;
+    background-color: #888;
+    background: #888;
+}
+
+.top-bar-section .dropdown li:not(.has-form):not(.active) > a:not(.button) {
+    color: #FFFFFF;
+    background: #444;
+    border-bottom: 1px solid #555;
+    border-left: 1px solid #555;
+}
+
 #sambro-menu {
-    background-color: #000;
-    height: 40px;
+    background-color: #FFF;
     width: 100%;
-    position: relative;
 }
 
     #sambro-menu img {
@@ -34,13 +94,9 @@ ul, li {
         margin: 0px;
     }
 
-    #sambro-menu li {
-        padding: 8px;
+    #sambro-menu li a {
+        color: #FFF;
     }
-
-        #sambro-menu li a {
-            color: #FFF;
-        }
 
     #sambro-menu ul.menu-right {
         position: absolute;
@@ -52,86 +108,79 @@ ul, li {
             margin-right: 5px;
         }
 
-#sambro-title {
-    background-color: #FFF;
-    height: 40px;
-    width: 100%;
-    border-bottom: 1px solid #CCC;
-}
-
-    #sambro-title h1 {
-        color: #080;
-        font-size: 24px;
-        font-weight: normal;
-        margin: 10px 0px 0px 15px;
-        padding: 0px;
-    }
-
-#sambro-header {
-    position: fixed;
-    top: 0px;
-    height: 70px;
+#default_map {
     width: 100%;
 }
 
 #sambro-footer {
-    background-color: #EEE;
-    position: fixed;
-    height: 30px;
+    background-color: #FFF;
+    margin-top: 20px;
     width: 100%;
-    bottom: 0px;
-    padding: 10px;
 }
 
-#sambro-body {
-    position: fixed;
-    width: 100%;
-    top: 90px;
-    bottom: 50px;
+#sambro-map {
+    background-color: #FFF;
+    margin: 20px 320px 0px 320px;
+    -webkit-box-shadow: 0px 1px 0px 0px rgba(0, 0, 0, 0.08), 0px 2px 0px 0px rgba(0, 0, 0, 0.02);
+    box-shadow: 0px 1px 0px 0px rgba(0, 0, 0, 0.08), 0px 2px 0px 0px rgba(0, 0, 0, 0.02);
 }
+
+#sambro-alert-table {
+    background-color: #FFF;
+    margin: 20px 320px 0px 320px;
+    -webkit-box-shadow: 0px 1px 0px 0px rgba(0, 0, 0, 0.08), 0px 2px 0px 0px rgba(0, 0, 0, 0.02);
+    box-shadow: 0px 1px 0px 0px rgba(0, 0, 0, 0.08), 0px 2px 0px 0px rgba(0, 0, 0, 0.02);
+}
+
+    #sambro-alert-table table {
+        width: 100%;
+    }
+
+        #sambro-alert-table table th {
+            border-bottom: 1px solid #CCC;
+            font-weight: bold;
+            text-align: center;
+            color: #333;
+        }
+
+        #sambro-alert-table table .fa {
+            margin-right: 5px;
+            color: #F83;
+        }
 
 #sambro-left {
-    border-right: 1px solid #CCC;
-    position: absolute;
-    left: 0px;
-    width: 320px;
-    top: 0px;
-    bottom: 0px;
+    background-color: #FFF;
+    margin: 20px 0px 0px 20px;
+    width: 280px;
+    float: left;
+    -webkit-box-shadow: 0px 1px 0px 0px rgba(0, 0, 0, 0.08), 0px 2px 0px 0px rgba(0, 0, 0, 0.02);
+    box-shadow: 0px 1px 0px 0px rgba(0, 0, 0, 0.08), 0px 2px 0px 0px rgba(0, 0, 0, 0.02);
 }
 
 #sambro-right {
-    border-left: 1px solid #CCC;
+    background-color: #FFF;
+    margin: 0px 20px 0px 0px;
+    width: 280px;
     position: absolute;
+    top: 65px;
     right: 0px;
-    width: 320px;
-    top: 0px;
-    bottom: 0px;
-}
-
-#sambro-center {
-    position: absolute;
-    left: 320px;
-    right: 320px;
-    top: 0px;
-    bottom: 0px;
+    -webkit-box-shadow: 0px 1px 0px 0px rgba(0, 0, 0, 0.08), 0px 2px 0px 0px rgba(0, 0, 0, 0.02);
+    box-shadow: 0px 1px 0px 0px rgba(0, 0, 0, 0.08), 0px 2px 0px 0px rgba(0, 0, 0, 0.02);
 }
 
 div.sambro-feeds {
-    position: absolute;
-    top: 36px;
-    bottom: 0px;
-    overflow: auto;
     padding-top: 15px;
 }
 
     div.sambro-feeds .fa {
-        background-color: #F00;
+        background-color: #F83;
         color: #FFF;
         display: inline;
-        border-radius: 30px;
+        border-radius: 3px;
         padding: 5px;
         position: absolute;
         left: 10px;
+        font-size: 12px;
     }
 
     div.sambro-feeds ul, div.sambro-feeds li {
@@ -144,13 +193,14 @@ div.sambro-feeds {
     }
 
     div.sambro-feeds h3 {
-        margin: 0px;
+        margin: 0px 0px 0px 0px;
         padding: 0px;
         font-size: 15px;
     }
 
     div.sambro-feeds li {
         padding: 0px 20px;
+        font-size: 12px;
     }
 
 #sambro-left div.sambro-feeds li {
@@ -158,46 +208,50 @@ div.sambro-feeds {
 }
 
 div.sambro-feeds li div {
-    border-bottom: 1px solid #CCC;
-    padding-bottom: 5px;
+    padding: 3px;
 }
 
 div.sambro-feeds li p {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
 }
 
 div.sambro-panel-title {
-    border-bottom: 1px solid #CCC;
-    border-top: 1px solid #CCC;
-    background-color: #EEE;
-    padding: 10px 10px 10px;
+    border-top: 5px solid #DDD;
+    border-bottom: 2px solid #EEE;
+    background-color: #FFF;
+    padding: 15px 10px;
     font-weight: bold;
+    color: #888;
+}
+
+    div.sambro-panel-title h1 {
+        font-size: 24px;
+        margin: 0px 0px;
+        padding: 0px;
+    }
+
+    div.sambro-panel-title p {
+        color: #888;
+        margin: 0px 0px;
+        padding: 0px;
+    }
+
+    div.sambro-panel-title .fa {
+        color: #888;
+        display: inline;
+        margin-right: 10px;
+        font-size: 18px;
+    }
+
+span.alert-date {
+    color: #888;
+    text-transform: uppercase;
 }
 
 span.alert-type {
-    color: #FFF;
-    padding: 1px 10px;
-    border-radius: 10px;
-}
-
-span.type-1 {
-    background-color: #080;
-}
-
-span.type-2 {
-    background-color: #C00;
-}
-
-span.type-3 {
-    background-color: #00A;
-}
-
-span.type-4 {
-    background-color: #F80;
-}
-
-span.type-5 {
-    background-color: #08F;
+    color: #888;
+    text-transform: uppercase;
 }
 
 #sahana-icon img {
@@ -205,19 +259,20 @@ span.type-5 {
     margin-right: 5px;
 }
 
-::-webkit-scrollbar {
-    width: 0.8em;
-    height: 0.8em;
+#poweredby {
+    float: none;
+    margin: 20px 0px;
 }
 
-::-webkit-scrollbar-button {
-    background: #CCC;
-}
+@media (max-width: 1200px) {
+    #sambro-right, #sambro-map, #sambro-alert-table {
+        margin: 0px 20px 20px 320px;
+        width: inherit;
+        position: inherit;
+        top: 0px;
+    }
 
-::-webkit-scrollbar-track-piece {
-    background: #FFF;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #CCC;
+    #sambro-map {
+        margin-top: 20px;
+    }
 }

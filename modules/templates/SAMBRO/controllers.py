@@ -16,6 +16,20 @@ from s3 import S3LocationFilter, S3OptionsFilter, S3FilterForm, S3CustomControll
 
 THEME = "SAMBRO"
 
+#  =============================================================================
+class index(S3CustomController):
+    """ Custom Home Page """
+
+    def __call__(self):
+        response = current.response
+        s3 = response.s3
+        T = current.T
+
+        map = current.gis.show_map()
+
+        self._view(THEME, "index.html")
+        return dict(title = T("CAP Alert"), map = map)
+
 # =============================================================================
 class subscriptions(S3CustomController):
     """ Custom page to manage subscriptions """
