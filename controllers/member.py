@@ -53,7 +53,8 @@ def membership():
                 redirect(URL(f="person", vars=vars))
 
             # Assume members under 120
-            s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
+            s3db.pr_person.date_of_birth.widget = \
+                                        S3CalendarWidget(past_months=1440)
 
         elif r.representation == "xls":
             # Split person_id into first/middle/last to make it match Import sheets
@@ -155,7 +156,8 @@ def person():
             if r.method != "import":
                 if not r.component:
                     # Assume members under 120
-                    s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
+                    s3db.pr_person.date_of_birth.widget = \
+                                        S3CalendarWidget(past_months=1440)
                 resource = r.resource
                 if resource.count() == 1:
                     resource.load()

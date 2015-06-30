@@ -867,8 +867,11 @@ def vol_volunteer_controller():
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
                     # Label for "occupation"
                     s3db.pr_person_details.occupation.label = T("Normal Job")
-                    # Assume volunteers only between 12-81
-                    s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+                    # Assume staff only between 12-81
+                    dob = s3db.pr_person.date_of_birth
+                    dob.widget = S3CalendarWidget(past_months = 972,
+                                                  future_months = -144,
+                                                  )
         return True
     s3.prep = prep
 
@@ -1064,7 +1067,10 @@ def vol_person_controller():
             if not r.component:
                 table = r.table
                 # Assume volunteers only between 12-81
-                table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+                dob = table.date_of_birth
+                dob.widget = S3CalendarWidget(past_months = 972,
+                                              future_months = -144,
+                                              )
                 table.pe_label.readable = table.pe_label.writable = False
                 table.missing.readable = table.missing.writable = False
                 table.age_group.readable = table.age_group.writable = False

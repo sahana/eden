@@ -138,8 +138,10 @@ def staff():
                     table.status.writable = table.status.readable = False
 
                     # Assume staff only between 16-81
-                    s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972,
-                                                                       future=-192)
+                    dob = s3db.pr_person.date_of_birth
+                    dob.widget = S3CalendarWidget(past_months = 972,
+                                                  future_months = -192,
+                                                  )
         elif r.representation == "xls":
             # Make it match Import sheets
             list_fields = s3db.get_config(tablename, "list_fields")
@@ -268,7 +270,10 @@ def profile():
                 table.missing.readable = table.missing.writable = False
                 table.age_group.readable = table.age_group.writable = False
                 # Assume volunteers only between 12-81
-                table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+                dob = table.date_of_birth
+                dob.widget = S3CalendarWidget(past_months = 972,
+                                              future_months = -144,
+                                              )
                 return True
         else:
             # Disable non-interactive & import

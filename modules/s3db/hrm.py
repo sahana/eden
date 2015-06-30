@@ -7122,7 +7122,10 @@ def hrm_person_controller(**attr):
                 table.missing.readable = table.missing.writable = False
                 table.age_group.readable = table.age_group.writable = False
                 # Assume volunteers only between 5-120
-                table.date_of_birth.widget = S3DateWidget(past=1440, future=-60)
+                dob = table.date_of_birth
+                dob.widget = S3CalendarWidget(past_months = 1440,
+                                              future_months = -60,
+                                              )
 
                 person_details_table = s3db.pr_person_details
                 # No point showing the 'Occupation' field - that's the Job Title in the Staff Record
