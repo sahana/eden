@@ -337,6 +337,33 @@
         },
 
         /**
+         * Clear all inputs
+         */
+        clear: function() {
+
+            var el = $(this.element);
+
+            // Clear any hidden inputs
+            if (this.dateInput) {
+                this.dateInput.val('');
+            }
+            if (this.timeInput) {
+                this.timeInput.val('');
+            }
+            // Update the real input
+            if (this.dateInput && this.timeInput) {
+                this._updateInput();
+            } else {
+                el.val('');
+            }
+
+            this._updateExtremes(null);
+
+            // Inform the filter form about the change
+            el.closest('.filter-form').trigger('optionChanged');
+        },
+
+        /**
          * Attach a $.datepicker instance
          */
         _datePicker: function() {
@@ -625,8 +652,13 @@
                 }
                 if (lastInput) {
                     // Update the timepicker
-                    var lastTime = $.datepicker.parseTime(timeFormat, lastInput);
-                    input.timepicker('setTime', new Date(1970, 1, 1, lastTime.hour, lastTime.minute, lastTime.second));
+                    var lastTime = $.datepicker.parseTime(timeFormat, lastInput),
+                        selectedTime = new Date(1970, 1, 1,
+                                                lastTime.hour,
+                                                lastTime.minute,
+                                                lastTime.second);
+                    input.timepicker('setTime', selectedTime);
+                    timeInput.data('selectedTime', selectedTime);
                 }
 
                 var minTimeEffective = timeInput.data('minTime') || minTime,
@@ -716,57 +748,6 @@
         },
 
         /**
-         * Split a date/time string into its date and time parts
-         *
-         * @param {string} dtstr - the date/time string
-         */
-        _split: function (dtstr) {
-
-            var opts = this.options,
-                sep = opts.separator,
-                timeFormat = opts.timeFormat,
-                tlen = timeFormat.split(sep).length,
-                parts = dtstr.split(sep),
-                plen = parts.length;
-
-            if (plen > 1) {
-                return {
-                    date: parts.splice(0, plen - tlen).join(sep),
-                    time: parts.splice(0, tlen).join(sep)
-                };
-            }
-            return {
-                date: dtstr,
-                time: ''
-            };
-        },
-
-        /**
-         * Helper function to split an extreme into date/time parts
-         * for calendarsPicker/timepicker combination
-         *
-         * @param {object} calendar: the calendar
-         * @param {Date} jsDate: the JS Date
-         */
-        _splitExtreme: function(calendar, jsDate) {
-
-            return {
-                date: calendar.fromJSDate(jsDate),
-                time: ('0' + jsDate.getHours()).slice(-2) + ':' +
-                      ('0' + jsDate.getMinutes()).slice(-2) + ':' +
-                      ('0' + jsDate.getSeconds()).slice(-2)
-            }
-        },
-
-        /**
-         * Join date and time strings into a combined date/time string
-         */
-        _join: function(datestr, timestr) {
-
-            return [datestr, timestr].join(this.options.separator);
-        },
-
-        /**
          * Update the real input from the hidden date and time inputs
          */
         _updateInput: function() {
@@ -776,6 +757,9 @@
                 time = this.timeInput.val();
 
             el.val(this._join(date, time));
+
+            // Inform the filter form about the change
+            el.closest('.filter-form').trigger('optionChanged');
         },
 
         /**
@@ -847,6 +831,40 @@
         },
 
         /**
+         * Split a date/time string into its date and time parts
+         *
+         * @param {string} dtstr - the date/time string
+         */
+        _split: function (dtstr) {
+
+            var opts = this.options,
+                sep = opts.separator,
+                timeFormat = opts.timeFormat,
+                tlen = timeFormat.split(sep).length,
+                parts = dtstr.split(sep),
+                plen = parts.length;
+
+            if (plen > 1) {
+                return {
+                    date: parts.splice(0, plen - tlen).join(sep),
+                    time: parts.splice(0, tlen).join(sep)
+                };
+            }
+            return {
+                date: dtstr,
+                time: ''
+            };
+        },
+
+        /**
+         * Join date and time strings into a combined date/time string
+         */
+        _join: function(datestr, timestr) {
+
+            return [datestr, timestr].join(this.options.separator);
+        },
+
+        /**
          * Replace the focus event on the trigger by a click event
          * in case the trigger element already has the focus
          *
@@ -881,6 +899,23 @@
         setMaxDate: function(jsDate) {
 
             return this._setExtreme('max', jsDate);
+        },
+
+        /**
+         * Helper function to split an extreme into date/time parts
+         * for calendarsPicker/timepicker combination
+         *
+         * @param {object} calendar: the calendar
+         * @param {Date} jsDate: the JS Date
+         */
+        _splitExtreme: function(calendar, jsDate) {
+
+            return {
+                date: calendar.fromJSDate(jsDate),
+                time: ('0' + jsDate.getHours()).slice(-2) + ':' +
+                      ('0' + jsDate.getMinutes()).slice(-2) + ':' +
+                      ('0' + jsDate.getSeconds()).slice(-2)
+            };
         },
 
         /**
@@ -979,32 +1014,58 @@
         },
 
         /**
-         * Clear
+         * Get the currently selected date/time as JS Date (public method)
          *
-         * @todo: also clear set_min/set_max limits (once implemented)
+         * @param {bool} end - without timepicker, set the time to the end
+         *                     of the selected day (23:59:59), rather than
+         *                     the start (00:00:00, default)
          */
-        clear: function() {
+        getJSDate: function(end) {
 
-            var el = $(this.element);
+            var el = $(this.element),
+                opts = this.options,
+                selectedDate = null;
 
-            // Clear any hidden inputs
-            if (this.dateInput) {
-                this.dateInput.val('');
-            }
-            if (this.timeInput) {
-                this.timeInput.val('');
-            }
-            // Update the real input
-            if (this.dateInput && this.timeInput) {
-                this._updateInput();
+            if (opts.timepicker) {
+                if (opts.calendar == "gregorian") {
+                    // datetimepicker
+                    selectedDate = el.datetimepicker('getDate');
+                } else {
+                    // calendarsPicker + timepicker
+                    var calendarDates = this.dateInput.calendarsPicker('getDate');
+                    if (calendarDates.length) {
+                        selectedDate = calendarDates[0].toJSDate();
+                        var selectedTime = this.timeInput.data('selectedTime');
+                        if (selectedTime) {
+                            selectedDate.setHours(
+                                selectedTime.getHours(),
+                                selectedTime.getMinutes(),
+                                selectedTime.getSeconds()
+                            );
+                        }
+                    }
+                }
             } else {
-                el.val('');
+                if (opts.calendar == "gregorian") {
+                    // datepicker
+                    selectedDate = el.datepicker('getDate');
+                } else {
+                    // calendarsPicker
+                    calendarDates = el.calendarsPicker('getDate');
+                    if (calendarDates.length) {
+                        selectedDate = calendarDates[0].toJSDate();
+                    }
+                }
+                if (selectedDate) {
+                    if (end) {
+                        selectedDate.setHours(23, 59, 59);
+                    } else {
+                        selectedDate.setHours(0, 0, 0);
+                    }
+                }
             }
 
-            this._updateExtremes(null);
-
-            // Inform the filter form about the change
-            el.closest('.filter-form').trigger('optionChanged');
+            return selectedDate;
         },
 
         /**
