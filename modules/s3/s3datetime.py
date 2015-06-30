@@ -71,17 +71,23 @@ class S3DateTime(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def date_represent(cls, dt, format=None, utc=False):
+    def date_represent(cls, dt, format=None, utc=False, calendar=None):
         """
             Represent the date according to deployment settings &/or T()
 
             @param dt: the date (datetime.date or datetime.datetime)
             @param format: the format (overrides deployment setting)
             @param utc: the date is given in UTC
+            @param calendar: the calendar to use (defaults to current.calendar)
         """
 
         if not format:
             format = current.deployment_settings.get_L10n_date_format()
+
+        if calendar is None:
+            calendar = current.calendar
+        elif isinstance(calendar, basestring):
+            calendar = S3Calendar(calendar)
 
         if dt:
             if utc:
@@ -94,7 +100,7 @@ class S3DateTime(object):
                         bp = (combine(dt, datetime.time(8, 0, 0)) - delta).time()
                         dt = combine(dt, bp)
                     dt = dt + delta
-            dtstr = current.calendar.format_date(dt, dtfmt=format, local=True)
+            dtstr = calendar.format_date(dt, dtfmt=format, local=True)
         else:
             dtstr = current.messages["NONE"]
 
@@ -102,16 +108,22 @@ class S3DateTime(object):
 
     # -----------------------------------------------------------------------------
     @classmethod
-    def datetime_represent(cls, dt, format=None, utc=False):
+    def datetime_represent(cls, dt, format=None, utc=False, calendar=None):
         """
             Represent the datetime according to deployment settings &/or T()
 
             @param dt: the datetime
             @param utc: the datetime is given in UTC
+            @param calendar: the calendar to use (defaults to current.calendar)
         """
 
         if format is None:
             format = current.deployment_settings.get_L10n_datetime_format()
+
+        if calendar is None:
+            calendar = current.calendar
+        elif isinstance(calendar, basestring):
+            calendar = S3Calendar(calendar)
 
         if dt:
             if utc:
@@ -123,7 +135,7 @@ class S3DateTime(object):
                         bp = (combine(dt, datetime.time(8, 0, 0)) - delta).time()
                         dt = combine(dt, bp)
                     dt = dt + datetime.timedelta(seconds=offset)
-            dtstr = current.calendar.format_datetime(dt, dtfmt=format, local=True)
+            dtstr = calendar.format_datetime(dt, dtfmt=format, local=True)
         else:
             dtstr = current.messages["NONE"]
 

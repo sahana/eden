@@ -152,9 +152,11 @@ class S3MembersModel(S3Model):
                       # History
                       s3_date("start_date",
                               label = T("Date Joined"),
+                              set_min = "#member_membership_end_date",
                               ),
                       s3_date("end_date",
                               label = T("Date resigned"),
+                              set_max = "#member_membership_start_date",
                               start_field = "member_membership_start_date",
                               default_interval = 12,
                               ),

@@ -1314,8 +1314,6 @@ class S3CalendarWidget(FormWidget):
         Widget to select a date from a popup calendar, with
         optional time input
 
-        @status: work in progress
-
         @note: this widget must be combined with the IS_UTC_DATE or
                IS_UTC_DATETIME validators to have the value properly
                converted from/to local timezone and format.
@@ -1525,7 +1523,7 @@ class S3CalendarWidget(FormWidget):
         fallback = False
         if self.minimum:
             earliest = self.minimum
-            if isinstance(earliest, datetime.date):
+            if type(earliest) is datetime.date:
                 # Consistency with S3Calendar
                 earliest = datetime.datetime.combine(earliest, datetime.time(8, 0, 0))
         elif self.past:
@@ -1548,7 +1546,7 @@ class S3CalendarWidget(FormWidget):
         fallback = False
         if self.maximum:
             latest = self.maximum
-            if isinstance(latest, datetime.date):
+            if type(latest) is datetime.date:
                 # Consistency with S3Calendar
                 latest = datetime.datetime.combine(latest, datetime.time(8, 0, 0))
         elif self.future:

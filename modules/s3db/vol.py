@@ -867,17 +867,16 @@ def vol_volunteer_controller():
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
                     # Label for "occupation"
                     s3db.pr_person_details.occupation.label = T("Normal Job")
-                    # Assume volunteers only between 12-81
-                    s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+                    # Assume staff only between 12-81
+                    dob = s3db.pr_person.date_of_birth
+                    dob.widget = S3CalendarWidget(past_months = 972,
+                                                  future_months = -144,
+                                                  )
         return True
     s3.prep = prep
 
     def postp(r, output):
         if r.interactive and not r.component:
-            # Set the minimum end_date to the same as the start_date
-            s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-
             # Configure action buttons
             S3CRUD.action_buttons(r, deletable=settings.get_hrm_deletable())
             if settings.has_module("msg") and \
@@ -1068,7 +1067,10 @@ def vol_person_controller():
             if not r.component:
                 table = r.table
                 # Assume volunteers only between 12-81
-                table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+                dob = table.date_of_birth
+                dob.widget = S3CalendarWidget(past_months = 972,
+                                              future_months = -144,
+                                              )
                 table.pe_label.readable = table.pe_label.writable = False
                 table.missing.readable = table.missing.writable = False
                 table.age_group.readable = table.age_group.writable = False
@@ -1172,9 +1174,6 @@ def vol_person_controller():
     def postp(r, output):
         if r.interactive and r.component:
             if r.component_name == "human_resource":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
                 vol_experience = settings.get_hrm_vol_experience()
                 if vol_experience in ("programme", "both") and \
                    r.method not in ("report", "import") and \
@@ -1211,10 +1210,6 @@ def vol_person_controller():
                     except:
                         pass
 
-            elif r.component_name == "experience":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
             elif r.component_name == "asset":
                 # Provide a link to assign a new Asset
                 # @ToDo: Proper Widget to do this inline

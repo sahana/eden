@@ -8,6 +8,7 @@
 import unittest
 from gluon import current
 
+from s3.s3datetime import S3Calendar
 from s3.s3fields import *
 from s3.s3validators import *
 
@@ -279,6 +280,10 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         self.utc_offset = session.s3.utc_offset
         session.s3.utc_offset = 0
 
+        # Set current calendar to Gregorian
+        self.calendar = current.calendar
+        current.calendar = S3Calendar("Gregorian")
+
     # -------------------------------------------------------------------------
     def tearDown(self):
 
@@ -290,6 +295,9 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
 
         # Reset time zone
         current.session.s3.utc_offset = self.utc_offset
+
+        # Restore current calendar
+        current.calendar = self.calendar
 
     # -------------------------------------------------------------------------
     def testValidation(self):
@@ -434,6 +442,36 @@ class IS_UTC_DATETIME_Tests(unittest.TestCase):
         assertEqual(value, dtstr)
 
     # -------------------------------------------------------------------------
+    def testValidationWithAlternativeCalendar(self):
+        """ Test validation with calendar-override """
+
+        assertEqual = self.assertEqual
+
+        # Test default=Gregorian, override=Persian
+        current.calendar = S3Calendar("Gregorian")
+        validate = IS_UTC_DATETIME(calendar="Persian")
+
+        dtstr = "1390-08-28 14:00:00"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 14, 0, 0))
+
+        dtstr_ = validate.formatter(value)
+        assertEqual(dtstr_, dtstr)
+
+        # Test default=Persian, override=Gregorian
+        current.calendar = S3Calendar("Persian")
+        validate = IS_UTC_DATETIME(calendar="Gregorian")
+
+        dtstr = "2011-11-19 14:00:00"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        assertEqual(value, datetime.datetime(2011, 11, 19, 14, 0, 0))
+
+        dtstr_ = validate.formatter(value)
+        assertEqual(dtstr_, dtstr)
+
+    # -------------------------------------------------------------------------
     def testDefaultFormat(self):
         """ Test validation with default format """
 
@@ -572,6 +610,10 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
 
         settings = current.deployment_settings
 
+        # Set default calendar to Gregorian
+        self.calendar = current.calendar
+        current.calendar = S3Calendar("Gregorian")
+
         # Make sure date format is standard
         self.date_format = settings.get_L10n_date_format()
         settings.L10n.date_format = "%Y-%m-%d"
@@ -591,6 +633,9 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
 
         # Reset time zone
         current.session.s3.utc_offset = self.utc_offset
+
+        # Reset calendar
+        current.calendar = self.calendar
 
     # -------------------------------------------------------------------------
     def testValidation(self):
@@ -797,6 +842,36 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         value, error = validate(dtstr)
         assertEqual(error, validate.error_message)
         assertEqual(value, dtstr)
+
+    # -------------------------------------------------------------------------
+    def testValidationWithAlternativeCalendar(self):
+        """ Test validation with calendar-override """
+
+        assertEqual = self.assertEqual
+
+        # Test default=Gregorian, override=Persian
+        current.calendar = S3Calendar("Gregorian")
+        validate = IS_UTC_DATE(calendar="Persian")
+
+        dtstr = "1390-08-28"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        assertEqual(value, datetime.date(2011, 11, 19))
+
+        dtstr_ = validate.formatter(value)
+        assertEqual(dtstr_, dtstr)
+
+        # Test default=Persian, override=Gregorian
+        current.calendar = S3Calendar("Persian")
+        validate = IS_UTC_DATE(calendar="Gregorian")
+
+        dtstr = "2011-11-19"
+        value, error = validate(dtstr)
+        assertEqual(error, None)
+        assertEqual(value, datetime.date(2011, 11, 19))
+
+        dtstr_ = validate.formatter(value)
+        assertEqual(dtstr_, dtstr)
 
     # -------------------------------------------------------------------------
     def testDefaultFormat(self):

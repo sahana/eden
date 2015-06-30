@@ -213,11 +213,13 @@ class S3EventModel(S3Model):
                                  label = T("Start Date"),
                                  represent = "date",
                                  widget = "date",
+                                 set_min = "#event_event_end_date",
                                  ),
                      s3_datetime("end_date",
                                  label = T("End Date"),
                                  represent = "date",
                                  widget = "date",
+                                 set_max = "#event_event_start_date",
                                  ),
                      Field.Method("year", self.event_event_year),
                      Field("closed", "boolean",
@@ -965,11 +967,7 @@ class S3IncidentReportModel(S3Model):
                           # @ToDo: Use link tables?
                           #self.event_event_id(ondelete = "CASCADE"),
                           #self.event_incident_id(ondelete = "CASCADE"),
-                          s3_datetime(
-                            # Experimental:
-                            #widget = S3CalendarWidget(timepicker=True),
-                            #requires = IS_UTC_DATETIME(),
-                          ),
+                          s3_datetime(default="now"),
                           Field("name", notnull=True,
                                 label = T("Title"),
                                 ),

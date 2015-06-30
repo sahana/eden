@@ -76,12 +76,21 @@ class DateRepresentationTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def setUp(self):
 
+        # Set current calendar to Gregorian
+        self.calendar = current.calendar
+        current.calendar = S3Calendar("Gregorian")
+
+        # Set default date format to ISO
         self.default_format = current.deployment_settings.get_L10n_date_format()
         current.deployment_settings.L10n.date_format = "%Y-%m-%d"
 
     # -------------------------------------------------------------------------
     def tearDown(self):
 
+        # Restore calendar
+        current.calendar = self.calendar
+
+        # Restore default date format
         current.deployment_settings.L10n.date_format = self.default_format
 
     # -------------------------------------------------------------------------
@@ -94,57 +103,69 @@ class DateRepresentationTests(unittest.TestCase):
         self.assertEqual(rstr, "2015-05-03")
 
     # -------------------------------------------------------------------------
-    def testDatetimeRepresentDefaultFormat(self):
+    def testDateRepresentDefaultFormat(self):
         """ Test date representation with default format """
 
         settings = current.deployment_settings
-        date_format = settings.get_L10n_date_format()
 
         assertEqual = self.assertEqual
         represent = S3DateTime.date_represent
 
         date = datetime.date(2015, 5, 3)
-        try:
-            settings.L10n.date_format = "%Y-%m-%d"
-            assertEqual(represent(date), "2015-05-03")
 
-            settings.L10n.date_format = "%m/%d/%y"
-            assertEqual(represent(date), "05/03/15")
+        settings.L10n.date_format = "%Y-%m-%d"
+        assertEqual(represent(date), "2015-05-03")
 
-            settings.L10n.date_format = "%a %d %b, %Y"
-            assertEqual(represent(date), "Sun 03 May, 2015")
+        settings.L10n.date_format = "%m/%d/%y"
+        assertEqual(represent(date), "05/03/15")
 
-            settings.L10n.date_format = "%d-%b-%Y"
-            assertEqual(represent(date), "03-May-2015")
+        settings.L10n.date_format = "%a %d %b, %Y"
+        assertEqual(represent(date), "Sun 03 May, 2015")
 
-        finally:
-            # Restore default format
-            settings.L10n.date_format = date_format
+        settings.L10n.date_format = "%d-%b-%Y"
+        assertEqual(represent(date), "03-May-2015")
 
     # -------------------------------------------------------------------------
-    def testDatetimeRepresentCustomFormat(self):
-        """ Test custom formatting of dates (=overriding L10n setting) """
-
-        settings = current.deployment_settings
-        date_format = settings.get_L10n_date_format()
+    def testDateRepresentAlternativeCalendar(self):
+        """ Test date representation with alternative calendar """
 
         assertEqual = self.assertEqual
         represent = S3DateTime.date_represent
 
         date = datetime.date(2015, 5, 3)
-        try:
-            # Set default format
-            settings.L10n.date_format = "%Y-%m-%d"
 
-            # Verify default format
-            assertEqual(represent(date), "2015-05-03")
+        # Represent with default calendar
+        assertEqual(represent(date), "2015-05-03")
 
-            # Override default format in call
-            assertEqual(represent(date, format="%a %d %b, %Y"), "Sun 03 May, 2015")
+        # Override default calendar
+        assertEqual(represent(date, calendar="Persian"), "1394-02-13")
 
-        finally:
-            # Restore default format
-            settings.L10n.date_format = date_format
+        # Change default calendar
+        current.calendar = S3Calendar("Persian")
+
+        # Represent with default calendar
+        assertEqual(represent(date), "1394-02-13")
+
+        # Override default calendar
+        assertEqual(represent(date, calendar="Gregorian"), "2015-05-03")
+
+    # -------------------------------------------------------------------------
+    def testDateRepresentCustomFormat(self):
+        """ Test custom formatting of dates (=overriding L10n setting) """
+
+        assertEqual = self.assertEqual
+        represent = S3DateTime.date_represent
+
+        date = datetime.date(2015, 5, 3)
+
+        # Set default format
+        current.deployment_settings.L10n.date_format = "%Y-%m-%d"
+
+        # Verify default format
+        assertEqual(represent(date), "2015-05-03")
+
+        # Override default format in call
+        assertEqual(represent(date, format="%a %d %b, %Y"), "Sun 03 May, 2015")
 
     # -------------------------------------------------------------------------
     def testDateRepresentDestructive(self):
@@ -178,7 +199,7 @@ class DateRepresentationTests(unittest.TestCase):
         self.assertEqual(rstr, "19-Feb-1473")
 
     # -------------------------------------------------------------------------
-    def testDatetimeRepresent(self):
+    def testDateTimeRepresent(self):
         """ Test date representation of datetime.datetime """
 
         date = datetime.datetime(1993, 6, 17, 22, 0, 0)
@@ -187,7 +208,7 @@ class DateRepresentationTests(unittest.TestCase):
         self.assertEqual(rstr, "1993-06-17")
 
     # -------------------------------------------------------------------------
-    def testTZAwareDatetimeRepresent(self):
+    def testTZAwareDateTimeRepresent(self):
         """ Test date representation of datetime.datetime (timezone-aware) """
 
         session = current.session
@@ -235,6 +256,10 @@ class DateTimeRepresentationTests(unittest.TestCase):
         current.deployment_settings.L10n.date_format = "%Y-%m-%d"
         current.deployment_settings.L10n.time_format = "%H:%M:%S"
 
+        # Set current calendar to Gregorian
+        self.calendar = current.calendar
+        current.calendar = S3Calendar("Gregorian")
+
     # -------------------------------------------------------------------------
     def tearDown(self):
 
@@ -242,6 +267,9 @@ class DateTimeRepresentationTests(unittest.TestCase):
 
         settings.L10n.date_format = self.date_format
         settings.L10n.time_format = self.time_format
+
+        # Restore current calendar
+        current.calendar = self.calendar
 
     # -------------------------------------------------------------------------
     def testDateTimeRepresent(self):
@@ -272,6 +300,30 @@ class DateTimeRepresentationTests(unittest.TestCase):
 
         with assertRaises(TypeError):
             dtstr = represent("Invalid Type", utc=True)
+
+    # -------------------------------------------------------------------------
+    def testDateTimeRepresentAlternativeCalendar(self):
+        """ Test date representation with alternative calendar """
+
+        assertEqual = self.assertEqual
+        represent = S3DateTime.datetime_represent
+
+        date = datetime.datetime(2015, 5, 3, 14, 0, 0)
+
+        # Represent with default calendar
+        assertEqual(represent(date), "2015-05-03 14:00:00")
+
+        # Override default calendar
+        assertEqual(represent(date, calendar="Persian"), "1394-02-13 14:00:00")
+
+        # Change default calendar
+        current.calendar = S3Calendar("Persian")
+
+        # Represent with default calendar
+        assertEqual(represent(date), "1394-02-13 14:00:00")
+
+        # Override default calendar
+        assertEqual(represent(date, calendar="Gregorian"), "2015-05-03 14:00:00")
 
     # -------------------------------------------------------------------------
     def testTZAwareDateTimeRepresent(self):
@@ -1324,7 +1376,7 @@ class S3DateTimeParserTests(unittest.TestCase):
                       ("%d-%b-%Y", "27-Mar-2005", (2005, 3, 27, 0, 0, 0)),
                       )
 
-        c = S3Calendar()
+        c = S3Calendar("Gregorian")
 
         for dtfmt, string, timetuple in test_dates:
 
@@ -1359,7 +1411,7 @@ class S3DateTimeParserTests(unittest.TestCase):
                       ("%d-%b-%Y %I:%M %p", "31-Apr-2005 0:30am", (2005, 5, 1, 0, 30, 0)),
                       )
 
-        c = S3Calendar()
+        c = S3Calendar("Gregorian")
 
         for dtfmt, string, timetuple in test_dates:
 
