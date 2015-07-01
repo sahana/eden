@@ -235,52 +235,34 @@ S3.search = {};
 
         // Date(time) range widgets -- each widget has two inputs.
         form.find('.date-filter-input:visible').each(function() {
-            $this = $(this);
-            id = $this.attr('id');
-            url_var = $('#' + id + '-data').val();
-            value = $this.val();
-            var pad = function (val, len) {
-                val = String(val);
-                len = len || 2;
-                while (val.length < len) val = "0" + val;
-                return val;
-            };
-            var iso = function(dt) {
+
+            var $this = $(this),
+                id = $this.attr('id'),
+                operator = id.split('-').pop(),
+                urlVariable = $('#' + id + '-data').val();
+
+            // Helper to convert a JS Date into an ISO format string
+            var isoFormat = function(dt) {
                 return dt.getFullYear() + '-' +
-                       pad(dt.getMonth()+1, 2) + '-' +
-                       pad(dt.getDate(), 2) + 'T' +
-                       pad(dt.getHours(), 2) + ':' +
-                       pad(dt.getMinutes(), 2) + ':' +
-                       pad(dt.getSeconds(), 2);
+                       ('0' + (dt.getMonth() + 1)).slice(-2) + '-' +
+                       ('0' + dt.getDate()).slice(-2) + 'T' +
+                       ('0' + dt.getHours()).slice(-2) + ':' +
+                       ('0' + dt.getMinutes()).slice(-2) + ':' +
+                       ('0' + dt.getSeconds()).slice(-2);
             };
-            var dt, dtstr;
+
+            var value = $this.val();
             if (value) {
-                if ($this.hasClass('datetimepicker')) {
-                    if ($this.hasClass('hide-time')) {
-                        dt = $this.datepicker('getDate');
-                        var op = id.split('-').pop();
-                        if (op == 'le' || op == 'gt') {
-                            dt.setHours(23, 59, 59, 0);
-                        } else {
-                            dt.setHours(0, 0, 0, 0);
-                        }
-                    } else {
-                        dt = $this.datetimepicker('getDate');
-                    }
-                    dt_str = iso(dt);
-                } else {
-                    dt = Date.parse(value);
-                    if (isNaN(dt)) {
-                        // Unsupported format (e.g. US MM-DD-YYYY), pass
-                        // as string, and hope the server can parse this
-                        dt_str = '"'+ value + '"';
-                    } else {
-                        dt_str = iso(new Date(dt));
-                    }
+                var end = false;
+                if (operator == 'le') {
+                    end = true;
                 }
-                queries.push([url_var, dt_str]);
+                var jsDate = $this.calendarWidget('getJSDate', end),
+                    urlValue = isoFormat(jsDate);
+                queries.push([urlVariable, urlValue]);
             } else {
-                queries.push([url_var, null]);
+                // Remove the filter (explicit null)
+                queries.push([urlValue, null]);
             }
         });
 

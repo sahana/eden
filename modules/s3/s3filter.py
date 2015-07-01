@@ -65,11 +65,18 @@ from gluon import *
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3rest import S3Method
+from s3datetime import s3_decode_iso_datetime, S3DateTime
 from s3query import S3ResourceField, S3ResourceQuery, S3URLQuery
+from s3rest import S3Method
 from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
-from s3widgets import ICON, S3DateWidget, S3DateTimeWidget, S3GroupedOptionsWidget, S3MultiSelectWidget, S3HierarchyWidget
+from s3widgets import ICON, \
+                      S3CalendarWidget, \
+                      S3DateWidget, \
+                      S3DateTimeWidget, \
+                      S3GroupedOptionsWidget, \
+                      S3MultiSelectWidget, \
+                      S3HierarchyWidget
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -673,8 +680,9 @@ class S3DateFilter(S3RangeFilter):
                 return ""
         else:
             ftype = rfield.ftype
+
+        # S3CalendarWidget requires a Field
         if not field:
-            # S3DateTimeWidget requires a Field
             if rfield:
                 tname, fname = rfield.tname, rfield.fname
             else:
@@ -686,58 +694,86 @@ class S3DateFilter(S3RangeFilter):
             field = Field(fname, ftype, requires = IS_UTC_DATE())
             field.tablename = field._tablename = tname
 
-        # Options
+        # Classes and labels for the individual date/time inputs
+        T = current.T
+        input_class = self._input_class
+        input_labels = self.input_labels
+
+        # Picker options
         hide_time = self.opts.get("hide_time", False)
 
         # Generate the input elements
-        T = current.T
+        filter_widget = DIV(_id=_id, _class=_class)
+        append = filter_widget.append
+
         selector = self.selector
-        _variable = self._variable
-        input_class = self._input_class
-        input_labels = self.input_labels
-        input_elements = DIV(_id=_id, _class=_class)
-        append = input_elements.append
+        get_variable = self._variable
         for operator in self.operator:
 
             input_id = "%s-%s" % (_id, operator)
 
-            # Determine the widget class
-            if ftype == "date":
-                widget = S3DateWidget()
-            else:
-                opts = {}
-                if operator == "ge":
-                    opts["set_min"] = "%s-%s" % (_id, "le")
-                elif operator == "le":
-                    opts["set_max"] = "%s-%s" % (_id, "ge")
-                widget = S3DateTimeWidget(hide_time=hide_time, **opts)
+            # Do we want a timepicker?
+            timepicker = False if ftype == "date" or hide_time else True
+
+            # Make the two inputs constrain each other
+            set_min = set_max = None
+            if operator == "ge":
+                set_min = "#%s-%s" % (_id, "le")
+            elif operator == "le":
+                set_max = "#%s-%s" % (_id, "ge")
+
+            # Instantiate the widget
+            widget = S3CalendarWidget(timepicker = timepicker,
+                                      set_min = set_min,
+                                      set_max = set_max,
+                                      )
 
             # Populate with the value, if given
             # if user has not set any of the limits, we get [] in values.
-            variable = _variable(selector, operator)
-            value = values.get(variable, None)
-            if value not in [None, []]:
-                if type(value) is list:
-                    value = value[0]
-            else:
+            value = values.get(get_variable(selector, operator))
+            if value in (None, []):
                 value = None
+            elif type(value) is list:
+                value = value[0]
+
+            # Widget expects a string in local calendar and format
+            if isinstance(value, basestring):
+                # URL filter or filter default come as string in
+                # Gregorian calendar and ISO format => convert into
+                # a datetime
+                dt = s3_decode_iso_datetime(value)
+            else:
+                # Assume datetime
+                dt = value
+            if dt:
+                if timepicker:
+                    dtstr = S3DateTime.datetime_represent(dt, utc=False)
+                else:
+                    dtstr = S3DateTime.date_represent(dt, utc=False)
+            else:
+                dtstr = None
 
             # Render the widget
-            picker = widget(field, value,
-                            _name=input_id,
-                            _id=input_id,
-                            _class=input_class)
+            picker = widget(field,
+                            dtstr,
+                            _class = input_class,
+                            _id = input_id,
+                            _name = input_id,
+                            )
 
             # Append label and widget
-            append(DIV(
-                    DIV(LABEL("%s:" % T(input_labels[operator]),
-                            _for=input_id),
-                        _class="range-filter-label"),
-                    DIV(picker,
-                        _class="range-filter-widget"),
-                    _class="range-filter-field"))
+            append(DIV(DIV(LABEL("%s:" % T(input_labels[operator]),
+                                 _for=input_id,
+                                 ),
+                           _class="range-filter-label",
+                           ),
+                       DIV(picker,
+                           _class="range-filter-widget",
+                           ),
+                       _class="range-filter-field",
+                       ))
 
-        return input_elements
+        return filter_widget
 
 # =============================================================================
 class S3SliderFilter(S3RangeFilter):

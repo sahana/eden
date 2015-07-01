@@ -228,7 +228,7 @@
             minuteStep: 5,
 
             clearButton: true,
-            triggerButton: true,
+            triggerButton: false,
 
             setMin: null,
             setMax: null,
@@ -587,6 +587,10 @@
                     minDate: minDate,
                     maxDate: maxDate,
 
+                    onSelect: function(input) {
+                        // Trigger a change event (calendarPicker does not)
+                        el.change();
+                    },
                     onClose: function(selectedDates) {
                         var selectedDate = null;
                         if (selectedDates.length) {
@@ -765,6 +769,7 @@
 
             // Inform the filter form about the change
             el.closest('.filter-form').trigger('optionChanged');
+
         },
 
         /**
