@@ -95,7 +95,7 @@ S3.search = {};
             $(this).val('');
         });
         form.find('.date-filter-input').each(function() {
-            $(this).val('');
+            $(this).calendarWidget('clear');
         });
         // Hierarchy filter widget (experimental)
         form.find('.hierarchy-filter').each(function() {
@@ -460,7 +460,7 @@ S3.search = {};
         });
 
         // Numerical range widgets
-        form.find('.range-filter-input:visible').each(function() {
+        form.find('.range-filter-input').each(function() {
             $this = $(this);
             id = $this.attr('id');
             expression = $('#' + id + '-data').val();
@@ -478,31 +478,30 @@ S3.search = {};
         });
 
         // Date(time) range widgets
-        form.find('.date-filter-input:visible').each(function() {
-            $this = $(this);
-            id = $this.attr('id');
-            expression = $('#' + id + '-data').val();
+        form.find('.date-filter-input').each(function() {
+
+            var $this = $(this),
+                expression = $('#' + $this.attr('id') + '-data').val(),
+                selector = expression.split('__')[0],
+                values = false;
+
             if (q.hasOwnProperty(expression)) {
+                values = q[expression];
+            } else if (q.hasOwnProperty(selector)) {
+                // Match isolated selector if no operator-specific expression present
+                values = q[selector];
+            }
+            if (values !== false) {
                 if (!$this.is(':visible') && !$this.hasClass('active')) {
                     toggleAdvanced(form);
                 }
-                values = q[expression];
                 if (values) {
-                    value = new Date(values[0]);
-                    if ($this.hasClass('datetimepicker')) {
-                        if ($this.hasClass('hide-time')) {
-                            $this.datepicker('setDate', value);
-                        } else {
-                            $this.datetimepicker('setDate', value);
-                        }
-                    } else if ($this.hasClass('hasDatepicker')) {
-                        $this.datepicker('setDate', value);
-                    } else {
-                        $this.val('');
-                        // @todo: format required!
-                    }
+                    // Add the 'T' separator to the date string so it
+                    // can be parsed by the Date constructor:
+                    var dtString = values[0].replace(' ', 'T');
+                    $this.calendarWidget('setJSDate', new Date(dtString));
                 } else {
-                    $this.val('');
+                    $this.calendarWidget('clear');
                 }
             }
         });

@@ -1085,7 +1085,7 @@
          */
         setJSDate: function(jsDate) {
 
-            if (!jsDate) {
+            if (!jsDate || isNaN(jsDate.getTime())) {
                 return;
             }
 
