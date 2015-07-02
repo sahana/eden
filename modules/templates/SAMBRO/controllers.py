@@ -7,7 +7,6 @@ except ImportError:
         import simplejson as json # try external module
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
-
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
@@ -27,8 +26,44 @@ class index(S3CustomController):
 
         map = current.gis.show_map()
 
+        output = {}
+        output["map"] = map
+
+        # Image Carousel
+        # Latest 4 Events and Alerts
+        from s3.s3query import FS
+        s3db = current.s3db
+        layout = s3.render_posts
+        list_id = "news_datalist"
+        limit = 4
+        list_fields = ["series_id",
+                       "location_id",
+                       "date",
+                       "body",
+                       "created_by",
+                       "created_by$organisation_id",
+                       "document.file",
+                       "event_post.event_id",
+                       ]
+
+        resource = s3db.resource("cms_post")
+        resource.add_filter(FS("series_id$name") == "Event")
+        # Only show Future Events
+        resource.add_filter(resource.table.date >= current.request.now)
+        # Order with next Event first
+        orderby = "date"
+        output["events"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
+
+        resource = s3db.resource("cms_post")
+        resource.add_filter(FS("series_id$name") == "Alert")
+        # Order with most recent Alert first
+        orderby = "date desc"
+        output["alerts"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
+
+
         self._view(THEME, "index.html")
-        return dict(title = T("CAP Alert"), map = map)
+
+        return output
 
 # =============================================================================
 class subscriptions(S3CustomController):
@@ -51,8 +86,7 @@ class subscriptions(S3CustomController):
         # Available resources
         resources = [dict(resource="cap_alert",
                           url="cap/alert",
-                          label=T("Updates")),
-                     ]
+                          label=T("Updates")),]
 
         # Filter widgets
         # @note: subscription manager has no resource context, so
@@ -63,23 +97,19 @@ class subscriptions(S3CustomController):
                                    options = s3db.cap_info_category_opts,
                                    represent = "%(name)s",
                                    resource = "cap_info",
-                                   _name = "category-filter",
-                                   ),
+                                   _name = "category-filter",),
                    S3LocationFilter("location_id",
                                     label = T("Location(s)"),
                                     levels = ("L0",),
                                     resource = "cap_area_location",
                                     options = gis.get_countries().keys(),
-                                    _name = "location-filter",
-                                    ),
+                                    _name = "location-filter",),
                    S3OptionsFilter("language",
                                    label = T("Language"),
                                    options = settings.get_cap_languages(),
                                    represent = "%(name)s",
                                    resource = "cap_info",
-                                   _name = "language-filter",
-                                   ),
-                   ]
+                                   _name = "language-filter",),]
 
         # Title and view
         title = T("Notification Settings")
@@ -105,20 +135,16 @@ class subscriptions(S3CustomController):
 
         # L10n
         T = current.T
-        labels = Storage(
-            RESOURCES = T("Subscribe To"),
+        labels = Storage(RESOURCES = T("Subscribe To"),
             NOTIFY_ON = T("Notify On"),
             FREQUENCY = T("Frequency"),
             NOTIFY_BY = T("Notify By"),
             MORE = T("More Options"),
-            LESS = T("Less Options"),
-        )
-        messages = Storage(
-            ERROR = T("Error: could not update notification settings"),
-            SUCCESS = T("Notification settings updated"),
-        )
+            LESS = T("Less Options"),)
+        messages = Storage(ERROR = T("Error: could not update notification settings"),
+            SUCCESS = T("Notification settings updated"),)
 
-        # Get current subscription settings resp. form defaults
+        # Get current subscription settings resp.  form defaults
         subscription = self._get_subscription()
 
         # Formstyle bootstrap
@@ -334,8 +360,7 @@ class subscriptions(S3CustomController):
                                     method=subscription["method"])
             subscription_id = success
         else:
-            success = db(stable.id == subscription_id).update(
-                            pe_id=pe_id,
+            success = db(stable.id == subscription_id).update(pe_id=pe_id,
                             filter_id=filter_id,
                             notify_on=subscription["notify_on"],
                             frequency=frequency,
@@ -410,5 +435,43 @@ class subscriptions(S3CustomController):
         subscription["id"] = subscription_id
         subscription["filter_id"] = filter_id
         return subscription
+
+    # =============================================================================
+def latest_records(resource, layout, list_id, limit, list_fields, orderby):
+    """
+        Display a dataList of the latest records for a resource
+        @todo: remove this wrapper
+    """
+
+    #orderby = resource.table[orderby]
+    datalist, numrows, ids = resource.datalist(fields=list_fields,
+                                               start=None,
+                                               limit=limit,
+                                               list_id=list_id,
+                                               orderby=orderby,
+                                               layout=layout)
+    if numrows == 0:
+        # Empty table or just no match?
+        from s3.s3crud import S3CRUD
+        table = resource.table
+        if "deleted" in table:
+            available_records = current.db(table.deleted != True)
+        else:
+            available_records = current.db(table._id > 0)
+        if available_records.select(table._id,
+                                    limitby=(0, 1)).first():
+            msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                         "msg_no_match"),
+                      _class="empty")
+        else:
+            msg = DIV(S3CRUD.crud_string(resource.tablename,
+                                         "msg_list_empty"),
+                      _class="empty")
+        data = msg
+    else:
+        # Render the list
+        data = datalist.html()
+
+    return data
 
 # END =========================================================================

@@ -1,1 +1,53 @@
 {{extend "layout.html"}}{{theme=response.s3.theme}}
+<link href="/eden/static/styles/../themes/SAMBRO/style.css" rel="stylesheet" />
+
+<div id="sambro-body" class="row">
+    <div class="large-12 columns">
+        <div class="row">
+
+            <div id="sambro-left" class="large-2 small-3 columns">
+                <div class="sambro-panel">
+                    <h4><i class="icon icon-bullhorn"></i>{{=T("Alerts")}}</h4>
+                    <div class="sambro-list">
+                        <i class="icon icon-compass"></i><a href="alert">Alert Title 1</a>
+                    </div>
+                    <div class="sambro-list">
+                        <i class="icon icon-compass"></i><a href="alert">Alert Title 2</a>
+                    </div>
+                    <div class="sambro-list">
+                        <i class="icon icon-compass"></i><a href="alert">Alert Title 3</a>
+                    </div>
+                    <div class="sambro-list">
+                        <i class="icon icon-compass"></i><a href="alert">Alert Title 4</a>
+                    </div>
+                    <div class="sambro-list">
+                        <i class="icon icon-compass"></i><a href="alert">Alert Title 5</a>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sambro-center" class="large-8 small-9 columns">
+                <div class="sambro-panel">
+                    <h4>{{=T("Sahana Alert System")}}</h4>
+                    {{=XML(map)}}
+                </div>
+            </div>
+
+            <div id="sambro-right" class="large-2 small-12 columns">
+                <div class="sambro-panel">
+                    <h4>{{=T("Events")}}</h4>
+                    <div class="sambro-list">
+                        {{=events}}
+                    </div>
+                </div>
+                <div class="sambro-panel">
+                    <h4>{{=T("Feeds")}}</h4>
+                    <div class="sambro-list">
+                        {{=alerts}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>

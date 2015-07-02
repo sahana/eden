@@ -21,7 +21,7 @@ def config(settings):
     settings.base.prepopulate = ("SAMBRO", "default/users")
 
     # Theme (folder to use for views/layout.html)
-    settings.base.theme = "SAMBRO"
+    #settings.base.theme = "SAMBRO"
 
     # The Registration functionality shouldn't be visible to the Public
     settings.security.registration_visible = False
@@ -109,25 +109,25 @@ def config(settings):
             #description = "Selective translation of strings based on module.",
             module_type = None,
         )),
-        #("gis", Storage(
-        #    name_nice = T("Map"),
-        #    #description = "Situation Awareness & Geospatial Analysis",
-        #    restricted = True,
-        #    module_type = 6,     # 6th item in the menu
-        #)),
-        #("pr", Storage(
-        #    name_nice = T("Person Registry"),
-        #    #description = "Central point to record details on People",
-        #    restricted = True,
-        #    access = "|1|",     # Only Administrators can see this module in the default menu (access to controller is possible to all still)
-        #    module_type = 10
-        #)),
-        #("org", Storage(
-        #    name_nice = T("Organizations"),
-        #    #description = 'Lists "who is doing what & where". Allows relief agencies to coordinate their activities',
-        #    restricted = True,
-        #    module_type = 10
-        #)),
+        ("gis", Storage(
+            name_nice = T("Map"),
+            #description = "Situation Awareness & Geospatial Analysis",
+            restricted = True,
+            module_type = 6,     # 6th item in the menu
+        )),
+        ("pr", Storage(
+            name_nice = T("Person Registry"),
+            #description = "Central point to record details on People",
+            restricted = True,
+            access = "|1|",     # Only Administrators can see this module in the default menu (access to controller is possible to all still)
+            module_type = 10
+        )),
+        ("org", Storage(
+            name_nice = T("Organizations"),
+            #description = 'Lists "who is doing what & where". Allows relief agencies to coordinate their activities',
+            restricted = True,
+            module_type = 10
+        )),
         # All modules below here should be possible to disable safely
         #("hrm", Storage(
         #    name_nice = T("Staff"),
@@ -135,43 +135,43 @@ def config(settings):
         #    restricted = True,
         #    module_type = 2,
         #)),
-        #("cap", Storage(
-        #    name_nice = T("CAP"),
-        #    #description = "Create & broadcast CAP alerts",
-        #    restricted = True,
-        #    module_type = 1,
-        #)),
-        #("cms", Storage(
-        #  name_nice = T("Content Management"),
-        #  #description = "Content Management System",
-        #  restricted = True,
-        #  module_type = 10,
-        #)),
-        #("doc", Storage(
-        #    name_nice = T("Documents"),
-        #    #description = "A library of digital resources, such as photos, documents and reports",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
-        #("msg", Storage(
-        #    name_nice = T("Messaging"),
-        #    #description = "Sends & Receives Alerts via Email & SMS",
-        #    restricted = True,
-        #    # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
-        #    module_type = None,
-        #)),
-        #("irs", Storage(
-        #    name_nice = T("Incidents"),
-        #    #description = "Incident Reporting System",
-        #    restricted = True,
-        #    module_type = 10
-        #)),
-        #("event", Storage(
-        #    name_nice = T("Events"),
-        #    #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
+        ("cap", Storage(
+            name_nice = T("CAP"),
+            #description = "Create & broadcast CAP alerts",
+            restricted = True,
+            module_type = 1,
+        )),
+        ("cms", Storage(
+          name_nice = T("Content Management"),
+          #description = "Content Management System",
+          restricted = True,
+          module_type = 10,
+        )),
+        ("doc", Storage(
+            name_nice = T("Documents"),
+            #description = "A library of digital resources, such as photos, documents and reports",
+            restricted = True,
+            module_type = 10,
+        )),
+        ("msg", Storage(
+            name_nice = T("Messaging"),
+            #description = "Sends & Receives Alerts via Email & SMS",
+            restricted = True,
+            # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
+            module_type = None,
+        )),
+        ("irs", Storage(
+            name_nice = T("Incidents"),
+            #description = "Incident Reporting System",
+            restricted = True,
+            module_type = 10
+        )),
+        ("event", Storage(
+            name_nice = T("Events"),
+            #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+            restricted = True,
+            module_type = 10,
+        )),
     ])
 
 # END =========================================================================
