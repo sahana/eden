@@ -108,7 +108,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var s3 = map.s3;
 
         // Allow more room for Features
-        map.Z_INDEX_BASE.Popup = 800;
+        map.Z_INDEX_BASE.Popup = 900;
 
         // Resize the Map when the Browser window is resized
         var map_div = $('#' + map_id + '_panel');
