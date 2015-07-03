@@ -58,6 +58,7 @@ class S3CAPModel(S3Model):
 
     names = ("cap_alert",
              "cap_alert_represent",
+             "cap_warning_priority",
              "cap_info",
              "cap_info_represent",
              "cap_resource",
@@ -487,14 +488,59 @@ class S3CAPModel(S3Model):
             ("Unknown", T("Certainty unknown")),
         ])
 
+        # ---------------------------------------------------------------------
+        # Warning Priorities for CAP
+        
+        tablename = "cap_warning_priority"
+        define_table(tablename,
+		             Field("priority_rank", "integer",
+		                    length = 2,
+				            ),
+                     Field("event_code",
+		                    label = T("Event Code"),
+		                    ),
+                     Field("name", notnull = True, length = 64,
+                            label = T("Name"),
+                            ),
+                     Field("event_type",
+                            label = T("Event Type"),
+                            ),
+                     Field("urgency",
+                            required = True,
+                            requires = IS_IN_SET(cap_info_urgency_opts),
+                            ),
+                     Field("severity",
+                            required = True,
+                            requires = IS_IN_SET(cap_info_severity_opts),
+                            ),
+                     Field("certainty",
+                            required = True,
+                            requires = IS_IN_SET(cap_info_certainty_opts),
+                            ),
+                     Field("color_code",
+                            label = T("Color Code"),
+                            ),
+                     *s3_meta_fields())
+        
+        priority_represent = S3Represent(lookup = tablename,
+                                         fields = ["name"])
+        
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Warning Priority"),
+            title_display = T("Warning Priority Details"),
+            title_list = T("Warning Priorities"),
+            title_update = T("Edit Warning Priority"),
+            title_upload = T("Import Warning Priorities"),
+            label_list_button = T("List Warning Priorities"),
+            label_delete_button = T("Delete Warning Priority"),
+            msg_record_created = T("Warning Priority added"),
+            msg_record_modified = T("Warning Priority updated"),
+            msg_record_deleted = T("Warning Priority removed"),
+            msg_list_empty = T("No Warning Priorities currently registered")
+            )
+        
+        # ---------------------------------------------------------------------
         # CAP info priority
-        priorities = settings.get_cap_priorities()
-        try:
-            cap_info_priority_opts = OrderedDict([(f[0], f[1]) for f in priorities]
-                    + [("Undefined", T("Undefined"))])
-        except IndexError:
-            raise ValueError("CAP priorities setting is not structured properly")
-
         # @ToDo: i18n: Need label=T("")
         tablename = "cap_info"
         define_table(tablename,
@@ -534,9 +580,24 @@ class S3CAPModel(S3Model):
                                                 ),
                            widget = S3MultiSelectWidget(),
                            ), # 1 or more allowed
-                     Field("event",
-                           required = True,
-                           ),
+                     self.event_type_id(requires = 
+                                       IS_ONE_OF(
+                                            db, "event_event_type.id",
+                                            S3Represent(
+                                                    lookup="event_event_type",
+                                                    translate=True
+                                                ),
+                                            orderby = "event_event_type.name",
+                                            sort = True
+                                        ),
+                                       script = '''
+                            $.filterOptionsS3({
+                             'trigger':'event_type_id',
+                             'target':'priority',
+                             'lookupURL':S3.Ap.concat('/cap/priority_get/'),
+                             'lookupResource':'event_type'                         
+                             })'''
+                     ),
                      Field("response_type", "list:string",
                            represent = S3Represent(options = cap_info_responseType_opts,
                                                    multiple = True,
@@ -546,8 +607,11 @@ class S3CAPModel(S3Model):
                            widget = S3MultiSelectWidget(),
                            ), # 0 or more allowed
                      Field("priority",
+                           represent = priority_represent,
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET(cap_info_priority_opts)
+                                        IS_ONE_OF(
+                                                db, "cap_warning_priority.id"
+                                            ),
                                         ),
                            ),
                      Field("urgency",
@@ -1065,7 +1129,6 @@ def cap_info_labels():
     T = current.T
     return dict(language=T("Language"),
                 category=T("Category"),
-                event=T("Event"),
                 response_type=T("Response type"),
                 urgency=T("Urgency"),
                 severity=T("Severity"),
