@@ -495,9 +495,9 @@ class S3CAPModel(S3Model):
         define_table(tablename,
 		             Field("priority_rank", "integer",
 		                    length = 2,
-				            ),
+	                        ),
                      Field("event_code",
-		                    label = T("Event Code"),
+	                        label = T("Event Code"),
 		                    ),
                      Field("name", notnull = True, length = 64,
                             label = T("Name"),
@@ -580,17 +580,17 @@ class S3CAPModel(S3Model):
                                                 ),
                            widget = S3MultiSelectWidget(),
                            ), # 1 or more allowed
-                     self.event_type_id(requires = 
-                                       IS_ONE_OF(
-                                            db, "event_event_type.id",
-                                            S3Represent(
-                                                    lookup="event_event_type",
-                                                    translate=True
-                                                ),
-                                            orderby = "event_event_type.name",
-                                            sort = True
-                                        ),
-                                       script = '''
+                     self.event_type_id(default = IS_ONE_OF(
+                                                    db, "event_event_type.id",
+                                                    S3Represent(
+                                                                lookup="event_event_type",
+                                                                translate=True
+                                                                ),
+                                                    orderby = "event_event_type.name",
+                                                    sort = True,
+                                                    ),
+                                        empty = False,                                                                                                
+                                        script = '''
                             $.filterOptionsS3({
                              'trigger':'event_type_id',
                              'target':'priority',
@@ -610,7 +610,8 @@ class S3CAPModel(S3Model):
                            represent = priority_represent,
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(
-                                                db, "cap_warning_priority.id"
+                                                db, "cap_warning_priority.id",
+                                                priority_represent
                                             ),
                                         ),
                            ),
