@@ -589,7 +589,7 @@ class S3CAPModel(S3Model):
                                                     orderby = "event_event_type.name",
                                                     sort = True,
                                                     ),
-                                        empty = False,                                                                                    
+                                        empty = False,
                                         script = '''
                             $.filterOptionsS3({
                              'trigger':'event_type_id',
