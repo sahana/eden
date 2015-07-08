@@ -226,7 +226,7 @@ class S3Profile(S3CRUD):
                 elif w_type == "form":
                     w = self._form(r, widget, **attr)
                 elif w_type == "map":
-                    w = self._map(r, widget, **attr)
+                    w = self._map(r, widget, widgets, **attr)
                 elif w_type == "report":
                     w = self._report(r, widget, **attr)
                 else:
@@ -796,7 +796,7 @@ class S3Profile(S3CRUD):
         return output
 
     # -------------------------------------------------------------------------
-    def _map(self, r, widget, **attr):
+    def _map(self, r, widget, widgets, **attr):
         """
             Generate a Map widget
 
@@ -834,7 +834,6 @@ class S3Profile(S3CRUD):
         mtable = s3db.gis_marker
         feature_resources = []
         fappend = feature_resources.append
-        widgets = s3db.get_config(tablename, "profile_widgets")
         s3dbresource = s3db.resource
         for widget in widgets:
             if widget["type"] not in ("datalist", "datatable", "report"):

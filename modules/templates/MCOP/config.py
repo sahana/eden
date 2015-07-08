@@ -17,7 +17,7 @@ from s3 import s3_avatar_represent
 
 def config(settings):
     """
-        Template for Puget Sound Common Maritime Operating Picture (MCOP)
+        Template for Washington Common Operating Picture (WA-COP)
 
         http://psmcop.org
     """
@@ -29,7 +29,7 @@ def config(settings):
     # Pre-Populate
     settings.base.prepopulate = ("MCOP", "default/users")
 
-    settings.base.system_name = T("Sahana: Puget Sound Common Maritime Operating Picture (MCOP)")
+    settings.base.system_name = T("Sahana: Washington Common Operating Picture (WA-COP)")
     settings.base.system_name_short = T("Sahana")
 
     # =============================================================================
@@ -492,6 +492,14 @@ def config(settings):
 
         # Custom Form
         location_id_field = table.location_id
+        from s3 import IS_LOCATION, S3LocationSelector
+        location_id_field.requires = IS_LOCATION()
+        location_id_field.widget = S3LocationSelector(levels=levels,
+                                                      show_address=True,
+                                                      show_map=True,
+                                                      points = True,
+                                                      polygons = True,
+                                                      )
         # Don't add new Locations here
         location_id_field.comment = None
 
@@ -1137,7 +1145,17 @@ def config(settings):
         table.name.label = T("Name")
         table.description.label = T("Description")
         table.description.comment = None
-        table.location_id.readable = table.location_id.writable = True
+
+        location_id_field = table.location_id
+        location_id_field.readable = location_id_field.writable = True
+        from s3 import IS_LOCATION, S3LocationSelector
+        location_id_field.requires = IS_LOCATION()
+        location_id_field.widget = S3LocationSelector(levels=levels,
+                                                      show_address=True,
+                                                      show_map=True,
+                                                      points = True,
+                                                      polygons = True,
+                                                      )
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
         crud_fields = ["source_url",
                        "status",
