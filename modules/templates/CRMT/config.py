@@ -970,6 +970,8 @@ def config(settings):
                                "comments",
                                ]
 
+                s3db.org_facility.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
+
                 s3db.configure(tablename,
                                # Hide Open & Delete dataTable action buttons
                                deletable = False,

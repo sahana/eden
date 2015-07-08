@@ -1,4 +1,5 @@
 /**
+/**
  * Used by the Map (modules/s3/s3gis.py)
  * This script is in Static to allow caching
  * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
@@ -107,7 +108,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var s3 = map.s3;
 
         // Allow more room for Features
-        map.Z_INDEX_BASE.Popup = 800;
+        map.Z_INDEX_BASE.Popup = 900;
 
         // Resize the Map when the Browser window is resized
         var map_div = $('#' + map_id + '_panel');
@@ -5409,7 +5410,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             zoom: zoom || state.zoom,
             layers: layersStr,
             plugins: pluginsStr
-        }
+        };
         var options = s3.options;
         if (options.pe_id) {
             json_data['pe_id'] = options.pe_id;
@@ -5526,6 +5527,9 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
             }
             if (key.s3_style) {
                 layer_config['style'] = key.s3_style;
+            }
+            if (key.dir) {
+                layer_config['dir'] = key.dir;
             }
             layers.push(layer_config);
         });

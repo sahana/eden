@@ -353,6 +353,10 @@ svg[id^=OpenLayers] {
 .olPopup #plain {
     max-width: 450px;
 }
+.olPopupCloseBox { /* Needed for Foundation-based themes for some reason */
+    margin-right: 15px;
+    margin-top: -8px;
+}
 .olFramedCloudPopupContent label {
     padding-right: 5px;
 }
