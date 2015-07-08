@@ -748,6 +748,8 @@ class S3OrganisationModel(S3Model):
 
         configure(tablename,
                   xml_post_parse = self.org_organisation_organisation_type_xml_post_parse,
+                  onaccept = self.org_organisation_organisation_type_onaccept,
+                  ondelete = self.org_organisation_organisation_type_ondelete,
                   )
 
         # ---------------------------------------------------------------------
@@ -855,6 +857,69 @@ class S3OrganisationModel(S3Model):
                                                     ).first()
         if deleted_row and deleted_row.logo:
             current.s3db.pr_image_delete_all(deleted_row.logo)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_organisation_organisation_type_onaccept(form):
+        """
+            Update the realm entity of the organisation after changing the
+            organisation type (otherwise type-dependent realm rules won't
+            ever take effect since the org_organisation record is written
+            before the org_organisation_organisation_type)
+
+            @param form: the Form
+        """
+
+        # Get the type-link
+        try:
+            record_id = form.vars.id
+        except AttributeError:
+            return
+        table = current.s3db.org_organisation_organisation_type
+        row = current.db(table.id == record_id).select(table.organisation_id,
+                                                       limitby = (0, 1),
+                                                       ).first()
+
+        if row:
+            # Update the realm entity
+            current.auth.set_realm_entity("org_organisation",
+                                          row.organisation_id,
+                                          force_update = True,
+                                          )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org_organisation_organisation_type_ondelete(row):
+        """
+            Update the realm entity of the organisation after removing an
+            organisation type (otherwise type-dependent realm rules won't
+            take effect)
+
+            @param form: the Row
+        """
+
+        # Get the type-link
+        try:
+            record_id = row.id
+        except AttributeError:
+            return
+        table = current.s3db.org_organisation_organisation_type
+        row = current.db(table.id == record_id).select(table.deleted_fk,
+                                                       limitby = (0, 1),
+                                                       ).first()
+        if row and row.deleted_fk:
+            # Find the organisation ID
+            try:
+                deleted_fk = json.loads(row.deleted_fk)
+            except ValueError:
+                return
+            organisation_id = deleted_fk.get("organisation_id")
+
+            # Update the realm entity
+            current.auth.set_realm_entity("org_organisation",
+                                          organisation_id,
+                                          force_update = True,
+                                          )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1319,9 +1384,11 @@ class S3OrganisationBranchModel(S3Model):
                     else:
                         branch_types.add(row.organisation_type_id)
                 for t in org_types - branch_types:
-                    ltable.insert(organisation_id = branch_id,
-                                  organisation_type_id = t,
-                                  )
+                    link_id = ltable.insert(organisation_id = branch_id,
+                                            organisation_type_id = t,
+                                            )
+                    form = Storage(vars = Storage(id = link_id))
+                    S3OrganisationModel.org_organisation_organisation_type_onaccept(link_id)
 
                 # Inherit Org Sectors
                 ltable = s3db.org_sector_organisation

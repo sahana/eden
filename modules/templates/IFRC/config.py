@@ -178,15 +178,20 @@ def config(settings):
 
         use_user_organisation = False
         #use_user_root_organisation = False
+
         # Suppliers & Partners are owned by the user's organisation
+        # @note: when the organisation record is first written, no
+        #        type-link would exist yet, so this needs to be
+        #        called again every time the type-links for an
+        #        organisation change in order to be effective
         if realm_entity == 0 and tablename == "org_organisation":
             ottable = s3db.org_organisation_type
             ltable = db.org_organisation_organisation_type
             query = (ltable.organisation_id == row.id) & \
-                    (ltable.organisation_type_id == ottable.id)
-            otype = db(query).select(ottable.name,
-                                     limitby=(0, 1)).first()
-            if not otype or otype.name != "Red Cross / Red Crescent":
+                    (ottable.id == ltable.organisation_type_id) & \
+                    (ottable.name == "Red Cross / Red Crescent")
+            rclink = db(query).select(ltable.id, limitby=(0, 1)).first()
+            if not rclink:
                 use_user_organisation = True
 
         # Facilities & Requisitions are owned by the user's organisation
@@ -2013,7 +2018,7 @@ def config(settings):
                     s3db.configure("hrm_human_resource",
                                    crud_form = crud_form,
                                    )
-        
+
                 elif root_org == NRCS:
                     pos = 6
                     # Add volunteer type to list_fields
@@ -2559,7 +2564,7 @@ def config(settings):
         return attr
 
     settings.customise_member_membership_type_controller = customise_member_membership_type_controller
-    
+
     # -----------------------------------------------------------------------------
     def customise_org_capacity_assessment_controller(**attr):
 
@@ -3056,7 +3061,7 @@ def config(settings):
                                            )
             elif component_name == "experience":
                 if root_org == IRCS:
-                    ctable = r.component.table 
+                    ctable = r.component.table
                     ctable.hours.readable = ctable.hours.writable = False
                     ctable.job_title_id.readable = ctable.job_title_id.writable = False
             elif component_name == "physical_description":
