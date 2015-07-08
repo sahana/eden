@@ -46,8 +46,6 @@
     /*text-shadow: 2px 2px 1px black;*/
 }
 
-
-
 .sahana_logo {
     float: left;
     height: 100px;
@@ -61,19 +59,19 @@
     padding: 20px 0 0;
 }
 
-.mcop_logo {
+.wa_cop_logo {
     float: left;
     clear: left;
-    width: 150px;
     margin: 0 5px 10px 15px;
+    height: 100px;
 }
 
 .header h2 {
     float: left;
-    font-size: 20px;
-    line-height: 25px;
+    font-size: 30px;
+    line-height: 40px;
     padding: 0;
-    margin: 0 0 0 10px;
+    margin: 25px 0 0 10px;
 }
 
 h1, h2, h3 {
@@ -97,7 +95,7 @@ h3 {
 }
 
 .header {
-    background: url('../../img/semi_white_75.png');
+    background-color: white;
     margin: 0;
 }
 
@@ -291,6 +289,10 @@ h2 {
 
 .edit-bar {
     position: static;
+}
+
+.media-body {
+    clear: left;
 }
 
 .dl-row {
