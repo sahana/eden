@@ -1141,6 +1141,16 @@ def config(settings):
     #    return default
     #settings.ui.autocomplete_delay = ui_autocomplete_delay
 
+    def l10n_calendar(default):
+        """ Which calendar to use """
+
+        root_org = current.auth.root_org_name()
+        if root_org == ARCS:
+            return "Afghan"
+        return default
+
+    settings.L10n.calendar = l10n_calendar
+
     # -------------------------------------------------------------------------
     def customise_asset_asset_controller(**attr):
 

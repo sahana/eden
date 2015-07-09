@@ -625,10 +625,13 @@
             if (this.hasOwnProperty('nTable')) {
                 // We have been called by reloadAjax()
 
-                // Copy the Ajax URL, and clear sAjaxSource to not
-                // override the ajax-setting for the actual reload:
-                ajax_urls[settings.nTable.id] = settings.sAjaxSource;
-                settings.sAjaxSource = null;
+                var sAjaxSource = settings.sAjaxSource;
+                if (sAjaxSource) {
+                    // Update Ajax URL, and clear sAjaxSource to not
+                    // override the ajax-setting for the actual reload:
+                    ajax_urls[settings.nTable.id] = sAjaxSource;
+                    settings.sAjaxSource = null;
+                }
 
                 // Clear cache to enforce reload
                 cacheLastJson = null;
