@@ -4371,7 +4371,7 @@ def pr_get_entities(pe_ids=None,
 
     if pe_ids is None:
         pe_ids = []
-    elif not isinstance(pe_ids, (list, tuple)):
+    elif not isinstance(pe_ids, (list, set, tuple)):
         pe_ids = [pe_ids]
     pe_ids = [long(pe_id) for pe_id in set(pe_ids)]
     query = (pe_table.deleted != True)

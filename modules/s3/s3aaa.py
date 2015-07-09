@@ -8218,17 +8218,19 @@ class S3RoleManager(S3Method):
 
         types = current.deployment_settings.get_auth_realm_entity_types()
 
-        if is_admin:
-            pe_ids = []
-        else:
-            # Filter to the realms of the role
-            pe_ids = set()
+        pe_ids = []
+        if not is_admin:
+            # Limit selection to the realms of the role
             if has_role(system_roles.ORG_GROUP_ADMIN):
-                pe_ids |= set(auth.user.realms[system_roles.ORG_GROUP_ADMIN])
+                realms = auth.user.realms[system_roles.ORG_GROUP_ADMIN]
+                if realms:
+                    pe_ids.extend(realms)
             if has_role(system_roles.ORG_ADMIN):
-                pe_ids |= set(auth.user.realms[system_roles.ORG_ADMIN])
-            pe_ids = list(pe_ids)
+                realms = auth.user.realms[system_roles.ORG_ADMIN]
+                if realms:
+                    pe_ids.extend(realms)
 
+        # Retrieve all entities, grouped by type
         entities = s3db.pr_get_entities(pe_ids=pe_ids, types=types, group=True)
 
         for instance_type in types:
