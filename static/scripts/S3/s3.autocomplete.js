@@ -54,10 +54,10 @@
         var throbber = $('#' + dummy + '_throbber');
 
         // Optional args
-        if (delay == 'undefined') {
+        if (delay == undefined) {
             delay = 800;
         }
-        if (min_length == 'undefined') {
+        if (min_length == undefined) {
             min_length = 2;
         }
         var datastore = {
@@ -192,10 +192,10 @@
 
         var throbber = $('#' + dummy + '_throbber');
 
-        if (delay == 'undefined') {
+        if (delay == undefined) {
             delay = 800;
         }
-        if (min_length == 'undefined') {
+        if (min_length == undefined) {
             min_length = 2;
         }
         dummy_input.autocomplete({
@@ -422,10 +422,10 @@
         if (level) {
             url += '?level=' + level;
         }
-        if (delay == 'undefined') {
+        if (delay == undefined) {
             delay = 800;
         }
-        if (min_length == 'undefined') {
+        if (min_length == undefined) {
             min_length = 2;
         }
         dummy_input.autocomplete({
@@ -580,10 +580,10 @@
         var throbber = $('#' + dummy + '_throbber');
 
         // Optional args
-        if (delay == 'undefined') {
+        if (delay == undefined) {
             delay = 800;
         }
-        if (min_length == 'undefined') {
+        if (min_length == undefined) {
             min_length = 2;
         }
         dummy_input.autocomplete({
@@ -715,10 +715,10 @@
         var throbber = $('#' + dummy + '_throbber');
 
         // Optional args
-        if (delay == 'undefined') {
+        if (delay == undefined) {
             delay = 800;
         }
-        if (min_length == 'undefined') {
+        if (min_length == undefined) {
             min_length = 2;
         }
         if (types) {
@@ -897,10 +897,10 @@
         var throbber = $('#' + dummy + '_throbber');
 
         // Optional args
-        if (delay == 'undefined') {
+        if (delay == undefined) {
             delay = 800;
         }
-        if (min_length == 'undefined') {
+        if (min_length == undefined) {
             min_length = 2;
         }
         dummy_input.autocomplete({
@@ -1071,10 +1071,10 @@
         var throbber = $('#' + dummy + '_throbber');
 
         // Optional args
-        if (delay == 'undefined') {
+        if (delay == undefined) {
             delay = 800;
         }
-        if (min_length == 'undefined') {
+        if (min_length == undefined) {
             min_length = 2;
         }
         dummy_input.autocomplete({
@@ -1334,10 +1334,10 @@
         var throbber = $('#' + dummy + '_throbber');
 
         // Optional args
-        if (delay == 'undefined') {
+        if (delay == undefined) {
             delay = 800;
         }
-        if (min_length == 'undefined') {
+        if (min_length == undefined) {
             min_length = 2;
         }
         dummy_input.autocomplete({
