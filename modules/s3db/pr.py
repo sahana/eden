@@ -3001,18 +3001,37 @@ class S3PersonEducationModel(S3Model):
     def model(self):
 
         T = current.T
+
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         NONE = current.messages["NONE"]
+
+        auth = current.auth
+        ADMIN = current.session.s3.system_roles.ADMIN
+        is_admin = auth.s3_has_role(ADMIN)
+        root_org = auth.root_org()
+        if is_admin:
+            filter_opts = ()
+        elif root_org:
+            filter_opts = (root_org, None)
+        else:
+            filter_opts = (None,)
 
         # ---------------------------------------------------------------------
         # Education Level
         #
         tablename = "pr_education_level"
         define_table(tablename,
-                     Field("name", length=64, notnull=True, unique=True,
+                     Field("name", length=64, notnull=True,
                            label = T("Name"),
                            ),
+                     # Only included in order to be able to set
+                     # realm_entity to filter appropriately
+                     self.org_organisation_id(default = root_org,
+                                              readable = is_admin,
+                                              writable = is_admin,
+                                              ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -3041,9 +3060,15 @@ class S3PersonEducationModel(S3Model):
                                    requires = IS_EMPTY_OR(
                                         IS_ONE_OF(current.db, "pr_education_level.id",
                                                   represent,
+                                                  filterby="organisation_id",
+                                                  filter_opts=filter_opts
                                                   )),
                                    sortby = "name",
                                    )
+
+        configure(tablename,
+                  deduplicate = self.pr_education_level_duplicate,
+                  )
 
         # ---------------------------------------------------------------------
         # Education
@@ -3099,28 +3124,46 @@ class S3PersonEducationModel(S3Model):
             msg_record_deleted = T("Education details deleted"),
             msg_list_empty = T("No education details currently registered"))
 
-        self.configure("pr_education",
-                       context = {"person": "person_id",
-                                  },
-                       deduplicate = self.pr_education_deduplicate,
-                       list_fields = ["id",
-                                      # Normally accessed via component
-                                      #"person_id",
-                                      "year",
-                                      "level_id",
-                                      "award",
-                                      "major",
-                                      "grade",
-                                      "institute",
-                                      ],
-                       orderby = "pr_education.year desc",
-                       sortby = [[1, "desc"]]
-                       )
+        configure("pr_education",
+                  context = {"person": "person_id",
+                             },
+                  deduplicate = self.pr_education_deduplicate,
+                  list_fields = ["id",
+                                 # Normally accessed via component
+                                 #"person_id",
+                                 "year",
+                                 "level_id",
+                                 "award",
+                                 "major",
+                                 "grade",
+                                 "institute",
+                                 ],
+                  orderby = "pr_education.year desc",
+                  sortby = [[1, "desc"]]
+                  )
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_education_level_duplicate(item):
+        """ Import item de-duplication """
+
+        data = item.data
+        name = data.get("name")
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        organisation_id = data.get("organisation_id")
+        if organisation_id:
+            query &= (table.organisation_id == organisation_id)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod

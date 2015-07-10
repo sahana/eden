@@ -1161,13 +1161,17 @@ class S3PDFTable(object):
 
 # =============================================================================
 class S3html2pdf():
+    """
+        Class that takes HTML in the form of web2py helper objects
+        and converts it to PDF
+    """
 
     def __init__(self,
                  pageWidth,
                  exclude_class_list = []):
         """
-            Method that takes html in the web2py helper objects
-            and converts it to pdf
+            @param pageWidth:
+            @param exclude_class_list:
         """
 
         # Fonts
@@ -1187,7 +1191,7 @@ class S3html2pdf():
         self.titlestyle.fontName = self.font_name_bold
         self.titlestyle.fontSize = 16
         self.normalstyle = self.plainstyle
-        # To add more pdf styles define the style above (just like the titlestyle)
+        # To add more PDF styles define the style above (just like the titlestyle)
         # Then add the style and the name to the lookup dict below
         # These can then be added to the html in the code as follows:
         # TD("Waybill", _class="pdf_title")
@@ -1196,6 +1200,7 @@ class S3html2pdf():
     # -------------------------------------------------------------------------
     def parse(self, html):
         """
+            Entry point for class
         """
 
         result = self.select_tag(html)
@@ -1335,6 +1340,7 @@ class S3html2pdf():
         I.drawWidth = width
         return [I]
 
+    # -------------------------------------------------------------------------
     def parse_p(self, html):
         """
             Parses a P element and converts it into a format for ReportLab

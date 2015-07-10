@@ -66,6 +66,7 @@ __all__ = ("S3OrganisationModel",
            "org_OrganisationRepresent",
            "org_SiteRepresent",
            #"org_AssignMethod",
+           #"org_CapacityReport",
            "org_customise_org_resource_fields",
            "org_organisation_list_layout",
            "org_resource_list_layout",
@@ -1523,134 +1524,11 @@ class S3OrganisationCapacityModel(S3Model):
         # Custom Report Method
         self.set_method("org", "capacity_assessment_data",
                         method = "custom_report",
-                        action = self.org_capacity_report)
+                        action = org_CapacityReport())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_capacity_report(r, **attr):
-        """
-            Custom Report Method for Organisation Capacity Assessment Data
-        """
-
-        T = current.T
-
-        output = dict(title = T("Branch Organisational Capacity Assessment"))
-        current.response.view = "org/capacity_report.html"
-
-        # Maintain RHeader for consistency
-        if attr.get("rheader"):
-            rheader = attr["rheader"](r)
-            if rheader:
-                output["rheader"] = rheader
-
-        # Read all the permitted data
-        resource = r.resource
-        resource.load()
-        rows = resource._rows
-
-        if not len(rows):
-            output["items"] = T("No Assessment Data Found")
-            return output
-
-        db = current.db
-        s3db = current.s3db
-
-        # Read all the Indicators
-        itable = s3db.org_capacity_indicator
-        indicators = db(itable.deleted == False).select(itable.id,
-                                                        itable.number,
-                                                        itable.section,
-                                                        itable.name,
-                                                        orderby = itable.number,
-                                                        )
-
-        # Find all the Assessments
-        assessments = [row.assessment_id for row in rows]
-        atable = s3db.org_capacity_assessment
-        assessments = db(atable.id.belongs(assessments)).select(atable.id,
-                                                                atable.organisation_id,
-                                                                #atable.date,
-                                                                # We will just include the most recent for each organisation
-                                                                orderby = ~atable.date,
-                                                                )
-
-        # Find all the Organisations and the Latest Assessments
-        latest_assessments = {}
-        orgs = {}
-        for a in assessments:
-            o = a.organisation_id
-            if o not in orgs:
-                latest_assessments[a.id] = o
-                orgs[o] = {}
-
-        # Calculate the Consolidated Ratings & populate the individual ratings
-        consolidated = {}
-        for i in indicators:
-            consolidated[i.id] = {"A": 0,
-                                  "B": 0,
-                                  "C": 0,
-                                  "D": 0,
-                                  "E": 0,
-                                  "F": 0,
-                                  }
-        for row in rows:
-            a = row.assessment_id
-            if a in latest_assessments:
-                indicator = row.indicator_id
-                rating = row.rating
-                # Update the Consolidated
-                consolidated[indicator][row.rating] += 1
-                # Lookup which org this data belongs to
-                o = latest_assessments[a]
-                # Populate the Individual
-                orgs[o][indicator] = row.rating
-
-        # Build the output table
-        rows = []
-        rappend = rows.append
-        section = None
-        for i in indicators:
-            if i.section != section:
-                section = i.section
-                rappend(TR(TD(section), _class="odd"))
-            title = TD("%s. %s" % (i.number, i.name))
-            row = TR(title)
-            append = row.append
-            indicator_id = i.id
-            values = consolidated[indicator_id]
-            for v in ("A", "B", "C", "D", "E", "F"):
-                append(TD(values[v]))
-            for o in orgs:
-                rating = orgs[o].get(indicator_id, "")
-                append(TD(rating))
-            rappend(row)
-
-        orepresent = org_OrganisationRepresent(parent=False,
-                                               acronym=False)
-        orgs = [TH(orepresent(o)) for o in orgs]
-
-        items = TABLE(THEAD(TR(TH("TOPICS", _rowspan=2),
-                               TH("Consolidated Ratings", _colspan=6),
-                               ),
-                            TR(TH("A"),
-                               TH("B"),
-                               TH("C"),
-                               TH("D"),
-                               TH("E"),
-                               TH("F"),
-                               *orgs
-                               ),
-                            ),
-                      TBODY(*rows),
-                      )
-
-        output["items"] = items
-
-        return output
 
 # =============================================================================
 class S3OrganisationGroupModel(S3Model):
@@ -4275,16 +4153,34 @@ class S3OfficeModel(S3Model):
         configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
+        organisation_id = self.org_organisation_id
         super_link = self.super_link
+
+        auth = current.auth
+        ADMIN = current.session.s3.system_roles.ADMIN
+        is_admin = auth.s3_has_role(ADMIN)
+        root_org = auth.root_org()
+        if is_admin:
+            filter_opts = ()
+        elif root_org:
+            filter_opts = (root_org, None)
+        else:
+            filter_opts = (None,)
 
         # ---------------------------------------------------------------------
         # Office Types
         #
         tablename = "org_office_type"
         define_table(tablename,
-                     Field("name", length=128, notnull=True, unique=True,
+                     Field("name", length=128, notnull=True,
                            label = T("Name"),
                            ),
+                     # Only included in order to be able to set
+                     # realm_entity to filter appropriately
+                     organisation_id(default = root_org,
+                                     readable = is_admin,
+                                     writable = is_admin,
+                                     ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -4310,7 +4206,9 @@ class S3OfficeModel(S3Model):
                             requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_office_type.id",
                                                   represent,
-                                                  sort=True
+                                                  sort=True,
+                                                  filterby="organisation_id",
+                                                  filter_opts=filter_opts
                                                   )),
                             sortby = "name",
                             comment = S3AddResourceLink(c="org",
@@ -4320,10 +4218,9 @@ class S3OfficeModel(S3Model):
                                 tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Office Type'.")),
                             )
 
-        # Not needed until we make Office Types organisation-dependent & hence remove the unique=True
-        #configure(tablename,
-        #          deduplicate = self.office_type_duplicate,
-        #          )
+        configure(tablename,
+                  deduplicate = self.office_type_duplicate,
+                  )
 
         # Components
         add_components(tablename,
@@ -4359,7 +4256,7 @@ class S3OfficeModel(S3Model):
                            #writable=False,
                            requires = code_requires,
                            ),
-                     self.org_organisation_id(
+                     organisation_id(
                          requires = org_organisation_requires(required=True,
                                                               updateable=True),
                          ),
@@ -4559,9 +4456,13 @@ class S3OfficeModel(S3Model):
     def office_type_duplicate(item):
         """ Import item de-duplication """
 
-        name = item.data.get("name")
+        data = item.data
+        name = data.get("name")
         table = item.table
         query = (table.name.lower() == name.lower())
+        organisation_id = data.get("organisation_id")
+        if organisation_id:
+            query &= (table.organisation_id == organisation_id)
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
         if duplicate:
@@ -6775,6 +6676,284 @@ class org_AssignMethod(S3Method):
                 r.error(501, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
+
+# =============================================================================
+class org_CapacityReport(S3Method):
+    """
+        Custom Report Method for Organisation Capacity Assessment Data
+    """
+
+    def apply_method(self, r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        if r.http == "GET":
+            if r.representation == "html":
+                
+                T = current.T
+
+                output = dict(title = T("Branch Organisational Capacity Assessment"))
+                current.response.view = "org/capacity_report.html"
+
+                # Maintain RHeader for consistency
+                if attr.get("rheader"):
+                    rheader = attr["rheader"](r)
+                    if rheader:
+                        output["rheader"] = rheader
+                
+                data = self._read_data(r)
+                if data is None:
+                    output["items"] = T("No Assessment Data Found")
+                    return output
+
+                indicators, orgs, consolidated = data
+
+                # Build the output table
+                rows = []
+                rappend = rows.append
+                section = None
+                for i in indicators:
+                    if i.section != section:
+                        section = i.section
+                        rappend(TR(TD(section), _class="odd"))
+                    title = TD("%s. %s" % (i.number, i.name))
+                    row = TR(title)
+                    append = row.append
+                    indicator_id = i.id
+                    values = consolidated[indicator_id]
+                    for v in ("A", "B", "C", "D", "E", "F"):
+                        append(TD(values[v]))
+                    for o in orgs:
+                        rating = orgs[o].get(indicator_id, "")
+                        append(TD(rating))
+                    rappend(row)
+
+                orepresent = org_OrganisationRepresent(parent=False,
+                                                       acronym=False)
+                orgs = [TH(orepresent(o)) for o in orgs]
+
+                items = TABLE(THEAD(TR(TH("TOPICS", _rowspan=2),
+                                       TH("Consolidated Ratings", _colspan=6),
+                                       ),
+                                    TR(TH("A"),
+                                       TH("B"),
+                                       TH("C"),
+                                       TH("D"),
+                                       TH("E"),
+                                       TH("F"),
+                                       *orgs
+                                       ),
+                                    ),
+                              TBODY(*rows),
+                              )
+
+                output["items"] = items
+
+                return output
+
+            elif r.representation == "xls":
+                data = self._read_data(r)
+                if data is None:
+                    current.session.error = current.T("No Assessment Data Found")
+                    redirect(URL(extension=""))
+                return self._xls(data)
+
+            else:
+                r.error(501, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _read_data(r):
+        """
+            Method to read the data
+
+            @param r: the S3Request
+        """
+
+        # Read all the permitted data
+        resource = r.resource
+        resource.load()
+        rows = resource._rows
+
+        if not len(rows):
+            return None
+
+        db = current.db
+        s3db = current.s3db
+
+        # Read all the Indicators
+        itable = s3db.org_capacity_indicator
+        indicators = db(itable.deleted == False).select(itable.id,
+                                                        itable.number,
+                                                        itable.section,
+                                                        itable.name,
+                                                        orderby = itable.number,
+                                                        )
+
+        # Find all the Assessments
+        assessments = [row.assessment_id for row in rows]
+        atable = s3db.org_capacity_assessment
+        assessments = db(atable.id.belongs(assessments)).select(atable.id,
+                                                                atable.organisation_id,
+                                                                #atable.date,
+                                                                # We will just include the most recent for each organisation
+                                                                orderby = ~atable.date,
+                                                                )
+
+        # Find all the Organisations and the Latest Assessments
+        latest_assessments = {}
+        orgs = {}
+        for a in assessments:
+            o = a.organisation_id
+            if o not in orgs:
+                latest_assessments[a.id] = o
+                orgs[o] = {}
+
+        # Calculate the Consolidated Ratings & populate the individual ratings
+        consolidated = {}
+        for i in indicators:
+            consolidated[i.id] = {"A": 0,
+                                  "B": 0,
+                                  "C": 0,
+                                  "D": 0,
+                                  "E": 0,
+                                  "F": 0,
+                                  }
+        for row in rows:
+            a = row.assessment_id
+            if a in latest_assessments:
+                indicator = row.indicator_id
+                rating = row.rating
+                # Update the Consolidated
+                consolidated[indicator][row.rating] += 1
+                # Lookup which org this data belongs to
+                o = latest_assessments[a]
+                # Populate the Individual
+                orgs[o][indicator] = row.rating
+
+        return indicators, orgs, consolidated
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _xls(data):
+        """
+            Method to output as XLS
+
+            @ToDo: Finish & use HTML2XLS method in XLS codec to be DRY & reusable
+        """
+
+        try:
+            import xlwt
+        except ImportError:
+            ERROR = S3XLS().ERROR
+            if current.auth.permission.format in S3Request.INTERACTIVE_FORMATS:
+                current.session.error = ERROR.XLWT_ERROR
+                redirect(URL(extension=""))
+            else:
+                error = ERROR.XLWT_ERROR
+                current.log.error(error)
+                return error
+
+        indicators, orgs, consolidated = data
+
+        # Build the output XLS
+        # @ToDo: Configurability if used outside IFRC
+        title = "BOCA"
+
+        #COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
+
+        # Create the workbook
+        book = xlwt.Workbook(encoding="utf-8")
+
+        # Add a sheet
+        # Can't have a / in the sheet_name, so replace any with a space
+        #sheet_name = str(title.replace("/", " "))
+        sheet_name = title
+        # sheet_name cannot be over 31 chars
+        if len(sheet_name) > 31:
+            sheet_name = sheet_name[:31]
+        sheet1 = book.add_sheet(sheet_name)
+
+        # Header
+        styleHeader = xlwt.XFStyle()
+        styleHeader.font.bold = True
+        styleHeader.pattern.pattern = styleHeader.pattern.SOLID_PATTERN
+        styleHeader.pattern.pattern_fore_colour = 0x2C # pale_blue S3XLS.HEADER_COLOUR
+        # Merged cells (rowspan, then colspan)
+        sheet1.write_merge(0, 1, 0, 0, "TOPICS", styleHeader)
+        sheet1.write_merge(0, 0, 1, 6, "Consolidated Ratings", styleHeader)
+        sheet1.row(1).write(1, "A", styleHeader)
+        sheet1.row(1).write(2, "B", styleHeader)
+        sheet1.row(1).write(3, "C", styleHeader)
+        sheet1.row(1).write(4, "D", styleHeader)
+        sheet1.row(1).write(5, "E", styleHeader)
+        sheet1.row(1).write(6, "F", styleHeader)
+        orepresent = org_OrganisationRepresent(parent=False,
+                                               acronym=False)
+        col = 7
+        for o in orgs:
+            sheet1.row(1).write(col, orepresent(o), styleHeader)
+            col += 1
+
+        # Data
+        styleSection = xlwt.XFStyle()
+        styleSection.font.bold = True
+        styleSection.pattern.pattern = styleSection.pattern.SOLID_PATTERN
+        styleSection.pattern.pattern_fore_colour = 0x2F # tan
+        row = 3
+        section = None
+        max_width = 0
+        for i in indicators:
+            if i.section != section:
+                section = i.section
+                sheet1.row(row).write(0, section, styleSection)
+                if len(section) > max_width:
+                    max_width = len(section)
+                row += 1
+            sheet1.row(row).write(0, "%s. %s" % (i.number, i.name))
+            indicator_id = i.id
+            values = consolidated[indicator_id]
+            col = 1
+            for v in ("A", "B", "C", "D", "E", "F"):
+                sheet1.row(row).write(col, values[v])
+                col += 1
+            for o in orgs:
+                rating = orgs[o].get(indicator_id, "")
+                sheet1.row(row).write(col, rating)
+                col += 1
+            row += 1
+
+        # Set the width of 1st column to max section length
+        COL_WIDTH_MULTIPLIER = 310
+        width = max(max_width * COL_WIDTH_MULTIPLIER, 2000)
+        width = min(width, 65535) # USHRT_MAX
+        sheet1.col(0).width = width
+
+        # Create the file
+        try:
+            from cStringIO import StringIO    # Faster, where available
+        except:
+            from StringIO import StringIO
+
+        output = StringIO()
+        book.save(output)
+
+        # Response headers
+        from gluon.contenttype import contenttype
+        filename = "%s.xls" % title
+        disposition = "attachment; filename=\"%s\"" % filename
+        response = current.response
+        response.headers["Content-Type"] = contenttype(".xls")
+        response.headers["Content-disposition"] = disposition
+
+        output.seek(0)
+        return output.read()
 
 # =============================================================================
 def org_customise_org_resource_fields(method):

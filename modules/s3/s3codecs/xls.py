@@ -3,7 +3,7 @@
 """
     S3 Microsoft Excel codec
 
-    @copyright: 2011-14 (c) Sahana Software Foundation
+    @copyright: 2011-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -133,9 +133,6 @@ class S3XLS(S3Codec):
                  * use_colour:     True to add colour to the cells. default False
         """
 
-        request = current.request
-
-        import datetime
         try:
             import xlwt
         except ImportError:
@@ -147,6 +144,7 @@ class S3XLS(S3Codec):
                 error = self.ERROR.XLWT_ERROR
                 current.log.error(error)
                 return error
+
         try:
             from xlrd.xldate import xldate_from_date_tuple, \
                                     xldate_from_time_tuple, \
@@ -160,6 +158,10 @@ class S3XLS(S3Codec):
                 error = self.ERROR.XLRD_ERROR
                 current.log.error(error)
                 return error
+
+        import datetime
+
+        request = current.request
 
         # The xlwt library supports a maximum of 182 characters in a single cell
         max_cell_size = 182
@@ -274,7 +276,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 writeCol = colCnt
             headerRow.write(writeCol, str(label), styleHeader)
             width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
-            #width = len(label) * COL_WIDTH_MULTIPLIER
+            width = min(width, 65535) # USHRT_MAX
             fieldWidths.append(width)
             sheet1.col(writeCol).width = width
             colCnt += 1
@@ -455,4 +457,30 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 xlfmt = xlfmt.replace(item, translate[item])
         return xlfmt
 
-# End =========================================================================
+# =============================================================================
+class S3HTML2XLS():
+    """
+        Class that takes HTML in the form of web2py helper objects
+        and converts it to XLS
+
+        @ToDo: Complete this (e.g. start with a copy of S3html2pdf)
+        See https://gist.github.com/JustOnce/2be3e4d951a66c22c5e0
+        & http://pydoc.net/Python/Kiowa/0.2w.rc9/kiowa.utils.xls.html2xls/
+
+        Places  to use this:
+            org_CapacityReport()
+    """
+
+    def __init__(self):
+
+        pass
+
+    # -------------------------------------------------------------------------
+    def parse(self, html):
+        """
+            Entry point for class
+        """
+
+        return None
+
+# END =========================================================================

@@ -3378,10 +3378,13 @@ class S3HRSkillModel(S3Model):
            - Look for a record with the same name, ignoring case
         """
 
-        name = item.data.get("name")
-
+        data = item.data
+        name = data.get("name")
         table = item.table
         query = (table.name.lower() == name.lower())
+        organisation_id = data.get("organisation_id")
+        if organisation_id:
+            query &= (table.organisation_id == organisation_id)
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
         if duplicate:
@@ -6411,9 +6414,8 @@ def hrm_group_controller():
 
     if team_name == "Teams":
         # CRUD Strings
-        ADD_TEAM = T("Add Team")
         s3.crud_strings[tablename] = Storage(
-            label_create = ADD_TEAM,
+            label_create = T("Add Team"),
             title_display = T("Team Details"),
             title_list = T("Teams"),
             title_update = T("Edit Team"),
