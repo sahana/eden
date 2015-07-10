@@ -206,13 +206,23 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         # Create the workbook
         book = xlwt.Workbook(encoding="utf-8")
 
+
+
         # Add a sheet
         # Can't have a / in the sheet_name, so replace any with a space
         sheet_name = str(title.replace("/", " "))
         # sheet_name cannot be over 31 chars
         if len(sheet_name) > 31:
             sheet_name = sheet_name[:31]
-        sheet1 = book.add_sheet(sheet_name)
+        sheets = []
+        rowLimit = 65536 #.xls exports are limited to 65536 rows per sheet, we bypass this by creating multiple sheets
+        sheetnum = len(rows) / rowLimit
+        count = 1
+        while len(sheets) <= sheetnum:
+            sheets.append(book.add_sheet('%s-%s' % (sheet_name, count)))
+            count += 1
+
+
 
         # Styles
         styleLargeHeader = xlwt.XFStyle()
@@ -250,53 +260,54 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         if use_colour:
             styleEven.pattern.pattern = styleEven.pattern.SOLID_PATTERN
             styleEven.pattern.pattern_fore_colour = S3XLS.ROW_ALTERNATING_COLOURS[1]
+        for sheet in sheets:
+            # Header row
+            colCnt = 0
+            headerRow = sheet.row(0)
+            fieldWidths = []
+            id = False
+            for selector in lfields:
+                if selector == report_groupby:
+                    continue
+                label = headers[selector]
+                if label == "Id":
+                    # Indicate to adjust colCnt when writing out
+                    id = True
+                    fieldWidths.append(0)
+                    colCnt += 1
+                    continue
+                if label == "Sort":
+                    continue
+                if id:
+                    # Adjust for the skipped column
+                    writeCol = colCnt - 1
 
-        # Header row
-        colCnt = 0
-        #headerRow = sheet1.row(2)
-        headerRow = sheet1.row(0)
-        fieldWidths = []
-        id = False
-        for selector in lfields:
-            if selector == report_groupby:
-                continue
-            label = headers[selector]
-            if label == "Id":
-                # Indicate to adjust colCnt when writing out
-                id = True
-                fieldWidths.append(0)
+                else:
+                        writeCol = colCnt
+                headerRow.write(writeCol, str(label), styleHeader)
+                width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+                width = min(width, 65535) # USHRT_MAX
+                fieldWidths.append(width)
+                sheet.col(writeCol).width = width
                 colCnt += 1
-                continue
-            if label == "Sort":
-                continue
-            if id:
-                # Adjust for the skipped column
-                writeCol = colCnt - 1
-            else:
-                writeCol = colCnt
-            headerRow.write(writeCol, str(label), styleHeader)
-            width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
-            width = min(width, 65535) # USHRT_MAX
-            fieldWidths.append(width)
-            sheet1.col(writeCol).width = width
-            colCnt += 1
         # Title row
         # - has been removed to allow columns to be easily sorted post-export.
         # - add deployment_setting if an Org wishes a Title Row
-        # currentRow = sheet1.row(0)
-        # if colCnt > 0:
-            # sheet1.write_merge(0, 0, 0, colCnt, str(title),
-                               # styleLargeHeader)
-        # currentRow.height = 500
-        # currentRow = sheet1.row(1)
-        # currentRow.write(0, str(current.T("Date Exported:")), styleNotes)
-        # currentRow.write(1, request.now, styleNotes)
-        # Fix the size of the last column to display the date
-        #if 16 * COL_WIDTH_MULTIPLIER > width:
-        #    sheet1.col(colCnt).width = 16 * COL_WIDTH_MULTIPLIER
+        # for sheet in sheets:
+            # currentRow = sheet.row(0)
+            # if colCnt > 0:
+                # sheet.write_merge(0, 0, 0, colCnt, str(title),
+                                # styleLargeHeader)
+                # currentRow.height = 500
+                # currentRow = sheet.row(1)
+                # currentRow.write(0, str(current.T("Date Exported:")), styleNotes)
+                # currentRow.write(1, request.now, styleNotes)
+                # Fix the size of the last column to display the date
+            #if 16 * COL_WIDTH_MULTIPLIER > width:
+            #    sheet.col(colCnt).width = 16 * COL_WIDTH_MULTIPLIER
 
-        # Initialize counters
-        totalCols = colCnt
+            # Initialize counters
+            totalCols = colCnt
         #rowCnt = 2
         rowCnt = 0
 
@@ -304,7 +315,12 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         for row in rows:
             # Item details
             rowCnt += 1
-            currentRow = sheet1.row(rowCnt)
+            sheetCnt = (rowCnt / rowLimit)
+            if sheetCnt == 0:
+                currentRow = sheets[sheetCnt].row(rowCnt - (sheetCnt * rowLimit))
+            else:
+                currentRow = sheets[sheetCnt].row(rowCnt - (sheetCnt * rowLimit) + 1)
+
             colCnt = 0
             if rowCnt % 2 == 0:
                 style = styleEven
@@ -314,10 +330,10 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 represent = s3_strip_markup(s3_unicode(row[report_groupby]))
                 if subheading != represent:
                     subheading = represent
-                    sheet1.write_merge(rowCnt, rowCnt, 0, totalCols,
-                                       subheading, styleSubHeader)
+                    sheets(sheetCnt).write_merge(rowCnt, rowCnt, 0, totalCols,
+                                                 subheading, styleSubHeader)
                     rowCnt += 1
-                    currentRow = sheet1.row(rowCnt)
+                    currentRow = sheets[sheetCnt].row(rowCnt)
                     if rowCnt % 2 == 0:
                         style = styleEven
                     else:
@@ -395,11 +411,11 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 width = len(represent) * COL_WIDTH_MULTIPLIER
                 if width > fieldWidths[colCnt]:
                     fieldWidths[colCnt] = width
-                    sheet1.col(writeCol).width = width
+                    sheets[sheetCnt].col(writeCol).width = width
                 colCnt += 1
-        sheet1.panes_frozen = True
-        #sheet1.horz_split_pos = 3
-        sheet1.horz_split_pos = 1
+        for sheet in sheets:
+            sheet.panes_frozen = True
+            sheet.horz_split_pos = 1
 
         output = StringIO()
         book.save(output)
