@@ -1,0 +1,36 @@
+body {
+    background-color: #FAFAFA;
+}
+
+.icon {
+    margin-right: 5px;
+}
+
+#sambro-body {
+}
+
+#sambro-center {
+}
+
+.sambro-list {
+    padding: 5px 5px;
+}
+
+.sambro-panel {
+    background-color: #FFF;
+    margin: 20px 0px 0px 0px;
+    border: 1px solid #e7eaec;
+    border-top: 4px solid #e7eaec;
+}
+
+    .sambro-panel div {
+    }
+
+    .sambro-panel h4 {
+        border-bottom: 1px solid #DDD;
+        font-size: 16px;
+        color: #888;
+        margin: 0px;
+        padding: 0px;
+        padding: 10px 10px;
+    }

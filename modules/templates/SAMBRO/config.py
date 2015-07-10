@@ -50,6 +50,7 @@ def config(settings):
             s3db.msg_parser_enable(_id)
 
             async = current.s3task.async
+
             # Poll
             async("msg_poll", args=["msg_rss_channel", channel_id])
 
