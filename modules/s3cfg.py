@@ -2189,22 +2189,6 @@ class S3Config(Storage):
                                                       ("ru", "русский"),
                                                       ]))
 
-    def get_cap_priorities(self):
-        """
-            Settings for CAP priorities
-
-            Should be an ordered dict of the format
-            OrderedDict([
-                            ("<value>, "<Translated title>", <urgency>, <severity>, <certainty>, <color>),
-                             ...
-                        ]) """
-        T = current.T
-        return self.cap.get("priorities", [
-                ("Urgent", T("Urgent"), "Immediate", "Extreme", "Observed", "red"),
-                ("High", T("High"), "Expected", "Severe", "Observed", "orange"),
-                ("Low", T("Low"), "Expected", "Moderate", "Observed", "green")
-                ])
-
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #

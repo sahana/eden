@@ -289,7 +289,7 @@ def template():
             field.readable = False
             field.required = False
 
-        for f in ["category", "event"]:
+        for f in ["category"]:
             itable[f].required = False
 
         ADD_ALERT_TPL = T("Create Template")
@@ -385,6 +385,59 @@ def area_location():
     output = s3_rest_controller("cap", "area_location",
                                 rheader = s3db.cap_rheader)
     return output
+
+# -----------------------------------------------------------------------------
+def warning_priority():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def priority_get():
+    
+    try:
+        event_type_id = request.args[0]
+    except:
+        result = current.xml.json_message(False, 400, "No Event Type provided!")
+    else:
+        try:
+            event_type_id = int(event_type_id)
+        except:
+            result = current.xml.json_message(False, 400, "Invalid Event Type!")
+        else:
+            # Get Event Name for Event ID 
+            etable = s3db.event_event_type
+            item = db(etable.id == event_type_id).select(etable.name,
+                                                         limitby=(0, 1)).first()
+            try:
+                event_type_name = item.name
+            except:
+                result = current.xml.json_message(False, 400, "Event Type Not Found!")
+            else:
+                wptable = s3db.cap_warning_priority
+                query = (wptable.event_type == event_type_name)
+                      
+                rows = db(query).select(wptable.id, wptable.name, 
+                                          orderby = wptable.id)
+
+                from gluon.serializers import json as jsons
+                if rows:
+                    row_dict = [{"id": r.id, "name": T(r.name)} for r in rows] + \
+                                [{"id": "", "name": T("Undefined")}]
+                    result = jsons(row_dict)
+                else:
+                    row = db(wptable.event_type == "others").select(wptable.id, 
+                                                                    wptable.name,
+                                                                    orderby = wptable.id)
+            
+                    row_dict = [{"id": r.id, "name": T(r.name)} for r in row] + \
+                                [{"id": "", "name": T("Undefined")}]
+                    result = jsons(row_dict)
+    finally:
+        response.headers["Content-Type"] = "application/json"
+        return result           
 
 # -----------------------------------------------------------------------------
 def alert_fields_comments():
@@ -520,12 +573,6 @@ def info_fields_comments():
           _title="%s|%s" % (
               T("Denotes the category of the subject event of the alert message"),
               T("You may select multiple categories by holding down control and then selecting the items.")))
-
-    table.event.comment = DIV(
-          _class="tooltip",
-          _title="%s|%s" % (
-              T("The text denoting the type of the subject event of the alert message"),
-              T("")))
 
     table.response_type.comment = DIV(
           _class="tooltip",
@@ -680,8 +727,21 @@ def resource_fields_comments():
 def set_priority_js():
     """ Output json for priority field """
 
-    p_settings = [f[0:1] + f[2:] for f in settings.get_cap_priorities()]
-    priority_conf = '''S3.cap_priorities=%s''' % json.dumps(p_settings)
+    wptable = s3db.cap_warning_priority
+    
+    rows = db(wptable).select(wptable.name, 
+                              wptable.urgency, 
+                              wptable.severity,
+                              wptable.certainty, 
+                              wptable.color_code,
+                              orderby = wptable.name,
+                              )
+    
+    from gluon.serializers import json as jsons
+    p_settings = [(T(r.name), r.urgency, r.severity, r.certainty, r.color_code)\
+                 for r in rows]
+    
+    priority_conf = '''S3.cap_priorities=%s''' % jsons(p_settings)
     js_global = s3.js_global
     if not priority_conf in js_global:
         js_global.append(priority_conf)
