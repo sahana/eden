@@ -1526,9 +1526,9 @@ class S3CalendarWidget(FormWidget):
             if type(earliest) is datetime.date:
                 # Consistency with S3Calendar
                 earliest = datetime.datetime.combine(earliest, datetime.time(8, 0, 0))
-        elif self.past:
+        elif self.past is not None:
             earliest = now - datetime.timedelta(hours=self.past)
-        elif self.past_months:
+        elif self.past_months is not None:
             earliest = now - relativedelta(months=self.past_months)
         else:
             fallback = True
@@ -1549,9 +1549,9 @@ class S3CalendarWidget(FormWidget):
             if type(latest) is datetime.date:
                 # Consistency with S3Calendar
                 latest = datetime.datetime.combine(latest, datetime.time(8, 0, 0))
-        elif self.future:
+        elif self.future is not None:
             latest = now + datetime.timedelta(hours=self.future)
-        elif self.future_months:
+        elif self.future_months is not None:
             latest = now + relativedelta(months=self.future_months)
         else:
             fallback = True
