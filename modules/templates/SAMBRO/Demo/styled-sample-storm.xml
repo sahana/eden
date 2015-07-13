@@ -1,0 +1,49 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<?xml-stylesheet type="text/xsl"  href="CAPAlert.xsl"?>
+<cap:alert xmlns:cap = "urn:oasis:names:tc:emergency:cap:1.2">
+    <cap:identifier>urn:oid:2.49.0.0.104.0.1.20150715.001</cap:identifier>
+    <cap:sender>hhthan@dmg.gov.mm</cap:sender>
+    <cap:sent>2015-07-15T14:30:00+06:30</cap:sent>
+    <cap:status>Exercise</cap:status>
+    <cap:msgType>Alert</cap:msgType>
+    <cap:source>dmh-sambro-srv@dmh.gov.mm</cap:source>
+    <cap:scope>Restricted</cap:scope>
+    <cap:restriction>Emergency First Responders</cap:restriction>
+    <cap:info>
+        <cap:category>Meteorological</cap:category>
+        <cap:category>Transport</cap:category>
+        <cap:event>SEVERE THUNDERSTORM</cap:event>
+        <cap:responseType>Shelter</cap:responseType>
+        <cap:urgency>Immediate</cap:urgency>
+        <cap:severity>Severe</cap:severity>
+        <cap:certainty>Observed</cap:certainty>
+        <cap:expires>2005-07-15T16:00:00-06:50</cap:expires>
+        <cap:senderName>NATIONAL DEPARTMENT OF METEOROLOGY AND HYDROLOGY</cap:senderName>
+        <cap:headline>Severe thunderstorm warning in effect </cap:headline>
+        <cap:description>
+            AT 2:50 PM MMT...National Department of Meteorology and Hydrology doppler radara indicaed a severe thunderstorm over the Yangoon coast...moving southwest at 15 KMPH. 
+            Showers, Intense Rain and and strong damaging windes are likely with this storm.
+        </cap:description>
+        <cap:instruction>Take cover in a sunstantially safe shelter until the stop passess.</cap:instruction>
+        <cap:contact>+955551212</cap:contact>
+        <cap:web>http://dmh.gov.mm/recentalert/</cap:web>
+        <cap:parameter>
+		<key>wind-speed </key>
+		<value>15 KMPH</value>
+	</cap:parameter>
+        <cap:parameter>
+		<key>sms-txt </key>
+		<value>Sever thunderstorm in effect for Mid-west Myanmar</value>
+	</cap:parameter>
+        <cap:parameter>
+		<key>tv-scroll-txt </key>
+		<value>Sever thunderstorm in effect for Mid-west Myanmar</value>
+	</cap:parameter>
+        <cap:area>
+            <cap:areaDesc>
+                Yangoon, Nay Pyi Tai, Mandale Districts
+            </cap:areaDesc>
+            <cap:polygon>9.7514,79.8804,9.8099,80.2529,9.3651,80.5696,7.2998,81.8413,7.1936,81.3771,8.2958,81.1134,9.2648,80.7069,9.7514,79.8804</cap:polygon>
+        </cap:area>
+    </cap:info>
+</cap:alert>

@@ -18,7 +18,7 @@ def config(settings):
     T = current.T
 
     # Pre-Populate
-    settings.base.prepopulate = ("SAMBRO", "default/users")
+    settings.base.prepopulate = ("SAMBRO", "SAMBRO/Demo", "default/users")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "SAMBRO"

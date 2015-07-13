@@ -3685,31 +3685,35 @@ class S3BulkImporter(object):
     def extract_other_import_line(self, path, details):
         """
             Store a single import job into the tasks property
+            *,function,filename,*extraArgs
         """
 
         function = details[1].strip('" ')
-        csv = None
+        filepath = None
         if len(details) >= 3:
-            fileName = details[2].strip('" ')
-            if fileName != "":
-                (csvPath, csvFile) = os.path.split(fileName)
-                if csvPath != "":
+            filename = details[2].strip('" ')
+            if filename != "":
+                (subfolder, filename) = os.path.split(filename)
+                if subfolder != "":
                     path = os.path.join(current.request.folder,
                                         "modules",
                                         "templates",
-                                        csvPath)
+                                        subfolder)
                     # @todo: deprecate this block once migration completed
                     if not os.path.exists(path):
                         # Non-standard location (legacy template)?
                         path = os.path.join(current.request.folder,
                                             "private",
                                             "templates",
-                                            csvPath)
-                csv = os.path.join(path, csvFile)
-        extraArgs = None
+                                            subfolder)
+                filepath = os.path.join(path, filename)
+
         if len(details) >= 4:
             extraArgs = details[3:]
-        self.tasks.append([2, function, csv, extraArgs])
+        else:
+            extraArgs = None
+
+        self.tasks.append((2, function, filepath, extraArgs))
 
     # -------------------------------------------------------------------------
     def execute_import_task(self, task):
@@ -3843,17 +3847,17 @@ class S3BulkImporter(object):
         s3 = current.response.s3
         if task[0] == 2:
             fun = task[1]
-            csv = task[2]
+            filepath = task[2]
             extraArgs = task[3]
-            if csv is None:
+            if filepath is None:
                 if extraArgs is None:
                     error = s3[fun]()
                 else:
                     error = s3[fun](*extraArgs)
             elif extraArgs is None:
-                error = s3[fun](csv)
+                error = s3[fun](filepath)
             else:
-                error = s3[fun](csv, *extraArgs)
+                error = s3[fun](filepath, *extraArgs)
             if error:
                 self.errorList.append(error)
             end = datetime.now()
@@ -4255,7 +4259,7 @@ class S3BulkImporter(object):
         restricted(code, environment, layer=filename)
 
     # -------------------------------------------------------------------------
-    def import_xml(self, filename, prefix, resourcename, format):
+    def import_xml(self, filepath, prefix, resourcename, format):
         """
             Import XML data using an XSLT: static/formats/<format>/import.xsl
         """
@@ -4263,21 +4267,15 @@ class S3BulkImporter(object):
         # Remove any spaces and enclosing double quote
         prefix = prefix.strip('" ')
         resourcename = resourcename.strip('" ')
-        filename = filename.strip('" ')
 
         errorString = "prepopulate error: file %s missing"
-        folder = current.request.folder
-        filepath = os.path.join(folder,
-                                "modules",
-                                "templates",
-                                filename)
         try:
             File = open(filepath, "r")
         except IOError:
-            self.errorList.append(errorString % filename)
+            self.errorList.append(errorString % filepath)
             return
 
-        stylesheet = os.path.join(folder,
+        stylesheet = os.path.join(current.request.folder,
                                   "static",
                                   "formats",
                                   format,
@@ -4290,14 +4288,14 @@ class S3BulkImporter(object):
         else:
             S.close()
 
-        resource = current.s3db.resource(prefix, resourcename)
+        resource = current.s3db.resource("%s_%s" % (prefix, resourcename))
         auth = current.auth
         auth.rollback = True
         try:
             resource.import_xml(File, stylesheet=stylesheet)
         except SyntaxError, e:
-            self.errorList.append("WARNING: import error - %s (file: %s, stylesheet: %s)" %
-                                 (e, filename, task[4]))
+            self.errorList.append("WARNING: import error - %s (file: %s, stylesheet: %s/import.xsl)" %
+                                 (e, filepath, format))
             auth.rollback = False
             return
 
@@ -4307,7 +4305,7 @@ class S3BulkImporter(object):
             # Must roll back if there was an error!
             error = resource.error
             self.errorList.append("%s - %s: %s" % (
-                                  task[3], resource.tablename, error))
+                                  filepath, resource.tablename, error))
             errors = current.xml.collect_errors(resource)
             if errors:
                 self.errorList.extend(errors)
