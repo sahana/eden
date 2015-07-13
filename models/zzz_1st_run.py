@@ -202,7 +202,7 @@ if len(pop_list) > 0:
 
     # Incident Reporting System
     if has_module("irs"):
-        # Categories visible to ends-users by default
+        # Categories visible to end-users by default
         table = db.irs_icategory
         table.insert(code = "flood")
         table.insert(code = "geophysical.landslide")
@@ -233,6 +233,7 @@ if len(pop_list) > 0:
     s3.import_role = bi.import_role
     s3.import_script = bi.import_script
     s3.import_user = bi.import_user
+    s3.import_xml = bi.import_xml
 
     # Relax strict email-matching rule for import updates of person records
     email_required = settings.get_pr_import_update_requires_email()

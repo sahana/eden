@@ -2738,8 +2738,6 @@ class S3OrganisationTeamModel(S3Model):
             Update affiliations
         """
 
-        from pr import OU
-
         if hasattr(form, "vars"):
             _id = form.vars.id
         elif isinstance(form, Row) and "id" in form:
@@ -2757,6 +2755,7 @@ class S3OrganisationTeamModel(S3Model):
                                             table.organisation_id,
                                             limitby=(0, 1)).first()
         if record:
+            from pr import OU
             org = ("org_organisation", record.organisation_id)
             group = ("pr_group", record.group_id)
             current.s3db.pr_add_affiliation(org, group,
@@ -5024,7 +5023,7 @@ class org_OrganisationRepresent(S3Represent):
 
             @ToDo: Support for self.translate = True
                    need to handle the inevitable NULL values which vary in
-                   order by DB, altthough perhaps DB handling doesn't matter
+                   order by DB, although perhaps DB handling doesn't matter
                    here.
         """
 
@@ -6707,7 +6706,7 @@ class org_CapacityReport(S3Method):
                 
                 data = self._read_data(r)
                 if data is None:
-                    output["items"] = T("No Assessment Data Found")
+                    output["items"] = current.response.s3.crud_strings["org_capacity_assessment"].msg_list_empty
                     return output
 
                 indicators, orgs, consolidated = data
@@ -6758,8 +6757,8 @@ class org_CapacityReport(S3Method):
             elif r.representation == "xls":
                 data = self._read_data(r)
                 if data is None:
-                    current.session.error = current.T("No Assessment Data Found")
-                    redirect(URL(extension=""))
+                    current.session.error = current.response.s3.crud_strings["org_capacity_assessment"].msg_list_empty
+                    redirect(URL(f="capacity_assessment", extension=""))
                 return self._xls(data)
 
             else:

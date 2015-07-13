@@ -768,7 +768,8 @@ def config(settings):
                 required = True,
                 branches = True,
                 updateable = True,
-                limit_filter_opts = True
+                limit_filter_opts = True,
+                hierarchy = True,
                 ):
         """
             Function to configure an organisation_id field to be restricted to just
@@ -778,6 +779,7 @@ def config(settings):
             @param branches: Include Branches
             @param updateable: Limit to Orgs which the user can update
             @param limit_filter_opts: Also limit the Filter options
+            @param hierarchy: Use the hierarchy widget (unsuitable for use in Inline Components)
 
             NB If limit_filter_opts=True, apply in customise_xx_controller inside prep,
                after standard_prep is run
@@ -872,7 +874,7 @@ def config(settings):
             requires = IS_EMPTY_OR(requires)
         f.requires = requires
 
-        if parent:
+        if parent and hierarchy:
             # Use hierarchy-widget
             from s3 import FS, S3HierarchyWidget
             # No need for parent in represent (it's a hierarchy view)
@@ -1050,6 +1052,18 @@ def config(settings):
         return default
 
     settings.hrm.teams = hrm_teams
+
+    def hrm_teams_orgs(default):
+        """ Whether Teams should link to 1 or more Orgs """
+
+        root_org = current.auth.root_org_name()
+        if root_org == VNRC:
+            # Multiple Orgs
+            return 2
+        # Single Org
+        return default
+
+    settings.hrm.teams_orgs = hrm_teams_orgs
 
     def hrm_vol_active(default):
         """ Whether & How to track Volunteers as Active """
@@ -2615,7 +2629,14 @@ def config(settings):
     settings.customise_org_capacity_assessment_controller = customise_org_capacity_assessment_controller
 
     # -----------------------------------------------------------------------------
-    def customise_org_office_controller(**attr):
+    def customise_org_office_resource(r, tablename):
+
+        # Organisation needs to be an NS/Branch
+        ns_only("org_office",
+                required = True,
+                branches = True,
+                limit_filter_opts = True,
+                )
 
         # Special cases for different NS
         root_org = current.auth.root_org_name()
@@ -2623,31 +2644,19 @@ def config(settings):
             table = current.s3db.org_office
             table.code.readable = table.code.writable = False
             table.office_type_id.readable = table.office_type_id.writable = False
+        elif root_org == VNRC:
+            # Limit office type dropdown to just the VNRC options, not the global ones as well
+            field = current.s3db.org_office.office_type_id
+            from gluon import IS_EMPTY_OR
+            from s3 import IS_ONE_OF
+            field.requires = IS_EMPTY_OR(
+                                IS_ONE_OF(current.db, "org_office_type.id",
+                                          field.represent,
+                                          filterby="organisation_id",
+                                          filter_opts=(current.auth.root_org(),)
+                                          ))
 
-        s3 = current.response.s3
-
-        # Custom prep
-        standard_prep = s3.prep
-        def custom_prep(r):
-            # Call standard prep
-            if callable(standard_prep):
-                result = standard_prep(r)
-            else:
-                result = True
-
-            # Organisation needs to be an NS/Branch
-            ns_only("org_office",
-                    required = True,
-                    branches = True,
-                    limit_filter_opts = True,
-                    )
-
-            return result
-        s3.prep = custom_prep
-
-        return attr
-
-    settings.customise_org_office_controller = customise_org_office_controller
+    settings.customise_org_office_resource = customise_org_office_resource
 
     # -----------------------------------------------------------------------------
     def customise_org_organisation_controller(**attr):
@@ -2832,6 +2841,7 @@ def config(settings):
         ns_only("org_organisation_team",
                 required = False,
                 branches = True,
+                hierarchy = False,
                 )
 
         s3 = current.response.s3
@@ -3089,12 +3099,13 @@ def config(settings):
                     # Hide the 'Name of Award' field
                     field = etable.award
                     field.readable = field.writable = False
-                    # Limit education-level dropdown to specific options
+                    # Limit education-level dropdown to the 3 specific options initially uploaded
+                    # @ToDo: Make this use the VNRC data in the table instead (shouldn't hardcode dynamic options here)
+                    # Although then these are different options which makes cross-Org reporting harder...hmmm..anyway these need an l10n which is hardcoded.
                     field = s3db.pr_education.level_id
-                    levels = ("Vocational School/ College",
-                              "Graduate",
-                              "Post graduate (Master's)",
-                              "Post graduate (Doctor's)",
+                    levels = ("High School",
+                              "University / College",
+                              "Post Graduate",
                               )
                     from gluon import IS_EMPTY_OR
                     from s3 import IS_ONE_OF

@@ -501,7 +501,7 @@
                     if (original !== null) {
                         // Keep current value
                         value = original[fieldname]['value'];
-                    } else if (typeof(data.defaults[fieldname]) != 'undefined') {
+                    } else if (data.defaults  && (typeof(data.defaults[fieldname]) != 'undefined')) {
                         value = data.defaults[fieldname].value;
                     } else {
                         value = '';

@@ -6386,7 +6386,8 @@ def hrm_group_controller():
     T = current.T
     s3db = current.s3db
     s3 = current.response.s3
-    team_name = current.deployment_settings.get_hrm_teams()
+    settings = current.deployment_settings
+    team_name = settings.get_hrm_teams()
 
     tablename = "pr_group"
     table = s3db[tablename]
@@ -6432,52 +6433,61 @@ def hrm_group_controller():
 
     # Pre-process
     def prep(r):
-        ottable = s3db.org_organisation_team
-        label = ottable.organisation_id.label
-        ottable.organisation_id.label = ""
-        crud_form = S3SQLCustomForm("name",
-                                    "description",
-                                    S3SQLInlineComponent("organisation_team",
-                                                         label = label,
-                                                         fields = ["organisation_id"],
-                                                         # @ToDo: Make this optional?
-                                                         multiple = False,
-                                                         ),
-                                    "comments",
-                                    )
+        # Redirect to member list when a new group has been created
+        create_next = URL(f="group",
+                          args=["[id]", "group_membership"])
+        teams_orgs = settings.get_hrm_teams_orgs()
+        if teams_orgs:
+            if teams_orgs == 1:
+                multiple = False
+            else:
+                multiple = True
+            ottable = s3db.org_organisation_team
+            label = ottable.organisation_id.label
+            ottable.organisation_id.label = ""
+            crud_form = S3SQLCustomForm("name",
+                                        "description",
+                                        S3SQLInlineComponent("organisation_team",
+                                                             label = label,
+                                                             fields = ["organisation_id"],
+                                                             multiple = multiple,
+                                                             ),
+                                        "comments",
+                                        )
 
-        filter_widgets = [
-            S3TextFilter(["name",
-                          "description",
-                          "comments",
-                          "organisation_team.organisation_id$name",
-                          "organisation_team.organisation_id$acronym",
-                          ],
-                         label = T("Search"),
-                         comment = T("You can search by by group name, description or comments and by organization name or acronym. You may use % as wildcard. Press 'Search' without input to list all."),
-                         #_class="filter-search",
-                         ),
-            S3OptionsFilter("organisation_team.organisation_id",
-                            label = T("Organization"),
-                            #hidden=True,
-                            ),
-            ]
+            filter_widgets = [
+                S3TextFilter(["name",
+                              "description",
+                              "comments",
+                              "organisation_team.organisation_id$name",
+                              "organisation_team.organisation_id$acronym",
+                              ],
+                             label = T("Search"),
+                             comment = T("You can search by by group name, description or comments and by organization name or acronym. You may use % as wildcard. Press 'Search' without input to list all."),
+                             #_class="filter-search",
+                             ),
+                S3OptionsFilter("organisation_team.organisation_id",
+                                label = T("Organization"),
+                                #hidden=True,
+                                ),
+                ]
 
-        list_fields = ["id",
-                       "organisation_team.organisation_id",
-                       "name",
-                       "description",
-                       "comments",
-                       ]
+            list_fields = ["organisation_team.organisation_id",
+                           "name",
+                           "description",
+                           "comments",
+                           ]
 
-        s3db.configure("pr_group",
-                       # Redirect to member list when a new group has been created
-                       create_next = URL(f="group",
-                                         args=["[id]", "group_membership"]),
-                       crud_form = crud_form,
-                       filter_widgets = filter_widgets,
-                       list_fields = list_fields,
-                       )
+            s3db.configure("pr_group",
+                           create_next = create_next,
+                           crud_form = crud_form,
+                           filter_widgets = filter_widgets,
+                           list_fields = list_fields,
+                           )
+        else:
+            s3db.configure("pr_group",
+                           create_next = create_next,
+                           )
 
         if r.interactive or r.representation in ("aadata", "xls"):
             if r.component_name == "group_membership":
@@ -6514,7 +6524,8 @@ def hrm_group_controller():
                                    "person_id$last_name",
                                    ] + list_fields
                     s3db.configure(tablename,
-                                   list_fields=list_fields)
+                                   list_fields = list_fields,
+                                   )
 
         return True
     s3.prep = prep

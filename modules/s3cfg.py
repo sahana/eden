@@ -2559,6 +2559,17 @@ class S3Config(Storage):
         """
         return self.__lazy(self.hrm, "teams", default="Teams")
 
+    def get_hrm_teams_orgs(self):
+        """
+            Whether Human Resource Teams should link to Organisations
+            & whether this is a Single Org or Multiple Orgs
+            Options:
+                None: disable link
+                1:    single Org
+                2:    multiple Orgs
+        """
+        return self.__lazy(self.hrm, "teams_orgs", default=1)
+
     def get_hrm_cv_tab(self):
         """
             Whether Human Resources should consolidate tabs into 1x CV page:
@@ -3129,7 +3140,11 @@ class S3Config(Storage):
         return self.__lazy(self.pr, "request_year_of_birth", default=False)
 
     def get_pr_name_format(self):
-        """ Format with which to represent Person Names """
+        """
+            Format with which to represent Person Names
+
+            Generally want an option in AddPersonWidget2 to handle the input like this too
+        """
         return self.__lazy(self.pr, "name_format", default="%(first_name)s %(middle_name)s %(last_name)s")
 
     def get_pr_select_existing(self):
