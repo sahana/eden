@@ -1459,7 +1459,8 @@ class S3CalendarWidget(FormWidget):
         separator = self.separator or \
                     settings.get_L10n_datetime_separator()
 
-        firstDOW = settings.get_L10n_firstDOW()
+        c = current.calendar if not self.calendar else S3Calendar(self.calendar)
+        firstDOW = c.first_dow
 
         extremes = self.extremes(time_format=time_format)
 

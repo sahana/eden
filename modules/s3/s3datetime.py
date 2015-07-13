@@ -256,6 +256,8 @@ class S3Calendar(object):
 
     MONTH_DAYS = (31, (28, 29), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
+    FIRST_DOW = 1 # Monday
+
     # -------------------------------------------------------------------------
     # Methods to be implemented by subclasses
     # -------------------------------------------------------------------------
@@ -309,6 +311,24 @@ class S3Calendar(object):
         if calendar is None:
             calendar = self._set_calendar(self.name)
         return calendar
+
+    # -------------------------------------------------------------------------
+    @property
+    def first_dow(self):
+        """ Get the first day of the week for this calendar """
+
+        calendar = self.calendar
+
+        first_dow = calendar._first_dow
+        if first_dow is None:
+            # Deployment setting?
+            first_dow = current.deployment_settings.get_L10n_firstDOW()
+            if first_dow is None:
+                # Calendar-specific default
+                first_dow = calendar.FIRST_DOW
+            calendar._first_dow = first_dow
+
+        return first_dow
 
     # -------------------------------------------------------------------------
     def parse_date(self, dtstr, dtfmt=None, local=False):
@@ -474,6 +494,8 @@ class S3Calendar(object):
             self._set_calendar(name)
 
         self._parser = None
+
+        self._first_dow = None
 
     # -------------------------------------------------------------------------
     def _set_calendar(self, name=None):
@@ -716,6 +738,8 @@ class S3PersianCalendar(S3Calendar):
 
     MONTH_DAYS = (31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, (29, 30))
 
+    FIRST_DOW = 6 # Shambe
+
     # -------------------------------------------------------------------------
     # Methods to be implemented by subclasses
     # -------------------------------------------------------------------------
@@ -815,6 +839,8 @@ class S3AfghanCalendar(S3PersianCalendar):
     MONTH_ABBR = ("Ham", "Taw", "Jaw", "Sar", "Asa", "Son",
                   "Miz", "Aqr", "Qaw", "Jad", "Dal", "Hut",
                   )
+
+    FIRST_DOW = 6 # Shambe
 
 # =============================================================================
 class S3DateTimeParser(object):

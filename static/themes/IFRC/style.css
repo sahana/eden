@@ -89,6 +89,9 @@ table td {
 table td:first-child {
     background-color: #fff;
 }
+table.ui-datepicker-calendar td:first-child {
+    background: inherit;
+}
 /*
 table tr td:last-child,
 table tr th:last-child {
