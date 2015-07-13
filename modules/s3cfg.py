@@ -1374,7 +1374,14 @@ class S3Config(Storage):
         return self.L10n.get("utc_offset", "+0000")
 
     def get_L10n_firstDOW(self):
-        return self.L10n.get("firstDOW", 1)
+        """
+            First day of the week (overrides calendar default)
+
+            0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+            None = use the calendar's default
+        """
+        return self.L10n.get("firstDOW", None)
 
     def get_L10n_calendar(self):
         """
@@ -2102,10 +2109,10 @@ class S3Config(Storage):
             Prefix to be prepended to identifiers of CAP alerts
         """
         return self.cap.get("identifier_prefix", "")
-    
+
     def get_cap_identifier_oid(self):
         """
-            OID for the CAP issuing authority 
+            OID for the CAP issuing authority
         """
         return self.cap.get("identifier_oid", "")
 
@@ -2114,7 +2121,7 @@ class S3Config(Storage):
             Suffix to be appended to identifiers of CAP alerts
         """
         return self.cap.get("identifier_suffix", "")
-    
+
     def get_cap_expire_offset(self):
         """
             Offset period for expiration

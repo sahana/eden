@@ -222,7 +222,7 @@
             showButtons: true,
 
             weekNumber: false,
-            firstDOW: 1,
+            firstDOW: null,
 
             timepicker: false,
             minuteStep: 5,
