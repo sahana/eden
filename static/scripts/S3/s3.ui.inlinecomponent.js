@@ -485,6 +485,15 @@
                         }
                     } else if (input.attr('type') == 'checkbox') {
                         value = input.prop('checked');
+                    } else if (input.hasClass('s3-hierarchy-input')) {
+                        if (value) {
+                            value = JSON.parse(value);
+                            if (!input.data('multiple')) {
+                                value = value[0];
+                            }
+                        } else {
+                            continue;
+                        }
                     } else {
                         cssclass = input.attr('class');
                         if (cssclass == 'generic-widget') {
@@ -1166,7 +1175,12 @@
                     for (var j=0, numfields=inputs.length; j < numfields; j++) {
                         input = $(inputs[j]);
                         // Ignore hidden inputs unless they have an 'input' flag
-                        if (input.is('[type="hidden"]') && !input.data('input') || !input.is(':visible')) {
+                        var inputFlag = input.data('input');
+                        if (input.is('[type="hidden"]')) {
+                            if (!input.data('input')) {
+                                continue;
+                            }
+                        } else if (!input.is(':visible')) {
                             continue;
                         }
                         // Treat SELECTs as empty if only the default value is selected
@@ -1408,7 +1422,8 @@
                 textInputs = 'input[type="text"],input[type="file"],textarea',
                 fileInputs = 'input[type="file"]',
                 otherInputs = 'input[type!="text"][type!="file"],select',
-                multiSelects = 'select.multiselect-widget';
+                multiSelects = 'select.multiselect-widget',
+                hierarchyInputs = 'input.s3-hierarchy-input';
 
             el.find('.add-row,.edit-row').each(function() {
                 var $this = $(this);
@@ -1434,6 +1449,10 @@
                         self._markChanged(this);
                         self._catchSubmit(this);
                     });
+                });
+                $this.find(hierarchyInputs).bind('change' + ns, function() {
+                    self._markChanged(this);
+                    self._catchSubmit(this);
                 });
                 $this.find(inputs).bind('keypress' + ns, function(e) {
                     if (e.which == 13) {

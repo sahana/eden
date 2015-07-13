@@ -87,6 +87,7 @@
 
             // The hidden input field
             this.input = el.find('.s3-hierarchy-input').first();
+            this.input.data('input', true);
             var s = opts.selected;
             if (s) {
                 this.input.val(JSON.stringify(s));
@@ -180,6 +181,8 @@
                 three_state = false,
                 contextMenu = null,
                 plugins = ['sort', 'checkbox'];
+
+            this.input.data('multiple', multiple);
 
             if ((cascade || leafonly ) && multiple) {
                 three_state = true;
