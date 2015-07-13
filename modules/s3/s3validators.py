@@ -2127,6 +2127,7 @@ class IS_ADD_PERSON_WIDGET2(Validator):
             T = current.T
             db = current.db
             s3db = current.s3db
+            settings = current.deployment_settings
 
             ptable = db.pr_person
             ctable = s3db.pr_contact
@@ -2181,8 +2182,7 @@ class IS_ADD_PERSON_WIDGET2(Validator):
 
                 # No email?
                 if not value:
-                    email_required = \
-                        current.deployment_settings.get_hrm_email_required()
+                    email_required = settings.get_hrm_email_required()
                     if email_required:
                         return (value, error_message)
                     return (value, None)
@@ -2345,7 +2345,14 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 first_name = fullname
                 middle_name = last_name = None
             else:
-                first_name, middle_name, last_name = name_split(fullname)
+                name_format = settings.get_pr_name_format()
+                if name_format == "%(last_name)s %(middle_name)s %(first_name)s":
+                    # Viet Nam style
+                    last_name, middle_name, first_name = name_split(fullname)
+                else:
+                    # Assume default: "%(first_name)s %(middle_name)s %(last_name)s"
+                    # @ToDo: Actually parse the format string
+                    first_name, middle_name, last_name = name_split(fullname)
             post_vars["first_name"] = first_name
             post_vars["middle_name"] = middle_name
             post_vars["last_name"] = last_name

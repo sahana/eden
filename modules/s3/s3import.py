@@ -3581,6 +3581,7 @@ class S3BulkImporter(object):
         self.csv = csv
         self.unescape = unescape
         self.tasks = []
+        # Some functions refer to a different resource
         self.alternateTables = {
             "hrm_group_membership": {"tablename": "pr_group_membership",
                                      "prefix": "pr",
@@ -3602,7 +3603,7 @@ class S3BulkImporter(object):
             into the task property.
             The descriptor file is the file called tasks.cfg in path.
             The file consists of a comma separated list of:
-            application, resource name, csv filename, xsl filename.
+            module, resource name, csv filename, xsl filename.
         """
 
         source = open(os.path.join(path, "tasks.cfg"), "r")
@@ -3614,22 +3615,22 @@ class S3BulkImporter(object):
             if prefix == "#": # comment
                 continue
             if prefix == "*": # specialist function
-                self.extractSpecialistLine(path, details)
-            else: # standard importer
-                self.extractImporterLine(path, details)
+                self.extract_other_import_line(path, details)
+            else: # standard CSV importer
+                self.extract_csv_import_line(path, details)
 
     # -------------------------------------------------------------------------
-    def extractImporterLine(self, path, details):
+    def extract_csv_import_line(self, path, details):
         """
-            Extract the details for an import Task
+            Extract the details for a CSV Import Task
         """
 
         argCnt = len(details)
         if argCnt == 4 or argCnt == 5:
             # Remove any spaces and enclosing double quote
-            app = details[0].strip('" ')
+            mod = details[0].strip('" ')
             res = details[1].strip('" ')
-            request = current.request
+            folder = current.request.folder
 
             csvFileName = details[2].strip('" ')
             if csvFileName[:7] == "http://":
@@ -3637,26 +3638,26 @@ class S3BulkImporter(object):
             else:
                 (csvPath, csvFile) = os.path.split(csvFileName)
                 if csvPath != "":
-                    path = os.path.join(request.folder,
+                    path = os.path.join(folder,
                                         "modules",
                                         "templates",
                                         csvPath)
                     # @todo: deprecate this block once migration completed
                     if not os.path.exists(path):
                         # Non-standard location (legacy template)?
-                        path = os.path.join(current.request.folder,
+                        path = os.path.join(folder,
                                             "private",
                                             "templates",
                                             csvPath)
                 csv = os.path.join(path, csvFile)
 
             xslFileName = details[3].strip('" ')
-            templateDir = os.path.join(request.folder,
+            templateDir = os.path.join(folder,
                                        "static",
                                        "formats",
                                        "s3csv")
-            # Try the app directory in the templates directory first
-            xsl = os.path.join(templateDir, app, xslFileName)
+            # Try the module directory in the templates directory first
+            xsl = os.path.join(templateDir, mod, xslFileName)
             _debug("%s %s" % (xslFileName, xsl))
             if os.path.exists(xsl) == False:
                 # Now try the templates directory
@@ -3675,40 +3676,44 @@ class S3BulkImporter(object):
                 extra_data = details[4]
             else:
                 extra_data = None
-            self.tasks.append([1, app, res, csv, xsl, extra_data])
+            self.tasks.append([1, mod, res, csv, xsl, extra_data])
         else:
             self.errorList.append(
             "prepopulate error: job not of length 4, ignored: %" % details)
 
     # -------------------------------------------------------------------------
-    def extractSpecialistLine(self, path, details):
+    def extract_other_import_line(self, path, details):
         """
-            Store a single import job into the task property
+            Store a single import job into the tasks property
+            *,function,filename,*extraArgs
         """
 
         function = details[1].strip('" ')
-        csv = None
+        filepath = None
         if len(details) >= 3:
-            fileName = details[2].strip('" ')
-            if fileName != "":
-                (csvPath, csvFile) = os.path.split(fileName)
-                if csvPath != "":
+            filename = details[2].strip('" ')
+            if filename != "":
+                (subfolder, filename) = os.path.split(filename)
+                if subfolder != "":
                     path = os.path.join(current.request.folder,
                                         "modules",
                                         "templates",
-                                        csvPath)
+                                        subfolder)
                     # @todo: deprecate this block once migration completed
                     if not os.path.exists(path):
                         # Non-standard location (legacy template)?
                         path = os.path.join(current.request.folder,
                                             "private",
                                             "templates",
-                                            csvPath)
-                csv = os.path.join(path, csvFile)
-        extraArgs = None
+                                            subfolder)
+                filepath = os.path.join(path, filename)
+
         if len(details) >= 4:
             extraArgs = details[3:]
-        self.tasks.append([2, function, csv, extraArgs])
+        else:
+            extraArgs = None
+
+        self.tasks.append((2, function, filepath, extraArgs))
 
     # -------------------------------------------------------------------------
     def execute_import_task(self, task):
@@ -3773,10 +3778,12 @@ class S3BulkImporter(object):
 
             # Check if the stylesheet is accessible
             try:
-                open(task[4], "r")
+                S = open(task[4], "r")
             except IOError:
                 self.errorList.append(errorString % task[4])
                 return
+            else:
+                S.close()
 
             extra_data = None
             if task[5]:
@@ -3840,17 +3847,17 @@ class S3BulkImporter(object):
         s3 = current.response.s3
         if task[0] == 2:
             fun = task[1]
-            csv = task[2]
+            filepath = task[2]
             extraArgs = task[3]
-            if csv is None:
+            if filepath is None:
                 if extraArgs is None:
                     error = s3[fun]()
                 else:
                     error = s3[fun](*extraArgs)
             elif extraArgs is None:
-                error = s3[fun](csv)
+                error = s3[fun](filepath)
             else:
-                error = s3[fun](csv, *extraArgs)
+                error = s3[fun](filepath, *extraArgs)
             if error:
                 self.errorList.append(error)
             end = datetime.now()
@@ -4250,6 +4257,61 @@ class S3BulkImporter(object):
 
         code = getcfs(filename, filename, None)
         restricted(code, environment, layer=filename)
+
+    # -------------------------------------------------------------------------
+    def import_xml(self, filepath, prefix, resourcename, format):
+        """
+            Import XML data using an XSLT: static/formats/<format>/import.xsl
+        """
+
+        # Remove any spaces and enclosing double quote
+        prefix = prefix.strip('" ')
+        resourcename = resourcename.strip('" ')
+
+        errorString = "prepopulate error: file %s missing"
+        try:
+            File = open(filepath, "r")
+        except IOError:
+            self.errorList.append(errorString % filepath)
+            return
+
+        stylesheet = os.path.join(current.request.folder,
+                                  "static",
+                                  "formats",
+                                  format,
+                                  "import.xsl")
+        try:
+            S = open(stylesheet, "r")
+        except IOError:
+            self.errorList.append(errorString % stylesheet)
+            return
+        else:
+            S.close()
+
+        resource = current.s3db.resource("%s_%s" % (prefix, resourcename))
+        auth = current.auth
+        auth.rollback = True
+        try:
+            resource.import_xml(File, stylesheet=stylesheet)
+        except SyntaxError, e:
+            self.errorList.append("WARNING: import error - %s (file: %s, stylesheet: %s/import.xsl)" %
+                                 (e, filepath, format))
+            auth.rollback = False
+            return
+
+        if not resource.error:
+            current.db.commit()
+        else:
+            # Must roll back if there was an error!
+            error = resource.error
+            self.errorList.append("%s - %s: %s" % (
+                                  filepath, resource.tablename, error))
+            errors = current.xml.collect_errors(resource)
+            if errors:
+                self.errorList.extend(errors)
+            current.db.rollback()
+
+        auth.rollback = False
 
     # -------------------------------------------------------------------------
     def perform_tasks(self, path):
