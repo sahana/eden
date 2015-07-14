@@ -37,21 +37,21 @@ class S3DataTableTests(unittest.TestCase):
                        "phone1",
                        "email"
                        ]
-                       
+
         self.resource = resource
         self.list_fields = list_fields
 
         data = resource.select(list_fields)
-        
+
         self.data = data["rows"]
         self.rfields = data["rfields"]
-        
+
     # -------------------------------------------------------------------------
     def testDataTableInitialOrderby(self):
         """ Test the initial orderby for different types of input. """
-        
+
         table = self.resource.table
-        
+
         dt = S3DataTable(self.rfields, self.data)
         expected = [[1, "asc"]]
         actual = dt.orderby

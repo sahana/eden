@@ -65,7 +65,7 @@ S3.search = {};
 
         // Temporarily disable auto-submit
         form.data('noAutoSubmit', 1);
- 
+
         form.find('.text-filter').each(function() {
             $(this).val('');
         });
@@ -73,11 +73,11 @@ S3.search = {};
             $this = $(this);
             if (this.tagName.toLowerCase() == 'select') {
                 $this.val('');
-                if ($this.hasClass('groupedopts-filter-widget') && 
+                if ($this.hasClass('groupedopts-filter-widget') &&
                     $this.groupedopts('instance')) {
                     $this.groupedopts('refresh');
                 } else
-                if ($this.hasClass('multiselect-filter-widget') && 
+                if ($this.hasClass('multiselect-filter-widget') &&
                     $this.multiselect('instance')) {
                     $this.multiselect('refresh');
                 }
@@ -95,7 +95,7 @@ S3.search = {};
             $(this).val('');
         });
         form.find('.date-filter-input').each(function() {
-            $(this).val('');
+            $(this).calendarWidget('clear');
         });
         // Hierarchy filter widget (experimental)
         form.find('.hierarchy-filter').each(function() {
@@ -235,52 +235,34 @@ S3.search = {};
 
         // Date(time) range widgets -- each widget has two inputs.
         form.find('.date-filter-input:visible').each(function() {
-            $this = $(this);
-            id = $this.attr('id');
-            url_var = $('#' + id + '-data').val();
-            value = $this.val();
-            var pad = function (val, len) {
-                val = String(val);
-                len = len || 2;
-                while (val.length < len) val = "0" + val;
-                return val;
-            };
-            var iso = function(dt) {
+
+            var $this = $(this),
+                id = $this.attr('id'),
+                operator = id.split('-').pop(),
+                urlVariable = $('#' + id + '-data').val();
+
+            // Helper to convert a JS Date into an ISO format string
+            var isoFormat = function(dt) {
                 return dt.getFullYear() + '-' +
-                       pad(dt.getMonth()+1, 2) + '-' +
-                       pad(dt.getDate(), 2) + 'T' +
-                       pad(dt.getHours(), 2) + ':' +
-                       pad(dt.getMinutes(), 2) + ':' +
-                       pad(dt.getSeconds(), 2);
+                       ('0' + (dt.getMonth() + 1)).slice(-2) + '-' +
+                       ('0' + dt.getDate()).slice(-2) + 'T' +
+                       ('0' + dt.getHours()).slice(-2) + ':' +
+                       ('0' + dt.getMinutes()).slice(-2) + ':' +
+                       ('0' + dt.getSeconds()).slice(-2);
             };
-            var dt, dtstr;
+
+            var value = $this.val();
             if (value) {
-                if ($this.hasClass('datetimepicker')) {
-                    if ($this.hasClass('hide-time')) {
-                        dt = $this.datepicker('getDate');
-                        var op = id.split('-').pop();
-                        if (op == 'le' || op == 'gt') {
-                            dt.setHours(23, 59, 59, 0);
-                        } else {
-                            dt.setHours(0, 0, 0, 0);
-                        }
-                    } else {
-                        dt = $this.datetimepicker('getDate');
-                    }
-                    dt_str = iso(dt);
-                } else {
-                    dt = Date.parse(value);
-                    if (isNaN(dt)) {
-                        // Unsupported format (e.g. US MM-DD-YYYY), pass
-                        // as string, and hope the server can parse this
-                        dt_str = '"'+ value + '"';
-                    } else {
-                        dt_str = iso(new Date(dt));
-                    }
+                var end = false;
+                if (operator == 'le') {
+                    end = true;
                 }
-                queries.push([url_var, dt_str]);
+                var jsDate = $this.calendarWidget('getJSDate', end),
+                    urlValue = isoFormat(jsDate);
+                queries.push([urlVariable, urlValue]);
             } else {
-                queries.push([url_var, null]);
+                // Remove the filter (explicit null)
+                queries.push([urlValue, null]);
             }
         });
 
@@ -469,7 +451,7 @@ S3.search = {};
                         $this.groupedopts('instance')) {
                         $this.groupedopts('refresh');
                     } else
-                    if ($this.hasClass('multiselect-filter-widget') && 
+                    if ($this.hasClass('multiselect-filter-widget') &&
                         $this.multiselect('instance')) {
                         $this.multiselect('refresh');
                     }
@@ -478,7 +460,7 @@ S3.search = {};
         });
 
         // Numerical range widgets
-        form.find('.range-filter-input:visible').each(function() {
+        form.find('.range-filter-input').each(function() {
             $this = $(this);
             id = $this.attr('id');
             expression = $('#' + id + '-data').val();
@@ -496,31 +478,30 @@ S3.search = {};
         });
 
         // Date(time) range widgets
-        form.find('.date-filter-input:visible').each(function() {
-            $this = $(this);
-            id = $this.attr('id');
-            expression = $('#' + id + '-data').val();
+        form.find('.date-filter-input').each(function() {
+
+            var $this = $(this),
+                expression = $('#' + $this.attr('id') + '-data').val(),
+                selector = expression.split('__')[0],
+                values = false;
+
             if (q.hasOwnProperty(expression)) {
+                values = q[expression];
+            } else if (q.hasOwnProperty(selector)) {
+                // Match isolated selector if no operator-specific expression present
+                values = q[selector];
+            }
+            if (values !== false) {
                 if (!$this.is(':visible') && !$this.hasClass('active')) {
                     toggleAdvanced(form);
                 }
-                values = q[expression];
                 if (values) {
-                    value = new Date(values[0]);
-                    if ($this.hasClass('datetimepicker')) {
-                        if ($this.hasClass('hide-time')) {
-                            $this.datepicker('setDate', value);
-                        } else {
-                            $this.datetimepicker('setDate', value);
-                        }
-                    } else if ($this.hasClass('hasDatepicker')) {
-                        $this.datepicker('setDate', value);
-                    } else {
-                        $this.val('');
-                        // @todo: format required!
-                    }
+                    // Add the 'T' separator to the date string so it
+                    // can be parsed by the Date constructor:
+                    var dtString = values[0].replace(' ', 'T');
+                    $this.calendarWidget('setJSDate', new Date(dtString));
                 } else {
-                    $this.val('');
+                    $this.calendarWidget('clear');
                 }
             }
         });
@@ -556,11 +537,11 @@ S3.search = {};
                         toggleAdvanced(form);
                     }
                     $this.val(values);
-                    if ($this.hasClass('groupedopts-filter-widget') && 
+                    if ($this.hasClass('groupedopts-filter-widget') &&
                         $this.groupedopts('instance')) {
                         $this.groupedopts('refresh');
                     } else
-                    if ($this.hasClass('multiselect-filter-widget') && 
+                    if ($this.hasClass('multiselect-filter-widget') &&
                         $this.multiselect('instance')) {
                         $this.multiselect('refresh');
                     }
@@ -787,11 +768,11 @@ S3.search = {};
                         }
 
                         // Refresh UI widgets
-                        if (widget.hasClass('groupedopts-filter-widget') && 
+                        if (widget.hasClass('groupedopts-filter-widget') &&
                             widget.groupedopts('instance')) {
                             widget.groupedopts('refresh');
                         } else
-                        if (widget.hasClass('multiselect-filter-widget') && 
+                        if (widget.hasClass('multiselect-filter-widget') &&
                             widget.multiselect('instance')) {
                             widget.multiselect('refresh');
                         }
@@ -863,7 +844,7 @@ S3.search = {};
      *                       last filter-submit, reload page if required
      */
     var updatePendingTargets = function(form) {
-        
+
         var url = $('#' + form).find('input.filter-submit-url[type="hidden"]')
                                .first().val(),
             targets = pendingTargets[form],
@@ -914,14 +895,14 @@ S3.search = {};
             t = $('#' + target_id);
             if (t.hasClass('dl')) {
                 t.datalist('ajaxReload', target_data['queries']);
-//                 dlAjaxReload(target_id, target_data['queries']);
             } else if (t.hasClass('dataTable')) {
-                var dt = t.dataTable();
                 // Refresh Data
-                dt.reloadAjax(target_data['ajaxurl']);
+                var dt = t.dataTable(),
+                    dtAjaxURL = target_data['ajaxurl'];
+                dt.fnReloadAjax(dtAjaxURL);
                 updateFormatURLs(dt, queries);
                 $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
-                    $(this).val(target_data['ajaxurl']);
+                    $(this).val(dtAjaxURL);
                 });
             } else if (t.hasClass('map_wrapper')) {
                 S3.gis.refreshLayer('search_results');
@@ -1150,7 +1131,7 @@ S3.search = {};
             }
         }
     };
-    
+
     /**
      * Initialise Map for an S3Map page
      * - in global scope as called from callback to Map Loader
@@ -1308,7 +1289,7 @@ S3.search = {};
                                     }
                                     // @ToDo: Read the options for subsequent levels
                                 }
-                            }                            
+                            }
                         }
                     } else {
                         for (i in _values) {
@@ -1381,13 +1362,13 @@ S3.search = {};
                     }
                 }
                 select.html(_options);
-                if (select.hasClass('groupedopts-filter-widget') && 
+                if (select.hasClass('groupedopts-filter-widget') &&
                     select.groupedopts('instance')) {
                     try {
                         select.groupedopts('refresh');
                     } catch(e) { }
                 } else
-                if (select.hasClass('multiselect-filter-widget') && 
+                if (select.hasClass('multiselect-filter-widget') &&
                     select.multiselect('instance')) {
                     select.multiselect('refresh');
                 }
@@ -1482,6 +1463,9 @@ S3.search = {};
                 } else if (t.hasClass('tp-container')) {
                     // TimePlots do not need page reload
                     needs_reload = false;
+                } else if (t.hasClass('ts-container')) {
+                    // Timesheets do not need page reload
+                    needs_reload = false;
                 } else {
                     // all other targets need page reload
                     if (visible) {
@@ -1512,13 +1496,13 @@ S3.search = {};
                     continue;
                 } else if (t.hasClass('dl')) {
                     t.datalist('ajaxReload', queries);
-//                     dlAjaxReload(target_id, queries);
                 } else if (t.hasClass('dataTable')) {
-                    var dt = t.dataTable();
-                    dt.reloadAjax(dt_ajaxurl[target_id]);
+                    var dt = t.dataTable(),
+                        dtAjaxURL = dt_ajaxurl[target_id];
+                    dt.fnReloadAjax(dtAjaxURL);
                     updateFormatURLs(dt, queries);
                     $('#' + dt[0].id + '_dataTable_filterURL').each(function() {
-                        $(this).val(dt_ajaxurl[target_id]);
+                        $(this).val(dtAjaxURL);
                     });
                 } else if (t.hasClass('map_wrapper')) {
                     S3.gis.refreshLayer('search_results', queries);
@@ -1538,7 +1522,7 @@ S3.search = {};
     var toggleAdvanced = function(form) {
 
         var $form = $(form), hidden;
-        
+
         $form.find('.advanced').each(function() {
             var widget = $(this);
             // Ignoring .multiselect-filter-bootstrap as not used & to be deprecated
@@ -1548,7 +1532,7 @@ S3.search = {};
                 widget.removeClass('hide')
                         .show()
                         .find(selectors).each( function() {
-                            selector = $(this)
+                            selector = $(this);
                             // Mark them as Active
                             selector.addClass('active');
                             // Refresh the contents
@@ -1572,7 +1556,7 @@ S3.search = {};
                 hidden = false;
             }
         });
-        
+
         var $btn = $($form.find('.filter-advanced-label'));
         if (hidden) {
             // Change label to label_off
@@ -1581,7 +1565,7 @@ S3.search = {};
             // Change label to label_on
             $btn.text($btn.data('on')).siblings().toggle();
         }
-        
+
     };
 
     /**
@@ -1739,7 +1723,7 @@ S3.search = {};
          * refresh: re-draw contents
          */
         refresh: function() {
-            
+
             var id = this.id,
                 el = this.element.val(''),
                 options = this.options;
@@ -1799,14 +1783,14 @@ S3.search = {};
             if (options.deleteTooltip) {
                 this.delete_btn.attr('title', options.deleteTooltip);
             }
-            
+
             // Throbber
             if (this.throbber) {
                 this.throbber.remove();
             }
             this.throbber = $('<div class="inline-throbber" id="fm-throbber-' + id + '">')
                             .css({'float': 'left'});
-            
+
             // ACCEPT button for create-dialog
             if (this.accept_btn) {
                 this.accept_btn.remove();
@@ -1845,7 +1829,7 @@ S3.search = {};
             // Hide selector and buttons
             var el = this.element.hide(),
                 fm = this;
-                
+
             this._hideCRUDButtons();
 
             // Show accept/cancel
@@ -1895,13 +1879,13 @@ S3.search = {};
             var el = this.element,
                 fm = this,
                 title = this.input.val();
-                
+
             if (!$(this.input).hasClass('changed') || !title) {
                 return;
             } else {
                 $(this.input).removeClass('changed');
             }
-            
+
             // Hide accept/cancel
             this.accept_btn.hide();
             this.cancel_btn.hide();
@@ -1914,7 +1898,7 @@ S3.search = {};
                 title: title,
                 query: S3.search.getCurrentFilters($(el).closest('form')),
                 url: this._getFilterURL()
-            }
+            };
 
             // Ajax-save
             $.ajaxS3({
@@ -1950,7 +1934,7 @@ S3.search = {};
                 opts = this.options;
 
             var id = $(el).val();
-            
+
             if (!id || opts.confirmUpdate && !confirm(opts.confirmUpdate)) {
                 return;
             }
@@ -1966,7 +1950,7 @@ S3.search = {};
                 id: id,
                 query: S3.search.getCurrentFilters($(el).closest('form')),
                 url: this._getFilterURL()
-            }
+            };
 
             // Ajax-update current filter
             $.ajaxS3({
@@ -2056,7 +2040,7 @@ S3.search = {};
             // Show selector and buttons
             var el = this.element.show(),
                 opts = this.options;
-            
+
             // Disable selector if no filters
             var options = $(el).find('option');
             if (options.length == 1 && options.first().hasClass('filter-manager-prompt')) {
@@ -2102,7 +2086,7 @@ S3.search = {};
          * _showCRUDButtons: show (unhide) load/save/delete buttons
          */
         _showCRUDButtons: function() {
-            
+
             var opts = this.options;
 
             this._hideCRUDButtons();
@@ -2124,12 +2108,12 @@ S3.search = {};
                 }
             }
         },
-        
+
         /**
          * _hideCRUDButtons: hide load/save/delete buttons
          */
         _hideCRUDButtons: function() {
-            
+
             this.create_btn.hide();
             this.load_btn.hide();
             this.delete_btn.hide();
@@ -2140,7 +2124,7 @@ S3.search = {};
          * _getFilterURL: get the page URL of the filter form
          */
         _getFilterURL: function() {
-            
+
             var url = $(this.element).closest('form')
                                      .find('input.filter-submit-url[type="hidden"]');
             if (url.length) {
@@ -2154,16 +2138,16 @@ S3.search = {};
          * _bindEvents: bind events to generated elements (after refresh)
          */
         _bindEvents: function() {
-            
+
             var fm = this;
-            
+
             // @todo: don't bind create if readOnly
             this.create_btn.click(function() {
                 fm._newFilter();
             });
             this.accept_btn.click(function() {
                 fm._accept();
-            })
+            });
             this.cancel_btn.click(function() {
                 fm._cancel();
             });

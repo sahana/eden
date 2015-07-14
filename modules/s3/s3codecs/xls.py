@@ -3,7 +3,7 @@
 """
     S3 Microsoft Excel codec
 
-    @copyright: 2011-14 (c) Sahana Software Foundation
+    @copyright: 2011-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -133,9 +133,6 @@ class S3XLS(S3Codec):
                  * use_colour:     True to add colour to the cells. default False
         """
 
-        request = current.request
-
-        import datetime
         try:
             import xlwt
         except ImportError:
@@ -147,6 +144,7 @@ class S3XLS(S3Codec):
                 error = self.ERROR.XLWT_ERROR
                 current.log.error(error)
                 return error
+
         try:
             from xlrd.xldate import xldate_from_date_tuple, \
                                     xldate_from_time_tuple, \
@@ -160,6 +158,10 @@ class S3XLS(S3Codec):
                 error = self.ERROR.XLRD_ERROR
                 current.log.error(error)
                 return error
+
+        import datetime
+
+        request = current.request
 
         # The xlwt library supports a maximum of 182 characters in a single cell
         max_cell_size = 182
@@ -179,6 +181,7 @@ class S3XLS(S3Codec):
             headers = data_source[0]
             types = data_source[1]
             rows = data_source[2:]
+            lfields = list_fields
         else:
             (title, types, lfields, headers, rows) = self.extractResource(data_source,
                                                                           list_fields)
@@ -203,13 +206,23 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         # Create the workbook
         book = xlwt.Workbook(encoding="utf-8")
 
+
+
         # Add a sheet
         # Can't have a / in the sheet_name, so replace any with a space
         sheet_name = str(title.replace("/", " "))
         # sheet_name cannot be over 31 chars
         if len(sheet_name) > 31:
             sheet_name = sheet_name[:31]
-        sheet1 = book.add_sheet(sheet_name)
+        sheets = []
+        rowLimit = 65536 #.xls exports are limited to 65536 rows per sheet, we bypass this by creating multiple sheets
+        sheetnum = len(rows) / rowLimit
+        count = 1
+        while len(sheets) <= sheetnum:
+            sheets.append(book.add_sheet('%s-%s' % (sheet_name, count)))
+            count += 1
+
+
 
         # Styles
         styleLargeHeader = xlwt.XFStyle()
@@ -247,53 +260,54 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         if use_colour:
             styleEven.pattern.pattern = styleEven.pattern.SOLID_PATTERN
             styleEven.pattern.pattern_fore_colour = S3XLS.ROW_ALTERNATING_COLOURS[1]
+        for sheet in sheets:
+            # Header row
+            colCnt = 0
+            headerRow = sheet.row(0)
+            fieldWidths = []
+            id = False
+            for selector in lfields:
+                if selector == report_groupby:
+                    continue
+                label = headers[selector]
+                if label == "Id":
+                    # Indicate to adjust colCnt when writing out
+                    id = True
+                    fieldWidths.append(0)
+                    colCnt += 1
+                    continue
+                if label == "Sort":
+                    continue
+                if id:
+                    # Adjust for the skipped column
+                    writeCol = colCnt - 1
 
-        # Header row
-        colCnt = 0
-        #headerRow = sheet1.row(2)
-        headerRow = sheet1.row(0)
-        fieldWidths = []
-        id = False
-        for selector in lfields:
-            if selector == report_groupby:
-                continue
-            label = headers[selector]
-            if label == "Id":
-                # Indicate to adjust colCnt when writing out
-                id = True
-                fieldWidths.append(0)
+                else:
+                        writeCol = colCnt
+                headerRow.write(writeCol, str(label), styleHeader)
+                width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
+                width = min(width, 65535) # USHRT_MAX
+                fieldWidths.append(width)
+                sheet.col(writeCol).width = width
                 colCnt += 1
-                continue
-            if label == "Sort":
-                continue
-            if id:
-                # Adjust for the skipped column
-                writeCol = colCnt - 1
-            else:
-                writeCol = colCnt
-            headerRow.write(writeCol, str(label), styleHeader)
-            width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
-            #width = len(label) * COL_WIDTH_MULTIPLIER
-            fieldWidths.append(width)
-            sheet1.col(writeCol).width = width
-            colCnt += 1
         # Title row
         # - has been removed to allow columns to be easily sorted post-export.
         # - add deployment_setting if an Org wishes a Title Row
-        # currentRow = sheet1.row(0)
-        # if colCnt > 0:
-            # sheet1.write_merge(0, 0, 0, colCnt, str(title),
-                               # styleLargeHeader)
-        # currentRow.height = 500
-        # currentRow = sheet1.row(1)
-        # currentRow.write(0, str(current.T("Date Exported:")), styleNotes)
-        # currentRow.write(1, request.now, styleNotes)
-        # Fix the size of the last column to display the date
-        #if 16 * COL_WIDTH_MULTIPLIER > width:
-        #    sheet1.col(colCnt).width = 16 * COL_WIDTH_MULTIPLIER
+        # for sheet in sheets:
+            # currentRow = sheet.row(0)
+            # if colCnt > 0:
+                # sheet.write_merge(0, 0, 0, colCnt, str(title),
+                                # styleLargeHeader)
+                # currentRow.height = 500
+                # currentRow = sheet.row(1)
+                # currentRow.write(0, str(current.T("Date Exported:")), styleNotes)
+                # currentRow.write(1, request.now, styleNotes)
+                # Fix the size of the last column to display the date
+            #if 16 * COL_WIDTH_MULTIPLIER > width:
+            #    sheet.col(colCnt).width = 16 * COL_WIDTH_MULTIPLIER
 
-        # Initialize counters
-        totalCols = colCnt
+            # Initialize counters
+            totalCols = colCnt
         #rowCnt = 2
         rowCnt = 0
 
@@ -301,7 +315,12 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         for row in rows:
             # Item details
             rowCnt += 1
-            currentRow = sheet1.row(rowCnt)
+            sheetCnt = (rowCnt / rowLimit)
+            if sheetCnt == 0:
+                currentRow = sheets[sheetCnt].row(rowCnt - (sheetCnt * rowLimit))
+            else:
+                currentRow = sheets[sheetCnt].row(rowCnt - (sheetCnt * rowLimit) + 1)
+
             colCnt = 0
             if rowCnt % 2 == 0:
                 style = styleEven
@@ -311,10 +330,10 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 represent = s3_strip_markup(s3_unicode(row[report_groupby]))
                 if subheading != represent:
                     subheading = represent
-                    sheet1.write_merge(rowCnt, rowCnt, 0, totalCols,
-                                       subheading, styleSubHeader)
+                    sheets(sheetCnt).write_merge(rowCnt, rowCnt, 0, totalCols,
+                                                 subheading, styleSubHeader)
                     rowCnt += 1
-                    currentRow = sheet1.row(rowCnt)
+                    currentRow = sheets[sheetCnt].row(rowCnt)
                     if rowCnt % 2 == 0:
                         style = styleEven
                     else:
@@ -392,11 +411,11 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 width = len(represent) * COL_WIDTH_MULTIPLIER
                 if width > fieldWidths[colCnt]:
                     fieldWidths[colCnt] = width
-                    sheet1.col(writeCol).width = width
+                    sheets[sheetCnt].col(writeCol).width = width
                 colCnt += 1
-        sheet1.panes_frozen = True
-        #sheet1.horz_split_pos = 3
-        sheet1.horz_split_pos = 1
+        for sheet in sheets:
+            sheet.panes_frozen = True
+            sheet.horz_split_pos = 1
 
         output = StringIO()
         book.save(output)
@@ -454,4 +473,30 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 xlfmt = xlfmt.replace(item, translate[item])
         return xlfmt
 
-# End =========================================================================
+# =============================================================================
+class S3HTML2XLS():
+    """
+        Class that takes HTML in the form of web2py helper objects
+        and converts it to XLS
+
+        @ToDo: Complete this (e.g. start with a copy of S3html2pdf)
+        See https://gist.github.com/JustOnce/2be3e4d951a66c22c5e0
+        & http://pydoc.net/Python/Kiowa/0.2w.rc9/kiowa.utils.xls.html2xls/
+
+        Places  to use this:
+            org_CapacityReport()
+    """
+
+    def __init__(self):
+
+        pass
+
+    # -------------------------------------------------------------------------
+    def parse(self, html):
+        """
+            Entry point for class
+        """
+
+        return None
+
+# END =========================================================================

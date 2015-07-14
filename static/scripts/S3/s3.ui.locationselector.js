@@ -318,16 +318,22 @@
                 // @todo: reverseLx?
                 formRow.show();
             } else {
-                // Other formstyle:
+                // Other formstyle
+
+                // Tuple themes: hide the label row
+                $(selector + '__row1').hide();
+
                 // Hide the main row & move out the Error
-                $(selector + '__row1').hide(); // Tuple themes
                 formRow.hide().after(errorWrapper);
+
+                // Re-insert the map icon and wrapper after the last
+                // location selector row (which may vary depending on config)
+                mapIconRow.detach();
+                var lastRow = formRow.siblings('[id^="' + fieldname + '"][id$="__row"]').last();
                 if (reverseLx) {
-                    L0Row.after(mapWrapper)
-                         .after(mapIconRow);
+                    lastRow.after(mapWrapper).after(mapIconRow);
                 } else {
-                    postcodeRow.after(mapWrapper)
-                               .after(mapIconRow);
+                    lastRow.after(mapWrapper).after(mapIconRow);
                 }
             }
 
@@ -348,8 +354,8 @@
          *
          * @param {number} level - the Lx level (0..5)
          * @param {number} id - the record ID of the selected Lx location
-         * @param {bool} refresh - whether this called before user input
-         *                         (in which case we do want to prevent geocoding)
+         * @param {bool} refresh - whether this is called before user input
+         *                         (in which case we want to prevent geocoding)
          */
         _lxSelect: function(level, id, refresh) {
 
@@ -679,7 +685,7 @@
 
             this._collectLx();
 
-            var data = this.data;
+            var data = this.data,
                 parent;
             for (var level = 5; level > -1; level--) {
                 parent = data['L' + level];

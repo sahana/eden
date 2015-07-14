@@ -66,6 +66,8 @@ class S3HierarchyCRUD(S3Method):
                 output = self.tree(r, **attr)
             elif r.representation == "json" and "node" in r.get_vars:
                 output = self.node_json(r, **attr)
+            elif r.representation == "xls":
+                output = self.export_xls(r, **attr)
             else:
                 r.error(501, current.ERROR.BAD_FORMAT)
         else:
@@ -175,7 +177,7 @@ class S3HierarchyCRUD(S3Method):
             else:
                 data["node"] = node_id
                 label = h.label(node_id)
-                data["label"] = str(label) if label else None
+                data["label"] = label if label else None
                 data["parent"] = h.parent(node_id)
 
                 children = h.children(node_id)
@@ -186,7 +188,7 @@ class S3HierarchyCRUD(S3Method):
                         label = h.label(child_id)
                         # @todo: include CRUD permissions?
                         nodes.append({"node": child_id,
-                                      "label": str(label) if label else None,
+                                      "label": label if label else None,
                                       })
                     data["children"] = nodes
 
@@ -259,6 +261,150 @@ class S3HierarchyCRUD(S3Method):
         s3.jquery_ready.append(script)
 
         return
+
+    # -------------------------------------------------------------------------
+    def export_xls(self, r, **attr):
+        """
+            Export nodes in the hierarchy in XLS format, including
+            ancestor references.
+
+            This is controlled by the hierarchy_export setting, which is
+            a dict like:
+            {
+                "field": "name",        - the field name for the ancestor reference
+                "root": "Organisation"  - the label for the root level
+                "branch": "Branch"      - the label for the branch levels
+                "prefix": "Sub"         - the prefix for the branch label
+            }
+
+            With this configuration, the ancestor columns would appear like:
+
+            Organisation, Branch, SubBranch, SubSubBranch, SubSubSubBranch,...
+
+            All parts of the setting can be omitted, the defaults are as follows:
+            - "field" defaults to "name"
+            - "root" is automatically generated from the resource name
+            - "branch" defaults to prefix+root
+            - "prefix" defaults to "Sub"
+
+            @status: experimental
+        """
+
+        resource = self.resource
+        tablename = resource.tablename
+
+        # Get the hierarchy
+        h = S3Hierarchy(tablename=tablename)
+        if not h.config:
+            r.error(405, "No hierarchy configured for %s" % tablename)
+
+        # Intepret the hierarchy_export setting for the resource
+        setting = resource.get_config("hierarchy_export", {})
+        field = setting.get("field")
+        if not field:
+            field = "name" if "name" in resource.fields else resource._id.name
+        prefix = setting.get("prefix", "Sub")
+        root = setting.get("root")
+        if not root:
+            root = "".join(s.capitalize() for s in resource.name.split("_"))
+        branch = setting.get("branch")
+        if not branch:
+            branch = "%s%s" % (prefix, root)
+
+        rfield = resource.resolve_selector(field)
+
+        # Get the list fields
+        list_fields = resource.list_fields("export_fields", id_column=False)
+        rfields = resource.resolve_selectors(list_fields,
+                                             extra_fields=False,
+                                             )[0]
+
+        # Selectors = the fields to extract
+        selectors = [h.pkey.name, rfield.selector]
+
+        # Columns = the keys for the XLS Codec to access the rows
+        # Types = the data types of the columns (in same order!)
+        columns = []
+        types = []
+
+        # Generate the headers and type list for XLS Codec
+        headers = {}
+        for rf in rfields:
+            selectors.append(rf.selector)
+            if rf.colname == rfield.colname:
+                continue
+            columns.append(rf.colname)
+            headers[rf.colname] = rf.label
+            if rf.ftype == "virtual":
+                types.append("string")
+            else:
+                types.append(rf.ftype)
+
+        # Get the root nodes
+        if self.record_id:
+            if r.component and h.pkey.name != resource._id.name:
+                query = resource.table._id == self.record_id
+                row = current.db(query).select(h.pkey, limitby=(0, 1)).first()
+                if not row:
+                    r.error(404, current.ERROR.BAD_RECORD)
+                roots = set([row[h.pkey]])
+            else:
+                roots = set([self.record_id])
+        else:
+            roots = h.roots
+
+        # Find all child nodes
+        all_nodes = h.findall(roots, inclusive=True)
+
+        # ...and extract their data from a clone of the resource
+        from s3query import FS
+        query = FS(h.pkey.name).belongs(all_nodes)
+        clone = current.s3db.resource(resource, filter=query)
+        data = clone.select(selectors, represent=True, raw_data=True)
+
+        # Convert into dict {hierarchy key: row}
+        hkey = str(h.pkey)
+        data_dict = dict((row._row[hkey], row) for row in data.rows)
+
+        # Add hierarchy headers and types
+        depth = max(h.depth(node_id) for node_id in roots)
+        htypes = []
+        hcolumns = []
+        colprefix = "HIERARCHY"
+        htype = "string" if rfield.ftype == "virtual" else rfield.ftype
+        for level in xrange(depth+1):
+            col = "%s.%s" % (colprefix, level)
+            if level == 0:
+                headers[col] = root
+            elif level == 1:
+                headers[col] = branch
+            else:
+                headers[col] = "%s%s" % ("".join([prefix] * (level -1)), branch)
+            hcolumns.append(col)
+            htypes.append(htype)
+
+
+        # Generate the output for XLS Codec
+        output = [headers, htypes + types]
+        for node_id in roots:
+            rows = h.export_node(node_id,
+                                 prefix = colprefix,
+                                 depth=depth,
+                                 hcol=rfield.colname,
+                                 columns = columns,
+                                 data = data_dict,
+                                 )
+            output.extend(rows)
+
+        # Encode in XLS format
+        from s3codec import S3Codec
+        codec = S3Codec.get_codec("xls")
+        result = codec.encode(output,
+                              title = resource.name,
+                              list_fields=hcolumns+columns)
+
+        # Reponse headers and file name are set in codec
+        return result
 
 # =============================================================================
 class S3Hierarchy(object):
@@ -1094,6 +1240,29 @@ class S3Hierarchy(object):
         return self.root(parent_id, category=category, classify=classify)
 
     # -------------------------------------------------------------------------
+    def depth(self, node_id, level=0):
+        """
+            Determine the depth of a hierarchy
+
+            @param node_id: the start node (default to all root nodes)
+        """
+
+        nodes = self.nodes
+        depth = self.depth
+
+        node = nodes.get(node_id)
+        if not node:
+            roots = self.roots
+            result = max(depth(root) for root in roots)
+        else:
+            children = node["s"]
+            if children:
+                result = max(depth(n, level=level+1) for n in children)
+            else:
+                result = level
+        return result
+
+    # -------------------------------------------------------------------------
     def siblings(self,
                  node_id,
                  category=DEFAULT,
@@ -1160,8 +1329,10 @@ class S3Hierarchy(object):
 
         result = set()
         findall = self.findall
-        if hasattr(node_id, "__iter__"):
+        if isinstance(node_id, (set, list, tuple)):
             for n in node_id:
+                if n is None:
+                    continue
                 result |= findall(n,
                                   category=category,
                                   classify=classify,
@@ -1248,11 +1419,17 @@ class S3Hierarchy(object):
         node = theset.get(node_id)
         if node:
             if LABEL in node:
-                return node[LABEL]
+                label = node[LABEL]
             else:
                 self._represent(node_ids=[node_id], renderer=represent)
             if LABEL in node:
-                return node[LABEL]
+                label = node[LABEL]
+            if type(label) is unicode:
+                try:
+                    label = label.encode("utf-8")
+                except UnicodeEncodeError:
+                    pass
+            return label
         return None
 
     # -------------------------------------------------------------------------
@@ -1261,6 +1438,7 @@ class S3Hierarchy(object):
              root=None,
              represent=None,
              hidden=True,
+             none=None,
              _class=None):
         """
             Render this hierarchy as nested unsorted list
@@ -1286,6 +1464,14 @@ class S3Hierarchy(object):
                     _style="display:none" if hidden else None)
         if _class:
             output.add_class(_class)
+        if none:
+            if none is True:
+                none = current.messages["NONE"]
+            output.insert(0, LI(none,
+                                _id="%s-None" % widget_id,
+                                _rel = "none",
+                                _class = "s3-hierarchy-node s3-hierarchy-none",
+                                ))
         return output
 
     # -------------------------------------------------------------------------
@@ -1324,5 +1510,91 @@ class S3Hierarchy(object):
                          for n in subnodes])
             item.append(sublist)
         return item
+
+    # -------------------------------------------------------------------------
+    def export_node(self,
+                    node_id,
+                    prefix = "_hierarchy",
+                    depth=None,
+                    level=0,
+                    path=None,
+                    hcol=None,
+                    columns = None,
+                    data = None,
+                    node_list=None):
+        """
+            Export the hierarchy beneath a node
+
+            @param node_id: the root node
+            @param prefix: prefix for the hierarchy column in the output
+            @param depth: the maximum depth to export
+            @param level: the current recursion level (internal)
+            @param path: the path dict for this node (internal)
+            @param hcol: the hierarchy column in the input data
+            @param columns: the list of columns to export
+            @param data: the input data dict {node_id: row}
+            @param node_list: the output data list (will be appended to)
+
+            @returns: the output data list
+
+            @todo: pass the input data as list and retain the original
+                   order when recursing into child nodes?
+        """
+
+        if node_list is None:
+            node_list = []
+
+        # Do not recurse deeper than depth levels below the root node
+        if depth is not None and level > depth:
+            return node_list
+
+        # Get the current node
+        node = self.nodes.get(node_id)
+        if not node:
+            return node_list
+
+        # Get the node data
+        if data:
+            if node_id not in data:
+                return node_list
+            node_data = data.get(node_id)
+        else:
+            node_data = {}
+
+        # Generate the path dict if it doesn't exist yet
+        if path is None:
+            if depth is None:
+                depth = self.depth(node_id)
+            path = dict(("%s.%s" % (prefix, l), "") for l in xrange(depth+1))
+
+        # Set the hierarchy column
+        label = node_data.get(hcol) if hcol else node_id
+        path["%s.%s" % (prefix, level)] = label
+
+        # Add remaining columns to the record dict
+        record = dict(path)
+        if columns:
+            for column in columns:
+                if columns == hcol:
+                    continue
+                record[column] = node_data.get(column)
+
+        # Append the record to the node list
+        node_list.append(record)
+
+        # Recurse into child nodes
+        children = node["s"]
+        for child in children:
+            self.export_node(child,
+                             prefix = prefix,
+                             depth=depth,
+                             level=level+1,
+                             path=dict(path),
+                             hcol=hcol,
+                             columns=columns,
+                             data=data,
+                             node_list=node_list,
+                             )
+        return node_list
 
 # END =========================================================================

@@ -4,6 +4,16 @@
     /* With side menu
     margin: 10px -15px 0 -16px; */
     margin: 0 0 0 -16px;
+    clear: both;
+}
+.map_wrapper {
+    clear: both;
+}
+
+/* Over-ride default settings which work with Foundation */
+.olPopupCloseBox {
+    margin-right: 0;
+    margin-top: 0;
 }
 
 /* Over-ride Ext */

@@ -245,7 +245,7 @@ class S3ChannelModel(S3Model):
 
             CLI API for shell scripts & to be called by S3Method
         """
-    
+
         db = current.db
         s3db = current.s3db
         table = s3db.table(tablename)
@@ -552,7 +552,7 @@ class S3MessageAttachmentModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EmailModel(S3ChannelModel):
@@ -680,8 +680,8 @@ class S3EmailModel(S3ChannelModel):
                             )
 
         # ---------------------------------------------------------------------
-        return dict()
-        
+        return {}
+
 # =============================================================================
 class S3FacebookModel(S3ChannelModel):
     """
@@ -892,7 +892,7 @@ class S3MCommonsModel(S3ChannelModel):
                    action = self.msg_channel_poll)
 
         # ---------------------------------------------------------------------
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ParsingModel(S3Model):
@@ -1131,7 +1131,7 @@ class S3ParsingModel(S3Model):
 
             CLI API for shell scripts & to be called by S3Method
         """
-    
+
         db = current.db
         s3db = current.s3db
         table = s3db.msg_parser
@@ -1316,7 +1316,7 @@ class S3RSSModel(S3ChannelModel):
                        )
 
         # ---------------------------------------------------------------------
-        return dict()
+        return {}
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -1399,7 +1399,7 @@ class S3SMSModel(S3Model):
                        )
 
         # ---------------------------------------------------------------------
-        return dict()
+        return {}
 
 # =============================================================================
 class S3SMSOutboundModel(S3Model):
@@ -1560,7 +1560,7 @@ class S3SMSOutboundModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
-        return dict()
+        return {}
 
 # =============================================================================
 class S3TropoModel(S3Model):
@@ -1627,7 +1627,7 @@ class S3TropoModel(S3Model):
                      )
 
         # ---------------------------------------------------------------------
-        return dict()
+        return {}
 
 # =============================================================================
 class S3TwilioModel(S3ChannelModel):
@@ -1704,7 +1704,7 @@ class S3TwilioModel(S3ChannelModel):
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        return dict()
+        return {}
 
 # =============================================================================
 class S3TwitterModel(S3Model):
@@ -1740,7 +1740,7 @@ class S3TwitterModel(S3Model):
                            represent = s3_yes_no_represent,
                            ),
                      Field("twitter_account"),
-                     Field("consumer_key", "password", 
+                     Field("consumer_key", "password",
                            widget = password_widget,
                            ),
                      Field("consumer_secret", "password",
@@ -1822,7 +1822,7 @@ class S3TwitterModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2042,7 +2042,7 @@ class S3TwitterSearchModel(S3ChannelModel):
                   )
 
         # ---------------------------------------------------------------------
-        return dict()
+        return {}
 
     # -----------------------------------------------------------------------------
     @staticmethod
@@ -2194,7 +2194,7 @@ class S3XFormsModel(S3Model):
                           )
 
         # ---------------------------------------------------------------------
-        return dict()
+        return {}
 
 # =============================================================================
 class S3BaseStationModel(S3Model):
@@ -2265,7 +2265,7 @@ class S3BaseStationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # ---------------------------------------------------------------------
     @staticmethod

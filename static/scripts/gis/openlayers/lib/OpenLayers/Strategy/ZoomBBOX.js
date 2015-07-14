@@ -1,4 +1,4 @@
-/* Copyright (c) 2014 by Sahana Software Foundation.
+/* Copyright (c) 2014-15 by Sahana Software Foundation.
  * Published under the MIT license.
  * See LICENSE in the Sahana Eden distribution or repository for the
  * full text of the license. */

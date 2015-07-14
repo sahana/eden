@@ -852,13 +852,11 @@ class ContactTracingModel(S3Model):
                      case_id(),
                      s3_datetime("start_date",
                                  label = T("From"),
-                                 widget = S3DateTimeWidget(set_min="disease_end_date",
-                                                           ),
+                                 set_min="#disease_tracing_end_date",
                                  ),
                      s3_datetime("end_date",
                                  label = T("To"),
-                                 widget = S3DateTimeWidget(set_max="disease_start_date",
-                                                           ),
+                                 set_max="#disease_tracing_start_date",
                                  ),
                      # @todo: add site_id?
                      self.gis_location_id(),
@@ -982,13 +980,13 @@ class ContactTracingModel(S3Model):
             msg_list_empty = T("No Exposure Information currently registered"))
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
 
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod

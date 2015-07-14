@@ -27,17 +27,18 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ["S3ContentModel",
+__all__ = ("S3ContentModel",
            "S3ContentMapModel",
            "S3ContentOrgModel",
            "S3ContentOrgGroupModel",
            "S3ContentUserModel",
            "cms_index",
+           "cms_documentation",
            "cms_rheader",
            "cms_customise_post_fields",
            "cms_post_list_layout",
            "S3CMS",
-           ]
+           )
 
 try:
     import json # try stdlib (Python 2.6)
@@ -302,6 +303,7 @@ class S3ContentModel(S3Model):
                              "location": "location_id",
                              "organisation": "created_by$organisation_id",
                              },
+                  deduplicate = self.cms_post_duplicate,
                   filter_actions = [{"label": "Open Table",
                                      "icon": "table",
                                      "function": "newsfeed",
@@ -579,6 +581,39 @@ class S3ContentModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def cms_post_duplicate(item):
+        """
+            CMS Post Import - Update Detection (primarily for non-blog
+            contents such as homepage, module index pages, summary pages,
+            or online documentation):
+                - same name and series => same post
+
+            @param item: the import item
+
+            @todo: if no name present => use cms_post_module component
+                   to identify updates (also requires deduplication of
+                   cms_post_module component)
+        """
+
+        data = item.data
+
+        name = data.get("name")
+        series_id = data.get("series_id")
+
+        if not name:
+            return
+
+        table = item.table
+        query = (table.name == name) & \
+                (table.series_id == series_id)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def cms_post_onaccept(form):
         """
            Handle the case where the page is for a Module home page,
@@ -827,7 +862,7 @@ class S3ContentMapModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ContentOrgModel(S3Model):
@@ -855,7 +890,7 @@ class S3ContentOrgModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ContentOrgGroupModel(S3Model):
@@ -879,7 +914,7 @@ class S3ContentOrgGroupModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ContentUserModel(S3Model):
@@ -903,7 +938,7 @@ class S3ContentUserModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 def cms_rheader(r, tabs=[]):
@@ -964,7 +999,7 @@ def cms_index(module, resource=None, page_name=None, alt_function=None):
     response.title = page_name
 
     item = None
-    if settings.has_module("cms"):
+    if settings.has_module("cms") and not settings.get_cms_hide_index(module):
         db = current.db
         table = current.s3db.cms_post
         ltable = db.cms_post_module
@@ -1020,6 +1055,10 @@ def cms_index(module, resource=None, page_name=None, alt_function=None):
             environment = build_environment(request, response, current.session)
             environment["settings"] = settings
             environment["s3db"] = current.s3db
+            # Retain certain globals (extend as needed):
+            g = globals()
+            environment["s3base"] = g.get("s3base")
+            environment["s3_redirect_default"] = g.get("s3_redirect_default")
             page = run_controller_in(request.controller, alt_function, environment)
             if isinstance(page, dict):
                 response._vars = page
@@ -1046,6 +1085,46 @@ def cms_index(module, resource=None, page_name=None, alt_function=None):
 
     response.view = "index.html"
     return dict(item=item, report=report)
+
+# =============================================================================
+def cms_documentation(r, default_page, default_url):
+    """
+        Render an online documentation page, to be called from prep
+
+        @param r: the S3Request
+        @param default_page: the default page name
+        @param default_url: the default URL if no contents found
+    """
+
+    row = r.record
+    if not row:
+        # Find the CMS page
+        name = r.get_vars.get("name", default_page)
+        table = r.resource.table
+        query = (table.name == name) & (table.deleted != True)
+        row = current.db(query).select(table.id,
+                                        table.title,
+                                        table.body,
+                                        limitby=(0, 1)).first()
+    if not row:
+        if name != default_page:
+            # Error - CMS page not found
+            r.error(404, current.T("Page not found"),
+                    next=URL(args=current.request.args, vars={}),
+                    )
+        else:
+            # No CMS contents for module homepage found at all
+            # => redirect to default page (preserving all errors)
+            from s3 import s3_redirect_default
+            s3_redirect_default(default_url)
+
+    # Render the page
+    from s3 import S3XMLContents
+    return {"bypass": True,
+            "output": {"title": row.title,
+                       "contents": S3XMLContents(row.body),
+                       },
+            }
 
 # =============================================================================
 class S3CMS(S3Method):

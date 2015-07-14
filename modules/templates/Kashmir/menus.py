@@ -56,5 +56,5 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                     ),
                 )
-        
+
 # END =========================================================================

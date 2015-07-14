@@ -588,7 +588,7 @@ def climate_station_parameter_range_from(row):
     table = current.s3db.table("climate_sample_table_%s" % parameter_id)
     if not table:
         return default
-        
+
     date = table.time_period.min()
     row = db(table.place_id == station_id).select(date).first()
     if row:
@@ -601,7 +601,7 @@ def climate_station_parameter_range_from(row):
 
 # -------------------------------------------------------------------------
 def climate_station_parameter_range_to(self):
-    
+
     default = current.messages["NONE"]
 
     if hasattr(row, "climate_station_parameter"):

@@ -24,16 +24,6 @@ except:
 from gluon.contenttype import contenttype
 import gluon.contrib.pyrtf as pyrtf
 
-from s3survey import S3AnalysisPriority, \
-                     survey_question_type, \
-                     survey_analysis_type, \
-                     getMatrix, \
-                     DEBUG, \
-                     LayoutBlocks, \
-                     DataMatrix, MatrixElement, \
-                     S3QuestionTypeOptionWidget, \
-                     survey_T
-
 # -----------------------------------------------------------------------------
 def index():
     """ Module's Home Page """
@@ -267,9 +257,6 @@ def series():
         if request.ajax == True and r.method == "read":
             return output["item"]
         if not r.component:
-            # Set the minimum end_date to the same as the start_date
-            s3.jquery_ready.append(
-'''S3.start_end_date('survey_series_start_date','survey_series_end_date')''')
             s3db.survey_serieslist_dataTable_post(r)
 
         elif r.component_name == "complete":
@@ -374,7 +361,7 @@ def series_export_formatted():
         template = s3db.survey_getTemplateFromSeries(series_id)
         template_id = template.id
         title = "%s (%s)" % (series.name, template.name)
-        title = survey_T(title, lang_dict)
+        title = s3db.survey_T(title, lang_dict)
         widget_list = s3db.survey_getAllWidgetsForTemplate(template_id)
         output = series_export_word(widget_list, lang_dict, title, logo)
         filename = "%s.rtf" % series.name
@@ -411,10 +398,13 @@ def series_prepare_matrix(series_id, series, logo, lang_dict, justified=False):
     template = s3db.survey_getTemplateFromSeries(series_id)
     template_id = template.id
     section_list = s3db.survey_getAllSectionsForSeries(series_id)
+    survey_T = s3db.survey_T
+
     title = "%s (%s)" % (series.name, template.name)
     title = survey_T(title, lang_dict)
     layout = []
     survey_getQstnLayoutRules = s3db.survey_getQstnLayoutRules
+
     for section in section_list:
         section_name = survey_T(section["name"], lang_dict)
         rules = survey_getQstnLayoutRules(template_id,
@@ -422,21 +412,21 @@ def series_prepare_matrix(series_id, series, logo, lang_dict, justified=False):
         layout_rules = [section_name, rules]
         layout.append(layout_rules)
     widget_list = s3db.survey_getAllWidgetsForTemplate(template_id)
-    layout_blocks = LayoutBlocks()
+    layout_blocks = s3db.survey_LayoutBlocks()
 
     # Store the questions into a matrix based on the layout and the space
     # required for each question - for example an option question might
     # need one row for each possible option, and if this is in a layout
     # then the position needs to be recorded carefully...
-    preliminary_matrix = getMatrix(title,
-                                   logo,
-                                   layout,
-                                   widget_list,
-                                   False,
-                                   lang_dict,
-                                   showSectionLabels = False,
-                                   layoutBlocks = layout_blocks,
-                                   )
+    preliminary_matrix = s3db.survey_getMatrix(title,
+                                               logo,
+                                               layout,
+                                               widget_list,
+                                               False,
+                                               lang_dict,
+                                               showSectionLabels = False,
+                                               layoutBlocks = layout_blocks,
+                                               )
     if not justified:
         return preliminary_matrix
 
@@ -447,15 +437,15 @@ def series_prepare_matrix(series_id, series, logo, lang_dict, justified=False):
 
     # Now rebuild the matrix with the spacing for each widget set up so
     # that the document will be fully justified
-    layout_blocks = LayoutBlocks()
-    (matrix1, matrix2) = getMatrix(title,
-                                   logo,
-                                   layout,
-                                   widget_list,
-                                   True,
-                                   lang_dict,
-                                   showSectionLabels = False,
-                                   )
+    layout_blocks = s3db.survey_LayoutBlocks()
+    (matrix1, matrix2) = s3db.survey_getMatrix(title,
+                                               logo,
+                                               layout,
+                                               widget_list,
+                                               True,
+                                               lang_dict,
+                                               showSectionLabels = False,
+                                               )
     return (matrix1, matrix2)
 
 # -----------------------------------------------------------------------------
@@ -498,7 +488,7 @@ def series_export_word(widget_list, lang_dict, title, logo):
         try:
             AddRow(*line)
         except:
-            if DEBUG:
+            if settings.base.debug:
                 raise
             pass
 
@@ -835,7 +825,7 @@ def completed_chart():
 
     getAnswers = s3db.survey_getAllAnswersForQuestionInSeries
     answers = getAnswers(question_id, series_id)
-    analysisTool = survey_analysis_type[q_type](question_id, answers)
+    analysisTool = s3db.survey_analysis_type[q_type](question_id, answers)
     qstnName = analysisTool.qstnWidget.question.name
     image = analysisTool.drawChart(series_id, output="png")
     return image

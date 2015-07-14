@@ -178,41 +178,71 @@ class S3DashBoardMenuLayout(S3NavigationItem):
     @staticmethod
     def layout(item):
 
-        T = current.T
-
-        if item.components:
-            items = item.render_components()
+        # Manage flags: hide any disabled/unauthorized items
+        logged_in = current.auth.s3_logged_in()
+        if logged_in:
+            if not item.authorized:
+                enabled = visible = False
+            elif item.enabled is None or item.enabled:
+                enabled = visible = True
         else:
-            items = None
+            enabled = visible = True
 
-        if item.parent is None:
-            #return items
-        #elif item.parent.parent is None:
-            if items:
-                if item.attr._id is not None:
-                    _id = item.attr._id
-                else:
-                    _id = "sub-dashboard"
-                return UL(items, _id=_id)
-            else:
-                return ""
-        else:
+        if enabled and visible:
+            T = current.T
+
             if item.components:
-                return LI(A(H2(item.label),
-                          UL(items),
-                          IMG(_src=URL(c="static", f="themes",
-                                       args=["IFRC", "img", item.opts.image]),
-                              _alt=T(item.opts.title)),
-                          _href=item.url()))
-            elif item.opts.text:
-                return LI(A(H2(item.label),
-                          P(T(item.opts.text)),
-                          IMG(_src=URL(c="static", f="themes",
-                                       args=["IFRC", "img", item.opts.image]),
-                              _alt=item.opts.image),
-                          _href=item.url()))
+                items = item.render_components()
+                if item.parent is None and logged_in:
+                    # Count number of active children and adjust submenu width
+                    accessible = item.get_all(authorized=True)
+                    active = len([submenu for submenu in accessible
+                                          if submenu.enabled in (None, True)])
+                    if active:
+                        # total width - borders / number of visible submenus
+                        style = "width:%spx;" % ((1022.0 - active) / active)
+                        for submenu in items:
+                            # Override CSS
+                            submenu["_style"] = style
             else:
-                return LI(A(item.label, _href=item.url()))
+                items = None
+
+            if item.parent is None:
+                #return items
+            #elif item.parent.parent is None:
+                if items:
+                    if item.attr._id is not None:
+                        _id = item.attr._id
+                    else:
+                        _id = "sub-dashboard"
+                    return UL(items, _id=_id)
+                else:
+                    return ""
+            else:
+                if item.components:
+                    return LI(A(H2(item.label),
+                                UL(items),
+                                IMG(_src=URL(c="static", f="themes",
+                                             args=["IFRC", "img", item.opts.image]),
+                                    _alt=T(item.opts.title),
+                                    ),
+                                _href=item.url(),
+                                ),
+                              )
+                elif item.opts.text:
+                    return LI(A(H2(item.label),
+                                P(T(item.opts.text)),
+                                IMG(_src=URL(c="static", f="themes",
+                                             args=["IFRC", "img", item.opts.image]),
+                                    _alt=item.opts.image,
+                                    ),
+                                _href=item.url(),
+                                ),
+                              )
+                else:
+                    return LI(A(item.label, _href=item.url()))
+        else:
+            return None
 
 # -----------------------------------------------------------------------------
 # Shortcut
@@ -231,19 +261,32 @@ class S3OrgMenuLayout(S3NavigationItem):
         # Lookup Root Organisation name & Logo
         root_org = current.auth.root_org()
         if root_org:
+            db = current.db
             s3db = current.s3db
+            language = current.session.s3.language
+            if language == current.deployment_settings.get_L10n_default_language():
+                l10n = None
+            else:
+                ltable = s3db.org_organisation_name
+                query = (ltable.organisation_id == root_org) & \
+                        (ltable.language == language)
+                l10n = db(query).select(ltable.name_l10n,
+                                        ltable.acronym_l10n,
+                                        limitby = (0, 1),
+                                        cache = s3db.cache,
+                                        ).first()
             table = s3db.org_organisation
-            record = current.db(table.id == root_org).select(table.name,
-                                                             table.acronym,
-                                                             table.logo,
-                                                             limitby = (0, 1),
-                                                             cache = s3db.cache,
-                                                             ).first()
-            if record:
-                if record.acronym:
-                    name = _name = record.acronym
+            record = db(table.id == root_org).select(table.name,
+                                                     table.acronym,
+                                                     table.logo,
+                                                     limitby = (0, 1),
+                                                     cache = s3db.cache,
+                                                     ).first()
+            if l10n:
+                if l10n.acronym_l10n:
+                    name = _name = l10n.acronym_l10n
                 else:
-                    _name = record.name
+                    _name = l10n.name_l10n
                     names = _name.split(" ")
                     names_with_breaks = []
                     nappend = names_with_breaks.append
@@ -253,6 +296,22 @@ class S3OrgMenuLayout(S3NavigationItem):
                     # Remove last BR()
                     names_with_breaks.pop()
                     name = TAG[""](*names_with_breaks)
+
+            if record:
+                if not l10n:
+                    if record.acronym:
+                        name = _name = record.acronym
+                    else:
+                        _name = record.name
+                        names = _name.split(" ")
+                        names_with_breaks = []
+                        nappend = names_with_breaks.append
+                        for name in names:
+                            nappend(name)
+                            nappend(BR())
+                        # Remove last BR()
+                        names_with_breaks.pop()
+                        name = TAG[""](*names_with_breaks)
 
                 if record.logo:
                     size = (60, None)

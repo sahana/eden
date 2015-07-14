@@ -7,6 +7,7 @@
     font-size: 0.9em;
     margin: 0;
     direction: ltr;
+    max-width: 5rem;
 }
 
 /* Main Navigation (S3MainMenu or modules menu) */

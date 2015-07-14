@@ -111,7 +111,7 @@ class LocationSettingTests(unittest.TestCase):
         # Test that the HR location is set correctly
         row = db(htable.id == human_resource_id).select(htable.location_id,
                                                         limitby=(0, 1)).first()
-                                                 
+
         self.assertNotEqual(row, None)
         return row, address_location_id, site_location_id
 
@@ -333,12 +333,12 @@ class LocationSettingTests(unittest.TestCase):
         record["id"] = link_id
         #s3db.update_super(ltable, record)
         s3db.onaccept(ltable, record, method="create")
-        
+
 
         # Test that the HR location is set correctly
         row = db(htable.id == human_resource_id).select(htable.location_id,
                                                         limitby=(0, 1)).first()
-                                                 
+
         self.assertNotEqual(row, None)
         return row, address_location_id, site_location_id
 
@@ -491,7 +491,7 @@ class LocationSettingTests(unittest.TestCase):
         # Test that the HR location is set correctly
         row = db(htable.id == human_resource_id).select(htable.location_id,
                                                         limitby=(0, 1)).first()
-                                                 
+
         self.assertNotEqual(row, None)
         return row, address_location_id, site_location_id
 
@@ -706,7 +706,7 @@ class LocationSettingTests(unittest.TestCase):
         # Test that the HR location is set correctly
         row = db(htable.id == human_resource_id).select(htable.location_id,
                                                         limitby=(0, 1)).first()
-                                                 
+
         self.assertNotEqual(row, None)
         return row, address_location_id, site_location_id
 

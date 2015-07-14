@@ -24,5 +24,5 @@ current.selenium_tests = [
                           "CreateCatalog",
                           "CreateCategory",
                           "CreateFacility",
-                          "AddStaffToOrganisation", 
+                          "AddStaffToOrganisation",
                           ]

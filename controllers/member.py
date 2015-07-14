@@ -25,7 +25,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Members
-    redirect(URL(f="membership", args=["summary"]))
+    s3_redirect_default(URL(f="membership", args=["summary"]))
 
 # =============================================================================
 def membership_type():
@@ -53,7 +53,8 @@ def membership():
                 redirect(URL(f="person", vars=vars))
 
             # Assume members under 120
-            s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
+            s3db.pr_person.date_of_birth.widget = \
+                                        S3CalendarWidget(past_months=1440)
 
         elif r.representation == "xls":
             # Split person_id into first/middle/last to make it match Import sheets
@@ -70,14 +71,6 @@ def membership():
 
         return True
     s3.prep = prep
-
-    def postp(r, output):
-        if r.interactive and r.component is None:
-            # Set the minimum end_date to the same as the start_date
-            s3.jquery_ready.append(
-'''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
-        return output
-    s3.postp = postp
 
     return s3_rest_controller(rheader = s3db.member_rheader)
 
@@ -163,7 +156,8 @@ def person():
             if r.method != "import":
                 if not r.component:
                     # Assume members under 120
-                    s3db.pr_person.date_of_birth.widget = S3DateWidget(past=1440)
+                    s3db.pr_person.date_of_birth.widget = \
+                                        S3CalendarWidget(past_months=1440)
                 resource = r.resource
                 if resource.count() == 1:
                     resource.load()
@@ -194,10 +188,6 @@ def person():
                                                 name="label_list_button",
                                                 _href=URL(c="member", f="membership"),
                                                 _id="list-btn")
-            elif r.component_name == "membership":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('member_membership_start_date','member_membership_end_date')''')
         return output
     s3.postp = postp
 

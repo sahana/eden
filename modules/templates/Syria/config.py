@@ -644,7 +644,12 @@ def config(settings):
                     s3.dl_rowsize = 2
 
                     # Just show specific Countries
-                    s3.filter = (table.name.belongs("Syrian Arab Republic", "Jordan", "Iraq", "Lebanon", "Turkey"))
+                    r.resource.add_filter(table.name.belongs("Syrian Arab Republic",
+                                                             "Jordan",
+                                                             "Iraq",
+                                                             "Lebanon",
+                                                             "Turkey",
+                                                             ))
                     # Default 5 triggers an AJAX call, we should load all by default
                     s3.dl_pagelength = 13
 

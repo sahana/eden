@@ -1,5 +1,7 @@
 Name,Description,Type,Enabled,Default,Config
 "Google Maps","Streets","maps","True",,
+"Google Maps","Streets","maps","True","True",IQ
+"Google Maps","Streets","maps","True","True",NZ
 "Google Maps","Streets","maps","True","True",TL
 "Google Maps","Streets","maps","True","True",VN
 "Google Hybrid","Streets over Satellite imagery","hybrid","False",,

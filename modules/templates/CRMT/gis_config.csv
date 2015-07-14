@@ -1,10 +1,17 @@
 UUID,Name,OU,OU Type,Default Country,Default L1,Default L2,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Geocoder,Marker,Image
-SITE_DEFAULT,Default,,,US,California,Los Angeles County,9,34.026689,-118.210315,900913,32.9,44,-123,-111,True,empty,http://aidiq.com/downloads/LACRMT/Default.jpg
-,Acton & Agua Dulce,Acton & Agua Dulce,org_group,US,California,Los Angeles County,12,34.4998267777,-118.216151487,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/ActonAguaDulce.jpg
-,Culver City,Culver City,org_group,US,California,Los Angeles County,13,34.0042128627,-118.383323206,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/CulverCity.jpg
-,Huntington Park,Huntington Park,org_group,US,California,Los Angeles County,14,33.9776987662,-118.212546598,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/HuntingtonPark.jpg
-,La Crescenta-Montrose,La Crescenta-Montrose,org_group,US,California,Los Angeles County,13,34.2295135891,-118.212173745,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/LaCrescentaMontrose.jpg
-,Pico-Union,Pico-Union,org_group,US,California,Los Angeles County,15,34.043884023,-118.280696165,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/Pico-Union.jpg
-,Pomona,Pomona,org_group,US,California,Los Angeles County,12,34.0551217286,-117.737929124,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/Pomona.jpg
-,Watts,Watts,org_group,US,California,Los Angeles County,14,33.9394689102,-118.230742704,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/Watts.jpg
-,Wilmington,Wilmington,org_group,US,California,Los Angeles County,13,33.7927621111,-118.238810789,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/Wilmington.jpg
+SITE_DEFAULT,Default,,,US,California,Los Angeles County,9,34.03,-118.21,900913,32.9,44,-123,-111,True,empty,http://aidiq.com/downloads/LACRMT/Default.jpg
+,Acton & Agua Dulce,Acton & Agua Dulce,org_group,US,California,Los Angeles County,12,34.5,-118.22,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/ActonAguaDulce.jpg
+,Compton,Compton,org_group,US,California,Los Angeles County,13,33.9,-118.2,900913,33.8,34,-118.3,-118.1,True,empty,http://aidiq.com/downloads/LACRMT/Compton.jpg
+,Culver City,Culver City,org_group,US,California,Los Angeles County,13,34,-118.38,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/CulverCity.jpg
+,Gardena,Gardena,org_group,US,California,Los Angeles County,13,33.9,-118.3,900913,33.8,34,-118.4,-118.2,True,empty,http://aidiq.com/downloads/LACRMT/Gardena.jpg
+,Hawaiian Gardens,Hawaiian Gardens,org_group,US,California,Los Angeles County,15,33.83,-118.07,900913,33.8,33.85,-118.1,-118.04,True,empty,http://aidiq.com/downloads/LACRMT/HawaiianGardens.jpg
+,Hollywood,Hollywood,org_group,US,California,Los Angeles County,15,34.094,-118.33,900913,34.07,34.12,-118.38,-118.29,True,empty,http://aidiq.com/downloads/LACRMT/Hollywood.jpg
+,Huntington Park,Huntington Park,org_group,US,California,Los Angeles County,14,33.98,-118.21,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/HuntingtonPark.jpg
+,La Crescenta-Montrose,La Crescenta-Montrose,org_group,US,California,Los Angeles County,14,34.23,-118.24,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/LaCrescentaMontrose.jpg
+,Palms,Palms,org_group,US,California,Los Angeles County,15,34.025,-118.41,900913,34,34.05,-118.45,-118.35,True,empty,http://aidiq.com/downloads/LACRMT/Palms.jpg
+,Pico-Union,Pico-Union,org_group,US,California,Los Angeles County,15,34.04,-118.28,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/Pico-Union.jpg
+,Pomona,Pomona,org_group,US,California,Los Angeles County,13,34.06,-117.74,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/Pomona.jpg
+,San Fernando,San Fernando,org_group,US,California,Los Angeles County,14,34.29,-118.44,900913,34.26,34.32,-118.49,-118.37,True,empty,http://aidiq.com/downloads/LACRMT/SanFernando.jpg
+,San Gabriel,San Gabriel,org_group,US,California,Los Angeles County,14,34.09,-118.1,900913,34.06,34.13,-118.15,-118.03,True,empty,http://aidiq.com/downloads/LACRMT/SanGabriel.jpg
+,Watts,Watts,org_group,US,California,Los Angeles County,14,33.94,-118.23,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/Watts.jpg
+,Wilmington,Wilmington,org_group,US,California,Los Angeles County,13,33.79,-118.24,900913,33.4,34.65,-120.56,-115.85,True,empty,http://aidiq.com/downloads/LACRMT/Wilmington.jpg

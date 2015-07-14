@@ -43,20 +43,124 @@ class S3MainMenu(default.S3MainMenu):
 
         AUTHENTICATED = current.session.s3.system_roles.AUTHENTICATED
 
+        INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
+
         return [
-            MM("Contacts", c="hrm", f="staff")(
-            ),                
+            MM("Dashboard", c="default", f="index",
+               args=["dashboard"],
+               restrict=[AUTHENTICATED],
+               ),
+            MM("Contacts", link=False, restrict=[AUTHENTICATED])(
+                MM("Networks", c="org", f="group"),
+                MM("Groups", c="hrm", f="group"),
+                MM("Organizations", c="org", f="organisation"),
+                MM(INDIVIDUALS, c="hrm", f="staff"),
+            ),
             MM("Facilities", c="org", f="facility", m="summary",
                restrict=[AUTHENTICATED])(
             ),
+            MM("Services", c="cms", f="page", vars={"name": "Services"}),
             MM("News", c="cms", f="newsfeed", args="datalist",
                icon="icon-news",
-               restrict=[AUTHENTICATED]),
+               restrict=[AUTHENTICATED],
+               ),
             MM("Map", c="gis", f="index",
                icon="icon-map",
-               restrict=[AUTHENTICATED]
+               restrict=[AUTHENTICATED],
                ),
+            MM("Data", c="cms", f="page", vars={"name": "Data"}),
+            MM("Get Involved", link=False)(
+                MM("Events",
+                   url="http://nycprepared.org/events",
+                   _target="_blank",
+                   ),
+                MM("Learn more",
+                   url="http://nycprepared.org",
+                   _target="_blank",
+                   ),
+                MM("Donate",
+                   url="https://sarapis.org/donate-to-nycprepared",
+                   _target="_blank",
+                   ),
+            ),
         ]
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_help(cls, **attr):
+        """ Help Menu """
+
+        ADMIN = current.auth.get_system_roles().ADMIN
+
+        menu_help = MM("Help", c="default", f="help", link=False, **attr)(
+            MM("User Guide", f="help"),
+            MM("Contact us", f="contact"),
+            #MM("About", f="about", restrict=[ADMIN]),
+        )
+
+        return menu_help
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_auth(cls, **attr):
+        """ Auth Menu """
+
+        auth = current.auth
+        logged_in = auth.is_logged_in()
+
+        if not logged_in:
+            request = current.request
+            login_next = URL(args=request.args, vars=request.vars)
+            if request.controller == "default" and \
+               request.function == "user" and \
+               "_next" in request.get_vars:
+                login_next = request.get_vars["_next"]
+
+            self_registration = current.deployment_settings.get_security_registration_visible()
+            if self_registration == "index":
+                register = MM("Register", c="default", f="index", m="register",
+                               vars=dict(_next=login_next),
+                               check=self_registration)
+            else:
+                register = MM("Register", m="register",
+                               vars=dict(_next=login_next),
+                               check=self_registration)
+
+            menu_auth = MM("Login", c="default", f="user", m="login",
+                           _id="auth_menu_login",
+                           vars=dict(_next=login_next), **attr)(
+                            MM("Login", m="login",
+                               vars=dict(_next=login_next)),
+                            register,
+                            MM("Lost Password", m="retrieve_password")
+                        )
+        else:
+            # Logged-in
+            menu_auth = MM(auth.user.email, c="default", f="user",
+                           translate=False,
+                           link=False,
+                           _id="auth_menu_email",
+                           **attr)(
+                            MM("Logout", m="logout", _id="auth_menu_logout"),
+                            #MM("User Profile", m="profile"),
+                            MM("Personal Profile", c="default", f="person", m="update"),
+                            #MM("Contact Details", c="pr", f="person",
+                            #    args="contact",
+                            #    vars={"person.pe_id" : auth.user.pe_id}),
+                            #MM("Subscriptions", c="pr", f="person",
+                            #    args="pe_subscription",
+                            #    vars={"person.pe_id" : auth.user.pe_id}),
+                            MM("Change Password", m="change_password"),
+                            SEP(),
+                            MM({"name": current.T("Rapid Data Entry"),
+                                "id": "rapid_toggle",
+                                "value": current.session.s3.rapid_data_entry is True,
+                                },
+                               f="rapid",
+                               ),
+                        )
+
+        return menu_auth
 
 # =============================================================================
 class S3OptionsMenu(default.S3OptionsMenu):
@@ -89,22 +193,24 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = s3.system_roles.ADMIN
         AUTHENTICATED = s3.system_roles.AUTHENTICATED
 
+        INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
+
         return M()(
-                    M("Contacts", c="hrm", f="staff")(
-                        M("View"),
+                    M("Networks", c="org", f="group")(
+                        M("Search"),
+                        M("Create", m="create"),
+                    ),
+                    M("Groups", c="hrm", f="group")(
+                        M("Search"),
                         M("Create", m="create"),
                     ),
                     M("Organizations", c="org", f="organisation")(
-                        M("View"),
+                        M("Search"),
                         M("Create", m="create",
                           restrict=[AUTHENTICATED]),
                     ),
-                    M("Groups", c="hrm", f="group")(
-                        M("View"),
-                        M("Create", m="create"),
-                    ),
-                    M("Networks", c="org", f="group")(
-                        M("View"),
+                    M(INDIVIDUALS, c="hrm", f="staff", t="hrm_human_resource")(
+                        M("Search"),
                         M("Create", m="create"),
                     ),
                     M("Your Personal Profile", c="default", f="person",

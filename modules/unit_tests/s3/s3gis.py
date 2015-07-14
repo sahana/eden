@@ -362,10 +362,15 @@ class S3LocationTreeTests(unittest.TestCase):
         table = self.table
 
         # Insert a new Country
-        L0_id = table.insert(level = LEVEL,
-                             name = L0,
-                             wkt = POLYGON
-                             )
+        form = Storage(vars=Storage(level=LEVEL,
+                                    name=L0,
+                                    wkt=POLYGON,
+                                    ),
+                       errors=None,
+                       )
+        current.gis.wkt_centroid(form)
+        L0_id = table.insert(**form.vars)
+
         # Store for future tests
         S3LocationTreeTests.ids[L0] = L0_id
 
@@ -413,11 +418,16 @@ class S3LocationTreeTests(unittest.TestCase):
         table = self.table
 
         # Insert a new L1
-        L1_id = table.insert(level = LEVEL,
-                             name = L1,
-                             parent = L0_id,
-                             wkt = POLYGON
-                             )
+        form = Storage(vars=Storage(level=LEVEL,
+                                    name=L1,
+                                    parent=L0_id,
+                                    wkt=POLYGON,
+                                    ),
+                       errors=None,
+                       )
+        current.gis.wkt_centroid(form)
+        L1_id = table.insert(**form.vars)
+
         # Store for future tests
         S3LocationTreeTests.ids[L1] = L1_id
 
@@ -467,11 +477,16 @@ class S3LocationTreeTests(unittest.TestCase):
         table = self.table
 
         # Insert a new L2
-        L2_id = table.insert(level = LEVEL,
-                             name = L2,
-                             parent = L1_id,
-                             wkt = POLYGON
-                             )
+        form = Storage(vars=Storage(level=LEVEL,
+                                    name=L2,
+                                    parent=L1_id,
+                                    wkt=POLYGON,
+                                    ),
+                       errors=None,
+                       )
+        current.gis.wkt_centroid(form)
+        L2_id = table.insert(**form.vars)
+
         # Store for future tests
         S3LocationTreeTests.ids[L2] = L2_id
 
@@ -523,11 +538,16 @@ class S3LocationTreeTests(unittest.TestCase):
         table = self.table
 
         # Insert a new L3
-        L3_id = table.insert(level = LEVEL,
-                             name = L3,
-                             parent = L2_id,
-                             wkt = POLYGON
-                             )
+        form = Storage(vars=Storage(level=LEVEL,
+                                    name=L3,
+                                    parent=L2_id,
+                                    wkt=POLYGON,
+                                    ),
+                       errors=None,
+                       )
+        current.gis.wkt_centroid(form)
+        L3_id = table.insert(**form.vars)
+
         # Store for future tests
         S3LocationTreeTests.ids[L3] = L3_id
 
@@ -581,11 +601,16 @@ class S3LocationTreeTests(unittest.TestCase):
         table = self.table
 
         # Insert a new L4
-        L4_id = table.insert(level = LEVEL,
-                             name = L4,
-                             parent = L3_id,
-                             wkt = POLYGON
-                             )
+        form = Storage(vars=Storage(level=LEVEL,
+                                    name=L4,
+                                    parent=L3_id,
+                                    wkt=POLYGON,
+                                    ),
+                       errors=None,
+                       )
+        current.gis.wkt_centroid(form)
+        L4_id = table.insert(**form.vars)
+
         # Store for future tests
         S3LocationTreeTests.ids[L4] = L4_id
 
@@ -641,11 +666,15 @@ class S3LocationTreeTests(unittest.TestCase):
         table = self.table
 
         # Insert a new L5
-        L5_id = table.insert(level = LEVEL,
-                             name = L5,
-                             parent = L4_id,
-                             wkt = POLYGON
-                             )
+        form = Storage(vars=Storage(level=LEVEL,
+                                    name=L5,
+                                    parent=L4_id,
+                                    wkt=POLYGON,
+                                    ),
+                       errors=None,
+                       )
+        current.gis.wkt_centroid(form)
+        L5_id = table.insert(**form.vars)
 
         # Update the Location Tree for the L5
         feature = dict(id=L5_id)
@@ -695,11 +724,15 @@ class S3LocationTreeTests(unittest.TestCase):
         table = self.table
 
         # Insert a new L3
-        L3_id = table.insert(level = LEVEL,
-                             name = L3,
-                             parent = L1_id,
-                             wkt = POLYGON
-                             )
+        form = Storage(vars=Storage(level=LEVEL,
+                                    name=L3,
+                                    parent=L1_id,
+                                    wkt=POLYGON,
+                                    ),
+                       errors=None,
+                       )
+        current.gis.wkt_centroid(form)
+        L3_id = table.insert(**form.vars)
 
         # Update the Location Tree for the L3
         feature = dict(id=L3_id)

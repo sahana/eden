@@ -50,7 +50,7 @@ class S3MainMenu(default.S3MainMenu):
         auth = current.auth
 
         if not auth.is_logged_in():
-            self_registration = current.deployment_settings.get_security_self_registration()
+            self_registration = current.deployment_settings.get_security_registration_visible()
             request = current.request
             login_next = URL(args=request.args, vars=request.vars)
             if request.controller == "default" and \

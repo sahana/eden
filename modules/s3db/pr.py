@@ -67,6 +67,7 @@ __all__ = ("S3PersonEntity",
            "pr_add_to_role",
            "pr_remove_from_role",
            # Hierarchy Lookup
+           "pr_instance_type",
            "pr_realm",
            "pr_realm_users",
            "pr_get_role_paths",
@@ -165,10 +166,11 @@ class S3PersonEntity(S3Model):
                            deploy_alert = T("Deployment Alert"),
                            dvi_body = T("Body"),
                            dvi_morgue = T("Morgue"),
-                           # If we want these, then pe_id needs adding to their
-                           # tables & configuring as a super-entity
+                           # If we want this, then pe_id needs adding to the
+                           # table & configuring as a super-entity
                            #fire_station = T("Fire Station"),
                            hms_hospital = T("Hospital"),
+                           hrm_training_event = T("Training Event"),
                            inv_warehouse = T("Warehouse"),
                            org_organisation = messages.ORGANISATION,
                            org_group = org_group_label,
@@ -176,6 +178,8 @@ class S3PersonEntity(S3Model):
                            org_office = T("Office"),
                            pr_person = T("Person"),
                            pr_group = T("Group"),
+                           po_area = T("Recovery Outreach Area"),
+                           po_household = T("Household"),
                            )
 
         pr_pentity_represent = pr_PersonEntityRepresent()
@@ -701,7 +705,7 @@ class S3OrgAuthModel(S3Model):
                           *s3_meta_fields())
 
         # ---------------------------------------------------------------------
-        return dict()
+        return {}
 
 # =============================================================================
 class S3PersonModel(S3Model):
@@ -751,6 +755,7 @@ class S3PersonModel(S3Model):
                                                             ),
                                     requires = IS_PERSON_GENDER(pr_gender_opts,
                                                                 sort=True,
+                                                                zero=None,
                                                                 ),
                                     )
 
@@ -883,6 +888,7 @@ class S3PersonModel(S3Model):
         crud_form = S3SQLCustomForm("first_name",
                                     "middle_name",
                                     "last_name",
+                                    "person_details.year_of_birth",
                                     "date_of_birth",
                                     "initials",
                                     "preferred_name",
@@ -919,7 +925,10 @@ class S3PersonModel(S3Model):
                        main = "first_name",
                        extra = "last_name",
                        onaccept = self.pr_person_onaccept,
-                       realm_components = ("presence",),
+                       realm_components = ("address",
+                                           "contact",
+                                           "presence",
+                                           ),
                        super_entity = ("pr_pentity", "sit_trackable"),
                        )
 
@@ -1155,8 +1164,8 @@ class S3PersonModel(S3Model):
         db = current.db
         s3db = current.s3db
 
-        vars = form.vars
-        person_id = vars.id
+        form_vars = form.vars
+        person_id = form_vars.id
 
         ptable = s3db.pr_person
         ltable = s3db.pr_person_user
@@ -1172,13 +1181,13 @@ class S3PersonModel(S3Model):
                                 limitby=(0, 1)).first()
 
         # If there is a user and their first or last name have changed
-        if user and vars.first_name and \
-           (user.first_name != vars.first_name or \
-            user.last_name != vars.last_name):
+        if user and form_vars.first_name and \
+           (user.first_name != form_vars.first_name or \
+            user.last_name != form_vars.last_name):
             # Update the user record
             query = (utable.id == user.id)
-            db(query).update(first_name = vars.first_name,
-                             last_name = vars.last_name,
+            db(query).update(first_name = form_vars.first_name,
+                             last_name = form_vars.last_name,
                              )
 
     # -------------------------------------------------------------------------
@@ -1391,9 +1400,10 @@ class S3PersonModel(S3Model):
         limit = int(_vars.limit or 0)
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
-            output = json.dumps([
-                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
-                ], separators=SEPARATORS)
+            output = [
+                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % \
+                    dict(max=MAX_SEARCH_RESULTS)))
+                ]
         else:
             fields = ["id",
                       "first_name",
@@ -1499,15 +1509,27 @@ class S3PersonModel(S3Model):
         if current.request.controller == "vol":
             dtable = s3db.pr_person_details
             fields.append(dtable.occupation)
+            # @ToDo: deployment_settings? Args passed into fn?
+            fields += [dtable.father_name,
+                       dtable.grandfather_name,
+                       dtable.year_of_birth,
+                       ]
             left = dtable.on(dtable.person_id == ptable.id)
 
         row = db(ptable.id == id).select(left=left,
                                          *fields).first()
         if left:
-            occupation = row["pr_person_details.occupation"]
+            details = row["pr_person_details"]
+            occupation = details.occupation
+            father_name = details.father_name
+            grandfather_name = details.grandfather_name
+            year_of_birth = details.year_of_birth
             row = row["pr_person"]
         else:
             occupation = None
+            father_name = None
+            grandfather_name = None
+            year_of_birth = None
         if tablename == "org_site":
             name = s3_fullname(row)
         if request_dob:
@@ -1569,6 +1591,12 @@ class S3PersonModel(S3Model):
             item["dob"] = represent(date_of_birth)
         if occupation:
             item["occupation"] = occupation
+        if father_name:
+            item["father_name"] = father_name
+        if grandfather_name:
+            item["grandfather_name"] = grandfather_name
+        if year_of_birth:
+            item["year_of_birth"] = year_of_birth
         output = json.dumps(item, separators=SEPARATORS)
 
         current.response.headers["Content-Type"] = "application/json"
@@ -1918,7 +1946,7 @@ class S3GroupModel(S3Model):
             title = T("Create Group")
             tooltip = T("Create a new Group")
 
-        represent = S3Represent(lookup=tablename)
+        represent = pr_GroupRepresent()
         group_id = S3ReusableField("group_id", "reference %s" % tablename,
                                    sortby = "name",
                                    comment = S3AddResourceLink(#c="pr",
@@ -2224,6 +2252,7 @@ class S3ContactModel(S3Model):
                            ),
                      Field("address",
                            label = T("Address"),
+                           # Enable as-required in templates
                            readable = False,
                            writable = False,
                            ),
@@ -2651,7 +2680,7 @@ class S3PersonImageModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2893,9 +2922,11 @@ class S3PersonIdentityModel(S3Model):
                           s3_date("valid_from",
                                   label = T("Valid From"),
                                   future = 0,
+                                  set_min = "#pr_identity_valid_until",
                                   ),
                           s3_date("valid_until",
                                   label = T("Valid Until"),
+                                  set_max = "#pr_identity_valid_from",
                                   start_field = "pr_identity_valid_from",
                                   default_interval = 12,
                                   ),
@@ -2935,7 +2966,7 @@ class S3PersonIdentityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2973,18 +3004,37 @@ class S3PersonEducationModel(S3Model):
     def model(self):
 
         T = current.T
+
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         NONE = current.messages["NONE"]
+
+        auth = current.auth
+        ADMIN = current.session.s3.system_roles.ADMIN
+        is_admin = auth.s3_has_role(ADMIN)
+        root_org = auth.root_org()
+        if is_admin:
+            filter_opts = ()
+        elif root_org:
+            filter_opts = (root_org, None)
+        else:
+            filter_opts = (None,)
 
         # ---------------------------------------------------------------------
         # Education Level
         #
         tablename = "pr_education_level"
         define_table(tablename,
-                     Field("name", length=64, notnull=True, unique=True,
+                     Field("name", length=64, notnull=True,
                            label = T("Name"),
                            ),
+                     # Only included in order to be able to set
+                     # realm_entity to filter appropriately
+                     self.org_organisation_id(default = root_org,
+                                              readable = is_admin,
+                                              writable = is_admin,
+                                              ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -3013,9 +3063,15 @@ class S3PersonEducationModel(S3Model):
                                    requires = IS_EMPTY_OR(
                                         IS_ONE_OF(current.db, "pr_education_level.id",
                                                   represent,
+                                                  filterby="organisation_id",
+                                                  filter_opts=filter_opts
                                                   )),
                                    sortby = "name",
                                    )
+
+        configure(tablename,
+                  deduplicate = self.pr_education_level_duplicate,
+                  )
 
         # ---------------------------------------------------------------------
         # Education
@@ -3071,28 +3127,46 @@ class S3PersonEducationModel(S3Model):
             msg_record_deleted = T("Education details deleted"),
             msg_list_empty = T("No education details currently registered"))
 
-        self.configure("pr_education",
-                       context = {"person": "person_id",
-                                  },
-                       deduplicate = self.pr_education_deduplicate,
-                       list_fields = ["id",
-                                      # Normally accessed via component
-                                      #"person_id",
-                                      "year",
-                                      "level",
-                                      "award",
-                                      "major",
-                                      "grade",
-                                      "institute",
-                                      ],
-                       orderby = "pr_education.year desc",
-                       sortby = [[1, "desc"]]
-                       )
+        configure("pr_education",
+                  context = {"person": "person_id",
+                             },
+                  deduplicate = self.pr_education_deduplicate,
+                  list_fields = ["id",
+                                 # Normally accessed via component
+                                 #"person_id",
+                                 "year",
+                                 "level_id",
+                                 "award",
+                                 "major",
+                                 "grade",
+                                 "institute",
+                                 ],
+                  orderby = "pr_education.year desc",
+                  sortby = [[1, "desc"]]
+                  )
 
         # ---------------------------------------------------------------------
         # Return model-global names to response.s3
         #
-        return dict()
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr_education_level_duplicate(item):
+        """ Import item de-duplication """
+
+        data = item.data
+        name = data.get("name")
+        table = item.table
+        query = (table.name.lower() == name.lower())
+        organisation_id = data.get("organisation_id")
+        if organisation_id:
+            query &= (table.organisation_id == organisation_id)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3181,6 +3255,16 @@ class S3PersonDetailsModel(S3Model):
                                 readable = False,
                                 writable = False,
                                 ),
+                          Field("year_of_birth", "integer",
+                                label = T("Year of Birth"),
+                                requires = IS_EMPTY_OR(
+                                    IS_INT_IN_RANGE(1900, current.request.now.year)
+                                    ),
+                                # Enable as-required in template
+                                # (used when this is all that is available: normally use Date of Birth)
+                                readable = False,
+                                writable = False,
+                                ),
                           Field("hometown",
                                 label = T("Home Town"),
                                 # Enable as-required in template
@@ -3214,6 +3298,11 @@ class S3PersonDetailsModel(S3Model):
                                 readable = False,
                                 writable = False,
                                 ),
+                          Field("grandmother_name",
+                                label = T("Name of Grandmother"),
+                                readable = False,
+                                writable = False,
+                                ),
                           Field("occupation", length=128, # Mayon Compatibility
                                 label = T("Profession"),
                                 ),
@@ -3236,9 +3325,8 @@ class S3PersonDetailsModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD Strings
-        ADD_DETAILS = T("Add Person's Details")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_DETAILS,
+            label_create = T("Add Person's Details"),
             title_display = T("Person's Details"),
             title_list = T("Persons' Details"),
             title_update = T("Edit Person's Details"),
@@ -3255,7 +3343,7 @@ class S3PersonDetailsModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4329,7 +4417,7 @@ def pr_get_entities(pe_ids=None,
 
     if pe_ids is None:
         pe_ids = []
-    elif not isinstance(pe_ids, (list, tuple)):
+    elif not isinstance(pe_ids, (list, set, tuple)):
         pe_ids = [pe_ids]
     pe_ids = [long(pe_id) for pe_id in set(pe_ids)]
     query = (pe_table.deleted != True)
@@ -4671,7 +4759,7 @@ class pr_PersonEntityRepresent(S3Represent):
                                    instance_type_nice)
 
         elif "name" in item:
-            pe_str = "%s%s" % (item["name"],
+            pe_str = "%s%s" % (s3_unicode(item["name"]),
                                instance_type_nice)
         else:
             pe_str = "[%s]%s" % (label,
@@ -4733,6 +4821,99 @@ class pr_PersonRepresent(S3Represent):
                                                  multiple,
                                                  default,
                                                  none)
+
+# =============================================================================
+class pr_GroupRepresent(S3Represent):
+    """ Representation of person groups """
+
+    def __init__(self):
+        """ Constructor """
+
+        super(pr_GroupRepresent, self).__init__("pr_group",
+                                                fields = ["name"],
+                                                )
+
+        self.show_org_groups = current.deployment_settings \
+                                      .get_org_group_team_represent()
+        self.org_groups = {}
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        db = current.db
+
+        table = self.table
+        count = len(values)
+        if count == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = db(query).select(table.id,
+                                table.name,
+                                limitby=(0, count),
+                                )
+        self.queries += 1
+
+        if self.show_org_groups:
+            # Look up all org_groups linked to these groups (second query
+            # because it's a m2m link but the returned rows must not contain
+            # duplicates)
+            s3db = current.s3db
+            ltable = s3db.org_group_team
+            gtable = s3db.org_group
+
+            left = gtable.on(ltable.org_group_id == gtable.id)
+            group_id = ltable.group_id
+
+            if count == 1:
+                query = (group_id == values[0])
+            else:
+                query = group_id.belongs(values)
+            query &= (ltable.deleted != True)
+
+            org_group_name = gtable.name
+            links = db(query).select(group_id,
+                                     org_group_name,
+                                     left=left,
+                                     )
+            self.queries += 1
+
+            groups = self.org_groups
+            for link in links:
+                group = link[group_id]
+                name = link[org_group_name]
+                if name:
+                    if group not in groups:
+                        groups[group] = [name]
+                    else:
+                        groups[group].append(name)
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        representation = "%s" % row.name
+
+        if self.show_org_groups:
+            # Append the org_group names in parantheses
+            names = self.org_groups.get(row.id)
+            if names:
+                representation = "%s (%s)" % (representation, ", ".join(names))
+
+        return representation
 
 # =============================================================================
 def pr_person_phone_represent(id, show_link=True):
@@ -5041,7 +5222,9 @@ class pr_Contacts(S3Method):
         # Custom View
         response.view = "pr/contacts.html"
 
-        return {"contents": contents, "title": T("Contacts")}
+        title = self.crud_string(r.tablename, "title_display")
+
+        return {"contents": contents, "title": title}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5555,7 +5738,6 @@ def pr_update_affiliations(table, record):
             return
 
         # Find the person_ids to update
-        update = pr_human_resource_update_affiliations
         person_id = None
         if record.deleted_fk:
             try:
@@ -5563,11 +5745,11 @@ def pr_update_affiliations(table, record):
             except:
                 pass
         if person_id:
-            update(person_id)
+            pr_human_resource_update_affiliations(person_id)
         if person_id != record.person_id:
             person_id = record.person_id
             if person_id:
-                update(person_id)
+                pr_human_resource_update_affiliations(person_id)
 
     elif rtype == "pr_group_membership":
 
@@ -5681,8 +5863,6 @@ def pr_human_resource_update_affiliations(person_id):
     STAFF = "Staff"
     VOLUNTEER = "Volunteer"
 
-    update = pr_human_resource_update_affiliations
-
     db = current.db
     s3db = current.s3db
     etable = s3db.pr_pentity
@@ -5769,15 +5949,15 @@ def pr_human_resource_update_affiliations(person_id):
                 masters[role].remove(pe)
 
     # Add affiliations to all masters which are not in current affiliations
+    #vol_role = current.deployment_settings.get_hrm_vol_affiliation() or OTHER_ROLE
     for role in masters:
         if role == VOLUNTEER:
+            #role_type = vol_role
             role_type = OTHER_ROLE
         else:
             role_type = OU
         for m in masters[role]:
             pr_add_affiliation(m, pe_id, role=role, role_type=role_type)
-
-    return
 
 # =============================================================================
 def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
@@ -5810,7 +5990,8 @@ def pr_add_affiliation(master, affiliate, role=None, role_type=OU):
         if not row:
             data = {"pe_id": master_pe,
                     "role": role,
-                    "role_type": role_type}
+                    "role_type": role_type,
+                    }
             role_id = rtable.insert(**data)
         else:
             role_id = row.id
@@ -6223,6 +6404,22 @@ def pr_get_ancestors(pe_id):
     return ancestors
 
 # =============================================================================
+def pr_instance_type(pe_id):
+    """
+        Get the instance type for a PE
+
+        @param pe_id: the PE ID
+    """
+
+    if pe_id:
+        etable = current.s3db.pr_pentity
+        row = current.db(etable.pe_id == pe_id).select(etable.instance_type,
+                                                       limitby=(0, 1)).first()
+        if row:
+            return row.instance_type
+    return None
+
+# =============================================================================
 def pr_realm(entity):
     """
         Get the default realm (=the immediate OU ancestors) of an entity
@@ -6383,7 +6580,7 @@ def pr_descendants(pe_ids, skip=None, root=True):
     nodes = set()
     ogetattr = object.__getattribute__
 
-    result = dict()
+    result = {}
 
     skip.update(pe_ids)
     for row in rows:

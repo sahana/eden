@@ -1,0 +1,89 @@
+Name,Title,Body
+HELPUserProfile,"RMS: How to update your Personal Profile","<div class=""online-documentation"">
+<h3>Opening your Personal Profile</h3>
+<p>
+Click the ""Login"" link in the upper right corner:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/service_menu_login.png""></img>
+<p>
+Enter your username (normally your email address) and password, and click ""Login"":
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/login_form.png""></img>
+<p>
+After successfully logging in, click the ""Profile"" link in the upper right corner:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/service_menu_profile.png""></img>
+
+<h3>Updating your basic details</h3>
+<p>
+Verify the information displayed on the <b>Person Details</b> tab. If necessary,
+make corrections, and then click ""Save"":
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/personal_profile_details_tab.png""></img>
+
+<h3>Updating your contact information</h3>
+<p>
+Move to the <b>Contacts</b> tab, and verify the information displayed.
+</p>
+<p>
+The <em>Contacts</em> section lists the contact details of yourself, whilst
+the <em>Emergency Contacts</em> section lists the contact details of persons
+that shall be contacted in case something happens to you:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/personal_profile_contacts_tab.png""></img>
+<p>
+Use the ""Add"" button of the respective section to add new contact
+information, and/or update any information as needed. You can either
+use the ""Edit"" button to open the row in a form, or you can click
+directly on the detail you want to change:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/personal_profile_contacts_editable.png""></img>
+<p>
+<b>Please make sure you keep this information up-to-date at all times</b>.
+</p>
+
+<h3>Updating your ID document data</h3>
+<p>
+Move to the <b>ID</b> tab to see your registered ID documents:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/personal_profile_id_tab.png""></img>
+<p>
+Use the ""Add Identity"" button to open a form to register
+another ID document, enter the details and then click ""Save"".
+</p>
+
+<h3>Updating your Physical Description Details</h3>
+<p>
+Please make sure the information on the <b>Description</b> tab is correct:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/personal_profile_description_tab.png""></img>
+
+<h3>Updating your Address</h3>
+<p>
+You can enter your current address(es) on the <b>Address</b> tab. Please
+verify that the information on that tab is correct and up-to-date.
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/personal_profile_address_tab.png""></img>
+
+<h3>Logout</h3>
+<p>
+Do not forget to log out from RMS:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/logout.png""></img>
+
+<h3>Privacy Information</h3>
+<p>
+The information you provide in your Personal Profile will be
+accessible for authorized staff members of your National Society
+and the IFRC.
+</p>
+<p>
+If you are an RDRT roster member, your personal details will be
+accessible for RDRT Administrators and mission managers. Contact
+information (email address, mobile phone number) will also be used
+by an automated system to send you RDRT alerts.
+</p>
+<p>
+Your personal details in RMS will not be shared publicly at any time.
+</p>
+</div>"

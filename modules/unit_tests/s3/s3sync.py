@@ -42,7 +42,7 @@ class ExportMergeTests(unittest.TestCase):
         xmltree = etree.ElementTree(etree.fromstring(xmlstr))
         resource = current.s3db.resource("org_office")
         resource.import_xml(xmltree)
-        
+
     def testExportOfReplacedBy(self):
         """
             Test wether the replaced_by UUID is exported with the deleted
@@ -53,10 +53,10 @@ class ExportMergeTests(unittest.TestCase):
 
         resource = s3db.resource("org_office",
                                  uid=["TESTSYNCOFFICE1", "TESTSYNCOFFICE2"])
-                                 
+
         records = resource.select(["id", "uuid"], limit=None)["rows"]
         self.assertNotEqual(records, None)
-        
+
         ids = dict([(record["org_office.uuid"], record["org_office.id"])
                     for record in records])
         self.assertEqual(len(ids), 2)
@@ -141,7 +141,7 @@ class ImportMergeWithExistingRecords(unittest.TestCase):
     """ Test correct import of merges if both records pre-exist """
 
     def setUp(self):
-    
+
         current.auth.override = True
 
         # Create records
@@ -171,7 +171,7 @@ class ImportMergeWithExistingRecords(unittest.TestCase):
         REPLACEDBY = "org_organisation.deleted_rb"
         uids = ["TESTIMPORTMERGEORG1", "TESTIMPORTMERGEORG2"]
         test_fields = ["id", "uuid", "deleted", "deleted_rb", "office.name"]
-        
+
         # Check the existing records
         resource = s3db.resource("org_organisation",
                                  uid =uids, include_deleted = True)
@@ -220,7 +220,7 @@ class ImportMergeWithExistingRecords(unittest.TestCase):
                 self.assertEqual(row.uuid, "TESTIMPORTMERGEORG1")
 
     def tearDown(self):
-        
+
         current.auth.override = False
         current.db.rollback()
 
@@ -375,7 +375,7 @@ class ImportMergeWithExistingDuplicate(unittest.TestCase):
                              .first()
                 self.assertEqual(row.uuid, "TESTIMPORTMERGEORG5")
                 self.assertEqual(record["org_office.name"], None)
-                
+
     def tearDown(self):
 
         current.auth.override = False

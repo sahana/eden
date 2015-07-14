@@ -112,15 +112,15 @@ class S3MainMenu(default.S3MainMenu):
             greeting = "Welcome, %s!" % user.first_name
             if user.org_group_id:
                 menu_auth = MM(greeting, c="org", f="group",
-                               args=[user.org_group_id, "dashboard"], 
-                               translate=False, 
+                               args=[user.org_group_id, "dashboard"],
+                               translate=False,
                                _id="auth_menu_email",
                                **attr)
             else:
                 # User is not associated with a coalition
                 menu_auth = MM(greeting,
                                link=False,
-                               translate=False, 
+                               translate=False,
                                _id="auth_menu_email",
                                **attr)
 
@@ -143,7 +143,7 @@ class S3MainMenu(default.S3MainMenu):
         if current.auth.is_logged_in():
             return None
 
-        #self_registration = current.deployment_settings.get_security_self_registration()
+        #self_registration = current.deployment_settings.get_security_registration_visible()
 
         request = current.request
         login_next = URL(args=request.args, vars=request.vars)

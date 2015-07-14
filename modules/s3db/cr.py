@@ -75,7 +75,6 @@ class S3ShelterModel(S3Model):
         T = current.T
         db = current.db
         s3 = current.response.s3
-
         settings = current.deployment_settings
 
         configure = self.configure
@@ -267,10 +266,10 @@ class S3ShelterModel(S3Model):
                      super_link("doc_id", "doc_entity"),
                      super_link("pe_id", "pr_pentity"),
                      super_link("site_id", "org_site"),
-                     #Field("code",
-                     #      length=10,           # Mayon compatibility
-                     #      notnull=True,
-                     #      unique=True, label=T("Code")),
+                     # @ToDo: code_requires
+                     #Field("code", length=10, # Mayon compatibility
+                     #      label=T("Code")
+                     #      ),
                      Field("name", notnull=True,
                            length=64,            # Mayon compatibility
                            label = T("Shelter Name"),
@@ -1087,7 +1086,7 @@ class S3ShelterRegistrationModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1196,7 +1195,7 @@ def cr_shelter_rheader(r, tabs=[]):
             if settings.has_module("hrm"):
                 STAFF = settings.get_hrm_staff_label()
                 tabs.append((STAFF, "human_resource"))
-                permit = current.auth.s3_has_permission 
+                permit = current.auth.s3_has_permission
                 if permit("update", tablename, r.id) and \
                    permit("create", "hrm_human_resource_site"):
                     tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))

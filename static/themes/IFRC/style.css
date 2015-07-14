@@ -85,10 +85,12 @@ table th label {
 }
 table td {
     padding: 10px;
-    vertical-align: top;
 }
 table td:first-child {
     background-color: #fff;
+}
+table.ui-datepicker-calendar td:first-child {
+    background: inherit;
 }
 /*
 table tr td:last-child,
@@ -269,9 +271,20 @@ form table td:first-child {
 	border-style: none;
 	background-color: transparent;
 }
-form table.embeddedComponent td,
-form table.embeddedComponent td:first-child {
-	border-style: solid;
+form table.embeddedComponent {
+    overflow: auto;
+}
+form table.embeddedComponent .map_wrapper {
+    min-width: 500px;
+}
+form table.embeddedComponent td {
+    border-style: none;
+}
+form table.embeddedComponent tr.label-row > td,
+form table.embeddedComponent tr.read-row > td,
+form table.embeddedComponent tr.edit-row > td,
+form table.embeddedComponent tr.edit-row > td {
+    border-style: solid;
 }
 
 /* Form Layout styles */
@@ -339,8 +352,9 @@ div.form-container form fieldset input.errorfield {
     background-color: #dc032e;
 }
 
-/* Required Field indicator */
+/* Red indicators */
 .error,
+.expired,
 .req,
 .req_key {
     color: #dc032e;
@@ -491,4 +505,64 @@ button.alert-send-btn:enabled {
 
 .profile-sub-header .icon {
     margin-right: 8px;
+}
+
+/* RDRT Custom Form in deploy_response_select_mission */
+form.select-member-form .tooltip {
+    display: inline-block;
+    vertical-align: text-bottom;
+}
+form.select-member-form {
+    margin-bottom: 0.5rem;
+}
+form.select-member-form label {
+    font-weight: bold;
+    padding-right: 0.3rem;
+}
+
+.po-summary {
+    display: table;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border: 1px solid #a0a0a0;
+}
+.po-summary-info {
+    display: table-row;
+}
+.po-summary-info label,
+.po-summary-info > span {
+    display: table-cell;
+    font-size: 0.9rem;
+    padding-right: 0.8rem;
+}
+.po-summary-info label {
+    font-weight: bold;
+}
+
+/* These form rows will only be revealed when follow-up checkbox is checked */
+#po_household_sub_defaultcontact__row,
+#po_household_sub_defaultcontact__row1,
+#po_household_sub_household_social_language__row,
+#po_household_sub_household_social_language__row1,
+#po_household_sub_household_social_community__row,
+#po_household_sub_household_social_community__row1,
+#po_household_sub_household_dwelling_dwelling_type__row,
+#po_household_sub_household_dwelling_dwelling_type__row1,
+#po_household_sub_household_dwelling_type_of_use__row,
+#po_household_sub_household_dwelling_type_of_use__row1,
+#po_household_sub_household_dwelling_repair_status__row,
+#po_household_sub_household_dwelling_repair_status__row1 {
+    display: none;
+}
+
+/* Online Documentation (@todo: move into separate CSS file?) */
+.online-documentation {
+    font-size: 0.9rem;
+    line-height: 1.2rem;
+}
+.online-documentation > img {
+    border: 1px solid silver;
+    margin-bottom: 20px;
+    margin-left: 40px;
+    max-width: 720px;
 }

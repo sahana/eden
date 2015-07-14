@@ -421,7 +421,7 @@ def location():
                 pass
             else:
                 if r.method == "report":
-                    s3.filter = (table.level !=None)
+                    r.resource.add_filter(table.level != None)
 
                 # Add Map to allow locations to be found this way
                 config = gis.get_config()
@@ -1021,9 +1021,10 @@ def config():
                     # Hide Exports
                     settings.ui.export_formats = []
                     # Filter Region & Default Configs
-                    s3.filter = (FS("config.temp") == False) & \
-                                (FS("config.region_location_id") == None) & \
-                                (FS("config.uuid") != "SITE_DEFAULT")
+                    query = (FS("config.temp") == False) & \
+                            (FS("config.region_location_id") == None) & \
+                            (FS("config.uuid") != "SITE_DEFAULT")
+                    r.resource.add_filter(query)
                     list_fields.append("pe_default")
                     CREATED_BY = T("Created By")
                     field = r.table.pe_id

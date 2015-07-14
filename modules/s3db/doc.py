@@ -94,6 +94,7 @@ class S3DocumentLibrary(S3Model):
                                org_office=T("Office"),
                                org_facility=T("Facility"),
                                org_group=T("Organization Group"),
+                               req_req=T("Request"),
                                # @ToDo: Deprecate
                                stats_people=T("People"),
                                vulnerability_document=T("Vulnerability Document"),
@@ -214,7 +215,7 @@ class S3DocumentLibrary(S3Model):
 
         # Reusable field
         represent = doc_DocumentRepresent(lookup = tablename,
-                                          fields = ["name", "file", "url"],
+                                          fields = ("name", "file", "url"),
                                           labels = "%(name)s",
                                           show_link = True)
 

@@ -273,7 +273,7 @@ class S3DVIModel(S3Model):
                             options=dvi_id_status_filteropts,
                             none=True),
         ]
-        
+
         # Resource configuration
         configure(tablename,
                   super_entity=("pr_pentity", "sit_trackable"),
@@ -410,7 +410,7 @@ class S3DVIModel(S3Model):
                                        dvi_id_methods.get(opt, UNKNOWN_OPT)),
                      Field("comment", "text"),
                      *s3_meta_fields())
- 
+
         # CRUD Strings
         crud_strings[tablename] = Storage(
             label_create = T("Create Identification Report"),

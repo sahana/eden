@@ -6,6 +6,8 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
+from s3 import S3CustomController
+
 # =============================================================================
 class index():
     """ Custom Home Page """
@@ -72,6 +74,10 @@ $('#single-col').css('padding', 0)'''
                     direction = "right",
                     top = 235,
                     left = 378),
+            Storage(name = "Iraqi Red Crescent Society",
+                    direction = "right",
+                    top = 110,
+                    left = 195),
             Storage(name = "Japanese Red Cross Society",
                     direction = "right",
                     top = 94,
@@ -208,5 +214,62 @@ $('#single-col').css('padding', 0)'''
         current.menu.breadcrumbs = None
 
         return dict(map=map)
+
+# =============================================================================
+class docs(S3CustomController):
+    """
+        Custom controller to display online documentation, accessible
+        for anonymous users (e.g. information how to register/login)
+    """
+
+    def __call__(self):
+
+        response = current.response
+
+        def prep(r):
+            default_url = URL(f="index", args=[], vars={})
+            return current.s3db.cms_documentation(r, "HELP", default_url)
+        response.s3.prep = prep
+        output = current.rest_controller("cms", "post")
+
+        # Custom view
+        self._view("IFRC", "docs.html")
+
+        current.menu.dashboard = None
+
+        return output
+
+# =============================================================================
+def deploy_index():
+    """
+        Custom module homepage for deploy (=RDRT) to display online
+        documentation for the module
+    """
+
+    response = current.response
+
+    def prep(r):
+        default_url = URL(f="mission", args="summary", vars={})
+        return current.s3db.cms_documentation(r, "RDRT", default_url)
+    response.s3.prep = prep
+    output = current.rest_controller("cms", "post")
+
+    # Custom view
+    view = path.join(current.request.folder,
+                     "modules",
+                     "templates",
+                     "IFRC",
+                     "views",
+                     "deploy",
+                     "index.html",
+                     )
+    try:
+        # Pass view as file not str to work in compiled mode
+        response.view = open(view, "rb")
+    except IOError:
+        from gluon.http import HTTP
+        raise HTTP(404, "Unable to open Custom View: %s" % view)
+
+    return output
 
 # END =========================================================================

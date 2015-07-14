@@ -108,7 +108,15 @@ form .action-lnk {
   font-size: 0.75rem;
 }
 form table.embeddedComponent {
+  border: 1px solid #dddddd;
   border-collapse: separate;
+}
+form table.embeddedComponent td {
+  border: none;
+  vertical-align: top;
+}
+form table.embeddedComponent .label-row td:empty {
+  padding: 0;
 }
 form .inline-open-add {
   display: inline-block;
@@ -201,12 +209,6 @@ textarea {
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
   width: 20rem !important;
 }
-.form-container form table.embeddedComponent {
-  border: 1px solid #dddddd;
-}
-.form-container form table.embeddedComponent td {
-  border: none;
-}
 
 .item-container .controls {
   background: #fafafa;
@@ -218,6 +220,9 @@ textarea {
 .filter-form table tr,
 .filter-form .ui-multiselect {
   max-width: 60%;
+}
+.filter-form table.s3-groupedopts-widget {
+  display: inline-block;
 }
 .filter-form .inline-tooltip {
   padding-top: 0.2rem;
@@ -476,11 +481,11 @@ div.tabs span.tab_other a:hover {
 .top-bar-section ul li.has-dropdown:hover > a {
   background-color: #bdb6b0;
 }
-.top-bar-section ul.dropdown li:not(.has-form) a:not(.button) {
+.top-bar-section ul.dropdown li:not(.has-form):not(.active) a:not(.button) {
   color: #ffffff;
   background-color: #777879;
 }
-.top-bar-section ul.dropdown li:not(.has-form) a:not(.button):hover {
+.top-bar-section ul.dropdown li:not(.has-form):not(.active) a:not(.button):hover {
   color: #ffffff;
   background-color: #bdb6b0;
 }
@@ -616,6 +621,13 @@ table.dataTable .selected-action {
   margin: 0 0.085rem;
 }
 
+body.rtl .dt-export-options {
+  float: left;
+}
+body.rtl .list_formats div {
+  float: left;
+}
+
 /* Empty-sections */
 .empty {
   font-style: italic;
@@ -651,6 +663,12 @@ table.dataTable .selected-action {
 #list-btn-add {
   float: right;
   margin-right: 1.0rem;
+}
+
+body.rtl #list-btn-add {
+  float: left;
+  margin-left: 1.0rem;
+  margin-right: 0;
 }
 
 /* Summary tabs */
@@ -761,12 +779,22 @@ input.date.hasDatepicker {
   font-size: 0.8rem;
 }
 
-/* Data Lists */
+/* Data Lists (including profile) */
+.dl .dl-header {
+  float: none;
+  text-align: right;
+}
 .dl .card_1_line {
   height: auto;
 }
+.dl .empty_card-holder {
+  text-align: center;
+}
 .dl .dl-row {
   border: 0;
+}
+.dl .dl-1-cols {
+  width: 100%;
 }
 
 .dl-item .dropdown .caret {
@@ -775,6 +803,12 @@ input.date.hasDatepicker {
 }
 .dl-item .attachments {
   margin-right: 0.2rem;
+}
+
+h4.profile-sub-header {
+  background-color: #EFEFEF;
+  padding: 0.1rem 0.3rem;
+  font-size: 1.2rem;
 }
 
 /* Comment feeds */

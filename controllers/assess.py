@@ -14,7 +14,7 @@ if not settings.has_module(module):
 def index():
     """ RESTful CRUD controller """
 
-    redirect(URL(f="building"))
+    s3_redirect_default(URL(f="building"))
 
 
 # -----------------------------------------------------------------------------
@@ -102,7 +102,7 @@ def building():
             # Load these models now as they'll be needed when we encode
             mtable = s3db.gis_marker
             s3db.configure("assess_building", marker_fn=building_marker_fn)
-        
+
         return True
     s3.prep = prep
 
@@ -111,6 +111,85 @@ def building():
 # -----------------------------------------------------------------------------
 def canvass():
     """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def need():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def needs():
+    """ RESTful CRUD controller """
+
+    S3SQLInlineComponent = s3base.S3SQLInlineComponent
+
+    crud_fields = ["name",
+                   "location_id",
+                   ]
+    cappend = crud_fields.append
+
+    # Demographics
+    field = s3db.assess_needs_demographic_data.parameter_id
+    field.writable = False
+    field.comment = None
+
+    table = s3db.stats_demographic
+    rows = db(table.deleted != True).select(table.parameter_id,
+                                            table.name,
+                                            )
+
+    label = T("Demographics")
+    number = 0
+    for row in rows:
+        name = "number%s" % number
+        number += 1
+        cappend(S3SQLInlineComponent("demographic",
+                                     name = name,
+                                     label = label,
+                                     fields = (("", "parameter_id"),
+                                               ("", "value"),
+                                               ),
+                                     filterby = dict(field = "parameter_id",
+                                                     options = row.parameter_id
+                                                     ),
+                                     multiple = False,
+                                     ),
+                )
+        label = ""
+
+    # Needs
+    table = s3db.assess_need
+    rows = db(table.deleted != True).select(table.id,
+                                            table.name,
+                                            )
+
+    label = T("Needs")
+    #number = 0
+    for row in rows:
+        name = "number%s" % number
+        number += 1
+        cappend(S3SQLInlineComponent("need",
+                                     name = name,
+                                     label = label,
+                                     fields = (("", "need_id"),
+                                               ("", "value"),
+                                               ),
+                                     filterby = dict(field = "need_id",
+                                                     options = row.id
+                                                     ),
+                                     multiple = False,
+                                     ),
+                )
+        label = ""
+
+    crud_form = s3base.S3SQLCustomForm(*crud_fields)
+
+    s3db.configure("assess_needs",
+                   crud_form = crud_form,
+                   )
 
     return s3_rest_controller()
 

@@ -894,7 +894,7 @@ class S3DeploymentAlertModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1268,6 +1268,7 @@ def deploy_member_filter(status=False):
             widgets.insert(1, S3HierarchyFilter("organisation_id$region_id",
                                                 lookup="org_region",
                                                 hidden=True,
+                                                none=T("No Region"),
                                                 ))
         else:
             widgets.insert(1, S3OptionsFilter("organisation_id$region_id",
@@ -1332,7 +1333,9 @@ class deploy_Inbox(S3Method):
                             filters = None
                         query = ~(FS("id").belongs(selected))
                         mresource = s3db.resource("msg_email",
-                                                filter=query, vars=filters)
+                                                  filter=query,
+                                                  vars=filters,
+                                                  )
                         if response.s3.filter:
                             mresource.add_filter(response.s3.filter)
                         rows = mresource.select(["id"], as_rows=True)
@@ -1381,6 +1384,9 @@ class deploy_Inbox(S3Method):
         else:
             limit = None
         filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+        if not orderby:
+            # Most recent messages on top
+            orderby = "msg_email.date desc"
         resource.add_filter(filter)
 
         # Extract the data
@@ -1394,7 +1400,7 @@ class deploy_Inbox(S3Method):
 
         # Instantiate the data table
         filteredrows = data["numrows"]
-        dt = S3DataTable(data["rfields"], data["rows"])
+        dt = S3DataTable(data["rfields"], data["rows"], orderby=orderby)
         dt_id = "datatable"
 
         # Bulk actions
@@ -1552,6 +1558,15 @@ def deploy_apply(r, **attr):
             limit = 4 * display_length
         else:
             limit = None
+        # Sorting by person_id requires introspection => use datatable_filter
+        if r.representation != "aadata":
+            get_vars = dict(get_vars)
+            dt_sorting = {"iSortingCols": "1",
+                          "bSortable_0": "false",
+                          "iSortCol_0": "1",
+                          "sSortDir_0": "asc",
+                          }
+            get_vars.update(dt_sorting)
         filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
         resource.add_filter(filter)
         data = resource.select(list_fields,
@@ -1562,7 +1577,7 @@ def deploy_apply(r, **attr):
                                count=True,
                                represent=True)
         filteredrows = data["numrows"]
-        dt = S3DataTable(data["rfields"], data["rows"])
+        dt = S3DataTable(data["rfields"], data["rows"], orderby=orderby)
         dt_id = "datatable"
 
         # Bulk actions
@@ -1767,6 +1782,15 @@ def deploy_alert_select_recipients(r, **attr):
         limit = 4 * display_length
     else:
         limit = None
+    # Sorting by person_id requires introspection => use datatable_filter
+    if r.representation != "aadata":
+        get_vars = dict(get_vars)
+        dt_sorting = {"iSortingCols": "1",
+                      "bSortable_0": "false",
+                      "iSortCol_0": "1",
+                      "sSortDir_0": "desc",
+                      }
+        get_vars.update(dt_sorting)
     filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
     resource.add_filter(filter)
     data = resource.select(list_fields,
@@ -1778,7 +1802,7 @@ def deploy_alert_select_recipients(r, **attr):
                            represent=True)
 
     filteredrows = data["numrows"]
-    dt = S3DataTable(data["rfields"], data["rows"])
+    dt = S3DataTable(data["rfields"], data["rows"], orderby=orderby)
     dt_id = "datatable"
 
     # Bulk actions
@@ -1975,7 +1999,7 @@ def deploy_response_select_mission(r, **attr):
                            represent=True)
 
     filteredrows = data["numrows"]
-    dt = S3DataTable(data["rfields"], data["rows"])
+    dt = S3DataTable(data["rfields"], data["rows"], orderby=orderby)
     dt_id = "datatable"
 
     if r.representation == "html":
@@ -1994,7 +2018,7 @@ def deploy_response_select_mission(r, **attr):
 
         s3 = response.s3
         s3.actions = [dict(label=str(T("Select Mission")),
-                           _class="action-btn",
+                           _class="action-btn link",
                            url=URL(f="email_inbox",
                                    args=[r.id, "select"],
                                    vars=action_vars,
@@ -2063,7 +2087,7 @@ def deploy_response_select_mission(r, **attr):
             id = "deploy_response_human_resource_id__row"
             # @ToDo: deployment_setting for 'Member' label
             title = T("Select Member")
-            label = "%s:" % title
+            label = LABEL("%s:" % title)
             field = s3db.deploy_response.human_resource_id
             # @ToDo: Get fancier & auto-click if there is just a single Mission
             script = \
@@ -2082,13 +2106,13 @@ def deploy_response_select_mission(r, **attr):
             widget = widget(field, None)
             comment = DIV(_class="tooltip",
                           _title="%s|%s" % (title,
-                                            current.messages.AUTOCOMPLETE_HELP))
+                                            current.messages.AUTOCOMPLETE_HELP),
+                          )
             # @ToDo: Handle non-callable formstyles
             row = s3.crud.formstyle(id, label, widget, comment)
             if isinstance(row, tuple):
-                row = TAG[""](row[0],
-                              row[1],
-                              )
+                row = TAG[""](row[0], row[1])
+
         # Any attachments?
         if atts:
             attachments = TABLE(TR(TH("%s: " % T("Attachments"))))
@@ -2101,7 +2125,7 @@ def deploy_response_select_mission(r, **attr):
         else:
             attachments = ""
         # @ToDo: Add Reply button
-        rheader = DIV(row,
+        rheader = DIV(FORM(row, _class="select-member-form"),
                       TABLE(TR(TH("%s: " % T("From")),
                                from_address,
                                ),

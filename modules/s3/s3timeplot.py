@@ -31,6 +31,7 @@ __all__ = ("S3TimePlot",
            "S3TimeSeries",
            "S3TimeSeriesEvent",
            "S3TimeSeriesEventFrame",
+           "S3TimeSeriesFact",
            "S3TimeSeriesPeriod",
            )
 
@@ -71,6 +72,7 @@ tp_tzsafe = lambda dt: dt.replace(tzinfo=dateutil.tz.tzutc()) \
 SEPARATORS = (",", ":")
 
 DEFAULT = lambda: None
+NUMERIC_TYPES = ("integer", "double", "id")
 
 dt_regex = Storage(
     YEAR = re.compile(r"\A\s*(\d{4})\s*\Z"),
@@ -79,6 +81,9 @@ dt_regex = Storage(
     DATE = re.compile(r"\A\s*(\d{4})-([0]?[1-9]|[1][12])-([012]?[1-9]|[3][01])\s*\Z"),
     DELTA = re.compile(r"\A\s*([+-]?)\s*(\d+)\s*([ymwdh])\w*\s*\Z"),
 )
+
+FACT = re.compile(r"([a-zA-Z]+)\(([a-zA-Z0-9_.$:\,~]+)\),*(.*)\Z")
+SELECTOR = re.compile(r"^[a-zA-Z0-9_.$:\~]+\Z")
 
 # =============================================================================
 class S3TimePlot(S3Method):
@@ -124,7 +129,7 @@ class S3TimePlot(S3Method):
         # Parse fact option
         fact = get_vars.get("fact")
         try:
-            method, base, slope, interval = self.parse_fact(fact)
+            facts = S3TimeSeriesFact.parse(fact)
         except SyntaxError:
             r.error(400, sys.exc_info()[1])
         baseline = get_vars.get("baseline")
@@ -142,18 +147,18 @@ class S3TimePlot(S3Method):
             # Create time series
             # @todo: should become resource.timeseries()
             ts = S3TimeSeries(resource,
-                            start=start,
-                            end=end,
-                            slots=slots,
-                            method=method,
-                            event_start=event_start,
-                            event_end=event_end,
-                            base=base,
-                            slope=slope,
-                            interval=interval,
-                            rows=rows,
-                            cols=cols,
-                            baseline=baseline)
+                              start=start,
+                              end=end,
+                              slots=slots,
+                              event_start=event_start,
+                              event_end=event_end,
+                              rows=rows,
+                              cols=cols,
+                              facts=facts,
+                              baseline=baseline,
+                              # @todo: add title
+                              #title=title,
+                              )
 
             # Extract aggregated results as JSON-serializable dict
             data = ts.as_dict()
@@ -228,7 +233,7 @@ class S3TimePlot(S3Method):
         # Parse fact option
         fact = get_vars.get("fact")
         try:
-            method, base, slope, interval = self.parse_fact(fact)
+            facts = S3TimeSeriesFact.parse(fact)
         except SyntaxError:
             r.error(400, sys.exc_info()[1])
         baseline = get_vars.get("baseline")
@@ -248,15 +253,15 @@ class S3TimePlot(S3Method):
                           start=start,
                           end=end,
                           slots=slots,
-                          method=method,
                           event_start=event_start,
                           event_end=event_end,
-                          base=base,
-                          slope=slope,
-                          interval=interval,
                           rows=rows,
                           cols=cols,
-                          baseline=baseline)
+                          facts=facts,
+                          baseline=baseline,
+                          # @todo: add title
+                          #title=title,
+                          )
 
         # Extract aggregated results as JSON-serializable dict
         data = ts.as_dict()
@@ -423,49 +428,6 @@ class S3TimePlot(S3Method):
             end = None
 
         return start, end
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def parse_fact(fact):
-        """
-            Parse fact expression
-
-            @param fact: the fact expression
-        """
-
-        # Parse the fact
-        if not fact:
-            method, parameters = "count", "id"
-        else:
-            match = re.match(r"([a-zA-Z]+)\(([a-zA-Z0-9_.$:\,]+)\)\Z", fact)
-            if match:
-                method, parameters = match.groups()
-            else:
-                method, parameters = "count", fact
-
-        # Validate method
-        if method not in S3TimeSeriesPeriod.methods:
-            raise SyntaxError("Unsupported aggregation method: %s" % method)
-
-        # Extract parameters
-        parameters = parameters.split(",")
-
-        base = parameters[0]
-        slope = None
-        interval = None
-
-        if method == "cumulate":
-            if len(parameters) == 2:
-                # Slope, Slots
-                slope = base
-                base = None
-                interval = parameters[1]
-            elif len(parameters) > 2:
-                # Base, Slope, Slots
-                slope = parameters[1]
-                interval = parameters[2]
-
-        return method, base, slope, interval
 
 # =============================================================================
 class S3TimePlotForm(S3ReportForm):
@@ -705,15 +667,13 @@ class S3TimeSeries(object):
                  start=None,
                  end=None,
                  slots=None,
-                 method=None,
                  event_start=None,
                  event_end=None,
-                 base=None,
-                 slope=None,
-                 interval=None,
                  rows=None,
                  cols=None,
-                 baseline=None):
+                 facts=None,
+                 baseline=None,
+                 title=None):
         """
             Constructor
 
@@ -725,40 +685,36 @@ class S3TimeSeries(object):
             @param event_start: the event start field (field selector)
             @param event_end: the event end field (field selector)
 
-            @param method: the aggregation method (default = count)
-            @param base: the base value to aggregate (field selector)
-            @param slope: the slope value for aggregation (field selector)
-            @param interval: the interval for the slope (string expression)
-
             @param rows: the rows axis for event grouping (field selector)
             @param cols: the columns axis for event grouping (field selector)
+            @param facts: an array of facts (S3TimeSeriesFact)
 
             @param baseline: the baseline field (field selector)
+
+            @param title: the time series title
         """
 
         self.resource = resource
         self.rfields = {}
 
+        self.title = title
+
         # Resolve timestamp
         self.resolve_timestamp(event_start, event_end)
-
-        # Resolve fact
-        if not method:
-            # Fall back to counting records
-            method = "count"
-            base = resource._id.name
-        self.resolve_fact(method, base, slope, baseline)
-        self.method = method
-        self.interval = interval
 
         # Resolve grouping axes
         self.resolve_axes(rows, cols)
 
+        # Resolve facts
+        if not facts:
+            facts = [S3TimeSeriesFact("count", resource._id.name)]
+        self.facts = [fact.resolve(resource) for fact in facts]
+
+        # Resolve baseline
+        self.resolve_baseline(baseline)
+
         # Create event frame
-        self.event_frame = self._event_frame(start,
-                                             end,
-                                             slots,
-                                             )
+        self.event_frame = self._event_frame(start, end, slots)
 
         # ...and fill it with data
         self._select()
@@ -769,26 +725,15 @@ class S3TimeSeries(object):
 
         rfields = self.rfields
 
-        # Method, base, slope and interval
-        method = self.method
-
-        base = None
-        slope = None
-        interval = None
-
-        base_colname = None
-        rfield = rfields.get("base")
-        if rfield:
-            base = rfield.selector
-            base_colname = rfield.colname
-
-        slope_colname = None
-        if method == "cumulate":
-            rfield = rfields.get("slope")
-            if rfield:
-                slope = rfield.selector
-                slope_colname = rfield.colname
-                interval = self.interval
+        # Fact Data
+        fact_data = []
+        for fact in self.facts:
+            fact_data.append((str(fact.label),
+                              fact.method,
+                              fact.base,
+                              fact.slope,
+                              fact.interval,
+                              ))
 
         # Event start and end selectors
         rfield = rfields.get("event_start")
@@ -832,13 +777,10 @@ class S3TimeSeries(object):
         event_frame = self.event_frame
         periods_data = []
         append = periods_data.append
+        #fact = self.facts[0]
         for period in event_frame:
             # Aggregate
-            period.aggregate(method,
-                             base_colname,
-                             slope=slope_colname,
-                             interval=interval,
-                             )
+            period.aggregate(self.facts)
             # Extract
             item = period.as_dict(rows = rows_keys,
                                   cols = cols_keys,
@@ -856,14 +798,11 @@ class S3TimeSeries(object):
             baseline = None
 
         # Output dict
-        data = {"f": (method, base, slope, interval),
+        data = {"f": fact_data,
                 "t": (event_start, event_end),
                 "s": event_frame.slots,
                 "e": event_frame.empty,
-                # @todo: implement labels:
-                #"l": {"t": report_title,
-                      #"f": fact_title,
-                      #},
+                "l": self.title,
                 "r": rows_data,
                 "c": cols_data,
                 "p": periods_data,
@@ -876,7 +815,10 @@ class S3TimeSeries(object):
     @staticmethod
     def _represent_axis(rfield, values):
         """
-            @todo: docstring
+            Represent and sort the values of a pivot axis (rows or cols)
+
+            @param rfield: the axis rfield
+            @param values: iterable of values
         """
 
         if rfield.virtual:
@@ -957,11 +899,8 @@ class S3TimeSeries(object):
         """
             Create an event frame for this report
 
-            @param resource: the target resource
-            @param event_start: the event start field (S3ResourceField)
-            @param event_end: the event end field (S3ResourceField)
-            @param start: the start date/time (string)
-            @param end: the end date/time (string)
+            @param start: the start date/time (string, date or datetime)
+            @param end: the end date/time (string, date or datetime)
             @param slots: the slot length (string)
 
             @return: the event frame
@@ -1084,6 +1023,7 @@ class S3TimeSeries(object):
         rfields = self.rfields
 
         # Fields to extract
+        cumulative = False
         event_start = rfields.get("event_start")
         fields = set([event_start.selector])
         event_end = rfields.get("event_end")
@@ -1095,20 +1035,24 @@ class S3TimeSeries(object):
         cols_rfield = rfields.get("cols")
         if cols_rfield:
             fields.add(cols_rfield.selector)
-        facts = []
-        for key in ("base", "slope"):
-            rfield = rfields.get(key)
-            if rfield:
-                facts.append(rfield)
-                fields.add(rfield.selector)
+        fact_columns = []
+        for fact in self.facts:
+            if fact.method == "cumulate":
+                cumulative = True
+            if fact.resource is None:
+                fact.resolve(resource)
+            for rfield in (fact.base_rfield, fact.slope_rfield):
+                if rfield:
+                    fact_columns.append(rfield.colname)
+                    fields.add(rfield.selector)
         fields.add(resource._id.name)
 
         # Get event frame
         event_frame = self.event_frame
 
         # Filter by event frame start:
-        # End date of events must be after the event frame start date
-        if self.method != "cumulate" and event_end:
+        if not cumulative and event_end:
+            # End date of events must be after the event frame start date
             end_selector = FS(event_end.selector)
             start = event_frame.start
             query = (end_selector == None) | (end_selector >= start)
@@ -1173,7 +1117,7 @@ class S3TimeSeries(object):
         for row in data.rows:
 
             # Extract values
-            values = dict((fact.colname, row[fact.colname]) for fact in facts)
+            values = dict((colname, row[colname]) for colname in fact_columns)
 
             # Extract grouping keys
             grouping = {}
@@ -1247,37 +1191,16 @@ class S3TimeSeries(object):
         rfields["event_start"] = start_rfield
         rfields["event_end"] = end_rfield
 
-        return
-
     # -------------------------------------------------------------------------
-    def resolve_fact(self, method, base, slope, baseline):
+    def resolve_baseline(self, baseline):
         """
-            Resolve the base, slope and baseline field selectors
+            Resolve the baseline field selector
 
-            @param method: the aggregation method
-            @param base: the base field selector
-            @param slope: the slope field selector
             @param baseline: the baseline selector
         """
 
         resource = self.resource
         rfields = self.rfields
-
-        # Resolve base selector
-        base_rfield = None
-        if base:
-            try:
-                base_rfield = resource.resolve_selector(base)
-            except (AttributeError, SyntaxError):
-                base_rfield = None
-
-        # Resolve slope selector
-        slope_rfield = None
-        if slope:
-            try:
-                slope_rfield = resource.resolve_selector(slope)
-            except (AttributeError, SyntaxError):
-                slope_rfield = None
 
         # Resolve baseline selector
         baseline_rfield = None
@@ -1287,32 +1210,14 @@ class S3TimeSeries(object):
             except (AttributeError, SyntaxError):
                 baseline_rfield = None
 
-        # Validate
-        if base_rfield is None:
-            if method != "cumulate" or slope_rfield is None:
-                raise SyntaxError("Invalid fact parameter")
-        if method != "count":
-            # All methods except count require numeric input values
-            numeric_types = ("integer", "double")
-            if base_rfield and base_rfield.ftype not in numeric_types:
-                raise SyntaxError("Fact field type not numeric: %s (%s)" %
-                                  (base, base_rfield.ftype))
-
-            if slope_rfield and slope_rfield.ftype not in numeric_types:
-                raise SyntaxError("Fact field type not numeric: %s (%s)" %
-                                  (slope, slope_rfield.ftype))
         if baseline_rfield and \
-           baseline_rfield.ftype not in ("integer", "double"):
-            # Invalid field type - log and ignore gracefully
+           baseline_rfield.ftype not in NUMERIC_TYPES:
+            # Invalid field type - log and ignore
             current.log.error("Invalid field type for baseline: %s (%s)" %
                               (baseline, baseline_rfield.ftype))
             baseline_rfield = None
 
-        rfields["base"] = base_rfield
-        rfields["slope"] = slope_rfield
         rfields["baseline"] = baseline_rfield
-
-        return
 
     # -------------------------------------------------------------------------
     def resolve_axes(self, rows, cols):
@@ -1532,9 +1437,400 @@ class S3TimeSeriesEvent(object):
         return result
 
 # =============================================================================
-class S3TimeSeriesPeriod(object):
+class S3TimeSeriesFact(object):
+    """ Class representing a fact layer """
 
-    methods = ("count", "cumulate", "sum", "avg", "min", "max")
+    #: Supported aggregation methods
+    METHODS = {"count": "Count",
+               "sum": "Total",
+               "cumulate": "Cumulative Total",
+               "min": "Minimum",
+               "max": "Maximum",
+               "avg": "Average",
+               }
+
+    def __init__(self, method, base, slope=None, interval=None, label=None):
+        """
+            Constructor
+
+            @param method: the aggregation method
+            @param base: column name of the (base) field
+            @param slope: column name of the slope field (for cumulate method)
+            @param interval: time interval expression for the slope
+        """
+
+        if method not in self.METHODS:
+            raise SyntaxError("Unsupported aggregation function: %s" % method)
+
+        self.method = method
+        self.base = base
+        self.slope = slope
+        self.interval = interval
+
+        self.label = label
+
+        self.resource = None
+
+        self.base_rfield = None
+        self.base_column = base
+
+        self.slope_rfield = None
+        self.slope_column = slope
+
+    # -------------------------------------------------------------------------
+    def aggregate(self, period, events):
+        """
+            Aggregate values from events
+
+            @param period: the period
+            @param events: the events
+        """
+
+        values = []
+        append = values.append
+
+        method = self.method
+        base = self.base_column
+
+        if method == "cumulate":
+
+            slope = self.slope_column
+            duration = period.duration
+
+            for event in events:
+
+                if event.start == None:
+                    continue
+
+                if base:
+                    base_value = event[base]
+                else:
+                    base_value = None
+
+                if slope:
+                    slope_value = event[slope]
+                else:
+                    slope_value = None
+
+                if base_value is None:
+                    if not slope or slope_value is None:
+                        continue
+                    else:
+                        base_value = 0
+                elif type(base_value) is list:
+                    try:
+                        base_value = sum(base_value)
+                    except (TypeError, ValueError):
+                        continue
+
+                if slope_value is None:
+                    if not base or base_value is None:
+                        continue
+                    else:
+                        slope_value = 0
+                elif type(slope_value) is list:
+                    try:
+                        slope_value = sum(slope_value)
+                    except (TypeError, ValueError):
+                        continue
+
+                interval = self.interval
+                if slope_value and interval:
+                    event_duration = duration(event, interval)
+                else:
+                    event_duration = 1
+
+                append((base_value, slope_value, event_duration))
+
+            result = self.compute(values)
+
+        elif base:
+
+            for event in events:
+                value = event[base]
+                if value is None:
+                    continue
+                elif type(value) is list:
+                    values.extend([v for v in value if v is not None])
+                else:
+                    values.append(value)
+
+            if method == "count":
+                result = len(values)
+            else:
+                result = self.compute(values)
+
+        else:
+            result = None
+
+        return result
+
+    # -------------------------------------------------------------------------
+    def compute(self, values):
+        """
+            Aggregate a list of values.
+
+            @param values: iterable of values
+        """
+
+        if values is None:
+            return None
+
+        method = self.method
+        values = [v for v in values if v != None]
+
+        if method == "count":
+            return len(values)
+        elif method == "min":
+            try:
+                return min(values)
+            except (TypeError, ValueError):
+                return None
+        elif method == "max":
+            try:
+                return max(values)
+            except (TypeError, ValueError):
+                return None
+        elif method == "sum":
+            try:
+                return sum(values)
+            except (TypeError, ValueError):
+                return None
+        elif method == "avg":
+            try:
+                num = len(values)
+                if num:
+                    return sum(values) / float(num)
+            except (TypeError, ValueError):
+                return None
+        elif method == "cumulate":
+            try:
+                return sum(base + slope * duration
+                           for base, slope, duration in values)
+            except (TypeError, ValueError):
+                return None
+        return None
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def parse(cls, fact):
+        """
+            Parse fact expression
+
+            @param fact: the fact expression
+        """
+
+        if isinstance(fact, list):
+            facts = []
+            for f in fact:
+                facts.extend(cls.parse(f))
+            if not facts:
+                raise SyntaxError("Invalid fact expression: %s" % fact)
+            return facts
+
+        if isinstance(fact, tuple):
+            label, fact = fact
+        else:
+            label = None
+
+        # Parse the fact
+        other = None
+        if not fact:
+            method, parameters = "count", "id"
+        else:
+            match = FACT.match(fact)
+            if match:
+                method, parameters, other = match.groups()
+                if other:
+                    other = cls.parse((label, other) if label else other)
+            elif SELECTOR.match(fact):
+                method, parameters, other = "count", fact, None
+            else:
+                raise SyntaxError("Invalid fact expression: %s" % fact)
+
+        # Validate method
+        if method not in cls.METHODS:
+            raise SyntaxError("Unsupported aggregation method: %s" % method)
+
+        # Extract parameters
+        parameters = parameters.split(",")
+
+        base = parameters[0]
+        slope = None
+        interval = None
+
+        if method == "cumulate":
+            if len(parameters) == 2:
+                # Slope, Slots
+                slope = base
+                base = None
+                interval = parameters[1]
+            elif len(parameters) > 2:
+                # Base, Slope, Slots
+                slope = parameters[1]
+                interval = parameters[2]
+
+        facts = [cls(method, base, slope=slope, interval=interval, label=label)]
+        if other:
+            facts.extend(other)
+        return facts
+
+    # -------------------------------------------------------------------------
+    def resolve(self, resource):
+        """
+            Resolve the base and slope selectors against resource
+
+            @param resource: the resource
+        """
+
+        self.resource = None
+
+        base = self.base
+        self.base_rfield = None
+        self.base_column = base
+
+        slope = self.slope
+        self.slope_rfield = None
+        self.slope_column = slope
+
+        # Resolve base selector
+        base_rfield = None
+        if base:
+            try:
+                base_rfield = resource.resolve_selector(base)
+            except (AttributeError, SyntaxError), e:
+                base_rfield = None
+
+        # Resolve slope selector
+        slope_rfield = None
+        if slope:
+            try:
+                slope_rfield = resource.resolve_selector(slope)
+            except (AttributeError, SyntaxError):
+                slope_rfield = None
+
+        method = self.method
+
+        # At least one field parameter must be resolvable
+        if base_rfield is None:
+            if method != "cumulate" or slope_rfield is None:
+                raise SyntaxError("Invalid fact parameter")
+
+        # All methods except count require numeric input values
+        if method != "count":
+            numeric_types = NUMERIC_TYPES
+            if base_rfield and base_rfield.ftype not in numeric_types:
+                raise SyntaxError("Fact field type not numeric: %s (%s)" %
+                                  (base, base_rfield.ftype))
+
+            if slope_rfield and slope_rfield.ftype not in numeric_types:
+                raise SyntaxError("Fact field type not numeric: %s (%s)" %
+                                  (slope, slope_rfield.ftype))
+
+        if base_rfield:
+            self.base_rfield = base_rfield
+            self.base_column = base_rfield.colname
+
+        if slope_rfield:
+            self.slope_rfield = slope_rfield
+            self.slope_column = slope_rfield.colname
+
+        if not self.label:
+            # Lookup the label from the timeplot options
+            label = self.lookup_label(resource,
+                                      method,
+                                      base,
+                                      slope,
+                                      self.interval)
+            if not label:
+                # Generate a default label
+                label = self.default_label(base_rfield, self.method)
+            self.label = label
+
+        self.resource = resource
+        return self
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def lookup_label(cls, resource, method, base, slope=None, interval=None):
+        """
+            Lookup the fact label from the timeplot options of resource
+
+            @param resource: the resource (S3Resource)
+            @param method: the aggregation method (string)
+            @param base: the base field selector (string)
+            @param slope: the slope field selector (string)
+            @param interval: the interval expression (string)
+        """
+
+        fact_opts = None
+        if resource:
+            config = resource.get_config("timeplot_options")
+            if config:
+                fact_opts = config.get("fact")
+
+        label = None
+        if fact_opts:
+            parse = cls.parse
+            for opt in fact_opts:
+                if isinstance(opt, tuple):
+                    title, facts = opt
+                else:
+                    title, facts = None, opt
+                facts = parse(facts)
+                match = None
+                for fact in facts:
+                    if fact.method == method and \
+                       fact.base == base and \
+                       fact.slope == slope and \
+                       fact.interval == interval:
+                        match = fact
+                        break
+                if match:
+                    if fact.label:
+                        label = fact.label
+                    elif len(facts) == 1:
+                        label = title
+                if label:
+                    break
+
+        return label
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def default_label(cls, rfield, method):
+        """
+            Generate a default fact label
+
+            @param rfield: the S3ResourceField (alternatively the field label)
+            @param method: the aggregation method
+        """
+
+        T = current.T
+
+        if hasattr(rfield, "ftype") and \
+           rfield.ftype == "id" and \
+           method == "count":
+            field_label = T("Records")
+        elif hasattr(rfield, "label"):
+            field_label = rfield.label
+        else:
+            field_label = rfield
+
+        method_label = cls.METHODS.get(method)
+        if not method_label:
+            method_label = method
+        else:
+            method_label = T(method_label)
+
+        return "%s (%s)" % (field_label, method_label)
+
+# =============================================================================
+class S3TimeSeriesPeriod(object):
+    """
+        Class representing a single time period (slot) in an event frame,
+        within which events will be grouped and facts aggregated
+    """
 
     def __init__(self, start, end=None):
         """
@@ -1563,8 +1859,6 @@ class S3TimeSeriesPeriod(object):
 
         self._reset_aggregates()
 
-        return
-
     # -------------------------------------------------------------------------
     def _reset_aggregates(self):
         """ Reset the aggregated values matrix """
@@ -1572,9 +1866,7 @@ class S3TimeSeriesPeriod(object):
         self.matrix = None
         self.rows = None
         self.cols = None
-        self.total = None
-
-        return
+        self.totals = None
 
     # -------------------------------------------------------------------------
     def add_current(self, event):
@@ -1639,7 +1931,7 @@ class S3TimeSeriesPeriod(object):
 
         # Output
         return {"t": (start, end),
-                "v": self.total,
+                "v": self.totals,
                 "r": row_totals,
                 "c": col_totals,
                 "x": matrix,
@@ -1653,230 +1945,116 @@ class S3TimeSeriesPeriod(object):
             @param cumulative: include previous events
         """
 
+        event_sets = [self.cevents]
         if cumulative:
-            events = dict(self.pevents)
-            events.update(self.cevents)
-        else:
-            events = self.cevents
+            event_sets.append(self.pevents)
+
         rows = {}
         cols = {}
         matrix = {}
         from itertools import product
-        for event_id, event in events.items():
-            for key in event.rows:
-                row = rows.get(key)
-                if row is None:
-                    row = rows[key] = set()
-                row.add(event_id)
-            for key in event.cols:
-                col = cols.get(key)
-                if col is None:
-                    col = cols[key] = set()
-                col.add(event_id)
-            for key in product(event.rows, event.cols):
-                cell = matrix.get(key)
-                if cell is None:
-                    cell = matrix[key] = set()
-                cell.add(event_id)
+        for index, events in enumerate(event_sets):
+            for event_id, event in events.items():
+                for key in event.rows:
+                    row = rows.get(key)
+                    if row is None:
+                        row = rows[key] = (set(), set())
+                    row[index].add(event_id)
+                for key in event.cols:
+                    col = cols.get(key)
+                    if col is None:
+                        col = cols[key] = (set(), set())
+                    col[index].add(event_id)
+                for key in product(event.rows, event.cols):
+                    cell = matrix.get(key)
+                    if cell is None:
+                        cell = matrix[key] = (set(), set())
+                    cell[index].add(event_id)
         self._rows = rows
         self._cols = cols
         self._matrix = matrix
 
     # -------------------------------------------------------------------------
-    def aggregate(self, method, base, slope=None, interval=None):
+    def aggregate(self, facts):
         """
-            Group and aggregate (=pivot) the events in this period
+            Group and aggregate the events in this period
 
-            @param method: the aggregation method
-            @param base: column name of the (base) field
-            @param slope: column name of the slope field (for cumulative values)
-            @param interval: time interval expression for the slope
+            @param facts: list of facts to aggregate
         """
 
         # Reset
         self._reset()
 
-        # Select events
-        if method == "cumulate":
-            events = dict(self.pevents)
-            events.update(self.cevents)
-            cumulative = True
-        elif method in self.methods:
-            events = self.cevents
-            cumulative = False
-        else:
-            raise SyntaxError("Unsupported aggregation function: %s" % method)
-
-        # Group events
-        self.group(cumulative = cumulative)
-
-        _aggregate = self._aggregate
-        aggregate = lambda items: _aggregate(items,
-                                             method,
-                                             base,
-                                             slope=slope,
-                                             interval=interval,
-                                             )
-
-        # Aggregate rows
         rows = self.rows = {}
-        for key, event_ids in self._rows.items():
-            items = [events[event_id] for event_id in event_ids]
-            rows[key] = aggregate(items)
-
-        # Aggregate columns
         cols = self.cols = {}
-        for key, event_ids in self._cols.items():
-            items = [events[event_id] for event_id in event_ids]
-            cols[key] = aggregate(items)
-
-        # Aggregate matrix
         matrix = self.matrix = {}
-        for key, event_ids in self._matrix.items():
-            items = [events[event_id] for event_id in event_ids]
-            matrix[key] = aggregate(items)
 
-        # Aggregate total
-        total = aggregate(events.values())
+        totals = []
 
-        self.total = total
-        return total
+        if not isinstance(facts, (list, tuple)):
+            facts = [facts]
+        if any(fact.method == "cumulate" for fact in facts):
+            self.group(cumulative=True)
+        else:
+            self.group()
 
-    # -------------------------------------------------------------------------
-    def _aggregate(self, events, method, base, slope=None, interval=None):
-        """
-            Aggregate values from events.
+        for fact in facts:
 
-            @param events: the events
-            @param method: the aggregation method (string)
-            @param base: column name of the (base) field
-            @param slope: column name of the slope field (for cumulative values)
-            @param interval: time interval expression for the slope
-        """
+            method = fact.method
 
-        values = []
-        append = values.append
-
-        if method == "cumulate":
-
-            duration = self._duration
-
-            for event in events:
-
-                if event.start == None:
-                    continue
-
-                if base:
-                    base_value = event[base]
-                else:
-                    base_value = None
-
-                if slope:
-                    slope_value = event[slope]
-                else:
-                    slope_value = None
-
-                if base_value is None:
-                    if not slope or slope_value is None:
-                        continue
-                    else:
-                        base_value = 0
-                elif type(base_value) is list:
-                    try:
-                        base_value = sum(base_value)
-                    except (TypeError, ValueError):
-                        continue
-
-                if slope_value is None:
-                    if not base or base_value is None:
-                        continue
-                    else:
-                        slope_value = 0
-                elif type(slope_value) is list:
-                    try:
-                        slope_value = sum(slope_value)
-                    except (TypeError, ValueError):
-                        continue
-
-                if slope_value and interval:
-                    event_duration = duration(event, interval)
-                else:
-                    event_duration = 1
-
-                append((base_value, slope_value, event_duration))
-
-            result = self._compute(method, values)
-
-        elif base:
-
-            for event in events:
-                value = event[base]
-                if value is None:
-                    continue
-                elif type(value) is list:
-                    values.extend([v for v in value if v is not None])
-                else:
-                    values.append(value)
-
-            if method == "count":
-                result = len(values)
+            # Select events
+            if method == "cumulate":
+                events = dict(self.pevents)
+                events.update(self.cevents)
+                cumulative = True
             else:
-                result = self._compute(method, values)
+                events = self.cevents
+                cumulative = False
 
-        else:
-            result = None
+            fact_aggregate = fact.aggregate
+            aggregate = lambda items: fact_aggregate(self, items)
 
-        return result
+            # Aggregate rows
+            for key, event_sets in self._rows.items():
+                event_ids = event_sets[0]
+                if cumulative:
+                    event_ids |= event_sets[1]
+                items = [events[event_id] for event_id in event_ids]
+                if key not in rows:
+                    rows[key] = [aggregate(items)]
+                else:
+                    rows[key].append(aggregate(items))
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def _compute(method, values):
-        """
-            Aggregate a list of values with the given method
+            # Aggregate columns
+            for key, event_sets in self._cols.items():
+                event_ids = event_sets[0]
+                if cumulative:
+                    event_ids |= event_sets[1]
+                items = [events[event_id] for event_id in event_ids]
+                if key not in cols:
+                    cols[key] = [aggregate(items)]
+                else:
+                    cols[key].append(aggregate(items))
 
-            @param method: the aggregation method as string
-            @param values: iterable of values
-        """
+            # Aggregate matrix
+            for key, event_sets in self._matrix.items():
+                event_ids = event_sets[0]
+                if cumulative:
+                    event_ids |= event_sets[1]
+                items = [events[event_id] for event_id in event_ids]
+                if key not in matrix:
+                    matrix[key] = [aggregate(items)]
+                else:
+                    matrix[key].append(aggregate(items))
 
-        if values is None:
-            return None
-        else:
-            values = [v for v in values if v != None]
+            # Aggregate total
+            totals.append(aggregate(events.values()))
 
-        if method == "count":
-            return len(values)
-        elif method == "min":
-            try:
-                return min(values)
-            except (TypeError, ValueError):
-                return None
-        elif method == "max":
-            try:
-                return max(values)
-            except (TypeError, ValueError):
-                return None
-        elif method == "sum":
-            try:
-                return sum(values)
-            except (TypeError, ValueError):
-                return None
-        elif method == "avg":
-            try:
-                num = len(values)
-                if num:
-                    return sum(values) / float(num)
-            except (TypeError, ValueError):
-                return None
-        elif method == "cumulate":
-            try:
-                return sum(base + slope * duration
-                           for base, slope, duration in values)
-            except (TypeError, ValueError):
-                return None
-        return None
+        self.totals = totals
+        return totals
 
     # -------------------------------------------------------------------------
-    def _duration(self, event, interval):
+    def duration(self, event, interval):
         """
             Compute the total duration of the given event before the end
             of this period, in number of interval

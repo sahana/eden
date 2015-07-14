@@ -28,34 +28,6 @@ $(document).ready(function() {
     });
 });
 
-/* Function to ensure that end_date is always start-date or later */
-S3.start_end_date = function(start_field, end_field) {
-    // This gets overridden by the widget when done from prep
-    // - need to instantiate from postp if we need this
-    var start_field = $('#' + start_field);
-    if (!start_field.length) {
-        // e.g. field isn't readable
-        return;
-    }
-    var end_field = $('#' + end_field);
-    if (!end_field.length) {
-        // e.g. field isn't readable
-        return;
-    }
-    var min = start_field.datepicker('getDate');
-    if (min) {
-        end_field.datepicker('option', 'minDate', min);
-    }
-    start_field.change(function() {
-        var min = start_field.datepicker('getDate');
-        end_field.datepicker('option', 'minDate', min);
-        var curr = end_field.datepicker('getDate');
-        if (curr && curr < min) {
-            end_field.datepicker('setDate', min);
-        }
-    });
-};
-
 // Automation of end date if start date is present and automation is allowed
 // Widget Used: S3DateWidget
 // Will be activated only if end_date_selector and start_date_selector are both used

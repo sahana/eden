@@ -2247,7 +2247,7 @@ class GIS(object):
             - used by GIS.get_location_data() and S3PivotTable.geojson()
 
             @ToDo: Support multiple locations for a single resource
-                   (e.g. a Project wworking in multiple Communities)
+                   (e.g. a Project working in multiple Communities)
         """
 
         db = current.db
@@ -2728,18 +2728,19 @@ class GIS(object):
             if len(layers) > 1:
                 layers.exclude(lambda row: row["gis_layer_feature.style_default"] == False)
             if len(layers) == 1:
-                marker = layers.first()
+                layer = layers.first()
             else:
                 # Can't differentiate
-                marker = None
+                layer = None
 
-            if marker:
-                _marker = marker["gis_marker"]
-                marker = dict(image=_marker.image,
-                              height=_marker.height,
-                              width=_marker.width,
-                              gps_marker=marker["gis_style"].gps_marker
-                              )
+            if layer:
+                _marker = layer["gis_marker"]
+                if _marker.image:
+                    marker = dict(image=_marker.image,
+                                  height=_marker.height,
+                                  width=_marker.width,
+                                  gps_marker=layer["gis_style"].gps_marker
+                                  )
 
         if not marker:
             # Default
@@ -4890,6 +4891,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 inherited = True
                 lat = Lx_lat
                 lon = Lx_lon
+                wkt = None
             elif path != _path or L0 != L0_name or L1 != L1_name or L2 != name or not wkt:
                 fixup_required = True
 
@@ -5027,6 +5029,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 inherited = True
                 lat = Lx_lat
                 lon = Lx_lon
+                wkt = None
             elif path != _path or L0 != L0_name or L1 != L1_name or L2 != L2_name or L3 != name or not wkt:
                 fixup_required = True
 
@@ -5194,6 +5197,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 inherited = True
                 lat = Lx_lat
                 lon = Lx_lon
+                wkt = None
             elif path != _path or L0 != L0_name or L1 != L1_name or L2 != L2_name or L3 != L3_name or L4 != name or not wkt:
                 fixup_required = True
 
@@ -5395,6 +5399,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 inherited = True
                 lat = Lx_lat
                 lon = Lx_lon
+                wkt = None
             elif path != _path or L0 != L0_name or L1 != L1_name or L2 != L2_name or L3 != L3_name or L4 != L4_name or L5 != name or not wkt:
                 fixup_required = True
 
@@ -5619,6 +5624,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             inherited = True
             lat = Lx_lat
             lon = Lx_lon
+            wkt = None
         elif path != _path or L0 != L0_name or L1 != L1_name or L2 != L2_name or L3 != L3_name or L4 != L4_name or L5 != L5_name or not wkt:
             fixup_required = True
 
@@ -6087,7 +6093,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                   "cluster_attribute",     # Optional
                   "cluster_distance",      # Optional
                   "cluster_threshold"      # Optional
-                }]
+                  }]
             @param feature_resources: REST URLs for (filtered) resources to overlay onto the map & their options (List of Dicts):
                 [{"name"      : T("MyLabel"), # A string: the label for the layer
                   "id"        : "search",     # A string: the id for the layer (for manipulation by JavaScript)
@@ -6106,11 +6112,11 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                   "cluster_threshold",        # Optional (overrides layer_id if-set)
                   "dir",                      # Optional (overrides layer_id if-set)
                   "style",                    # Optional (overrides layer_id if-set)
-                }]
+                  }]
             @param wms_browser: WMS Server's GetCapabilities & options (dict)
                 {"name": T("MyLabel"),     # Name for the Folder in LayerTree
                  "url": string             # URL of GetCapabilities
-                }
+                 }
             @param catalogue_layers: Show all the enabled Layers from the GIS Catalogue
                                      Defaults to False: Just show the default Base layer
             @param legend: True: Show the GeoExt Legend panel, False: No Panel, "float": New floating Legend Panel
@@ -6129,7 +6135,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             @param mgrs: Use the MGRS Control to select PDFs
                 {"name": string,           # Name for the Control
                  "url": string             # URL of PDF server
-                }
+                 }
                 @ToDo: Also add MGRS Search support: http://gxp.opengeo.org/master/examples/mgrs.html
             @param window: Have viewport pop out of page into a resizable window
             @param window_hide: Have the window hidden by default, ready to appear (e.g. on clicking a button)
@@ -7673,6 +7679,7 @@ class LayerArcREST(Layer):
                 transparent = (self.transparent, (True,)),
                 base = (self.base, (False,)),
                 _base = (self._base, (False,)),
+                format = (self.img_format, ("png",)),
             )
 
             return output

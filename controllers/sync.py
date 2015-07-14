@@ -28,7 +28,7 @@ def config():
             output["buttons"].pop("list_btn", None)
         return output
     s3.postp = postp
-    
+
     # Can't do anything else than update here
     r = s3_request(args=[str(record_id), "update"], extension="html")
     return r()
@@ -76,7 +76,7 @@ def repository():
                                 _title="%s|%s" % (
                                        T("Repository UUID"),
                                        T("Identifier which the remote site uses to authenticate at this site when sending synchronization requests.")))
-            
+
             if r.component and r.id:
                 if r.component.alias == "job":
                     s3task.configure_tasktable_crud(
@@ -122,7 +122,7 @@ def sync():
             # URL variables from peer:
             # repository ID, msince and sync filters
             get_vars_new = Storage(include_deleted=True)
-            
+
             for k, v in get_vars.items():
                 if k in ("repository", "msince") or \
                    k[0] == "[" and "]" in k:

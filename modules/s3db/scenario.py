@@ -261,7 +261,7 @@ class S3ScenarioAssetModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ScenarioHRModel(S3Model):
@@ -301,7 +301,7 @@ class S3ScenarioHRModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ScenarioMapModel(S3Model):
@@ -382,7 +382,7 @@ class S3ScenarioOrganisationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ScenarioSiteModel(S3Model):
@@ -421,7 +421,7 @@ class S3ScenarioSiteModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3ScenarioTaskModel(S3Model):
@@ -463,7 +463,7 @@ class S3ScenarioTaskModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # -----------------------------------------------------------------------------
 def scenario_rheader(r, tabs=[]):

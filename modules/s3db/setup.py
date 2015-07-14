@@ -270,13 +270,14 @@ class S3DeployModel(S3Model):
                    action = setup_UpgradeMethod,
                    )
 
-        return dict()
+        return {}
 
+    # -------------------------------------------------------------------------
     def defaults(self):
         """
         Safe defaults for model-global names in case module is disabled
         """
-        return dict()
+        return {}
 
 # -----------------------------------------------------------------------------
 def server_validation(form):

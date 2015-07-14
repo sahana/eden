@@ -232,6 +232,8 @@ def formstyle_foundation_inline(form, fields, *args, **kwargs):
                                      comment,
                                      _class="inline-tooltip tooltip",
                                      )
+            if hasattr(comment, "add_class"):
+                comment.add_class("inline-tooltip")
             controls_col.append(comment)
 
         _class = "form-row row hide" if hidden else "form-row row"

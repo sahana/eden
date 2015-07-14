@@ -32,6 +32,7 @@ __all__ = ("OutreachAreaModel",
            "OutreachReferralModel",
            "po_rheader",
            "po_organisation_onaccept",
+           "po_due_followups",
            )
 
 from ..s3 import *
@@ -52,6 +53,7 @@ class OutreachAreaModel(S3Model):
         auth = current.auth
 
         define_table = self.define_table
+        super_link = self.super_link
 
         s3 = current.response.s3
         crud_strings = s3.crud_strings
@@ -65,6 +67,8 @@ class OutreachAreaModel(S3Model):
         #
         tablename = "po_area"
         define_table(tablename,
+                     super_link("doc_id", "doc_entity"),
+                     super_link("pe_id", "pr_pentity"),
                      Field("name",
                            requires = IS_NOT_EMPTY(),
                            ),
@@ -72,6 +76,7 @@ class OutreachAreaModel(S3Model):
                      self.gis_location_id(
                         widget = S3LocationSelector(points = False,
                                                     polygons = True,
+                                                    feature_required = True,
                                                     ),
                      ),
                      # Only included to set realm entity:
@@ -79,6 +84,14 @@ class OutreachAreaModel(S3Model):
                                               readable = is_admin,
                                               writable = is_admin,
                                               ),
+                     Field("attempted_visits", "integer",
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Attempted Visits"),
+                                                           T("Number of households in the area where nobody was at home at the time of visit"))),
+                           default = 0,
+                           label = T("Attempted Visits"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(minimum=0)),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -132,6 +145,23 @@ class OutreachAreaModel(S3Model):
         # Table Configuration
         self.configure(tablename,
                        filter_widgets = filter_widgets,
+                       summary = ({"common": True,
+                                   "name": "add",
+                                   "widgets": [{"method": "create"}],
+                                   },
+                                  {"name": "table",
+                                   "label": "Table",
+                                   "widgets": [{"method": "datatable"}]
+                                   },
+                                  {"name": "map",
+                                   "label": "Map",
+                                   "widgets": [{"method": "map",
+                                                "ajax_init": True}],
+                                   },
+                                  ),
+                       super_entity = ("doc_entity", "pr_pentity"),
+                       onaccept = self.area_onaccept,
+                       ondelete = self.area_ondelete,
                        )
 
         # ---------------------------------------------------------------------
@@ -153,12 +183,91 @@ class OutreachAreaModel(S3Model):
         return {"po_area_id": lambda **attr: dummy("area_id"),
                 }
 
+    # -------------------------------------------------------------------------
+    @classmethod
+    def area_onaccept(cls, form):
+        """ Onaccept actions for po_area """
+
+        try:
+            record_id = form.vars.id
+        except AttributeError:
+            return
+        cls.area_update_affiliations(record_id)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def area_ondelete(cls, row):
+        """ Ondelete actions for po_area """
+
+        try:
+            record_id = row.id
+        except AttributeError:
+            return
+        cls.area_update_affiliations(record_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def area_update_affiliations(record_id):
+        """
+            Update affiliations for an area
+
+            @param record: the area record
+        """
+
+        ROLE = "Areas"
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.po_area
+        row = db(table.id == record_id).select(table.pe_id,
+                                               table.deleted,
+                                               table.deleted_fk,
+                                               table.organisation_id,
+                                               limitby=(0, 1),
+                                               ).first()
+        if not row:
+            return
+
+        # Get the organisation_id
+        if row.deleted:
+            try:
+                fk = json.loads(row.deleted_fk)
+                organisation_id = fk["organisation_id"]
+            except ValueError:
+                organisation_id = None
+        else:
+            organisation_id = row.organisation_id
+
+        # Get the PE ids
+        area_pe_id = row.pe_id
+        organisation_pe_id = s3db.pr_get_pe_id("org_organisation",
+                                               organisation_id,
+                                               )
+
+        # Remove obsolete affiliations
+        rtable = s3db.pr_role
+        atable = s3db.pr_affiliation
+        query = (atable.pe_id == row.pe_id) & \
+                (atable.deleted != True) & \
+                (atable.role_id == rtable.id) & \
+                (rtable.role == ROLE) & \
+                (rtable.pe_id != organisation_pe_id)
+        rows = db(query).select(rtable.pe_id)
+        for row in rows:
+            s3db.pr_remove_affiliation(row.pe_id, area_pe_id, role=ROLE)
+
+        # Add current affiliation
+        from pr import OU
+        s3db.pr_add_affiliation(organisation_pe_id, area_pe_id, role=ROLE, role_type=OU)
+
 # =============================================================================
 class OutreachHouseholdModel(S3Model):
 
     names = ("po_household",
              "po_household_id",
              "po_household_dwelling",
+             "po_age_group",
              "po_household_member",
              "po_household_followup",
              "po_household_social",
@@ -175,6 +284,7 @@ class OutreachHouseholdModel(S3Model):
 
         s3 = current.response.s3
         crud_strings = s3.crud_strings
+        settings = current.deployment_settings
 
         # ---------------------------------------------------------------------
         # Household
@@ -185,7 +295,19 @@ class OutreachHouseholdModel(S3Model):
                      super_link("pe_id", "pr_pentity"),
                      self.po_area_id(),
                      # @todo: inherit Lx from area and hide Lx (in area prep)
-                     self.gis_location_id(label=T("Address")),
+                     self.gis_location_id(
+                        label = T("Address"),
+                        widget = S3LocationSelector(show_address=True,
+                                                    show_map=settings.get_gis_map_selector(),
+                                                    show_postcode=settings.get_gis_postcode_selector(),
+                                                    prevent_duplicate_addresses = True,
+                                                    ),
+                        ),
+                     s3_date("date_visited",
+                             default = "now",
+                             empty = False,
+                             label = T("Date visited"),
+                             ),
                      Field("followup", "boolean",
                            default = False,
                            label = T("Follow up"),
@@ -234,6 +356,10 @@ class OutreachHouseholdModel(S3Model):
                           S3OptionsFilter("area_id",
                                           #hidden = True,
                                           ),
+                          S3DateFilter("date_visited",
+                                       label = T("Date visited"),
+                                       hidden = True,
+                                       ),
                           S3OptionsFilter("followup",
                                           cols = 2,
                                           hidden = True,
@@ -242,6 +368,10 @@ class OutreachHouseholdModel(S3Model):
                                        label = T("Follow-up Date"),
                                        hidden = True,
                                        ),
+                          S3OptionsFilter("household_followup.completed",
+                                          cols = 2,
+                                          hidden = True,
+                                          ),
                           S3OptionsFilter("organisation_household.organisation_id",
                                           hidden = True,
                                           ),
@@ -250,8 +380,10 @@ class OutreachHouseholdModel(S3Model):
         # List fields
         list_fields = ("area_id",
                        "location_id",
+                       "date_visited",
                        "followup",
                        "household_followup.followup_date",
+                       "household_followup.completed",
                        "organisation_household.organisation_id",
                        "comments",
                        )
@@ -260,12 +392,37 @@ class OutreachHouseholdModel(S3Model):
         report_axes = ["area_id",
                        "followup",
                        "organisation_household.organisation_id",
+                       "household_followup.completed",
+                       "household_followup.evaluation",
                        ]
         reports = ((T("Number of Households Visited"), "count(id)"),
                    )
 
+        # Custom Form
+        crud_form = S3SQLCustomForm("area_id",
+                                    "location_id",
+                                    "date_visited",
+                                    "followup",
+                                    S3SQLInlineComponent("contact",
+                                                         label = T("Contact Information"),
+                                                         fields = ["priority",
+                                                                   (T("Type"), "contact_method"),
+                                                                   (T("Number"), "value"),
+                                                                   "comments",
+                                                                   ],
+                                                         orderby = "priority",
+                                                         ),
+                                    "household_social.language",
+                                    "household_social.community",
+                                    "household_dwelling.dwelling_type",
+                                    "household_dwelling.type_of_use",
+                                    "household_dwelling.repair_status",
+                                    "comments",
+                                    )
+
         configure(tablename,
                   create_next = self.household_create_next,
+                  crud_form = crud_form,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.household_onaccept,
@@ -308,6 +465,19 @@ class OutreachHouseholdModel(S3Model):
                      household_id(),
                      self.pr_person_id(),
                      s3_comments(),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Household Member Age Groups (under 18,18-30,30-55,56-75,75+)
+        #
+        age_groups = ("<18", "18-30", "30-55", "56-75", "75+")
+        tablename = "po_age_group"
+        define_table(tablename,
+                     self.pr_person_id(),
+                     Field("age_group",
+                           label = T("Age Group"),
+                           requires = IS_EMPTY_OR(IS_IN_SET(age_groups)),
+                           ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
@@ -368,9 +538,10 @@ class OutreachHouseholdModel(S3Model):
                      Field("language",
                            label = T("Main Language"),
                            represent = S3Represent(options=languages),
-                           requires = IS_ISO639_2_LANGUAGE_CODE(select=None,
-                                                                sort=True,
-                                                                ),
+                           requires = IS_EMPTY_OR(
+                                        IS_ISO639_2_LANGUAGE_CODE(select=None,
+                                                                  sort=True,
+                                                                  )),
                            ),
                      Field("community", "text",
                            label = T("Community Connections"),
@@ -391,6 +562,8 @@ class OutreachHouseholdModel(S3Model):
                       "W": T("worse"),
                       }
 
+        twoweeks = current.request.utcnow + datetime.timedelta(days=14)
+
         tablename = "po_household_followup"
         define_table(tablename,
                      household_id(),
@@ -399,12 +572,16 @@ class OutreachHouseholdModel(S3Model):
                            ),
                      s3_date("followup_date",
                              label = T("Date for Follow-up"),
-                             default = current.request.utcnow + \
-                                       datetime.timedelta(days=14),
+                             default = twoweeks,
                              past = 0,
                              ),
                      Field("followup", "text",
                            label = T("Follow-up made"),
+                           ),
+                     Field("completed", "boolean",
+                           default = False,
+                           label = "Follow-up completed",
+                           represent = s3_yes_no_represent,
                            ),
                      Field("evaluation",
                            label = T("Evaluation"),
@@ -455,7 +632,7 @@ class OutreachHouseholdModel(S3Model):
         if r.function == "area":
             if follow_up:
                 return URL(f="household",
-                           args=["[id]", "contact"],
+                           args=["[id]", "person"],
                            vars=next_vars,
                            )
             else:
@@ -465,8 +642,8 @@ class OutreachHouseholdModel(S3Model):
                              )
         else:
             if follow_up:
-                return r.url(target="[id]",
-                             component="contact",
+                return r.url(id="[id]",
+                             component="person",
                              method="",
                              vars=next_vars,
                              )
@@ -496,11 +673,14 @@ class OutreachHouseholdModel(S3Model):
                          (ftable.deleted != True))
         row = current.db(htable.id == record_id).select(htable.id,
                                                         htable.followup,
+                                                        htable.realm_entity,
                                                         ftable.id,
                                                         left=left,
                                                         limitby=(0, 1)).first()
         if row and row[htable.followup] and not row[ftable.id]:
-            ftable.insert(household_id=row[htable.id])
+            ftable.insert(household_id=row[htable.id],
+                          realm_entity=row[htable.realm_entity],
+                          )
 
 # =============================================================================
 class OutreachReferralModel(S3Model):
@@ -567,6 +747,7 @@ class OutreachReferralModel(S3Model):
         crud_strings[tablename] = Storage(
             label_create = T("Add Agency"),
             title_update = T("Edit Referral Agency"),
+            label_list_button = T("List Agencies"),
             label_delete_button = T("Remove Agency"),
         )
 
@@ -581,7 +762,9 @@ class OutreachReferralModel(S3Model):
                                      comment=org_comment,
                                      ),
                      self.po_household_id(),
-                     s3_date(default="now"),
+                     s3_date(default="now",
+                             label=T("Date Referral Made"),
+                             ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -687,6 +870,7 @@ def po_rheader(r, tabs=[]):
                 tabs = [(T("Basic Details"), ""),
                         (T("Households"), "household"),
                         (T("Referral Agencies"), "organisation"),
+                        (T("Documents"), "document"),
                         ]
 
             rheader_fields = [["name"],
@@ -697,10 +881,10 @@ def po_rheader(r, tabs=[]):
             if not tabs:
                 tabs = [(T("Basic Details"), "")]
                 if record.followup:
-                    tabs.extend([(T("Contact Information"), "contact"),
-                                 (T("Social Information"), "household_social"),
+                    tabs.extend([#(T("Contact Information"), "contact"),
+                                 #(T("Social Information"), "household_social"),
+                                 #(T("Dwelling"), "household_dwelling"),
                                  (T("Members"), "person"),
-                                 (T("Dwelling"), "household_dwelling"),
                                  (T("Follow-up Details"), "household_followup"),
                                  (T("Referrals"), "organisation_household"),
                                  ])
@@ -746,5 +930,15 @@ def po_organisation_onaccept(form):
     row = current.db(query).select(rtable.id, limitby=(0, 1)).first()
     if not row:
         rtable.insert(organisation_id=organisation_id)
+
+# =============================================================================
+def po_due_followups():
+    """ Number of due follow-ups """
+
+    query = (FS("followup_date") <= datetime.datetime.utcnow().date()) & \
+            (FS("completed") != True)
+    resource = current.s3db.resource("po_household_followup", filter=query)
+
+    return resource.count()
 
 # END =========================================================================

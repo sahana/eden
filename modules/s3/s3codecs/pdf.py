@@ -3,7 +3,7 @@
 """
     S3 Adobe PDF codec
 
-    @copyright: 2011-14 (c) Sahana Software Foundation
+    @copyright: 2011-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -217,12 +217,16 @@ class S3RL_PDF(S3Codec):
         if title == None:
             title = "Report"
         docTitle = "%s %s" % (title, now)
-        self.filename = attr.get("pdf_filename")
-        if self.filename == None:
+        filename = attr.get("pdf_filename")
+        if filename is None:
             if not isinstance(title, str):
                 # Must be str not unicode
                 title = title.encode("utf-8")
-            self.filename = "%s_%s.pdf" % (title, now)
+            filename = "%s_%s.pdf" % (title, now)
+        elif len(filename) < 5 or filename[-4:] != ".pdf":
+            # Add extension
+            filename = "%s.pdf" % filename
+        self.filename = filename
 
         # Get the Doc Template
         paper_size = attr.get("paper_size")
@@ -1157,13 +1161,17 @@ class S3PDFTable(object):
 
 # =============================================================================
 class S3html2pdf():
+    """
+        Class that takes HTML in the form of web2py helper objects
+        and converts it to PDF
+    """
 
     def __init__(self,
                  pageWidth,
                  exclude_class_list = []):
         """
-            Method that takes html in the web2py helper objects
-            and converts it to pdf
+            @param pageWidth:
+            @param exclude_class_list:
         """
 
         # Fonts
@@ -1183,7 +1191,7 @@ class S3html2pdf():
         self.titlestyle.fontName = self.font_name_bold
         self.titlestyle.fontSize = 16
         self.normalstyle = self.plainstyle
-        # To add more pdf styles define the style above (just like the titlestyle)
+        # To add more PDF styles define the style above (just like the titlestyle)
         # Then add the style and the name to the lookup dict below
         # These can then be added to the html in the code as follows:
         # TD("Waybill", _class="pdf_title")
@@ -1192,6 +1200,7 @@ class S3html2pdf():
     # -------------------------------------------------------------------------
     def parse(self, html):
         """
+            Entry point for class
         """
 
         result = self.select_tag(html)
@@ -1298,13 +1307,13 @@ class S3html2pdf():
             src = html.attributes["_src"]
             root_dir = "%s%s%s" % (sep, current.request.application, sep)
             if uploadfolder:
-                src = src.rsplit(sep, 1)
+                src = src.rsplit("/", 1) # Don't use os.sep here
                 src = os.path.join(uploadfolder, src[1])
             elif src.startswith("%sstatic" % root_dir):
                 src = src.split(root_dir)[-1]
                 src = os.path.join(current.request.folder, src)
             else:
-                src = src.rsplit(sep, 1)
+                src = src.rsplit("/", 1) # Don't use os.sep here
                 src = os.path.join(current.request.folder,
                                    "uploads%s" % sep, src[1])
             if os.path.exists(src):
@@ -1331,6 +1340,7 @@ class S3html2pdf():
         I.drawWidth = width
         return [I]
 
+    # -------------------------------------------------------------------------
     def parse_p(self, html):
         """
             Parses a P element and converts it into a format for ReportLab

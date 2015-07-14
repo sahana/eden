@@ -751,17 +751,17 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
     # -------------------------------------------------------------------------
     def testDateTimeComparison(self):
-        """ 
+        """
             Test virtual field string value comparison against
             date/time value
         """
 
         assertTrue = self.assertTrue
         assertFalse = self.assertFalse
-        
+
         resource = current.s3db.resource("org_organisation")
         row = Storage()
-        
+
         # Test matching date
         query = FS("test") == datetime.datetime(2014,10,5).date()
 
@@ -771,7 +771,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         assertFalse(query(resource, row))
         row.test = ""
         assertFalse(query(resource, row))
-        
+
         # Test matching datetime
         query = FS("test") == datetime.datetime(2014,10,5,10,0,0)
 
@@ -786,7 +786,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
 
         # Test matching time
         query = FS("test") == datetime.time(10,0,0)
-        
+
         row.test = "10:00:00"
         assertTrue(query(resource, row))
         row.test = "11:00:00"
@@ -795,7 +795,7 @@ class ResourceFilterQueryTests(unittest.TestCase):
         assertFalse(query(resource, row))
         row.test = ""
         assertFalse(query(resource, row))
-        
+
     # -------------------------------------------------------------------------
     def tearDown(self):
 
@@ -2432,13 +2432,13 @@ class URLQueryParserTests(unittest.TestCase):
              ),
             ("pr_person",
              'last_name like "User*" or lower(contact.value) like "*example.com"',
-             {None: '((pr_person.last_name like "user%") or (pr_contact.value.lower() like "%example.com"))',
+             {None: '((pr_person.last_name.lower() like "user%") or (pr_contact.value.lower() like "%example.com"))',
               },
              ),
             ("pr_person",
              'last_name like "User*" and not(contact.value like "*example.com" or first_name like "Norm*")',
-             {None: '((pr_person.last_name like "user%") and (not (pr_person.first_name like "norm%")))',
-              "contact": '(not (pr_contact.value like "%example.com"))',
+             {None: '((pr_person.last_name.lower() like "user%") and (not (pr_person.first_name.lower() like "norm%")))',
+              "contact": '(not (pr_contact.value.lower() like "%example.com"))',
               },
              ),
             ("pr_person",
@@ -2448,6 +2448,10 @@ class URLQueryParserTests(unittest.TestCase):
             ("org_organisation",
              None,
              {},
+             ),
+            ("org_facility",
+             'organisation_id$name like "*YMCA*" or organisation_id$name like "*YWCA*"',
+             {None: '((org_organisation.name.lower() like "%ymca%") or (org_organisation.name.lower() like "%ywca%"))'},
              ),
             ("org_office",
              'not a valid expression',

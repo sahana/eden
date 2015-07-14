@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from gluon import *
-from s3 import S3CustomController, S3DataTable
+from s3 import S3CustomController, S3DataTable, S3Method, s3_request
 
 THEME = "NYC"
 
@@ -65,7 +65,7 @@ class index(S3CustomController):
         output["item"] = item
 
         # Login/Registration forms
-        self_registration = settings.get_security_self_registration()
+        self_registration = settings.get_security_registration_visible()
         registered = False
         login_form = None
         login_div = None
@@ -74,7 +74,7 @@ class index(S3CustomController):
 
         # Check logged in and permissions
         if system_roles.AUTHENTICATED not in roles:
-            
+
             login_buttons = DIV(A(T("Login"),
                                   _id="show-login",
                                   _class="tiny secondary button"),
@@ -96,7 +96,7 @@ $('#show-login').click(function(e){
  $('#intro').slideUp()
 })'''
             s3.jquery_ready.append(script)
-            
+
             # This user isn't yet logged-in
             if current.request.cookies.has_key("registered"):
                 # This browser has logged-in before
@@ -136,7 +136,7 @@ $('#login-btn').click(function(e){
  $('#login_form').show()
 })'''
                 s3.jquery_ready.append(register_script)
-                
+
             # Provide a login box on front page
             auth.messages.submit_button = T("Login")
             login_form = auth.login(inline=True)
@@ -159,7 +159,7 @@ $('#login-btn').click(function(e){
 
         self._view(THEME, "index.html")
         return output
-        
+
 # -----------------------------------------------------------------------------
 class network():
     """
@@ -469,4 +469,254 @@ class register(S3CustomController):
                     item=item,
                     )
 
-# END =========================================================================# END =========================================================================
+# =============================================================================
+class dashboard(S3CustomController):
+    """ Custom controller for personal dashboard """
+
+    def __call__(self):
+
+        auth = current.auth
+        if not auth.s3_logged_in():
+            auth.permission.fail()
+
+        # Use custom method
+        current.s3db.set_method("pr", "person",
+                                method = "dashboard",
+                                action = PersonalDashboard,
+                                )
+
+        # Call for currently logged-in person
+        r = s3_request("pr", "person",
+                       args=[str(auth.s3_logged_in_person()),
+                             "dashboard.%s" % auth.permission.format,
+                             ],
+                       r = current.request,
+                       )
+
+        return r()
+
+# =============================================================================
+class PersonalDashboard(S3Method):
+    """ Custom method for personal dashboard """
+
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the request (S3Request)
+            @param attr: REST controller parameters
+        """
+
+        if r.record and r.representation in ("html", "aadata"):
+
+            T = current.T
+            db = current.db
+            s3db = current.s3db
+
+            auth = current.auth
+            is_admin = auth.s3_has_role("ADMIN")
+            accessible = auth.s3_accessible_query
+
+            # Profile widgets
+            profile_widgets = []
+            add_widget = profile_widgets.append
+
+            dt_row_actions = self.dt_row_actions
+            from s3 import FS
+
+            # Organisations
+            widget = {"label": T("My Organizations"),
+                      "icon": "organisation",
+                      "insert": False,
+                      "tablename": "org_organisation",
+                      "type": "datatable",
+                      "actions": dt_row_actions("org", "organisation"),
+                      "list_fields": ["name",
+                                      (T("Type"), "organisation_organisation_type.organisation_type_id"),
+                                      "phone",
+                                      (T("Email"), "email.value"),
+                                      "website",
+                                      ],
+                      }
+            if not is_admin:
+                otable = s3db.org_organisation
+                rows = db(accessible("update", "org_organisation")).select(otable.id)
+                organisation_ids = [row.id for row in rows]
+                widget["filter"] = FS("id").belongs(organisation_ids)
+            add_widget(widget)
+
+            # Facilities
+            widget = {"label": T("My Facilities"),
+                      "icon": "facility",
+                      "insert": False,
+                      "tablename": "org_facility",
+                      "type": "datatable",
+                      "actions": dt_row_actions("org", "facility"),
+                      "list_fields": ["name",
+                                      "code",
+                                      "site_facility_type.facility_type_id",
+                                      "organisation_id",
+                                      "location_id",
+                                      ],
+                      }
+            if not is_admin:
+                ftable = s3db.org_facility
+                rows = db(accessible("update", "org_facility")).select(ftable.id)
+                facility_ids = [row.id for row in rows]
+                widget["filter"] = FS("id").belongs(facility_ids)
+            add_widget(widget)
+
+            # Networks (only if user can update any records)
+            widget_filter = None
+            if not is_admin:
+                gtable = s3db.org_group
+                rows = db(accessible("update", "org_group")).select(gtable.id)
+                group_ids = [row.id for row in rows]
+                if group_ids:
+                    widget_filter = FS("id").belongs(group_ids)
+            if is_admin or widget_filter:
+                widget = {"label": T("My Networks"),
+                          "icon": "org-network",
+                          "insert": False,
+                          "tablename": "org_group",
+                          "filter": widget_filter,
+                          "type": "datatable",
+                          "actions": dt_row_actions("org", "group"),
+                          }
+                add_widget(widget)
+
+            # Groups (only if user can update any records)
+            widget_filter = None
+            if not is_admin:
+                gtable = s3db.pr_group
+                rows = db(accessible("update", "pr_group")).select(gtable.id)
+                group_ids = [row.id for row in rows]
+                if group_ids:
+                    widget_filter = FS("id").belongs(group_ids)
+            if is_admin or widget_filter:
+                widget = {"label": T("My Groups"),
+                          "icon": "group",
+                          "insert": False,
+                          "tablename": "pr_group",
+                          "filter": widget_filter,
+                          "type": "datatable",
+                          "actions": dt_row_actions("hrm", "group"),
+                          "list_fields": [(T("Network"), "group_team.org_group_id"),
+                                          "name",
+                                          "description",
+                                          (T("Chairperson"), "chairperson"),
+                                          ],
+                          }
+                add_widget(widget)
+
+            # CMS Content
+            from gluon.html import A, DIV, H2, TAG
+            item = None
+            title = T("Dashboard")
+            if current.deployment_settings.has_module("cms"):
+                name = "Dashboard"
+                ctable = s3db.cms_post
+                query = (ctable.name == name) & (ctable.deleted != True)
+                row = db(query).select(ctable.id,
+                                       ctable.title,
+                                       ctable.body,
+                                       limitby=(0, 1)).first()
+                get_vars = {"page": name,
+                            "url": URL(args="dashboard", vars={}),
+                            }
+                if row:
+                    title = row.title
+                    if is_admin:
+                        item = DIV(XML(row.body),
+                                   DIV(A(T("Edit"),
+                                         _href=URL(c="cms", f="post",
+                                                   args=[row.id, "update"],
+                                                   vars=get_vars,
+                                                   ),
+                                         _class="action-btn",
+                                         ),
+                                       _class="cms-edit",
+                                       ),
+                                   )
+                    else:
+                        item = DIV(XML(row.body))
+                elif is_admin:
+                    item = DIV(DIV(A(T("Edit"),
+                                     _href=URL(c="cms", f="post",
+                                               args="create",
+                                               vars=get_vars,
+                                               ),
+                                     _class="action-btn",
+                                     ),
+                                   _class="cms-edit",
+                                   )
+                               )
+
+            # Rheader
+            if r.representation == "html":
+                # Dashboard title
+                profile_header = TAG[""](DIV(DIV(H2(title),
+                                                 _class="medium-6 columns end",
+                                                 ),
+                                             _class="row",
+                                             )
+                                         )
+                # CMS content
+                if item:
+                    profile_header.append(DIV(DIV(item,
+                                                  _class="medium-12 columns",
+                                                  ),
+                                              _class="row",
+                                              ))
+                # Dashboard links
+                dashboard_links = DIV(A(T("Personal Profile"),
+                                        _href = URL(c="default", f="person"),
+                                        _class = "action-btn",
+                                        ),
+                                      _class="dashboard-links",
+                                      _style="padding:0.5rem 0;"
+                                      )
+
+                profile_header.append(DIV(DIV(dashboard_links,
+                                              _class="medium-12 columns",
+                                              ),
+                                          _class="row",
+                                          ))
+            else:
+                profile_header = None
+
+            # Configure profile
+            tablename = r.tablename
+            s3db.configure(tablename,
+                           profile_cols = 2,
+                           profile_header = profile_header,
+                           profile_widgets = profile_widgets,
+                           )
+
+            # Render profile
+            from s3 import S3Profile
+            profile = S3Profile()
+            profile.tablename = tablename
+            profile.request = r
+            output = profile.profile(r, **attr)
+
+            if r.representation == "html":
+                output["title"] = \
+                current.response.title = T("Personal Dashboard")
+            return output
+        else:
+            raise HTTP(501, current.ERROR.BAD_METHOD)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def dt_row_actions(c, f):
+        """ Data table row actions """
+
+        return lambda r, list_id: [
+            {"label": current.deployment_settings.get_ui_label_update(),
+             "url": URL(c=c, f=f, args=["[id]", "update"]),
+             "_class": "action-btn edit",
+             },
+        ]
+
+# END =========================================================================

@@ -2615,7 +2615,7 @@ def config(settings):
                     s3.dl_rowsize = 2
 
                     # Just show L1s (Districts)
-                    s3.filter = (table.level == "L1")
+                    r.resource.add_filter(table.level == "L1")
                     # Default 5 triggers an AJAX call, we should load all by default
                     s3.dl_pagelength = 13
 
@@ -3998,7 +3998,7 @@ def config(settings):
                 result = standard_prep(r)
 
             # Filter Out Docs from Newsfeed & Projects
-            current.response.s3.filter = (table.name != None)
+            r.resource.add_filter(table.name != None)
 
             if r.interactive:
                 s3.crud_strings[tablename] = Storage(

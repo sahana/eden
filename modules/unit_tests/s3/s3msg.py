@@ -20,7 +20,7 @@ class S3OutboxTests(unittest.TestCase):
     def setUp(self):
 
         current.auth.override = True
-    
+
         # Backup normal method
         self.save_email = current.msg.send_email
         xmlstr = """
@@ -68,7 +68,7 @@ class S3OutboxTests(unittest.TestCase):
         resource = s3db.resource("pr_person")
         resource.import_xml(xmltree)
         self.assertTrue(resource.error is None)
-        
+
         resource = s3db.resource("org_organisation")
         resource.import_xml(xmltree)
         self.assertTrue(resource.error is None)
@@ -93,7 +93,7 @@ class S3OutboxTests(unittest.TestCase):
         s3db.update_super(mailbox, record)
         self.message_id = record.message_id
         self.assertTrue(self.message_id > 0)
-        
+
         self.sent = []
 
     # -------------------------------------------------------------------------
@@ -122,7 +122,7 @@ class S3OutboxTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testProcessEmailToGroup(self):
         """ Test processing emails to groups """
-        
+
         s3db = current.s3db
         resource = s3db.resource("pr_group", uid=["MsgTestGroup"])
         rows = resource.select(["pe_id"], as_rows=True)
@@ -144,7 +144,7 @@ class S3OutboxTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     def testProcessEmailToOrganisation(self):
         """ Test processing emails to organisations """
-        
+
         s3db = current.s3db
         resource = s3db.resource("org_organisation", uid=["MsgTestOrg"])
         rows = resource.select(["pe_id"], as_rows=True)

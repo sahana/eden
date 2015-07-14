@@ -101,22 +101,7 @@ def config(settings):
     # Uncomment to control the dataTables layout: https://datatables.net/reference/option/dom
     settings.ui.datatables_dom = "<'data-info row'<'large-4 columns'i><'large-3 columns'l><'large-3 columns search'f><'large-2 columns right'>r><'dataTable_table't><'row'p>"
     # Move the export_formats inside the row above it
-    settings.ui.datatables_initComplete = \
-    '''
-    $('.dataTables_paginate').after($('.dt-export-options'))
-    $('.dataTables_wrapper').prepend($('#filter-form'))
-    $('#filter-form').addClass('data-sort')
-    $('#summary-filter-form').children().first().addClass('row').wrap('<div class="data-filter"></div>')
-    $('#summary-filter-form').prepend($('.dataTables_wrapper .data-info'))
-    $('.data-filter').hide()
-    $('.data-sort .large-3.columns select').addClass('large-5')
-    $('.data-sort .search').append('<div class="row collapse"><div class="small-10 columns"></div></div>')
-    $('.data-sort .search .small-10').after($('.search_text')).remove()
-    $('.search_text').wrap('<div class="small-10 columns"></div>')
-    $('.data-sort .search .small-10').after('<div class="small-2 columns"><a class="button postfix" href="#"><i class="fi-magnifying-glass"></i></a></div>')
-    $('.data-sort .right').html('<a id="js-toggle-filters" class="button tiny right">%s</a>')
-    $('#js-toggle-filters').click(function(){$('.data-filter').slideToggle()})
-    ''' % T("Filter")
+    settings.ui.datatables_initComplete = '''$('.dataTables_paginate').after($('.dt-export-options'))'''
     # Uncomment for dataTables to use a different paging style:
     settings.ui.datatables_pagingType = "bootstrap"
     settings.ui.export_formats = ("xls", "xml")
@@ -799,7 +784,7 @@ def config(settings):
                                                       header = True,
                                                       ),
                                       S3DateFilter("date",
-                                                   label = None,
+                                                   #label = None,
                                                    hide_time = True,
                                                    input_labels = {"ge": "From", "le": "To"}
                                                    )
@@ -830,7 +815,7 @@ def config(settings):
                                    # Hide Open & Delete dataTable action buttons
                                    deletable = False,
                                    editable = False,
-                                   filter_formstyle = filter_formstyle,
+                                   #filter_formstyle = filter_formstyle,
                                    filter_widgets = filter_widgets,
                                    report_options = report_options,
                                    )
@@ -985,6 +970,8 @@ def config(settings):
                                "comments",
                                ]
 
+                s3db.org_facility.location_id.represent = s3db.gis_LocationRepresent(address_only=True)
+
                 s3db.configure(tablename,
                                # Hide Open & Delete dataTable action buttons
                                deletable = False,
@@ -1036,9 +1023,9 @@ def config(settings):
                                                     "service_organisation.service_id",
                                                     "comments"
                                                     ],
-                                                    label = "",
+                                                    label = T("Search"),
                                                     _class = "search_text",
-                                                    _placeholder = T("Search"),
+                                                    #_placeholder = T("Search"),
                                                     ),
                                       S3OptionsFilter("group_membership.group_id",
                                                       represent = "%(name)s",
@@ -1084,7 +1071,7 @@ def config(settings):
                         )
 
                     s3db.configure(tablename,
-                                   filter_formstyle = filter_formstyle,
+                                   #filter_formstyle = filter_formstyle,
                                    filter_widgets = filter_widgets,
                                    icon = "organization", # Used for Create Icon in Summary View
                                    report_options = report_options,
@@ -1202,7 +1189,7 @@ def config(settings):
                                            S3SQLInlineComponent("facility",
                                                     label = T("Organization's Addresses"),
                                                     fields = [("", "location_id"),
-                                                            ],
+                                                              ],
                                                     columns = (10,),
                                                     multiple = True,
                                            ))
@@ -1821,7 +1808,7 @@ def config(settings):
                                    # Hide Open & Delete dataTable action buttons
                                    editable = False,
                                    deletable = False,
-                                   filter_formstyle = filter_formstyle,
+                                   #filter_formstyle = filter_formstyle,
                                    filter_widgets = filter_widgets,
                                    report_options = report_options,
                                    )

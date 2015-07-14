@@ -427,7 +427,7 @@ def email_inbox():
                                     label = T("Attachments"),
                                     fields = ["document_id",
                                               ],
-                                    ),                                                                
+                                    ),
                                 )
 
     tablename = "msg_email"
@@ -1586,7 +1586,7 @@ def twitter_result():
             # Display the Tweet as an Embedded tweet
             record = output["item"].record
             # Tweet link
-            twitter_url = "https://twitter.com/%s/statuses/%s" % (record.from_address, 
+            twitter_url = "https://twitter.com/%s/statuses/%s" % (record.from_address,
                                                                   record.tweet_id)
             script_url = "https://platform.twitter.com/widgets.js"
             # Themeable Throbber
@@ -1604,17 +1604,17 @@ def twitter_result():
                           "_data-conversation": "none",
                           "_class": "twitter-tweet",
                           "lang": record.lang,
-                          } 
+                          }
             tweet = TAG["blockquote"](tweet_container,
                                       tweet_user,
                                       SCRIPT(_src = script_url,
                                              _charset = "utf-8"),
                                       **attributes
-                                      ) 
-            # Insert tweet 
+                                      )
+            # Insert tweet
             output["item"] = tweet
         return output
-    
+
     s3.postp = postp
 
     return s3_rest_controller()

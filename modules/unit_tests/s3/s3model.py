@@ -66,9 +66,9 @@ class S3SuperEntityTests(unittest.TestCase):
     # -------------------------------------------------------------------------
     @classmethod
     def tearDownClass(cls):
-        
+
         db = current.db
-        
+
         # Drop all test tables
         db.setest_component_cascade.drop()
         db.setest_component_setnull.drop()
@@ -96,7 +96,7 @@ class S3SuperEntityTests(unittest.TestCase):
 
         current.db.rollback()
         current.auth.override = False
-        
+
     # -------------------------------------------------------------------------
     def testDeleteSuper(self):
         """ Test delete_super without constraints """
@@ -150,7 +150,7 @@ class S3SuperEntityTests(unittest.TestCase):
         component_record = component_table[component_id]
         self.assertTrue(component_record.deleted)
         self.assertEqual(component_record.se_id, None)
-        
+
         # Super-record is deleted
         super_table = s3db.setest_super
         super_record = super_table[se_id]

@@ -23,7 +23,7 @@ def index_alt():
     """
 
     # Just redirect to the Demographic Data
-    redirect(URL(f="demographic_data", args="summary"))
+    s3_redirect_default(URL(f="demographic_data", args="summary"))
 
 # -----------------------------------------------------------------------------
 def parameter():
@@ -67,7 +67,7 @@ def demographic_aggregate():
                      f="demographic_aggregate",
                      args="",
                      ))
-        
+
     s3db.set_method("stats", "demographic_aggregate",
                     method="clear",
                     action=clear_aggregates)
@@ -86,7 +86,7 @@ def people():
     """ REST Controller """
 
     return s3_rest_controller()
-    
+
 # -----------------------------------------------------------------------------
 def trained_type():
     """ REST Controller """
@@ -99,4 +99,10 @@ def trained():
 
     return s3_rest_controller()
 
- # END =========================================================================
+# -----------------------------------------------------------------------------
+def impact_type():
+    """ REST Controller for impact types """
+
+    return s3_rest_controller()
+
+# END =========================================================================

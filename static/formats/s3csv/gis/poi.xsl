@@ -667,7 +667,7 @@
         <xsl:variable name="l4id" select="concat('L4/', $countrycode, '/', $l1, '/', $l2, '/', $l3, '/', $l4)"/>
         <xsl:variable name="l5id" select="concat('L5/', $countrycode, '/', $l1, '/', $l2, '/', $l3, '/', $l4, '/', $l5)"/>
 
-        <!-- Office Location -->
+        <!-- PoI Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat($lat, $lon, $wkt)"/>

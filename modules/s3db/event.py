@@ -213,11 +213,13 @@ class S3EventModel(S3Model):
                                  label = T("Start Date"),
                                  represent = "date",
                                  widget = "date",
+                                 set_min = "#event_event_end_date",
                                  ),
                      s3_datetime("end_date",
                                  label = T("End Date"),
                                  represent = "date",
                                  widget = "date",
+                                 set_max = "#event_event_start_date",
                                  ),
                      Field.Method("year", self.event_event_year),
                      Field("closed", "boolean",
@@ -750,6 +752,12 @@ class S3IncidentModel(S3Model):
                                           "autocomplete": "name",
                                           "autodelete": True,
                                           },
+                            stats_impact = {"link": "event_event_impact",
+                                            "joinby": "incident_id",
+                                            "key": "impact_id",
+                                            "actuate": "replace",
+                                            "autodelete": True,
+                                            },
                             )
 
         # Custom Method to Assign HRs
@@ -959,7 +967,7 @@ class S3IncidentReportModel(S3Model):
                           # @ToDo: Use link tables?
                           #self.event_event_id(ondelete = "CASCADE"),
                           #self.event_incident_id(ondelete = "CASCADE"),
-                          s3_datetime(),
+                          s3_datetime(default="now"),
                           Field("name", notnull=True,
                                 label = T("Title"),
                                 ),
@@ -1010,7 +1018,7 @@ class S3IncidentReportModel(S3Model):
                             )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventResourceModel(S3Model):
@@ -1030,7 +1038,7 @@ class S3EventResourceModel(S3Model):
 
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Event Resource Model needs Stats module enabling")
-            return dict()
+            return {}
 
         T = current.T
         super_link = self.super_link
@@ -1179,7 +1187,7 @@ class S3EventResourceModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3IncidentReportOrganisationGroupModel(S3Model):
@@ -1210,7 +1218,7 @@ class S3IncidentReportOrganisationGroupModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3IncidentTypeModel(S3Model):
@@ -1378,7 +1386,7 @@ class S3IncidentTypeTagModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventActivityModel(S3Model):
@@ -1403,7 +1411,7 @@ class S3EventActivityModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventAlertModel(S3Model):
@@ -1501,7 +1509,7 @@ class S3EventAlertModel(S3Model):
             msg_list_empty = T("No Recipients currently defined"))
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventAssetModel(S3Model):
@@ -1588,7 +1596,7 @@ class S3EventAssetModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1661,7 +1669,7 @@ class S3EventCMSModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventHRModel(S3Model):
@@ -1754,7 +1762,7 @@ class S3EventHRModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1790,7 +1798,7 @@ class S3EventImpactModel(S3Model):
 
         if not current.deployment_settings.has_module("stats"):
             current.log.warning("Event Impact Model needs Stats module enabling")
-            return dict()
+            return {}
 
         #T = current.T
 
@@ -1800,14 +1808,61 @@ class S3EventImpactModel(S3Model):
         tablename = "event_event_impact"
         self.define_table(tablename,
                           self.event_event_id(ondelete = "CASCADE"),
-                          #self.event_incident_id(ondelete = "CASCADE"),
+                          self.event_incident_id(ondelete = "CASCADE"),
                           self.stats_impact_id(empty = False,
-                                               ondelete = "RESTRICT",
+                                               ondelete = "CASCADE",
                                                ),
                           *s3_meta_fields())
 
+        # Table configuration
+        self.configure(tablename,
+                       onaccept = self.event_impact_onaccept,
+                       )
+
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event_impact_onaccept(form):
+        """
+            Onaccept-routine for event_impact links:
+                - populate event_id from incident if empty
+        """
+
+        try:
+            formvars = form.vars
+            record_id = formvars.id
+        except KeyError:
+            return
+        if not record_id:
+            return
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.event_event_impact
+
+        # Make sure we have both keys
+        if any(f not in formvars for f in ("event_id", "incident_id")):
+            query = (table.id == record_id)
+            record = db(query).select(table.id,
+                                      table.event_id,
+                                      table.incident_id,
+                                      limitby=(0, 1)).first()
+            if not record:
+                return
+        else:
+            record = formvars
+
+        # If event_id is empty - populate it from the incident
+        if not record.event_id and record.incident_id:
+            itable = s3db.event_incident
+            query = (itable.id == record.incident_id)
+            incident = db(query).select(itable.event_id,
+                                        limitby=(0, 1)).first()
+            if incident:
+                db(table.id == record_id).update(event_id=incident.event_id)
 
 # =============================================================================
 class S3EventIReportModel(S3Model):
@@ -1849,7 +1904,7 @@ class S3EventIReportModel(S3Model):
             msg_list_empty = T("No Incident Reports currently registered in this incident"))
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventMapModel(S3Model):
@@ -1889,7 +1944,7 @@ class S3EventMapModel(S3Model):
             msg_list_empty = T("No Map Profiles currently registered in this incident"))
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventOrganisationModel(S3Model):
@@ -1946,7 +2001,7 @@ class S3EventOrganisationModel(S3Model):
             msg_list_empty = T("No Organizations currently registered in this incident"))
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3EventSiteModel(S3Model):
@@ -2048,7 +2103,7 @@ class S3EventSiteModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2118,7 +2173,7 @@ class S3EventSitRepModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2189,7 +2244,7 @@ class S3EventTaskModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2268,7 +2323,7 @@ class S3EventShelterModel(S3Model):
                 )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 def event_notification_dispatcher(r, **attr):
@@ -2658,22 +2713,37 @@ def event_rheader(r):
             # Incident Controller
             tabs = [(T("Incident Details"), None)]
             append = tabs.append
+
+            # Impact tab
+            if settings.get_event_incident_impact_tab():
+                append((T("Impact"), "impact"))
+
+            # Tasks tab
             if settings.has_module("project"):
                 append((T("Tasks"), "task"))
+
+            # Staff tab
             if settings.has_module("hrm"):
                 STAFF = settings.get_hrm_staff_label()
                 append((STAFF, "human_resource"))
                 if current.auth.s3_has_permission("create", "event_human_resource"):
                      append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
+
+            # Asset tab
             if settings.has_module("asset"):
                 append((T("Assets"), "asset"))
+
+            # Other tabs
             tabs.extend(((T("Facilities"), "site"), # Inc Shelters
                          (T("Organizations"), "organisation"),
                          (T("SitReps"), "sitrep"),
                          (T("Map Profile"), "config"),
                          ))
+
+            # Messaging tab
             if settings.has_module("msg"):
                 append((T("Send Notification"), "dispatch"))
+
             rheader_tabs = s3_rheader_tabs(r, tabs)
 
             record = r.record

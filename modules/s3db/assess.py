@@ -30,6 +30,7 @@
 __all__ = ("S3Assess24HModel",
            "S3AssessBuildingModel",
            "S3AssessCanvassModel",
+           "S3AssessNeedsModel",
            )
 
 from gluon import *
@@ -37,6 +38,7 @@ from gluon.storage import Storage
 from gluon.tools import callback
 from ..s3 import *
 
+# @ToDo: Shouldn't have T at module level
 T = current.T
 
 # Common to both Building & Canvass
@@ -80,9 +82,6 @@ class S3Assess24HModel(S3Model):
                           self.gis_location_id(
                             widget = S3LocationSelector(show_map = False),
                             ),
-                          Field("inhabitants", "integer",
-                                label = T("Approximate number of inhabitants"),
-                                ),
                           Field("inhabitants", "integer",
                                 label = T("Approximate number of inhabitants"),
                                 ),
@@ -130,7 +129,7 @@ class S3Assess24HModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class S3AssessBuildingModel(S3Model):
@@ -1088,6 +1087,150 @@ class S3AssessCanvassModel(S3Model):
         self.configure(tablename,
                        filter_widgets = filter_widgets,
                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class S3AssessNeedsModel(S3Model):
+    """
+        Needs Assessment form
+        - based on Iraqi Red Crescent requirements
+    """
+
+    names = ("assess_need",
+             "assess_needs",
+             "assess_needs_demographic_data",
+             "assess_needs_needs_data",
+             )
+
+    def model(self):
+
+        T = current.T
+        s3 = current.response.s3
+
+        if s3.bulk:
+            # Don't default the Team leader name for Bulk Imports
+            default_person = None
+        else:
+            default_person = current.auth.s3_logged_in_person()
+
+        crud_strings = s3.crud_strings
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Need
+        #
+        tablename = "assess_need"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Need"),
+            title_display = T("Need Details"),
+            title_list = T("Needs"),
+            title_update = T("Edit Need"),
+            label_list_button = T("List Needs"),
+            label_delete_button = T("Delete Need"),
+            msg_record_created = T("Need added"),
+            msg_record_modified = T("Need updated"),
+            msg_record_deleted = T("Need deleted"),
+            msg_list_empty = T("No Needs found")
+        )
+
+        # ---------------------------------------------------------------------
+        # Needs Assessment
+        #
+        tablename = "assess_needs"
+        define_table(tablename,
+                     #self.pr_person_id(
+                     #  default = default_person,
+                     #  label = ("Name of Assessment Team Leader"),
+                     #  ),
+                     #s3_date(default = "now"),
+                     Field("name",
+                           label = T("Name"), # of Camp
+                           ),
+                     self.gis_location_id(
+                       widget = S3LocationSelector(show_map = False),
+                       ),
+                     #self.pr_person_id("contact_id",
+                     #  comment = None,
+                     #  label = ("Name of contact person in the community"),
+                     #  requires = IS_ADD_PERSON_WIDGET2(),
+                     #  widget = S3AddPersonWidget2(),
+                     #  ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Assessment"),
+            title_display = T("Assessment Details"),
+            title_list = T("Assessments"),
+            title_update = T("Edit Assessment"),
+            label_list_button = T("List Assessments"),
+            label_delete_button = T("Delete Assessment"),
+            msg_record_created = T("Assessment added"),
+            msg_record_modified = T("Assessment updated"),
+            msg_record_deleted = T("Assessment deleted"),
+            msg_list_empty = T("No Assessments found")
+        )
+
+        # Components
+        self.add_components(tablename,
+                            assess_needs_need_data = {"name": "need",
+                                                      "joinby": "assessment_id",
+                                                      },
+                            assess_needs_demographic_data = {"name": "demographic",
+                                                             "joinby": "assessment_id",
+                                                             },
+                            )
+
+        # ---------------------------------------------------------------------
+        # Needs Assessment Demographic Data
+        #
+        tablename = "assess_needs_demographic_data"
+        define_table(tablename,
+                     Field("assessment_id", "reference assess_needs",
+                           readable = False,
+                           writable = False,
+                           ),
+                     self.stats_demographic_id,
+                     Field("value", "integer",
+                           label = T("Value"),
+                           ),
+                     *s3_meta_fields()
+                     )
+
+        # ---------------------------------------------------------------------
+        # Needs Assessment Data
+        #
+        tablename = "assess_needs_need_data"
+        define_table(tablename,
+                     Field("assessment_id", "reference assess_needs",
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("need_id", "reference assess_need",
+                           label = T("Need"),
+                           represent = S3Represent(lookup="assess_need",
+                                                   translate=True),
+                           writable = False,
+                           ),
+                     Field("value", "boolean",
+                           label = T("Value"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     *s3_meta_fields()
+                     )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

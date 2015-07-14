@@ -23,7 +23,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Shelters
-    redirect(URL(f="shelter"))
+    s3_redirect_default(URL(f="shelter"))
 
 # =============================================================================
 def shelter_type():

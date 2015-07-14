@@ -1,0 +1,19 @@
+{{extend "layout.html"}}
+<div class="row">
+ <div class="medium-8 small-12 columns">
+  <div class="row">
+    <div class="small-12 columns home-cms">
+      <!-- space for CMS contents -->
+      {{=item}}
+    </div>
+  </div>
+  <div class="row hide-for-small">
+    <div class="small-12 columns home-dashboard">
+       <!-- space for dashboard -->
+    </div>
+  </div>
+ </div>
+ <div class="medium-4 columns hide-for-small">
+  <img class="right home-map" src="/{{=appname}}/static/themes/RMSAmericas/img/map2.jpg"/>
+ </div>
+</div>

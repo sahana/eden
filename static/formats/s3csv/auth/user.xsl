@@ -18,7 +18,7 @@
          @ToDo: Add support for Sites to auth.s3_import_prep
          - meanwhile, can add these via hrm/person.xsl
          Facility Type...........s3db[tablename]
-         Site....................org_site.name
+         Office..................org_site.name
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -68,11 +68,6 @@
             <xsl:if test="col[@field='Language']!=''">
                 <data field="language"><xsl:value-of select="col[@field='Language']"/></data>
             </xsl:if>
-
-            <!-- Every user must have the authenticated role -->
-            <resource name="auth_membership">
-                <reference field="group_id" resource="auth_group" uuid="AUTHENTICATED"/>
-            </resource>
 
             <!-- Add other roles as per list -->
             <xsl:variable name="roles" select="col[@field='Role']/text()"/>

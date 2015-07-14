@@ -47,7 +47,7 @@ class RootOrgUpdateTests(unittest.TestCase):
         row = db(otable.id == record_id).select(otable.id,
                                                 otable.root_organisation,
                                                 limitby=(0, 1)).first()
-                                                 
+
         self.assertNotEqual(row, None)
         self.assertEqual(row.root_organisation, row.id)
 

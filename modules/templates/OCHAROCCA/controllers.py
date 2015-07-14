@@ -58,13 +58,13 @@ class index(S3CustomController):
             data[code]["location"] = count
             data["total"]["location"] += count
 
-            # Administrative Areas, Demographic Data, Baseline 
+            # Administrative Areas, Demographic Data, Baseline
             for table, tablename in ((ltable, "gis_location"),
-                                     (ddtable, "stats_demographic_data"), 
+                                     (ddtable, "stats_demographic_data"),
                                      (vdtable, "vulnerability_data")):
 
                 count_field = table._id.count()
-                
+
                 query = base_query & \
                         (level_field.belongs(levels))
                 if tablename != "gis_location":

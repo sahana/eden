@@ -23,7 +23,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Requests
-    redirect(URL(f="req"))
+    s3_redirect_default(URL(f="req"))
 
 # -----------------------------------------------------------------------------
 def is_affiliated():
@@ -254,11 +254,7 @@ def req_controller(template = False):
                     s3.crud_strings["req_req"].label_create = T("Make People Request")
 
                 # Filter the query based on type
-                if s3.filter:
-                    s3.filter = s3.filter & \
-                                (table.type == type)
-                else:
-                    s3.filter = (table.type == type)
+                r.resource.add_filter(table.type == type)
 
             # These changes are applied via JS in create forms where type is editable
             if type == 1: # Item
@@ -268,7 +264,8 @@ def req_controller(template = False):
                     table.purpose.label = T("What the Items will be used for")
                 table.site_id.label = T("Deliver To")
                 table.request_for_id.label = T("Deliver To")
-                table.requester_id.label = T("Site Contact")
+                # Keep consistency, don't change
+                #table.requester_id.label = T("Site Contact")
                 table.recv_by_id.label = T("Delivered To")
 
             elif type == 3: # Person
@@ -324,7 +321,7 @@ def req_controller(template = False):
                     # Hide fields which don't make sense in a Create form
                     # - includes one embedded in list_create
                     # - list_fields over-rides, so still visible within list itself
-                    s3.req_create_form_mods()
+                    s3db.req_create_form_mods()
 
                     if type and settings.get_req_inline_forms():
                         # Inline Forms
@@ -353,10 +350,13 @@ def req_controller(template = False):
                     # Tell the client to request per-feature markers
                     s3db.configure("req_req", marker_fn=marker_fn)
 
-            # Prevent Items from being added to closed or cancelled requests
-            if r.record and (r.record.closed or r.record.cancel):
-                s3db.configure("req_req_item",
-                               insertable = False)
+            if r.record:
+                # @ToDo: Prevent deletion of Requests which have had items sent
+                if r.record.closed or r.record.cancel:
+                    # Prevent Items from being added to closed or cancelled requests
+                    s3db.configure("req_req_item",
+                                   insertable = False,
+                                   )
 
         elif r.representation == "plain":
             # Map Popups
@@ -397,9 +397,9 @@ def req_controller(template = False):
 
             table.site_id.requires = IS_IN_SET(site_opts)
             if (commit_status == 2) and settings.get_req_restrict_on_complete():
-                # Restrict from committing to completed requests                
+                # Restrict from committing to completed requests
                 listadd = False
-            else:    
+            else:
                 # Allow commitments to be added when doing so as a component
                 listadd = True
 
@@ -457,7 +457,8 @@ $.filterOptionsS3({
                             "comments",
                         )
                     s3db.configure("req_commit",
-                                   crud_form = crud_form)
+                                   crud_form = crud_form,
+                                   )
                     # Redirect to the Items tab after creation
                     #s3db.configure(table,
                     #               create_next = URL(c="req", f="commit",
@@ -479,22 +480,23 @@ $.filterOptionsS3({
                     # Custom Form
                     s3forms = s3base.s3forms
                     crud_form = s3forms.S3SQLCustomForm(
-                            "site_id",
-                            "date",
-                            "date_available",
-                            "committer_id",
-                            s3forms.S3SQLInlineComponent(
-                                "commit_skill",
-                                label = T("Skills"),
-                                fields = ["quantity",
-                                          "skill_id",
-                                          "comments"
-                                          ]
-                            ),
-                            "comments",
+                        "site_id",
+                        "date",
+                        "date_available",
+                        "committer_id",
+                        s3forms.S3SQLInlineComponent(
+                            "commit_skill",
+                            label = T("Skills"),
+                            fields = ["quantity",
+                                      "skill_id",
+                                      "comments"
+                                      ]
+                        ),
+                        "comments",
                         )
                     s3db.configure("req_commit",
-                                   crud_form = crud_form)
+                                   crud_form = crud_form,
+                                   )
                     # Redirect to the Skills tab after creation
                     #s3db.configure(table,
                     #               create_next = URL(c="req", f="commit",
@@ -553,7 +555,7 @@ $.filterOptionsS3({
                                            # _class="action-btn"))
                         # output["buttons"]["delete_btn"] = delete_btn
                 if not template and settings.get_req_use_commit():
-                    # This is appropriate to all
+                    # This is appropriate to both Items and People
                     s3.actions.append(
                         dict(url = URL(c="req", f="req",
                                        args=["[id]", "commit_all"]),
@@ -587,34 +589,59 @@ $.filterOptionsS3({
                 #         restrict = restrict
                 #        )
                 #    )
-                s3.actions.append(
+                if settings.get_req_copyable():
+                    s3.actions.append(
                         dict(url = URL(c="req", f="req",
                                        args=["[id]", "copy_all"]),
-                             _class = "action-btn send-btn copy_all",
-                             label = str(T("Copy"))
+                             _class = "action-btn copy_all",
+                             label = s3_unicode(T("Copy")).encode("utf8")
                             )
                         )
+                    confirm = T("Are you sure you want to create a new request as a copy of this one?")
+                    s3.jquery_ready.append('''S3.confirmClick('.copy_all','%s')''' % confirm)
                 if not template:
-                    s3.actions.append(
-                            dict(url = URL(c="req", f="req",
-                                           args=["[id]", "commit_all", "send"]),
-                                 _class = "action-btn send-btn dispatch",
-                                 label = str(T("Send"))
+                    if settings.get_req_use_commit():
+                        s3.actions.append(
+                                dict(url=URL(c="req", f="req",
+                                             args=["[id]", "commit_all", "send"]),
+                                     _class="action-btn send-btn dispatch",
+                                     label=s3_unicode(T("Send")).encode("utf8")
+                                     )
                                 )
-                            )
-                    s3.jquery_ready.append(
-'''S3.confirmClick('.send-btn','%s')''' % T("Are you sure you want to commit to this request and send a shipment?"))
+                        confirm = T("Are you sure you want to commit to this request and send a shipment?")
+                        s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+                    elif auth.user and auth.user.site_id:
+                        s3.actions.append(
+                                     # Better to force users to go through the Check process
+                                dict(#url=URL(c="req", f="send_req",
+                                     #        args=["[id]"],
+                                     #        vars=dict(site_id=auth.user.site_id)
+                                     #        ),
+                                     url=URL(c="req", f="req",
+                                             args=["[id]", "check"],
+                                             vars={"site_id": auth.user.site_id}
+                                             ),
+                                     _class="action-btn send-btn dispatch",
+                                     #label=s3_unicode(T("Send")).encode("utf8")
+                                     label=s3_unicode(T("Check")).encode("utf8"),
+                                     )
+                                )
+                        confirm = T("Are you sure you want to send a shipment for this request?")
+                        s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+
             else:
                 s3_action_buttons(r)
-                if r.component.name == "req_item" and settings.get_req_prompt_match():
-                    req_item_inv_item_btn = dict(url = URL(c = "req",
-                                                           f = "req_item_inv_item",
-                                                           args = ["[id]"]
-                                                          ),
-                                                 _class = "action-btn",
-                                                 label = str(T("Request from Facility")),
-                                                 )
-                    s3.actions.append(req_item_inv_item_btn)
+                if r.component.name == "req_item" and \
+                   settings.get_req_prompt_match():
+                    s3.actions.append(
+                            dict(url = URL(c = "req",
+                                           f = "req_item_inv_item",
+                                           args = ["[id]"]
+                                           ),
+                                 _class = "action-btn",
+                                 label = s3_unicode(T("Request from Facility")).encode("utf8"),
+                                 )
+                        )
                 if r.component.name == "commit":
                     if "form" in output:
                         id = r.record.id
@@ -635,7 +662,7 @@ S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this reques
                                           dict(url = URL(c="req", f="send_commit",
                                                          args = ["[id]"]),
                                                _class = "action-btn send-btn",
-                                               label = str(T("Prepare Shipment"))
+                                               label = s3_unicode(T("Prepare Shipment")).encode("utf8")
                                               )
                                        )
                             s3.jquery_ready.append(
@@ -660,7 +687,8 @@ S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this reques
     s3.postp = postp
 
     return s3_rest_controller("req", "req",
-                              rheader = s3db.req_rheader)
+                              rheader = s3db.req_rheader,
+                              )
 
 # =============================================================================
 def requester_represent(id, show_link=True):
@@ -731,13 +759,16 @@ def req_item():
         s3.filter = (FS("req_id$is_template") == False)
 
     def prep(r):
-        
+
         if r.interactive or r.representation == "aadata":
 
             list_fields = s3db.get_config("req_req_item", "list_fields")
             list_fields.insert(1, "req_id$site_id")
-            list_fields.insert(1, "req_id$site_id$location_id$L4")
-            list_fields.insert(1, "req_id$site_id$location_id$L3")
+            levels = gis.get_relevant_hierarchy_levels()
+            levels.reverse()
+            for level in levels:
+                lfield = "req_id$site_id$location_id$%s" % level
+                list_fields.insert(1, lfield)
             s3db.configure("req_req_item",
                            insertable = False,
                            list_fields = list_fields,
@@ -971,7 +1002,7 @@ def commit():
                                               _href=URL(c="default",
                                                         f="user",
                                                         args=["profile"]))
-                    
+
                     jappend = s3.jquery_ready.append
                     jappend('''
 $('#req_commit_site_id_link').click(function(){
@@ -987,7 +1018,7 @@ $('#req_commit_site_id_link').click(function(){
 })''')
                     # Dropdown not Autocomplete
                     s3db.req_commit_item.req_item_id.widget = None
-                    
+
                     # Options updater for inline items
                     if not r.component:
                         jappend('''
@@ -1336,14 +1367,6 @@ def send_req():
 
     req_id = request.args[0]
     site_id = request.vars.get("site_id", None)
-    site_name = s3db.org_site_represent(site_id, show_link=False)
-
-    ritable = s3db.req_req_item
-    iitable = s3db.inv_inv_item
-    sendtable = s3db.inv_send
-    tracktable = s3db.inv_track_item
-    siptable = s3db.supply_item_pack
-
     table = s3db.req_req
     r_req = db(table.id == req_id).select(table.req_ref,
                                           table.requester_id,
@@ -1360,6 +1383,38 @@ def send_req():
         redirect(URL(c="req", f="req",
                      args = [req_id]))
 
+    ritable = s3db.req_req_item
+    iitable = s3db.inv_inv_item
+    sendtable = s3db.inv_send
+    tracktable = s3db.inv_track_item
+    siptable = s3db.supply_item_pack
+
+    # Get the items for this request that have not been fulfilled or in transit
+    sip_id_field = siptable.id
+    sip_quantity_field = siptable.quantity
+    query = (ritable.req_id == req_id) & \
+            (ritable.quantity_transit < ritable.quantity) & \
+            (ritable.deleted == False) & \
+            (ritable.item_pack_id == sip_id_field)
+    req_items = db(query).select(ritable.id,
+                                 ritable.quantity,
+                                 ritable.quantity_transit,
+                                 ritable.quantity_fulfil,
+                                 ritable.item_id,
+                                 sip_quantity_field
+                                 )
+
+    if not req_items:
+        # Can't use site_name as gluon/languages.py def translate has a str() which can give a Unicode error
+        #site_name = s3db.org_site_represent(site_id, show_link=False)
+        session.warning = \
+            T("This request has no items outstanding!")
+
+        # Redirect to view the list of items in the Request
+        redirect(URL(c="req", f="req",
+                     args=[req_id, "req_item"])
+                 )
+
     # Create a new send record
     code = s3db.supply_get_shipping_code("WB",
                                          site_id,
@@ -1375,22 +1430,8 @@ def send_req():
                                status = s3db.inv_ship_status["IN_PROCESS"],
                                )
 
-    # Get the items for this request that have not been fulfilled (in transit)
-    sip_id_field = siptable.id
-    sip_quantity_field = siptable.quantity
-    query = (ritable.req_id == req_id) & \
-            (ritable.quantity_transit < ritable.quantity) & \
-            (ritable.deleted == False) & \
-            (ritable.item_pack_id == sip_id_field)
-    req_items = db(query).select(ritable.id,
-                                 ritable.quantity,
-                                 ritable.quantity_transit,
-                                 ritable.quantity_fulfil,
-                                 ritable.item_id,
-                                 sip_quantity_field
-                                 )
-
-    # Loop through each request item and find matched in the site inventory
+    # Loop through each request item and find matches in the site inventory
+    # - don't match items which are expired or in bad condition
     IN_PROCESS = s3db.inv_tracking_status["IN_PROCESS"]
     insert = tracktable.insert
     inv_remove = s3db.inv_remove
@@ -1410,11 +1451,14 @@ def send_req():
                 iitable.owner_org_id,
                 iitable.supply_org_id,
                 sip_quantity_field,
+                iitable.item_source_no,
                 ]
     bquery = (ii_quantity_field > 0) & \
              (iitable.site_id == site_id) & \
              (iitable.deleted == False) & \
-             (iitable.item_pack_id == sip_id_field)
+             (iitable.item_pack_id == sip_id_field) & \
+             ((iitable.expiry_date >= request.now) | ((iitable.expiry_date == None))) & \
+             (iitable.status == 0)
     orderby = ii_expiry_field | ii_purchase_field
 
     no_match = True
@@ -1428,7 +1472,7 @@ def send_req():
                                      orderby=orderby)
 
         if len(inv_items) == 0:
-            break;
+            continue
         no_match = False
         one_match = len(inv_items) == 1
         # Get the Quantity Needed
@@ -1489,6 +1533,7 @@ def send_req():
                    expiry_date = iitem.expiry_date,
                    owner_org_id = iitem.owner_org_id,
                    supply_org_id = iitem.supply_org_id,
+                   item_source_no = iitem.item_source_no,
                    #comments = comment,
                    )
         # 2nd pass
@@ -1513,17 +1558,19 @@ def send_req():
                    expiry_date = iitem.expiry_date,
                    owner_org_id = iitem.owner_org_id,
                    supply_org_id = iitem.supply_org_id,
+                   item_source_no = iitem.item_source_no,
                    #comments = comment,
                    )
 
     if no_match:
+        # Can't use %(site_name)s as gluon/languages.py def translate has a str() which can give a Unicode error
+        #site_name = s3db.org_site_represent(site_id, show_link=False)
         session.warning = \
-            T("%(site)s has no items exactly matching this request. There may still be other items in stock which can fulfill this request!") % \
-                dict(site=site_name)
+            T("This site has no items exactly matching this request. There may still be other items in stock which can fulfill this request!")
 
     # Redirect to view the list of items in the Send
-    redirect(URL(c = "inv", f = "send",
-                 args = [send_id, "track_item"])
+    redirect(URL(c="inv", f="send",
+                 args=[send_id, "track_item"])
              )
 
 # =============================================================================

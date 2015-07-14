@@ -19,10 +19,10 @@ def index():
     mode = session.s3.hrm.mode
     if mode is not None:
         # Go to Personal Profile
-        redirect(URL(f="person"))
+        s3_redirect_default(URL(f="person"))
     else:
         # Bypass home page & go direct to searchable list of Staff
-        redirect(URL(f="staff", args="summary"))
+        s3_redirect_default(URL(f="staff", args="summary"))
 
 # =============================================================================
 # People
@@ -113,8 +113,8 @@ def staff():
                 if r.method == "import":
                     # Redirect to person controller
                     redirect(URL(f="person",
-                                args="import",
-                                vars={"group": "staff"}))
+                                 args="import",
+                                 vars={"group": "staff"}))
                 elif not r.component and r.method != "delete":
                     # Configure site_id
                     field = table.site_id
@@ -138,8 +138,10 @@ def staff():
                     table.status.writable = table.status.readable = False
 
                     # Assume staff only between 16-81
-                    s3db.pr_person.date_of_birth.widget = S3DateWidget(past=972,
-                                                                       future=-192)
+                    dob = s3db.pr_person.date_of_birth
+                    dob.widget = S3CalendarWidget(past_months = 972,
+                                                  future_months = -192,
+                                                  )
         elif r.representation == "xls":
             # Make it match Import sheets
             list_fields = s3db.get_config(tablename, "list_fields")
@@ -176,9 +178,6 @@ def staff():
     def postp(r, output):
         if r.interactive:
             if not r.component:
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
                 s3_action_buttons(r, deletable=settings.get_hrm_deletable())
                 if "msg" in settings.modules and \
                    settings.get_hrm_compose_button() and \
@@ -271,27 +270,15 @@ def profile():
                 table.missing.readable = table.missing.writable = False
                 table.age_group.readable = table.age_group.writable = False
                 # Assume volunteers only between 12-81
-                table.date_of_birth.widget = S3DateWidget(past=972, future=-144)
+                dob = table.date_of_birth
+                dob.widget = S3CalendarWidget(past_months = 972,
+                                              future_months = -144,
+                                              )
                 return True
         else:
             # Disable non-interactive & import
             return False
     s3.prep = prep
-
-    # CRUD post-process
-    def postp(r, output):
-        if r.interactive and r.component:
-            if r.component_name == "human_resource":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_human_resource_start_date','hrm_human_resource_end_date')''')
-            if r.component_name == "experience":
-                # Set the minimum end_date to the same as the start_date
-                s3.jquery_ready.append(
-'''S3.start_end_date('hrm_experience_start_date','hrm_experience_end_date')''')
-
-        return output
-    s3.postp = postp
 
     output = s3_rest_controller("pr", "person",
                                 rheader = s3db.hrm_rheader,

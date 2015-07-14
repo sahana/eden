@@ -7,7 +7,7 @@ require(['converse'], function (converse) {
         debug: true ,
         hide_muc_server: false,
         // @ToDo: Support other locales
-        i18n: geti18nSetting(),
+        i18n: geti18nSetting,
         prebind: false,
         show_controlbox_by_default: true,
         xhr_user_search: false

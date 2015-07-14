@@ -2082,19 +2082,19 @@ class S3XML(S3Codec):
                 attributes = child.attrib
                 if native:
                     if tag == TAG.resource:
-                        resource = attributes[ATTRIBUTE.name]
+                        resource = attributes.get(ATTRIBUTE.name)
                         tag = "%s_%s" % (PREFIX.resource, resource)
                         collapse = False
                     elif tag == TAG.options:
-                        r = attributes[ATTRIBUTE.resource]
+                        r = attributes.get(ATTRIBUTE.resource)
                         tag = "%s_%s" % (PREFIX.options, r)
                         single = is_single(TAG.options, ATTRIBUTE.resource, r)
                     elif tag == TAG.reference:
-                        f = attributes[ATTRIBUTE.field]
+                        f = attributes.get(ATTRIBUTE.field)
                         tag = "%s_%s" % (PREFIX.reference, f)
                         single = is_single(TAG.reference, ATTRIBUTE.field, f)
                     elif tag == TAG.data:
-                        tag = attributes[ATTRIBUTE.field]
+                        tag = attributes.get(ATTRIBUTE.field)
                         single = is_single(TAG.data, ATTRIBUTE.field, tag)
                 else:
                     for s in iterchildren(tag=tag):
@@ -2431,6 +2431,10 @@ class S3XML(S3Codec):
                 types = s.row_types(ridx, *cols)
                 values = s.row_values(ridx, *cols)
 
+                # Skip empty rows
+                if not any(v != "" for v in values):
+                    continue
+
                 if header_row and record_idx == 0:
                     # Read column headers
                     if not fields:
@@ -2578,11 +2582,14 @@ class S3XML(S3Codec):
                                     quotechar=quotechar)
             ROW = TAG.row
             for i, r in enumerate(reader):
+                # Skip empty rows
+                if not any(r.values()):
+                    continue
                 if i == 0:
                     # Auto-detect hashtags
                     items = dict((k, s3_unicode(v.strip()))
                                  for k, v in r.items() if k and v and v.strip())
-                    if all(v[0] == '#' for v in items.values()):
+                    if all(v[0] == "#" for v in items.values()):
                         hashtags.update(items)
                         continue
                 row = SubElement(root, ROW)

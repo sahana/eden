@@ -350,6 +350,14 @@ S3.trunk8 = function(selector, lines, more) {
             }
         });
     });
+    // Attach to any new items after Ajax-listUpdate (dataTables)
+    $('.dataTable').on('draw.dt', function() {
+        $(this).find(selector).each(function() {
+            if (this.trunk8 === undefined) {
+                $(this).trunk8(settings);
+            }
+        });
+    });
 };
 
 // ============================================================================
@@ -1292,7 +1300,6 @@ S3.openPopup = function(url, center) {
 
         var trigger = settings.trigger, triggerName;
 
-
         if (settings.event) {
             triggerName = settings.event;
         } else if (typeof trigger == 'string') {
@@ -1330,9 +1337,18 @@ S3.openPopup = function(url, center) {
         }
 
         // Initial event-less update of the target(s)
-        $(triggerSelector).last().each(function() {
+        $(triggerSelector).each(function() {
             var trigger = $(this),
                 $scope;
+            // Hidden inline rows must not trigger an initial update
+            // @note: check visibility of the row not of the trigger, e.g.
+            //        AutoComplete triggers are always hidden!
+            // @note: must check for CSS explicitly, not just visibility because
+            //        the entire form could be hidden (e.g. list-add)
+            var inlineRow = trigger.closest('.inline-form');
+            if (inlineRow.length && (inlineRow.hasClass('empty-row') || inlineRow.css('display') == 'none')) {
+                return;
+            }
             if (settings.scope == 'row') {
                 $scope = trigger.closest('.edit-row.inline-form,.add-row.inline-form');
             } else {

@@ -31,6 +31,7 @@
 
 import os
 import re
+import sys
 
 try:
     import json # try stdlib (Python 2.6)
@@ -39,6 +40,8 @@ except ImportError:
         import simplejson as json # try external module
     except:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
+
+from itertools import product
 
 from gluon import current
 from gluon.storage import Storage
@@ -49,12 +52,18 @@ from gluon.validators import IS_IN_SET, IS_EMPTY_OR
 
 from s3query import FS
 from s3rest import S3Method
+from s3utils import s3_flatlist, s3_has_foreign_key, s3_unicode, S3MarkupStripper, s3_represent_value
 from s3xml import S3XMLFormat
+from s3validators import IS_NUMBER
 
 layer_pattern = re.compile("([a-zA-Z]+)\((.*)\)\Z")
 
 # Compact JSON encoding
+DEFAULT = lambda: None
 SEPARATORS = (",", ":")
+
+FACT = re.compile(r"([a-zA-Z]+)\(([a-zA-Z0-9_.$:\,~]+)\),*(.*)\Z")
+SELECTOR = re.compile(r"^[a-zA-Z0-9_.$:\~]+\Z")
 
 # =============================================================================
 class S3Report(S3Method):
@@ -101,20 +110,14 @@ class S3Report(S3Method):
                 show_filter_form = True
                 S3FilterForm.apply_filter_defaults(r, resource)
 
-        # Filter
-        response = current.response
-        s3_filter = response.s3.filter
-        if s3_filter is not None:
-            resource.add_filter(s3_filter)
-
         widget_id = "pivottable"
 
         # @todo: make configurable:
-        maxrows = 10
-        maxcols = 10
+        maxrows = 20
+        maxcols = 20
 
         # Extract the relevant GET vars
-        report_vars = ("rows", "cols", "fact", "aggregate", "totals")
+        report_vars = ("rows", "cols", "fact", "totals")
         get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
                         if k in report_vars)
 
@@ -134,31 +137,22 @@ class S3Report(S3Method):
 
             rows = get_vars.get("rows", None)
             cols = get_vars.get("cols", None)
+
             layer = get_vars.get("fact", "id")
-
-            if layer is not None:
-                m = layer_pattern.match(layer)
-                if m is None:
-                    # Backward-compatiblity: alternative "aggregate" option
-                    selector = layer
-                    if get_vars and "aggregate" in get_vars:
-                        method = get_vars["aggregate"]
-                    else:
-                        method = "count"
-                else:
-                    selector, method = m.group(2), m.group(1)
-
-            if not layer or not any([rows, cols]):
+            try:
+                facts = S3PivotTableFact.parse(layer)
+            except SyntaxError:
+                current.log.error(sys.exc_info()[1])
+                facts = None
+            if not facts or not any([rows, cols]):
                 pivottable = None
             else:
                 prefix = resource.prefix_selector
-                selector = prefix(selector)
-                layer = (selector, method)
                 get_vars["rows"] = prefix(rows) if rows else None
                 get_vars["cols"] = prefix(cols) if cols else None
-                get_vars["fact"] = "%s(%s)" % (method, selector)
+                get_vars["fact"] = ",".join("%s(%s)" % (fact.method, fact.selector) for fact in facts)
 
-                pivottable = resource.pivottable(rows, cols, [layer])
+                pivottable = S3PivotTable(resource, rows, cols, facts)
         else:
             pivottable = None
 
@@ -221,7 +215,7 @@ class S3Report(S3Method):
             self._view(r, "pivottable.html")
 
             # View
-            response.view = self._view(r, "report.html")
+            current.response.view = self._view(r, "report.html")
 
         elif r.representation == "json":
 
@@ -249,12 +243,6 @@ class S3Report(S3Method):
         # Set response headers
         response.headers["Content-Type"] = s3.content_type.get("geojson",
                                                                "application/json")
-
-        # Filter
-        s3_filter = s3.filter
-        if s3_filter is not None:
-            resource.add_filter(s3_filter)
-
         if not resource.count():
             # No Data
             return json.dumps({})
@@ -294,7 +282,7 @@ class S3Report(S3Method):
                 # Show Points
                 resource.clear_query()
                 # Apply URL filters (especially BBOX)
-                resource.build_query(filter=s3_filter, vars=get_vars)
+                resource.build_query(filter=s3.filter, vars=get_vars)
 
                 # Extract the Location Data
                 xmlformat = S3XMLFormat(stylesheet)
@@ -356,7 +344,7 @@ class S3Report(S3Method):
                     return json.dumps({})
                 resource.clear_query()
                 # Apply URL filters (especially BBOX)
-                resource.build_query(filter=s3_filter, vars=get_vars)
+                resource.build_query(filter=s3.filter, vars=get_vars)
                 level = "L%s" % (level - 1)
                 if context and "location" in context:
                     # @ToDo: We can add sanity-checking using resource.parse_bbox_query() as a guide if-desired
@@ -371,15 +359,9 @@ class S3Report(S3Method):
         if not output:
             # Build the Pivot Table
             cols = None
-            layer = get_vars.get("fact",
-                                 defaults.get("fact",
-                                              "count(id)"))
-            m = layer_pattern.match(layer)
-            selector, method = m.group(2), m.group(1)
-            prefix = resource.prefix_selector
-            selector = prefix(selector)
-            layer = (selector, method)
-            pivottable = resource.pivottable(rows, cols, [layer])
+            layer = get_vars.get("fact", defaults.get("fact", "count(id)"))
+            facts = S3PivotTableFact.parse(layer)[:1]
+            pivottable = S3PivotTable(resource, rows, cols, facts)
 
             # Extract the Location Data
             #attr_fields = []
@@ -406,7 +388,7 @@ class S3Report(S3Method):
                     #    attr_fields.append(attribute)
                     #attr_fields = ",".join(attr_fields)
 
-            ids, location_data = pivottable.geojson(layer=layer, level=level)
+            ids, location_data = pivottable.geojson(fact=facts[0], level=level)
 
             # Export as GeoJSON
             current.xml.show_ids = True
@@ -446,17 +428,12 @@ class S3Report(S3Method):
         resource = self.resource
         get_config = resource.get_config
 
-        # Filter
-        s3_filter = current.response.s3.filter
-        if s3_filter is not None:
-            resource.add_filter(s3_filter)
-
         # @todo: make configurable:
         maxrows = 20
         maxcols = 20
 
         # Extract the relevant GET vars
-        report_vars = ("rows", "cols", "fact", "aggregate", "totals")
+        report_vars = ("rows", "cols", "fact", "totals")
         get_vars = dict((k, v) for k, v in r.get_vars.iteritems()
                         if k in report_vars)
 
@@ -476,32 +453,23 @@ class S3Report(S3Method):
 
             rows = get_vars.get("rows", None)
             cols = get_vars.get("cols", None)
+
             layer = get_vars.get("fact", "id")
-
-            # Backward-compatiblity: alternative "aggregate" option
-            if layer is not None:
-                m = layer_pattern.match(layer)
-                if m is None:
-                    selector = layer
-                    if get_vars and "aggregate" in get_vars:
-                        method = get_vars["aggregate"]
-                    else:
-                        method = "count"
-                else:
-                    selector, method = m.group(2), m.group(1)
-
-            if not layer or not any([rows, cols]):
+            try:
+                facts = S3PivotTableFact.parse(layer)
+            except SyntaxError:
+                current.log.error(sys.exc_info()[1])
+                facts = None
+            if not facts or not any([rows, cols]):
                 pivottable = None
             else:
                 prefix = resource.prefix_selector
-                selector = prefix(selector)
-                layer = (selector, method)
                 get_vars["rows"] = prefix(rows) if rows else None
                 get_vars["cols"] = prefix(cols) if cols else None
-                get_vars["fact"] = "%s(%s)" % (method, selector)
+                get_vars["fact"] = ",".join("%s(%s)" % (fact.method, fact.selector) for fact in facts)
 
                 if visible:
-                    pivottable = resource.pivottable(rows, cols, [layer])
+                    pivottable = S3PivotTable(resource, rows, cols, facts)
                 else:
                     pivottable = None
         else:
@@ -888,8 +856,7 @@ class S3ReportForm(object):
 
         resource = self.resource
 
-        from s3data import S3PivotTable
-        all_methods = S3PivotTable.METHODS
+        all_methods = S3PivotTableFact.METHODS
 
         # Get all layers
         layers = None
@@ -909,7 +876,7 @@ class S3ReportForm(object):
         # Resolve layer options
         T = current.T
         RECORDS = T("Records")
-        mname = S3PivotTable._get_method_label
+        mname = S3PivotTableFact._get_method_label
 
         def layer_label(rfield, method):
             """ Helper to construct a layer label """
@@ -921,18 +888,39 @@ class S3ReportForm(object):
         prefix = resource.prefix_selector
 
         layer_opts = []
-        for layer in layers:
+        for option in layers:
 
-            # Parse option
-            if type(layer) is tuple:
-                label, s = layer
+            if isinstance(option, tuple):
+                title, layer = option
             else:
-                label, s = None, layer
-            match = layer_pattern.match(s)
-            if match is not None:
-                s, m = match.group(2), match.group(1)
+                title, layer = None, option
+
+            try:
+                facts = S3PivotTableFact.parse(layer)
+            except SyntaxError:
+                continue
+
+            if len(facts) > 1:
+                # Multi-fact layer
+                labels = []
+                expressions = []
+                for fact in facts:
+                    if not title:
+                        rfield = resource.resolve_selector(fact.selector)
+                        labels.append(fact.get_label(rfield, layers))
+                    expressions.append("%s(%s)" % (fact.method, fact.selector))
+                if not title:
+                    title = " / ".join(labels)
+                layer_opts.append((",".join(expressions), title))
+                continue
             else:
-                m = None
+                fact = facts[0]
+
+            label = fact.label or title
+            if fact.default_method:
+                s, m = fact.selector, None
+            else:
+                s, m = fact.selector, fact.method
 
             # Resolve the selector
             selector = prefix(s)
@@ -1043,5 +1031,1387 @@ class S3ReportForm(object):
                         ),
                         widgets,
                         **attr)
+
+# =============================================================================
+class S3PivotTableFact(object):
+    """ Class representing a fact layer """
+
+    #: Supported aggregation methods
+    METHODS = {"list": "List",
+               "count": "Count",
+               "min": "Minimum",
+               "max": "Maximum",
+               "sum": "Total",
+               "avg": "Average",
+               #"std": "Standard Deviation"
+               }
+
+
+    def __init__(self, method, selector, label=None, default_method=True):
+        """
+            Constructor
+
+            @param method: the aggregation method
+            @param selector: the field selector
+            @param label: the fact label
+            @param default_method: using default method (used by parser)
+        """
+
+        if method is None:
+            method = "count"
+            default_method = True
+        if method not in self.METHODS:
+            raise SyntaxError("Unsupported aggregation function: %s" % method)
+
+        self.method = method
+        self.selector = selector
+
+        self._layer = None
+        self.label = label
+
+        self.resource = None
+        self.rfield = None
+        self.column = selector
+
+        self.default_method = default_method
+
+    # -------------------------------------------------------------------------
+    @property
+    def layer(self):
+
+        layer = self._layer
+        if not layer:
+            layer = self._layer = (self.selector, self.method)
+        return layer
+
+    # -------------------------------------------------------------------------
+    def compute(self, values, method=DEFAULT, totals=False):
+        """
+            Aggregate a list of values.
+
+            @param values: iterable of values
+        """
+
+        if values is None:
+            return None
+
+        if method is DEFAULT:
+            method = self.method
+        if totals and method == "list":
+            method = "count"
+
+        if method is None or method == "list":
+            return values if values else None
+
+        values = [v for v in values if v != None]
+
+        if method == "count":
+            return len(values)
+
+        elif method == "min":
+            try:
+                return min(values)
+            except (TypeError, ValueError):
+                return None
+
+        elif method == "max":
+            try:
+                return max(values)
+            except (TypeError, ValueError):
+                return None
+
+        elif method == "sum":
+            try:
+                return sum(values)
+            except (TypeError, ValueError):
+                return None
+
+        elif method == "avg":
+            try:
+                if len(values):
+                    return sum(values) / float(len(values))
+                else:
+                    return 0.0
+            except (TypeError, ValueError):
+                return None
+
+        #elif method == "std":
+            #import numpy
+            #if not values:
+                #return 0.0
+            #try:
+                #return numpy.std(values)
+            #except (TypeError, ValueError):
+                #return None
+
+        return None
+
+    # -------------------------------------------------------------------------
+    def aggregate_totals(self, totals):
+        """
+            Aggregate totals for this fact (hyper-aggregation)
+
+            @param totals: iterable of totals
+        """
+
+        if self.method in ("list", "count"):
+            total = self.compute(totals, method="sum")
+        else:
+            total = self.compute(totals)
+        return total
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def parse(cls, fact):
+        """
+            Parse fact expression
+
+            @param fact: the fact expression
+        """
+
+        if isinstance(fact, tuple):
+            label, fact = fact
+        else:
+            label = None
+
+        if isinstance(fact, list):
+            facts = []
+            for f in fact:
+                facts.extend(cls.parse(f))
+            if not facts:
+                raise SyntaxError("Invalid fact expression: %s" % fact)
+            return facts
+
+        # Parse the fact
+        other = None
+        default_method = False
+        if not fact:
+            method, parameters = "count", "id"
+        else:
+            match = FACT.match(fact)
+            if match:
+                method, parameters, other = match.groups()
+                if other:
+                    other = cls.parse((label, other) if label else other)
+            elif SELECTOR.match(fact):
+                method, parameters, other = "count", fact, None
+                default_method = True
+            else:
+                raise SyntaxError("Invalid fact expression: %s" % fact)
+
+        # Validate method
+        if method not in cls.METHODS:
+            raise SyntaxError("Unsupported aggregation method: %s" % method)
+
+        # Extract parameters
+        parameters = parameters.split(",")
+
+        selector = parameters[0]
+
+        facts = [cls(method,
+                     selector,
+                     label=label,
+                     default_method=default_method,
+                     ),
+                 ]
+        if other:
+            facts.extend(other)
+        return facts
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _get_method_label(cls, code):
+        """
+            Get a label for a method
+
+            @param code: the method code
+            @return: the label (lazyT), or None for unsupported methods
+        """
+
+        methods = cls.METHODS
+
+        if code is None:
+            code = "list"
+        if code in methods:
+            return current.T(methods[code])
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _get_field_label(rfield, fact_options=None):
+        """
+            Get the label for a field
+
+            @param rfield: the S3ResourceField
+            @param fact_options: the corresponding subset of the report
+                                 options ("fact", "rows" or "cols")
+        """
+
+        label = None
+
+        if not rfield:
+            return
+        resource = rfield.resource
+
+        fields = list(fact_options) if fact_options else []
+
+        list_fields = resource.get_config("list_fields")
+        if list_fields:
+            fields.extend(list_fields)
+
+        prefix = resource.prefix_selector
+
+        # Search through the field labels in report options
+        selector = prefix(rfield.selector)
+        for f in fields:
+            if type(f) is tuple and \
+                isinstance(f[1], basestring) and \
+                prefix(f[1]) == selector:
+                label = f[0]
+                break
+
+        if not label and rfield:
+            if rfield.ftype == "id":
+                label = current.T("Records")
+            else:
+                label = rfield.label
+
+        return label if label else ""
+
+    # -------------------------------------------------------------------------
+    def get_label(self, rfield, fact_options=None):
+        """
+            Get a label for this fact
+
+            @param rfield: the S3ResourceField
+            @param fact_options: the "fact" list of the report options
+        """
+
+        label = self.label
+        if label:
+            # Already set
+            return label
+
+
+        if fact_options:
+            # Lookup the label from the fact options
+            prefix = rfield.resource.prefix_selector
+            for fact_option in fact_options:
+                facts = self.parse(fact_option)
+                for fact in facts:
+                    if fact.method == self.method and \
+                       prefix(fact.selector) == prefix(self.selector):
+                        label = fact.label
+                        break
+                if label:
+                    break
+
+        if not label:
+            # Construct a label from the field label and the method name
+            field_label = self._get_field_label(rfield, fact_options)
+            method_label = self._get_method_label(self.method)
+            label = "%s (%s)" % (field_label, method_label)
+
+        self.label = label
+        return label
+
+# =============================================================================
+class S3PivotTable(object):
+    """ Class representing a pivot table of a resource """
+
+    def __init__(self, resource, rows, cols, facts, strict=True):
+        """
+            Constructor - extracts all unique records, generates a
+            pivot table from them with the given dimensions and
+            computes the aggregated values for each cell.
+
+            @param resource: the S3Resource
+            @param rows: field selector for the rows dimension
+            @param cols: field selector for the columns dimension
+            @param facts: list of S3PivotTableFacts to compute
+            @param strict: filter out dimension values which don't match
+                           the resource filter
+        """
+
+        # Initialize ----------------------------------------------------------
+        #
+        if not rows and not cols:
+            raise SyntaxError("No rows or columns specified for pivot table")
+
+        self.resource = resource
+
+        self.lfields = None
+        self.dfields = None
+        self.rfields = None
+
+        self.rows = rows
+        self.cols = cols
+        self.facts = facts
+
+        # API variables -------------------------------------------------------
+        #
+        self.records = None
+        """ All records in the pivot table as a Storage like:
+                {
+                 <record_id>: <Row>
+                }
+        """
+
+        self.empty = False
+        """ Empty-flag (True if no records could be found) """
+        self.numrows = None
+        """ The number of rows in the pivot table """
+        self.numcols = None
+        """ The number of columns in the pivot table """
+
+        self.cell = None
+        """ Array of pivot table cells in [rows[columns]]-order, each
+            cell is a Storage like:
+                {
+                 records: <list_of_record_ids>,
+                 (<fact>, <method>): <aggregated_value>, ...per layer
+                }
+        """
+        self.row = None
+        """ List of row headers, each header is a Storage like:
+                {
+                 value: <dimension value>,
+                 records: <list_of_record_ids>,
+                 (<fact>, <method>): <total value>, ...per layer
+                }
+        """
+        self.col = None
+        """ List of column headers, each header is a Storage like:
+                {
+                 value: <dimension value>,
+                 records: <list_of_record_ids>,
+                 (<fact>, <method>): <total value>, ...per layer
+                }
+        """
+        self.totals = Storage()
+        """ The grand total values for each layer, as a Storage like:
+                {
+                 (<fact>, <method): <total value>, ...per layer
+                }
+        """
+
+        self.values = {}
+
+        # Get the fields ------------------------------------------------------
+        #
+        tablename = resource.tablename
+
+        # The "report_fields" table setting defines which additional
+        # fields shall be included in the report base layer. This is
+        # useful to provide easy access to the record data behind a
+        # pivot table cell.
+        fields = current.s3db.get_config(tablename, "report_fields", [])
+
+        self._get_fields(fields=fields)
+        rows = self.rows
+        cols = self.cols
+
+        # Retrieve the records ------------------------------------------------
+        #
+        data = resource.select(self.rfields.keys(), limit=None)
+        drows = data["rows"]
+        if drows:
+
+            key = str(resource.table._id)
+            records = Storage([(i[key], i) for i in drows])
+
+            # Generate the data frame -----------------------------------------
+            #
+            gfields = self.gfields
+            pkey_colname = gfields[self.pkey]
+            rows_colname = gfields[rows]
+            cols_colname = gfields[cols]
+
+            if strict:
+                rfields = self.rfields
+                axes = (rfield
+                        for rfield in (rfields[rows], rfields[cols])
+                        if rfield != None)
+                axisfilter = resource.axisfilter(axes)
+            else:
+                axisfilter = None
+
+            dataframe = []
+            extend = dataframe.extend
+            #insert = dataframe.append
+            expand = self._expand
+
+            for _id in records:
+                row = records[_id]
+                item = {key: _id}
+                if rows_colname:
+                    item[rows_colname] = row[rows_colname]
+                if cols_colname:
+                    item[cols_colname] = row[cols_colname]
+                extend(expand(item, axisfilter=axisfilter))
+
+            self.records = records
+
+            # Group the records -----------------------------------------------
+            #
+            matrix, rnames, cnames = self._pivot(dataframe,
+                                                 pkey_colname,
+                                                 rows_colname,
+                                                 cols_colname)
+
+            # Initialize columns and rows -------------------------------------
+            #
+            if cols:
+                self.col = [Storage({"value": v}) for v in cnames]
+                self.numcols = len(self.col)
+            else:
+                self.col = [Storage({"value": None})]
+                self.numcols = 1
+
+            if rows:
+                self.row = [Storage({"value": v}) for v in rnames]
+                self.numrows = len(self.row)
+            else:
+                self.row = [Storage({"value": None})]
+                self.numrows = 1
+
+            # Add the layers --------------------------------------------------
+            #
+            add_layer = self._add_layer
+            for fact in self.facts:
+                add_layer(matrix, fact)
+
+        else:
+            # No items to report on -------------------------------------------
+            #
+            self.empty = True
+
+    # -------------------------------------------------------------------------
+    # API methods
+    # -------------------------------------------------------------------------
+    def __len__(self):
+        """ Total number of records in the report """
+
+        items = self.records
+        if items is None:
+            return 0
+        else:
+            return len(self.records)
+
+    # -------------------------------------------------------------------------
+    def geojson(self,
+                fact=None,
+                level="L0"):
+        """
+            Render the pivot table data as a dict ready to be exported as
+            GeoJSON for display on a Map.
+
+            Called by S3Report.geojson()
+
+            @param layer: the layer. e.g. ("id", "count")
+                          - we only support methods "count" & "sum"
+                          - @ToDo: Support density: 'per sqkm' and 'per population'
+            @param level: the aggregation level (defaults to Country)
+        """
+
+        if fact is None:
+            fact = self.facts[0]
+        layer = fact.layer
+
+        # The rows dimension
+        # @ToDo: We can add sanity-checking using resource.parse_bbox_query() if-desired
+        context = self.resource.get_config("context")
+        if context and "location" in context:
+            rows_dim = "(location)$%s" % level
+        else:
+            # Fallback to location_id
+            rows_dim = "location_id$%s" % level
+            # Fallback we can add if-required
+            #rows_dim = "site_id$location_id$%s" % level
+
+        # The data
+        attributes = {}
+        geojsons = {}
+
+        if self.empty:
+            location_ids = []
+        else:
+            numeric = lambda x: isinstance(x, (int, long, float))
+            row_repr = lambda v: s3_unicode(v)
+
+            ids = {}
+            irows = self.row
+            rows = []
+
+            # Group and sort the rows
+            is_numeric = None
+            for i in xrange(self.numrows):
+                irow = irows[i]
+                total = irow[layer]
+                if is_numeric is None:
+                    is_numeric = numeric(total)
+                if not is_numeric:
+                    total = len(irow.records)
+                header = Storage(value = irow.value,
+                                 text = irow.text if "text" in irow
+                                                  else row_repr(irow.value))
+                rows.append((i, total, header))
+
+            self._sortdim(rows, self.rfields[rows_dim])
+
+            # Aggregate the grouped values
+            db = current.db
+            gtable = current.s3db.gis_location
+            query = (gtable.level == level) & (gtable.deleted == False)
+            for rindex, rtotal, rtitle in rows:
+                rval = rtitle.value
+                if rval:
+                    # @ToDo: Handle duplicate names ;)
+                    if rval in ids:
+                        _id = ids[rval]
+                    else:
+                        q = query & (gtable.name == rval)
+                        row = db(q).select(gtable.id,
+                                           gtable.parent,
+                                           limitby=(0, 1)
+                                           ).first()
+                        try:
+                            _id = row.id
+                            # Cache
+                            ids[rval] = _id
+                        except:
+                            continue
+
+                    attribute = dict(name=s3_unicode(rval),
+                                     value=rtotal)
+                    attributes[_id] = attribute
+
+            location_ids = [ids[r] for r in ids]
+            query = (gtable.id.belongs(location_ids))
+            geojsons = current.gis.get_locations(gtable,
+                                                 query,
+                                                 join=False,
+                                                 geojson=True)
+
+        # Prepare for export via xml.gis_encode() and geojson/export.xsl
+        location_data = {}
+        geojsons = dict(gis_location = geojsons)
+        location_data["geojsons"] = geojsons
+        attributes = dict(gis_location = attributes)
+        location_data["attributes"] = attributes
+        return location_ids, location_data
+
+    # -------------------------------------------------------------------------
+    def json(self, maxrows=None, maxcols=None):
+        """
+            Render the pivot table data as JSON-serializable dict
+
+            @param layer: the layer
+            @param maxrows: maximum number of rows (None for all)
+            @param maxcols: maximum number of columns (None for all)
+            @param least: render the least n rows/columns rather than
+                          the top n (with maxrows/maxcols)
+
+            {
+                labels: {
+                    layer:
+                    rows:
+                    cols:
+                    total:
+                },
+                method: <aggregation method>,
+                cells: [rows[cols]],
+                rows: [rows[index, value, label, total]],
+                cols: [cols[index, value, label, total]],
+
+                total: <grand total>,
+                filter: [rows selector, cols selector]
+            }
+        """
+
+        rfields = self.rfields
+        resource = self.resource
+
+        T = current.T
+        OTHER = "__other__"
+
+        rows_dim = self.rows
+        cols_dim = self.cols
+
+        # The output data
+        orows = []
+        rappend = orows.append
+        ocols = []
+        cappend = ocols.append
+        ocells = []
+
+        lookups = {}
+        facts = self.facts
+
+        if not self.empty:
+
+            # Representation methods for row and column keys
+            row_repr = self._represent_method(rows_dim)
+            col_repr = self._represent_method(cols_dim)
+
+            # Label for the "Others" row/columns
+            others = s3_unicode(T("Others"))
+
+            # Get the layers (fact.selector, fact.method),
+            # => used as keys to access the pivot data
+            layers = [fact.layer for fact in facts]
+            least = facts[0].method == "min"
+
+            # Group and sort the rows (grouping = determine "others")
+            irows = self.row
+            rows = []
+            rtail = (None, None)
+            for i in xrange(self.numrows):
+                irow = irows[i]
+                totals = [irow[layer] for layer in layers]
+                sort_total = totals[0]
+                header = {"value": irow.value,
+                          "text": irow.text if "text" in irow
+                                            else row_repr(irow.value),
+                          }
+                rows.append((i, sort_total, totals, header))
+            if maxrows is not None:
+                rtail = self._tail(rows, maxrows, least=least, facts=facts)
+            self._sortdim(rows, rfields[rows_dim])
+            if rtail[1] is not None:
+                values = [irows[i]["value"] for i in rtail[0]]
+                rows.append((OTHER,
+                             rtail[1],
+                             rtail[2],
+                             {"value": values, "text":others},
+                             ))
+
+            # Group and sort the cols (grouping = determine "others")
+            icols = self.col
+            cols = []
+            ctail = (None, None)
+            for i in xrange(self.numcols):
+                icol = icols[i]
+                totals = [icol[layer] for layer in layers]
+                sort_total = totals[0]
+                header = {"value": icol.value,
+                          "text": icol.text if "text" in icol
+                                            else col_repr(icol.value),
+                          }
+                cols.append((i, sort_total, totals, header))
+            if maxcols is not None:
+                ctail = self._tail(cols, maxcols, least=least, facts=facts)
+            self._sortdim(cols, rfields[cols_dim])
+            if ctail[1] is not None:
+                values = [icols[i]["value"] for i in ctail[0]]
+                cols.append((OTHER,
+                             ctail[1],
+                             ctail[2],
+                             {"value": values, "text": others},
+                             ))
+
+            rothers = rtail[0] or set()
+            cothers = ctail[0] or set()
+
+            # Group and sort the cells accordingly
+            # @todo: break up into subfunctions
+            icell = self.cell
+            cells = {}
+            for i in xrange(self.numrows):
+                irow = icell[i]
+                ridx = (i, OTHER) if rothers and i in rothers else (i,)
+
+                for j in xrange(self.numcols):
+                    cell = irow[j]
+                    cidx = (j, OTHER) if cothers and j in cothers else (j,)
+
+                    cell_records = cell["records"]
+
+                    for layer_index, layer in enumerate(layers):
+
+                        # Get cell items for the layer
+                        # => items can be a single numeric value, or a list
+                        items = cell[layer]
+
+                        # Get cell value for the layer
+                        if isinstance(items, list):
+                            value = len(items)
+                        else:
+                            value = items
+
+                        for ri in ridx:
+                            if ri not in cells:
+                                orow = cells[ri] = {}
+                            else:
+                                orow = cells[ri]
+                            for ci in cidx:
+
+                                if ci not in orow:
+                                    # Create a new output cell
+                                    ocell = orow[ci] = {"values": [],
+                                                        "items": [],
+                                                        "records": [],
+                                                        }
+                                else:
+                                    ocell = orow[ci]
+
+
+                                if layer_index == 0:
+                                    # Extend the list of records
+                                    ocell["records"].extend(cell_records)
+
+                                value_array = ocell["values"]
+                                items_array = ocell["items"]
+                                if len(value_array) <= layer_index:
+                                    value_array.append(value)
+                                    items_array.append(items)
+                                else:
+                                    ovalue = value_array[layer_index]
+                                    oitems = items_array[layer_index]
+                                    if isinstance(ovalue, list):
+                                        ovalue.append(value)
+                                        oitems.append(items)
+                                    else:
+                                        value_array[layer_index] = [ovalue, value]
+                                        items_array[layer_index] = [oitems, items]
+
+            # Get field representation methods
+            represents = self._represents(layers)
+
+            # Aggregate the grouped values
+            value_maps = {}
+            add_columns = True # do this only once
+            for rindex, rtotal, rtotals, rtitle in rows:
+
+                orow = []
+
+                # Row value for filter construction
+                rval = rtitle["value"]
+                if rindex == OTHER and isinstance(rval, list):
+                    rval = ",".join(s3_unicode(v) for v in rval)
+                elif rval is not None:
+                    rval = s3_unicode(rval)
+
+                # The output row summary
+                rappend((rindex,
+                         rindex in rothers,
+                         rtotals,
+                         rval,
+                         rtitle["text"],
+                         ))
+
+                for cindex, ctotal, ctotals, ctitle in cols:
+
+                    # Get the corresponding cell
+                    cell = cells[rindex][cindex]
+
+                    value_array = cell["values"]
+                    items_array = cell["items"]
+
+                    # Initialize the output cell
+                    # @todo: deflate JSON keys
+                    ocell = {"items": [], "values": [], "keys": []}
+
+                    for layer_index, fact in enumerate(facts):
+
+                        selector, method = fact.layer
+                        if selector not in lookups:
+                            lookup = lookups[selector] = {}
+                        else:
+                            lookup = lookups[selector]
+                        if selector not in value_maps:
+                            value_map = value_maps[selector] = {}
+                        else:
+                            value_map = value_maps[selector]
+
+                        # Add the cell value
+                        value = value_array[layer_index]
+                        if type(value) is list:
+                            # "Others" cell with multiple totals
+                            value = fact.aggregate_totals(value)
+                        ocell["values"].append(value)
+
+                        has_fk, _repr = represents[selector]
+                        rfield = self.rfields[selector]
+                        items = items_array[layer_index]
+                        okeys = None
+
+                        # Build a lookup table for field values if counting
+                        if method in ("count", "list"):
+                            keys = []
+                            for record_id in cell["records"]:
+                                record = self.records[record_id]
+                                try:
+                                    fvalue = record[rfield.colname]
+                                except AttributeError:
+                                    continue
+                                if fvalue is None:
+                                    continue
+                                if type(fvalue) is not list:
+                                    fvalue = [fvalue]
+                                for v in fvalue:
+                                    if v is None:
+                                        continue
+                                    if has_fk:
+                                        if v not in keys:
+                                            keys.append(v)
+                                        if v not in lookup:
+                                            lookup[v] = _repr(v)
+                                    else:
+                                        if v not in value_map:
+                                            next_id = len(value_map)
+                                            value_map[v] = next_id
+                                            keys.append(next_id)
+                                            lookup[next_id] = _repr(v)
+                                        else:
+                                            prev_id = value_map[v]
+                                            if prev_id not in keys:
+                                                keys.append(prev_id)
+
+                            # Sort the keys by their representations
+                            keys.sort(key=lambda i: lookup[i])
+                            if method == "list":
+                                items = [lookup[key] for key in keys if key in lookup]
+                            else:
+                                okeys = keys
+
+                        ocell["items"].append(items)
+                        ocell["keys"].append(okeys)
+
+                    orow.append(ocell)
+
+                    if add_columns:
+
+                        # Column value for filter construction
+                        cval = ctitle["value"]
+                        if cindex == OTHER and isinstance(cval, list):
+                            cval = ",".join(s3_unicode(v) for v in cval)
+                        elif cval is not None:
+                            cval = s3_unicode(cval)
+
+                        # The output column summary
+                        cappend((cindex,
+                                 cindex in cothers,
+                                 ctotals,
+                                 cval,
+                                 ctitle["text"],
+                                 ))
+
+                add_columns = False
+                ocells.append(orow)
+
+        # Lookup labels
+        report_options = resource.get_config("report_options", {})
+        if report_options:
+            fact_options = report_options.get("fact")
+        else:
+            fact_options = ()
+
+        # @todo: lookup report title before constructing from fact labels
+
+        fact_data = []
+        fact_labels = []
+        for fact in facts:
+            rfield = rfields[fact.selector]
+            fact_label = str(fact.get_label(rfield, fact_options))
+            fact_data.append((fact.selector, fact.method, fact_label))
+            fact_labels.append(fact_label)
+
+        get_label = S3PivotTableFact._get_field_label
+        if rows_dim:
+            rows_label = str(get_label(rfields[rows_dim], report_options.get("rows")))
+        else:
+            rows_label = ""
+
+        if cols_dim:
+            cols_label = str(get_label(rfields[cols_dim], report_options.get("cols")))
+        else:
+            cols_label = ""
+
+        labels = {"total": str(T("Total")),
+                  "none": str(current.messages["NONE"]),
+                  "per": str(T("per")),
+                  "breakdown": str(T("Breakdown")),
+                  # @todo: use report title:
+                  "layer": " / ".join(fact_labels),
+                  "rows": rows_label,
+                  "cols": cols_label,
+                  }
+
+        # Compile the output dict
+        output = {"rows": orows,
+                  "cols": ocols,
+                  "facts": fact_data,
+                  "cells": ocells,
+                  "lookups": lookups,
+                  "total": self._totals(self.totals, [fact]),
+                  "nodata": None if not self.empty else str(T("No data available")),
+                  "labels": labels,
+                  }
+
+        # Add axis selectors for filter-URL construction
+        prefix = resource.prefix_selector
+        output["filter"] = (prefix(rows_dim) if rows_dim else None,
+                            prefix(cols_dim) if cols_dim else None,
+                            )
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def _represents(self, layers):
+        """
+            Get the representation functions per fact field
+
+            @param layers: the list of layers, tuples (selector, method)
+        """
+
+        rfields = self.rfields
+        represents = {}
+
+        values = self.values
+
+        for selector, method in layers:
+            if selector in represents:
+                continue
+
+            # Get the field
+            rfield = rfields[selector]
+            f = rfield.field
+
+            # Utilize bulk-representation for field values
+            if method in ("list", "count") and \
+               f is not None and \
+               hasattr(f.represent, "bulk"):
+                all_values = values[(selector, method)]
+                if all_values:
+                    f.represent.bulk(list(s3_flatlist(all_values)))
+
+            # Get the representation method
+            has_fk = f is not None and s3_has_foreign_key(f)
+            if has_fk:
+                represent = lambda v, f=f: s3_unicode(f.represent(v))
+            else:
+                m = self._represent_method(selector)
+                represent = lambda v, m=m: s3_unicode(m(v))
+
+            represents[selector] = (has_fk, represent)
+
+        return represents
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _sortdim(items, rfield, index=3):
+        """
+            Sort a dimension (sorts items in-place)
+
+            @param items: the items as list of tuples
+                          (index, sort-total, totals, header)
+            @param rfield: the dimension (S3ResourceField)
+            @param index: alternative index of the value/text dict
+                          within each item
+        """
+
+        if not rfield:
+            return
+        ftype = rfield.ftype
+        sortby = "value"
+        if ftype == "integer":
+            requires = rfield.requires
+            if isinstance(requires, (tuple, list)):
+                requires = requires[0]
+            if isinstance(requires, IS_EMPTY_OR):
+                requires = requires.other
+            if isinstance(requires, IS_IN_SET):
+                sortby = "text"
+        elif ftype[:9] == "reference":
+            sortby = "text"
+        items.sort(key=lambda item: item[index][sortby])
+        return
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def _tail(cls, items, length=10, least=False, facts=None):
+        """
+            Find the top/least <length> items (by total)
+
+            @param items: the items as list of tuples
+                          (index, sort-total, totals, header)
+            @param length: the maximum number of items
+            @param least: find least rather than top
+            @param facts: the facts to aggregate the tail totals
+        """
+
+        try:
+            if len(items) > length:
+                l = list(items)
+                l.sort(lambda x, y: int(y[1]-x[1]))
+                if least:
+                    l.reverse()
+                keys = [item[0] for item in l[length-1:]]
+                totals = []
+                for i, fact in enumerate(facts):
+                    subtotals = [item[2][i] for item in l[length-1:]]
+                    totals.append(fact.aggregate_totals(subtotals))
+                return (keys, totals[0], totals)
+        except (TypeError, ValueError):
+            pass
+        return (None, None)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _totals(values, facts, append=None):
+        """
+            Get the totals of a row/column/report
+
+            @param values: the values dictionary
+            @param facts: the facts
+            @param append: callback to collect the totals for JSON data
+                           (currently only collects the first layer)
+        """
+
+        totals = []
+        number_represent = IS_NUMBER.represent
+        for fact in facts:
+            value = values[fact.layer]
+            #if fact.method == "list":
+                #value = value and len(value) or 0
+            if not len(totals) and append is not None:
+                append(value)
+            totals.append(s3_unicode(number_represent(value)))
+        totals = " / ".join(totals)
+        return totals
+
+    # -------------------------------------------------------------------------
+    # Internal methods
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _pivot(items, pkey_colname, rows_colname, cols_colname):
+        """
+            2-dimensional pivoting of a list of unique items
+
+            @param items: list of unique items as dicts
+            @param pkey_colname: column name of the primary key
+            @param rows_colname: column name of the row dimension
+            @param cols_colname: column name of the column dimension
+
+            @return: tuple of (cell matrix, row headers, column headers),
+                     where cell matrix is a 2-dimensional array [rows[columns]]
+                     and row headers and column headers each are lists (in the
+                     same order as the cell matrix)
+        """
+
+        rvalues = Storage()
+        cvalues = Storage()
+        cells = Storage()
+
+        # All unique rows values
+        rindex = 0
+        cindex = 0
+        for item in items:
+
+            rvalue = item[rows_colname] if rows_colname else None
+            cvalue = item[cols_colname] if cols_colname else None
+
+            if rvalue not in rvalues:
+                r = rvalues[rvalue] = rindex
+                rindex += 1
+            else:
+                r = rvalues[rvalue]
+            if cvalue not in cvalues:
+                c = cvalues[cvalue] = cindex
+                cindex += 1
+            else:
+                c = cvalues[cvalue]
+
+            if (r, c) not in cells:
+                cells[(r, c)] = [item[pkey_colname]]
+            else:
+                cells[(r, c)].append(item[pkey_colname])
+
+        matrix = []
+        for r in xrange(len(rvalues)):
+            row = []
+            for c in xrange(len(cvalues)):
+                row.append(cells[(r, c)])
+            matrix.append(row)
+
+        rnames = [None] * len(rvalues)
+        for k, v in rvalues.items():
+            rnames[v] = k
+
+        cnames = [None] * len(cvalues)
+        for k, v in cvalues.items():
+            cnames[v] = k
+
+        return matrix, rnames, cnames
+
+    # -------------------------------------------------------------------------
+    def _add_layer(self, matrix, fact):
+        """
+            Compute an aggregation layer, updates:
+
+                - self.cell: the aggregated values per cell
+                - self.row: the totals per row
+                - self.col: the totals per column
+                - self.totals: the overall totals per layer
+
+            @param matrix: the cell matrix
+            @param fact: the fact field
+            @param method: the aggregation method
+        """
+
+        rows = self.row
+        cols = self.col
+        records = self.records
+        extract = self._extract
+        resource = self.resource
+
+        RECORDS = "records"
+        VALUES = "values"
+
+        table = resource.table
+        pkey = table._id.name
+
+        layer = fact.layer
+
+        numcols = len(self.col)
+        numrows = len(self.row)
+
+        # Initialize cells
+        if self.cell is None:
+            self.cell = [[Storage()
+                          for i in xrange(numcols)]
+                         for j in xrange(numrows)]
+        cells = self.cell
+
+        all_values = []
+        for r in xrange(numrows):
+
+            # Initialize row header
+            row = rows[r]
+            row[RECORDS] = []
+            row[VALUES] = []
+
+            row_records = row[RECORDS]
+            row_values = row[VALUES]
+
+            for c in xrange(numcols):
+
+                # Initialize column header
+                col = cols[c]
+                if RECORDS not in col:
+                    col[RECORDS] = []
+                col_records = col[RECORDS]
+                if VALUES not in col:
+                    col[VALUES] = []
+                col_values = col[VALUES]
+
+                # Get the records
+                cell = cells[r][c]
+                if RECORDS in cell and cell[RECORDS] is not None:
+                    ids = cell[RECORDS]
+                else:
+                    data = matrix[r][c]
+                    if data:
+                        remove = data.remove
+                        while None in data:
+                            remove(None)
+                        ids = data
+                    else:
+                        ids = []
+                    cell[RECORDS] = ids
+                row_records.extend(ids)
+                col_records.extend(ids)
+
+                # Get the values
+                if fact.selector is None:
+                    fact.selector = pkey
+                    values = ids
+                    row_values = row_records
+                    col_values = row_records
+                    all_values = records.keys()
+                else:
+                    values = []
+                    append = values.append
+                    for i in ids:
+                        value = extract(records[i], fact.selector)
+                        if value is None:
+                            continue
+                        append(value)
+                    values = list(s3_flatlist(values))
+                    if fact.method in ("list", "count"):
+                        values =  list(set(values))
+                    row_values.extend(values)
+                    col_values.extend(values)
+                    all_values.extend(values)
+
+                # Aggregate values
+                value = fact.compute(values)
+                cell[layer] = value
+
+            # Compute row total
+            row[layer] = fact.compute(row_values, totals=True)
+            del row[VALUES]
+
+        # Compute column total
+        for c in xrange(numcols):
+            col = cols[c]
+            col[layer] = fact.compute(col[VALUES], totals=True)
+            del col[VALUES]
+
+        # Compute overall total
+        self.totals[layer] = fact.compute(all_values, totals=True)
+        self.values[layer] = all_values
+        return
+
+    # -------------------------------------------------------------------------
+    def _get_fields(self, fields=None):
+        """
+            Determine the fields needed to generate the report
+
+            @param fields: fields to include in the report (all fields)
+        """
+
+        resource = self.resource
+        table = resource.table
+
+        # Lambda to prefix all field selectors
+        alias = resource.alias
+        def prefix(s):
+            if isinstance(s, (tuple, list)):
+                return prefix(s[-1])
+            if "." not in s.split("$", 1)[0]:
+                return "%s.%s" % (alias, s)
+            elif s[:2] == "~.":
+                return "%s.%s" % (alias, s[2:])
+            else:
+                return s
+
+        self.pkey = pkey = prefix(table._id.name)
+        self.rows = rows = self.rows and prefix(self.rows) or None
+        self.cols = cols = self.cols and prefix(self.cols) or None
+
+        if not fields:
+            fields = ()
+
+        # dfields (data-fields): fields to generate the layers
+        dfields = [prefix(s) for s in fields]
+        if rows and rows not in dfields:
+            dfields.append(rows)
+        if cols and cols not in dfields:
+            dfields.append(cols)
+        if pkey not in dfields:
+            dfields.append(pkey)
+
+        for fact in self.facts:
+            selector = fact.selector = prefix(fact.selector)
+            if selector not in dfields:
+                dfields.append(selector)
+
+        self.dfields = dfields
+
+        # rfields (resource-fields): dfields resolved into a ResourceFields map
+        rfields = resource.resolve_selectors(dfields)[0]
+        rfields = Storage([(f.selector.replace("~", alias), f) for f in rfields])
+        self.rfields = rfields
+
+        # gfields (grouping-fields): fields to group the records by
+        self.gfields = {pkey: rfields[pkey].colname,
+                        rows: rfields[rows].colname
+                                if rows and rows in rfields else None,
+                        cols: rfields[cols].colname
+                                if cols and cols in rfields else None,
+                        }
+        return
+
+    # -------------------------------------------------------------------------
+    def _represent_method(self, field):
+        """
+            Get the representation method for a field in the report
+
+            @param field: the field selector
+        """
+
+        rfields = self.rfields
+        default = lambda value: None
+
+        if field and field in rfields:
+
+            rfield = rfields[field]
+
+            if rfield.field:
+                def repr_method(value):
+                    return s3_represent_value(rfield.field, value,
+                                              strip_markup=True)
+
+            elif rfield.virtual:
+                stripper = S3MarkupStripper()
+                def repr_method(val):
+                    if val is None:
+                        return "-"
+                    text = s3_unicode(val)
+                    if "<" in text:
+                        stripper.feed(text)
+                        return stripper.stripped() # = totally naked ;)
+                    else:
+                        return text
+            else:
+                repr_method = default
+        else:
+            repr_method = default
+
+        return repr_method
+
+    # -------------------------------------------------------------------------
+    def _extract(self, row, field):
+        """
+            Extract a field value from a DAL row
+
+            @param row: the row
+            @param field: the fieldname (list_fields syntax)
+        """
+
+        rfields = self.rfields
+        if field not in rfields:
+            raise KeyError("Invalid field name: %s" % field)
+        rfield = rfields[field]
+        try:
+            return rfield.extract(row)
+        except AttributeError:
+            return None
+
+    # -------------------------------------------------------------------------
+    def _expand(self, row, axisfilter=None):
+        """
+            Expand a data frame row into a list of rows for list:type values
+
+            @param row: the row
+            @param field: the field to expand (None for all fields)
+            @param axisfilter: dict of filtered field values by column names
+        """
+
+        pairs = []
+        append = pairs.append
+        for colname in self.gfields.values():
+            if not colname:
+                continue
+            value = row[colname]
+            if type(value) is list:
+                if not value:
+                    value = [None]
+                if axisfilter and colname in axisfilter:
+                    p = [(colname, v) for v in value
+                                       if v in axisfilter[colname]]
+                    if not p:
+                        raise RuntimeError("record does not match query")
+                    else:
+                        append(p)
+                else:
+                    append([(colname, v) for v in value])
+            else:
+                append([(colname, value)])
+        result = [dict(i) for i in product(*pairs)]
+        return result
 
 # END =========================================================================

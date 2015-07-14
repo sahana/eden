@@ -217,9 +217,10 @@ def assess_tables():
                  Field("value", "integer",
                        default = 0,
                        label = T("Severity"),
+                       represent = s3_assess_severity_represent,
                        requires = IS_EMPTY_OR(IS_IN_SET(assess_severity_opts)),
                        widget = SQLFORM.widgets.radio.widget,
-                       represent = s3_assess_severity_represent),
+                       ),
                  s3_comments(),
                  *s3_meta_fields())
 
@@ -240,12 +241,13 @@ def assess_tables():
         name_nice_plural = T("Assessments"))
 
     # Summary as component of assessments
-    add_components("assess_assess", assess_summary="assess_id")
+    add_components("assess_assess",
+                   assess_summary="assess_id",
+                   )
 
     # Pass variables back to global scope (response.s3.*)
-    return dict(
-            assess_id = assess_id
-        )
+    return dict(assess_id = assess_id,
+                )
 
 # =========================================================================
 # Rapid Assessment Tool
@@ -264,9 +266,8 @@ def rat_tables():
         human_resource_id = s3db.pr_person_id
 
     # Section CRUD strings
-    ADD_SECTION = T("Add Section")
     rat_section_crud_strings = Storage(
-        label_create = ADD_SECTION,
+        label_create = T("Add Section"),
         title_display = T("Section Details"),
         title_list = T("Sections"),
         title_update = "",
@@ -390,36 +391,41 @@ def rat_tables():
     tablename = "assess_rat"
     define_table(tablename,
                  Field("date", "date",
+                       default = datetime.datetime.today(),
                        requires = [IS_DATE(format = settings.get_L10n_date_format()),
                                    IS_NOT_EMPTY()],
-                       default = datetime.datetime.today()),
-                 location_id(widget = S3LocationAutocompleteWidget(),
-                             requires = IS_LOCATION()),
+                       ),
+                 location_id(requires = IS_LOCATION(),
+                             widget = S3LocationAutocompleteWidget(),
+                             ),
                  human_resource_id("staff_id", label=T("Staff")),
                  human_resource_id("staff2_id", label=T("Staff2")),
                  Field("interview_location", "list:integer",
                        label = T("Interview taking place at"),
+                       represent = lambda opt, set=rat_interview_location_opts: \
+                                      rat_represent_multiple(set, opt),
                        requires = IS_EMPTY_OR(IS_IN_SET(rat_interview_location_opts,
                                                         multiple=True,
                                                         zero=None)),
                        #widget = SQLFORM.widgets.checkboxes.widget,
-                       represent = lambda opt, set=rat_interview_location_opts: \
-                                      rat_represent_multiple(set, opt),
-                       comment = "(%s)" % T("Select all that apply")),
+                       comment = "(%s)" % T("Select all that apply"),
+                       ),
                  Field("interviewee", "list:integer",
                        label = T("Person interviewed"),
+                       represent = lambda opt, set=rat_interviewee_opts: \
+                                    rat_represent_multiple(set, opt),
                        requires = IS_EMPTY_OR(IS_IN_SET(rat_interviewee_opts,
                                                         multiple=True,
                                                         zero=None)),
                        #widget = SQLFORM.widgets.checkboxes.widget,
-                      represent = lambda opt, set=rat_interviewee_opts: \
-                                    rat_represent_multiple(set, opt),
-                       comment = "(%s)" % T("Select all that apply")),
+                       comment = "(%s)" % T("Select all that apply"),
+                       ),
                  Field("accessibility", "integer",
                        label = T("Accessibility of Affected Location"),
+                       represent = lambda opt: rat_accessibility_opts.get(opt, opt),
                        requires = IS_EMPTY_OR(IS_IN_SET(rat_accessibility_opts,
                                                         zero=None)),
-                       represent = lambda opt: rat_accessibility_opts.get(opt, opt)),
+                       ),
                  s3_comments(),
                  #document_id(),  # Better to have multiple Documents on a Tab
                  s3db.shelter_id(),
@@ -524,107 +530,120 @@ def rat_tables():
                  assessment_id(),
                  Field("population_total", "integer",
                        label = T("Total population of site visited"),
-                       comment = T("people")),
+                       comment = T("people"),
+                       ),
                 Field("households_total", "integer",
-                    label = T("Total # of households of site visited"),
-                    comment = T("households")),
+                      label = T("Total # of households of site visited"),
+                      comment = T("households"),
+                      ),
                 Field("population_affected", "integer",
-                    label = T("Estimated # of people who are affected by the emergency"),
-                    comment = T("people")),
+                      label = T("Estimated # of people who are affected by the emergency"),
+                      comment = T("people"),
+                      ),
                 Field("households_affected", "integer",
-                    label = T("Estimated # of households who are affected by the emergency"),
-                    comment = T("households")),
+                      label = T("Estimated # of households who are affected by the emergency"),
+                      comment = T("households"),
+                      ),
                 Field("male_05", "double",
-                    label = T("Number/Percentage of affected population that is Male & Aged 0-5")),
+                      label = T("Number/Percentage of affected population that is Male & Aged 0-5"),
+                      ),
                 Field("male_612", "double",
-                    label = T("Number/Percentage of affected population that is Male & Aged 6-12")),
+                      label = T("Number/Percentage of affected population that is Male & Aged 6-12"),
+                      ),
                 Field("male_1317", "double",
-                    label = T("Number/Percentage of affected population that is Male & Aged 13-17")),
+                      label = T("Number/Percentage of affected population that is Male & Aged 13-17"),
+                      ),
                 Field("male_1825", "double",
-                    label = T("Number/Percentage of affected population that is Male & Aged 18-25")),
+                      label = T("Number/Percentage of affected population that is Male & Aged 18-25"),
+                      ),
                 Field("male_2660", "double",
-                    label = T("Number/Percentage of affected population that is Male & Aged 26-60")),
+                      label = T("Number/Percentage of affected population that is Male & Aged 26-60"),
+                      ),
                 Field("male_61", "double",
-                    label = T("Number/Percentage of affected population that is Male & Aged 61+")),
+                      label = T("Number/Percentage of affected population that is Male & Aged 61+"),
+                      ),
                 Field("female_05", "double",
-                    label = T("Number/Percentage of affected population that is Female & Aged 0-5")),
+                      label = T("Number/Percentage of affected population that is Female & Aged 0-5"),
+                      ),
                 Field("female_612", "double",
-                    label = T("Number/Percentage of affected population that is Female & Aged 6-12")),
+                      label = T("Number/Percentage of affected population that is Female & Aged 6-12")),
                 Field("female_1317", "double",
-                    label = T("Number/Percentage of affected population that is Female & Aged 13-17")),
+                      label = T("Number/Percentage of affected population that is Female & Aged 13-17")),
                 Field("female_1825", "double",
-                    label = T("Number/Percentage of affected population that is Female & Aged 18-25")),
+                      label = T("Number/Percentage of affected population that is Female & Aged 18-25")),
                 Field("female_2660", "double",
-                    label = T("Number/Percentage of affected population that is Female & Aged 26-60")),
+                      label = T("Number/Percentage of affected population that is Female & Aged 26-60")),
                 Field("female_61", "double",
-                    label = T("Number/Percentage of affected population that is Female & Aged 61+")),
+                      label = T("Number/Percentage of affected population that is Female & Aged 61+")),
                 Field("dead_women", "integer",
-                    label = T("How many Women (18 yrs+) are Dead due to the crisis"),
-                    comment = T("people")),  # @ToDo: Should this say "Number of people"?
+                      label = T("How many Women (18 yrs+) are Dead due to the crisis"),
+                      comment = T("people")),  # @ToDo: Should this say "Number of people"?
                 Field("dead_men", "integer",
-                    label = T("How many Men (18 yrs+) are Dead due to the crisis"),
-                    comment = T("people")),
+                      label = T("How many Men (18 yrs+) are Dead due to the crisis"),
+                      comment = T("people")),
                 Field("dead_girl", "integer",
-                    label = T("How many Girls (0-17 yrs) are Dead due to the crisis"),
-                    comment = T("people")),
+                      label = T("How many Girls (0-17 yrs) are Dead due to the crisis"),
+                      comment = T("people")),
                 Field("dead_boy", "integer",
-                    label = T("How many Boys (0-17 yrs) are Dead due to the crisis"),
-                    comment = T("people")),
+                      label = T("How many Boys (0-17 yrs) are Dead due to the crisis"),
+                      comment = T("people")),
                 Field("injured_women", "integer",
-                    label = T("How many Women (18 yrs+) are Injured due to the crisis"),
-                    comment = T("people")),
+                      label = T("How many Women (18 yrs+) are Injured due to the crisis"),
+                      comment = T("people")),
                 Field("injured_men", "integer",
-                    label = T("How many Men (18 yrs+) are Injured due to the crisis"),
-                    comment = T("people")),
+                      label = T("How many Men (18 yrs+) are Injured due to the crisis"),
+                      comment = T("people")),
                 Field("injured_girl", "integer",
-                    label = T("How many Girls (0-17 yrs) are Injured due to the crisis"),
-                    comment = T("people")),
+                      label = T("How many Girls (0-17 yrs) are Injured due to the crisis"),
+                      comment = T("people")),
                 Field("injured_boy", "integer",
-                    label = T("How many Boys (0-17 yrs) are Injured due to the crisis"),
-                    comment = T("people")),
+                      label = T("How many Boys (0-17 yrs) are Injured due to the crisis"),
+                      comment = T("people")),
                 Field("missing_women", "integer",
-                    label = T("How many Women (18 yrs+) are Missing due to the crisis"),
-                    comment = T("people")),
+                      label = T("How many Women (18 yrs+) are Missing due to the crisis"),
+                      comment = T("people")),
                 Field("missing_men", "integer",
-                    label = T("How many Men (18 yrs+) are Missing due to the crisis"),
-                    comment = T("people")),
+                      label = T("How many Men (18 yrs+) are Missing due to the crisis"),
+                      comment = T("people")),
                 Field("missing_girl", "integer",
-                    label = T("How many Girls (0-17 yrs) are Missing due to the crisis"),
-                    comment = T("people")),
+                      label = T("How many Girls (0-17 yrs) are Missing due to the crisis"),
+                      comment = T("people")),
                 Field("missing_boy", "integer",
-                    label = T("How many Boys (0-17 yrs) are Missing due to the crisis"),
-                    comment = T("people")),
+                      label = T("How many Boys (0-17 yrs) are Missing due to the crisis"),
+                      comment = T("people")),
                 Field("household_head_elderly", "integer",
-                    label = T("Elderly person headed households (>60 yrs)"),
-                    comment = T("households")),
+                      label = T("Elderly person headed households (>60 yrs)"),
+                      comment = T("households")),
                 Field("household_head_female", "integer",
-                    label = T("Female headed households"),
-                    comment = T("households")),
+                      label = T("Female headed households"),
+                      comment = T("households")),
                 Field("household_head_child", "integer",
-                    label = T("Child headed households (<18 yrs)"),
-                    comment = T("households")),
+                      label = T("Child headed households (<18 yrs)"),
+                      comment = T("households")),
                 Field("disabled_physical", "integer",
-                    label = T("Persons with disability (physical)"),
-                    comment = T("people")),
+                      label = T("Persons with disability (physical)"),
+                      comment = T("people")),
                 Field("disabled_mental", "integer",
-                    label = T("Persons with disability (mental)"),
-                    comment = T("people")),
+                      label = T("Persons with disability (mental)"),
+                      comment = T("people")),
                 Field("pregnant", "integer",
-                    label = T("Pregnant women"),
-                    comment = T("people")),
+                      label = T("Pregnant women"),
+                      comment = T("people")),
                 Field("lactating", "integer",
-                    label = T("Lactating women"),
-                    comment = T("people")),
+                      label = T("Lactating women"),
+                      comment = T("people")),
                 Field("minorities", "integer",
-                    label = T("Migrants or ethnic minorities"),
-                    comment = T("people")),
+                      label = T("Migrants or ethnic minorities"),
+                      comment = T("people")),
                 s3_comments(),
                 *s3_meta_fields())
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
-    configure(tablename, deletable=False)
+    configure(tablename,
+              deletable = False,
+              )
 
     # Section 3: Shelter & Essential NFIs -------------------------------------
 
@@ -648,94 +667,96 @@ def rat_tables():
 
     tablename = "assess_section3"
     define_table(tablename,
-                         assessment_id(),
-                         Field("houses_total", "integer",
-                               label = T("Total number of houses in the area"),
-                               requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
-                               ),
-                         Field("houses_destroyed", "integer",
-                               requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
-                               **rat_label_and_tooltip(
-                                   "Number of houses destroyed/uninhabitable",
-                                   "How many houses are uninhabitable (uninhabitable = foundation and structure destroyed)?")),
-                         Field("houses_damaged", "integer",
-                               requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
-                               **rat_label_and_tooltip(
-                                   "Number of houses damaged, but usable",
-                                   "How many houses suffered damage but remain usable (usable = windows broken, cracks in walls, roof slightly damaged)?")),
-                         Field("houses_salvmat", "list:integer",
-                               requires = IS_EMPTY_OR(IS_IN_SET(rat_houses_salvmat_types,
-                                                                multiple=True,
-                                                                zero=None)),
-                               represent = lambda opt, set=rat_houses_salvmat_types: \
-                                               rat_represent_multiple(set, opt),
-                               **rat_label_and_tooltip(
-                                   "Salvage material usable from destroyed houses",
-                                   "What type of salvage material can be used from destroyed houses?",
-                                   multiple=True)),
-                         Field("water_containers_available", "boolean",
-                               **rat_label_and_tooltip(
-                                   "Water storage containers available for HH",
-                                   "Do households have household water storage containers?")),
-                         Field("water_containers_sufficient", "boolean",
-                               **rat_label_and_tooltip(
-                                   "Water storage containers sufficient per HH",
-                                   "Do households each have at least 2 containers (10-20 litres each) to hold water?")),
-                         Field("water_containers_types", "list:integer",
-                               requires = IS_EMPTY_OR(IS_IN_SET(rat_water_container_types,
-                                                                zero=None,
-                                                                multiple=True)),
-                               represent = lambda opt, set=rat_water_container_types: \
-                                               rat_represent_multiple(set, opt),
-                               **rat_label_and_tooltip(
-                                   "Types of water storage containers available",
-                                   "What types of household water storage containers are available?",
-                                   multiple=True)),
-                         Field("water_containers_types_other",
-                               label = T("Other types of water storage containers")),
-                         Field("cooking_equipment_available", "boolean",
-                               **rat_label_and_tooltip(
-                                   "Appropriate cooking equipment/materials in HH",
-                                   "Do households have appropriate equipment and materials to cook their food (stove, pots, dished plates, and a mug/drinking vessel, etc)?")),
-                         Field("sanitation_items_available", "boolean",
-                               **rat_label_and_tooltip(
-                                   "Reliable access to sanitation/hygiene items",
-                                   "Do people have reliable access to sufficient sanitation/hygiene items (bathing soap, laundry soap, shampoo, toothpaste and toothbrush)?")),
-                         Field("sanitation_items_available_women", "boolean",
-                               **rat_label_and_tooltip(
-                                   "Easy access to sanitation items for women/girls",
-                                   "Do women and girls have easy access to sanitary materials?")),
-                         Field("bedding_materials_available", "boolean",
-                               **rat_label_and_tooltip(
-                                   "Bedding materials available",
-                                   "Do households have bedding materials available (tarps, plastic mats, blankets)?")),
-                         Field("clothing_sets_available", "boolean",
-                               **rat_label_and_tooltip(
-                                   "Appropriate clothing available",
-                                   "Do people have at least 2 full sets of clothing (shirts, pants/sarong, underwear)?")),
-                         Field("nfi_assistance_available", "boolean",
-                               **rat_label_and_tooltip(
-                                   "Shelter/NFI assistance received/expected",
-                                   "Have households received any shelter/NFI assistance or is assistance expected in the coming days?")),
-                         Field("kits_hygiene_received", "boolean",
-                               label = T("Hygiene kits received")),
-                         Field("kits_hygiene_source",
-                               label = T("Hygiene kits, source")),
-                         Field("kits_household_received", "boolean",
-                               label = T("Household kits received")),
-                         Field("kits_household_source",
-                               label = T("Household kits, source")),
-                         Field("kits_dwelling_received", "boolean",
-                               label = T("Family tarpaulins received")),  # @ToDo: Better label, perhaps? A tarp isn't a dwelling.
-                         Field("kits_dwelling_source",
-                               label = T("Family tarpaulins, source")),
-                         s3_comments(),
-                         *s3_meta_fields())
+                 assessment_id(),
+                 Field("houses_total", "integer",
+                       label = T("Total number of houses in the area"),
+                       requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
+                       ),
+                 Field("houses_destroyed", "integer",
+                       requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
+                       **rat_label_and_tooltip(
+                           "Number of houses destroyed/uninhabitable",
+                           "How many houses are uninhabitable (uninhabitable = foundation and structure destroyed)?")),
+                 Field("houses_damaged", "integer",
+                       requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 99999999)),
+                       **rat_label_and_tooltip(
+                           "Number of houses damaged, but usable",
+                           "How many houses suffered damage but remain usable (usable = windows broken, cracks in walls, roof slightly damaged)?")),
+                 Field("houses_salvmat", "list:integer",
+                       requires = IS_EMPTY_OR(IS_IN_SET(rat_houses_salvmat_types,
+                                                        multiple=True,
+                                                        zero=None)),
+                       represent = lambda opt, set=rat_houses_salvmat_types: \
+                                       rat_represent_multiple(set, opt),
+                       **rat_label_and_tooltip(
+                           "Salvage material usable from destroyed houses",
+                           "What type of salvage material can be used from destroyed houses?",
+                           multiple=True)),
+                 Field("water_containers_available", "boolean",
+                       **rat_label_and_tooltip(
+                           "Water storage containers available for HH",
+                           "Do households have household water storage containers?")),
+                 Field("water_containers_sufficient", "boolean",
+                       **rat_label_and_tooltip(
+                           "Water storage containers sufficient per HH",
+                           "Do households each have at least 2 containers (10-20 litres each) to hold water?")),
+                 Field("water_containers_types", "list:integer",
+                       requires = IS_EMPTY_OR(IS_IN_SET(rat_water_container_types,
+                                                        zero=None,
+                                                        multiple=True)),
+                       represent = lambda opt, set=rat_water_container_types: \
+                                       rat_represent_multiple(set, opt),
+                       **rat_label_and_tooltip(
+                           "Types of water storage containers available",
+                           "What types of household water storage containers are available?",
+                           multiple=True)),
+                 Field("water_containers_types_other",
+                       label = T("Other types of water storage containers")),
+                 Field("cooking_equipment_available", "boolean",
+                       **rat_label_and_tooltip(
+                           "Appropriate cooking equipment/materials in HH",
+                           "Do households have appropriate equipment and materials to cook their food (stove, pots, dished plates, and a mug/drinking vessel, etc)?")),
+                 Field("sanitation_items_available", "boolean",
+                       **rat_label_and_tooltip(
+                           "Reliable access to sanitation/hygiene items",
+                           "Do people have reliable access to sufficient sanitation/hygiene items (bathing soap, laundry soap, shampoo, toothpaste and toothbrush)?")),
+                 Field("sanitation_items_available_women", "boolean",
+                       **rat_label_and_tooltip(
+                           "Easy access to sanitation items for women/girls",
+                           "Do women and girls have easy access to sanitary materials?")),
+                 Field("bedding_materials_available", "boolean",
+                       **rat_label_and_tooltip(
+                           "Bedding materials available",
+                           "Do households have bedding materials available (tarps, plastic mats, blankets)?")),
+                 Field("clothing_sets_available", "boolean",
+                       **rat_label_and_tooltip(
+                           "Appropriate clothing available",
+                           "Do people have at least 2 full sets of clothing (shirts, pants/sarong, underwear)?")),
+                 Field("nfi_assistance_available", "boolean",
+                       **rat_label_and_tooltip(
+                           "Shelter/NFI assistance received/expected",
+                           "Have households received any shelter/NFI assistance or is assistance expected in the coming days?")),
+                 Field("kits_hygiene_received", "boolean",
+                       label = T("Hygiene kits received")),
+                 Field("kits_hygiene_source",
+                       label = T("Hygiene kits, source")),
+                 Field("kits_household_received", "boolean",
+                       label = T("Household kits received")),
+                 Field("kits_household_source",
+                       label = T("Household kits, source")),
+                 Field("kits_dwelling_received", "boolean",
+                       label = T("Family tarpaulins received")),  # @ToDo: Better label, perhaps? A tarp isn't a dwelling.
+                 Field("kits_dwelling_source",
+                       label = T("Family tarpaulins, source")),
+                 s3_comments(),
+                 *s3_meta_fields())
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
-    configure(tablename, deletable=False)
+    configure(tablename,
+              deletable = False,
+              )
 
     # Section 4 - Water and Sanitation ----------------------------------------
 
@@ -779,119 +800,121 @@ def rat_tables():
 
     tablename = "assess_section4"
     define_table(tablename,
-                        assessment_id(),
-                        Field("water_source_pre_disaster_type", "integer",
-                              label = T("Type of water source before the disaster"),
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_water_source_types,
-                                                               zero=None)),
-                              represent = lambda opt: rat_water_source_types.get(opt,
-                                                                                 UNKNOWN_OPT)),
-                        Field("water_source_pre_disaster_description",
-                              label = T("Description of water source before the disaster")),
-                        Field("dwater_source_type", "integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_water_source_types,
-                                                               zero=None)),
-                              represent = lambda opt: rat_water_source_types.get(opt,
-                                                                                 UNKNOWN_OPT),
-                              **rat_label_and_tooltip(
-                                  "Current type of source for drinking water",
-                                  "What is your major source of drinking water?")),
-                        Field("dwater_source_description",
-                              label = T("Description of drinking water source")),
-                        Field("dwater_reserve",
-                              **rat_label_and_tooltip(
-                                  "How long will this water resource last?",
-                                  "Specify the minimum sustainability in weeks or days.")),
-                        Field("swater_source_type", "integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_water_source_types,
-                                                               zero=None)),
-                              represent = lambda opt: rat_water_source_types.get(opt,
-                                                                                 UNKNOWN_OPT),
-                              **rat_label_and_tooltip(
-                                  "Current type of source for sanitary water",
-                                  "What is your major source of clean water for daily use (ex: washing, cooking, bathing)?")),
-                        Field("swater_source_description",
-                              label = T("Description of sanitary water source")),
-                        Field("swater_reserve",
-                              **rat_label_and_tooltip(
-                                  "How long will this water resource last?",
-                                  "Specify the minimum sustainability in weeks or days.")),
-                        Field("water_coll_time", "integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_walking_time_opts,
-                                                               zero=None)),
-                              represent = lambda opt: rat_walking_time_opts.get(opt,
-                                                                                UNKNOWN_OPT),
-                              **rat_label_and_tooltip(
-                                  "Time needed to collect water",
-                                  "How long does it take you to reach the available water resources? Specify the time required to go there and back, including queuing time, by foot.")),
-                        Field("water_coll_safe", "boolean",
-                              label = T("Is it safe to collect water?"),
-                              default = True),
-                        Field("water_coll_safety_problems",
-                              label = T("If no, specify why")),
-                        Field("water_coll_person", "integer",
-                              label = T("Who usually collects water for the family?"),
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_water_coll_person_opts,
-                                                               zero=None)),
-                              represent = lambda opt: rat_water_coll_person_opts.get(opt,
-                                                                                     UNKNOWN_OPT)),
-                        Field("defec_place_type",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_defec_place_types,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt: rat_defec_place_types.get(opt,
-                                                                                UNKNOWN_OPT),
-                              **rat_label_and_tooltip(
-                                  "Type of place for defecation",
-                                  "Where do the majority of people defecate?",
-                                  multiple=True)),
-                        Field("defec_place_description",
-                              label = T("Description of defecation area")),
-                        Field("defec_place_distance", "integer",
-                              label = T("Distance between defecation area and water source"),
-                              comment = T("meters")),
-                        Field("defec_place_animals", "integer",
-                              label = T("Defecation area for animals"),
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_defec_place_animals_opts,
-                                                               zero = None)),
-                              represent = lambda opt: rat_defec_place_animals_opts.get(opt,
-                                                                                       UNKNOWN_OPT)),
-                        Field("close_industry", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Industry close to village/camp",
-                                  "Is there any industrial or agro-chemical production close to the affected area/village?")),
-                        Field("waste_disposal",
-                              **rat_label_and_tooltip(
-                                  "Place for solid waste disposal",
-                                  "Where is solid waste disposed in the village/camp?")),
-                        Field("latrines_number", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Number of latrines",
-                                  "How many latrines are available in the village/IDP centre/Camp?")),
-                        Field("latrines_type", "integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_latrine_types,
-                                                               zero=None)),
-                              represent = lambda opt: rat_latrine_types.get(opt,
-                                                                            UNKNOWN_OPT),
-                              **rat_label_and_tooltip(
-                                  "Type of latrines",
-                                  "What type of latrines are available in the village/IDP centre/Camp?")),
-                        Field("latrines_separation", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Separate latrines for women and men",
-                                  "Are there separate latrines for women and men available?")),
-                        Field("latrines_distance", "integer",
-                              **rat_label_and_tooltip(
-                                  "Distance between shelter and latrines",
-                                  "Distance between latrines and temporary shelter in meters")),
-                        s3_comments(),
-                        *s3_meta_fields())
+                assessment_id(),
+                Field("water_source_pre_disaster_type", "integer",
+                      label = T("Type of water source before the disaster"),
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_water_source_types,
+                                                       zero=None)),
+                      represent = lambda opt: rat_water_source_types.get(opt,
+                                                                         UNKNOWN_OPT)),
+                Field("water_source_pre_disaster_description",
+                      label = T("Description of water source before the disaster")),
+                Field("dwater_source_type", "integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_water_source_types,
+                                                       zero=None)),
+                      represent = lambda opt: rat_water_source_types.get(opt,
+                                                                         UNKNOWN_OPT),
+                      **rat_label_and_tooltip(
+                          "Current type of source for drinking water",
+                          "What is your major source of drinking water?")),
+                Field("dwater_source_description",
+                      label = T("Description of drinking water source")),
+                Field("dwater_reserve",
+                      **rat_label_and_tooltip(
+                          "How long will this water resource last?",
+                          "Specify the minimum sustainability in weeks or days.")),
+                Field("swater_source_type", "integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_water_source_types,
+                                                       zero=None)),
+                      represent = lambda opt: rat_water_source_types.get(opt,
+                                                                         UNKNOWN_OPT),
+                      **rat_label_and_tooltip(
+                          "Current type of source for sanitary water",
+                          "What is your major source of clean water for daily use (ex: washing, cooking, bathing)?")),
+                Field("swater_source_description",
+                      label = T("Description of sanitary water source")),
+                Field("swater_reserve",
+                      **rat_label_and_tooltip(
+                          "How long will this water resource last?",
+                          "Specify the minimum sustainability in weeks or days.")),
+                Field("water_coll_time", "integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_walking_time_opts,
+                                                       zero=None)),
+                      represent = lambda opt: rat_walking_time_opts.get(opt,
+                                                                        UNKNOWN_OPT),
+                      **rat_label_and_tooltip(
+                          "Time needed to collect water",
+                          "How long does it take you to reach the available water resources? Specify the time required to go there and back, including queuing time, by foot.")),
+                Field("water_coll_safe", "boolean",
+                      label = T("Is it safe to collect water?"),
+                      default = True),
+                Field("water_coll_safety_problems",
+                      label = T("If no, specify why")),
+                Field("water_coll_person", "integer",
+                      label = T("Who usually collects water for the family?"),
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_water_coll_person_opts,
+                                                       zero=None)),
+                      represent = lambda opt: rat_water_coll_person_opts.get(opt,
+                                                                             UNKNOWN_OPT)),
+                Field("defec_place_type",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_defec_place_types,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt: rat_defec_place_types.get(opt,
+                                                                        UNKNOWN_OPT),
+                      **rat_label_and_tooltip(
+                          "Type of place for defecation",
+                          "Where do the majority of people defecate?",
+                          multiple=True)),
+                Field("defec_place_description",
+                      label = T("Description of defecation area")),
+                Field("defec_place_distance", "integer",
+                      label = T("Distance between defecation area and water source"),
+                      comment = T("meters")),
+                Field("defec_place_animals", "integer",
+                      label = T("Defecation area for animals"),
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_defec_place_animals_opts,
+                                                       zero = None)),
+                      represent = lambda opt: rat_defec_place_animals_opts.get(opt,
+                                                                               UNKNOWN_OPT)),
+                Field("close_industry", "boolean",
+                      **rat_label_and_tooltip(
+                          "Industry close to village/camp",
+                          "Is there any industrial or agro-chemical production close to the affected area/village?")),
+                Field("waste_disposal",
+                      **rat_label_and_tooltip(
+                          "Place for solid waste disposal",
+                          "Where is solid waste disposed in the village/camp?")),
+                Field("latrines_number", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Number of latrines",
+                          "How many latrines are available in the village/IDP centre/Camp?")),
+                Field("latrines_type", "integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_latrine_types,
+                                                       zero=None)),
+                      represent = lambda opt: rat_latrine_types.get(opt,
+                                                                    UNKNOWN_OPT),
+                      **rat_label_and_tooltip(
+                          "Type of latrines",
+                          "What type of latrines are available in the village/IDP centre/Camp?")),
+                Field("latrines_separation", "boolean",
+                      **rat_label_and_tooltip(
+                          "Separate latrines for women and men",
+                          "Are there separate latrines for women and men available?")),
+                Field("latrines_distance", "integer",
+                      **rat_label_and_tooltip(
+                          "Distance between shelter and latrines",
+                          "Distance between latrines and temporary shelter in meters")),
+                s3_comments(),
+                *s3_meta_fields())
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
-    configure(tablename, deletable=False)
+    configure(tablename,
+              deletable = False,
+              )
 
     # Section 5 - Health ------------------------------------------------------
 
@@ -917,140 +940,142 @@ def rat_tables():
 
     tablename = "assess_section5"
     define_table(tablename,
-                        assessment_id(),
-                        Field("health_services_pre_disaster", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Health services functioning prior to disaster",
-                                  "Were there health services functioning for the community prior to the disaster?")),
-                        Field("medical_supplies_pre_disaster", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Basic medical supplies available prior to disaster",
-                                  "Were basic medical supplies available for health services prior to the disaster?")),
-                        Field("health_services_post_disaster", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Health services functioning since disaster",
-                                  "Are there health services functioning for the community since the disaster?")),
-                        Field("medical_supplies_post_disaster", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Basic medical supplies available since disaster",
-                                  "Are basic medical supplies available for health services since the disaster?")),
-                        Field("medical_supplies_reserve", "integer",
-                              label = T("How many days will the supplies last?")),
-                        Field("health_services_available_types", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_health_services_types,
-                                                               zero=None, multiple=True)),
-                              represent = lambda opt: \
-                                              rat_represent_multiple(rat_health_services_types, opt),
-                              **rat_label_and_tooltip(
-                                  "Types of health services available",
-                                  "What types of health services are still functioning in the affected area?",
-                                  multiple=True)),
-                        Field("staff_number_doctors", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Number of doctors actively working",
-                                  "How many doctors in the health centers are still actively working?")),
-                        Field("staff_number_nurses", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Number of nurses actively working",
-                                  "How many nurses in the health centers are still actively working?")),
-                        Field("staff_number_midwives", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Number of midwives actively working",
-                                  "How many midwives in the health centers are still actively working?")),
-                        Field("health_service_walking_time", "integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_walking_time_opts,
-                                                               zero=None)),
-                              represent = lambda opt: rat_walking_time_opts.get(opt,
-                                                                                UNKNOWN_OPT),
-                              **rat_label_and_tooltip(
-                                  "Walking time to the health service",
-                                  "How long does it take you to walk to the health service?")),
-                        Field("health_problems_adults", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_health_problems_opts,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt, set=rat_health_problems_opts: \
-                                              rat_represent_multiple(set, opt),
-                              **rat_label_and_tooltip(
-                                  "Current type of health problems, adults",
-                                  "What types of health problems do people currently have?",
-                                  multiple=True)),
-                        Field("health_problems_adults_other",
-                              label = T("Other current health problems, adults")),
-                        Field("health_problems_children", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_health_problems_opts,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt, set=rat_health_problems_opts: \
-                                              rat_represent_multiple(set, opt),
-                              **rat_label_and_tooltip(
-                                  "Current type of health problems, children",
-                                  "What types of health problems do children currently have?",
-                                  multiple=True)),
-                        Field("health_problems_children_other",
-                              label = T("Other current health problems, children")),
-                        Field("chronical_illness_cases", "boolean",  # @ToDo: "chronic illness"?
-                              **rat_label_and_tooltip(
-                                  "People with chronical illnesses",
-                                  "Are there people with chronical illnesses in your community?")),
-                        Field("chronical_illness_children", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Children with chronical illnesses",
-                                  "Are there children with chronical illnesses in your community?")),
-                        Field("chronical_illness_elderly", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Older people with chronical illnesses",
-                                  "Are there older people with chronical illnesses in your community?")),
-                        Field("chronical_care_sufficient", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Sufficient care/assistance for chronically ill",
-                                  "Are the chronically ill receiving sufficient care and assistance?")),
-                        Field("malnutrition_present_pre_disaster", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Malnutrition present prior to disaster",
-                                  "Were there cases of malnutrition in this area prior to the disaster?")),
-                        Field("mmd_present_pre_disaster", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Micronutrient malnutrition prior to disaster",
-                                  "Were there reports or evidence of outbreaks of any micronutrient malnutrition disorders before the emergency?")),
-                        Field("breast_milk_substitutes_pre_disaster", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Breast milk substitutes used prior to disaster",
-                                  "Were breast milk substitutes used prior to the disaster?")),
-                        Field("breast_milk_substitutes_post_disaster", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Breast milk substitutes in use since disaster",
-                                  "Are breast milk substitutes being used here since the disaster?")),
-                        Field("infant_nutrition_alternative", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_infant_nutrition_alternative_opts,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt, set=rat_infant_nutrition_alternative_opts: \
-                                              rat_represent_multiple(set, opt),
-                              **rat_label_and_tooltip(
-                                  "Alternative infant nutrition in use",
-                                  "Babies who are not being breastfed, what are they being fed on?",
-                                  multiple=True)),
-                        Field("infant_nutrition_alternative_other",
-                              label = T("Other alternative infant nutrition in use")),
-                        Field("u5_diarrhea", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Diarrhea among children under 5",
-                                  "Are there cases of diarrhea among children under the age of 5?")),
-                        Field("u5_diarrhea_rate_48h", "integer",
-                              **rat_label_and_tooltip(
-                                  "Approx. number of cases/48h",
-                                  "Approximately how many children under 5 with diarrhea in the past 48 hours?")),
-                        s3_comments(),
-                        *s3_meta_fields())
+                assessment_id(),
+                Field("health_services_pre_disaster", "boolean",
+                      **rat_label_and_tooltip(
+                          "Health services functioning prior to disaster",
+                          "Were there health services functioning for the community prior to the disaster?")),
+                Field("medical_supplies_pre_disaster", "boolean",
+                      **rat_label_and_tooltip(
+                          "Basic medical supplies available prior to disaster",
+                          "Were basic medical supplies available for health services prior to the disaster?")),
+                Field("health_services_post_disaster", "boolean",
+                      **rat_label_and_tooltip(
+                          "Health services functioning since disaster",
+                          "Are there health services functioning for the community since the disaster?")),
+                Field("medical_supplies_post_disaster", "boolean",
+                      **rat_label_and_tooltip(
+                          "Basic medical supplies available since disaster",
+                          "Are basic medical supplies available for health services since the disaster?")),
+                Field("medical_supplies_reserve", "integer",
+                      label = T("How many days will the supplies last?")),
+                Field("health_services_available_types", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_health_services_types,
+                                                       zero=None, multiple=True)),
+                      represent = lambda opt: \
+                                      rat_represent_multiple(rat_health_services_types, opt),
+                      **rat_label_and_tooltip(
+                          "Types of health services available",
+                          "What types of health services are still functioning in the affected area?",
+                          multiple=True)),
+                Field("staff_number_doctors", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Number of doctors actively working",
+                          "How many doctors in the health centers are still actively working?")),
+                Field("staff_number_nurses", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Number of nurses actively working",
+                          "How many nurses in the health centers are still actively working?")),
+                Field("staff_number_midwives", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Number of midwives actively working",
+                          "How many midwives in the health centers are still actively working?")),
+                Field("health_service_walking_time", "integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_walking_time_opts,
+                                                       zero=None)),
+                      represent = lambda opt: rat_walking_time_opts.get(opt,
+                                                                        UNKNOWN_OPT),
+                      **rat_label_and_tooltip(
+                          "Walking time to the health service",
+                          "How long does it take you to walk to the health service?")),
+                Field("health_problems_adults", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_health_problems_opts,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt, set=rat_health_problems_opts: \
+                                      rat_represent_multiple(set, opt),
+                      **rat_label_and_tooltip(
+                          "Current type of health problems, adults",
+                          "What types of health problems do people currently have?",
+                          multiple=True)),
+                Field("health_problems_adults_other",
+                      label = T("Other current health problems, adults")),
+                Field("health_problems_children", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_health_problems_opts,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt, set=rat_health_problems_opts: \
+                                      rat_represent_multiple(set, opt),
+                      **rat_label_and_tooltip(
+                          "Current type of health problems, children",
+                          "What types of health problems do children currently have?",
+                          multiple=True)),
+                Field("health_problems_children_other",
+                      label = T("Other current health problems, children")),
+                Field("chronical_illness_cases", "boolean",  # @ToDo: "chronic illness"?
+                      **rat_label_and_tooltip(
+                          "People with chronical illnesses",
+                          "Are there people with chronical illnesses in your community?")),
+                Field("chronical_illness_children", "boolean",
+                      **rat_label_and_tooltip(
+                          "Children with chronical illnesses",
+                          "Are there children with chronical illnesses in your community?")),
+                Field("chronical_illness_elderly", "boolean",
+                      **rat_label_and_tooltip(
+                          "Older people with chronical illnesses",
+                          "Are there older people with chronical illnesses in your community?")),
+                Field("chronical_care_sufficient", "boolean",
+                      **rat_label_and_tooltip(
+                          "Sufficient care/assistance for chronically ill",
+                          "Are the chronically ill receiving sufficient care and assistance?")),
+                Field("malnutrition_present_pre_disaster", "boolean",
+                      **rat_label_and_tooltip(
+                          "Malnutrition present prior to disaster",
+                          "Were there cases of malnutrition in this area prior to the disaster?")),
+                Field("mmd_present_pre_disaster", "boolean",
+                      **rat_label_and_tooltip(
+                          "Micronutrient malnutrition prior to disaster",
+                          "Were there reports or evidence of outbreaks of any micronutrient malnutrition disorders before the emergency?")),
+                Field("breast_milk_substitutes_pre_disaster", "boolean",
+                      **rat_label_and_tooltip(
+                          "Breast milk substitutes used prior to disaster",
+                          "Were breast milk substitutes used prior to the disaster?")),
+                Field("breast_milk_substitutes_post_disaster", "boolean",
+                      **rat_label_and_tooltip(
+                          "Breast milk substitutes in use since disaster",
+                          "Are breast milk substitutes being used here since the disaster?")),
+                Field("infant_nutrition_alternative", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_infant_nutrition_alternative_opts,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt, set=rat_infant_nutrition_alternative_opts: \
+                                      rat_represent_multiple(set, opt),
+                      **rat_label_and_tooltip(
+                          "Alternative infant nutrition in use",
+                          "Babies who are not being breastfed, what are they being fed on?",
+                          multiple=True)),
+                Field("infant_nutrition_alternative_other",
+                      label = T("Other alternative infant nutrition in use")),
+                Field("u5_diarrhea", "boolean",
+                      **rat_label_and_tooltip(
+                          "Diarrhea among children under 5",
+                          "Are there cases of diarrhea among children under the age of 5?")),
+                Field("u5_diarrhea_rate_48h", "integer",
+                      **rat_label_and_tooltip(
+                          "Approx. number of cases/48h",
+                          "Approximately how many children under 5 with diarrhea in the past 48 hours?")),
+                s3_comments(),
+                *s3_meta_fields())
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
-    configure(tablename, deletable=False)
+    configure(tablename,
+              deletable = False,
+              )
 
     # Section 6 - Nutrition/Food Security -------------------------------------
 
@@ -1089,67 +1114,69 @@ def rat_tables():
 
     tablename = "assess_section6"
     define_table(tablename,
-                        assessment_id(),
-                        Field("food_stocks_main_dishes", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_main_dish_types,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt, set=rat_main_dish_types: \
-                                              rat_represent_multiple(set, opt),
-                              **rat_label_and_tooltip(
-                                  "Existing food stocks, main dishes",
-                                  "What food stocks exist? (main dishes)",
-                                  multiple=True)),
-                        # @ToDo: Should there be a field "food_stocks_other_main_dishes"?
-                        Field("food_stocks_side_dishes", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_side_dish_types,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt, set=rat_side_dish_types: \
-                                              rat_represent_multiple(set, opt),
-                              **rat_label_and_tooltip(
-                                  "Existing food stocks, side dishes",
-                                  "What food stocks exist? (side dishes)",
-                                  multiple=True)),
-                        Field("food_stocks_other_side_dishes",
-                              label = T("Other side dishes in stock")),
-                        Field("food_stocks_reserve", "integer",
-                              label = T("How long will the food last?"),
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_food_stock_reserve_opts,
-                                                               zero=None)),
-                              represent = lambda opt: rat_food_stock_reserve_opts.get(opt,
-                                                                                      UNKNOWN_OPT)),
-                        Field("food_sources", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_food_source_types,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt, set=rat_food_source_types: \
-                                              rat_represent_multiple(set, opt),
-                              **rat_label_and_tooltip(
-                                  "Usual food sources in the area",
-                                  "What are the people's normal ways to obtain food in this area?",
-                                  multiple=True)),
-                        Field("food_sources_other",
-                              label = T("Other ways to obtain food")),
-                        Field("food_sources_disruption", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Normal food sources disrupted",
-                                  "Have normal food sources been disrupted?")),
-                        Field("food_sources_disruption_details",
-                              label = T("If yes, which and how")),
-                        Field("food_assistance_available", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Food assistance available/expected",
-                                  "Have the people received or are you expecting any medical or food assistance in the coming days?")),
-                        Field("food_assistance_details", "text",
-                              label = T("If yes, specify what and by whom")),
-                        s3_comments(),
-                        *s3_meta_fields())
+                assessment_id(),
+                Field("food_stocks_main_dishes", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_main_dish_types,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt, set=rat_main_dish_types: \
+                                      rat_represent_multiple(set, opt),
+                      **rat_label_and_tooltip(
+                          "Existing food stocks, main dishes",
+                          "What food stocks exist? (main dishes)",
+                          multiple=True)),
+                # @ToDo: Should there be a field "food_stocks_other_main_dishes"?
+                Field("food_stocks_side_dishes", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_side_dish_types,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt, set=rat_side_dish_types: \
+                                      rat_represent_multiple(set, opt),
+                      **rat_label_and_tooltip(
+                          "Existing food stocks, side dishes",
+                          "What food stocks exist? (side dishes)",
+                          multiple=True)),
+                Field("food_stocks_other_side_dishes",
+                      label = T("Other side dishes in stock")),
+                Field("food_stocks_reserve", "integer",
+                      label = T("How long will the food last?"),
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_food_stock_reserve_opts,
+                                                       zero=None)),
+                      represent = lambda opt: rat_food_stock_reserve_opts.get(opt,
+                                                                              UNKNOWN_OPT)),
+                Field("food_sources", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_food_source_types,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt, set=rat_food_source_types: \
+                                      rat_represent_multiple(set, opt),
+                      **rat_label_and_tooltip(
+                          "Usual food sources in the area",
+                          "What are the people's normal ways to obtain food in this area?",
+                          multiple=True)),
+                Field("food_sources_other",
+                      label = T("Other ways to obtain food")),
+                Field("food_sources_disruption", "boolean",
+                      **rat_label_and_tooltip(
+                          "Normal food sources disrupted",
+                          "Have normal food sources been disrupted?")),
+                Field("food_sources_disruption_details",
+                      label = T("If yes, which and how")),
+                Field("food_assistance_available", "boolean",
+                      **rat_label_and_tooltip(
+                          "Food assistance available/expected",
+                          "Have the people received or are you expecting any medical or food assistance in the coming days?")),
+                Field("food_assistance_details", "text",
+                      label = T("If yes, specify what and by whom")),
+                s3_comments(),
+                *s3_meta_fields())
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
-    configure(tablename, deletable=False)
+    configure(tablename,
+              deletable = False,
+              )
 
     # Section 7 - Livelihood --------------------------------------------------
 
@@ -1186,87 +1213,89 @@ def rat_tables():
 
     tablename = "assess_section7"
     define_table(tablename,
-                        assessment_id(),
-                        Field("income_sources_pre_disaster", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_income_source_opts,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt, set=rat_income_source_opts: \
-                                              rat_represent_multiple(set, opt),
-                              **rat_label_and_tooltip(
-                                  "Main income sources before disaster",
-                                  "What were your main sources of income before the disaster?",
-                                  multiple=True)),
-                        Field("income_sources_post_disaster", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_income_source_opts,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt, set=rat_income_source_opts: \
-                                              rat_represent_multiple(set, opt),
-                              **rat_label_and_tooltip(
-                                  "Current main income sources",
-                                  "What are your main sources of income now?",
-                                  multiple=True)),
-                        Field("main_expenses", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_expense_types,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt, set=rat_expense_types: \
-                                              rat_represent_multiple(set, opt),
-                              **rat_label_and_tooltip(
-                                  "Current major expenses",
-                                  "What do you spend most of your income on now?",
-                                  multiple=True)),
-                        Field("main_expenses_other",
-                              label = T("Other major expenses")),
+                assessment_id(),
+                Field("income_sources_pre_disaster", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_income_source_opts,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt, set=rat_income_source_opts: \
+                                      rat_represent_multiple(set, opt),
+                      **rat_label_and_tooltip(
+                          "Main income sources before disaster",
+                          "What were your main sources of income before the disaster?",
+                          multiple=True)),
+                Field("income_sources_post_disaster", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_income_source_opts,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt, set=rat_income_source_opts: \
+                                      rat_represent_multiple(set, opt),
+                      **rat_label_and_tooltip(
+                          "Current main income sources",
+                          "What are your main sources of income now?",
+                          multiple=True)),
+                Field("main_expenses", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_expense_types,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt, set=rat_expense_types: \
+                                      rat_represent_multiple(set, opt),
+                      **rat_label_and_tooltip(
+                          "Current major expenses",
+                          "What do you spend most of your income on now?",
+                          multiple=True)),
+                Field("main_expenses_other",
+                      label = T("Other major expenses")),
 
-                        Field("business_damaged", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Business damaged",
-                                  "Has your business been damaged in the course of the disaster?")),
-                        Field("business_cash_available", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Cash available to restart business",
-                                  "Do you have access to cash to restart your business?")),
-                        Field("business_cash_source", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_cash_source_opts,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt, set=rat_cash_source_opts: \
-                                              rat_represent_multiple(set, opt),
-                              **rat_label_and_tooltip(
-                                  "Main cash source",
-                                  "What are your main sources of cash to restart your business?")),
-                        Field("rank_reconstruction_assistance", "integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_ranking_opts, zero=None)),
-                              **rat_label_and_tooltip(
-                                  "Immediate reconstruction assistance, Rank",
-                                  "Assistance for immediate repair/reconstruction of houses")),
-                        Field("rank_farmland_fishing_assistance", "integer",
-                              label = T("Farmland/fishing material assistance, Rank"),
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_ranking_opts, zero=None))),
-                        Field("rank_poultry_restocking", "integer",
-                              label = T("Poultry restocking, Rank"),
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_ranking_opts, zero=None))),
-                        Field("rank_health_care_assistance", "integer",
-                              label = T("Health care assistance, Rank"),
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_ranking_opts, zero=None))),
-                        Field("rank_transportation_assistance", "integer",
-                              label = T("Transportation assistance, Rank"),
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_ranking_opts, zero=None))),
-                        Field("other_assistance_needed",
-                              label = T("Other assistance needed")),
-                        Field("rank_other_assistance", "integer",
-                              label = T("Other assistance, Rank"),
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_ranking_opts, zero=None))),
+                Field("business_damaged", "boolean",
+                      **rat_label_and_tooltip(
+                          "Business damaged",
+                          "Has your business been damaged in the course of the disaster?")),
+                Field("business_cash_available", "boolean",
+                      **rat_label_and_tooltip(
+                          "Cash available to restart business",
+                          "Do you have access to cash to restart your business?")),
+                Field("business_cash_source", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_cash_source_opts,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt, set=rat_cash_source_opts: \
+                                      rat_represent_multiple(set, opt),
+                      **rat_label_and_tooltip(
+                          "Main cash source",
+                          "What are your main sources of cash to restart your business?")),
+                Field("rank_reconstruction_assistance", "integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_ranking_opts, zero=None)),
+                      **rat_label_and_tooltip(
+                          "Immediate reconstruction assistance, Rank",
+                          "Assistance for immediate repair/reconstruction of houses")),
+                Field("rank_farmland_fishing_assistance", "integer",
+                      label = T("Farmland/fishing material assistance, Rank"),
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_ranking_opts, zero=None))),
+                Field("rank_poultry_restocking", "integer",
+                      label = T("Poultry restocking, Rank"),
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_ranking_opts, zero=None))),
+                Field("rank_health_care_assistance", "integer",
+                      label = T("Health care assistance, Rank"),
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_ranking_opts, zero=None))),
+                Field("rank_transportation_assistance", "integer",
+                      label = T("Transportation assistance, Rank"),
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_ranking_opts, zero=None))),
+                Field("other_assistance_needed",
+                      label = T("Other assistance needed")),
+                Field("rank_other_assistance", "integer",
+                      label = T("Other assistance, Rank"),
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_ranking_opts, zero=None))),
 
-                        s3_comments(),
-                        *s3_meta_fields())
+                s3_comments(),
+                *s3_meta_fields())
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
 
-    configure(tablename, deletable=False)
+    configure(tablename,
+              deletable = False,
+              )
 
     # Section 8 - Education ---------------------------------------------------
 
@@ -1307,165 +1336,167 @@ def rat_tables():
 
     tablename = "assess_section8"
     define_table(tablename,
-                        assessment_id(),
-                        Field("schools_total", "integer",
-                              label = T("Total number of schools in affected area"),
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999))),
-                        Field("schools_public", "integer",
-                              label = T("Number of public schools"),
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999))),
-                        Field("schools_private", "integer",
-                              label = T("Number of private schools"),
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999))),
-                        Field("schools_religious", "integer",
-                              label = T("Number of religious schools"),
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999))),
+                assessment_id(),
+                Field("schools_total", "integer",
+                      label = T("Total number of schools in affected area"),
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999))),
+                Field("schools_public", "integer",
+                      label = T("Number of public schools"),
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999))),
+                Field("schools_private", "integer",
+                      label = T("Number of private schools"),
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999))),
+                Field("schools_religious", "integer",
+                      label = T("Number of religious schools"),
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999))),
 
-                        Field("schools_destroyed", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Number of schools destroyed/uninhabitable",
-                                  "uninhabitable = foundation and structure destroyed")),
-                        Field("schools_damaged", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Number of schools damaged but usable",
-                                  "windows broken, cracks in walls, roof slightly damaged")),
-                        Field("schools_salvmat", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_schools_salvmat_types,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt, set=rat_schools_salvmat_types: \
-                                              rat_represent_multiple(set, opt),
-                              **rat_label_and_tooltip(
-                                  "Salvage material usable from destroyed schools",
-                                  "What type of salvage material can be used from destroyed schools?",
-                                  multiple=True)),
+                Field("schools_destroyed", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Number of schools destroyed/uninhabitable",
+                          "uninhabitable = foundation and structure destroyed")),
+                Field("schools_damaged", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Number of schools damaged but usable",
+                          "windows broken, cracks in walls, roof slightly damaged")),
+                Field("schools_salvmat", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_schools_salvmat_types,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt, set=rat_schools_salvmat_types: \
+                                      rat_represent_multiple(set, opt),
+                      **rat_label_and_tooltip(
+                          "Salvage material usable from destroyed schools",
+                          "What type of salvage material can be used from destroyed schools?",
+                          multiple=True)),
 
-                        Field("alternative_study_places_available", "boolean",
-                              **rat_label_and_tooltip(
-                                  "Alternative places for studying available",
-                                  "Are there alternative places for studying?")),
-                        Field("alternative_study_places_number", "integer",
-                              label = T("Number of alternative places for studying"),
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999))),
-                        Field("alternative_study_places", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_alternative_study_places,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt, set=rat_alternative_study_places: \
-                                              rat_represent_multiple(set, opt),
-                              **rat_label_and_tooltip(
-                                  "Alternative places for studying",
-                                  "Where are the alternative places for studying?",
-                                  multiple=True)),
-                        Field("alternative_study_places_other",
-                              label = T("Other alternative places for study")),
+                Field("alternative_study_places_available", "boolean",
+                      **rat_label_and_tooltip(
+                          "Alternative places for studying available",
+                          "Are there alternative places for studying?")),
+                Field("alternative_study_places_number", "integer",
+                      label = T("Number of alternative places for studying"),
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999))),
+                Field("alternative_study_places", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_alternative_study_places,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt, set=rat_alternative_study_places: \
+                                      rat_represent_multiple(set, opt),
+                      **rat_label_and_tooltip(
+                          "Alternative places for studying",
+                          "Where are the alternative places for studying?",
+                          multiple=True)),
+                Field("alternative_study_places_other",
+                      label = T("Other alternative places for study")),
 
-                        Field("schools_open_pre_disaster", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Number of schools open before disaster",
-                                  "How many primary/secondary schools were opening prior to the disaster?")),
-                        Field("schools_open_post_disaster", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Number of schools open now",
-                                  "How many of the primary/secondary schools are now open and running a regular schedule of class?")),
+                Field("schools_open_pre_disaster", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Number of schools open before disaster",
+                          "How many primary/secondary schools were opening prior to the disaster?")),
+                Field("schools_open_post_disaster", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Number of schools open now",
+                          "How many of the primary/secondary schools are now open and running a regular schedule of class?")),
 
-                        Field("teachers_active_pre_disaster", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Number of teachers before disaster",
-                                  "How many teachers worked in the schools prior to the disaster?")),
-                        Field("teachers_affected_by_disaster", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Number of teachers affected by disaster",
-                                  "How many teachers have been affected by the disaster (affected = unable to work)?")),
+                Field("teachers_active_pre_disaster", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Number of teachers before disaster",
+                          "How many teachers worked in the schools prior to the disaster?")),
+                Field("teachers_affected_by_disaster", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Number of teachers affected by disaster",
+                          "How many teachers have been affected by the disaster (affected = unable to work)?")),
 
-                        Field("children_0612_female", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Girls 6-12 yrs in affected area",
-                                  "How many primary school age girls (6-12) are in the affected area?")),
-                        Field("children_0612_male", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Boys 6-12 yrs in affected area",
-                                  "How many primary school age boys (6-12) are in the affected area?")),
-                        Field("children_0612_not_in_school_female", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Girls 6-12 yrs not attending school",
-                                  "How many of the primary school age girls (6-12) in the area are not attending school?")),
-                        Field("children_0612_not_in_school_male", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Boys 6-12 yrs not attending school",
-                                  "How many of the primary school age boys (6-12) in the area are not attending school?")),
+                Field("children_0612_female", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Girls 6-12 yrs in affected area",
+                          "How many primary school age girls (6-12) are in the affected area?")),
+                Field("children_0612_male", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Boys 6-12 yrs in affected area",
+                          "How many primary school age boys (6-12) are in the affected area?")),
+                Field("children_0612_not_in_school_female", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Girls 6-12 yrs not attending school",
+                          "How many of the primary school age girls (6-12) in the area are not attending school?")),
+                Field("children_0612_not_in_school_male", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Boys 6-12 yrs not attending school",
+                          "How many of the primary school age boys (6-12) in the area are not attending school?")),
 
-                        Field("children_1318_female", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Girls 13-18 yrs in affected area",
-                                  "How many secondary school age girls (13-18) are in the affected area?")),
-                        Field("children_1318_male", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Boys 13-18 yrs in affected area",
-                                  "How many secondary school age boys (13-18) are in the affected area?")),
-                        Field("children_1318_not_in_school_female", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Girls 13-18 yrs not attending school",
-                                  "How many of the secondary school age girls (13-18) in the area are not attending school?")),
-                        Field("children_1318_not_in_school_male", "integer",
-                              requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
-                              **rat_label_and_tooltip(
-                                  "Boys 13-18 yrs not attending school",
-                                  "How many of the secondary school age boys (13-18) in the area are not attending school?")),
+                Field("children_1318_female", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Girls 13-18 yrs in affected area",
+                          "How many secondary school age girls (13-18) are in the affected area?")),
+                Field("children_1318_male", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Boys 13-18 yrs in affected area",
+                          "How many secondary school age boys (13-18) are in the affected area?")),
+                Field("children_1318_not_in_school_female", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Girls 13-18 yrs not attending school",
+                          "How many of the secondary school age girls (13-18) in the area are not attending school?")),
+                Field("children_1318_not_in_school_male", "integer",
+                      requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, 999999)),
+                      **rat_label_and_tooltip(
+                          "Boys 13-18 yrs not attending school",
+                          "How many of the secondary school age boys (13-18) in the area are not attending school?")),
 
-                        Field("school_attendance_barriers", "list:integer",
-                              requires = IS_EMPTY_OR(IS_IN_SET(rat_school_attendance_barriers_opts,
-                                                               zero=None,
-                                                               multiple=True)),
-                              represent = lambda opt, set=rat_school_attendance_barriers_opts: \
-                                              rat_represent_multiple(set, opt),
-                              **rat_label_and_tooltip(
-                                  "Factors affecting school attendance",
-                                  "What are the factors affecting school attendance?",
-                                  multiple=True)),
-                        Field("school_attendance_barriers_other",
-                              label = T("Other factors affecting school attendance")),
+                Field("school_attendance_barriers", "list:integer",
+                      requires = IS_EMPTY_OR(IS_IN_SET(rat_school_attendance_barriers_opts,
+                                                       zero=None,
+                                                       multiple=True)),
+                      represent = lambda opt, set=rat_school_attendance_barriers_opts: \
+                                      rat_represent_multiple(set, opt),
+                      **rat_label_and_tooltip(
+                          "Factors affecting school attendance",
+                          "What are the factors affecting school attendance?",
+                          multiple=True)),
+                Field("school_attendance_barriers_other",
+                      label = T("Other factors affecting school attendance")),
 
-                        Field("school_assistance_available", "boolean",
-                              **rat_label_and_tooltip(
-                                  "School assistance received/expected",
-                                  "Have schools received or are expecting to receive any assistance?")),
-                        Field("school_assistance_tents_available", "boolean",
-                              label = T("School tents received")),
-                        Field("school_assistence_tents_source",
-                              label = T("School tents, source")),
-                        Field("school_assistance_materials_available", "boolean",
-                              label = T("Education materials received")),
-                        Field("school_assistance_materials_source",
-                              label = T("Education materials, source")),
-                        Field("school_assistance_other_available", "boolean",
-                              label = T("Other school assistance received")),
-                        Field("school_assistance_other",
-                              label = T("Other school assistance, details")),
-                        Field("school_assistance_other_source",
-                              label = T("Other school assistance, source")),
-                        s3_comments(),
-                        *s3_meta_fields())
+                Field("school_assistance_available", "boolean",
+                      **rat_label_and_tooltip(
+                          "School assistance received/expected",
+                          "Have schools received or are expecting to receive any assistance?")),
+                Field("school_assistance_tents_available", "boolean",
+                      label = T("School tents received")),
+                Field("school_assistence_tents_source",
+                      label = T("School tents, source")),
+                Field("school_assistance_materials_available", "boolean",
+                      label = T("Education materials received")),
+                Field("school_assistance_materials_source",
+                      label = T("Education materials, source")),
+                Field("school_assistance_other_available", "boolean",
+                      label = T("Other school assistance received")),
+                Field("school_assistance_other",
+                      label = T("Other school assistance, details")),
+                Field("school_assistance_other_source",
+                      label = T("Other school assistance, source")),
+                s3_comments(),
+                *s3_meta_fields())
 
     # @ToDo: onvalidation!
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
-    
-    configure(tablename, deletable=False)
+
+    configure(tablename,
+              deletable = False,
+              )
 
 
     # Section 9 - Protection --------------------------------------------------
@@ -1720,37 +1751,39 @@ def rat_tables():
 
     # CRUD strings
     crud_strings[tablename] = rat_section_crud_strings
-    
-    configure(tablename, deletable=False)
+
+    configure(tablename,
+              deletable = False,
+              )
 
     # Sections as components of RAT
     add_components("assess_rat",
-                   assess_section2={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section3={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section4={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section5={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section6={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section7={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section8={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                   assess_section9={"joinby": "assessment_id",
-                                    "multiple": False,
-                                   },
-                  )
-                 
+                   assess_section2 = {"joinby": "assessment_id",
+                                      "multiple": False,
+                                      },
+                   assess_section3 = {"joinby": "assessment_id",
+                                      "multiple": False,
+                                      },
+                   assess_section4 = {"joinby": "assessment_id",
+                                      "multiple": False,
+                                      },
+                   assess_section5 = {"joinby": "assessment_id",
+                                      "multiple": False,
+                                      },
+                   assess_section6 = {"joinby": "assessment_id",
+                                      "multiple": False,
+                                      },
+                   assess_section7 = {"joinby": "assessment_id",
+                                      "multiple": False,
+                                      },
+                   assess_section8 = {"joinby": "assessment_id",
+                                      "multiple": False,
+                                      },
+                   assess_section9 = {"joinby": "assessment_id",
+                                      "multiple": False,
+                                      },
+                   )
+
     # -----------------------------------------------------------------------------
     def assess_rat_summary(r, **attr):
 
@@ -1945,13 +1978,13 @@ def rat():
 
     # Subheadings in forms:
     configure("assess_section2",
-        subheadings = {
-            T("Population and number of households"): "population_total",
-            T("Fatalities"): "dead_women",
-            T("Casualties"): "injured_women",
-            T("Missing Persons"): "missing_women",
-            T("General information on demographics"): "household_head_elderly",
-            T("Comments"): "comments"})
+              subheadings = {T("Population and number of households"): "population_total",
+                             T("Fatalities"): "dead_women",
+                             T("Casualties"): "injured_women",
+                             T("Missing Persons"): "missing_women",
+                             T("General information on demographics"): "household_head_elderly",
+                             T("Comments"): "comments"
+                             })
     configure("assess_section3",
         subheadings = {
             T("Access to Shelter"): "houses_total",

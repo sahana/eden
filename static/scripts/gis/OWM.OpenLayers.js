@@ -751,23 +751,7 @@ if( st.dt>times.sunrise && st.dt< times.sunset ) var day='d'; else var day='n';
 var wtext = GetWeatherText2(st);
 
 var h_header = 
-'<p class="weather_title"><a style="weather_title_link" href="http://openweathermap.org/city/'+st.id+'">'+st.name+'</a></p> \
-<div style="float: left;" >\
-\
-<div class="weather_block">\
- <div class="cur_weather_block" title="'+wtext+'">\
-  <img class="weather_image" alt="'+wtext+'" src="http://openweathermap.org/img/w/'+GetWeatherIconDay(st,day)+'"/>\
-  <div class="temp_block" >\
-   <div class="big_temp" title="Current Temperature '+dt+'">'+temp+'°</div>\
-   <div class="small_temp_block" >\
-    <div class="small_temp">'+wtext+'</div>\
-   </div>\
-  </div>\
- </div>\
- <div class="small_val_grey" title="Min and max temperature">Min t: '+temp_min+' / Max t: '+temp_max+' °</div>\
- <div class="small_val_grey">Humidity: ' + st.main.humidity +'%</div>\
- <div class="small_val_grey">Wind: '+st.wind.speed+' m/s</div>\
-</div>';
+'<p class="weather_title"><a style="weather_title_link" href="http://openweathermap.org/city/'+st.id+'">'+st.name+'</a></p><div style="float:left" ><div class="weather_block"><div class="cur_weather_block" title="'+wtext+'"><img class="weather_image" alt="'+wtext+'" src="http://openweathermap.org/img/w/'+GetWeatherIconDay(st,day)+'"/><div class="temp_block" ><div class="big_temp" title="Current Temperature '+dt+'">'+temp+'°</div><div class="small_temp_block" ><div class="small_temp">'+wtext+'</div></div></div></div><div class="small_val_grey" title="Min and max temperature">Min t: '+temp_min+' / Max t: '+temp_max+' °</div><div class="small_val_grey">Humidity: ' + st.main.humidity +'%</div><div class="small_val_grey">Wind: '+st.wind.speed+' m/s</div></div>';
 
 h_footer = '</div>';
 
@@ -790,19 +774,9 @@ for(var i = j; i < cnt+j ; i++){
 	hr = dtat.getHours(); 
 	dt = hr + ':00';
 	if(hr<10) dt = '0' + dt; 
- 
 
-h_o = 
-'<div style="font-size: small; float: left; text-align: center;" >\
- <div title="' + WeekDayText.days[dtat.getDay()] + '">'+WeekDayText.days_small[dtat.getDay()]+'</div>\
- <div title="' + dtat.toString() + '">'+dt+'</div>\
- <img alt="'+GetWeatherText2(forecast[i])+'" src="http://openweathermap.org/img/w/'+GetWeatherIcon2(st, forecast[i])+'"/>\
- <div class="small_val" title="Temperature">'+temp+'°</div>\
- <div class="small_val" title="Ветер">'+forecast[i].wind.speed+' m/s</div>\
- <div class="small_val_grey" title="Давление">'+forecast[i].main.pressure+'</div>\
-</div>'
-
-	h_body = h_body + h_o;
+h_o = '<div style="font-size:small;float:left;text-align:center;"><div title="' + WeekDayText.days[dtat.getDay()] + '">'+WeekDayText.days_small[dtat.getDay()]+'</div><div title="' + dtat.toString() + '">'+dt+'</div><img alt="'+GetWeatherText2(forecast[i])+'" src="http://openweathermap.org/img/w/'+GetWeatherIcon2(st, forecast[i])+'"/><div class="small_val" title="Temperature">'+temp+'°</div><div class="small_val" title="Ветер">'+forecast[i].wind.speed+' m/s</div><div class="small_val_grey" title="Давление">'+forecast[i].main.pressure+'</div></div>';
+h_body = h_body + h_o;
 }
 
 return h_header + h_body + h_footer;
@@ -833,23 +807,7 @@ if( st.weather.length > 0 ) {
 }
 
 
-var html = 
-'<p class="weather_title"><a class="weather_title_link" href="http://openweathermap.org/city/'+st.id+'" target="_top">'+st.name+'</a></p> \
-<div class="weather_block">\
- <div class="cur_weather_block" title="'+wdescription+'">\
-  <img class="weather_image" alt="'+wdescription+'" src="'+icon_url+'"/>\
-  <div class="temp_block" >\
-   <div class="big_temp" title="Current Temperature">'+temp+'°</div>\
-   <div class="small_temp_block" >\
-    <div class="small_temp">'+wtext+'</div>\
-   </div>\
-  </div>\
- </div>\
- <div class="small_val_grey" title="Min and max temperature">Min t: '+temp_min+' / Max t: '+temp_max+' °</div>\
- <div class="small_val_grey">Humidity: ' + st.main.humidity +'%</div>\
- <div class="small_val_grey">Wind: '+st.wind.speed+' m/s</div>\
- <div class="small_val_grey">Clouds: '+st.clouds.all+' %</div>\
-</div>';
+var html = '<p class="weather_title"><a class="weather_title_link" href="http://openweathermap.org/city/'+st.id+'" target="_top">'+st.name+'</a></p><div class="weather_block"><div class="cur_weather_block" title="'+wdescription+'"><img class="weather_image" alt="'+wdescription+'" src="'+icon_url+'"/><div class="temp_block" ><div class="big_temp" title="Current Temperature">'+temp+'°</div><div class="small_temp_block" ><div class="small_temp">'+wtext+'</div></div></div></div><div class="small_val_grey" title="Min and max temperature">Min t: '+temp_min+' / Max t: '+temp_max+' °</div><div class="small_val_grey">Humidity: ' + st.main.humidity +'%</div><div class="small_val_grey">Wind: '+st.wind.speed+' m/s</div><div class="small_val_grey">Clouds: '+st.clouds.all+' %</div></div>';
 
 return html;
 }
@@ -859,15 +817,7 @@ function GetStationPopupHtml(st)
 var temp = Math.round((st.main.temp)*10)/10;
 var dt = new Date(st.dt * 1000 );
 
-var html_h=
-'<p class="weather_title"><a href="http://openweathermap.org/station/'+st.id+'" target="_top">'+st.name+'</a></p> \
-<div class="weather_block">\
-	<div class="cur_weather_block" >\
-		<img class="station_image" alt="'+GetWeatherText2(st)+'" src="'+GetStationIcon(st)+'"/>\
-		<div class="temp_block">\
-			<div class="big_temp" title="Current Temperature">'+temp+'°</div>\
-		</div>\
-	</div>';
+var html_h = '<p class="weather_title"><a href="http://openweathermap.org/station/'+st.id+'" target="_top">'+st.name+'</a></p><div class="weather_block"><div class="cur_weather_block" ><img class="station_image" alt="'+GetWeatherText2(st)+'" src="'+GetStationIcon(st)+'"/><div class="temp_block"><div class="big_temp" title="Current Temperature">'+temp+'°</div></div></div>';
 
 if(st.main.humidity)
 	html_h += '<div class="small_val_grey">Humidity: ' + st.main.humidity +'%</div>';

@@ -12,15 +12,24 @@ if not settings.has_module(module):
 
 s3db.hrm_vars()
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def index():
-    """ Module's Home Page """
+    """ Customisable module homepage """
 
-    module_name = settings.modules[module].name_nice
-    response.title = module_name
-    return dict(module_name=module_name)
+    return settings.customise_home(module, alt_function="index_alt")
 
-# =============================================================================
+# -----------------------------------------------------------------------------
+def index_alt():
+    """
+        Fallback for module homepage when not customised and
+        no CMS content found (ADMINs will see CMS edit unless
+        disabled globally via settings.cms.hide_index)
+    """
+
+    # Just redirect to the Mission Summary View
+    s3_redirect_default(URL(f="mission", args="summary"))
+
+# -----------------------------------------------------------------------------
 def mission():
     """ RESTful CRUD Controller """
 
@@ -112,7 +121,7 @@ def mission():
                               rheader=s3db.deploy_rheader,
                               )
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def response_message():
     """
         RESTful CRUD Controller
@@ -123,7 +132,7 @@ def response_message():
                               custom_crud_buttons = {"list_btn": None},
                               )
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def human_resource():
     """
         RESTful CRUD Controller
@@ -352,7 +361,7 @@ def person_search():
 
     return s3_rest_controller("pr", "person")
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def alert_create_script():
     """
         Inject JS to help the Alert creation form
@@ -705,7 +714,7 @@ def email_channel():
 
     return s3_rest_controller("msg")
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 def alert_recipient():
     """
         RESTful CRUD controller for options.s3json lookups
@@ -716,9 +725,9 @@ def alert_recipient():
 
     return s3_rest_controller()
 
-# =============================================================================
+# -----------------------------------------------------------------------------
 # Messaging
-# =============================================================================
+#
 def compose():
     """ Send message to people/teams """
 

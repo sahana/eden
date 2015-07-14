@@ -286,10 +286,10 @@
         if (tableConfig['bulkActions']) {
             $('.bulkcheckbox').unbind('click.bulkSelect')
                               .on('click.bulkSelect', function(event) {
-                                  
+
                 var id = this.id.substr(6),
                     rows = selectedRows[t];
-                    
+
                 var posn = inList(id, rows);
                 if (posn == -1) {
                     rows.push(id);
@@ -355,7 +355,7 @@
             // are stored in the hidden fields
             $(aHiddenFieldsID[t][0]).val(selectionMode[t]);
             $(aHiddenFieldsID[t][1]).val(selectedRows[t].join(','));
-            
+
             // Add the bulk action controls to the dataTable
             $('.dataTable-action').remove();
             $(bulk_action_controls).insertBefore('#bulk_select_options');
@@ -625,6 +625,14 @@
             if (this.hasOwnProperty('nTable')) {
                 // We have been called by reloadAjax()
 
+                var sAjaxSource = settings.sAjaxSource;
+                if (sAjaxSource) {
+                    // Update Ajax URL, and clear sAjaxSource to not
+                    // override the ajax-setting for the actual reload:
+                    ajax_urls[settings.nTable.id] = sAjaxSource;
+                    settings.sAjaxSource = null;
+                }
+
                 // Clear cache to enforce reload
                 cacheLastJson = null;
                 cacheLastRequest = null;
@@ -667,7 +675,7 @@
 
             if (!ajax) {
                 var requestEnd = requestStart + requestLength;
-            
+
                 // Prevent the Ajax lookup of the last page if we already know
                 // that there are no more records than we have in the cache.
                 if (cacheLastJson && cacheLastJson.hasOwnProperty('recordsFiltered')) {
@@ -683,7 +691,7 @@
                 } else if (cacheLower < 0 || requestStart < cacheLower || requestEnd > cacheUpper) {
                     // outside cached data - need to make a request
                     ajax = true;
-                } else if (cacheLastRequest && 
+                } else if (cacheLastRequest &&
                         (JSON.stringify(request.order)   !== JSON.stringify(cacheLastRequest.order) ||
                          JSON.stringify(request.columns) !== JSON.stringify(cacheLastRequest.columns) ||
                          JSON.stringify(request.search)  !== JSON.stringify(cacheLastRequest.search))) {
@@ -759,16 +767,32 @@
                 }
                 var order_len = request.order.length;
                 if (order_len) {
+                    // Number of sorting columns
                     sendData.push({'name': 'iSortingCols',
                                    'value': order_len
                                    });
-                    for (var i=0; i < order_len; i++) {
-                        var _order = request.order[i];
+                    var columnConfigs = columns[t],
+                        columnConfig,
+                        ordering,
+                        i;
+                    // Declare non-sortable columns (required by server to interpret
+                    // column indices correctly)
+                    for (i = 0; i < columnConfigs.length; i++) {
+                        columnConfig = columnConfigs[i];
+                        if (columnConfig && !columnConfig.bSortable) {
+                            sendData.push({'name': 'bSortable_' + i,
+                                           'value': 'false'
+                                           });
+                        }
+                    }
+                    // Declare sort-column indices and sorting directions
+                    for (i = 0; i < order_len; i++) {
+                        ordering = request.order[i];
                         sendData.push({'name': 'iSortCol_' + i,
-                                       'value': _order.column
+                                       'value': ordering.column
                                        });
                         sendData.push({'name': 'sSortDir_' + i,
-                                       'value': _order.dir
+                                       'value': ordering.dir
                                        });
                     }
                 }
@@ -805,7 +829,7 @@
                 var json = $.extend(true, {}, cacheLastJson);
 
                 // Update the echo for each response
-                json.draw = request.draw; 
+                json.draw = request.draw;
 
                 // Remove the records up to the start of the current page
                 json.data.splice(0, requestStart - cacheLower);
@@ -952,14 +976,15 @@
         if (tableConfig['pagination'] == 'true') {
             // Server-side Pagination is True
             // Cache the pages to reduce server-side calls
-            var serverSide = true;
-            var processing = true;
-            ajax_urls[selector.slice(1)] = tableConfig['ajaxUrl'];
-            var pageLength = tableConfig['pageLength'];
+            var serverSide = true,
+                processing = true,
+                pageLength = tableConfig['pageLength'];
             //var data = {'length': pageLength,
             //            'start': 0,
             //            'draw': 1
             //            };
+
+            ajax_urls[selector.slice(1)] = tableConfig['ajaxUrl'];
 
             if ($(selector + '_dataTable_cache').length > 0) {
                 var cache = $.parseJSON($(selector + '_dataTable_cache').val());
@@ -974,9 +999,9 @@
             // end of pagination code
         } else {
             // No Pagination
-            var serverSide = false;
-            var processing = false;
-            var pageLength = tableConfig['pageLength'];
+            var serverSide = false,
+                processing = false,
+                pageLength = tableConfig['pageLength'];
             fnAjax[t] = null;
         } // end of no pagination code
 
@@ -996,10 +1021,13 @@
             'pageLength': pageLength, // formerly iDisplayLength
             'pagingType': tableConfig['pagingType'], // formerly sPaginationType
             'processing': processing, // formerly bProcessing
-            'responsive': true,
+            //'responsive': $(selector).hasClass('responsive'), // redundant, responsive-class alone should be enough
             'searchDelay': 450,
             'searching': tableConfig['searching'] == 'true', // formerly bFilter
             'serverSide': serverSide, // formerly bServerSide
+            'search': {
+                'smart': serverSide // workaround for dataTables bug: smart search crashing with empty search string
+            },
             'language': { // formerly oLanguage
                 'aria': { // formerly oAria
                     'sortAscending': ': ' + i18n.sortAscending,  // formerly sSortAscending
@@ -1288,11 +1316,11 @@
                                  .on('click.datatable', function() {
 
             var tableid = dt.attr('id');
-              
+
             var oSetting = dt.dataTableSettings[t],
                 url = $(this).data('url'),
                 extension = $(this).data('extension');
-                
+
             if (oSetting) {
                 var arguments = 'id=' + tableid,
                     serverFilterArgs = $('#' + tableid + '_dataTable_filter');

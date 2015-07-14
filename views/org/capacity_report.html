@@ -1,0 +1,42 @@
+{{extend "layout.html"}}
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+</div>
+<div class='row'>
+ <div id='rheader' class='small-12 columns'>
+  {{try:}}{{=XML(rheader)}}
+ </div>
+</div>
+<div id='component' class='row'>
+{{except:}}
+ </div>
+</div>
+<div class='row'>
+{{pass}}
+ <div class='small-12 columns'>
+  <div class='row'>
+   <div id='map' class='small-12 columns'></div>
+  </div>
+  <div class='row'>
+   {{try:}}{{items = items}}
+    <div id='table-container' class='small-12 columns'>
+     <span class='list_formats'>
+      <a href='{{=URL(args=request.args, extension="xls")}}'>
+      <div class='dt-export export_xls' title='{{=T("Export in XLS format")}}'></div>
+      </a>
+     </span>
+     {{=items}}
+    </div>
+   {{except:}}{{pass}}
+  </div>
+ </div>
+</div>
+<div class='row'>
+ {{if s3.rfooter:}}
+  <div id='rfooter' class='small-12 columns'>
+   {{=XML(s3.rfooter)}}
+  </div>
+ {{pass}}
+</div>

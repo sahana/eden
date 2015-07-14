@@ -50,7 +50,7 @@ def index_alt():
     """
 
     # Just redirect to the Hospitals Map
-    redirect(URL(f="hospital", args=["map"]))
+    s3_redirect_default(URL(f="hospital", args=["map"]))
 
 # -----------------------------------------------------------------------------
 def ltc():

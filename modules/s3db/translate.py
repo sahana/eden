@@ -90,7 +90,7 @@ class S3TranslateModel(S3Model):
 
         #----------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -98,9 +98,9 @@ class S3TranslateModel(S3Model):
         """
             Check CSV file before upload
         """
-        
+
         import csv
-        
+
         T = current.T
         try:
             csvfile = form.vars.file.file
@@ -115,7 +115,7 @@ class S3TranslateModel(S3Model):
             form.errors["file"] = error % {"msg": sys.exc_info()[1]}
         csvfile.seek(0)
         return
-        
+
     # -------------------------------------------------------------------------
     @staticmethod
     def translate_language_onaccept(form):
@@ -127,7 +127,7 @@ class S3TranslateModel(S3Model):
         import csv
         import os
         from ..s3.s3translate import Strings
-        
+
         form_vars = form.vars
         lang_code = form_vars.code
 

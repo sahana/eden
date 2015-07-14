@@ -87,6 +87,7 @@
 
             // The hidden input field
             this.input = el.find('.s3-hierarchy-input').first();
+            this.input.data('input', true);
             var s = opts.selected;
             if (s) {
                 this.input.val(JSON.stringify(s));
@@ -181,6 +182,8 @@
                 contextMenu = null,
                 plugins = ['sort', 'checkbox'];
 
+            this.input.data('multiple', multiple);
+
             if ((cascade || leafonly ) && multiple) {
                 three_state = true;
             } else if (multiple) {
@@ -250,6 +253,10 @@
                         return -1;
                     } else if (bRel == 'bulk') {
                         return 1;
+                    } else if (aRel == 'none') {
+                        return -1;
+                    } else if (bRel == 'none') {
+                        return 1;
                     } else {
                         return sorted;
                     }
@@ -272,8 +279,8 @@
                             id: this.treeID + '-select-all',
                             text: opts.selectAllText,
                             li_attr: {
-                                rel: 'bulk',
-                                class: 's3-hierarchy-action-node'
+                                'rel': 'bulk',
+                                'class': 's3-hierarchy-action-node'
                             }
                         }, "first"
                     );
@@ -314,7 +321,10 @@
                     return; // skip bulk nodes
                 }
                 if (id && (!leafonly || inst.is_leaf(this))) {
-                    var record_id = parseInt(id.split('-').pop());
+                    var record_id = id.split('-').pop();
+                    if (record_id != 'None') {
+                        record_id = parseInt(record_id);
+                    }
                     if (record_id) {
                         new_selected.push(record_id);
                         selected_ids.push(id);
@@ -500,8 +510,8 @@
                             id: nodeID + '-select-all',
                             text: this.options.selectAllText,
                             li_attr: {
-                                rel: 'bulk',
-                                class: 's3-hierarchy-action-node'
+                                'rel': 'bulk',
+                                'class': 's3-hierarchy-action-node'
                             }
                         }, "first"
                     );

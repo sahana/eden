@@ -318,8 +318,6 @@ class S3LocationModel(S3Model):
                                       requires = IS_EMPTY_OR(IS_LOCATION()),
                                       sortby = "name",
                                       widget = S3LocationSelector(show_address=True,
-                                                                  show_map=settings.get_gis_map_selector(),
-                                                                  show_postcode=settings.get_gis_postcode_selector(),
                                                                   ),
                                       # Alternate LocationSelector for when you don't have the Location Hierarchy available to load
                                       #requires = IS_EMPTY_OR(
@@ -1020,7 +1018,8 @@ class S3LocationModel(S3Model):
         if (not limit or limit > MAX_SEARCH_RESULTS) and \
            resource.count() > MAX_SEARCH_RESULTS:
             output = json.dumps([
-                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % dict(max=MAX_SEARCH_RESULTS)))
+                dict(label=str(current.T("There are more than %(max)s results, please input more characters.") % \
+                    dict(max=MAX_SEARCH_RESULTS)))
                 ], separators=SEPARATORS)
 
         elif loc_select:
@@ -1243,7 +1242,7 @@ class S3LocationNameModel(S3Model):
                   )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1452,7 +1451,7 @@ class S3LocationGroupModel(S3Model):
                      *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 class S3LocationHierarchyModel(S3Model):
@@ -1535,12 +1534,40 @@ class S3LocationHierarchyModel(S3Model):
         )
 
         self.configure(tablename,
+                       deduplicate = self.gis_hierarchy_deduplicate,
                        onvalidation = self.gis_hierarchy_onvalidation,
                        )
 
         # Pass names back to global scope (s3.*)
         return dict(gis_hierarchy_form_setup = self.gis_hierarchy_form_setup,
                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_hierarchy_deduplicate(item):
+        """
+          This callback will be called when importing Hierarchy records it will look
+          to see if the record being imported is a duplicate.
+
+          @param item: An S3ImportJob object which includes all the details
+                      of the record being imported
+
+          If the record is a duplicate then it will set the item method to update
+
+        """
+
+        location_id = item.data.get("location_id")
+        if not location_id:
+            return
+
+        # Match by location_id
+        table = item.table
+        query = (table.location_id == location_id)
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2002,6 +2029,7 @@ class S3GISConfigModel(S3Model):
                   onaccept = self.gis_config_onaccept,
                   ondelete = self.gis_config_ondelete,
                   onvalidation = self.gis_config_onvalidation,
+                  orderby = "name",
                   )
 
         # Components
@@ -3093,7 +3121,7 @@ class S3FeatureLayerModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3262,6 +3290,12 @@ class S3MapModel(S3Model):
         # ---------------------------------------------------------------------
         # ArcGIS REST
         #
+        # If exporting data via the Query interface use WHERE 1=1
+        # Can then convert to GeoJSON using:
+        # ogr2ogr -f GeoJSON standard.geojson proprietary.json" OGRGeoJSON
+        #
+        arc_img_formats = ("png", "png8", "png24", "jpg", "pdf", "bmp", "gif", "svg", "svgz", "emf", "ps", "png32")
+
         tablename = "gis_layer_arcrest"
         define_table(tablename,
                      layer_id,
@@ -3290,6 +3324,11 @@ class S3MapModel(S3Model):
                            default = True,
                            label = TRANSPARENT,
                            represent = s3_yes_no_represent,
+                           ),
+                     Field("img_format", length=32,
+                           default = "png",
+                           label = FORMAT,
+                           requires = IS_EMPTY_OR(IS_IN_SET(arc_img_formats)),
                            ),
                      s3_role_required(),       # Single Role
                      #s3_roles_permitted(),    # Multiple Roles (needs implementing in modules/s3gis.py)
@@ -4066,7 +4105,7 @@ class S3MapModel(S3Model):
                      *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5032,7 +5071,7 @@ class S3PoIOrganisationGroupModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5072,7 +5111,7 @@ class S3PoIFeedModel(S3Model):
                           *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
-        return dict()
+        return {}
 
 # =============================================================================
 def name_field():

@@ -14,7 +14,7 @@ from s3.s3rest import S3Request
 class URLBuilderTests(unittest.TestCase):
 
     def setUp(self):
-        
+
         current.auth.override = True
 
         s3db = current.s3db
@@ -136,7 +136,7 @@ class URLBuilderTests(unittest.TestCase):
         # Set to None (resets component ID and method)
         self.assertEqual(r.url(component=""),
                          "/%s/pr/person/%s.xml?test=test" % (a, p))
-                         
+
         # Change component (resets component ID and method)
         self.assertEqual(r.url(component="other"),
                          "/%s/pr/person/%s/other.xml?test=test" % (a, p))
@@ -158,7 +158,7 @@ class URLBuilderTests(unittest.TestCase):
                          "/%s/pr/person/%s/contact/5/method.xml?test=test" % (a, p))
 
     def testURLTargetOverrideMaster(self):
-        
+
         (a, p, c, r) = (self.a, self.p, self.c, self.r)
         r = S3Request(prefix="pr",
                       name="person",
@@ -202,17 +202,17 @@ class URLBuilderTests(unittest.TestCase):
     def testURLVarsOverride(self):
 
         (a, p, c, r) = (self.a, self.p, self.c, self.r)
-        
+
         # No Change
         self.assertEqual(r.url(vars=None),
                          "/%s/pr/person/%s/contact/%s/method.xml?test=test" % (a, p, c))
-                         
+
         # Set to None
         self.assertEqual(r.url(vars={}),
                          "/%s/pr/person/%s/contact/%s/method.xml" % (a, p, c))
         self.assertEqual(r.url(vars=""),
                          "/%s/pr/person/%s/contact/%s/method.xml" % (a, p, c))
-                         
+
         # Change vars
         self.assertEqual(r.url(vars={"other":"test"}),
                          "/%s/pr/person/%s/contact/%s/method.xml?other=test" % (a, p, c))
@@ -255,7 +255,7 @@ class URLBuilderTests(unittest.TestCase):
                       f="person",
                       args=[self.p, "method"],
                       vars=Storage(format="xml", test="test"))
-        
+
         self.assertEqual(r.url(method="", id=5),
                          "/%s/pr/person/5.xml?test=test" % a)
         self.assertEqual(r.url(method="", vars=None),

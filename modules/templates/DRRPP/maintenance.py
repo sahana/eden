@@ -29,7 +29,7 @@ class Daily():
         subject = "DRR Project Portal: '%s' has passed it's end date"
         message = "Please login to the DRR Project Portal & update the project to either show that it has been extended or that it is now completed:\n%s/%s/project/project/" \
             % (base_url, appname)
-        
+
         query = (table.end_date == now.date())
         rows = db(query).select(table.id,
                                 table.name,
@@ -40,7 +40,7 @@ class Daily():
                        message = message + row.id,
                        reply_to = reply_to
                        )
-        
+
         # Email creator of the project when:
         # * a record hasn�t been updated in over 6 months when the status is not completed
         subject = "DRR Project Portal: '%s' hasn't been updated for 6 months"

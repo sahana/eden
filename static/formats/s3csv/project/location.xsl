@@ -361,6 +361,8 @@
     <!-- ****************************************************************** -->
     <xsl:template name="Locations">
 
+        <xsl:variable name="pos" select="position()"/>
+
         <xsl:variable name="l0" select="col[@field='Country']/text()"/>
         <xsl:variable name="l1" select="col[@field='L1']/text()"/>
         <xsl:variable name="l2" select="col[@field='L2']/text()"/>
@@ -368,14 +370,14 @@
         <xsl:variable name="l4" select="col[@field='L4']/text()"/>
         <xsl:variable name="l5" select="col[@field='L5']/text()"/>
 
-        <xsl:variable name="l1id" select="concat('L1: ', $l1)"/>
-        <xsl:variable name="l2id" select="concat('L2: ', $l2)"/>
-        <xsl:variable name="l3id" select="concat('L3: ', $l3)"/>
-        <xsl:variable name="l4id" select="concat('L4: ', $l4)"/>
-        <xsl:variable name="l5id" select="concat('L5: ', $l5)"/>
+        <xsl:variable name="l1id" select="concat('L1:', $l1, ':', $pos)"/>
+        <xsl:variable name="l2id" select="concat('L2:', $l2, ':', $pos)"/>
+        <xsl:variable name="l3id" select="concat('L3:', $l3, ':', $pos)"/>
+        <xsl:variable name="l4id" select="concat('L4:', $l4, ':', $pos)"/>
+        <xsl:variable name="l5id" select="concat('L5:', $l5, ':', $pos)"/>
 
-        <xsl:variable name="lat" select="col[@field='Lat']"/>
-        <xsl:variable name="lon" select="col[@field='Lon']"/>
+        <xsl:variable name="lat" select="col[@field='Lat']/text()"/>
+        <xsl:variable name="lon" select="col[@field='Lon']/text()"/>
 
         <!-- Country Code = UUID of the L0 Location -->
         <xsl:variable name="countrycode">
@@ -413,10 +415,10 @@
                 <data field="name"><xsl:value-of select="$l1"/></data>
                 <data field="level"><xsl:text>L1</xsl:text></data>
                 <xsl:choose>
-                    <xsl:when test="col[@field='L2'] or col[@field='L3'] or col[@field='L4']">
+                    <xsl:when test="$l2!='' or $l3!='' or $l4!=''">
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                        <xsl:if test="$lat!='' and $lon!=''">
                             <data field="lat"><xsl:value-of select="$lat"/></data>
                             <data field="lon"><xsl:value-of select="$lon"/></data>
                         </xsl:if>
@@ -450,10 +452,10 @@
                 <data field="name"><xsl:value-of select="$l2"/></data>
                 <data field="level"><xsl:text>L2</xsl:text></data>
                 <xsl:choose>
-                    <xsl:when test="col[@field='L3'] or col[@field='L4']">
+                    <xsl:when test="$l3!='' or $l4!=''">
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                        <xsl:if test="$lat!='' and $lon!=''">
                             <data field="lat"><xsl:value-of select="$lat"/></data>
                             <data field="lon"><xsl:value-of select="$lon"/></data>
                         </xsl:if>
@@ -494,10 +496,10 @@
                 <data field="name"><xsl:value-of select="$l3"/></data>
                 <data field="level"><xsl:text>L3</xsl:text></data>
                 <xsl:choose>
-                    <xsl:when test="col[@field='L4']">
+                    <xsl:when test="$l4!=''">
                     </xsl:when>
                     <xsl:otherwise>
-                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                        <xsl:if test="$lat!='' and $lon!=''">
                             <data field="lat"><xsl:value-of select="$lat"/></data>
                             <data field="lon"><xsl:value-of select="$lon"/></data>
                         </xsl:if>
@@ -545,10 +547,9 @@
                 <data field="name"><xsl:value-of select="$l4"/></data>
                 <data field="level"><xsl:text>L4</xsl:text></data>
                 <xsl:choose>
-                    <xsl:when test="col[@field='L5']">
-                    </xsl:when>
+                    <xsl:when test="$l5!=''"></xsl:when>
                     <xsl:otherwise>
-                        <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                        <xsl:if test="$lat!='' and $lon!=''">
                             <data field="lat"><xsl:value-of select="$lat"/></data>
                             <data field="lon"><xsl:value-of select="$lon"/></data>
                         </xsl:if>
@@ -602,7 +603,7 @@
                 </xsl:choose>
                 <data field="name"><xsl:value-of select="$l5"/></data>
                 <data field="level"><xsl:text>L5</xsl:text></data>
-                <xsl:if test="col[@field='Lat']!='' and col[@field='Lon']!=''">
+                <xsl:if test="$lat!='' and $lon!=''">
                     <data field="lat"><xsl:value-of select="$lat"/></data>
                     <data field="lon"><xsl:value-of select="$lon"/></data>
                 </xsl:if>
@@ -614,6 +615,8 @@
     <!-- ****************************************************************** -->
     <xsl:template name="LocationReference">
 
+        <xsl:variable name="pos" select="position()"/>
+
         <xsl:variable name="l0" select="col[@field='Country']/text()"/>
         <xsl:variable name="l1" select="col[@field='L1']/text()"/>
         <xsl:variable name="l2" select="col[@field='L2']/text()"/>
@@ -621,11 +624,11 @@
         <xsl:variable name="l4" select="col[@field='L4']/text()"/>
         <xsl:variable name="l5" select="col[@field='L5']/text()"/>
 
-        <xsl:variable name="l1id" select="concat('L1: ', $l1)"/>
-        <xsl:variable name="l2id" select="concat('L2: ', $l2)"/>
-        <xsl:variable name="l3id" select="concat('L3: ', $l3)"/>
-        <xsl:variable name="l4id" select="concat('L4: ', $l4)"/>
-        <xsl:variable name="l5id" select="concat('L5: ', $l5)"/>
+        <xsl:variable name="l1id" select="concat('L1:', $l1, ':', $pos)"/>
+        <xsl:variable name="l2id" select="concat('L2:', $l2, ':', $pos)"/>
+        <xsl:variable name="l3id" select="concat('L3:', $l3, ':', $pos)"/>
+        <xsl:variable name="l4id" select="concat('L4:', $l4, ':', $pos)"/>
+        <xsl:variable name="l5id" select="concat('L5:', $l5, ':', $pos)"/>
 
         <xsl:choose>
             <xsl:when test="$l5!=''">

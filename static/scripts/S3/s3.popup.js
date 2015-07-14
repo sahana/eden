@@ -27,7 +27,7 @@ function s3_popup_refresh_main_form() {
         } else {
             // Refresh dataTable
             try {
-                selector.dataTable().reloadAjax();
+                selector.dataTable().fnReloadAjax();
             } catch(e) {}
         }
         // Update the layer on the Maps (if appropriate)

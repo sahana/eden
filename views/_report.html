@@ -1,4 +1,18 @@
-{{try:}}{{if title:}}{{=H2(title)}}{{pass}}{{except:}}{{pass}}
+<div class='row'>
+ <div class='small-12 columns'>
+  {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+ </div>
+</div>
+<div class='row'>
+ <div id='rheader' class='small-12 columns'>
+  {{try:}}{{=XML(rheader)}}
+ </div>
+</div>
+<div id='component' class='row'>
+{{except:}}
+ </div>
+</div>
+{{pass}}
 {{try:}}{{report_type}}{{except:}}{{report_type="pivottable"}}{{pass}}
 {{if report_type == "pivottable":}}
 {{include response.s3.views.get("pivottable.html", "_pivottable.html")}}

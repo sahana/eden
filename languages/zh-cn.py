@@ -3985,7 +3985,6 @@
 'by': '按',
 'c/o Name': 'c/o名称',
 'can be used to extract data from spreadsheets and put them into database tables.': '可用于将它们从电子表格抽取数据并放到数据库表中。',
-'cancelled': '已取消',
 'caucasoid': '高加索',
 'check all': '全选',
 'click for more details': '单击以获取更多详细信息',

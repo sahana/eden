@@ -3,18 +3,18 @@
  */
 
 jQuery.fn.labelOver = function(overClass) {
-    return this.each(function(){
+    return $(this).each(function(){
         var label = jQuery(this);
         var f = label.attr('for');
         if (f) {
             var input = jQuery('#' + f);
 
             this.hide = function() {
-                label.css({ textIndent: -10000 })
+                label.css({ textIndent: -10000 });
             }
 
             this.show = function() {
-                if (input.val() == '') label.css({ textIndent: 0 })
+                if (input.val() == '') label.css({ textIndent: 0 });
             }
 
             // handlers
@@ -24,5 +24,5 @@ jQuery.fn.labelOver = function(overClass) {
 
             if (input.val() != '') this.hide(); 
         }
-    })
-}
+    });
+};

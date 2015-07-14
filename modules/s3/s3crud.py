@@ -54,6 +54,7 @@ from gluon.languages import lazyT
 from gluon.storage import Storage
 from gluon.tools import callback
 
+from s3datetime import S3DateTime
 from s3export import S3Exporter
 from s3forms import S3SQLDefaultForm
 from s3rest import S3Method
@@ -1393,10 +1394,6 @@ class S3CRUD(S3Method):
         # Initialize output
         output = {}
 
-        # Filter
-        if s3.filter is not None:
-            resource.add_filter(s3.filter)
-
         # Linkto
         if not linkto:
             linkto = self._linkto(r)
@@ -1611,10 +1608,6 @@ class S3CRUD(S3Method):
 
         # Initialize output
         output = {}
-
-        # Filter
-        if s3.filter is not None:
-            resource.add_filter(s3.filter)
 
         # Prepare data list
         representation = r.representation
@@ -2282,15 +2275,19 @@ class S3CRUD(S3Method):
     # -------------------------------------------------------------------------
     def last_update(self):
         """
-            Get the last update meta-data
+            Get the last update meta-data of the current record
+
+            @return: a dict {modified_by: <user>, modified_on: <datestr>},
+                     depending on which of these attributes are available
+                     in the current record
         """
 
-        output = dict()
+        output = {}
         record_id = self.record_id
         if record_id:
-            T = current.T
-            table = self.table
+            record = None
             fields = []
+            table = self.table
             if "modified_on" in table.fields:
                 fields.append(table.modified_on)
             if "modified_by" in table.fields:
@@ -2300,20 +2297,23 @@ class S3CRUD(S3Method):
                 query = (table._id == record_id)
                 record = current.db(query).select(limitby=(0, 1),
                                                   *fields).first()
-
-                if record:
-                    if "modified_by" in record:
-                        if not record.modified_by:
-                            modified_by = T("anonymous user")
-                        else:
-                            modified_by = \
-                                table.modified_by.represent(record.modified_by)
-                        output["modified_by"] = T("by %(person)s") % \
-                                                  dict(person = modified_by)
-                    if "modified_on" in record:
-                        output["modified_on"] = T("on %(date)s") % \
-                                                dict(date = record.modified_on)
-
+            if record:
+                T = current.T
+                if "modified_by" in record:
+                    if not record.modified_by:
+                        modified_by = T("anonymous user")
+                    else:
+                        modified_by = \
+                            table.modified_by.represent(record.modified_by)
+                    output["modified_by"] = T("by %(person)s") % \
+                                             {"person": modified_by}
+                if "modified_on" in record:
+                    modified_on = \
+                        S3DateTime.datetime_represent(record.modified_on,
+                                                      utc=True,
+                                                      )
+                    output["modified_on"] = T("on %(date)s") % \
+                                             {"date": modified_on}
         return output
 
     # -------------------------------------------------------------------------

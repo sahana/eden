@@ -27,7 +27,7 @@ def index_alt():
     """
 
     # Just redirect to the list of Posts
-    redirect(URL(f="post"))
+    s3_redirect_default(URL(f="post"))
 
 # -----------------------------------------------------------------------------
 def series():
@@ -134,13 +134,15 @@ def post():
                     field.readable = field.writable = False
 
                 page = get_vars.get("page", None)
+                url = get_vars.get("url") # custom redirect?
                 if page:
                     table.name.default = page
                     table.name.readable = table.name.writable = False
                     _crud = s3.crud_strings[tablename]
                     _crud.label_create = T("New Page")
                     _crud.title_update = T("Edit Page")
-                    url = URL(c="default", f="index", vars={"page": page})
+                    if not url:
+                        url = URL(c="default", f="index", vars={"page": page})
                     s3db.configure(tablename,
                                    create_next = url,
                                    update_next = url,
@@ -155,29 +157,40 @@ def post():
                     # We always want the Rich Text widget here
                     table.body.widget = s3base.s3_richtext_widget
                     resource = get_vars.get("resource", None)
-                    if resource in ("contact", "index"):
-                        if resource == "contact":
+                    if resource in ("about", "contact", "help", "index"):
+
+                        if resource == "about":
+                            # We're creating/updating text for the About page
+                            table.name.default = "About Page"
+                        elif resource == "contact":
                             # We're creating/updating text for a Contact page
                             table.name.default = "Contact Page"
+                        elif resource == "help":
+                            # We're creating/updating text for the Help page
+                            table.name.default = "Help Page"
                         else:
                             # We're creating/updating text for the Home page
                             table.name.default = "Home Page"
+
                         #table.title.readable = table.title.writable = False
                         table.replies.readable = table.replies.writable = False
-                        url = URL(c=_module, f=resource)
+                        if not url:
+                            url = URL(c=_module, f=resource)
                     elif resource:
                         # We're creating/updating text for a Resource Summary page
                         table.name.default = "%s Summary Page Header" % resource
                         table.title.readable = table.title.writable = False
                         table.replies.readable = table.replies.writable = False
-                        url = URL(c=_module, f=resource, args="summary")
+                        if not url:
+                            url = URL(c=_module, f=resource, args="summary")
                     else:
                         # We're creating/updating a Module home page
                         table.name.default = "%s Home Page" % _module
                         _crud = s3.crud_strings[tablename]
                         _crud.label_create = T("New Page")
                         _crud.title_update = T("Edit Page")
-                        url = URL(c=_module, f="index")
+                        if not url:
+                            url = URL(c=_module, f="index")
 
                     s3db.configure(tablename,
                                    create_next = url,
@@ -222,16 +235,30 @@ def page():
         - with optional Comments
     """
 
+    found = True
+    get_vars = request.get_vars
+    if "name" in get_vars:
+        table = s3db.cms_post
+        query = (table.name == get_vars.name) & \
+                (table.deleted != True)
+        row = db(query).select(table.id, limitby=(0, 1)).first()
+        if row:
+            request.args.append(str(row.id))
+        else:
+            found = False
+
     # Pre-process
     def prep(r):
+        if not found:
+            r.error(404, T("Page not found"), next=auth.permission.homepage)
         s3db.configure(r.tablename, listadd=False)
         return True
     s3.prep = prep
 
     # Post-process
     def postp(r, output):
-        if r.record:
-            output = {"item": r.record.body}
+        if r.record and not r.transformable():
+            output = {"item": s3base.S3XMLContents(r.record.body).xml()}
             current.menu.options = None
             response.view = s3base.S3CRUD._view(r, "cms/page.html")
             if r.record.replies:
@@ -324,7 +351,9 @@ def newsfeed():
     title_list = T("Latest Information")
 
     # Hide Posts linked to Modules and Maps & Expired Posts
-    s3.filter = (FS("post_module.module") == None) & (FS("post_layer.layer_id") == None) & (FS("expired") != True)
+    s3.filter = (FS("post_module.module") == None) & \
+                (FS("post_layer.layer_id") == None) & \
+                (FS("expired") != True)
 
     # Ensure that filtered views translate into options which update the Widget
     if "~.series_id$name" in get_vars:
@@ -429,7 +458,7 @@ def newsfeed():
                                    #represent = "%(name)s",
                                    hidden = hidden,
                                    ))
-                      
+
     elif len_series > 1:
         notify_fields.insert(0, (T("Type"), "series_id"))
         # Checkboxes
@@ -506,9 +535,9 @@ def newsfeed():
                 # @ToDo: deployment_setting
                 #ADMIN = session.s3.system_roles.ADMIN
                 #if (not auth.s3_has_role(ADMIN)):
-                #    represent = S3Represent(lookup="cms_series", 
+                #    represent = S3Represent(lookup="cms_series",
                 #                            translate=settings.get_L10n_translate_cms_series())
-                #    field.requires = IS_ONE_OF(db, 
+                #    field.requires = IS_ONE_OF(db,
                 #                               "cms_series.id",
                 #                               represent,
                 #                               not_filterby="name",
@@ -552,7 +581,7 @@ def newsfeed():
                                  post_id=form.vars.id)
 
                 s3db.configure("cms_post",
-                               create_onaccept = create_onaccept, 
+                               create_onaccept = create_onaccept,
                                )
 
             crud_fields = ["date",

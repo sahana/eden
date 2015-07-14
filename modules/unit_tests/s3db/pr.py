@@ -450,7 +450,7 @@ class ContactValidationTests(unittest.TestCase):
 
         self.current_setting = current.deployment_settings \
                                       .get_msg_require_international_phone_numbers()
-        
+
     # -------------------------------------------------------------------------
     def tearDown(self):
 
@@ -467,7 +467,7 @@ class ContactValidationTests(unittest.TestCase):
 
         current.deployment_settings \
                .msg.require_international_phone_numbers = False
-        
+
         from s3db.pr import S3ContactModel
         onvalidation = S3ContactModel.pr_contact_onvalidation
 
@@ -497,7 +497,7 @@ class ContactValidationTests(unittest.TestCase):
 
         current.deployment_settings \
                .msg.require_international_phone_numbers = True
-               
+
         from s3db.pr import S3ContactModel
         onvalidation = S3ContactModel.pr_contact_onvalidation
 
@@ -528,7 +528,7 @@ class ContactValidationTests(unittest.TestCase):
         s3db = current.s3db
         current.deployment_settings \
                .msg.require_international_phone_numbers = False
-               
+
         xmlstr = """
 <s3xml>
     <resource name="pr_person" uuid="CONTACTVALIDATORTESTPERSON1">
@@ -559,7 +559,7 @@ class ContactValidationTests(unittest.TestCase):
         self.assertEqual(resource.count(), 0)
         row = resource.select(["value"], as_rows=True).first()
         self.assertEqual(row, None)
-    
+
     # -------------------------------------------------------------------------
     def testMobilePhoneNumberImportValidationInternational(self):
         """ Test that validator for mobile phone number is applied during import """

@@ -1,0 +1,48 @@
+Name,Title,Body
+RDRTMembersSummary,"RDRT: Navigating the Roster","<div class=""online-documentation"">
+<h3>RDRT Members</h3>
+<p>
+The <b>RDRT Members</b> page provides an overview of all
+RDRT roster members currently registered in the RMS database.
+To open the RDRT Members page, choose ""Members"" from
+the RDRT menu at the top:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/menu_top_members.png""></img>
+<p>
+If you already are in the RDRT module, you can also choose ""RDRT Members""
+in the left menu:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/menu_side_members.png""></img>
+
+<h3>Finding a particular Member</h3>
+<p>
+You can find a particular member in the list by using filters. Remember
+that it may take a few moments for the list to get updated after you have
+changed a filter.
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/members_summary.png""></img>
+<p>
+Note that by default, only active members are shown. You can change
+this by selecting/de-selecting the ""Status"" checkboxes in the filter
+form.
+</p>
+<p>
+Click the pencil in the member row to open the <a href=""{{name:RDRTMemberProfile}}"">Member Profile</a>.
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/members_summary_actions.png""></img>
+<p>
+Clicking on the trashbin icon removes the member from the RDRT roster. Note
+that this does <b>not</b> remove the person data of the member from the
+database - and you can re-add the member to the roster at any time.
+</p>
+<p>
+The envelope icon allows you to send a message to this member (per email
+or SMS). Note that messages sent to individual members are currently not
+recorded in the RDRT module.
+</p>
+<p>
+Note that certain icons may not be shown for a member if you do not have the
+required permissions to perform the action.
+</p>
+<p><a href=""{{name:RDRT}}"">Back to table of contents</a></p>
+</div>"

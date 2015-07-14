@@ -483,6 +483,32 @@ class S3HierarchyTests(unittest.TestCase):
         assertEqual(root, None)
 
     # -------------------------------------------------------------------------
+    def testDepth(self):
+        """ Test determination of the maximum depth beneath a node """
+
+        uids = self.uids
+        rows = self.rows
+
+        assertEqual = self.assertEqual
+
+        h = S3Hierarchy("test_hierarchy")
+
+        # Top root
+        node = uids["HIERARCHY1"]
+        assertEqual(h.depth(node), 2)
+
+        # Sub-node
+        node = uids["HIERARCHY2-1"]
+        assertEqual(h.depth(node), 1)
+
+        # Leaf
+        node = uids["HIERARCHY1-1-1"]
+        assertEqual(h.depth(node), 0)
+
+        # None (processes all roots)
+        assertEqual(h.depth(None), 2)
+
+    # -------------------------------------------------------------------------
     def testSiblings(self):
         """ Test lookup of sibling nodes """
 
@@ -544,6 +570,48 @@ class S3HierarchyTests(unittest.TestCase):
         root = uids["HIERARCHY1"]
         nodes = h.findall(root, category="Cat 4")
         assertEqual(nodes, set())
+
+    # -------------------------------------------------------------------------
+    def testExportNode(self):
+        """ Test export of nodes """
+
+        assertEqual = self.assertEqual
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
+        h = S3Hierarchy("test_hierarchy")
+        data = dict((self.uids[uid], self.rows[uid]) for uid in self.uids)
+
+        # Export the rows beneath node HIERARCHY1
+        root = self.uids["HIERARCHY1"]
+        output = h.export_node(root,
+                               depth=2,
+                               prefix="_export",
+                               data=data,
+                               hcol = "test_hierarchy.name",
+                               columns=["test_hierarchy.category"],
+                               )
+
+        # Should give 7 rows
+        assertEqual(len(output), 7)
+
+        for row in output:
+            next_level = True
+            for i in xrange(2):
+                hcol = "_export.%s" % i
+                # All hierarchy columns must be present
+                assertTrue(hcol in row)
+                label = row[hcol]
+                # The row should belong to this branch
+                if label != "" and next_level:
+                    assertEqual(label[:6], "Type 1")
+                else:
+                    # Levels below the last level must be empty
+                    next_level = False
+                    assertEqual(label, "")
+
+            assertTrue("test_hierarchy.category" in row)
+            assertFalse("test_hierarchy.name" in row)
 
     # -------------------------------------------------------------------------
     def testFilteringLeafOnly(self):

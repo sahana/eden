@@ -653,6 +653,15 @@ class S3Msg(object):
                                (ptable.deleted != True)),
                      ]
 
+            etable = s3db.hrm_training_event
+            ttable = s3db.hrm_training
+            tleft = [ttable.on((ttable.training_event_id == etable.id) & \
+                               (ttable.person_id != None) & \
+                               (ttable.deleted != True)),
+                     ptable.on((ptable.id == ttable.person_id) & \
+                               (ptable.deleted != True)),
+                     ]
+            
             atable = s3db.table("deploy_alert")
             if atable:
                 ltable = db.deploy_alert_recipient
@@ -730,6 +739,21 @@ class S3Msg(object):
                 # Re-queue the message for each HR in the organisation
                 oquery = (otable.pe_id == pe_id)
                 recipients = db(oquery).select(ptable.pe_id, left=oleft)
+                pe_ids = set(r.pe_id for r in recipients)
+                pe_ids.discard(None)
+                if pe_ids:
+                    for pe_id in pe_ids:
+                        outbox.insert(message_id=message_id,
+                                      pe_id=pe_id,
+                                      contact_method=contact_method,
+                                      system_generated=True)
+                    chainrun = True
+                status = True
+
+            elif entity_type == "hrm_training_event":
+                # Re-queue the message for each participant
+                equery = (etable.pe_id == pe_id)
+                recipients = db(equery).select(ptable.pe_id, left=tleft)
                 pe_ids = set(r.pe_id for r in recipients)
                 pe_ids.discard(None)
                 if pe_ids:
@@ -1575,6 +1599,10 @@ class S3Msg(object):
                 sinsert(channel_id=channel_id,
                         status=error)
                 return error
+            except poplib.error_proto, e:
+                # Something else went wrong - probably transient (have seen '-ERR EOF' here)
+                current.log.error("Email poll failed: %s" % e)
+                return
 
             try:
                 # Attempting APOP authentication...

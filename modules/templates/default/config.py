@@ -90,6 +90,8 @@ def config(settings):
     # The key 0 implies not realm restricted
     # The keys "organisation_id" and "site_id" can be used to indicate the user's "organisation_id" and "site_id"
     #settings.auth.registration_roles = { 0: ["STAFF", "PROJECT_EDIT"]}
+    # Define which entity types to use as realm entities in role manager
+    #settings.auth.realm_entity_types = ("org_organisation",)
     # Uncomment to activate entity role manager tabs for OrgAdmins
     #settings.auth.entity_role_manager = True
     # Define modules for entity role manager
@@ -136,7 +138,8 @@ def config(settings):
     #    ("km", "ភាសាខ្មែរ"),
     #    ("ko", "한국어"),
     #    ("mn", "Монгол хэл"), # Mongolian
-    #    ("ne", "नेपाली"),                         #  Nepali
+    #    ("my", "မြန်မာစာ"),       # Burmese
+    #    ("ne", "नेपाली"),                               #  Nepali
     #    ("prs", "دری"),       # Dari
     #    ("ps", "پښتو"),       # Pashto
     #    ("pt", "Português"),
@@ -369,6 +372,11 @@ def config(settings):
     # Uncomment to Disable the Postcode selector in the LocationSelector
     #settings.gis.postcode_selector = False
 
+    # Increase these if having scalability issues or slow connections
+    #settings.ui.autocomplete_delay = 800
+    #settings.ui.autocomplete_min_chars = 2
+    #settings.ui.filter_auto_submit = 800
+    #settings.ui.report_auto_submit = 800
     # Enable this for a UN-style deployment
     #settings.ui.cluster = True
     # Enable this to use the label 'Camp' instead of 'Shelter'
@@ -428,6 +436,8 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # CMS
+    # Uncomment this to hide CMS from module index pages
+    #settings.cms.hide_index = True
     # Uncomment to use Bookmarks in Newsfeed
     #settings.cms.bookmarks = True
     # Uncomment to use have Filter form in Newsfeed be open by default
@@ -494,6 +504,8 @@ def config(settings):
     #settings.pr.search_shows_hr_details = False
     # Uncomment to hide Emergency Contacts in Person Contacts page
     #settings.pr.show_emergency_contacts = False
+    # Uncomment to hide the Address tab in person details
+    #settings.pr.use_address = False
     # Show separate Public and Private Contacts Tabs
     #settings.pr.contacts_tabs = ("public", "private")
 
@@ -501,6 +513,8 @@ def config(settings):
     # Organisations
     # Uncomment to use an Autocomplete for Organisation lookup fields
     #settings.org.autocomplete = True
+    # Enable the Organisation Sector field
+    #settings.org.sector = True
     # Enable the use of Organisation Branches
     #settings.org.branches = True
     # Show branches as tree rather than as table
@@ -602,8 +616,8 @@ def config(settings):
     #settings.hrm.show_organisation = True
     # Uncomment to consolidate tabs into a single CV
     #settings.hrm.cv_tab = True
-    # Uncomment to consolidate tabs into Staff Record
-    #settings.hrm.record_tab = True
+    # Uncomment to consolidate tabs into Staff Record (set to False to hide the tab)
+    #settings.hrm.record_tab = "record"
     # Uncomment to disable the use of Volunteer Awards
     #settings.hrm.use_awards = False
     # Uncomment to disable the use of HR Certificates
@@ -693,6 +707,8 @@ def config(settings):
     #settings.req.type_hrm_label = "Volunteers"
     # Label for Requester
     #settings.req.requester_label = "Site Contact"
+    # Uncomment to disable Recurring Request
+    #settings.req.recurring = False
     #settings.req.requester_optional = True
     # Uncomment if the User Account logging the Request is NOT normally the Requester
     #settings.req.requester_is_author = False

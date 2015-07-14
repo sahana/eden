@@ -28,10 +28,11 @@
             // Move the user-visible rows underneath the real (hidden) one
             var org_row = $(selector + '_organisation_id__row');
             var name_row = $(selector + '_full_name__row');
-            var date_of_birth_row = $(selector + '_date_of_birth__row');
-            var gender_row = $(selector + '_gender__row');
             var father_name_row = $(selector + '_father_name__row');
             var grandfather_name_row = $(selector + '_grandfather_name__row');
+            var date_of_birth_row = $(selector + '_date_of_birth__row');
+            var year_of_birth_row = $(selector + '_year_of_birth__row');
+            var gender_row = $(selector + '_gender__row');
             var occupation_row = $(selector + '_occupation__row');
             var mobile_phone_row = $(selector + '_mobile_phone__row');
             var home_phone_row = $(selector + '_home_phone__row');
@@ -43,10 +44,11 @@
                     .after(home_phone_row)
                     .after(mobile_phone_row)
                     .after(occupation_row)
-                    .after(grandfather_name_row)
-                    .after(father_name_row)
                     .after(gender_row)
                     .after(date_of_birth_row)
+                    .after(year_of_birth_row)
+                    .after(grandfather_name_row)
+                    .after(father_name_row)
                     .after(name_row)
                     .after(org_row)
                     .after(error_row)
@@ -55,10 +57,11 @@
             title_row.removeClass('hide').show();
             org_row.removeClass('hide').show();
             name_row.removeClass('hide').show();
-            date_of_birth_row.removeClass('hide').show();
-            gender_row.removeClass('hide').show();
             father_name_row.removeClass('hide').show();
             grandfather_name_row.removeClass('hide').show();
+            date_of_birth_row.removeClass('hide').show();
+            year_of_birth_row.removeClass('hide').show();
+            gender_row.removeClass('hide').show();
             occupation_row.removeClass('hide').show();
             mobile_phone_row.removeClass('hide').show();
             home_phone_row.removeClass('hide').show();
@@ -123,6 +126,7 @@
               selector + '_gender' + ',' +
               selector + '_father_name' + ',' +
               selector + '_grandfather_name' + ',' +
+              selector + '_year_of_birth' + ',' +
               selector + '_occupation' + ',' +
               selector + '_mobile_phone' + ',' +
               selector + '_home_phone' + ',' +
@@ -218,6 +222,7 @@
         $(selector + '_full_name').prop('disabled', false);
         $(selector + '_gender').prop('disabled', false);
         $(selector + '_date_of_birth').prop('disabled', false);
+        $(selector + '_year_of_birth').prop('disabled', false);
         $(selector + '_father_name').prop('disabled', false);
         $(selector + '_grandfather_name').prop('disabled', false);
         $(selector + '_occupation').prop('disabled', false);
@@ -233,6 +238,7 @@
         $(selector + '_gender').prop('disabled', true);
         $(selector + '_date_of_birth').prop('disabled', true);
         $(selector + '_date_of_birth__row .ui-datepicker-trigger').hide();
+        $(selector + '_year_of_birth').prop('disabled', true);
         $(selector + '_father_name').prop('disabled', true);
         $(selector + '_grandfather_name').prop('disabled', true);
         $(selector + '_occupation').prop('disabled', true);
@@ -270,6 +276,7 @@
             $(selector + '_gender').prop('disabled', true).val(existing.gender);
             $(selector + '_date_of_birth').prop('disabled', true).val(existing.date_of_birth);
             $(selector + '_date_of_birth__row .ui-datepicker-trigger').show();
+            $(selector + '_year_of_birth').prop('disabled', true).val(existing.year_of_birth);
             $(selector + '_father_name').prop('disabled', true).val(existing.father_name);
             $(selector + '_grandfather_name').prop('disabled', true).val(existing.grandfather_name);
             $(selector + '_occupation').prop('disabled', true).val(existing.occupation);
@@ -297,6 +304,7 @@
         $(selector + '_gender').prop('disabled', false).val('');
         $(selector + '_date_of_birth').prop('disabled', false).val('');
         $(selector + '_date_of_birth__row .ui-datepicker-trigger').show();
+        $(selector + '_year_of_birth').prop('disabled', false).val('');
         $(selector + '_father_name').prop('disabled', false).val('');
         $(selector + '_grandfather_name').prop('disabled', false).val('');
         $(selector + '_occupation').prop('disabled', false).val('');
@@ -356,6 +364,7 @@
                 organisation_id: $(selector + '_organisation_id').val(),
                 gender: $(selector + '_gender').val(),
                 date_of_birth: $(selector + '_date_of_birth').val(),
+                year_of_birth: $(selector + '_year_of_birth').val(),
                 father_name: $(selector + '_father_name').val(),
                 grandfather_name: $(selector + '_grandfather_name').val(),
                 occupation: $(selector + '_occupation').val(),
@@ -379,9 +388,8 @@
         real_input.data('url', url);
 
         dummy_input.autocomplete({
-            // @ToDo: Configurable options
-            delay: 450,
-            minLength: 2,
+            delay: $(this).data('delay') || 800,
+            minLength: $(this).data('chars') || 2,
             source: function(request, response) {
                 // Patch the source so that we can handle No Matches
                 $.ajax({
@@ -537,6 +545,11 @@
             $(selector + '_date_of_birth').val(date_of_birth);
             existing['date_of_birth'] = date_of_birth;
         }
+        if (data.hasOwnProperty('year_of_birth')) {
+            var year_of_birth = data['year_of_birth'];
+            $(selector + '_year_of_birth').val(year_of_birth);
+            existing['year_of_birth'] = year_of_birth;
+        }
         if (data.hasOwnProperty('father_name')) {
             var father_name = data['father_name'];
             $(selector + '_father_name').val(father_name);
@@ -669,14 +682,17 @@
                 card += '<div class="card_1_line">' + item.org + '</div>';
             }
             card += '<div class="card_1_line">' + name + '</div>';
-            if (item.dob) {
-                card += '<div class="card_1_line">' + item.dob + '</div>';
-            }
             if (item.father_name && i18n.father_name_label) {
                 card += '<div class="card_1_line"><label>' + i18n.father_name_label + '</label>' + item.father_name + '</div>';
             }
             if (item.grandfather_name && i18n.grandfather_name_label) {
                 card += '<div class="card_1_line"><label>' + i18n.grandfather_name_label + '</label>' + item.grandfather_name + '</div>';
+            }
+            if (item.year_of_birth) {
+                card += '<div class="card_1_line">' + item.year_of_birth + '</div>';
+            }
+            if (item.dob) {
+                card += '<div class="card_1_line">' + item.dob + '</div>';
             }
             if (item.email) {
                 card += '<div class="card_1_line">' + item.email + '</div>';

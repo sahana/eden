@@ -36,13 +36,17 @@ var s3_register_validation = function() {
     if (undefined != S3.whitelists) {
         // Check for Whitelists
         $('.auth_register #auth_user_email').blur(function() {
-            var email = $('.auth_register #auth_user_email').val();
-            var domain = email.split('@')[1];
-            if (undefined != S3.whitelists[domain]) {
-                $('#auth_user_organisation_id').val(S3.whitelists[domain]);
-            } else {
-                $('#auth_user_organisation_id__row').show();
-            }
+            var field = $('#auth_user_organisation_id');
+            if (!field.val()) {
+                // If no value yet exists then set from whitelist
+                var email = $('.auth_register #auth_user_email').val();
+                var domain = email.split('@')[1];
+                if (undefined != S3.whitelists[domain]) {
+                    field.val(S3.whitelists[domain]);
+                } else {
+                    $('#auth_user_organisation_id__row').show();
+                }
+            }    
         })
     }
 

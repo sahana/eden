@@ -84,6 +84,10 @@ class S3PatientModel(S3Model):
                           Field("phone", requires=s3_phone_requires,
                                 label = T("Current Location Phone Number"),
                                 ),
+                          Field("injuries", "text",
+                                label = T("Injuries"),
+                                widget = s3_comments_widget,
+                                ),
                           s3_date("treatment_date",
                                   label = T("Date of Treatment"),
                                   ),
@@ -228,7 +232,7 @@ class S3PatientModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
 # =============================================================================
 class patient_PatientRepresent(S3Represent):

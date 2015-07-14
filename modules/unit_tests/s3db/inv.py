@@ -28,7 +28,7 @@ class InvTests(unittest.TestCase):
         #---------------------------------------------------------------------
 
 
-        
+
     def tearDown(self):
 
         current.db.rollback()

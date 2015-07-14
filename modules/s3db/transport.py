@@ -48,16 +48,18 @@ class S3TransportModel(S3Model):
     def model(self):
 
         T = current.T
+        db = current.db
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
+        settings = current.deployment_settings
+
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        super_link = self.super_link
+
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
-        super_link = self.super_link
-        settings = current.deployment_settings
-        db = current.db
 
         # ---------------------------------------------------------------------
         # Airports
@@ -122,9 +124,11 @@ class S3TransportModel(S3Model):
                                  }
 
         if settings.get_transport_airport_code_unique():
-            code_requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "transport_airport.code"))
+            code_requires = IS_EMPTY_OR([IS_LENGTH(10),
+                                         IS_NOT_IN_DB(db, "transport_airport.code"),
+                                         ])
         else:
-            code_requires = None
+            code_requires = IS_EMPTY_OR(IS_LENGTH(10))
 
         tablename = "transport_airport"
         define_table(tablename,
@@ -319,9 +323,11 @@ class S3TransportModel(S3Model):
         # Heliports
         #
         if settings.get_transport_heliport_code_unique():
-            code_requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "transport_heliport.code"))
+            code_requires = IS_EMPTY_OR([IS_LENGTH(10),
+                                         IS_NOT_IN_DB(db, "transport_heliport.code"),
+                                         ])
         else:
-            code_requires = None
+            code_requires = IS_EMPTY_OR(IS_LENGTH(10))
 
         tablename = "transport_heliport"
         define_table(tablename,
@@ -386,9 +392,11 @@ class S3TransportModel(S3Model):
             2: T("m")
         }
         if settings.get_transport_seaport_code_unique():
-            code_requires = IS_EMPTY_OR(IS_NOT_IN_DB(db, "transport_seaport.code"))
+            code_requires = IS_EMPTY_OR([IS_LENGTH(10),
+                                         IS_NOT_IN_DB(db, "transport_seaport.code"),
+                                         ])
         else:
-            code_requires = None
+            code_requires = IS_EMPTY_OR(IS_LENGTH(10))
 
         tablename = "transport_seaport"
         define_table(tablename,
@@ -566,7 +574,7 @@ class S3TransportModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict()
+        return {}
 
     # -------------------------------------------------------------------------
     @staticmethod

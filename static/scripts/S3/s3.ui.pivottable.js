@@ -479,7 +479,7 @@
                 rows.append('td')
                     .attr('class', 'pt-row-total')
                     .text(function(d) {
-                        return d[2];
+                        return d[2][0];
                     });
             }
             return rows;
@@ -495,28 +495,39 @@
         _renderCell: function(data, index, labels) {
 
             var column = d3.select(this),
-                items = data.items;
+                items = data.items,
+                keys = data.keys,
+                layer,
+                layer_keys;
 
-            var value = column.append('div')
-                              .attr('class', 'pt-cell-value');
-            if (items === null) {
-                value.text(labels.none);
-            } else if ($.isArray(items)) {
-                value.append('ul')
-                     .selectAll('li')
-                     .data(items)
-                     .enter()
-                     .append('li')
-                     .html(function(d) { return d; });
-            } else {
-                value.text(items);
-            }
+            for (var i=0, len=items.length; i<len; i++) {
+                layer = items[i];
 
-            var keys = data.keys;
-            if (items && keys && keys.length) {
-                $(column.node()).data('records', keys);
-                column.append('div')
-                      .attr('class', 'pt-cell-zoom');
+                var value = column.append('div')
+                                  .attr('class', 'pt-cell-value');
+                if (layer === null) {
+                    value.text(labels.none);
+                } else if ($.isArray(layer)) {
+                    value.append('ul')
+                         .selectAll('li')
+                         .data(layer)
+                         .enter()
+                         .append('li')
+                         .html(function(d) { return d; });
+                } else {
+                    value.text(layer);
+                }
+                layer_keys = data.keys[i];
+                if (items && layer_keys && layer_keys.length) {
+                    $(value.node()).data('keys', layer_keys)
+                                   .data('fact', i);
+                    value.append('div')
+                         .attr('class', 'pt-cell-zoom');
+                }
+                if (len - i > 1) {
+                    value.append('span')
+                         .text(' / ');
+                }
             }
         },
 
@@ -553,7 +564,7 @@
                   .enter()
                   .append('td')
                   .attr('class', 'pt-col-total')
-                  .text(function(col) { return col[2]; });
+                  .text(function(col) { return col[2][0]; });
 
             // Grand total
             footer.append('td')
@@ -714,9 +725,9 @@
                 }
             } else if (chartType == 'barchart') {
                 if (chartAxis == 'rows') {
-                    this._renderBarChart(data.rows, rowsTitle, rows_selector);
+                    this._renderBarChart(data.rows, data.facts, rowsTitle, rows_selector);
                 } else {
-                    this._renderBarChart(data.cols, colsTitle, cols_selector);
+                    this._renderBarChart(data.cols, data.facts, colsTitle, cols_selector);
                 }
             } else if (chartType == 'breakdown') {
                 if (chartAxis == 'rows') {
@@ -766,14 +777,14 @@
             var items = [], total = 0;
             for (var i=0; i<data.length; i++) {
                 var item = data[i];
-                if (!item[1] && item[2] >= 0) {
+                if (!item[1] && item[2][0] >= 0) {
                     items.push({
                         index: item[0],
                         label: item[4],
-                        value: item[2],
+                        value: item[2][0],
                         key: item[3]
                     });
-                    total += item[2];
+                    total += item[2][0];
                 }
             }
 
@@ -859,7 +870,7 @@
          * @param {string} title - the chart title
          * @param {string} selector - the field selector for the axis (for filtering)
          */
-        _renderBarChart: function(data, title, selector) {
+        _renderBarChart: function(data, facts, title, selector) {
 
             var chart = this.chart;
             if (!chart) {
@@ -871,17 +882,25 @@
 
             // Prepare the data items
             var items = [],
-                truncateLabel = this._truncateLabel;
-            for (var i=0; i<data.length; i++) {
-                var item = data[i];
-                if (!item[1]) {
-                    items.push({
+                truncateLabel = this._truncateLabel,
+                series,
+                set,
+                item;
+
+            for (var i=0; i < facts.length; i++) {
+                series = {key: facts[i][2]};
+                set = [];
+                for (var j=0; j < data.length; j++) {
+                    item = data[j];
+                    set.push({
                         label: item[4],
-                        value: item[2],
+                        value: item[2][i],
                         filterIndex: item[0],
                         filterKey: item[3]
                     });
                 }
+                series.values = set;
+                items.push(series);
             }
 
             // Set the height of the chart container
@@ -913,16 +932,29 @@
             nv.addGraph(function() {
 
                 // Define the chart
-                var reportChart = nv.models.discreteBarChart()
-                                           .x(function(d) { return d.label })
-                                           .y(function(d) { return d.value })
+                var reportChart, dispatch;
+                if (items.length > 1) {
+                    reportChart = nv.models.multiBarChart()
+                                           .x(function(d) { return d.label; })
+                                           .y(function(d) { return d.value; })
+                                           .staggerLabels(true)
+                                           .tooltips(true)
+                                           .tooltipContent(tooltipContent)
+                                           .showControls(false);
+                    dispatch = reportChart.multibar;
+                } else {
+                    reportChart = nv.models.discreteBarChart()
+                                           .x(function(d) { return d.label; })
+                                           .y(function(d) { return d.value; })
                                            .staggerLabels(true)
                                            .tooltips(true)
                                            .tooltipContent(tooltipContent)
                                            .showValues(true);
+                    reportChart.valueFormat(valueFormat);
+                    dispatch = reportChart.discretebar;
+                }
 
                 // Set value and tick formatters
-                reportChart.valueFormat(valueFormat);
                 reportChart.yAxis
                            .tickFormat(valueFormat);
                 reportChart.xAxis
@@ -934,14 +966,14 @@
                 d3.select($(chart).get(0))
                   .append('svg')
                   .attr('class', 'nv')
-                  .datum([{key: "reportChart", values: items}])
+                  .datum(items)
                   .transition().duration(500)
                   .call(reportChart);
 
                 // Event handlers
                 if (pt.options.exploreChart && selector) {
                     // Click on a bar forwards to a filtered view
-                    reportChart.discretebar.dispatch.on('elementClick', function(e) {
+                    dispatch.dispatch.on('elementClick', function(e) {
                         var filterKey = e.point.filterKey;
                         if (filterKey === null) {
                             filterKey = 'None';
@@ -993,7 +1025,7 @@
                 cdim = data.cols;
                 getData = function(i, j) {
                     var ri = ridx[i], ci = cidx[j];
-                    return cells[ri][ci]['value'];
+                    return cells[ri][ci]['values'][0];
                 };
                 rowsSelector = selectors[0];
                 colsSelector = selectors[1];
@@ -1002,7 +1034,7 @@
                 cdim = data.rows;
                 getData = function(i, j) {
                     var ri = ridx[i], ci = cidx[j];
-                    return cells[ci][ri]['value'];
+                    return cells[ci][ri]['values'][0];
                 };
                 rowsSelector = selectors[1];
                 colsSelector = selectors[0];
@@ -1213,11 +1245,11 @@
                 for (var i=0; i<yAxis.length; i++) {
                     item = getData(null, i);
                     if (xIndex === null) {
-                        value = item[2];
+                        value = item[2][0];
                     } else {
-                        value = getData(xIndex, i).value;
+                        value = getData(xIndex, i).values[0];
                     }
-                    if (!item[1] && item[2] >= 0) {
+                    if (!item[1] && item[2][0] >= 0) {
                         items.push({
                             filterIndex: item[0],
                             filterKey: item[3],
@@ -1234,15 +1266,15 @@
             var xHeaders = [], total = 0;
             for (var i=0; i<xAxis.length; i++) {
                 var item = getData(i, null);
-                if (!item[1] && item[2] >= 0) {
+                if (!item[1] && item[2][0] >= 0) {
                     xHeaders.push({
                         position: i,
                         filterIndex: item[0],
                         filterKey: item[3],
                         label: item[4],
-                        value: item[2]
+                        value: item[2][0]
                     });
-                    total += item[2];
+                    total += item[2][0];
                 }
             }
 
@@ -1487,11 +1519,11 @@
                         }
                         if (xIndex !== null) {
                             var xFilter = filterExpression(xSelector, xIndex, xKey);
-                            filters.push([xFilter, xKey]);
+                            filters.push([xFilter, xKey || 'None']);
                         }
                         if (yIndex !== null) {
                             var yFilter = filterExpression(ySelector, yIndex, yKey);
-                            filters.push([yFilter, yKey]);
+                            filters.push([yFilter, yKey || 'None']);
                         }
                         pt._chartExplore(filters);
                     });
@@ -1931,24 +1963,26 @@
             $(widgetID + ' div.pt-table div.pt-cell-zoom').click(function(event) {
 
                 var zoom = $(event.currentTarget);
-                var cell = zoom.closest('td'); //parent();
-
+                var cell = zoom.closest('.pt-cell-value'); //parent();
                 var values = cell.find('.pt-cell-records');
+
                 if (values.length > 0) {
                     values.remove();
                     zoom.removeClass('opened');
                 } else {
-                    var keys = cell.data('records');
+                    var keys = cell.data('keys'),
+                        fact = cell.data('fact');
+                    var selector = data.facts[fact][0];
+                    var lookup = data.lookups[selector];
 
                     values = $('<div/>').addClass('pt-cell-records');
 
                     var list = $('<ul/>');
                     for (var i=0; i < keys.length; i++) {
-                        list.append('<li>' + data.lookup[keys[i]] + '</li>');
+                        list.append('<li>' + lookup[keys[i]] + '</li>');
                     }
                     values.append(list);
-                    cell.append(values);
-                    zoom.addClass('opened');
+                    zoom.addClass('opened').after(values);
                 }
             });
 

@@ -68,7 +68,7 @@ from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3dal import Expression, Field, Row, Rows, Table
-from s3data import S3DataTable, S3DataList, S3PivotTable
+from s3data import S3DataTable, S3DataList
 from s3datetime import s3_format_datetime
 from s3fields import S3Represent, s3_all_meta_field_names
 from s3query import FS, S3ResourceField, S3ResourceQuery, S3Joins, S3URLQuery
@@ -1248,25 +1248,6 @@ class S3Resource(object):
                         layout=layout)
 
         return dl, numrows, data["ids"]
-
-    # -------------------------------------------------------------------------
-    def pivottable(self, rows, cols, layers, strict=True):
-        """
-            Generate a pivot table of this resource.
-
-            @param rows: field selector for the rows dimension
-            @param cols: field selector for the columns dimension
-            @param layers: list of tuples (field selector, method) for
-                           the aggregation layers
-            @param strict: filter out dimension values which don't match
-                           the resource filter
-
-            @return: an S3PivotTable instance
-
-            Supported methods: see S3PivotTable
-        """
-
-        return S3PivotTable(self, rows, cols, layers, strict=strict)
 
     # -------------------------------------------------------------------------
     def json(self,
@@ -4390,7 +4371,8 @@ class S3ResourceFilter(object):
 
         tablenames = ("gis_location",
                       "gis_feature_query",
-                      "gis_layer_shapefile")
+                      "gis_layer_shapefile",
+                      )
 
         POLYGON = "POLYGON((%s %s, %s %s, %s %s, %s %s, %s %s))"
 
@@ -4627,13 +4609,19 @@ class S3ResourceFilter(object):
 
         resource = self.resource
 
+        inner_joins = self.get_joins(left=False)
+        if inner_joins:
+            inner = S3Joins(resource.tablename, inner_joins)
+            ijoins = ", ".join([str(j) for j in inner.as_list()])
+        else:
+            ijoins = None
+
         left_joins = self.get_joins(left=True)
         if left_joins:
             left = S3Joins(resource.tablename, left_joins)
-            joins = ", ".join([str(j) for j in left.as_list()])
+            ljoins = ", ".join([str(j) for j in left.as_list()])
         else:
-            left = None
-            joins = None
+            ljoins = None
 
         vfltr = self.get_filter()
         if vfltr:
@@ -4643,15 +4631,16 @@ class S3ResourceFilter(object):
 
         represent = "<S3ResourceFilter %s, " \
                     "query=%s, " \
+                    "join=[%s], " \
                     "left=[%s], " \
                     "distinct=%s, " \
-                    "filter=%s>" % (
-                        resource.tablename,
-                        self.get_query(),
-                        joins,
-                        self.distinct,
-                        vfltr
-                    )
+                    "filter=%s>" % (resource.tablename,
+                                    self.get_query(),
+                                    ijoins,
+                                    ljoins,
+                                    self.distinct,
+                                    vfltr,
+                                    )
 
         return represent
 
