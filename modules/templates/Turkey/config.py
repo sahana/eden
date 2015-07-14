@@ -12,12 +12,8 @@ from gluon.storage import Storage
 
 def config(settings):
     """
-        Template settings: 'Skeleton' designed to be copied to quickly create
-                           custom templates
-
-        All settings which are to configure a specific template are located
-        here. Deployers should ideally not need to edit any other files outside
-        of their template folder.
+        Settings for the SITAP deployhment in Turkey:
+        http://sahana.org.tr
     """
 
     T = current.T
@@ -60,29 +56,8 @@ def config(settings):
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
     settings.L10n.languages = OrderedDict([
         ("ar", "العربية"),
-    #    ("bs", "Bosanski"),
         ("en", "English"),
-    #    ("fr", "Français"),
-    #    ("de", "Deutsch"),
-    #    ("el", "ελληνικά"),
-    #    ("es", "Español"),
-    #    ("it", "Italiano"),
-    #    ("ja", "日本語"),
-    #    ("km", "ភាសាខ្មែរ"),
-    #    ("ko", "한국어"),
-    #    ("ne", "नेपाली"),          # Nepali
-    #    ("prs", "دری"), # Dari
-    #    ("ps", "پښتو"), # Pashto
-    #    ("pt", "Português"),
-    #    ("pt-br", "Português (Brasil)"),
-    #    ("ru", "русский"),
-    #    ("tet", "Tetum"),
-    #    ("tl", "Tagalog"),
         ("tr", "Türkçe"),
-    #    ("ur", "اردو"),
-    #    ("vi", "Tiếng Việt"),
-    #    ("zh-cn", "中文 (简体)"),
-    #    ("zh-tw", "中文 (繁體)"),
     ])
     # Default language for Language Toolbar (& GIS Locations in future)
     settings.L10n.default_language = "tr"
@@ -123,9 +98,79 @@ def config(settings):
     #
     settings.security.policy = 8 # Entity Realm + Hierarchy and Delegations
 
+    # Uncomment to have Volunteers be hierarchical organisational units
+    # (& hence HR realms propagate down to Address & Contacts)
+    # NB Doesn't seem to make any difference
+    #settings.hrm.vol_affiliation = 1
+
+    # Uncomment to have Person records owned by the Org they are an HR for
+    settings.auth.person_realm_human_resource_site_then_org = True
+
     # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
     settings.hrm.skill_types = True
 
+    # -------------------------------------------------------------------------
+    def pr_component_realm_entity(table, row):
+        """
+            Assign a Realm Entity to Person Address/Contact records
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Find the Person
+        ptable = s3db.pr_person
+        person = db(ptable.pe_id == row.pe_id).select(ptable.id,
+                                                      limitby=(0, 1)
+                                                      ).first()
+        try:
+            person_id = person.id
+        except:
+            # => Set to default of Person's
+            return row.pe_id
+
+        # Find the Organisation which this Person links to
+        htable = s3db.hrm_human_resource
+        query = (htable.person_id == person_id) & \
+                (htable.deleted == False)
+        hrs = db(query).select(htable.organisation_id)
+        if len(hrs) != 1:
+            # Either no HR record or multiple options
+            # => Set to default of Person's
+            return row.pe_id
+        organisation_id = hrs.first().organisation_id
+
+        # Find the Org's realm_entity
+        otable = s3db.org_organisation
+        org = db(otable.id == organisation_id).select(otable.realm_entity,
+                                                      limitby=(0, 1)
+                                                      ).first()
+        try:
+            # Set to the same realm_entity
+            return org.realm_entity
+        except:
+            # => Set to default of Person's
+            return row.pe_id
+
+    # -------------------------------------------------------------------------
+    def customise_pr_address_resource(r, tablename):
+
+        current.s3db.configure("pr_address",
+                               realm_entity = pr_component_realm_entity,
+                               )
+
+    settings.customise_pr_address_resource = customise_pr_address_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_contact_resource(r, tablename):
+
+        current.s3db.configure("pr_contact",
+                               realm_entity = pr_component_realm_entity,
+                               )
+
+    settings.customise_pr_contact_resource = customise_pr_contact_resource
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_resource(r, tablename):
 
         s3db = current.s3db
@@ -162,12 +207,20 @@ def config(settings):
                                     "person_details.military_service",
                                     "comments",
                                     )
+
         s3db.configure("pr_person",
                        crud_form = crud_form,
+                       )
+        s3db.configure("pr_address",
+                       realm_entity = pr_component_realm_entity,
+                       )
+        s3db.configure("pr_contact",
+                       realm_entity = pr_component_realm_entity,
                        )
 
     settings.customise_pr_person_resource = customise_pr_person_resource
 
+    # -------------------------------------------------------------------------
     def vol_rheader(r):
         if r.representation != "html":
             # RHeaders only used in interactive views
@@ -194,6 +247,7 @@ def config(settings):
             rheader = None
         return rheader
 
+    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
         # Custom RHeader
         attr["rheader"] = vol_rheader

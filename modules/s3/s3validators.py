@@ -2374,26 +2374,27 @@ class IS_ADD_PERSON_WIDGET2(Validator):
             if person_id:
                 # Update the super-entities
                 s3db.update_super(ptable, dict(id=person_id))
-                # Update realm
-                current.auth.s3_set_record_owner(ptable, person_id)
                 # Read the created pe_id
-                query = (ptable.id == person_id)
-                person = db(query).select(ptable.pe_id,
-                                          limitby=(0, 1)).first()
+                person = db(ptable.id == person_id).select(ptable.pe_id,
+                                                           limitby=(0, 1)
+                                                           ).first()
 
                 # Add contact information as provided
+                pe_id = person.pe_id
                 if post_vars.email:
-                    ctable.insert(pe_id=person.pe_id,
+                    ctable.insert(pe_id=pe_id,
                                   contact_method="EMAIL",
                                   value=post_vars.email)
                 if mobile:
-                    ctable.insert(pe_id=person.pe_id,
+                    ctable.insert(pe_id=pe_id,
                                   contact_method="SMS",
                                   value=post_vars.mobile_phone)
                 if home_phone:
-                    ctable.insert(pe_id=person.pe_id,
+                    ctable.insert(pe_id=pe_id,
                                   contact_method="HOME_PHONE",
                                   value=post_vars.home_phone)
+
+                # Add details
                 details = {}
                 if post_vars.occupation:
                     details["occupation"] = post_vars.occupation
@@ -2406,6 +2407,9 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 if details:
                     details["person_id"] = person_id
                     s3db.pr_person_details.insert(**details)
+
+                # Update ownership & realm
+                current.auth.s3_set_record_owner(ptable, person_id)
             else:
                 # Something went wrong
                 return (person_id, self.error_message or \

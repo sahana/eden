@@ -579,6 +579,8 @@ class S3Config(Storage):
         """
             Should we set pr_person.realm_entity to that of
             hrm_human_resource.site_id$pe_id
+            or
+            hrm_human_resource.organisation_id$pe_id if 1st not set
         """
         return self.auth.get("person_realm_human_resource_site_then_org", False)
 
@@ -2694,6 +2696,15 @@ class S3Config(Storage):
             The tooltip to show when viewing the Active status in the Volunteer RHeader
         """
         return self.hrm.get("vol_active_tooltip")
+
+    #def get_hrm_vol_affiliation(self):
+    #    """
+    #        Which affiliation type Volunteers use:
+    #            1 = Organisational Unit (=> Hierarchy)
+    #            9 = 'Other Role'
+    #            None = default ('Other Role')
+    #    """
+    #    return self.__lazy(self.hrm, "vol_affiliation", default=None)
 
     def get_hrm_vol_experience(self):
         """

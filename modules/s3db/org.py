@@ -2735,7 +2735,9 @@ class S3OrganisationTeamModel(S3Model):
     @staticmethod
     def org_team_onaccept(form):
         """
-            Update affiliations
+            Update affiliations.
+
+            @ToDo: ondelete function needed too
         """
 
         if hasattr(form, "vars"):

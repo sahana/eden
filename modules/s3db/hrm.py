@@ -781,6 +781,7 @@ class S3HRModel(S3Model):
             crud_fields.extend(("details.volunteer_type",
                                 "details.availability",
                                 "details.card",
+                                # @ToDo: Move these to the IFRC Template
                                 "volunteer_cluster.vol_cluster_type_id",
                                 "volunteer_cluster.vol_cluster_id",
                                 "volunteer_cluster.vol_cluster_position_id",
@@ -5293,7 +5294,7 @@ def hrm_human_resource_onaccept(form):
     person_id = record.person_id
     person = Storage(id = person_id)
     if settings.get_auth_person_realm_human_resource_site_then_org():
-        # Set pr_person.realm_entity to the human_resource's site pe_id
+        # Set pr_person.realm_entity to the human_resource's site pe_id or organisation_pe_id
         entity = s3db.pr_get_pe_id("org_site", site_id) or \
                  s3db.pr_get_pe_id("org_organisation", organisation_id)
 
@@ -5475,7 +5476,7 @@ def hrm_human_resource_onaccept(form):
                 profile["organisation_id"] = organisation_id
                 profile["site_id"] = site_id
         if profile:
-            db(utable.id == user.id).update(**profile)
+            db(utable.id == user_id).update(**profile)
 
 # =============================================================================
 def hrm_compose():

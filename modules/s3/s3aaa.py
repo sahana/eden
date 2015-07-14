@@ -4506,7 +4506,7 @@ $.filterOptionsS3({
         if not row:
             return
 
-        # Prepare the udpate
+        # Prepare the update
         data = Storage()
 
         # Find owned_by_user
@@ -4520,7 +4520,8 @@ $.filterOptionsS3({
                   "pr_physical_description",
                   "pr_group_membership",
                   "pr_image",
-                  "hrm_training")
+                  "hrm_training",
+                  )
             if OUSR in fields:
                 data[OUSR] = fields[OUSR]
             elif not row[OUSR] or tablename in pi:
@@ -4566,7 +4567,6 @@ $.filterOptionsS3({
                 data[REALM] = realm_entity
 
         self.s3_update_record_owner(table, row, update=force_update, **data)
-        return
 
     # -------------------------------------------------------------------------
     def set_realm_entity(self, table, records, entity=0, force_update=False):

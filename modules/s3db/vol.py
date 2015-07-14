@@ -854,8 +854,9 @@ def vol_volunteer_controller():
                         table[fn].writable = table[fn].readable = False
                     # Hide volunteer ID as per setting
                     if settings.get_hrm_use_code() is not True:
-                        table["code"].readable = table["code"].writable = False
+                        table.code.readable = table.code.writable = False
                     # Organisation Dependent Fields
+                    # @ToDo: Move these to the IFRC Template
                     set_org_dependent_field = settings.set_org_dependent_field
                     set_org_dependent_field("pr_person_details", "father_name")
                     set_org_dependent_field("pr_person_details", "mother_name")
