@@ -213,11 +213,6 @@ def config(settings):
                                     "person_details.military_service",
                                     "comments",
                                     )
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> 07f38c303935e3da1de62fc4d7d720c3281f829f
         s3db.configure("pr_person",
                        crud_form = crud_form,                       
                        )
@@ -571,4 +566,5 @@ def config(settings):
 
     # For access from custom controllers
     s3.render_posts = render_posts
+    
 # END =========================================================================
