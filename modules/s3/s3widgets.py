@@ -73,6 +73,7 @@ __all__ = ("S3ACLWidget",
            "S3TimeIntervalWidget",
            #"S3UploadWidget",
            "S3FixedOptionsWidget",
+           "S3QuestionWidget",
            "CheckboxesWidgetS3",
            "s3_comments_widget",
            "s3_richtext_widget",
@@ -8268,6 +8269,245 @@ class S3XMLContents(object):
         """ Render the output """
 
         return re.sub(r"\{\{(.+?)\}\}", self.link, self.contents)
+
+# =============================================================================
+class S3QuestionWidget(FormWidget):
+    """
+        A Question widget which takes attributes
+        of a typical question as input and converts
+        it into a JSON
+    """
+
+    # -------------------------------------------------------------------------
+    def __call__(self, field, value, **attr):
+        """
+            Widget builder
+
+            @param field: the Field
+            @param value: the current value
+            @param attributes: the HTML attributes for the widget
+        """
+
+        selector = attr.get("id")
+        if not selector:
+            if isinstance(field, Field):
+                selector = str(field).replace(".", "_")
+            else:
+                selector = field.name.replace(".", "_")
+
+        # Field name
+        name = attr.get("_name")
+
+        if not name:
+            name = field.name
+
+        T = current.T
+        request = current.request
+        s3 = current.response.s3
+
+        # The actual hidden input containing the JSON of the fields
+        real_input = INPUT(_id=selector,
+                           _name=name,
+                           _value=value,
+                           _type="hidden",
+                           )
+
+        formstyle = s3.crud.formstyle
+
+        if value is None:
+            value = "{}"
+
+        value = eval(value)
+
+        type_options = (("string", "String"),
+                        ("integer", "Integer"),
+                        ("float", "Float"),
+                        ("text", "Text"),
+                        ("object", "Object"),
+                        ("date", "Date"),
+                        ("time", "Time"),
+                        ("datetime", "DateTime"),
+                        ("reference", "Reference"),
+                        ("location", "Location"),
+                        )
+
+        type_id = "%s_type" % selector
+
+        select_field = Field("type", requires=IS_IN_SET(type_options))
+        select_value = value.get("type", "")
+
+        # Used by OptionsWidget for creating DOM id for select input
+        select_field.tablename = "dc_question_model"
+        select = OptionsWidget.widget(select_field, select_value)
+
+        # Retrieve value of checkboxes
+        multiple = value.get("multiple", False)
+        if multiple == "true":
+            multiple = True
+        else:
+            multiple = False
+
+        is_required = value.get("is_required", False)
+        if is_required == "true":
+            is_required = True
+        else:
+            is_required = False
+
+        # Render visual components
+        components = {}
+        manual_input = self._input
+
+        components["type"] = ("Type: ", select, type_id)
+
+        components["is_required"] = manual_input(selector,
+                                                 "is_required",
+                                                 is_required,
+                                                 T("Is Required"),
+                                                 "checkbox")
+
+        components["description"] = manual_input(selector,
+                                                 "description",
+                                                 value.get("description", ""),
+                                                 T("Description"))
+
+        components["default_answer"] = manual_input(selector,
+                                                    "defaultanswer",
+                                                    value.get("defaultanswer", ""),
+                                                    T("Default Answer"))
+
+        components["max"] = manual_input(selector,
+                                         "max",
+                                         value.get("max", ""),
+                                         T("Maximum"))
+
+        components["min"] = manual_input(selector,
+                                         "min",
+                                         value.get("min", ""),
+                                         T("Minimum"))
+
+        components["filter"] = manual_input(selector,
+                                            "filter",
+                                            value.get("filter", ""),
+                                            T("Filter"))
+
+        components["reference"] = manual_input(selector,
+                                               "reference",
+                                               value.get("reference", ""),
+                                               T("Reference"))
+
+        components["represent"] = manual_input(selector,
+                                               "represent",
+                                               value.get("represent", ""),
+                                               T("Represent"))
+
+        components["location"] = manual_input(selector,
+                                              "location",
+                                              value.get("location", "[]"),
+                                              T("Location Fields"))
+
+        components["options"] = manual_input(selector,
+                                             "options",
+                                             value.get("options", "[]"),
+                                             T("Options"))
+
+        components["multiple"] = manual_input(selector,
+                                              "multiple",
+                                              multiple,
+                                              T("Multiple Options"),
+                                              "checkbox")
+
+        # Load the widget script
+        scripts = s3.scripts
+        script_dir = "/%s/static/scripts" % request.application
+
+        script = "%s/S3/s3.ui.question.js" % script_dir
+        if script not in scripts:
+            scripts.append(script)
+
+        # Call the widget
+        script = '''$('#%(widget_id)s').addQuestion()''' % \
+                {"widget_id": "dc_question_model"}
+
+        s3.jquery_ready.append(script)
+
+        # Get the layout for visible components
+        visible_components = self._layout(components)
+
+        return TAG[""](real_input,
+                       visible_components)
+
+    # -------------------------------------------------------------------------
+    def _layout(self, components, formstyle=None):
+        """
+            Overall layout for visible components
+
+            @param components: the components as dict
+            @param formstyle: the formstyle (falls back to CRUD formstyle)
+        """
+
+        if formstyle is None:
+            formstyle = current.response.s3.crud.formstyle
+
+        # Test the formstyle
+        row = formstyle("test", "test", "test", "test")
+
+        tuple_rows = isinstance(row, tuple)
+
+        inputs = TAG[""]()
+        for name in ("type", "is_required", "description", "default_answer",
+                     "max", "min", "filter", "reference", "represent",
+                     "location", "options", "multiple"):
+            if name in components:
+                label, widget, input_id = components[name]
+                formrow = formstyle("%s__row" % input_id,
+                                    label,
+                                    widget,
+                                    "")
+
+                if tuple_rows:
+                    inputs.append(formrow[0])
+                    inputs.append(formrow[1])
+                else:
+                    inputs.append(formrow)
+        return inputs
+
+    # -------------------------------------------------------------------------
+    def _input(self,
+               fieldname,
+               name,
+               value,
+               label,
+               _type="text"):
+        """
+            Render a text input with given attributes
+
+            @param fieldname: the field name (for ID construction)
+            @param name: the name for the input field
+            @param value: the initial value for the input
+            @param label: the label for the input
+            @param hidden: render hidden
+
+            @return: a tuple (label, widget, id, hidden)
+        """
+
+        input_id = "%s_%s" % (fieldname, name)
+
+        _label = LABEL("%s: " % label, _for=input_id)
+
+        if isinstance(value, unicode):
+            value = value.encode("utf-8")
+
+        # If the input is of type checkbox
+        if name in ("is_required", "multiple"):
+            widget = INPUT(_type=_type,
+                           _id=input_id,
+                           value=value)
+        else:
+            widget = INPUT(_type=_type,
+                           _id=input_id,
+                           _value=value)
+
+        return (_label, widget, input_id)
 
 # =============================================================================
 class ICON(I):
