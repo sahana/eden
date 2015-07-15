@@ -565,7 +565,7 @@ class S3OrganisationModel(S3Model):
                   context = {"location": location_context,
                              },
                   crud_form = crud_form,
-                  deduplicate = self.organisation_duplicate,
+                  deduplicate = org_OrganisationDuplicate.duplicate,
                   filter_widgets = filter_widgets,
                   hierarchy_export = {"root": "Organisation",
                                       "branch": "Branch",
@@ -984,47 +984,6 @@ class S3OrganisationModel(S3Model):
 
     # -----------------------------------------------------------------------------
     @staticmethod
-    def organisation_duplicate(item):
-        """
-            Import item deduplication, match by name or l10_name
-
-            @ToDo: parent (for Branches)
-
-            @param item: the S3ImportItem instance
-        """
-
-        name = item.data.get("name", None)
-        if name:
-            table = item.table
-            query = (table.name.lower() == name.lower())
-            duplicate = current.db(query).select(table.id,
-                                                 table.name,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                # @ToDo: Can we see the parent in the import?
-                #if current.deployment_settings.get_org_branches():
-                #    btable = s3db.org_organisation_branch
-                item.id = duplicate.id
-                # Retain the original spelling of the name
-                item.data.name = duplicate.name
-                item.method = item.METHOD.UPDATE
-            elif current.deployment_settings.get_L10n_translate_org_organisation():
-                # See if this a name_l10n
-                ltable = current.s3db.org_organisation_name
-                query = (ltable.name_l10n == name) & \
-                        (ltable.organisation_id == table.id)
-                duplicate = current.db(query).select(table.id,
-                                                     table.name,
-                                                     limitby=(0, 1)).first()
-                if duplicate:
-                    # @ToDo: Import Log
-                    #current.log.debug("Organisation l10n Match")
-                    item.data.name = duplicate.name # Don't update the name
-                    item.id = duplicate.id
-                    item.method = item.METHOD.UPDATE
-
-    # -----------------------------------------------------------------------------
-    @staticmethod
     def org_search_ac(r, **attr):
         """
             JSON search method for S3OrganisationAutocompleteWidget
@@ -1295,6 +1254,7 @@ class S3OrganisationBranchModel(S3Model):
         request_vars = form.request_vars
         if request_vars and \
            request_vars.branch_id and \
+           request_vars.organisation_id and \
            int(request_vars.branch_id) == int(request_vars.organisation_id):
             error = current.T("Cannot make an Organization a branch of itself!")
             form.errors["branch_id"] = error
@@ -6440,6 +6400,214 @@ def org_update_root_organisation(organisation_id, root_org=None):
     return root_org
 
 # =============================================================================
+class org_OrganisationDuplicate(object):
+    """ Import item deduplication, match by name or l10_name """
+
+    @classmethod
+    def duplicate(cls, item):
+        """
+            Main method, to be set for the "deduplicate" hook
+
+            @param item: the S3ImportItem
+        """
+
+        try:
+            duplicate_id = cls.identify(item)
+        except ValueError:
+            # Ambiguous => reject the item
+            error = "Ambiguous data, try specifying parent organisation"
+            item.accepted = False
+            item.error = error
+            if item.element is not None:
+                item.element.set(current.xml.ATTRIBUTE["error"], error)
+            return
+
+        if duplicate_id:
+            item.id = duplicate_id
+            item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def identify(cls, item=None, uid=None):
+        """
+            Get the record ID that corresponds to the given import item
+            or UUID
+
+            @param item: the import item
+            @param uid: the UUID
+
+            @return: the record ID if successfully identified, or
+                     None if there is no record for that item yet
+            @raise ValueError: if there are multiple matches in the DB
+        """
+
+        if item.id:
+            # Already identified
+            return item.id
+
+        if uid is not None:
+            # Try to find the record for this UUID
+            table = item.table if item else current.s3db.org_organisation
+            query = (table.uuid == uid)
+            row = current.db(query).select(table.id, limitby=(0, 1)).first()
+            if row:
+                return row.id
+
+        if item is not None:
+
+            # Do we have any name matches?
+            name_matches = cls.name_match(item)
+            if not name_matches:
+                return None
+
+            # Do we have a parent specified by the source?
+            parent_id, parent_uid, parent_item = cls.parent(item)
+
+            if not any((parent_id, parent_uid, parent_item)):
+
+                if len(name_matches) == 1:
+                    # Single name match (+ no parent item = no conflict)
+                    match = name_matches.keys()[0]
+                    name = name_matches[match].get("name")
+                    if name:
+                        item.data.name = name
+                    return match
+
+                else:
+                    # Multiple name matches, look for a single root org match
+                    hits = [k for k, v in name_matches.items()
+                                  if v.get("parent") is None]
+                    if len(hits) == 1:
+                        # Single root organisation match
+                        match = hits[0]
+                        name = name_matches[match].get("name")
+                        if name:
+                            item.data.name = name
+                        return match
+
+                    else:
+                        # Multiple or no root organisation matches (=ambiguous)
+                        raise ValueError
+            else:
+                if not parent_id:
+                    # Try to identify the parent (recurse)
+                    parent_id = cls.identify(item = parent_item,
+                                             uid = parent_uid,
+                                             )
+                if not parent_id:
+                    # Parent does not yet exist, so branch must be new too
+                    return None
+
+                hits = [k for k, v in name_matches.items()
+                              if v.get("parent") == parent_id]
+
+                if len(hits) == 0:
+                    # No name match under the same parent => new branch
+                    return None
+
+                if len(hits) == 1:
+                    # Single name match under the same parent
+                    match = hits[0]
+                    name = name_matches[match].get("name")
+                    if name:
+                        item.data.name = name
+                    return match
+
+                else:
+                    # Multiple name matches under the same parent (=ambiguous)
+                    raise ValueError
+
+        # Default
+        return None
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def name_match(cls, item):
+        """
+            Find all name matches for the given import item
+
+            @param item: the import item
+            @return: a dict {id: name, parent: parent_id} of records which
+                     match the import item by name, or alternatively by
+                     local name if enabled and no direct name match
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        matches = {}
+
+        name = item.data.get("name")
+        if not name:
+            return matches
+
+        table = item.table
+
+        # Search by name
+        query = (table.name.lower() == name.lower())
+        rows = db(query).select(table.id, table.name)
+
+        settings = current.deployment_settings
+        if not rows and settings.get_L10n_translate_org_organisation():
+            # Search by local name
+            ltable = s3db.org_organisation_name
+            query = (ltable.name_l10n.lower() == name.lower()) & \
+                    (ltable.organisation_id == table.id) & \
+                    (ltable.deleted != True)
+            rows = db(query).select(table.id, table.name)
+
+        if rows:
+            # Get the parents for all matches
+            matches = dict((row.id, {"name": row.name}) for row in rows)
+
+            btable = s3db.org_organisation_branch
+            query = (btable.branch_id.belongs(matches.keys())) & \
+                    (btable.deleted != True)
+            links = db(query).select(btable.organisation_id,
+                                     btable.branch_id,
+                                     )
+            for link in links:
+                matches[link.branch_id]["parent"] = link.organisation_id
+
+        return matches
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def parent(cls, item):
+        """
+            Find the parent for the given import item
+
+            @param item: the import item
+            @return: a tuple (id, uid, item) for the parent
+        """
+
+        parent_id = parent_uid = parent_item = None
+
+        is_key = lambda fk, name: fk == name or \
+                                  isinstance(fk, tuple) and fk[1] == name
+
+        all_items = item.job.items
+        for uid, link_item in all_items.items():
+            if link_item.tablename == "org_organisation_branch":
+                references = link_item.references
+                parent = branch = None
+                for reference in references:
+                    fk = reference.field
+                    if is_key(fk, "branch_id"):
+                        branch = reference.entry
+                    elif is_key(fk, "organisation_id"):
+                        parent = reference.entry
+                    if parent and branch:
+                        break
+                if parent and branch and branch.item_id == item.item_id:
+                    parent_id = parent.id
+                    parent_uid = parent.uid
+                    parent_item = all_items.get(parent.item_id)
+                    break
+
+        return parent_id, parent_uid, parent_item
+
+# =============================================================================
 class org_AssignMethod(S3Method):
     """
         Custom Method to allow organisations to be assigned to something
@@ -6694,7 +6862,7 @@ class org_CapacityReport(S3Method):
 
         if r.http == "GET":
             if r.representation == "html":
-                
+
                 T = current.T
 
                 output = dict(title = T("Branch Organisational Capacity Assessment"))
@@ -6705,7 +6873,7 @@ class org_CapacityReport(S3Method):
                     rheader = attr["rheader"](r)
                     if rheader:
                         output["rheader"] = rheader
-                
+
                 data = self._read_data(r)
                 if data is None:
                     output["items"] = current.response.s3.crud_strings["org_capacity_assessment"].msg_list_empty

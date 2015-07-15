@@ -2005,6 +2005,9 @@ class S3ImportItem(object):
 
         # Detect update
         self.deduplicate()
+        if self.accepted is False:
+            # Item rejected by deduplicator (e.g. due to ambiguity)
+            return False
 
         # Don't need to validate skipped or deleted records
         if self.skip or self.method in (DELETE, MERGE):
