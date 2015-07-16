@@ -115,6 +115,7 @@
     <xsl:template match="row">
         <xsl:call-template name="OrganisationHierarchy">
             <xsl:with-param name="Level">Organisation</xsl:with-param>
+            <xsl:with-param name="Subset" select="//row"/>
         </xsl:call-template>
 
     </xsl:template>
@@ -125,9 +126,12 @@
         <xsl:param name="Parent"/>
         <xsl:param name="ParentPath"/>
         <xsl:param name="Level"/>
+        <!-- Subset = all rows with the same parent organisation -->
+        <xsl:param name="Subset"/>
 
         <xsl:variable name="Name" select="col[@field=$Level]"/>
-        
+        <xsl:variable name="SubSubset" select="$Subset[col[@field=$Level]/text()=$Name]"/>
+
         <!-- Construct the branch path (for tuid-generation) -->
         <xsl:variable name="Path">
             <xsl:choose>
@@ -139,7 +143,7 @@
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:variable>
-        
+
         <!-- Generate the column name of the next level from the current level -->
         <xsl:variable name="NextLevel">
             <xsl:choose>
@@ -153,25 +157,27 @@
         <xsl:choose>
             <xsl:when test="col[@field=$NextLevel] and col[@field=$NextLevel]/text()!=''">
 
+                <xsl:if test="generate-id($SubSubset[1])=generate-id(.)">
+                    <!-- If the parent organisation of this branch does not exist
+                         in the source, then create it now from the bare name -->
+                    <xsl:variable name="ParentRow" select="$SubSubset[not(col[@field=$NextLevel]) or
+                                                                      not(col[@field=$NextLevel]/text()!='')]"/>
+                    <xsl:if test="count($ParentRow)=0">
+                        <xsl:call-template name="Organisation">
+                            <xsl:with-param name="Name" select="$Name"/>
+                            <xsl:with-param name="Path" select="$Path"/>
+                            <xsl:with-param name="ParentPath" select="$ParentPath"/>
+                        </xsl:call-template>
+                    </xsl:if>
+                </xsl:if>
+
                 <!-- Descend one more level down -->
                 <xsl:call-template name="OrganisationHierarchy">
                     <xsl:with-param name="Parent" select="$Name"/>
                     <xsl:with-param name="ParentPath" select="$Path"/>
                     <xsl:with-param name="Level" select="$NextLevel"/>
+                    <xsl:with-param name="Subset" select="$SubSubset"/>
                 </xsl:call-template>
-
-                <!-- If the parent organisation doesn't exist in this file,
-                     create it without row from the bare name -->
-                <xsl:if test="not(preceding-sibling::row[col[@field=$Level]/text()=$Name]) and
-                              not(../row[col[@field=$Level]/text()=$Name and
-                                  (not(col[@field=$NextLevel]) or
-                                       col[@field=$NextLevel]/text()='')])">
-                    <xsl:call-template name="Organisation">
-                        <xsl:with-param name="Name" select="$Name"/>
-                        <xsl:with-param name="Path" select="$Path"/>
-                        <xsl:with-param name="ParentPath" select="$ParentPath"/>
-                    </xsl:call-template>
-                </xsl:if>
 
             </xsl:when>
             <xsl:otherwise>
@@ -187,7 +193,7 @@
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
-    
+
     <!-- ****************************************************************** -->
     <xsl:template name="Organisation">
         <xsl:param name="Name"/>
@@ -200,7 +206,7 @@
             <xsl:attribute name="tuid">
                 <xsl:value-of select="concat('ORG:', $Path)"/>
             </xsl:attribute>
-            
+
             <!-- Add link to parent (if there is one) -->
             <xsl:if test="$ParentPath!=''">
                 <resource name="org_organisation_branch" alias="parent">
@@ -217,7 +223,7 @@
 
             <xsl:if test="$Row">
                 <!-- Use the data in this row -->
-                
+
                 <xsl:variable name="Groups" select="col[@field='Groups']/text()"/>
                 <xsl:variable name="Sectors" select="col[@field='Sectors']/text()"/>
                 <xsl:variable name="Services" select="col[@field='Services']/text()"/>
@@ -243,13 +249,13 @@
                 <xsl:if test="col[@field='Approved']!=''">
                     <data field="approved_by">0</data>
                 </xsl:if>
-            
+
                 <xsl:if test="col[@field='Acronym']!=''">
                     <data field="acronym">
                         <xsl:value-of select="col[@field='Acronym']"/>
                     </data>
                 </xsl:if>
-            
+
                 <!-- Link to Organisation Type -->
                 <xsl:if test="$Type!=''">
                     <resource name="org_organisation_organisation_type">
@@ -320,7 +326,7 @@
                         <xsl:value-of select="$countrycode"/>
                     </data>
                 </xsl:if>
-                
+
                 <xsl:if test="col[@field='Region']!=''">
                     <reference field="region_id" resource="org_region">
                         <xsl:attribute name="tuid">
@@ -328,19 +334,19 @@
                         </xsl:attribute>
                     </reference>
                 </xsl:if>
-                
+
                 <xsl:if test="col[@field='Website']!=''">
                     <data field="website">
                         <xsl:value-of select="col[@field='Website']"/>
                     </data>
                 </xsl:if>
-                
+
                 <xsl:if test="col[@field='Phone']!=''">
                     <data field="phone">
                         <xsl:value-of select="col[@field='Phone']"/>
                     </data>
                 </xsl:if>
-                
+
                 <xsl:if test="col[@field='Phone2']!=''">
                     <resource name="pr_contact">
                         <data field="contact_method">WORK_PHONE</data>
@@ -349,7 +355,7 @@
                         </data>
                     </resource>
                 </xsl:if>
-                
+
                 <xsl:if test="col[@field='Facebook']!=''">
                     <resource name="pr_contact">
                         <data field="contact_method">FACEBOOK</data>
@@ -358,7 +364,7 @@
                         </data>
                     </resource>
                 </xsl:if>
-                
+
                 <xsl:if test="col[@field='Twitter']!=''">
                     <resource name="pr_contact">
                         <data field="contact_method">TWITTER</data>
@@ -367,7 +373,7 @@
                         </data>
                     </resource>
                 </xsl:if>
-                
+
                 <xsl:if test="col[@field='Comments']!=''">
                     <data field="comments">
                         <xsl:value-of select="col[@field='Comments']"/>
@@ -618,6 +624,8 @@
         </xsl:choose>
 
     </xsl:template>
+
+    <xsl:template name="quote"/>
 
     <!-- END ************************************************************** -->
 </xsl:stylesheet>
