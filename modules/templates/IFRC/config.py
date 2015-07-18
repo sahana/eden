@@ -87,7 +87,7 @@ def config(settings):
 
         # Entity reference fields
         EID = "pe_id"
-        #OID = "organisation_id"
+        OID = "organisation_id"
         SID = "site_id"
         #GID = "group_id"
         PID = "person_id"
@@ -105,6 +105,7 @@ def config(settings):
                                 pr_image = EID,
                                 pr_identity = PID,
                                 pr_education = PID,
+                                pr_group = OID,
                                 pr_note = PID,
                                 hrm_human_resource = SID,
                                 hrm_training = PID,
@@ -220,9 +221,8 @@ def config(settings):
                     realm_entity = row.pe_id
                 # otherwise: inherit from the person record
 
-        # Groups are owned by the user's organisation
-        #elif tablename in ("pr_group",):
-        elif tablename == "pr_group":
+        elif realm_entity == 0 and tablename == "pr_group":
+            # Groups are owned by the user's organisation if not linked to an Organisation directly
             use_user_organisation = True
 
         auth = current.auth
@@ -2062,6 +2062,15 @@ def config(settings):
                                                               hidden = True,
                                                               ))
 
+                elif root_org == VNRC:
+                    # Add extra list_fields
+                    list_fields = get_config("list_fields")
+                    list_fields += [(T("ID Number"), "person_id$identity.value"),
+                                    (T("Province"), "location_id$L1"),
+                                    (T("District"), "location_id$L2"),
+                                    (T("Commune"), "location_id$L3"),
+                                    ]
+
             if controller == "deploy":
                 # Custom setting for RDRT
 
@@ -2815,8 +2824,17 @@ def config(settings):
         # Special cases for different NS
         root_org = current.auth.root_org_name()
         if root_org == VNRC:
+            table = current.s3db.pr_contact
             # Hard to translate in Vietnamese
-            current.s3db.pr_contact.value.label = ""
+            table.value.label = ""
+            # Restrict options to just those wanted by VNRC
+            from gluon import IS_IN_SET
+            table.contact_method.requires = IS_IN_SET({"EMAIL":       T("Email"),
+                                                       "HOME_PHONE":  T("Home phone"),
+                                                       "SMS":         T("Mobile Phone"),
+                                                       "WORK_PHONE":  T("Work phone"),
+                                                       },
+                                                      zero=None)
 
     settings.customise_pr_contact_resource = customise_pr_contact_resource
 

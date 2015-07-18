@@ -180,9 +180,8 @@ def user():
                action=link_user)
 
     # CRUD Strings
-    ADD_USER = T("Create User")
     s3.crud_strings["auth_user"] = Storage(
-        label_create = ADD_USER,
+        label_create = T("Create User"),
         title_display = T("User Details"),
         title_list = T("Users"),
         title_update = T("Edit User"),
@@ -325,9 +324,12 @@ def user():
             # @ToDo: Merge these with the code in s3aaa.py and use S3SQLCustomForm to implement
             form = output.get("form", None)
             if not form:
-                create_url = URL(args=["create"])
-                output["showadd_btn"] = s3base.S3CRUD.crud_button(T("Create User"),
-                                                                  _href=create_url)
+                crud_button = s3base.S3CRUD.crud_button
+                output["showadd_btn"] = DIV(crud_button(T("Create User"),
+                                                        _href=URL(args=["create"])),
+                                            crud_button(T("Import Users"),
+                                                        _href=URL(args=["import"])),
+                                            )
                 return output
             # Assume formstyle callable
             id = "auth_user_password_two__row"

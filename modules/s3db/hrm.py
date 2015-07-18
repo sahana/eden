@@ -3388,7 +3388,7 @@ class S3HRSkillModel(S3Model):
             # Python lower() converts the TR char İ to i (Correctly, according to http://www.fileformat.info/info/unicode/char/0130/index.htm)
             # PostgreSQL LOWER() on Windows doesn't convert it, although this seems to be a locale issue:
             # http://stackoverflow.com/questions/18507589/the-lower-function-on-international-characters-in-postgresql
-            # Works fine on Debian servers
+            # Works fine on Debian servers if the locale is a .UTF-8 before the Postgres cluster is created
             query = (table.name.lower() == s3_unicode(name).lower().encode("utf8"))
         else:
             query = (table.name.lower() == name.lower())
@@ -8732,9 +8732,9 @@ def hrm_human_resource_filters(resource_type=None,
             # Programme filter
             append_filter(S3OptionsFilter("person_id$hours.programme_id",
                                           label = T("Program"),
-                                          options = lambda: \
-                                            get_s3_filter_opts("hrm_programme",
-                                                               org_filter=True),
+                                          #options = lambda: \
+                                          #  get_s3_filter_opts("hrm_programme",
+                                          #                     org_filter=True),
                                           hidden = True,
                                           ))
 

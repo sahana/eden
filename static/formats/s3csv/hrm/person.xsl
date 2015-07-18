@@ -51,6 +51,7 @@
          Criminal Record................optional.....person_details criminal record
          Military Service...............optional.....person_details military service
          Blood Type.....................optional.....pr_physical_description blood_type
+         Ethnicity......................optional.....pr_physical_description ethnicity
          National ID....................optional.....person identity type = 2, value
          Passport No....................optional.....person identity type = 1, value
          Passport Country...............optional.....person identity
@@ -646,6 +647,7 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="BloodType" select="col[@field='Blood Type']"/>
+        <xsl:variable name="Ethnicity" select="col[@field='Ethnicity']"/>
         <xsl:variable name="Teams" select="col[@field='Teams']"/>
         <xsl:variable name="Trainings" select="col[@field='Trainings']"/>
         <xsl:variable name="Certificates" select="col[@field='Certificates']"/>
@@ -818,21 +820,26 @@
                 </xsl:if>
             </resource>
 
-            <xsl:if test="$BloodType!=''">
+            <xsl:if test="$BloodType!='' or $Ethnicity!=''">
                 <resource name="pr_physical_description">
-                    <data field="blood_type">
-                        <xsl:choose>
-                            <xsl:when test="$BloodType='0+'">
-                                <xsl:text>O+</xsl:text>
-                            </xsl:when>
-                            <xsl:when test="$BloodType='0-'">
-                                <xsl:text>O-</xsl:text>
-                            </xsl:when>
-                            <xsl:otherwise>
-                                <xsl:value-of select="$BloodType"/>
-                            </xsl:otherwise>
-                        </xsl:choose>
-                    </data>
+                    <xsl:if test="$Ethnicity!=''">
+                        <data field="ethnicity"><xsl:value-of select="$Ethnicity"/></data>
+                    </xsl:if>
+                    <xsl:if test="$BloodType!=''">
+                        <data field="blood_type">
+                            <xsl:choose>
+                                <xsl:when test="$BloodType='0+'">
+                                    <xsl:text>O+</xsl:text>
+                                </xsl:when>
+                                <xsl:when test="$BloodType='0-'">
+                                    <xsl:text>O-</xsl:text>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:value-of select="$BloodType"/>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </data>
+                    </xsl:if>
                 </resource>
             </xsl:if>
 

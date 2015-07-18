@@ -434,7 +434,7 @@
 'Christian': 'គ្រិស្ដសាសនិក',
 'Clean-Up Campaign': 'យុទ្ធនាការ​បោសសំអាត',
 'Cleaner': 'កម្មវិធី​សំអាត',
-'Clear all': 'ជ​ម្រះ​ទាំងអស់',
+'Clear All': 'ជ​ម្រះ​ទាំងអស់',
 'Clear filter': 'ជម្រះ​​តម្រង',
 'Clear selection': 'ជម្រះការ​ជ្រើស',
 'Clear': 'ជម្រះ',

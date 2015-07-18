@@ -13,6 +13,7 @@
          Language................auth_user.language
          Role....................auth_group.role
          Organisation............org_organisation.name
+         Branch..................branch organisation name (only 1 level supported. If need a SubBranch then put Branch in Organisation column & SubBranch in Branch column)
          Organisation Group......org_group.name
 
          @ToDo: Add support for Sites to auth.s3_import_prep
@@ -25,20 +26,12 @@
 
     <xsl:include href="../../xml/commons.xsl"/>
 
-    <xsl:key name="organisations" match="row" use="col[@field='Organisation']/text()"/>
     <xsl:key name="groups" match="row" use="col[@field='Organisation Group']/text()"/>
 
     <!-- ****************************************************************** -->
 
     <xsl:template match="/">
         <s3xml>
-            <!-- Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=
-                                        generate-id(key('organisations',
-                                                        col[@field='Organisation']/text())[1])]">
-                <xsl:call-template name="Organisation"/>
-            </xsl:for-each>
-
             <!-- Organisation Groups -->
             <xsl:for-each select="//row[generate-id(.)=
                                         generate-id(key('groups',
@@ -53,6 +46,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+        <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="GroupName" select="col[@field='Organisation Group']/text()"/>
 
         <!-- Create the User -->
@@ -76,12 +70,22 @@
             </xsl:call-template>
 
             <!-- Link to Organisation -->
-            <xsl:if test="$OrgName!=''">
-                <data field="organisation_id">
-                    <!-- Name gets converted to ID in auth.s3_import_prep -->
-                    <xsl:value-of select="$OrgName"/>
-                </data>
-            </xsl:if>
+            <xsl:choose>
+                <xsl:when test="$BranchName!=''">
+                    <!-- Link to the Branch -->
+                    <data field="organisation_id">
+                        <!-- Name gets converted to ID in auth.s3_import_prep -->
+                        <xsl:value-of select="concat($OrgName, '+BRANCH+', $BranchName)"/>
+                    </data>
+                </xsl:when>
+                <xsl:when test="$OrgName!=''">
+                    <!-- Link to the top-level Organisation -->
+                    <data field="organisation_id">
+                        <!-- Name gets converted to ID in auth.s3_import_prep -->
+                        <xsl:value-of select="$OrgName"/>
+                    </data>
+                </xsl:when>
+            </xsl:choose>
 
             <!-- Link to Organisation Group -->
             <xsl:if test="$GroupName!=''">
@@ -136,18 +140,6 @@
                 </xsl:when>
             </xsl:choose>
         </resource>
-
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="Organisation">
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-
-        <xsl:if test="$OrgName!=''">
-            <resource name="org_organisation">
-                <data field="name"><xsl:value-of select="$OrgName"/></data>
-            </resource>
-        </xsl:if>
 
     </xsl:template>
 

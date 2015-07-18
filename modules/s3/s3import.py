@@ -2100,7 +2100,7 @@ class S3ImportItem(object):
                 from traceback import format_exc
                 current.log.error("S3Import %s onvalidation exception:" % tablename)
                 current.log.debug(format_exc(10))
-        self.accepted = True
+        accepted = True
         if form.errors:
             for k in form.errors:
                 e = self.element.findall("data[@field='%s']" % k)
@@ -2113,9 +2113,10 @@ class S3ImportItem(object):
                     e = e[0]
                 e.set(ERROR, str(form.errors[k]).decode("utf-8"))
             self.error = current.ERROR.VALIDATION_ERROR
-            self.accepted = False
+            accepted = False
 
-        return self.accepted
+        self.accepted = accepted
+        return accepted
 
     # -------------------------------------------------------------------------
     def commit(self, ignore_errors=False):

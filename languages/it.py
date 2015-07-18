@@ -847,7 +847,7 @@
 'Cladding, glazing': 'Rivestimenti, vetri',
 'Cleaner': 'Addetto alle pulizie',
 'clear': 'Chiaro',
-'Clear all': 'Cancella tutto',
+'Clear All': 'Cancella tutto',
 'Clear all Layers': 'Cancella tutti gli strati',
 'Clear filter': 'Cancella i filtri',
 'click for more details': 'Fare clic per maggiori dettagli',
