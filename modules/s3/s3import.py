@@ -376,7 +376,7 @@ class S3Importer(S3Method):
 
         if not output:
             output = dict()
-            # must commit here to separate this transaction from
+            # Must commit here to separate this transaction from
             # the trial import phase which will be rolled back.
             db.commit()
 

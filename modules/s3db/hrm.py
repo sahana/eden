@@ -5393,17 +5393,20 @@ def hrm_human_resource_onaccept(form):
     elif address:
         data.location_id = location_id = address.location_id
 
-    elif vol and record.location_id:
-        # Add Address from newly-created HRM
-        query = (ptable.id == person_id)
-        pe = db(query).select(ptable.pe_id,
-                              limitby=(0, 1)).first()
-        try:
-            record_id = atable.insert(type = 1,
-                                      pe_id = pe.pe_id,
-                                      location_id = location_id)
-        except:
-            current.log.error("Can't find person with id", person_id)
+    elif vol:
+        if record.location_id:
+            location_id = record.location_id
+            # Add Address from newly-created HRM
+            pe = db(ptable.id == person_id).select(ptable.pe_id,
+                                                   limitby=(0, 1)).first()
+            try:
+                atable.insert(type = 1,
+                              pe_id = pe.pe_id,
+                              location_id = location_id)
+            except:
+                current.log.error("Can't find person with id", person_id)
+        else:
+            data.location_id = location_id = None
 
     else:
         data.location_id = location_id = None
