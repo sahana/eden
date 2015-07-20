@@ -1229,16 +1229,18 @@ class S3PersonModel(S3Model):
         for citem in item.components:
             if citem.tablename == "pr_contact":
                 data = citem.data
-                if data.get("contact_method") == "EMAIL":
-                    email = data.value
-                elif data.get("contact_method") == "SMS":
-                    sms = data.value
+                if data:
+                    if data.get("contact_method") == "EMAIL":
+                        email = data.value
+                    elif data.get("contact_method") == "SMS":
+                        sms = data.value
             elif citem.tablename == "pr_identity":
                 data = citem.data
-                id_type = data.get("type")
-                id_value = data.get("value")
-                if id_type and id_value:
-                    id[id_type] = id_value
+                if data:
+                    id_type = data.get("type")
+                    id_value = data.get("value")
+                    if id_type and id_value:
+                        id[id_type] = id_value
 
         s3db = current.s3db
         table = s3db.pr_contact
