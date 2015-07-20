@@ -12,9 +12,136 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3 import S3LocationFilter, S3OptionsFilter, S3FilterForm, S3CustomController
+from s3 import FS, S3CustomController, S3FilterForm, S3DateFilter, S3LocationFilter, S3OptionsFilter
 
-THEME = "CAP"
+THEME = "SAMBRO"
+
+# =============================================================================
+class index(S3CustomController):
+    """ Custom home page for the Public """
+
+    # -------------------------------------------------------------------------
+    def __call__(self):
+        """ Main entry point, configuration """
+
+        # @ToDo: Have 2 Pages which reuse common info with just the different URL for cap_alert
+
+        T = current.T
+        s3db = current.s3db
+        request = current.request
+
+        output = {}
+
+        # Map
+        _map = current.gis.show_map(catalogue_layers=True,
+                                    collapsed=True,
+                                    save=False,
+                                    )
+        output["_map"] = _map
+
+        # Filterable List of Alerts
+        # - most recent first
+        resource = s3db.resource("cap_alert")
+        # Don't show Templates
+        resource.add_filter(FS("is_template") == False)
+        # Only show Public Alerts
+        resource.add_filter(FS("scope") == "Public")
+        # Only show Alerts which haven't expired
+        #resource.add_filter(FS("info.expires") >= request.utcnow)
+        list_id = "cap_alert_datalist"
+        list_fields = ["info.headline",
+                       "area.name",
+                       "info.description",
+                       "info.sender_name",
+                       ]
+        # Order with most recent Alert first
+        orderby = "cap_info.expires desc"
+        datalist, numrows, ids = resource.datalist(fields = list_fields,
+                                                   #start = None,
+                                                   limit = 5,
+                                                   list_id = list_id,
+                                                   orderby = orderby,
+                                                   layout = s3db.cap_alert_list_layout
+                                                   )
+        ajax_url = URL(c="cap", f="public", args="datalist.dl", vars={"list_id": list_id})
+        output[list_id] = datalist.html(ajaxurl = ajax_url,
+                                        pagesize = 5
+                                        )
+
+        # @ToDo: Options are currently built from the full-set rather than the filtered set
+        filter_widgets = [S3LocationFilter("location.location_id",
+                                           label = "",
+                                           #label=T("Country"),
+                                           levels=("L0",),
+                                           widget="multiselect",
+                                           ),
+                          S3OptionsFilter("info.event_type_id",
+                                          label=T("Alert Type"),
+                                          ),
+                          S3DateFilter("info.expires",
+                                       label = "",
+                                       #label=T("Expiry Date"),
+                                       hide_time=True,
+                                       ),
+                          ]
+        filter_form = S3FilterForm(filter_widgets,
+                                   ajax=True,
+                                   submit=True,
+                                   url=ajax_url,
+                                   )
+        output["alert_filter_form"] = filter_form.html(resource, request.get_vars, list_id)
+
+        # Filterable News Feed
+        # - most recent first
+        resource = s3db.resource("cms_post")
+        # Only show News posts (differentiate from e.g. online user guide)
+        resource.add_filter(FS("series_id$name") == "News")
+        list_id = "cms_post_datalist"
+        list_fields = [#"series_id",
+                       "location_id",
+                       "date",
+                       "body",
+                       #"created_by",
+                       #"created_by$organisation_id",
+                       #"document.file",
+                       ]
+        # Order with most recent Post first
+        orderby = "cms_post.date desc"
+        datalist, numrows, ids = resource.datalist(fields = list_fields,
+                                                   #start = None,
+                                                   limit = 5,
+                                                   list_id = list_id,
+                                                   orderby = orderby,
+                                                   layout = s3db.cms_post_list_layout
+                                                   )
+        ajax_url = URL(c="cms", f="post", args="datalist.dl", vars={"list_id": list_id})
+        output[list_id] = datalist.html(ajaxurl = ajax_url,
+                                        pagesize = 5
+                                        )
+
+        filter_widgets = [S3LocationFilter("location_id",
+                                           label="",
+                                           levels=("L0",),
+                                           widget="multiselect",
+                                           ),
+                          # @ToDo: Source (Series? Tag?)
+                          #S3OptionsFilter(),
+                          ]
+        filter_form = S3FilterForm(filter_widgets,
+                                   ajax=True,
+                                   submit=True,
+                                   url=ajax_url,
+                                   )
+        output["news_filter_form"] = filter_form.html(resource, request.get_vars, list_id)
+
+        # Title and view
+        output["title"] = current.deployment_settings.get_system_name()
+        self._view(THEME, "index.html")
+
+        # Custom CSS
+        current.response.s3.stylesheets.append("../themes/SAMBRO/style.css")
+
+        return output
 
 # =============================================================================
 class subscriptions(S3CustomController):
@@ -74,7 +201,9 @@ class subscriptions(S3CustomController):
         # Form
         form = self._manage_subscriptions(resources, filters)
 
-        return dict(title=title, form=form)
+        return dict(title = title,
+                    form = form,
+                    )
 
     # -------------------------------------------------------------------------
     def _manage_subscriptions(self, resources, filters):

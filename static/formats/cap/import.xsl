@@ -4,9 +4,9 @@
 
     <!-- **********************************************************************
 
-         CAP Import Templates for S3XRC
+         CAP Import Templates for Sahana Eden
 
-         Copyright (c) 2011-14 Sahana Software Foundation
+         Copyright (c) 2011-15 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -139,6 +139,23 @@
             -->
             <xsl:apply-templates select="./cap:info" />
         </resource>
+        <xsl:apply-templates select="./cap:info/cap:event" />
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="cap:event">
+        <xsl:variable name="EventTypeName" select="./text()"/>
+
+        <xsl:if test="$EventTypeName!=''">
+            <resource name="event_event_type">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$EventTypeName" />
+                </xsl:attribute>
+                <data field="name">
+                    <xsl:value-of select="$EventTypeName" />
+                </data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -165,10 +182,12 @@
                     </xsl:attribute>
                 </data>
             </xsl:if>
-            <xsl:if test="cap:category!=''">
-                <data field="event">
-                    <xsl:value-of select="cap:event" />
-                </data>
+            <xsl:if test="cap:event!=''">
+                <reference field="event_type_id" resource="event_event_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="cap:event" />
+                    </xsl:attribute>
+                </reference>
             </xsl:if>
             <xsl:if test="cap:responseType!=''">
                 <data field="response_type">

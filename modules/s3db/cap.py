@@ -31,6 +31,7 @@ __all__ = ("S3CAPModel",
            "cap_info_labels",
            "cap_alert_is_template",
            "cap_rheader",
+           "cap_alert_list_layout",
            #"cap_gis_location_xml_post_parse",
            #"cap_gis_location_xml_post_render",
            )
@@ -376,7 +377,7 @@ class S3CAPModel(S3Model):
                           "sender",
                           "incidents",
                           "cap_info.headline",
-                          "cap_info.event",
+                          "cap_info.event_type_id",
                           ],
                          label = T("Search"),
                          comment = T("Search for an Alert by sender, incident, headline or event."),
@@ -398,6 +399,8 @@ class S3CAPModel(S3Model):
                   context = {"location": "location.location_id",
                              },
                   filter_widgets = filter_widgets,
+                  list_layout = cap_alert_list_layout,
+                  list_orderby = "cap_info.expires desc",
                   onvalidation = self.cap_alert_form_validation,
                   )
 
@@ -534,9 +537,7 @@ class S3CAPModel(S3Model):
                                                 ),
                            widget = S3MultiSelectWidget(),
                            ), # 1 or more allowed
-                     Field("event",
-                           required = True,
-                           ),
+                     self.event_type_id(),
                      Field("response_type", "list:string",
                            represent = S3Represent(options = cap_info_responseType_opts,
                                                    multiple = True,
@@ -591,6 +592,7 @@ class S3CAPModel(S3Model):
                            ),
                      *s3_meta_fields())
 
+        # @ToDo: Move labels into main define_table (can then be lazy & performs better anyway)
         info_labels = cap_info_labels()
         for field in info_labels:
             db.cap_info[field].label = info_labels[field]
@@ -1065,7 +1067,7 @@ def cap_info_labels():
     T = current.T
     return dict(language=T("Language"),
                 category=T("Category"),
-                event=T("Event"),
+                event_type_id=T("Event"),
                 response_type=T("Response type"),
                 urgency=T("Urgency"),
                 severity=T("Severity"),
@@ -1616,7 +1618,45 @@ def cap_gis_location_xml_post_render(element, record):
     # Did not find anything to use. Presumably the area has a text description.
     return
 
-# -----------------------------------------------------------------------------
+# =============================================================================
+def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
+    """
+        Default dataList item renderer for CAP Alerts on the Home page.
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    record_id = record["cap_alert.id"]
+    item_class = "thumbnail"
+
+    #raw = record._row
+    headline = record["cap_info.headline"]
+    location = record["cap_area.name"]
+    description = record["cap_info.description"]
+    sender = record["cap_info.sender_name"]
+
+    headline = A(headline,
+                 # @ToDo: Link to nicely-formatted version of Display page
+                 _href = URL(c="cap", f="alert", args=record_id),
+                 )
+    headline = DIV(headline,
+                   current.T("in %(location)s") % dict(location=location)
+                   )
+
+    item = DIV(headline,
+               P(description),
+               P(sender, style="bold"),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# =============================================================================
 class CAPImportFeed(S3Method):
     """
         Import CAP alerts from a URL

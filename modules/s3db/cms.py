@@ -1165,10 +1165,10 @@ class S3CMS(S3Method):
 
         # This is currently assuming that we're being used in a Summary page or similar
         request = current.request
-        module = request.controller
-        resource = request.function
 
-        return self.resource_content(module, resource, widget_id)
+        return self.resource_content(request.controller,
+                                     request.function,
+                                     widget_id)
 
     # -------------------------------------------------------------------------
     @staticmethod

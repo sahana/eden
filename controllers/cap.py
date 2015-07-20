@@ -46,15 +46,19 @@ def info_prep(r):
         item = r.record
         if item and r.tablename == "cap_info" and \
            s3db.cap_alert_is_template(item.alert_id):
-            for f in ["urgency", "certainty",
-                      "effective", "onset", "expires",
-                      "priority", "severity"]:
+            for f in ("urgency",
+                      "certainty",
+                      "effective",
+                      "onset",
+                      "expires",
+                      "priority",
+                      "severity"
+                      ):
                 field = table[f]
                 field.writable = False
                 field.readable = False
                 field.required = False
-            for f in ["category", "event"]:
-                table[f].required = False
+            table.category.required = False
 
     post_vars = request.post_vars
     template_id = None
@@ -87,8 +91,28 @@ def info_prep(r):
     return True
 
 # -----------------------------------------------------------------------------
+def public():
+    """
+        Filtered version of the Alerts controller
+    """
+
+    s3.filter = (s3base.FS("scope") == "Public")
+
+    return alert()
+
+# -----------------------------------------------------------------------------
 def alert():
     """ REST controller for CAP Alerts and Components """
+
+    if auth.permission.format == "dl":
+        list_fields = ["info.headline",
+                       "area.name",
+                       "info.description",
+                       "info.sender_name",
+                       ]
+        s3db.configure("cap_alert",
+                       list_fields = list_fields,
+                       )
 
     def prep(r):
         if r.id:
@@ -220,7 +244,9 @@ def alert():
         return output
     s3.postp = postp
 
-    output = s3_rest_controller(rheader = s3db.cap_rheader)
+    output = s3_rest_controller("cap", "alert",
+                                rheader = s3db.cap_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -271,30 +297,33 @@ def template():
             redirect(URL(c="cap", f="template", args=[_id]))
 
     def prep(r):
-        for f in ["identifier", "msg_type"]:
+        for f in ("identifier", "msg_type"):
             field = atable[f]
             field.writable = False
             field.readable = False
             field.requires = None
-        for f in ["status", "scope"]:
+        for f in ("status", "scope"):
             atable[f].requires = None
         atable.template_title.required = True
         atable.status.readable = atable.status.writable = False
         itable = db.cap_info
-        for f in ["urgency", "certainty",
-                  "priority", "severity",
-                  "effective", "onset", "expires"]:
+        for f in ("urgency",
+                  "certainty",
+                  "priority",
+                  "severity",
+                  "effective",
+                  "onset",
+                  "expires",
+                  ):
             field = itable[f]
             field.writable = False
             field.readable = False
             field.required = False
 
-        for f in ["category", "event"]:
-            itable[f].required = False
+        itable.category.required = False
 
-        ADD_ALERT_TPL = T("Create Template")
         s3.crud_strings["cap_template"] = Storage(
-            label_create = ADD_ALERT_TPL,
+            label_create = T("Create Template"),
             title_display = T("Template"),
             title_list = T("Templates"),
             title_update = T("Edit Template"), # If already-published, this should create a new "Update" alert instead of modifying the original
@@ -520,12 +549,6 @@ def info_fields_comments():
           _title="%s|%s" % (
               T("Denotes the category of the subject event of the alert message"),
               T("You may select multiple categories by holding down control and then selecting the items.")))
-
-    table.event.comment = DIV(
-          _class="tooltip",
-          _title="%s|%s" % (
-              T("The text denoting the type of the subject event of the alert message"),
-              T("")))
 
     table.response_type.comment = DIV(
           _class="tooltip",
