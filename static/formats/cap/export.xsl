@@ -154,6 +154,10 @@
                 </xsl:call-template>
             </xsl:if>
 
+            <xsl:if test="data[@field='priority']!=''">
+                <priority><xsl:value-of select="data[@field='priority']"/></priority>
+            </xsl:if>
+
             <urgency><xsl:value-of select="data[@field='urgency']"/></urgency>
             <severity><xsl:value-of select="data[@field='severity']"/></severity>
             <certainty><xsl:value-of select="data[@field='certainty']"/></certainty>
