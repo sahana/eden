@@ -1,0 +1,4 @@
+Priority Rank,Event Code,Name,Event Type,Urgency,Severity,Certainty,Color Code
+1,2099,Urgent,others,Immediate,Extreme,Observed,red
+2,2099,High,others,Expected,Severe,Observed,orange
+3,2099,Low,others,Expected,Moderate,Observed,green
