@@ -314,7 +314,7 @@ def config(settings):
         attr["rheader"] = vol_rheader
         return attr
 
-    settings.customise_pr_person_controller = customise_pr_person_controller
+    #settings.customise_pr_person_controller = customise_pr_person_controller
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
