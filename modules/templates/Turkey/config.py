@@ -248,6 +248,7 @@ def config(settings):
                 list_fields.append("location_id$L1")
                 list_fields.append("location_id$L2")
                 list_fields.append("location_id$L3")
+                list_fields.append("person_id$training.course_id")
                 
                 from s3 import S3TextFilter, S3OptionsFilter, S3LocationFilter
                 filter_widgets = [S3TextFilter(["person_id$first_name",
