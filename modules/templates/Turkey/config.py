@@ -293,24 +293,28 @@ def config(settings):
         table = s3db.hrm_human_resource
         hr = current.db(table.person_id == person_id).select(table.organisation_id,
                                                              limitby=(0, 1)).first()
+
+        name_surname = table.person_id.represent(person_id)
+        
         if hr:
             if current.auth.user.organisation_id != hr.organisation_id:
-                # Only show Org if not the same as user's
-                rheader = table.organisation_id.represent(hr.organisation_id)
-            else:
-                rheader = None
-        else:
-            # Something went wrong!
-            rheader = None
+                # Only show Org if not the same as user's                
+                org_name = table.organisation_id.represent(hr.organisation_id)
+            else :
+                org_name = None            
+        
+        rheader = TABLE(TR(TD(name_surname)),
+                        TR(TD(org_name))) 
+        
         return rheader
-
+    
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
         # Custom RHeader
         attr["rheader"] = vol_rheader
         return attr
 
-    #settings.customise_pr_person_controller = customise_pr_person_controller
+    settings.customise_pr_person_controller = customise_pr_person_controller
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
