@@ -261,7 +261,8 @@ def config(settings):
                 if is_admin :
                     filter_widgets.append(S3OptionsFilter("organisation_id"))
                 filter_widgets.append(S3LocationFilter("location_id",
-                                         label = T("Location"),                                         
+                                        levels = ("L1","L2","L3"),
+                                        label = T("Location"),                                         
                                          #hidden = True,
                                          ),
                                       )
