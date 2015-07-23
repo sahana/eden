@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import datetime
 try:
     # Python 2.7
     from collections import OrderedDict
@@ -10,7 +10,7 @@ except:
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
-from ...s3 import s3_URLise
+from ...s3 import *
 
 def config(settings):
     """
@@ -271,15 +271,34 @@ def config(settings):
                        list_fields = list_fields,
                        filter_widgets = filter_widgets,
                        )
+                                
             return result
         
         s3.prep = custom_prep  
         return attr
     
     settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
+    
+    # =============================================================================
+    def customise_hrm_training_resource(r, tablename):
+        """ Configure hrm_training_resource """  
+        s3db = current.s3db      
+        table = s3db.hrm_training
+        
+        s3db.configure(table,
+                       list_fields = ["course_id$code",
+                                      "course_id",
+                                      "date",
+                                      "hours"
+                                      ],
+                       )          
+    
+    settings.customise_hrm_training_resource = customise_hrm_training_resource
 
-    # -------------------------------------------------------------------------
-    def vol_rheader(r):
+    # =============================================================================
+    def vol_rheader(r, tabs=[], profile=False):
+        """ Resource headers for component views """
+    
         if r.representation != "html":
             # RHeaders only used in interactive views
             return None
@@ -287,26 +306,278 @@ def config(settings):
         if record is None:
             # List or Create form: rheader makes no sense here
             return None
-
-        #from gluon.html import DIV
-        person_id = r.id
-        s3db = current.s3db
-        table = s3db.hrm_human_resource
-        hr = current.db(table.person_id == person_id).select(table.organisation_id,
-                                                             limitby=(0, 1)).first()
-
-        name_surname = table.person_id.represent(person_id)
-        
-        if hr:
-            if current.auth.user.organisation_id != hr.organisation_id:
-                # Only show Org if not the same as user's                
-                org_name = table.organisation_id.represent(hr.organisation_id)
-            else :
-                org_name = None            
-        
-        rheader = TABLE(TR(TD(name_surname)),
-                        TR(TD(org_name))) 
-        
+    
+        T = current.T
+        table = r.table
+        resourcename = r.name
+    
+        if resourcename == "person":
+            settings = current.deployment_settings
+            get_vars = r.get_vars
+            hr = get_vars.get("human_resource.id", None)
+            if hr:
+                name = current.s3db.hrm_human_resource_represent(int(hr))
+            else:
+                name = s3_fullname(record)
+            group = get_vars.get("group", None)
+            if group is None:
+                controller = r.controller
+                if controller == "vol":
+                    group = "volunteer"
+                else:
+                    group = "staff"
+            use_cv = settings.get_hrm_cv_tab()
+            record_tab = settings.get_hrm_record_tab()
+            experience_tab = None
+            service_record = ""
+            tbl = TABLE(TR(TH(name,
+                              # @ToDo: Move to CSS
+                              _style="padding-top:15px")
+                           ))
+            experience_tab2 = None
+            if settings.get_hrm_staff_experience() == "experience" and not use_cv:
+                experience_tab = (T("Experience"), "experience")
+    
+            if settings.get_hrm_use_certificates():
+                certificates_tab = (T("Certificates"), "certification")
+            else:
+                certificates_tab = None
+    
+            if settings.get_hrm_use_credentials():
+                credentials_tab = (T("Credentials"), "credential")
+            else:
+                credentials_tab = None
+    
+            if settings.get_hrm_use_description():
+                description_tab = (T("Description"), "physical_description")
+            else:
+                description_tab = None
+    
+            if settings.get_hrm_use_education() and not use_cv:
+                education_tab = (T("Education"), "education")
+            else:
+                education_tab = None
+    
+            if settings.get_hrm_use_id():
+                id_tab = (T("ID"), "identity")
+            else:
+                id_tab = None
+    
+            if settings.get_hrm_use_address():
+                address_tab = (T("Address"), "address")
+            else:
+                address_tab = None
+    
+            if settings.get_hrm_salary():
+                salary_tab = (T("Salary"), "salary")
+            else:
+                salary_tab = None
+    
+            if settings.get_hrm_use_skills() and not use_cv:
+                skills_tab = (T("Skills"), "competency")
+            else:
+                skills_tab = None
+    
+            if record_tab != "record":
+                teams = settings.get_hrm_teams()
+                if teams:
+                    teams_tab = (T(teams), "group_membership")
+                else:
+                    teams_tab = None
+            else:
+                teams_tab = None
+    
+            trainings_tab = instructor_tab = None
+            if settings.get_hrm_use_trainings():
+                if not use_cv:
+                    trainings_tab = (T("Trainings"), "training")
+                if settings.get_hrm_training_instructors() in ("internal", "both"):
+                    instructor_tab = (T("Instructor"), "training_event")
+    
+            if use_cv:
+                trainings_tab = (T("CV"), "cv")
+    
+            hr_tab = None
+            if not record_tab:
+                record_method = None
+            elif record_tab == "record":
+                record_method = "record"
+            else:
+                # Default
+                record_method = "human_resource"
+    
+            if profile:
+                # Configure for personal mode
+                if record_method:
+                    hr_tab = (T("Staff/Volunteer Record"), record_method)
+                tabs = [(T("Person Details"), None),
+                        (T("User Account"), "user"),
+                        hr_tab,
+                        id_tab,
+                        description_tab,
+                        address_tab,
+                        ]
+                contacts_tabs = settings.get_pr_contacts_tabs()
+                if "all" in contacts_tabs:
+                    tabs.append((T("Contacts"), "contacts"))
+                if "public" in contacts_tabs:
+                    tabs.append((T("Public Contacts"), "public_contacts"))
+                if "private" in contacts_tabs:
+                    tabs.append((T("Private Contacts"), "private_contacts"))
+                tabs += [education_tab,
+                         trainings_tab,
+                         certificates_tab,
+                         skills_tab,
+                         credentials_tab,
+                         experience_tab,
+                         experience_tab2,
+                         instructor_tab,
+                         teams_tab,
+                         #(T("Assets"), "asset"),
+                         ]
+            elif current.session.s3.hrm.mode is not None:
+                # Configure for personal mode
+                tabs = [(T("Person Details"), None),
+                        id_tab,
+                        description_tab,
+                        address_tab,
+                        ]
+                contacts_tabs = settings.get_pr_contacts_tabs()
+                if "all" in contacts_tabs:
+                    tabs.append((T("Contacts"), "contacts"))
+                if "public" in contacts_tabs:
+                    tabs.append((T("Public Contacts"), "public_contacts"))
+                if "private" in contacts_tabs:
+                    tabs.append((T("Private Contacts"), "private_contacts"))
+                if record_method is not None:
+                    hr_tab = (T("Positions"), "human_resource")
+                tabs += [trainings_tab,
+                         certificates_tab,
+                         skills_tab,
+                         credentials_tab,
+                         experience_tab,
+                         experience_tab2,
+                         hr_tab,
+                         teams_tab,
+                         (T("Assets"), "asset"),
+                         ]
+            else:
+                # Configure for HR manager mode
+                if group == "staff":
+                    hr_record = T("Staff Record")
+                    awards_tab = None
+                elif group == "volunteer":
+                    hr_record = T("Volunteer Record")
+                    if settings.get_hrm_use_awards() and not use_cv:
+                        awards_tab = (T("Awards"), "award")
+                    else:
+                        awards_tab = None
+                if record_method:
+                    hr_tab = (hr_record, record_method)
+                tabs = [(T("Person Details"), None),
+                        hr_tab,
+                        id_tab,
+                        description_tab,
+                        address_tab,
+                        ]
+                contacts_tabs = settings.get_pr_contacts_tabs()
+                if "all" in contacts_tabs:
+                    tabs.append((T("Contacts"), "contacts"))
+                if "public" in contacts_tabs:
+                    tabs.append((T("Public Contacts"), "public_contacts"))
+                if "private" in contacts_tabs:
+                    tabs.append((T("Private Contacts"), "private_contacts"))
+                tabs += [salary_tab,
+                         education_tab,
+                         trainings_tab,
+                         certificates_tab,
+                         skills_tab,
+                         credentials_tab,
+                         experience_tab,
+                         experience_tab2,
+                         instructor_tab,
+                         awards_tab,
+                         teams_tab,
+                         (T("Assets"), "asset"),
+                         ]
+                # Add role manager tab if a user record exists
+                user_id = current.auth.s3_get_user_id(record.id)
+                if user_id:
+                    tabs.append((T("Roles"), "roles"))
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            rheader = DIV(service_record,
+                          A(s3_avatar_represent(record.id,
+                                                "pr_person",
+                                                _class="rheader-avatar"),
+                            _href=URL(f="person", args=[record.id, "image"],
+                                      vars = get_vars),
+                            ),
+                          tbl,
+                          rheader_tabs)
+    
+        elif resourcename == "training_event":
+            # Tabs
+            tabs = [(T("Training Event Details"), None),
+                    (T("Participants"), "participant"),
+                    ]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            if current.deployment_settings.has_module("msg") and \
+                   current.auth.permission.has_permission("update", c="hrm", f="compose"):
+                # @ToDo: Be able to see who has been messaged, whether messages bounced, receive confirmation responses, etc
+                action = A(T("Message Participants"),
+                           _href = URL(f = "compose",
+                                       vars = {"training_event.id": record.id,
+                                               "pe_id": record.pe_id,
+                                               },
+                                       ),
+                           _class = "action-btn send"
+                           )
+            else:
+                action = None
+            rheader = DIV(TABLE(TR(TH("%s: " % table.course_id.label),
+                                   table.course_id.represent(record.course_id)),
+                                TR(TH("%s: " % table.site_id.label),
+                                   table.site_id.represent(record.site_id)),
+                                TR(TH("%s: " % table.start_date.label),
+                                   table.start_date.represent(record.start_date)),
+                                TR(TH(action, _colspan=2)),
+                                ),
+                          rheader_tabs)
+    
+        elif resourcename == "certificate":
+            # Tabs
+            tabs = [(T("Certificate Details"), None),
+                    ]
+            if current.deployment_settings.get_hrm_use_skills():
+                tabs.append((T("Skill Equivalence"), "certificate_skill"))
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                                   record.name),
+                                ),
+                          rheader_tabs)
+    
+        elif resourcename == "course":
+            # Tabs
+            tabs = [(T("Course Details"), None),
+                    (T("Course Certificates"), "course_certificate"),
+                    ]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                                   record.name),
+                                ),
+                          rheader_tabs)
+    
+        elif resourcename == "programme":
+            # Tabs
+            tabs = [(T("Program Details"), None),
+                    (T("Volunteer Hours"), "person"),
+                    ]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                                   record.name),
+                                ),
+                          rheader_tabs)
+    
         return rheader
     
     # -------------------------------------------------------------------------
@@ -315,7 +586,7 @@ def config(settings):
         attr["rheader"] = vol_rheader
         return attr
 
-    #settings.customise_pr_person_controller = customise_pr_person_controller
+    settings.customise_pr_person_controller = customise_pr_person_controller
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
