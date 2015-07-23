@@ -285,9 +285,16 @@ def config(settings):
         s3db = current.s3db      
         table = s3db.hrm_training
         
-        if r.representation != "html":
-            return
-        else :
+        if r.representation == "xls":
+            s3db.configure(table,
+                       list_fields = ["course_id$code",
+                                      "course_id",
+                                      "person_id",
+                                      "date",
+                                      "hours"
+                                      ],
+                       )
+        elif r.representation == "html":
             s3db.configure(table,
                        list_fields = ["course_id$code",
                                       "course_id",
