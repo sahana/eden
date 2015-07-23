@@ -272,7 +272,7 @@ def config(settings):
                        list_fields = list_fields,
                        filter_widgets = filter_widgets,
                        )
-                                
+                                                                
             return result
         
         s3.prep = custom_prep  
@@ -305,6 +305,58 @@ def config(settings):
                        )          
     
     settings.customise_hrm_training_resource = customise_hrm_training_resource
+    
+    # =============================================================================
+    def customise_hrm_training_controller(**attr):
+        """ Configure hrm_training_contyroller """  
+        s3 = current.response.s3
+        standard_prep = s3.prep  
+        auth = current.auth      
+        ADMIN = current.session.s3.system_roles.ADMIN
+        is_admin = auth.s3_has_role(ADMIN)       
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+            if r.controller == "vol":
+                s3db = current.s3db
+                list_fields = ["course_id$code"]
+                list_fields.append("course_id")
+                list_fields.append("person_id")
+                
+                from s3 import S3TextFilter, S3OptionsFilter, S3LocationFilter
+                filter_widgets = [S3TextFilter(["course_id$code",
+                                    "course_id$name",
+                                    "person_id$first_name",
+                                    "person_id$middle_name",
+                                    "person_id$last_name",
+                                      ],
+                                     label = T("Search"),
+                                     ),
+                                  ]
+                if is_admin :
+                    filter_widgets.append(S3OptionsFilter("course_id$organisation_id"))
+                filter_widgets.append(S3LocationFilter("person_id$location_id",
+                                        levels = ("L1","L2","L3","L4"),
+                                        label = T("Location"),                                         
+                                         #hidden = True,
+                                         ),
+                                      )
+                filter_widgets.append(S3OptionsFilter("course_id"))
+                
+                s3db.configure("hrm_training",                       
+                       list_fields = list_fields,    
+                       filter_widgets = filter_widgets                   
+                       )
+                                                                
+            return result
+        
+        s3.prep = custom_prep  
+        return attr
+    
+    settings.customise_hrm_training_controller = customise_hrm_training_controller
 
     # =============================================================================
     def vol_rheader(r, tabs=[], profile=False):
