@@ -53,11 +53,12 @@
 
     <!-- ****************************************************************** -->
     <!-- Module-specific XSLT -->
-    <xsl:include href="modules/project.xsl"/>
+    <xsl:include href="modules/cap.xsl"/>
     <xsl:include href="modules/cms.xsl"/>
     <xsl:include href="modules/dvi.xsl"/>
     <xsl:include href="modules/hms.xsl"/>
     <xsl:include href="modules/pr.xsl"/>
+    <xsl:include href="modules/project.xsl"/>
     <xsl:include href="modules/req.xsl"/>
     <xsl:include href="modules/supply.xsl"/>
 
