@@ -69,14 +69,14 @@
         $('#cap_info_priority').change(function() {
             var p = S3.cap_priorities,
                 len = p.length;
-            if ($(this).val() == 'Undefined') {
+            if ($(this).find('option:selected').text() == 'Undefined') {
                 $(this).css('border', '2px solid gray');
                 $form.find('[name=urgency]').val('');
                 $form.find('[name=severity]').val('');
                 $form.find('[name=certainty]').val('');
             }
             for (var i=0; i< len; i++) {
-                if (p[i][0] == $(this).val()) {
+                if (p[i][0] == $(this).find('option:selected').text()) {
                     $form.find('[name=urgency]').val(p[i][1]);
                     $form.find('[name=severity]').val(p[i][2]);
                     $form.find('[name=certainty]').val(p[i][3]);
@@ -92,10 +92,14 @@
                 if ($form.find('[name=urgency]').val()   == p[i][1] &&
                     $form.find('[name=severity]').val()  == p[i][2] &&
                     $form.find('[name=certainty]').val() == p[i][3]) {
-                    $form.find('[name=priority]').val(p[i][0])
-                         .css('border', '2px solid ' + p[i][4]);
+                        $('#cap_info_priority option').each(function() {
+                            if($(this).text() == p[i][0]) {
+                                $(this).attr('selected', 'selected');
+                                $form.find('[name=priority]').css('border', '2px solid ' + p[i][4]);
+                            }                        
+                        });
                     return;
-                }
+                    }
             }
 
             $form.find('[name=priority]').val('Undefined')

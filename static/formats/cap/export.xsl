@@ -5,7 +5,7 @@
     <!-- **********************************************************************
          CAP Export Templates
 
-         Copyright (c) 2011-14 Sahana Software Foundation
+         Copyright (c) 2011-15 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -144,7 +144,7 @@
                 </xsl:call-template>
             </xsl:if>
 
-            <event><xsl:value-of select="data[@field='event']"/></event>
+            <event><xsl:value-of select="reference[@field='event_type_id']"/></event>
 
             <xsl:if test="data[@field='response_type']">
                 <xsl:call-template name="split-into-nodes">
@@ -152,6 +152,10 @@
                     </xsl:with-param>
                     <xsl:with-param name="node-name">responseType</xsl:with-param>
                 </xsl:call-template>
+            </xsl:if>
+
+            <xsl:if test="data[@field='priority']!=''">
+                <priority><xsl:value-of select="data[@field='priority']"/></priority>
             </xsl:if>
 
             <urgency><xsl:value-of select="data[@field='urgency']"/></urgency>

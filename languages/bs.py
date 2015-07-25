@@ -1347,7 +1347,7 @@
 'Cladding, glazing': 'Oblaganje, glačanje',
 'Clean Instance': 'Čista kopija',
 'clear': 'čisto',
-'Clear all': 'Obriši sve',
+'Clear All': 'Obriši sve',
 'Clear all Layers': 'Očisti sve slojeve',
 'Clear CACHE?': 'Obrisati predmemoriju?',
 'Clear DISK': 'Obriši na disku',

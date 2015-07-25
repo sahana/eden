@@ -1,0 +1,55 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<?xml-stylesheet type="text/xsl"  href="CAPAlert.xsl"?>
+<cap:alert xmlns:cap = "urn:oasis:names:tc:emergency:cap:1.2">
+    <cap:identifier>urn:oid:2.49.0.0.104.0.1.20150715.003</cap:identifier>
+    <cap:sender>jianyou.wu007@gmail.com</cap:sender>
+    <cap:sent>2015-07-15T14:30:00+06:30</cap:sent>
+    <cap:status>Exercise</cap:status>
+    <cap:msgType>Alert</cap:msgType>
+    <cap:source>dmh-sambro-srv@dmh.gov.mm</cap:source>
+    <cap:scope>Restricted</cap:scope>
+    <cap:restriction>Myanmar Radio and Television, Relief and Resettlement Department</cap:restriction>
+    <cap:info>
+        <cap:category>Geo</cap:category>
+        <cap:category>Met</cap:category>
+        <cap:category>Infra</cap:category>
+        <cap:category>Transport</cap:category>
+        <cap:event>TSUNAMI</cap:event>
+        <cap:responseType>Shelter</cap:responseType>
+        <cap:urgency>Immediate</cap:urgency>
+        <cap:severity>Severe</cap:severity>
+        <cap:certainty>Observed</cap:certainty>
+        <cap:expires>2005-07-19T16:00:00-06:50</cap:expires>
+        <cap:senderName>DEPARTMENT OF METEOROLOGY AND HYDROLOGY</cap:senderName>
+        <cap:headline>Tsunami Warning in effect </cap:headline>
+        <cap:description>
+            AT DATE MMT...National Department of Meteorology and Hydrology doppler radara indicaed a severe thunderstorm over the PLACE coast...moving southwest at SPEED KMPH. 
+            Showers, Intense Rain and and strong damaging windes are likely with this storm.
+        </cap:description>
+        <cap:instruction>Take cover in a substantially safe shelter until the stop passess.</cap:instruction>
+	<cap:web>http://facebook.com/moezala/</cap:web>
+        <cap:contact>00955551212, 00955551212</cap:contact>
+        <cap:parameter>
+		<cap:valueName>wave-height </cap:valueName>
+		<cap:value>10 feet</cap:value>
+	</cap:parameter>
+        <cap:parameter>
+		<cap:valueName>arrival-time </cap:valueName>
+		<cap:value>2-5 hours</cap:value>
+	</cap:parameter>
+        <cap:parameter>
+		<cap:valueName>sms-txt </cap:valueName>
+		<cap:value>Sever thunderstorm in effect for Mid-west Myanmar</cap:value>
+	</cap:parameter>
+        <cap:parameter>
+		<cap:valueName>tv-scroll-txt </cap:valueName>
+		<cap:value>Sever thunderstorm in effect for Mid-west Myanmar</cap:value>
+	</cap:parameter>
+        <cap:area>
+            <cap:areaDesc>
+                Rakhine coastal area
+            </cap:areaDesc>
+            <cap:polygon>21.28,92.208 20.752,92.399 18.855,94.892 15.855,95.677 18.039,93.393 21.280,92.208</cap:polygon>
+        </cap:area>
+    </cap:info>
+</cap:alert>

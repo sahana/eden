@@ -1255,7 +1255,7 @@
 'Clean-Up Campaign': 'Campaña de Limpieza',
 'Cleaner': 'Limpiador',
 'Clear all Layers': 'Desactive todas las capas',
-'Clear all': 'Borrar todos',
+'Clear All': 'Borrar todos',
 'Clear Color Selection': 'Borrar Selección de color',
 'Clear filter': 'Limpia filtro',
 'Clear Selection': 'Limpia la selección',

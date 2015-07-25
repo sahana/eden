@@ -1599,7 +1599,7 @@ class S3XML(S3Codec):
                                                  "file": stream})
                                 (dummy, error) = s3_validate(table, f, dummy, original)
                         elif field_type == "password":
-                            v = value
+                            v = str(value) # CRYPT barfs on integers
                             (value, error) = s3_validate(table, f, v)
                         else:
                             (value, error) = s3_validate(table, f, v, original)
@@ -2552,7 +2552,7 @@ class S3XML(S3Codec):
             # Make this a list of all encodings you need to support (as long as
             # they are supported by Python codecs), always starting with the most
             # likely.
-            encodings = ["utf-8-sig", "iso-8859-1"]
+            encodings = ("utf-8-sig", "iso-8859-1")
             e = encodings[0]
             for line in source:
                 if e:

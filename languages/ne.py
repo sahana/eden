@@ -474,7 +474,7 @@
 'Cleaner': 'सफा गर्ने',
 'Clear': 'सफाइ',
 'clear': 'सफाइ',
-'Clear all': 'सबै सफाई',
+'Clear All': 'सबै सफाई',
 'Clear filter': 'क्लियर फिल्टर',
 'Clear selection': 'छानिएको सफाइ',
 'Click anywhere on the map for full functionality': 'पूर्ण कार्यप्रस्तुतिको लागि नक्साको जुनसुकै भागमा पनि सफाइ',

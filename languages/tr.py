@@ -179,7 +179,7 @@
 "City": "Şehir",
 "City / Town / Village": "Şehir / Kasaba / Köy",
 "Clear Color Selection": "Renk Seçimini İptal Et",
-"Clear all": "Tümünü temizle",
+"Clear All": "Tümünü temizle",
 "Clear filter": "Filtreleyi temizle",
 "Click on the slider to choose a value": "Bir değer seçmek için kaydırma çubuğuna tıklayın",
 "Climate change mitigation": "İklim Değişimi Etkileri Azaltma",

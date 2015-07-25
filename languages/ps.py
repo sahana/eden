@@ -456,7 +456,7 @@
 'Cleaner': 'پاکوونکی',
 'Clear': 'پاک ',
 'clear': 'پباک',
-'Clear all': 'ټول پاک کړه',
+'Clear All': 'ټول پاک کړه',
 'Clear filter': 'فیلتر پاک کړه',
 'Clear selection': 'انخاب پاک کړه',
 'Click anywhere on the map for full functionality': 'په هر ځای د نقشه کی کلیک وکړه د مکمل عملکرد لپاره',

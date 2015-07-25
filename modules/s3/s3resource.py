@@ -2633,6 +2633,8 @@ class S3Resource(object):
 
             # Call the import pre-processor to prepare tables
             # and cleanup the tree as necessary
+            # NB For 2-phase imports this gets called twice!
+            # can't use commit_job to differentiate since we need it to run on the trial import
             import_prep = current.response.s3.import_prep
             if import_prep:
                 tree = import_job.get_tree()
@@ -2659,6 +2661,8 @@ class S3Resource(object):
 
             # Call the import pre-processor to prepare tables
             # and cleanup the tree as necessary
+            # NB For 2-phase imports this gets called twice!
+            # can't use commit_job to differentiate since we need it to run on the trial import
             import_prep = current.response.s3.import_prep
             if import_prep:
                 if not isinstance(tree, etree._ElementTree):

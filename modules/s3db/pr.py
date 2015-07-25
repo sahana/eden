@@ -1229,16 +1229,18 @@ class S3PersonModel(S3Model):
         for citem in item.components:
             if citem.tablename == "pr_contact":
                 data = citem.data
-                if data.get("contact_method") == "EMAIL":
-                    email = data.value
-                elif data.get("contact_method") == "SMS":
-                    sms = data.value
+                if data:
+                    if data.get("contact_method") == "EMAIL":
+                        email = data.value
+                    elif data.get("contact_method") == "SMS":
+                        sms = data.value
             elif citem.tablename == "pr_identity":
                 data = citem.data
-                id_type = data.get("type")
-                id_value = data.get("value")
-                if id_type and id_value:
-                    id[id_type] = id_value
+                if data:
+                    id_type = data.get("type")
+                    id_value = data.get("value")
+                    if id_type and id_value:
+                        id[id_type] = id_value
 
         s3db = current.s3db
         table = s3db.pr_contact
@@ -2052,6 +2054,7 @@ class S3GroupModel(S3Model):
                                  ],
                   onaccept = self.group_membership_onaccept,
                   ondelete = self.group_membership_onaccept,
+                  realm_entity = self.group_membership_realm_entity,
                   )
 
         # ---------------------------------------------------------------------
@@ -2114,7 +2117,28 @@ class S3GroupModel(S3Model):
                                  group_id = None,
                                  deleted_fk = json.dumps(deleted_fk))
             pr_update_affiliations(table, record)
-        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def group_membership_realm_entity(table, row):
+        """
+            Set the realm entity of Group Membership records to the same as
+            that of the person
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Find the Group
+        gtable = s3db.pr_group
+        group = db(gtable.id == row.group_id).select(gtable.realm_entity,
+                                                     limitby=(0, 1)
+                                                     ).first()
+        try:
+            return group.realm_entity
+        except:
+            # => Set to default of None
+            return None
 
 # =============================================================================
 class S3ContactModel(S3Model):

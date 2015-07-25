@@ -985,7 +985,7 @@ class S3DataList(object):
                                                   "msg_no_match")
             empty = DIV(empty, _class="dl-empty")
             if self.total > 0:
-                empty.update(_style="display:none;")
+                empty.update(_style="display:none")
             items.append(empty)
 
             row_idx = int(self.start / rowsize) + 1

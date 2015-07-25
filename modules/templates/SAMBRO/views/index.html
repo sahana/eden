@@ -1,0 +1,16 @@
+{{extend "layout.html"}}
+<h1>{{=title}}</h1>
+<div class='large-3 columns'>
+<h3>{{=T("Alerts")}}</h3>
+{{=alert_filter_form}}
+{{=cap_alert_datalist}}
+</div>
+<div class='large-6 columns'>
+{{=_map}}
+</div>
+<div class='large-3 columns'>
+<h3>{{=T("News Feeds")}}</h3>
+{{=news_filter_form}}
+{{=cms_post_datalist}}
+</div>
+{{include "dataLists.html"}}

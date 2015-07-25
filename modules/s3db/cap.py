@@ -31,6 +31,7 @@ __all__ = ("S3CAPModel",
            "cap_info_labels",
            "cap_alert_is_template",
            "cap_rheader",
+           "cap_alert_list_layout",
            #"cap_gis_location_xml_post_parse",
            #"cap_gis_location_xml_post_render",
            )
@@ -58,6 +59,7 @@ class S3CAPModel(S3Model):
 
     names = ("cap_alert",
              "cap_alert_represent",
+             "cap_warning_priority",
              "cap_info",
              "cap_info_represent",
              "cap_resource",
@@ -376,7 +378,7 @@ class S3CAPModel(S3Model):
                           "sender",
                           "incidents",
                           "cap_info.headline",
-                          "cap_info.event",
+                          "cap_info.event_type_id",
                           ],
                          label = T("Search"),
                          comment = T("Search for an Alert by sender, incident, headline or event."),
@@ -398,6 +400,8 @@ class S3CAPModel(S3Model):
                   context = {"location": "location.location_id",
                              },
                   filter_widgets = filter_widgets,
+                  list_layout = cap_alert_list_layout,
+                  list_orderby = "cap_info.expires desc",
                   onvalidation = self.cap_alert_form_validation,
                   )
 
@@ -487,14 +491,59 @@ class S3CAPModel(S3Model):
             ("Unknown", T("Certainty unknown")),
         ])
 
+        # ---------------------------------------------------------------------
+        # Warning Priorities for CAP
+        
+        tablename = "cap_warning_priority"
+        define_table(tablename,
+                     Field("priority_rank", "integer",
+                           label = T("Priority Rank"),
+                           length = 2,
+                           ),
+                     Field("event_code",
+                           label = T("Event Code"),
+                           ),
+                     Field("name", notnull = True, length = 64,
+                           label = T("Name"),
+                           ),
+                     Field("event_type",
+                           label = T("Event Type"),
+                           ),
+                     Field("urgency",
+                           label = T("Urgency"),
+                           requires = IS_IN_SET(cap_info_urgency_opts),
+                           ),
+                     Field("severity",
+                           label = T("Severity"),
+                           requires = IS_IN_SET(cap_info_severity_opts),
+                           ),
+                     Field("certainty",
+                           label = T("Certainty"),
+                           requires = IS_IN_SET(cap_info_certainty_opts),
+                           ),
+                     Field("color_code",
+                           label = T("Color Code"),
+                           ),
+                     *s3_meta_fields())
+        
+        priority_represent = S3Represent(lookup = tablename)
+        
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Warning Priority"),
+            title_display = T("Warning Priority Details"),
+            title_list = T("Warning Priorities"),
+            title_update = T("Edit Warning Priority"),
+            title_upload = T("Import Warning Priorities"),
+            label_list_button = T("List Warning Priorities"),
+            label_delete_button = T("Delete Warning Priority"),
+            msg_record_created = T("Warning Priority added"),
+            msg_record_modified = T("Warning Priority updated"),
+            msg_record_deleted = T("Warning Priority removed"),
+            msg_list_empty = T("No Warning Priorities currently registered")
+            )
+        
+        # ---------------------------------------------------------------------
         # CAP info priority
-        priorities = settings.get_cap_priorities()
-        try:
-            cap_info_priority_opts = OrderedDict([(f[0], f[1]) for f in priorities]
-                    + [("Undefined", T("Undefined"))])
-        except IndexError:
-            raise ValueError("CAP priorities setting is not structured properly")
-
         # @ToDo: i18n: Need label=T("")
         tablename = "cap_info"
         define_table(tablename,
@@ -534,9 +583,15 @@ class S3CAPModel(S3Model):
                                                 ),
                            widget = S3MultiSelectWidget(),
                            ), # 1 or more allowed
-                     Field("event",
-                           required = True,
-                           ),
+                     self.event_type_id(empty = False,
+                                        script = '''
+                            $.filterOptionsS3({
+                             'trigger':'event_type_id',
+                             'target':'priority',
+                             'lookupURL':S3.Ap.concat('/cap/priority_get/'),
+                             'lookupResource':'event_type'                         
+                             })'''
+                     ),
                      Field("response_type", "list:string",
                            represent = S3Represent(options = cap_info_responseType_opts,
                                                    multiple = True,
@@ -546,8 +601,12 @@ class S3CAPModel(S3Model):
                            widget = S3MultiSelectWidget(),
                            ), # 0 or more allowed
                      Field("priority",
+                           represent = priority_represent,
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET(cap_info_priority_opts)
+                                        IS_ONE_OF(
+                                                  db, "cap_warning_priority.id",
+                                                  priority_represent
+                                                  ),
                                         ),
                            ),
                      Field("urgency",
@@ -591,6 +650,7 @@ class S3CAPModel(S3Model):
                            ),
                      *s3_meta_fields())
 
+        # @ToDo: Move labels into main define_table (can then be lazy & performs better anyway)
         info_labels = cap_info_labels()
         for field in info_labels:
             db.cap_info[field].label = info_labels[field]
@@ -1065,7 +1125,7 @@ def cap_info_labels():
     T = current.T
     return dict(language=T("Language"),
                 category=T("Category"),
-                event=T("Event"),
+                event_type_id=T("Event"),
                 response_type=T("Response type"),
                 urgency=T("Urgency"),
                 severity=T("Severity"),
@@ -1616,7 +1676,45 @@ def cap_gis_location_xml_post_render(element, record):
     # Did not find anything to use. Presumably the area has a text description.
     return
 
-# -----------------------------------------------------------------------------
+# =============================================================================
+def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
+    """
+        Default dataList item renderer for CAP Alerts on the Home page.
+
+        @param list_id: the HTML ID of the list
+        @param item_id: the HTML ID of the item
+        @param resource: the S3Resource to render
+        @param rfields: the S3ResourceFields to render
+        @param record: the record as dict
+    """
+
+    record_id = record["cap_alert.id"]
+    item_class = "thumbnail"
+
+    #raw = record._row
+    headline = record["cap_info.headline"]
+    location = record["cap_area.name"]
+    description = record["cap_info.description"]
+    sender = record["cap_info.sender_name"]
+
+    headline = A(headline,
+                 # @ToDo: Link to nicely-formatted version of Display page
+                 _href = URL(c="cap", f="alert", args=record_id),
+                 )
+    headline = DIV(headline,
+                   current.T("in %(location)s") % dict(location=location)
+                   )
+
+    item = DIV(headline,
+               P(description),
+               P(sender, style="bold"),
+               _class=item_class,
+               _id=item_id,
+               )
+
+    return item
+
+# =============================================================================
 class CAPImportFeed(S3Method):
     """
         Import CAP alerts from a URL
