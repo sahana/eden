@@ -1999,6 +1999,9 @@ class S3GroupModel(S3Model):
                            represent = lambda group_head: \
                                        (group_head and [T("yes")] or [""])[0]
                            ),
+                     Field("group_number", "integer",
+                           label = T("Group Number"),
+                     ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -2051,6 +2054,7 @@ class S3GroupModel(S3Model):
                                  "group_id$description",
                                  "person_id",
                                  "group_head",
+                                 "group_number",
                                  ],
                   onaccept = self.group_membership_onaccept,
                   ondelete = self.group_membership_onaccept,
