@@ -470,6 +470,28 @@ def priority_get():
         return result
     
 # -----------------------------------------------------------------------------
+def compose():
+    """
+        Send message to the people with role of Alert Approval
+    """
+    
+    # For SAMBRO, permission is checked by the Authentication Roles but the permission
+    # should be checked if CAP module is enabled
+    if settings.has_module("msg"):        
+        # Notify People with the role of Alert Approval via email and SMS
+        pe_ids = get_vars.get("pe_ids")
+        alert_id = get_vars.get("cap_alert.id")
+        subject = "%s: Alert Approval Required" % settings.get_system_name_short()
+        url = "%s%s" % (settings.get_base_public_url(),
+                        URL(c="cap", f="alert", args=[alert_id, "review"]))
+        message = "You are requested to take action on this alert:\n\n%s" % url
+        msg.send_by_pe_id(pe_ids, subject, message)
+        msg.send_by_pe_id(pe_ids, subject, message, contact_method = "SMS")
+        session.confirmation = T("Alert Approval Notified")
+        
+    redirect(URL(c="cap", f="alert"))
+
+# -----------------------------------------------------------------------------
 def alert_fields_comments():
     """
         Add comments to Alert fields
