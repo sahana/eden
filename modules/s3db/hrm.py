@@ -766,10 +766,10 @@ class S3HRModel(S3Model):
             #location_context = "person_id$address.location_id" # When not using S3Track()
             if settings.get_hrm_vol_roles():
                 crud_fields.insert(2, "job_title_id")
-                report_fields.extend(("job_title_id"))
+                report_fields.append(("job_title_id"))
             if settings.get_hrm_vol_departments():
                 crud_fields.insert(4, "department_id")
-                report_fields.extend(("department_id"))
+                report_fields.append(("department_id"))
             if settings.get_hrm_vol_experience() in ("programme", "both"):
                 crud_fields.insert(2, S3SQLInlineComponent("programme_hours",
                                                            label = "",

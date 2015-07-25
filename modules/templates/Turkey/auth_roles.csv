@@ -52,3 +52,5 @@ LOGS_MANAGER,logs_manager,Logistics Manager,inv,warehouse,,READ|CREATE|UPDATE|DE
 LOGS_MANAGER,logs_manager,Logistics Manager,,,inv_inv_item,READ|CREATE|UPDATE|DELETE,,,,,
 PROJECT_MANAGER,project_manager,Project Manager,project,,,READ|CREATE|UPDATE|DELETE,,,,,
 STAFF,staff,Staff of an Organisation,,,pr_contact,READ,,,,,
+ANONYMOUS,Anonymous,,,,cms_post,READ,READ,,,,
+ANONYMOUS,Anonymous,,,,cms_series,READ,READ,,,,
