@@ -330,7 +330,7 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 represent = s3_strip_markup(s3_unicode(row[report_groupby]))
                 if subheading != represent:
                     subheading = represent
-                    sheets(sheetCnt).write_merge(rowCnt, rowCnt, 0, totalCols,
+                    sheets[sheetCnt].write_merge(rowCnt, rowCnt, 0, totalCols,
                                                  subheading, styleSubHeader)
                     rowCnt += 1
                     currentRow = sheets[sheetCnt].row(rowCnt)
