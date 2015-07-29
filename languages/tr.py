@@ -1473,5 +1473,6 @@
 "Contact Person":"İlgili Kişi",
 "Budget":"Bütçe",
 "Import Project":"Projeleri İçe Aktar",
-"Upload a file formatted according to the Template":"Şablona göre düzenlenmiş bir dosya yükleyin"
+"Upload a file formatted according to the Template":"Şablona göre düzenlenmiş bir dosya yükleyin",
+"Group Number":"Ekip No"
 }

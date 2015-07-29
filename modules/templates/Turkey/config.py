@@ -295,7 +295,7 @@ def config(settings):
                                       ],
                        )          
     
-    settings.customise_hrm_training_resource = customise_hrm_training_resource
+    settings.customise_hrm_training_resource = customise_hrm_training_resource  
     
     # =============================================================================
     def customise_hrm_training_controller(**attr):
@@ -637,6 +637,25 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
         # Custom RHeader
+        s3 = current.response.s3
+        standard_prep = s3.prep  
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+            if r.controller == "vol":
+                s3db = current.s3db                
+                s3db.configure("pr_group_membership",
+                               list_fields = ["group_id",
+                                              "group_number",                                      
+                                              ],
+                               )  
+                                                                
+            return result
+        
+        s3.prep = custom_prep  
         attr["rheader"] = vol_rheader
         return attr
 
