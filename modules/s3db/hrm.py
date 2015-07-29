@@ -4387,8 +4387,8 @@ class S3HRProgrammeModel(S3Model):
                      Field("contract",
                            label = T("Contract Number"),
                            # Enable in templates as-required
-                           #readable = False,
-                           #writable = False,
+                           readable = False,
+                           writable = False,
                            ),
                      s3_date(future=0),
                      s3_date("end_date",

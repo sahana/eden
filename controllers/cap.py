@@ -439,7 +439,8 @@ def priority_get():
             # Get Event Name for Event ID 
             etable = s3db.event_event_type
             item = db(etable.id == event_type_id).select(etable.name,
-                                                         limitby=(0, 1)).first()
+                                                         limitby=(0, 1)
+                                                         ).first()
             try:
                 event_type_name = item.name
             except:
@@ -459,8 +460,8 @@ def priority_get():
                     result = jsons(row_dict)
                 else:
                     rows = db(wptable.event_type == "others").select(wptable.id, 
-                                                                    wptable.name,
-                                                                    orderby = wptable.id)
+                                                                     wptable.name,
+                                                                     orderby = wptable.id)
             
                     row_dict = [{"id": r.id, "name": T(r.name)} for r in rows] + \
                                [{"id": "", "name": T("Undefined")}]
