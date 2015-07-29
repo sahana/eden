@@ -29,6 +29,14 @@ def config(settings):
     # GeoNames username
     settings.gis.geonames_username = "eden_test"
 
+    # =============================================================================
+    # System Settings
+    # -----------------------------------------------------------------------------
+    # Record Approval
+    settings.auth.record_approval = True
+    # cap_alert record requires approval before sending
+    settings.auth.record_approval_required_for = ("cap_alert",)
+
     # -----------------------------------------------------------------------------
     # Messaging
     # Parser

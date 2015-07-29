@@ -371,6 +371,11 @@ class S3CAPModel(S3Model):
                                                   )),
                            widget = S3MultiSelectWidget(),
                            ),
+                     # approved_on field for recording when the alert was approved
+                     s3_datetime("approved_on",
+                                 readable = False,
+                                 writable = False,
+                                 ),
                      *s3_meta_fields())
 
         filter_widgets = [
@@ -403,6 +408,8 @@ class S3CAPModel(S3Model):
                   list_layout = cap_alert_list_layout,
                   list_orderby = "cap_info.expires desc",
                   onvalidation = self.cap_alert_form_validation,
+                  # update the approved_on field on approve of the alert
+                  onapprove = self.cap_alert_approve,
                   )
 
         # Components
@@ -1116,6 +1123,24 @@ class S3CAPModel(S3Model):
 
         return True
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_alert_approve(record=None):
+        """
+            Update the approved_on field when alert gets approved
+        """
+        
+        if not record:
+            return
+        
+        alert_id = record["id"]        
+        
+        # Update approved_on at the time the alert is approved
+        if alert_id:
+            db = current.db
+            approved_on = record["approved_on"]
+            db(db.cap_alert.id == alert_id).update(approved_on = current.request.utcnow)
+
 # =============================================================================
 def cap_info_labels():
     """
@@ -1213,6 +1238,38 @@ def cap_rheader(r):
                                        _target="_blank",
                                        )
 
+                    auth = current.auth
+                    # Display 'Submit for Approval' based on permission  
+                    # and deployment settings
+                    if not r.record.approved_by and \
+                       current.deployment_settings.get_cap_authorisation() and \
+                       auth.s3_has_permission("update", "cap_alert", record_id=r.id):
+                        # Get the user ids for the role alert_approver
+                        db = current.db
+                        agtable = db.auth_group
+                        rows = db(agtable.role == "Alert Approver")._select(agtable.id)
+                        group_rows = db(agtable.id.belongs(rows)).select(agtable.id)
+                        if group_rows:
+                            for group_row in group_rows:
+                                group_id = group_row.id                            
+                                user_ids = auth.s3_group_members(group_id) # List of user_ids
+                                pe_ids = [] # List of pe_ids
+                                for user_id in user_ids:
+                                    pe_ids.append(auth.s3_user_pe_id(int(user_id)))
+                                    
+                            submit_btn = A(T("Submit for Approval"),
+                                           _href = URL(f = "compose",
+                                                       vars = {"cap_alert.id": record.id,
+                                                               "pe_ids": pe_ids,
+                                                               },
+                                                       ),
+                                           _class = "action-btn"
+                                           )
+                        else:
+                            submit_btn = None
+                    else:
+                        submit_btn = None
+
                     table = s3db.cap_area
                     query = (table.alert_id == record_id)
                     row = current.db(query).select(table.id,
@@ -1241,6 +1298,8 @@ def cap_rheader(r):
                                   rheader_tabs,
                                   error
                                   )
+                    if submit_btn:
+                        rheader.insert(1, TR(submit_btn))
 
             elif tablename == "cap_area":
                 # Shouldn't ever be called
