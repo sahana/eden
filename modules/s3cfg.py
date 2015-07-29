@@ -2198,6 +2198,13 @@ class S3Config(Storage):
                                                       ("ru", "русский"),
                                                       ]))
 
+    def get_cap_authorisation(self):
+        """
+            Authorisation setting whether to display "Submit for Approval" Button
+        """
+        
+        return self.cap.get("authorisation", True)
+
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #
