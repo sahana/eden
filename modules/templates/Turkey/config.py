@@ -649,7 +649,8 @@ def config(settings):
                 s3db = current.s3db                
                 s3db.configure("pr_group_membership",
                                list_fields = ["group_id",
-                                              "group_number",                                      
+                                              "group_number",
+                                              "comments"                                      
                                               ],
                                )  
                                                                 
