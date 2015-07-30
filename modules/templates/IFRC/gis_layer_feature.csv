@@ -10,7 +10,7 @@ Volunteers,All Active Volunteers,vol,volunteer,volunteer,"Contact, Dreadlocks",{
 Volunteers Report,All Active Volunteers - Aggregated,vol,volunteer,,,{name}: {value} T('volunteers'),,~.status=1,True,,,"[{'prop':'value','fillOpacity':0.5}]",,,False,,0,0
 Warehouses,All Active Warehouses,inv,warehouse,warehouse,Building,{name} (T('Warehouse'))<br />{organisation_id},"name,organisation_id",~.obsolete=False,,True,,,,,False,,,
 Areas,Used for PO Home Page,po,area,,,{name},name,,,False,,"{'fill':'2288CC','fillOpacity':0.5}",True,,False,False,0,0
-Households,Used for Summary Page,po,household,"Infrastructure House",,{addr_street},~.location_id$addr_street,,,,,,,,False,False,0,0
+Households,Used for Summary Page,po,household,"Infrastructure House",,{addr_street},~.location_id$addr_street,,,True,,,,,False,False,0,0
 Projects,Used for Search Results,project,project,,,{name} (T('Project'))<br />{location.location_id},"name,location.location_id,current_indicator_status",,,,,"[{'prop':'current_indicator_status','low':0,'high':65,'fill':'ffffff','fillOpacity':0.5},{'prop':'current_indicator_status','low':66,'high':85,'fill':'ffff00','fillOpacity':0.5},{'prop':'current_indicator_status','low':86,'high':100,'fill':'00ff00','fillOpacity':0.5}]",,,False,False,,
 Stock Items,Used for Search Results,inv,inv_item,,,{item_id} (T('Stock Item'))<br />{site_id}<br />{quantity} {item_pack_id}<br />T('Expires') {expiry_date},"item_id,site_id,quantity,item_pack_id,expiry_date",,,,,,,,False,False,,
 Training Events,Used for Search Results,hrm,training_event,,,{course_id} (T('Training Event'))<br />{site_id}<br />{start_date},"course_id,site_id,start_date",,,True,,,,,False,False,,

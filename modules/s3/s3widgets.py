@@ -4857,7 +4857,7 @@ class S3LocationSelector(S3Selector):
         else:
             self.feature_required = None
         if show_map is None:
-            setttings = settings.get_gis_map_selector()
+            show_map = settings.get_gis_map_selector()
         self.show_map = show_map
         self.open_map_on_load = show_map and open_map_on_load
 

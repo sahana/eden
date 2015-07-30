@@ -3208,7 +3208,7 @@ def config(settings):
                         ltable = s3db.gis_location
                         ptable = ltable.with_alias("gis_parent_location")
                         dbset = db((ltable.level == "L1") & \
-                                (ptable.name == "Viet Nam"))
+                                   (ptable.name == "Viet Nam"))
                         left = ptable.on(ltable.parent == ptable.id)
                         vn_provinces = IS_EMPTY_OR(IS_ONE_OF(dbset, "gis_location.name",
                                                             "%(name)s",
