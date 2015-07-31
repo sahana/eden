@@ -1960,8 +1960,6 @@ def config(settings):
         #elif vnrc:
         #    settings.org.site_label = "Office/Center"
 
-        s3db.org_organisation.root_organisation.label = T("National Society")
-
         s3 = current.response.s3
 
         # Custom prep
@@ -2176,6 +2174,7 @@ def config(settings):
 
                 # Custom list fields for RDRT
                 phone_label = settings.get_ui_label_mobile_phone()
+                s3db.org_organisation.root_organisation.label = T("National Society")
                 list_fields = ["person_id",
                                (T("Sectors"), "credential.job_title_id"),
                                # @todo: Languages?

@@ -1022,6 +1022,7 @@ def config(settings):
                 )
 
         # Don't show RDRT in the list
+        from gluon import IS_IN_SET
         current.s3db.hrm_job_title.type.requires = IS_IN_SET({1: T("Staff"),
                                                               2: T("Volunteer"),
                                                               3: T("Both")
@@ -1336,7 +1337,7 @@ def config(settings):
                                 # Add Region to list_fields
                                 list_fields.insert(-1, "region_id")
                                 # Region is required
-                                r.table.region_id.requires = r.table.region_id.requires.other
+                                r.table.region_id.requires = r.table.region_id.requires[0].other
                             else:
                                 r.table.region_id.readable = r.table.region_id.writable = False
                         resource.configure(list_fields=list_fields)

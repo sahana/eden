@@ -5338,7 +5338,7 @@ def org_rheader(r, tabs=[]):
             if type_filter:
                 if type_filter == "Supplier":
                     skip_branches = True
-                    tabs = [(T("Basic Details"), None),
+                    tabs = [(T("Basic Details"), None, {"native": 1}),
                             (T("Offices"), "office"),
                             (T("Warehouses"), "warehouse"),
                             (T("Contacts"), "human_resource"),

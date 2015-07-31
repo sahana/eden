@@ -1602,12 +1602,11 @@ class S3ComponentTab(object):
         has_permission = current.auth.s3_has_permission
 
         # Must have access to the link table (if any):
-        linktable = hook.linktable
         if hook.linktable and not has_permission(READ, hook.linktable):
             return False
 
         # ...and to the component table itself:
-        if current.auth.s3_has_permission(READ, hook.tablename):
+        if has_permission(READ, hook.tablename):
             return True
 
         return False

@@ -540,6 +540,10 @@ class S3LocationModel(S3Model):
             if level:
                 editable = level != "L0"
                 if editable and level in gis.hierarchy_level_keys:
+                    if level == "L1" and not parent:
+                        response.error = error = T("L1 locations need to be within a Country")
+                        form.errors["level"] = error
+                        return
                     # Check whether the country config allows us to edit this location
                     # id doesn't exist for create forms and parent is a quicker check anyway when available
                     child = parent or current.request.vars.get("id", None)
