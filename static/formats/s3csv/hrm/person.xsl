@@ -89,8 +89,7 @@
          Permanent L4...................optional.....person permanent address L4
          Skills.........................optional.....comma-separated list of Skills
          Teams..........................optional.....comma-separated list of Groups
-         Team:XXXX......................optional.....Group Number of Team XXXX OR "TRUE" to add Teams by column
-         TeamC:XXXX.....................optional.....Comment of Team XXXX
+         Team:XXXX......................optional.....Group Number of Team XXXX OR "TRUE" to add Teams by column         
          Trainings......................optional.....comma-separated list of Training Courses
          Training:XXXX..................optional.....Date of Training Course XXXX OR "True" to add Training Courses by column
          Certificates...................optional.....comma-separated list of Certificates
@@ -954,18 +953,6 @@
                     </xsl:call-template>
                 </xsl:if>
             </xsl:for-each>
-            
-            <!-- TeamC:XXXX -->
-            <xsl:for-each select="col[starts-with(@field, 'TeamC:')]">
-                <xsl:variable name="Comment" select="text()"/>
-                <xsl:if test="$Comment!=''">
-                    <xsl:call-template name="resource">
-                        <xsl:with-param name="item" select="normalize-space(substring-after(@field, ':'))"/>
-                        <xsl:with-param name="arg">team</xsl:with-param>
-                        <xsl:with-param name="comment" select="$Comment"/>
-                    </xsl:call-template>
-                </xsl:if>
-            </xsl:for-each>
 
             <!-- Trainings -->
             <xsl:call-template name="splitList">
@@ -1739,8 +1726,7 @@
         <xsl:param name="item"/>
         <xsl:param name="arg"/>
         <xsl:param name="date"/>
-        <xsl:param name="number"/>
-        <xsl:param name="comment"/>
+        <xsl:param name="number"/>        
         <xsl:choose>
             <!-- Contacts -->
             <xsl:when test="$arg='email'">
@@ -1791,10 +1777,7 @@
                     </reference>
                     <xsl:if test="$number!='' and $number!='TRUE' and $number!='True' and $number!='true' and $number!='YES' and $number!='Yes' and $number!='yes'">
                         <data field="group_number"><xsl:value-of select="$number"/></data>
-                    </xsl:if>
-                    <xsl:if test="$comment!=''">
-                        <data field="comments"><xsl:value-of select="$comment"/></data>
-                    </xsl:if>
+                    </xsl:if>                    
                 </resource>
             </xsl:when>
             <!-- Trainings -->
