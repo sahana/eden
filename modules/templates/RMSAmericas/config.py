@@ -41,7 +41,7 @@ def config(settings):
 
     # Uncomment to show a default cancel button in standalone create/update forms
     settings.ui.default_cancel_button = True
-    
+
     # @todo: configure custom icons
     #settings.ui.custom_icons = {
     #    "male": "icon-male",
@@ -1365,6 +1365,17 @@ def config(settings):
 
             return result
         s3.prep = custom_prep
+
+        settings = current.deployment_settings
+
+        # Alter rheader tabs for Suppliers (=hide Offices, Warehouses and Contacts)
+        type_filter = current.request.get_vars.get("organisation_type.name")
+        if type_filter == "Supplier":
+            tabs = [(T("Basic Details"), None, {"native": 1}),
+                    ]
+            if settings.get_L10n_translate_org_organisation():
+                tabs.append((T("Local Names"), "name"))
+            attr["rheader"] = lambda r: current.s3db.org_rheader(r, tabs=tabs)
 
         return attr
 
