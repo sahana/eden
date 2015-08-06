@@ -6585,7 +6585,8 @@ class org_OrganisationDuplicate(object):
         parent_id = parent_uid = parent_item = None
 
         is_key = lambda fk, name: fk == name or \
-                                  isinstance(fk, tuple) and fk[1] == name
+                                  isinstance(fk, (tuple, list)) and \
+                                  fk[1] == name
 
         all_items = item.job.items
         for uid, link_item in all_items.items():
