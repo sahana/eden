@@ -1921,8 +1921,8 @@ $.filterOptionsS3({
                             records = db(otable.name == parent).select(otable.id)
                             if len(records) == 1:
                                 # Add branch link
-                                link_id = btable.insert(organisation_id == records.first().id,
-                                                        branch_id == id)
+                                link_id = btable.insert(organisation_id = records.first().id,
+                                                        branch_id = id)
                                 onaccept = s3db.get_config("org_organisation_branch", "onaccept")
                                 callback(onaccept, Storage(vars=Storage(id=link_id)))
                             elif len(records) > 1:
