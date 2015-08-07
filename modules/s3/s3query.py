@@ -1407,7 +1407,10 @@ class S3ResourceQuery(object):
         elif op == self.TYPEOF:
             q = self._query_typeof(l, r)
         elif op == self.LIKE:
-            q = l.like(s3_unicode(r))
+            if current.deployment_settings.get_database_airegex():
+                q = S3AIRegex.like(l, r)
+            else:
+                q = l.like(s3_unicode(r))
         elif op == self.LT:
             q = l < r
         elif op == self.LE:
@@ -1776,6 +1779,7 @@ class S3ResourceQuery(object):
             result = self._probe_contains(r, l)
 
         elif op == self.LIKE:
+            # @todo: apply AIRegex if configured
             pattern = re.escape(str(r)).replace("\\%", ".*").replace(".*.*", "\\%")
             return re.match(pattern, str(l)) is not None
 
@@ -2238,6 +2242,96 @@ class S3URLQuery(object):
                 q |= rquery
 
         return q
+
+# =============================================================================
+class S3AIRegex(object):
+    """
+        Helper class to construct quasi-accent-insensitive text search
+        queries based on SQL regular expressions (REGEXP).
+
+        Important: This will return complete nonsense if the REGEXP
+                   implementation of the DBMS is not multibyte-safe,
+                   so it must be suppressed for those cases (see also
+                   modules/s3config.py)!
+    """
+
+    # Groups with diacritic variants of the same character
+    GROUPS = (
+        u"aăâåãáàẩắằầảẳẵẫấạặậǻ",
+        u"äæ",
+        u"cçćĉ",
+        u"dđð",
+        u"eêèềẻểẽễéếẹệë",
+        u"gǵĝ",
+        u"hĥ",
+        u"iìỉĩíịîï",
+        u"jĵ",
+        u"kḱ",
+        u"lĺ",
+        u"mḿ",
+        u"nñńǹ",
+        u"oôơòồờỏổởõỗỡóốớọộợ",
+        u"öøǿ",
+        u"pṕ",
+        u"rŕ",
+        u"sśŝ",
+        u"tẗ",
+        u"uưùừủửũữúứụựứüǘûǜ",
+        u"wẃŵẁ",
+        u"yỳỷỹýỵÿŷ",
+        u"zźẑ",
+    )
+
+    ESCAPE = ".*$^[](){}\\+?"
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def like(cls, l, r):
+        """
+            Query constructor
+
+            @param l: the left operand
+            @param r: the right operand (string)
+        """
+
+        string = cls.translate(r)
+        if string:
+            return l.lower().regexp("^%s$" % string.replace("%", ".*"))
+        else:
+            return l.like(r)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def translate(cls, string):
+        """
+            Helper method to translate the search string into a regular
+            expression
+
+            @param string: the search string
+        """
+
+        if not string:
+            return None
+
+        match = False
+        output = []
+        append = output.append
+
+        GROUPS = cls.GROUPS
+        ESCAPE = cls.ESCAPE
+        for character in s3_unicode(string).lower():
+
+            if character in ESCAPE:
+                result = "\%s" % character
+            else:
+                result = character
+                for group in GROUPS:
+                    if character in group:
+                        match = True
+                        result = "[%s]{1}" % group
+                        break
+            append(result)
+        return "".join(output) if match else None
 
 # =============================================================================
 # Helper to combine multiple queries using AND
