@@ -1324,6 +1324,283 @@ class S3PersianCalendarTests(unittest.TestCase):
             render(dt)
 
 # =============================================================================
+class S3NepaliCalendarTests(unittest.TestCase):
+    """ Test cases for Nepali (=Bikram Samvat) calendar """
+
+    def setUp(self):
+
+        self.test_dates = (((1973, 4, 21), 2441793.5, (2030, 1, 9)),
+                           ((1988, 3, 1), 2447221.5, (2044, 11, 18)),
+                           ((2017, 11, 8), 2458065.5, (2074, 7, 22)),
+                           )
+
+    # -------------------------------------------------------------------------
+    def testJDConversion(self):
+        """
+            Test conversion of Bikram Samvat date to JD and Gregorian date
+            (low-level routines)
+        """
+
+        test_dates = self.test_dates
+
+        assertEqual = self.assertEqual
+
+        c = S3Calendar("Nepali")
+
+        gregorian_to_jd = c._gregorian_to_jd
+        jd_to_gregorian = c._jd_to_gregorian
+
+        from_jd = c.calendar.from_jd
+        to_jd = c.calendar.to_jd
+
+        for gdate, jd, cdate in test_dates:
+
+            jd_ = gregorian_to_jd(gdate[0], gdate[1], gdate[2])
+            assertEqual(jd_, jd)
+
+            cd_ = from_jd(jd_)
+            assertEqual(cd_, cdate)
+
+            jd_ = to_jd(cd_[0], cd_[1], cd_[2])
+            assertEqual(jd_, jd)
+
+            gd_ = jd_to_gregorian(jd_)
+            assertEqual(gd_, gdate)
+
+    # -------------------------------------------------------------------------
+    def testCalendarDate(self):
+        """
+            Test direct conversion between Bikram Samvat and Gregorian
+            timetuples (cdate/gdate)
+        """
+
+        test_dates = self.test_dates
+
+        assertEqual = self.assertEqual
+
+        c = S3Calendar("Nepali")
+        to_gregorian = c.calendar._gdate
+        from_gregorian = c.calendar._cdate
+
+        for gdate, jd, cdate in test_dates:
+
+            # Conversion from Bikram Samvat to Gregorian
+            timetuple = (cdate[0], cdate[1], cdate[2], 8, 0, 0)
+            gdate_ = to_gregorian(timetuple)
+            assertEqual(gdate_[:3], gdate)
+
+            # Conversion from Gregorian to Bikram Samvat
+            timetuple = (gdate[0], gdate[1], gdate[2], 8, 0, 0)
+            cdate_ = from_gregorian(timetuple)
+            assertEqual(cdate_[:3], cdate)
+
+    # -------------------------------------------------------------------------
+    def testDateParsing(self):
+        """ Test S3Calendar.parse_date """
+
+        c = S3Calendar("Nepali")
+        parse = c.parse_date
+
+        assertEqual = self.assertEqual
+
+        # Test with ISOFORMAT
+        dtstr = "1982-08-06"
+        dt = parse(dtstr)
+        assertEqual(dt, datetime.date(1925, 11, 21))
+
+        # Test with local format
+        settings = current.deployment_settings
+        date_format = settings.get_L10n_date_format()
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            dtstr = "25/01/2040"
+            dt = parse(dtstr, local=True)
+            assertEqual(dt, datetime.date(1983, 5, 8))
+        finally:
+            settings.L10n.date_format = date_format
+
+        # Test with format override
+        dtstr = "25.09.2060"
+        dt = parse(dtstr, dtfmt="%d.%m.%Y")
+        assertEqual(dt, datetime.date(2004, 1, 9))
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            dt = parse(dtstr, dtfmt="%d.%m.%Y", local=True)
+            assertEqual(dt, datetime.date(2004, 1, 9))
+        finally:
+            settings.L10n.date_format = date_format
+
+        # Test with None
+        dtstr = None
+        dt = parse(dtstr)
+        assertEqual(dt, None)
+
+        # Test with invalid type
+        dtstr = 96
+        dt = parse(dtstr)
+        assertEqual(dt, None)
+
+        # Test with invalid value
+        dtstr = "Invalid Value"
+        dt = parse(dtstr)
+        assertEqual(dt, None)
+
+    # -------------------------------------------------------------------------
+    def testDateTimeParsing(self):
+        """ Test S3Calendar.parse_datetime """
+
+        c = S3Calendar("Nepali")
+        parse = c.parse_datetime
+
+        assertEqual = self.assertEqual
+
+        # Test with ISOFORMAT
+        dtstr = "1982-08-06T13:01:41"
+        dt = parse(dtstr)
+        assertEqual(dt, datetime.datetime(1925, 11, 21, 13, 1, 41))
+
+        # Test with local format
+        settings = current.deployment_settings
+        date_format = settings.get_L10n_date_format()
+        time_format = settings.get_L10n_time_format()
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            settings.L10n.time_format = "%H.%M"
+            dtstr = "09/05/2021 13.21"
+            dt = parse(dtstr, local=True)
+            assertEqual(dt, datetime.datetime(1964, 8, 24, 13, 21, 0))
+        finally:
+            settings.L10n.date_format = date_format
+            settings.L10n.time_format = time_format
+
+        # Test with format override
+        dtstr = "25.Paush 2060 10:13:44"
+        dt = parse(dtstr, dtfmt="%d.%B %Y %H:%M:%S")
+        assertEqual(dt, datetime.datetime(2004, 1, 9, 10, 13, 44))
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            settings.L10n.time_format = "%H.%M"
+            dt = parse(dtstr,  dtfmt="%d.%B %Y %H:%M:%S", local=True)
+            assertEqual(dt, datetime.datetime(2004, 1, 9, 10, 13, 44))
+        finally:
+            settings.L10n.date_format = date_format
+            settings.L10n.time_format = time_format
+
+        # Test with None
+        dtstr = None
+        dt = parse(dtstr)
+        assertEqual(dt, None)
+
+        # Test with invalid type
+        dtstr = 96
+        dt = parse(dtstr)
+        assertEqual(dt, None)
+
+        # Test with invalid value
+        dtstr = "Invalid Value"
+        dt = parse(dtstr)
+        assertEqual(dt, None)
+
+    # -------------------------------------------------------------------------
+    def testDateFormatting(self):
+        """ Test S3Calendar.format_date """
+
+        c = S3Calendar("Nepali")
+        render = c.format_date
+
+        assertEqual = self.assertEqual
+        assertRaises = self.assertRaises
+
+        # Test with ISOFORMAT
+        dt = datetime.date(1925, 11, 21)
+        dtstr = render(dt)
+        assertEqual(dtstr, "1982-08-06")
+
+        # Test with local format
+        settings = current.deployment_settings
+        date_format = settings.get_L10n_date_format()
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            dt = datetime.date(1983, 5, 8)
+            dtstr = render(dt, local=True)
+            assertEqual(dtstr, "25/01/2040")
+        finally:
+            settings.L10n.date_format = date_format
+
+        # Test with format override
+        dt = datetime.date(2004, 2, 9)
+        dtstr = render(dt, dtfmt="%d-%b-%Y")
+        assertEqual(dtstr, "26-Ma-2060")
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            dtstr = render(dt, dtfmt="%d.%B %Y", local=True)
+            assertEqual(dtstr, "26.Mangh 2060")
+        finally:
+            settings.L10n.date_format = date_format
+
+        # Test with None
+        dt = None
+        dtstr = render(dt)
+        assertEqual(dtstr, current.messages.NONE)
+
+        # Test with invalid type
+        dt = 96
+        with assertRaises(TypeError):
+            render(dt)
+
+    # -------------------------------------------------------------------------
+    def testDateTimeFormatting(self):
+        """ Test S3Calendar.format_datetime """
+
+        c = S3Calendar("Nepali")
+        render = c.format_datetime
+
+        assertEqual = self.assertEqual
+        assertRaises = self.assertRaises
+
+        # Test with ISOFORMAT
+        dt = datetime.datetime(1925, 11, 21, 13, 1, 41)
+        dtstr = render(dt)
+        assertEqual(dtstr, "1982-08-06T13:01:41")
+
+        # Test with local format
+        settings = current.deployment_settings
+        date_format = settings.get_L10n_date_format()
+        time_format = settings.get_L10n_time_format()
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            settings.L10n.time_format = "%H.%M"
+            dt = datetime.datetime(1964, 8, 24, 13, 21, 0)
+            dtstr = render(dt, local=True)
+            assertEqual(dtstr, "09/05/2021 13.21")
+        finally:
+            settings.L10n.date_format = date_format
+            settings.L10n.time_format = time_format
+
+        # Test with format override
+        dt = datetime.datetime(2004, 1, 9, 10, 13, 44)
+        dtstr = render(dt, dtfmt="%d.%m.%Y %H:%M:%S")
+        assertEqual(dtstr, "25.09.2060 10:13:44")
+        try:
+            settings.L10n.date_format = "%d/%m/%Y"
+            settings.L10n.time_format = "%H.%M"
+            dtstr = render(dt,  dtfmt="%d.%B %Y %H:%M:%S", local=True)
+            assertEqual(dtstr, "25.Paush 2060 10:13:44")
+        finally:
+            settings.L10n.date_format = date_format
+            settings.L10n.time_format = time_format
+
+        # Test with None
+        dt = None
+        dtstr = render(dt)
+        assertEqual(dtstr, current.messages.NONE)
+
+        # Test with invalid type
+        dt = 96
+        with assertRaises(TypeError):
+            render(dt)
+
+# =============================================================================
 class S3DateTimeParserTests(unittest.TestCase):
     """ Tests for S3DateTimeParser """
 
@@ -1525,6 +1802,7 @@ if __name__ == "__main__":
         TimeRepresentationTests,
         DateTimeRepresentationTests,
         S3PersianCalendarTests,
+        S3NepaliCalendarTests,
         S3DateTimeParserTests,
     )
 

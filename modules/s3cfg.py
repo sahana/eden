@@ -2202,7 +2202,7 @@ class S3Config(Storage):
         """
             Authorisation setting whether to display "Submit for Approval" Button
         """
-        
+
         return self.cap.get("authorisation", True)
 
     # -------------------------------------------------------------------------
@@ -2731,6 +2731,12 @@ class S3Config(Storage):
 
     def get_inv_facility_label(self):
         return self.inv.get("facility_label", "Warehouse")
+
+    def get_inv_facility_manage_staff(self):
+        """
+            Show Staff Management Tabs for Facilities in Inventory Module
+        """
+        return self.inv.get("facility_manage_staff", True)
 
     def get_inv_recv_tab_label(self):
         label = self.inv.get("recv_tab_label")
