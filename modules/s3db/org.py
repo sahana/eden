@@ -5426,25 +5426,29 @@ def org_rheader(r, tabs=[]):
         rheader.append(rheader_tabs)
 
     elif tablename in ("org_office", "org_facility"):
+
         tabs = [(T("Basic Details"), None),
                 #(T("Contact Data"), "contact"),
                 ]
-        append = tabs.append
-        if settings.has_module("hrm"):
+        append_tab = tabs.append
+
+        if settings.has_module("hrm") and \
+           (r.controller != "inv" or settings.get_inv_facility_manage_staff()):
             STAFF = settings.get_hrm_staff_label()
-            tabs.append((STAFF, "human_resource"))
-            permit = current.auth.s3_has_permission
-            if permit("update", tablename, r.id) and \
-               permit("create", "hrm_human_resource_site"):
-                tabs.append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
+            append_tab((STAFF, "human_resource"))
+            permitted = current.auth.s3_has_permission
+            if permitted("update", tablename, r.id) and \
+               permitted("create", "hrm_human_resource_site"):
+                append_tab((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
         if settings.get_req_summary():
-            append((T("Needs"), "site_needs"))
+            append_tab((T("Needs"), "site_needs"))
         if settings.has_module("asset"):
-            append((T("Assets"), "asset"))
+            append_tab((T("Assets"), "asset"))
         if settings.has_module("inv"):
             tabs = tabs + s3db.inv_tabs(r)
         if settings.has_module("req"):
             tabs = tabs + s3db.req_tabs(r)
+
         tabs.extend(((T("Attachments"), "document"),
                      (T("User Roles"), "roles"),
                      ))
