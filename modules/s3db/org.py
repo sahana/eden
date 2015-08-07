@@ -340,6 +340,13 @@ class S3OrganisationModel(S3Model):
                                 lambda: gis.get_countries(key_type="code"),
                                                           zero=messages.SELECT_LOCATION)),
                            ),
+                     # Simple free-text contact field, can be enabled
+                     # in templates as needed
+                     Field("contact",
+                           label = T("Contact"),
+                           readable = False,
+                           writable = False,
+                           ),
                      # @ToDo: Deprecate with Contact component
                      Field("phone",
                            label = T("Phone #"),
