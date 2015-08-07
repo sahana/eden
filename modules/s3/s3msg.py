@@ -1804,7 +1804,9 @@ class S3Msg(object):
             error = "Error: %s" % e.code
             current.log.error(error)
             # Store status in the DB
-            db(table.channel_id == channel_id).update(status=error)
+            S3Msg.update_channel_status(channel_id,
+                                        status=error,
+                                        period=(300, 3600))
             return error
         else:
             sms_list = json.loads(smspage.read())
