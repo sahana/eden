@@ -1524,6 +1524,12 @@ class S3Config(Storage):
                 excluded_fields_dict.get(resourcename, [])
 
         return excluded_fields
+    # -------------------------------------------------------------------------
+    # XLS Settings
+    #
+    def get_xls_title_row(self):
+        """Include a title row for XLS Exports"""
+        return self.base.get("xls_title_row", False)
 
     # -------------------------------------------------------------------------
     # UI Settings

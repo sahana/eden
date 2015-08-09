@@ -209,6 +209,9 @@ def config(settings):
     # Location of Logo used in pdfs headers
     #settings.ui.pdf_logo = "static/img/mylogo.png"
 
+    #Uncomment to add a title row to XLS exports
+    #settings.base.xls_title_row = True
+
     # GIS (Map) settings
     # Size of the Embedded Map
     # Change this if-required for your theme
