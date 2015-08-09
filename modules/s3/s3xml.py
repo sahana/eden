@@ -1015,7 +1015,12 @@ class S3XML(S3Codec):
 
             if tablename in attributes:
                 # Add Attributes
-                attrs = attributes[tablename][record_id]
+                try:
+                    attrs = attributes[tablename][record_id]
+                except KeyError:
+                    from s3utils import s3_debug
+                    s3_debug("S3XML", "record not found in lookup")
+                    attrs = {}
                 if attrs:
                     # Encode in a way which we can decode in static/formats/geojson/export.xsl
                     # - double up all tokens to reduce chances of them being within represents

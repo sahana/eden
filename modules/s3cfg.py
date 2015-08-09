@@ -827,6 +827,35 @@ class S3Config(Storage):
     def get_database_type(self):
         return self.database.get("db_type", "sqlite").lower()
 
+    def get_database_airegex(self):
+        """
+            Whether to instead of LIKE use REGEXP with groups of diacritic
+            alternatives of characters to enforce accent-insensitive matches
+            in text search (for SQLite and PostgreSQL, neither of which
+            applies collation rules in LIKE)
+
+            @note: MySQL's REGEXP implementation is not multibyte-safe,
+                   so AIRegex is ignored for MySQL.
+
+            @note: However, MYSQL's LIKE applies collation rules, so
+                   accent-insensitivity can be achieved by settings a
+                   suitable default database collation with:
+                     ALTER DATABASE <dbname> DEFAULT COLLATE <collname>
+                   Caution: this will trigger a rebuilt of all indices, so
+                            on a populated production database this could
+                            take quite a long time (but is needed only once)!
+
+            @note: AIRegex is much less scalable than normal LIKE or even
+                   ILIKE, enable/disable on a case-by-case basis in case
+                   of performance issues (which is also why this is a lazy
+                   setting), or consider switching to MySQL altogether
+        """
+        if self.get_database_type() != "mysql":
+            airegex = self.__lazy(self.database, "airegex", False)
+        else:
+            airegex = False
+        return airegex
+
     def get_database_string(self):
         db_type = self.database.get("db_type", "sqlite").lower()
         pool_size = self.database.get("pool_size", 30)
@@ -2198,6 +2227,13 @@ class S3Config(Storage):
                                                       ("ru", "русский"),
                                                       ]))
 
+    def get_cap_authorisation(self):
+        """
+            Authorisation setting whether to display "Submit for Approval" Button
+        """
+
+        return self.cap.get("authorisation", True)
+
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #
@@ -2724,6 +2760,12 @@ class S3Config(Storage):
 
     def get_inv_facility_label(self):
         return self.inv.get("facility_label", "Warehouse")
+
+    def get_inv_facility_manage_staff(self):
+        """
+            Show Staff Management Tabs for Facilities in Inventory Module
+        """
+        return self.inv.get("facility_manage_staff", True)
 
     def get_inv_recv_tab_label(self):
         label = self.inv.get("recv_tab_label")

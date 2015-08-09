@@ -70,6 +70,7 @@ ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all re
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"pr_person",,ALL,,,,,
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"pr_physical_description",,ALL,,,,,
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"project_project",,ALL,,,,,
+ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"req_req",,ALL,,,,,
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"supply_catalog",,ALL,,,,,
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"vol_details",,ALL,,,,,
 project_data_entry,"Project Data Entry",,project,,,,"READ|CREATE","READ|CREATE|UPDATE",,,,

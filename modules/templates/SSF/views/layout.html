@@ -33,6 +33,12 @@
  {{# Built by /static/scripts/tools/build.sahana.py }}
  <link href="/{{=appname}}/static/themes/{{=theme}}/eden.min.css" rel="stylesheet" type="text/css" />
 {{pass}}
+{{if "content_only" in request.vars:}}
+  <style>
+    .top-bar, .sidebar, #content h2, #footer {display:none}
+    #content {left: -250px}
+  </style>
+{{pass}}
 {{include "scripts_top.html"}}
 </head>
 {{try:}}

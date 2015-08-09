@@ -1921,8 +1921,8 @@ $.filterOptionsS3({
                             records = db(otable.name == parent).select(otable.id)
                             if len(records) == 1:
                                 # Add branch link
-                                link_id = btable.insert(organisation_id == records.first().id,
-                                                        branch_id == id)
+                                link_id = btable.insert(organisation_id = records.first().id,
+                                                        branch_id = id)
                                 onaccept = s3db.get_config("org_organisation_branch", "onaccept")
                                 callback(onaccept, Storage(vars=Storage(id=link_id)))
                             elif len(records) > 1:
@@ -7775,18 +7775,21 @@ class S3RoleManager(S3Method):
             use_realms = auth.permission.entity_realm
 
             # These roles are assigned by the system:
-            unassignable = [sr.ANONYMOUS, sr.AUTHENTICATED]
+            unassignable = set((sr.ANONYMOUS, sr.AUTHENTICATED))
 
             has_role = auth.s3_has_role
             for role in (sr.ADMIN, sr.ORG_ADMIN, sr.ORG_GROUP_ADMIN):
                 if not has_role(role):
                     # Users must have the role themselves in order to
                     # assign it to others
-                    unassignable.append(role)
+                    unassignable.add(role)
                 elif role == sr.ADMIN and user_id == auth.user_id:
                     # Admins can not remove their own ADMIN role (to prevent
                     # them from locking out themselves)
-                    unassignable.append(role)
+                    unassignable.add(role)
+
+            # Catch incomplete system roles setups (legacy databases)
+            unassignable.discard(None)
 
             if r.representation == "html":
 

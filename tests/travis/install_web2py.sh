@@ -9,6 +9,7 @@ apt-get update -qq
 apt-get -q install python-dev
 apt-get -q install build-essential
 apt-get -q install python
+apt-get -q install python-psycopg2
 
 
 echo "downloading and installing web2py"

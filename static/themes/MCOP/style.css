@@ -62,16 +62,15 @@
 .wa_cop_logo {
     float: left;
     clear: left;
-    margin: 0 5px 10px 15px;
     height: 100px;
 }
 
 .header h2 {
     float: left;
-    font-size: 30px;
-    line-height: 40px;
+    font-size: 25px;
+    line-height: 30px;
+    margin: 20px 0 0 10px;
     padding: 0;
-    margin: 25px 0 0 10px;
 }
 
 h1, h2, h3 {

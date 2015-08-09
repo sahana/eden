@@ -41,7 +41,7 @@ def config(settings):
 
     # Uncomment to show a default cancel button in standalone create/update forms
     settings.ui.default_cancel_button = True
-    
+
     # @todo: configure custom icons
     #settings.ui.custom_icons = {
     #    "male": "icon-male",
@@ -467,6 +467,10 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Inventory Management
+
+    # Hide Staff Management Tabs for Facilities in Inventory Module
+    settings.inv.facility_manage_staff = False
+
     settings.inv.show_mode_of_transport = True
     settings.inv.send_show_time_in = True
     #settings.inv.collapse_tabs = True
@@ -1022,6 +1026,7 @@ def config(settings):
                 )
 
         # Don't show RDRT in the list
+        from gluon import IS_IN_SET
         current.s3db.hrm_job_title.type.requires = IS_IN_SET({1: T("Staff"),
                                                               2: T("Volunteer"),
                                                               3: T("Both")
@@ -1228,9 +1233,12 @@ def config(settings):
 
         s3 = current.response.s3
 
+        type_filter = current.request.get_vars.get("organisation_type.name")
+
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
+
             # Call standard prep
             if callable(standard_prep):
                 result = standard_prep(r)
@@ -1242,6 +1250,8 @@ def config(settings):
                 if not r.component or r.component_name == "branch":
 
                     resource = r.resource
+                    table = resource.table
+
                     type_label = T("Type")
 
                     if r.get_vars.get("caller") == "org_facility_organisation_id":
@@ -1298,14 +1308,13 @@ def config(settings):
                                                filter_widgets = filter_widgets,
                                                )
                     else:
-                        # Organisations in org module
+                        # Organisations in other modules (org, inv etc.)
                         list_fields = ["name",
                                        "acronym",
                                        "organisation_organisation_type.organisation_type_id",
                                        "country",
                                        "website",
                                        ]
-                        type_filter = r.get_vars.get("organisation_type.name", None)
                         if type_filter:
                             type_names = type_filter.split(",")
                             if len(type_names) == 1:
@@ -1336,13 +1345,30 @@ def config(settings):
                                 # Add Region to list_fields
                                 list_fields.insert(-1, "region_id")
                                 # Region is required
-                                r.table.region_id.requires = r.table.region_id.requires.other
+                                table.region_id.requires = table.region_id.requires[0].other
+
                             else:
-                                r.table.region_id.readable = r.table.region_id.writable = False
+                                table.region_id.readable = table.region_id.writable = False
+
+                            if type_filter == "Supplier":
+                                # Show simple free-text contact field
+                                contact_field = table.contact
+                                contact_field.readable = True
+                                contact_field.writable = True
+
+                                # Include contact information in list_fields
+                                list_fields = ["name",
+                                               "acronym",
+                                               "country",
+                                               "contact",
+                                               "phone",
+                                               "website",
+                                               ]
+
                         resource.configure(list_fields=list_fields)
 
                         if r.interactive:
-                            r.table.country.label = T("Country")
+                            table.country.label = T("Country")
                             from s3 import S3SQLCustomForm, S3SQLInlineLink
                             crud_form = S3SQLCustomForm(
                                             "name",
@@ -1355,6 +1381,7 @@ def config(settings):
                                                             ),
                                             "region_id",
                                             "country",
+                                            "contact",
                                             "phone",
                                             "website",
                                             "logo",
@@ -1364,6 +1391,16 @@ def config(settings):
 
             return result
         s3.prep = custom_prep
+
+        settings = current.deployment_settings
+
+        # Alter rheader tabs for Suppliers (=hide Offices, Warehouses and Contacts)
+        if type_filter == "Supplier":
+            tabs = [(T("Basic Details"), None, {"native": 1}),
+                    ]
+            if settings.get_L10n_translate_org_organisation():
+                tabs.append((T("Local Names"), "name"))
+            attr["rheader"] = lambda r: current.s3db.org_rheader(r, tabs=tabs)
 
         return attr
 

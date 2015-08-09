@@ -2454,6 +2454,10 @@ class GIS(object):
                         except AttributeError:
                             # FieldMethod
                             ftype = None
+                        except KeyError:
+                            from s3utils import s3_debug
+                            s3_debug("SGIS", "Field %s doesn't exist in table %s" % (fname, tname))
+                            continue
                         attr_cols[fieldname] = (ftype, fname)
 
                 _pkey = str(_pkey)

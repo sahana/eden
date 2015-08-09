@@ -1288,6 +1288,7 @@ class Pootle:
                 Upload a file to Pootle
             """
 
+            # @ToDo try/except error
             import mechanize
             import re
 

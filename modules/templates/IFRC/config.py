@@ -1863,11 +1863,57 @@ def config(settings):
             T = current.T
             root_org = current.auth.root_org_name()
             if root_org == IRCS:
-                current.s3db.hrm_human_resource.start_date.label = T("Appointment Date")
+                s3db = current.s3db
+                table = s3db.hrm_human_resource
+                table.start_date.label = T("Appointment Date")
                 def vol_service_record_manager(default):
                     from s3 import s3_fullname
                     return s3_fullname(current.auth.s3_logged_in_person())
                 settings.hrm.vol_service_record_manager = vol_service_record_manager
+                from s3 import IS_ADD_PERSON_WIDGET2, S3SQLCustomForm, S3SQLInlineComponent
+                table.person_id.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
+                table.code.label = T("Appointment Number")
+                phtable = s3db.hrm_programme_hours
+                #phtable.date.label = T("Direct Date")
+                #phtable.contract.label = T("Direct Number")
+                phtable.contract.readable = phtable.contract.writable = True
+                crud_form = S3SQLCustomForm("organisation_id",
+                                            "person_id",
+                                            S3SQLInlineComponent("home_address",
+                                                                 label = T("Address"),
+                                                                 fields = [("", "location_id"),
+                                                                           ],
+                                                                 default = {"type": 1}, # Current Home Address
+                                                                 link = False,
+                                                                 multiple = False,
+                                                                 ),
+                                            "department_id",
+                                            "start_date",
+                                            "code",
+                                            S3SQLInlineComponent("programme_hours",
+                                                                 label = T("Contract"),
+                                                                 fields = ["programme_id",
+                                                                           (T("Direct Date"), "date"),
+                                                                           (T("End Date"), "end_date"),
+                                                                           (T("Direct Number"), "contract"),
+                                                                           ],
+                                                                 link = False,
+                                                                 multiple = False,
+                                                                 ),
+                                            S3SQLInlineComponent("education",
+                                                                 label = T("Education"),
+                                                                 fields = [(T("Education Level"), "level_id"),
+                                                                           "institute",
+                                                                           "year",
+                                                                           ],
+                                                                 link = False,
+                                                                 multiple = False,
+                                                                 ),
+                                            "details.active",
+                                            )
+                s3db.configure("hrm_human_resource",
+                               crud_form = crud_form,
+                               )
             elif root_org == NRCS:
                 # Expose volunteer_type field with these options:
                 types = {"PROGRAMME": T("Program Volunteer"),
@@ -1913,8 +1959,6 @@ def config(settings):
 
         #elif vnrc:
         #    settings.org.site_label = "Office/Center"
-
-        s3db.org_organisation.root_organisation.label = T("National Society")
 
         s3 = current.response.s3
 
@@ -1992,52 +2036,6 @@ def config(settings):
                                                 "start_date",
                                                 "details.active",
                                                 (T("Remarks"), "comments"),
-                                                )
-                    s3db.configure("hrm_human_resource",
-                                   crud_form = crud_form,
-                                   )
-
-                elif root_org == IRCS:
-                    from s3 import IS_ADD_PERSON_WIDGET2, S3SQLCustomForm, S3SQLInlineComponent
-                    table.person_id.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
-                    table.code.label = T("Appointment Number")
-                    phtable = current.s3db.hrm_programme_hours
-                    #phtable.date.label = T("Direct Date")
-                    #phtable.contract.label = T("Direct Number")
-                    phtable.contract.readable = phtable.contract.writable = True
-                    crud_form = S3SQLCustomForm("organisation_id",
-                                                "person_id",
-                                                S3SQLInlineComponent("home_address",
-                                                                     label = T("Address"),
-                                                                     fields = [("", "location_id"),
-                                                                               ],
-                                                                     default = {"type": 1}, # Current Home Address
-                                                                     link = False,
-                                                                     multiple = False,
-                                                                     ),
-                                                "department_id",
-                                                "start_date",
-                                                "code",
-                                                S3SQLInlineComponent("programme_hours",
-                                                                     label = T("Contract"),
-                                                                     fields = ["programme_id",
-                                                                               (T("Direct Date"), "date"),
-                                                                               (T("End Date"), "end_date"),
-                                                                               (T("Direct Number"), "contract"),
-                                                                               ],
-                                                                     link = False,
-                                                                     multiple = False,
-                                                                     ),
-                                                S3SQLInlineComponent("education",
-                                                                     label = T("Education"),
-                                                                     fields = [(T("Education Level"), "level_id"),
-                                                                               "institute",
-                                                                               "year",
-                                                                               ],
-                                                                     link = False,
-                                                                     multiple = False,
-                                                                     ),
-                                                "details.active",
                                                 )
                     s3db.configure("hrm_human_resource",
                                    crud_form = crud_form,
@@ -2176,6 +2174,7 @@ def config(settings):
 
                 # Custom list fields for RDRT
                 phone_label = settings.get_ui_label_mobile_phone()
+                s3db.org_organisation.root_organisation.label = T("National Society")
                 list_fields = ["person_id",
                                (T("Sectors"), "credential.job_title_id"),
                                # @todo: Languages?
@@ -3208,7 +3207,7 @@ def config(settings):
                         ltable = s3db.gis_location
                         ptable = ltable.with_alias("gis_parent_location")
                         dbset = db((ltable.level == "L1") & \
-                                (ptable.name == "Viet Nam"))
+                                   (ptable.name == "Viet Nam"))
                         left = ptable.on(ltable.parent == ptable.id)
                         vn_provinces = IS_EMPTY_OR(IS_ONE_OF(dbset, "gis_location.name",
                                                             "%(name)s",
