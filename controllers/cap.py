@@ -134,10 +134,23 @@ def alert():
                                               T("Save and edit information"),
                                               "",
                                               ),)
-            elif r.component_name in ("area", "resource"):
+            elif r.component_name == "area":
                 # Limit to those for this Alert
                 r.component.table.info_id.requires = IS_EMPTY_OR(
-                                                        IS_ONE_OF(current.db, "cap_info.id",
+                                                        IS_ONE_OF(db, "cap_info.id",
+                                                                  s3db.cap_info_represent,
+                                                                  filterby="alert_id",
+                                                                  filter_opts=(r.id,),
+                                                                  ))
+                for f in ("event_type_id", "priority"):
+                    # Do not show for the actual area
+                    field = r.component.table[f]
+                    field.writable = field.readable = False
+                    
+            elif r.component_name == "resource":
+                # Limit to those for this Alert
+                r.component.table.info_id.requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "cap_info.id",
                                                                   s3db.cap_info_represent,
                                                                   filterby="alert_id",
                                                                   filter_opts=(r.id,),
@@ -145,7 +158,7 @@ def alert():
             elif r.component_name == "location":
                 # Limit to those for this Alert
                 r.component.table.area_id.requires = IS_EMPTY_OR(
-                                                        IS_ONE_OF(current.db, "cap_area.id",
+                                                        IS_ONE_OF(db, "cap_area.id",
                                                                   s3db.cap_area_represent,
                                                                   filterby="alert_id",
                                                                   filter_opts=(r.id,),
@@ -366,9 +379,26 @@ def template():
 def area():
     """
         REST controller for CAP area
-        - shouldn't ever be called
+        Should only be accessed for defining area template
     """
 
+    def prep(r):
+        # Should be accessed by people having permission to create area template
+        if not auth.s3_has_permission("create", "cap_area"):
+            r.unauthorised()
+        
+        artable = s3db.cap_area
+        for f in ("alert_id", "info_id"):
+            field = artable[f]
+            field.writable = False
+            field.readable = False
+        
+        # Area create from this controller is template
+        artable.is_template.default = True
+        
+        return True
+    s3.prep = prep
+    
     def postp(r, output):
         if r.interactive and r.component and r.component_name == "area_location":
             # Modify action button to open cap/area_location directly.
