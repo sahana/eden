@@ -152,8 +152,9 @@ class S3ChannelModel(S3Model):
         define_table(tablename,
                      channel_id(),
                      Field("status",
-                           #label = T("Status")
+                           #label = T("Status"),
                            #represent = s3_yes_no_represent,
+                           represent = lambda v: v or current.messages["NONE"],
                            ),
                      *s3_meta_fields())
 
@@ -306,7 +307,7 @@ class S3ChannelModel(S3Model):
 
         if form.record:
             # Update form
-            # process of changed
+            # Process if changed
             if form.record.enabled and not form.vars.enabled:
                 current.s3db.msg_channel_disable(form.table._tablename,
                                                  form.vars.channel_id)
@@ -1732,30 +1733,46 @@ class S3TwitterModel(S3Model):
                      self.super_link("channel_id", "msg_channel"),
                      # @ToDo: Allow different Twitter accounts for different PEs (Orgs / Teams)
                      #self.pr_pe_id(),
-                     Field("name"),
-                     Field("description"),
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     Field("description",
+                           label = T("Description"),
+                           ),
                      Field("enabled", "boolean",
                            default = True,
                            label = T("Enabled?"),
                            represent = s3_yes_no_represent,
                            ),
-                     Field("twitter_account"),
+                     Field("login", "boolean",
+                           default = False,
+                           label = T("Use for Login?"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     Field("twitter_account",
+                           label = T("Twitter Account"),
+                           ),
+                     # Get these from https://apps.twitter.com
                      Field("consumer_key", "password",
+                           label = T("Consumer Key"),
                            widget = password_widget,
                            ),
                      Field("consumer_secret", "password",
+                           label = T("Consumer Secret"),
                            widget = password_widget,
                            ),
                      Field("access_token", "password",
+                           label = T("Access Token"),
                            widget = password_widget,
                            ),
                      Field("access_token_secret", "password",
+                           label = T("Access Token Secret"),
                            widget = password_widget,
                            ),
                      *s3_meta_fields())
 
         configure(tablename,
-                  onaccept = self.msg_channel_onaccept,
+                  onaccept = self.twitter_channel_onaccept,
                   #onvalidation = self.twitter_channel_onvalidation
                   super_entity = "msg_channel",
                   )
@@ -1857,6 +1874,17 @@ class S3TwitterModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def twitter_channel_onaccept(form):
+
+        if form.vars.login:
+            # Ensure only a single account used for Login
+            current.db(current.s3db.msg_twitter_channel.id != form.vars.id).update(login = False)
+
+        # Normal onaccept processing
+        S3ChannelModel.channel_onaccept(form)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def twitter_channel_onvalidation(form):
         """
             Complete oauth: take tokens from session + pin from form,
@@ -1867,9 +1895,9 @@ class S3TwitterModel(S3Model):
         session = current.session
         settings = current.deployment_settings.msg
         s3 = session.s3
-        vars = form.vars
+        form_vars = form.vars
 
-        if vars.pin and s3.twitter_request_key and s3.twitter_request_secret:
+        if form_vars.pin and s3.twitter_request_key and s3.twitter_request_secret:
             try:
                 import tweepy
             except:
@@ -1880,18 +1908,19 @@ class S3TwitterModel(S3Model):
             oauth.set_request_token(s3.twitter_request_key,
                                     s3.twitter_request_secret)
             try:
-                oauth.get_access_token(vars.pin)
-                vars.oauth_key = oauth.access_token.key
-                vars.oauth_secret = oauth.access_token.secret
+                oauth.get_access_token(form_vars.pin)
+                form_vars.oauth_key = oauth.access_token.key
+                form_vars.oauth_secret = oauth.access_token.secret
                 twitter = tweepy.API(oauth)
-                vars.twitter_account = twitter.me().screen_name
-                vars.pin = "" # we won't need it anymore
+                form_vars.twitter_account = twitter.me().screen_name
+                form_vars.pin = "" # we won't need it anymore
                 return
             except tweepy.TweepError:
                 session.error = T("Settings were reset because authenticating with Twitter failed")
+
         # Either user asked to reset, or error - clear everything
         for k in ["oauth_key", "oauth_secret", "twitter_account"]:
-            vars[k] = None
+            form_vars[k] = None
         for k in ["twitter_request_key", "twitter_request_secret"]:
             s3[k] = ""
 

@@ -272,9 +272,8 @@ class S3ProjectModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_PROJECT = T("Create Project")
         crud_strings[tablename] = Storage(
-            label_create = ADD_PROJECT,
+            label_create = T("Create Project"),
             title_display = T("Project Details"),
             title_list = T("Projects"),
             title_update = T("Edit Project"),
@@ -397,7 +396,8 @@ class S3ProjectModel(S3Model):
                         ),
             sortby = "name",
             comment = S3AddResourceLink(c="project", f="project",
-                                        tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Create Project'.")),
+                                        tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Create Project'."),
+                                        ),
             )
 
         # Custom Methods

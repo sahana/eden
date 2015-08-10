@@ -24,7 +24,7 @@ class index(S3CustomController):
     def __call__(self):
         """ Main entry point, configuration """
 
-        # @ToDo: Have 2 Pages which reuse common info with just the different URL for cap_alert
+        logged_in = current.auth.s3_logged_in()
 
         T = current.T
         s3db = current.s3db
@@ -33,6 +33,7 @@ class index(S3CustomController):
         output = {}
 
         # Map
+        # @ToDo: Add appropriate FeatureResource depending on whether logged_in or not
         _map = current.gis.show_map(catalogue_layers=True,
                                     collapsed=True,
                                     save=False,
@@ -44,8 +45,9 @@ class index(S3CustomController):
         resource = s3db.resource("cap_alert")
         # Don't show Templates
         resource.add_filter(FS("is_template") == False)
-        # Only show Public Alerts
-        resource.add_filter(FS("scope") == "Public")
+        if not logged_in:
+            # Only show Public Alerts
+            resource.add_filter(FS("scope") == "Public")
         # Only show Alerts which haven't expired
         #resource.add_filter(FS("info.expires") >= request.utcnow)
         list_id = "cap_alert_datalist"
@@ -63,15 +65,18 @@ class index(S3CustomController):
                                                    orderby = orderby,
                                                    layout = s3db.cap_alert_list_layout
                                                    )
-        ajax_url = URL(c="cap", f="public", args="datalist.dl", vars={"list_id": list_id})
+        if logged_in:
+            fn = "alert"
+        else:
+            fn = "public"
+        ajax_url = URL(c="cap", f=fn, args="datalist.dl", vars={"list_id": list_id})
         output[list_id] = datalist.html(ajaxurl = ajax_url,
                                         pagesize = 5
                                         )
 
         # @ToDo: Options are currently built from the full-set rather than the filtered set
         filter_widgets = [S3LocationFilter("location.location_id",
-                                           label = "",
-                                           #label=T("Country"),
+                                           label=T("Location"),
                                            levels=("L0",),
                                            widget="multiselect",
                                            ),

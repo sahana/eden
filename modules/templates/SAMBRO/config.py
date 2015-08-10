@@ -29,20 +29,22 @@ def config(settings):
     # GeoNames username
     settings.gis.geonames_username = "eden_test"
 
-    # =============================================================================
+    # =========================================================================
     # System Settings
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Record Approval
     settings.auth.record_approval = True
     # cap_alert record requires approval before sending
     settings.auth.record_approval_required_for = ("cap_alert",)
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Messaging
     # Parser
     settings.msg.parser = "SAMBRO"
 
+    # -------------------------------------------------------------------------
     def customise_msg_rss_channel_resource(r, tablename):
+
         s3db = current.s3db
         def onaccept(form):
             # Normal onaccept
@@ -54,7 +56,8 @@ def config(settings):
                                                     limitby=(0, 1)).first().channel_id
             # Link to Parser
             table = s3db.msg_parser
-            _id = table.insert(channel_id=channel_id, function_name="parse_rss", enabled=True)
+            #_id = table.insert(channel_id=channel_id, function_name="parse_rss_2_cap", enabled=True)
+            _id = table.insert(channel_id=channel_id, function_name="parse_rss_2_cms", enabled=True)
             s3db.msg_parser_enable(_id)
 
             async = current.s3task.async
@@ -62,7 +65,8 @@ def config(settings):
             async("msg_poll", args=["msg_rss_channel", channel_id])
 
             # Parse
-            async("msg_parse", args=[channel_id, "parse_rss"])
+            #async("msg_parse", args=[channel_id, "parse_rss_2_cap"])
+            async("msg_parse", args=[channel_id, "parse_rss_2_cms"])
 
         s3db.configure(tablename,
                        create_onaccept = onaccept,
@@ -70,6 +74,37 @@ def config(settings):
 
     settings.customise_msg_rss_channel_resource = customise_msg_rss_channel_resource
 
+    # -------------------------------------------------------------------------
+    def customise_msg_twitter_channel_resource(r, tablename):
+
+        s3db = current.s3db
+        def onaccept(form):
+            # Normal onaccept
+            s3db.msg_channel_onaccept(form)
+            _id = form.vars.id
+            db = current.db
+            table = db.msg_twitter_channel
+            channel_id = db(table.id == _id).select(table.channel_id,
+                                                    limitby=(0, 1)).first().channel_id
+            # Link to Parser
+            table = s3db.msg_parser
+            _id = table.insert(channel_id=channel_id, function_name="parse_tweet", enabled=True)
+            s3db.msg_parser_enable(_id)
+
+            async = current.s3task.async
+            # Poll
+            async("msg_poll", args=["msg_twitter_channel", channel_id])
+
+            # Parse
+            async("msg_parse", args=[channel_id, "parse_tweet"])
+
+        s3db.configure(tablename,
+                       create_onaccept = onaccept,
+                       )
+
+    settings.customise_msg_twitter_channel_resource = customise_msg_twitter_channel_resource
+
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # @ToDo: Have the system automatically enable migrate if a module is enabled
     # Modules menu is defined in modules/eden/menu.py

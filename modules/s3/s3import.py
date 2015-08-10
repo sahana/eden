@@ -65,7 +65,7 @@ from gluon.storage import Storage, Messages
 from gluon.tools import callback, fetch
 
 from s3datetime import s3_utc
-from s3rest import S3Method
+from s3rest import S3Method, S3Request
 from s3resource import S3Resource
 from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
 from s3xml import S3XML
@@ -1193,8 +1193,6 @@ class S3Importer(S3Method):
             @param timestmp: the timestamp of the completion
         """
 
-        session = current.session
-
         messages = self.messages
         msg = "%s - %s - %s" % \
               (messages.commit_total_records_imported,
@@ -1203,14 +1201,14 @@ class S3Importer(S3Method):
         msg = msg % totals
 
         if timestmp != None:
-            session.flash = messages.job_completed % \
-                            (self.date_represent(timestmp), msg)
+            current.session.flash = messages.job_completed % \
+                                        (self.date_represent(timestmp), msg)
         elif totals[1] is not 0:
-            session.error = msg
+            current.session.error = msg
         elif totals[2] is not 0:
-            session.warning = msg
+            current.session.warning = msg
         else:
-            session.flash = msg
+            current.session.flash = msg
 
     # -------------------------------------------------------------------------
     def _dataTable(self,
@@ -3789,6 +3787,12 @@ class S3BulkImporter(object):
             else:
                 S.close()
 
+            # Customise the resource
+            customise = current.deployment_settings.customise_resource(tablename)
+            if customise:
+                request = S3Request(prefix, name, current.request)
+                customise(request, tablename)
+
             extra_data = None
             if task[5]:
                 try:
@@ -4292,7 +4296,15 @@ class S3BulkImporter(object):
         else:
             S.close()
 
-        resource = current.s3db.resource("%s_%s" % (prefix, resourcename))
+        tablename = "%s_%s" % (prefix, resourcename)
+        resource = current.s3db.resource(tablename)
+
+        # Customise the resource
+        customise = current.deployment_settings.customise_resource(tablename)
+        if customise:
+            request = S3Request(prefix, resourcename, current.request)
+            customise(request, tablename)
+
         auth = current.auth
         auth.rollback = True
         try:
@@ -4309,7 +4321,7 @@ class S3BulkImporter(object):
             # Must roll back if there was an error!
             error = resource.error
             self.errorList.append("%s - %s: %s" % (
-                                  filepath, resource.tablename, error))
+                                  filepath, tablename, error))
             errors = current.xml.collect_errors(resource)
             if errors:
                 self.errorList.extend(errors)

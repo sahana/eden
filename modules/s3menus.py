@@ -1917,9 +1917,8 @@ class S3OptionsMenu(object):
             ),
             M("Mobile Commons Channels", c="msg", f="mcommons_channel"),
             M("Twilio Channels", c="msg", f="twilio_channel"),
+            M("Twitter Channels", c="msg", f="twitter_channel"),
             M("Parsers", c="msg", f="parser"),
-            M("Twitter Settings", c="msg", f="twitter_channel",
-              args=[1], m="update")
         ]
 
     # -------------------------------------------------------------------------

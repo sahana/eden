@@ -4034,7 +4034,9 @@ def config(settings):
     def customise_vulnerability_data_resource(r, tablename):
 
         # Date is required: We don't store modelled data
-        r.table.date.requires = r.table.date.requires.other
+        requires = r.table.date.requires
+        if hasattr(requires, "other"):
+            r.table.date.requires = requires.other
 
     settings.customise_vulnerability_data_resource = customise_vulnerability_data_resource
 
