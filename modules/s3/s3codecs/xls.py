@@ -294,20 +294,21 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 fieldWidths.append(width)
                 sheet.col(writeCol).width = width
                 colCnt += 1
-        # Title row
-        # Adds a title row to the file if specified in the deployment settings
-        # Defaults to false
+
+        # Title row (optional, deployment setting)
         if settings.get_xls_title_row():
             for sheet in sheets:
+                # First row => Title (standard = "title_list" CRUD string)
                 currentRow = sheet.row(0)
                 if colCnt > 0:
                     sheet.write_merge(0, 0, 0, colCnt, str(title),
                                       styleLargeHeader)
                 currentRow.height = 500
+                # Second row => Export date/time
                 currentRow = sheet.row(1)
                 currentRow.write(0, str(current.T("Date Exported:")), styleNotes)
                 currentRow.write(1, request.now, styleNotes)
-                    # Fix the size of the last column to display the date
+                # Fix the size of the last column to display the date
                 if 16 * COL_WIDTH_MULTIPLIER > width:
                     sheet.col(colCnt).width = 16 * COL_WIDTH_MULTIPLIER
 

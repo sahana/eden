@@ -1499,6 +1499,7 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # PDF settings
+    #
     def get_paper_size(self):
         return self.base.get("paper_size", "A4")
 
@@ -1524,11 +1525,17 @@ class S3Config(Storage):
                 excluded_fields_dict.get(resourcename, [])
 
         return excluded_fields
+
     # -------------------------------------------------------------------------
-    # XLS Settings
+    # XLS Export Settings
     #
     def get_xls_title_row(self):
-        """Include a title row for XLS Exports"""
+        """
+            Include a title row in XLS Exports
+            - default=False to allow easy post-export column sorting
+            - uses the "title_list" CRUD string + export date/time
+            - standard title can be overridden in exporter call
+        """
         return self.base.get("xls_title_row", False)
 
     # -------------------------------------------------------------------------
