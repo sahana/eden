@@ -314,6 +314,18 @@ def config(settings):
     VNRC = "Viet Nam Red Cross"
 
     # -----------------------------------------------------------------------------
+    def airegex(default):
+        """ NS-specific settings for accent-insensitive searching """
+
+        root_org = current.auth.root_org_name()
+        if root_org == VNRC:
+            return True
+        else:
+            return False
+
+    settings.database.airegex = airegex
+
+    # -----------------------------------------------------------------------------
     # Finance settings
     #
     def currencies(default):

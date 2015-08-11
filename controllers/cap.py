@@ -104,6 +104,10 @@ def public():
 def alert():
     """ REST controller for CAP Alerts and Components """
 
+    # @ToDo: Simplified Page for Read mode
+    # - No side menu
+    # - No tabs
+
     if auth.permission.format == "dl":
         list_fields = ["info.headline",
                        "area.name",

@@ -845,6 +845,9 @@ class S3Config(Storage):
                             on a populated production database this could
                             take quite a long time (but is needed only once)!
 
+            @note: SQLite fails on Windows Python 2.7.10 with current PyDAL
+                   (PR coming for PyDAL)
+
             @note: AIRegex is much less scalable than normal LIKE or even
                    ILIKE, enable/disable on a case-by-case basis in case
                    of performance issues (which is also why this is a lazy

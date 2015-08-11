@@ -45,6 +45,17 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_msg_rss_channel_resource(r, tablename):
 
+        # @ToDo: We won't be able to automate this as we have 2 sorts, so will need the user to select manually
+        # Can we add a component for the parser for S3CSV imports?
+
+        # UX: separate menu items distinguished via get_var
+        # @ToDo: Add menu entries for "Create RSS Feed for CAP" & "Create RSS Feed for CMS"
+        type = current.request.get_vars.get("type", None)
+        if type == "cap":
+            fn = "parse_rss_2_cap"
+        else:
+            fn = "parse_rss_2_cms"
+
         s3db = current.s3db
         def onaccept(form):
             # Normal onaccept
@@ -56,8 +67,7 @@ def config(settings):
                                                     limitby=(0, 1)).first().channel_id
             # Link to Parser
             table = s3db.msg_parser
-            #_id = table.insert(channel_id=channel_id, function_name="parse_rss_2_cap", enabled=True)
-            _id = table.insert(channel_id=channel_id, function_name="parse_rss_2_cms", enabled=True)
+            _id = table.insert(channel_id=channel_id, function_name=fn, enabled=True)
             s3db.msg_parser_enable(_id)
 
             async = current.s3task.async
@@ -65,8 +75,7 @@ def config(settings):
             async("msg_poll", args=["msg_rss_channel", channel_id])
 
             # Parse
-            #async("msg_parse", args=[channel_id, "parse_rss_2_cap"])
-            async("msg_parse", args=[channel_id, "parse_rss_2_cms"])
+            async("msg_parse", args=[channel_id, fn])
 
         s3db.configure(tablename,
                        create_onaccept = onaccept,

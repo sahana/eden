@@ -3723,7 +3723,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         #ttable.insert(location_id = location_id,
                         #              tag = "area",
                         #              value = area)
-                    except db._adapter.driver.OperationalError, exception:
+                    except db._adapter.driver.OperationalError, e:
                         current.log.error(sys.exc_info[1])
 
             else:
