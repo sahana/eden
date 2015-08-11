@@ -25,6 +25,10 @@ class index(S3CustomController):
         """ Main entry point, configuration """
 
         logged_in = current.auth.s3_logged_in()
+        if logged_in:
+            fn = "alert"
+        else:
+            fn = "public"
 
         T = current.T
         s3db = current.s3db
@@ -33,9 +37,33 @@ class index(S3CustomController):
         output = {}
 
         # Map
-        # @ToDo: Add appropriate FeatureResource depending on whether logged_in or not
-        _map = current.gis.show_map(catalogue_layers=True,
+        ftable = s3db.gis_layer_feature
+        query = (ftable.controller == "cap") & \
+                (ftable.function == fn)
+        layer = current.db(query).select(ftable.layer_id,
+                                         limitby=(0, 1)
+                                         ).first()
+        try:
+            layer_id = layer.layer_id
+        except:
+            from s3 import s3_debug
+            s3_debug("Cannot find Layer for Map")
+            layer_id = None
+
+        feature_resources = [{"name"      : T("Alerts"),
+                              "id"        : "search_results",
+                              "layer_id"  : layer_id,
+                              "tablename" : "cap_alert",
+                              "url"       : URL(c="cap", f=fn,
+                                                extension="geojson"),
+                              # We activate in callback after ensuring URL is updated for current filter status
+                              "active"    : False,
+                              }]
+
+        _map = current.gis.show_map(callback='''S3.search.s3map()''',
+                                    catalogue_layers=True,
                                     collapsed=True,
+                                    feature_resources=feature_resources,
                                     save=False,
                                     )
         output["_map"] = _map
@@ -65,10 +93,6 @@ class index(S3CustomController):
                                                    orderby = orderby,
                                                    layout = s3db.cap_alert_list_layout
                                                    )
-        if logged_in:
-            fn = "alert"
-        else:
-            fn = "public"
         ajax_url = URL(c="cap", f=fn, args="datalist.dl", vars={"list_id": list_id})
         output[list_id] = datalist.html(ajaxurl = ajax_url,
                                         pagesize = 5

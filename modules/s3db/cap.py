@@ -623,15 +623,12 @@ class S3CAPModel(S3Model):
                                         ),
                            ),
                      Field("urgency",
-                           required = True,
                            requires = IS_IN_SET(cap_info_urgency_opts),
                            ),
                      Field("severity",
-                           required = True,
                            requires = IS_IN_SET(cap_info_severity_opts),
                            ),
                      Field("certainty",
-                           required = True,
                            requires = IS_IN_SET(cap_info_certainty_opts),
                            ),
                      Field("audience", "text"),
@@ -846,6 +843,7 @@ class S3CAPModel(S3Model):
                      Field("ceiling", "integer", # Feet above Sea-level in WGS84 (Maximum)
                            label = T("Ceiling"),
                            ), 
+                     # Only used for Templates
                      self.event_type_id(script = '''
                             $.filterOptionsS3({
                              'trigger':'event_type_id',
@@ -854,6 +852,7 @@ class S3CAPModel(S3Model):
                              'lookupResource':'event_type'                         
                              })'''
                      ),
+                     # Only used for Templates
                      Field("priority",
                            label = T("Priority"),
                            represent = priority_represent,
@@ -911,8 +910,8 @@ class S3CAPModel(S3Model):
 
         configure(tablename,
                   #create_next = URL(f="area", args=["[id]", "location"]),
-                  # Shouldn't be required if all UI actions go through alert controller & XSLT configured appropriately
-                  #create_onaccept = update_alert_id(tablename),
+                  # Old: Shouldn't be required if all UI actions go through alert controller & XSLT configured appropriately
+                  create_onaccept = update_alert_id(tablename),
                   crud_form = crud_form,
                   )
 
@@ -1350,7 +1349,7 @@ def cap_rheader(r):
                         rheader.insert(1, TR(submit_btn))
 
             elif tablename == "cap_area":
-                # Shouldn't ever be called
+                # Used only for Area Templates
                 tabs = [(T("Area"), None),
                         (T("Locations"), "location"),
                         #(T("Geocodes"), "tag"),
@@ -1359,7 +1358,7 @@ def cap_rheader(r):
                 rheader = DIV(TABLE(TR(TH("%s: " % T("Alert")),
                                        TD(A(s3db.cap_alert_represent(record.alert_id),
                                             _href=URL(c="cap", f="alert",
-                                                      args=[record.id, "update"])))
+                                                      args=[record.alert_id, "update"])))
                                        ),
                                     TR(TH("%s: " % T("Information")),
                                        TD(A(s3db.cap_info_represent(record.info_id),
@@ -1482,6 +1481,7 @@ def update_alert_id(tablename):
                 # Nothing we can do
                 return
         else:
+            # cap_area or cap_resource
             info_id = form_vars.get("info_id", None)
             if not info_id:
                 # Get the full record
@@ -1507,7 +1507,8 @@ def update_alert_id(tablename):
                 # Nothing we can do
                 return
 
-        db(table.id == _id).update(alert_id = alert_id)
+        if alert_id:
+            db(table.id == _id).update(alert_id = alert_id)
 
     return func
 
