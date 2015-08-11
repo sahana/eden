@@ -127,6 +127,7 @@ class S3Parser(object):
                 person_id = ptable.insert(first_name = first_name,
                                           middle_name = middle_name,
                                           last_name = last_name)
+                s3db.update_super(ptable, dict(id=person_id))
         else:
             person_id = None
 
@@ -287,6 +288,7 @@ class S3Parser(object):
                 person_id = ptable.insert(first_name = first_name,
                                           middle_name = middle_name,
                                           last_name = last_name)
+                s3db.update_super(ptable, dict(id=person_id))
         else:
             person_id = None
 
@@ -353,38 +355,13 @@ class S3Parser(object):
                                                     limitby=(0, 1)
                                                     ).first()
 
-        person_id = None
-        #author = record.author
-        #if author:
-        #    ptable = s3db.pr_person
-        #    # https://code.google.com/p/python-nameparser/
-        #    from nameparser import HumanName
-        #    name = HumanName(author)
-        #    first_name = name.first
-        #    middle_name = name.middle
-        #    last_name = name.last
-        #    query = (ptable.first_name == first_name) & \
-        #            (ptable.middle_name == middle_name) & \
-        #            (ptable.last_name == last_name)
-        #    pexists = db(query).select(ptable.id,
-        #                               limitby=(0, 1)
-        #                               ).first()
-        #    if pexists:
-        #        person_id = pexists.id
-        #    else:
-        #        person_id = ptable.insert(first_name = first_name,
-        #                                  middle_name = middle_name,
-        #                                  last_name = last_name)
-        #else:
-        #    person_id = None
-
         if exists:
             post_id = exists.id
             db(post_table.id == post_id).update(#title = record.title,
                                                 body = body,
                                                 created_on = record.date,
                                                 #location_id = record.location_id,
-                                                person_id = person_id,
+                                                #person_id = person_id,
                                                 )
 
         else:
@@ -403,7 +380,7 @@ class S3Parser(object):
                                         body = body,
                                         created_on = record.date,
                                         #location_id = record.location_id,
-                                        person_id = person_id,
+                                        #person_id = person_id,
                                         series_id = series_id,
                                         mci = 1, # This is an imported record, not added natively
                                         )
