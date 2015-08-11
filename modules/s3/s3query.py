@@ -2317,6 +2317,8 @@ class S3AIRegex(object):
         output = []
         append = output.append
 
+        sqlite = current.deployment_settings.get_database_type() == "sqlite"
+
         GROUPS = cls.GROUPS
         ESCAPE = cls.ESCAPE
         for character in s3_unicode(string).lower():
@@ -2328,7 +2330,12 @@ class S3AIRegex(object):
                 for group in GROUPS:
                     if character in group:
                         match = True
-                        result = "[%s]{1}" % group
+                        if sqlite:
+                            # SQLite doesn't properly lower() unicode,
+                            # so adding the uppercase alternatives here
+                            result = "[%s%s]{1}" % (group, group.upper())
+                        else:
+                            result = "[%s]{1}" % group
                         break
             append(result)
         return "".join(output) if match else None
