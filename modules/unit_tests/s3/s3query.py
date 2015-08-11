@@ -2507,6 +2507,8 @@ class AIRegexTests(unittest.TestCase):
             {"uuid": "TEST7", "name": "Fälød"},
             {"uuid": "TEST8", "name": "Kîlur"},
             {"uuid": "TEST9", "name": "Nulừk"},
+            {"uuid": "TEST10", "name": "Đắk Lặk"},
+            {"uuid": "TEST11", "name": None}
         )
         table = db.airegex_test
         for data in samples:
@@ -2553,6 +2555,7 @@ class AIRegexTests(unittest.TestCase):
             ("Mãn%", ("TEST2",)),
             ("%îlu%", ("TEST8",)),
             ("%ïlu%", ("TEST8",)),
+            (u"%Đắk%", ("TEST10",)),
             ("", ()),
             (1, ()),
         )
