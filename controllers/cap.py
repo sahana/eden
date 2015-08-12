@@ -104,7 +104,7 @@ def public():
 def alert():
     """ REST controller for CAP Alerts and Components """
 
-    # @ToDo: Simplified Page for Read mode (Use profile page?)
+    # @ToDo: Simplified Page for Read mode (Use profile page with a header & no components?)
     # - No side menu
     # - No tabs
     # - Map

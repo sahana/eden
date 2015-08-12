@@ -1336,6 +1336,7 @@ class GIS(object):
                     mtable.on(mtable.id == stable.marker_id),
                     )
             row = db(query).select(*fields,
+                                   left=left,
                                    limitby=(0, 1)).first()
             if not row:
                 # No configs found at all
@@ -4631,7 +4632,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             """
 
             query = (table.parent == parent) & \
-                    (table.inherited == True)
+                    (table.inherited == True) & \
+                    (table.deleted == False)
             rows = db(query).select(*fields)
             for row in rows:
                 try:
