@@ -70,6 +70,7 @@ class S3CAPModel(S3Model):
              "cap_area_location",
              "cap_area_tag",
              "cap_info_category_opts",
+             "cap_template_represent",
              )
 
     def model(self):
@@ -1021,7 +1022,8 @@ class S3CAPModel(S3Model):
                     cap_alert_represent = alert_represent,
                     cap_area_represent = area_represent,
                     cap_info_represent = info_represent,
-                    cap_info_category_opts = cap_info_category_opts
+                    cap_info_category_opts = cap_info_category_opts,
+                    cap_template_represent = self.cap_template_represent,
                     )
 
     # -------------------------------------------------------------------------
@@ -1806,8 +1808,7 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
     sender = record["cap_info.sender_name"]
 
     headline = A(headline,
-                 # @ToDo: Link to nicely-formatted version of Display page
-                 _href = URL(c="cap", f="alert", args=record_id),
+                 _href = URL(c="cap", f="alert", args=[record_id, "profile"]),
                  )
     headline = DIV(headline,
                    current.T("in %(location)s") % dict(location=location)

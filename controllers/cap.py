@@ -104,10 +104,7 @@ def public():
 def alert():
     """ REST controller for CAP Alerts and Components """
 
-    # @ToDo: Simplified Page for Read mode (Use profile page with a header & no components?)
-    # - No side menu
-    # - No tabs
-    # - Map
+    tablename = "cap_alert"
 
     if auth.permission.format == "dl":
         list_fields = ["info.headline",
@@ -115,7 +112,8 @@ def alert():
                        "info.description",
                        "info.sender_name",
                        ]
-        s3db.configure("cap_alert",
+
+        s3db.configure(tablename,
                        list_fields = list_fields,
                        )
 
@@ -133,12 +131,113 @@ def alert():
             alert_fields_comments()
 
             if not r.component:
-                if r.method != "import":
+                if r.method == "profile":
+                    # Provide a nice display of the Alert details
+
+                    # Hide the side menu
+                    current.menu.options = None
+
+                    # Read the Components
+                    record = r.record
+                    alert_id = record.id
+
+                    # Info
+                    # @ToDo: handle multiple languages
+                    itable = s3db.cap_info
+                    info = db(itable.alert_id == alert_id).select(itable.headline,
+                                                                  itable.description,
+                                                                  itable.instruction,
+                                                                  limitby=(0, 1)
+                                                                  ).first()
+
+                    if info.instruction:
+                        instruction = TAG[""](H3(T("Instructions")),
+                                              P(info.instruction),
+                                              )
+                    else:
+                        instruction = None
+
+                    # Area
+                    # @ToDo: handle multiple areas
+                    atable = s3db.cap_area
+                    area = db(atable.alert_id == alert_id).select(limitby=(0, 1)).first()
+                    location = TAG[""](H3(T("Location")),
+                                       P(area.name),
+                                       )
+
+                    profile_header = DIV(H2(info.headline),
+                                         P(info.description),
+                                         location,
+                                         instruction,
+                                         _class="profile-header",
+                                         )
+
+                    # Map
+                    ftable = s3db.gis_layer_feature
+                    if auth.s3_logged_in():
+                        fn = "alert"
+                    else:
+                        fn = "public"
+                    query = (ftable.controller == "cap") & \
+                            (ftable.function == fn)
+                    layer = db(query).select(ftable.layer_id,
+                                             limitby=(0, 1)
+                                             ).first()
+                    try:
+                        layer = dict(active = True,
+                                     layer_id = layer.layer_id,
+                                     filter = "~.id=%s" % alert_id,
+                                     name = record.identifier,
+                                     id = "profile-header-%s-%s" % (tablename, alert_id),
+                                     )
+                    except:
+                        # No suitable prepop found
+                        layer = None
+
+                    # Location
+                    # @ToDo: Support multiple Locations
+                    gtable = db.gis_location
+                    ltable = db.cap_area_location
+                    query = (ltable.alert_id == alert_id) & \
+                            (ltable.location_id == gtable.id)
+                    location = db(query).select(gtable.lat_max,
+                                                gtable.lon_max,
+                                                gtable.lat_min,
+                                                gtable.lon_min,
+                                                limitby=(0, 1)).first()
+                    if location:
+                        bbox = {"lat_max" : location.lat_max,
+                                "lon_max" : location.lon_max,
+                                "lat_min" : location.lat_min,
+                                "lon_min" : location.lon_min
+                                }
+                    else:
+                        # Default bounds
+                        bbox = {}
+
+                    map_widget = dict(label = "Map",
+                                      type = "map",
+                                      context = "alert",
+                                      icon = "icon-map",
+                                      #height = 383,
+                                      #width = 568,
+                                      bbox = bbox,
+                                      )
+
+                    s3db.configure(tablename,
+                                   profile_header = profile_header,
+                                   profile_layers = (layer,),
+                                   profile_widgets = (map_widget,
+                                                      ),
+                                   )
+                  
+                elif r.method != "import":
                     s3.crud.submit_style = "hide"
                     s3.crud.custom_submit = (("edit_info",
                                               T("Save and edit information"),
                                               "",
                                               ),)
+
             elif r.component_name == "area":
                 # Limit to those for this Alert
                 r.component.table.info_id.requires = IS_EMPTY_OR(
@@ -249,7 +348,7 @@ def alert():
 
             if isinstance(output, dict) and "form" in output:
                 if not r.component and \
-                   r.method not in ("import", "import_feed"):
+                   r.method not in ("import", "import_feed", "profile"):
                     fields = s3db.cap_info_labels()
                     jsobj = []
                     for f in fields:

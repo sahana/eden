@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2"><identifier>730b1b5f-b194-48e5-8eee-fa6726bedf9d</identifier><sender>PAGASA-DOST</sender><sent>2015-08-08T03:02:59+00:00</sent><status>Actual</status><msgType>Update</msgType><scope>Public</scope><references>PAGASA-DOST,34c696a6-5e45-4da1-8131-01d862de4b33,2015-08-07T22:04:05+00:00</references><info><category>Met</category><event>Tropical Cyclone Warning</event><responseType>Prepare</responseType><urgency>Expected</urgency><severity>Moderate</severity><certainty>Likely</certainty><expires>2015-08-08T23:01:23+08:00</expires><senderName>PAGASA-DOST</senderName><headline>Tropical Cyclone Warning : Typhoon HANNA (SOUDELOR) Signal #2</headline><description>A tropical cyclone will affect the the locality.&#xD;
+Winds of greater than 60 kph and up to 100 kph may be expected in at least 24 hours.
+
+At 10:00 AM today, the eye of Typhoon &#x201C;HANNA&#x201D; was located based on all available data at 405 km North Northwest of Itbayat, Batanes (24.1&#xB0;N, 120.2&#xB0;E).&#xD;
+&#xD;
+Maximum sustained winds of 150 kph near the center and gustiness of up to 185 kph&#xD;
+&#xD;
+Forecast to move Northwest at 20 kph&#xD;
+&#xD;
+&#x2022;24 hour (Tomorrow morning): Outside PAR or at 810 km Northwest of Itbayat, Batanes&#xD;
+&#x2022;48 hour (Monday morning): 1160 km North Northwest of Itbayat, Batanes (Outside PAR)</description><instruction>Write instruction here.Wave Height (Open Sea): 4.1-14.0m Storm surge possible at coastal areas&#xD;
+&#x2022;Light to Moderate damage to high risk structures; &#xD;
+&#x2022;Very light to light damage to medium-risk structures;  &#xD;
+&#x2022;No damage to very light damage to low risk structures&#xD;
+&#x2022;Unshielded, old dilapidated schoolhouses, makeshift shanties, and other structures of light materials are partially damaged or unroofed. &#xD;
+&#x2022;A number of nipa and cogon houses may be partially or totally unroofed.&#xD;
+&#x2022;Some old galvanized iron (G.I.) roofs may be peeled or blown off.&#xD;
+&#x2022;Some wooden, old electric posts are tilted or downed.&#xD;
+&#x2022;Some damage to poorly constructed signs/billboards&#xD;
+&#x2022;In general, the winds may bring light to moderate damage to the exposed communities. Most banana plants, a few mango trees, ipil-ipil and similar types of trees are downed or broken &#xD;
+&#x2022;Some coconut trees may be tilted with few others broken</instruction><web>http://kidlat.pagasa.dost.gov.ph/index.php/tropical-cyclones/weather-bulletin</web><contact>PAGASA DOST</contact><parameter><valueName>layer:Google:Region:0.1</valueName><value>Northern Luzon</value></parameter><parameter><valueName>Public Storm Warning Signal Level</valueName><value>2</value></parameter><area><areaDesc>Batanes</areaDesc><geocode><valueName>SAME</valueName><value>020900000</value></geocode></area></info><Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><DigestValue>OgY7b4fqzd6pC2NCAG75YkhmgJM=</DigestValue></Reference></SignedInfo><SignatureValue>da4zHzwIlYKBK0tR7ZFjAt5AaRpALo3YITcnDU1EbVZdhhtskkKKAVj/SVTY9kpK
+Csz/mimYnOVtwBzMvoHIdfOEnJ33wLyhntyV7CUsePlAzbU84iHeK8ZGx5iUE7fv
+a2RpwPdGXEDkcITA+SZzYEvd98gjME3mjHykIs+lzYG+4FEQN3e+8acIOjyqA9zr
+MVQ4ILUvhGTVyw7xxiwkTtzvIWiXXIbwTYUxvpLu9MHaVyUh+mPcbYPLEKH0J0s4
+6mD/J5Ak3yybNHqjtCoc53adP5tjXZORprHjerf6yoAho0AvZDBsybsgjMuZT8+U
+GGDro+tJpYB9UFXvYdXx8w==</SignatureValue><KeyInfo><KeyValue>
+<RSAKeyValue>
+<Modulus>
+yVfF/fKxLtHIbctP7JfrM6OHY3L956UkjaRSRw2cng6M7dumT0DVmefl19dzc2YY
+CqvEefXC1ebZsNai7DCVG5CzUm8gaOnrzvzIhJPCOcI8FYrkG+Wb3Ni23gfoldA/
+DwD/rR2dBtLT6xSJEmqMcb+z5ofAEvv8kg/nD0JSXgE3r4V3BF0C3Bk11PkZdtag
+hVRtLSSsbygP26TdHL9VmmXlB6p0/MY55Qk2XAlUUP81ufycX1y58oTVAJPP3uDa
+LwFm5ae8NeBp2MiF5kF0u7foxy+uh7RH0H8TbvF7IQCdMK3EN7SFSm89tAi7E/Ao
+KTuICl584Dd97ZDFeVVBqw==
+</Modulus>
+<Exponent>
+AQAB
+</Exponent>
+</RSAKeyValue>
+</KeyValue></KeyInfo></Signature></alert>
