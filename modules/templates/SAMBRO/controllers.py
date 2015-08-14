@@ -99,11 +99,11 @@ class index(S3CustomController):
                                         )
 
         # @ToDo: Options are currently built from the full-set rather than the filtered set
-        filter_widgets = [S3LocationFilter("location.location_id",
-                                           label=T("Location"),
-                                           levels=("L0",),
-                                           widget="multiselect",
-                                           ),
+        filter_widgets = [#S3LocationFilter("location.location_id",
+                          #                 label=T("Location"),
+                          #                 levels=("L0",),
+                          #                 widget="multiselect",
+                          #                 ),
                           S3OptionsFilter("info.event_type_id",
                                           label=T("Alert Type"),
                                           ),
@@ -148,20 +148,20 @@ class index(S3CustomController):
                                         pagesize = 5
                                         )
 
-        filter_widgets = [S3LocationFilter("location_id",
-                                           label="",
-                                           levels=("L0",),
-                                           widget="multiselect",
-                                           ),
-                          # @ToDo: Source (Series? Tag?)
-                          #S3OptionsFilter(),
-                          ]
-        filter_form = S3FilterForm(filter_widgets,
-                                   ajax=True,
-                                   submit=True,
-                                   url=ajax_url,
-                                   )
-        output["news_filter_form"] = filter_form.html(resource, request.get_vars, list_id)
+        #filter_widgets = [#S3LocationFilter("location_id",
+        #                  #                 label="",
+        #                  #                 levels=("L0",),
+        #                  #                 widget="multiselect",
+        #                  #                 ),
+        #                  # @ToDo: Source (Series? Tag?)
+        #                  #S3OptionsFilter(),
+        #                  ]
+        #filter_form = S3FilterForm(filter_widgets,
+        #                           ajax=True,
+        #                           submit=True,
+        #                           url=ajax_url,
+        #                           )
+        #output["news_filter_form"] = filter_form.html(resource, request.get_vars, list_id)
 
         # Title and view
         output["title"] = current.deployment_settings.get_system_name()
