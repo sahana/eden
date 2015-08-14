@@ -1868,6 +1868,7 @@ class S3GroupModel(S3Model):
                      # Instances
                      super_link("doc_id", "doc_entity"),
                      super_link("pe_id", "pr_pentity"),
+                     super_link("track_id", "sit_trackable"),
                      Field("group_type", "integer",
                            default = 4,
                            label = T("Group Type"),
@@ -1898,6 +1899,10 @@ class S3GroupModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
+                     # Base location
+                     self.gis_location_id(readable=False,
+                                          writable=False,
+                                          ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -1932,7 +1937,10 @@ class S3GroupModel(S3Model):
                   deduplicate = self.group_deduplicate,
                   extra = "description",
                   main = "name",
-                  super_entity = ("doc_entity", "pr_pentity"),
+                  super_entity = ("doc_entity",
+                                  "pr_pentity",
+                                  "sit_trackable",
+                                  ),
                   )
 
         # Reusable field
