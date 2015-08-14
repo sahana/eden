@@ -134,6 +134,7 @@ class SyncDataModel(S3Model):
             "ccrm": "CiviCRM",
             "wrike": "Wrike",
             "mcb": "Mariner CommandBridge",
+            "adashi": "ADASHI (passive)"
         }
         password_widget = S3PasswordWidget()
         tablename = "sync_repository"

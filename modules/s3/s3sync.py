@@ -28,29 +28,12 @@
 """
 
 import sys
-import urllib, urllib2
 import datetime
-import time
-import traceback
 
 try:
     from cStringIO import StringIO # Faster, where available
 except:
     from StringIO import StringIO
-
-try:
-    from lxml import etree
-except ImportError:
-    print >> sys.stderr, "ERROR: lxml module needed for XML handling"
-    raise
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
 from gluon.storage import Storage
@@ -59,7 +42,6 @@ from s3datetime import s3_parse_datetime, s3_utc
 from s3rest import S3Method
 from s3import import S3ImportItem
 from s3query import S3URLQuery
-from s3utils import s3_unicode
 
 DEBUG = False
 if DEBUG:
@@ -74,12 +56,13 @@ else:
 class S3Sync(S3Method):
     """ Synchronization Handler """
 
-    # -------------------------------------------------------------------------
     def __init__(self):
         """ Constructor """
 
         S3Method.__init__(self)
+
         self.log = S3SyncLog()
+        self._config = None
 
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
@@ -120,119 +103,7 @@ class S3Sync(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    def get_status(self):
-        """ Read the current sync status """
-
-        table = current.s3db.sync_status
-        row = current.db().select(table.ALL, limitby=(0, 1)).first()
-        if not row:
-            row = Storage()
-        return row
-
-    # -------------------------------------------------------------------------
-    def set_status(self, **attr):
-        """ Update the current sync status """
-
-        table = current.s3db.sync_status
-
-        data = Storage([(k, attr[k]) for k in attr if k in table.fields])
-        data.update(timestmp = datetime.datetime.utcnow())
-        row = current.db().select(table._id, limitby=(0, 1)).first()
-        if row:
-            row.update_record(**data)
-        else:
-            table.insert(**data)
-            row = data
-        return row
-
-    # -------------------------------------------------------------------------
-    def __get_config(self):
-        """ Read the sync settings, avoid repeated DB lookups """
-
-        if not hasattr(self, "config"):
-
-            table = current.s3db.sync_config
-            row = current.db().select(table.ALL, limitby=(0, 1)).first()
-            self.config = row
-
-        return self.config
-
-    # -------------------------------------------------------------------------
-    def synchronize(self, repository):
-        """
-            Synchronize with a repository
-
-            @param repository: the repository Row
-
-            @return: True if successful, False if there was an error
-        """
-
-        _debug("S3Sync.synchronize(%s)" % repository.url)
-
-        log = self.log
-
-        if not repository.url:
-            message = "No URL set for repository"
-            log.write(repository_id=repository.id,
-                      resource_name=None,
-                      transmission=None,
-                      mode=None,
-                      action="connect",
-                      remote=False,
-                      result=self.log.FATAL,
-                      message=message)
-            return False
-
-        ttable = current.s3db.sync_task
-        query = (ttable.repository_id == repository.id) & \
-                (ttable.deleted != True)
-        tasks = current.db(query).select()
-
-        connector = S3SyncRepository(repository)
-        error = connector.login()
-        if error:
-            log.write(repository_id=repository.id,
-                      resource_name=None,
-                      transmission=log.OUT,
-                      mode=None,
-                      action="login",
-                      remote=True,
-                      result=log.FATAL,
-                      message=error)
-            return False
-
-        success = True
-        for task in tasks:
-
-            # Pull
-            mtime = None
-            if task.mode in (1, 3):
-                error, mtime = connector.pull(task,
-                                              onconflict=self.onconflict)
-            if error:
-                success = False
-                _debug("S3Sync.synchronize: %s PULL error: %s" %
-                                    (task.resource_name, error))
-                continue
-            if mtime is not None:
-                task.update_record(last_pull=mtime)
-
-            # Push
-            mtime = None
-            if task.mode in (2, 3):
-                error, mtime = connector.push(task)
-            if error:
-                success = False
-                _debug("S3Sync.synchronize: %s PUSH error: %s" %
-                                    (task.resource_name, error))
-                continue
-            if mtime is not None:
-                task.update_record(last_push=mtime)
-
-            _debug("S3Sync.synchronize: %s done" % task.resource_name)
-
-        return success
-
+    # REST Methods:
     # -------------------------------------------------------------------------
     def __register(self, r, **attr):
         """
@@ -246,8 +117,6 @@ class S3Sync(S3Method):
         result = log.SUCCESS
         message = "registration successful"
         repository_id = None
-
-        config = self.__get_config()
 
         if "repository" in r.vars:
             ruid = r.vars["repository"]
@@ -275,11 +144,11 @@ class S3Sync(S3Method):
 
         if result == log.SUCCESS:
             output = current.xml.json_message(message=message,
-                                              sender="%s" % config.uuid)
+                                              sender="%s" % self.config.uuid)
         else:
             output = current.xml.json_message(False, 400,
                                               message=message,
-                                              sender="%s" % config.uuid)
+                                              sender="%s" % self.config.uuid)
 
         # Set content type header
         headers = current.response.headers
@@ -289,8 +158,7 @@ class S3Sync(S3Method):
         log.write(repository_id=repository_id,
                   resource_name=log.NONE,
                   transmission=log.IN,
-                  mode=log.PUSH,
-                  action="register repository",
+                  mode=log.REGISTER,
                   result=result,
                   message=message)
 
@@ -305,53 +173,53 @@ class S3Sync(S3Method):
             @param attr: the controller attributes
         """
 
-        _debug("S3Sync.__send")
+        mixed =  attr.get("mixed", False)
+        get_vars = r.get_vars
 
         resource = r.resource
 
         # Identify the requesting repository
-        repository_id = None
-        if "repository" in r.vars:
+        repository_uuid = get_vars.get("repository")
+        connector = None
 
-            db = current.db
-            s3db = current.s3db
+        if repository_uuid:
 
-            ruid = r.vars["repository"]
-            rtable = s3db.sync_repository
-            ttable = s3db.sync_task
-
-            left = ttable.on((rtable.id == ttable.repository_id) & \
-                             (ttable.resource_name == resource.tablename))
-
-            row = db(rtable.uuid == ruid).select(rtable.id,
-                                                 ttable.id,
-                                                 left=left,
-                                                 limitby=(0, 1)).first()
+            rtable = current.s3db.sync_repository
+            query = rtable.uuid == repository_uuid
+            row = current.db(query).select(limitby=(0, 1)).first()
             if row:
-                repository_id = row[rtable.id]
-                task_id = row[ttable.id]
+                connector = S3SyncRepository(row)
+
+        if connector is None:
+            # Use a dummy repository with Eden API
+            connector = S3SyncRepository(Storage(id = None,
+                                                 name = "unknown",
+                                                 apitype = "eden",
+                                                 ))
+
+        current.log.debug("S3Sync PULL from %s (%s)" % (connector.name,
+                                                        connector.apitype))
 
         # Additional export parameters
-        _vars = r.get_vars
-        start = _vars.get("start", None)
+        start = get_vars.get("start", None)
         if start is not None:
             try:
                 start = int(start)
             except ValueError:
                 start = None
-        limit = _vars.get("limit", None)
+        limit = get_vars.get("limit", None)
         if limit is not None:
             try:
                 limit = int(limit)
             except ValueError:
                 limit = None
-        msince = _vars.get("msince", None)
+        msince = get_vars.get("msince", None)
         if msince is not None:
             msince = s3_parse_datetime(msince)
 
         # Sync filters from peer
         filters = {}
-        for k, v in _vars.items():
+        for k, v in get_vars.items():
             if k[0] == "[" and "]" in k:
                 tablename, urlvar = k[1:].split("]", 1)
                 if urlvar:
@@ -368,27 +236,29 @@ class S3Sync(S3Method):
         if not filters:
             filters = None
 
-        # Export the resource
-        output = resource.export_xml(start=start,
-                                     limit=limit,
-                                     filters=filters,
-                                     msince=msince)
-        count = resource.results
+        try:
+            result = connector.send(resource,
+                                    start = start,
+                                    limit = limit,
+                                    msince = msince,
+                                    filters = filters,
+                                    mixed = mixed,
+                                    )
+        except NotImplementedError:
+            r.error(405, "Synchronization method not supported for repository")
 
-        # Set content type header
-        headers = current.response.headers
-        headers["Content-Type"] = "text/xml"
-
-        # Log the operation
         log = self.log
-        log.write(repository_id=repository_id,
-                  resource_name=r.resource.tablename,
-                  transmission=log.IN,
-                  mode=log.PULL,
-                  result=log.SUCCESS,
-                  message="data sent to peer (%s records)" % count)
+        log.write(repository_id = connector.id,
+                  resource_name = "mixed" if mixed else resource.tablename,
+                  transmission = log.IN,
+                  mode = log.PULL,
+                  action = "send",
+                  remote = result.get("remote", False),
+                  result = result.get("status", log.NONE),
+                  message = result.get("message", ""),
+                  )
 
-        return output
+        return result.get("response")
 
     # -------------------------------------------------------------------------
     def __receive(self, r, **attr):
@@ -399,32 +269,45 @@ class S3Sync(S3Method):
             @param attr: the controller attributes
         """
 
-        _debug("S3Sync.__receive")
+        mixed = attr.get("mixed", False)
+        get_vars = r.get_vars
 
         s3db = current.s3db
         db = current.db
 
         # Identify the sending repository
-        repository = Storage(id=None)
-        if "repository" in r.vars:
-            ruid = r.vars["repository"]
+        repository_uuid = get_vars.get("repository")
+        connector = None
+
+        if repository_uuid:
+
             rtable = s3db.sync_repository
-            row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
+            query = rtable.uuid == repository_uuid
+            row = current.db(query).select(limitby=(0, 1)).first()
             if row:
-                repository = row
-        if not repository.id or \
-           not repository.accept_push:
+                connector = S3SyncRepository(row)
+
+        # Check that the repository is registered and allowed to push
+        if connector is None or not connector.accept_push:
             r.error(403, current.ERROR.NOT_PERMITTED)
+
+        current.log.debug("S3Sync PUSH from %s (%s)" % (connector.name,
+                                                        connector.apitype))
 
         # Get strategy and policy
         default_update_policy = S3ImportItem.POLICY.NEWER
         default_conflict_policy = S3ImportItem.POLICY.MASTER
 
+        # Identify the synchronization task
         ttable = s3db.sync_task
-        query = (ttable.repository_id == repository.id) & \
-                (ttable.resource_name == r.tablename) & \
-                (ttable.deleted != True)
-        task = db(query).select(limitby=(0, 1)).first()
+        if not mixed:
+            query = (ttable.repository_id == connector.id) & \
+                    (ttable.resource_name == r.tablename) & \
+                    (ttable.deleted != True)
+            task = db(query).select(limitby=(0, 1)).first()
+        else:
+            task = None
+
         last_sync = None
         if task:
             strategy = task.strategy
@@ -432,9 +315,10 @@ class S3Sync(S3Method):
             conflict_policy = task.conflict_policy or default_conflict_policy
             if update_policy not in ("THIS", "OTHER"):
                 last_sync = task.last_pull
+
         else:
             policies = S3ImportItem.POLICY
-            p = r.get_vars.get("update_policy", None)
+            p = get_vars.get("update_policy", None)
             values = {"THIS": "OTHER", "OTHER": "THIS"}
             switch = lambda p: p in values and values[p] or p
             if p and p in policies:
@@ -442,16 +326,16 @@ class S3Sync(S3Method):
                 update_policy = policies[p]
             else:
                 update_policy = default_update_policy
-            p = r.get_vars.get("conflict_policy", None)
+            p = get_vars.get("conflict_policy", None)
             if p and p in policies:
                 p = switch(p)
                 conflict_policy = policies[p]
             else:
                 conflict_policy = default_conflict_policy
-            msince = r.get_vars.get("msince", None)
+            msince = get_vars.get("msince", None)
             if msince is not None:
                 last_sync = s3_parse_datetime(msince)
-            s = r.get_vars.get("strategy", None)
+            s = get_vars.get("strategy", None)
             if s:
                 s = str(s).split(",")
                 methods = S3ImportItem.METHOD
@@ -460,74 +344,126 @@ class S3Sync(S3Method):
             else:
                 strategy = ttable.strategy.default
 
-        # Other parameters
-        ignore_errors = True
-
         # Get the source
         source = r.read_body()
 
         # Import resource
         resource = r.resource
-        onconflict = lambda item: self.onconflict(item, repository, resource)
+
         try:
-            output = resource.import_xml(source, format="xml",
-                                         ignore_errors=ignore_errors,
-                                         strategy=strategy,
-                                         update_policy=update_policy,
-                                         conflict_policy=conflict_policy,
-                                         last_sync=last_sync,
-                                         onconflict=onconflict)
+            result = connector.receive(source,
+                                       resource,
+                                       strategy = strategy,
+                                       update_policy = update_policy,
+                                       conflict_policy = conflict_policy,
+                                       last_sync = last_sync,
+                                       onconflict = self.onconflict,
+                                       mixed = mixed,
+                                       )
         except IOError:
             current.auth.permission.fail()
         except SyntaxError:
             e = sys.exc_info()[1]
             r.error(400, e)
+        except NotImplementedError:
+            r.error(405, "Synchronization method not supported for repository")
+
+        log = self.log
+        log.write(repository_id = connector.id,
+                  resource_name = "mixed" if mixed else resource.tablename,
+                  transmission = log.IN,
+                  mode = log.PUSH,
+                  action = "receive",
+                  remote = result.get("remote", False),
+                  result = result.get("status", log.NONE),
+                  message = result.get("message", ""),
+                  )
+
+        return result.get("response")
+
+    # -------------------------------------------------------------------------
+    # API Methods:
+    # -------------------------------------------------------------------------
+    def synchronize(self, repository):
+        """
+            Synchronize with a repository, called from scheduler task
+
+            @param repository: the repository Row
+
+            @return: True if successful, False if there was an error
+        """
+
+        current.log.debug("S3Sync: synchronize %s" % repository.url)
 
         log = self.log
 
-        if resource.error_tree is not None:
-            # Validation error (log in any case)
-            if ignore_errors:
-                result = log.WARNING
-            else:
-                result = log.FATAL
-            message = "%s" % resource.error
-            for element in resource.error_tree.findall("resource"):
-                error_msg = element.get("error", "unknown error")
+        if not repository.url:
+            log.write(repository_id = repository.id,
+                      resource_name = None,
+                      transmission = None,
+                      mode = log.NONE,
+                      action = "connect",
+                      remote = False,
+                      result = self.log.FATAL,
+                      message = "No URL set for repository",
+                      )
+            return False
 
-                error_fields = element.findall("data[@error]")
-                if error_fields:
-                    for field in error_fields:
-                        error_msg = field.get("error", "unknown error")
-                        if error_msg:
-                            msg = "(UID: %s) %s.%s=%s: %s" % \
-                                    (element.get("uuid", None),
-                                     element.get("name", None),
-                                     field.get("field", None),
-                                     field.get("value", field.text),
-                                     error_msg)
-                            message = "%s, %s" % (message, msg)
-                else:
-                    msg = "(UID: %s) %s: %s" % \
-                          (element.get("uuid", None),
-                           element.get("name", None),
-                           error_msg)
-                    message = "%s, %s" % (message, msg)
-        else:
-            result = log.SUCCESS
-            message = "data received from peer"
+        ttable = current.s3db.sync_task
+        query = (ttable.repository_id == repository.id) & \
+                (ttable.deleted != True)
+        tasks = current.db(query).select()
 
-        log.write(repository_id=repository.id,
-                  resource_name=resource.tablename,
-                  transmission=log.IN,
-                  mode=log.PUSH,
-                  result=result,
-                  message=message)
+        connector = S3SyncRepository(repository)
+        error = connector.login()
+        if error:
+            log.write(repository_id = repository.id,
+                      resource_name = None,
+                      transmission = log.OUT,
+                      mode = log.LOGIN,
+                      action = "login",
+                      remote = True,
+                      result = log.FATAL,
+                      message = error,
+                      )
+            return False
 
-        return output
+        success = True
+        for task in tasks:
+
+            # Pull
+            mtime = None
+            if task.mode in (1, 3):
+                error, mtime = connector.pull(task,
+                                              onconflict=self.onconflict,
+                                              )
+            if error:
+                success = False
+                current.log.debug("S3Sync: %s PULL error: %s" %
+                                  (task.resource_name, error))
+                continue
+            if mtime is not None:
+                task.update_record(last_pull=mtime)
+
+            # Push
+            mtime = None
+            if task.mode in (2, 3):
+                error, mtime = connector.push(task)
+            if error:
+                success = False
+                current.log.debug("S3Sync: %s PUSH error: %s" %
+                                  (task.resource_name, error))
+                continue
+            if mtime is not None:
+                task.update_record(last_push=mtime)
+
+            current.log.debug("S3Sync.synchronize: %s done" % task.resource_name)
+
+        return success
 
     # -------------------------------------------------------------------------
-    def onconflict(self, item, repository, resource):
+    @classmethod
+    def onconflict(cls, item, repository, resource):
         """
             Automatic conflict resolution
 
@@ -595,6 +531,48 @@ class S3Sync(S3Method):
                 item.conflict = False
 
     # -------------------------------------------------------------------------
+    # Utility methods:
+    # -------------------------------------------------------------------------
+    @property
+    def config(self):
+        """ Lazy access to the current sync config """
+
+        if self._config is None:
+
+            table = current.s3db.sync_config
+            row = current.db().select(table.ALL, limitby=(0, 1)).first()
+            self._config = row
+
+        return self._config
+
+    # -------------------------------------------------------------------------
+    def get_status(self):
+        """ Read the current sync status """
+
+        table = current.s3db.sync_status
+        row = current.db().select(table.ALL, limitby=(0, 1)).first()
+        if not row:
+            row = Storage()
+        return row
+
+    # -------------------------------------------------------------------------
+    def set_status(self, **attr):
+        """ Update the current sync status """
+
+        table = current.s3db.sync_status
+
+        data = dict((k, attr[k]) for k in attr if k in table.fields)
+        data["timestmp"] = datetime.datetime.utcnow()
+
+        row = current.db().select(table._id, limitby=(0, 1)).first()
+        if row:
+            row.update_record(**data)
+        else:
+            table.insert(**data)
+            row = data
+        return row
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def get_filters(task_id):
         """
@@ -633,16 +611,23 @@ class S3SyncLog(S3Method):
 
     TABLENAME = "sync_log"
 
+    # Outcomes
     SUCCESS = "success"
     WARNING = "warning"
     ERROR = "error"
     FATAL = "fatal"
 
+    # Transmissions
     IN = "incoming"
     OUT = "outgoing"
+
+    # Methods
     PULL = "pull"
     PUSH = "push"
+    LOGIN = "login"
+    REGISTER = "register"
 
+    # None
     NONE = "none"
 
     # -------------------------------------------------------------------------
@@ -657,11 +642,13 @@ class S3SyncLog(S3Method):
         output = dict()
 
         resource = r.resource
-        if resource.tablename == "sync_log":
+        if resource.tablename == self.TABLENAME:
             return resource.crud.select(r, **attr)
+
         elif resource.tablename == "sync_repository":
-            # READ for sync log for this repository
+            # READ for sync log for this repository (currently not needed)
             pass
+
         else:
             if r.interactive:
                 # READ for sync log for this resource
@@ -706,47 +693,45 @@ class S3SyncLog(S3Method):
             @param resource_name: the resource name
             @param transmission: transmission mode (IN, OUT or None)
             @param mode: synchronization mode (PULL, PUSH or None)
-            @param action: action taken to resolve errors (if any)
+            @param action: action that triggers the log entry (if any)
             @param result: the result of the transaction
                            (SUCCESS, WARNING, ERROR or FATAL)
             @param remote: boolean, True if this is a remote error
             @param message: clear text message
         """
 
-        if result not in (cls.SUCCESS,
-                          cls.WARNING,
-                          cls.ERROR,
-                          cls.FATAL):
+        if result not in (cls.SUCCESS, cls.WARNING, cls.ERROR, cls.FATAL):
             result = cls.SUCCESS
+
+        if result == cls.SUCCESS:
+            # Can't be a remote error if it's not an error at all
+            remote = False
 
         if transmission not in (cls.IN, cls.OUT):
             transmission = cls.NONE
-        if mode not in (cls.PULL, cls.PUSH):
-            mode = cls.NONE
 
-        mode = "%s/%s" % (mode, transmission)
+        if mode not in (cls.PULL, cls.PUSH, cls.LOGIN, cls.REGISTER):
+            mode = cls.NONE
 
         if not action:
             action = cls.NONE
 
-        now = datetime.datetime.utcnow()
-        entry = Storage(timestmp=now,
-                        repository_id=repository_id,
-                        resource_name=resource_name,
-                        mode=mode,
-                        action=action,
-                        result=result,
-                        remote=remote,
-                        message=message)
+        entry = {"timestmp": datetime.datetime.utcnow(),
+                 "repository_id": repository_id,
+                 "resource_name": resource_name,
+                 "mode": "%s/%s" % (mode, transmission),
+                 "action": action,
+                 "result": result,
+                 "remote": remote,
+                 "message": message,
+                 }
 
-        table = current.s3db[cls.TABLENAME]
-
-        table.insert(**entry)
-        return
+        current.s3db[cls.TABLENAME].insert(**entry)
 
     # -------------------------------------------------------------------------
     @staticmethod
     def rheader(r, **attr):
+        """ S3SyncLog resource header """
 
         if r.id is None:
             return DIV(current.T("Showing latest entries first"))
@@ -769,14 +754,19 @@ class S3SyncRepository(object):
 
         self.id = repository.id
         self.name = repository.name
+
+        self.accept_push = repository.accept_push
+
         self.url = repository.url
         self.username = repository.username
         self.password = repository.password
+
         self.client_id = repository.client_id
         self.client_secret = repository.client_secret
         self.site_key = repository.site_key
         self.refresh_token = repository.refresh_token
         self.proxy = repository.proxy
+
         self.apitype = repository.apitype
 
         import sync_adapter
@@ -791,14 +781,14 @@ class S3SyncRepository(object):
     # -------------------------------------------------------------------------
     @property
     def config(self):
-        """
-            Lazy access to synchronization settings
-        """
+        """ Lazy access to the current sync config """
 
         if self._config is None:
+
             table = current.s3db.sync_config
             row = current.db().select(table.ALL, limitby=(0, 1)).first()
             self._config = row
+
         return self._config
 
     # -------------------------------------------------------------------------
@@ -813,29 +803,132 @@ class S3SyncRepository(object):
 
 # =============================================================================
 class S3SyncBaseAdapter(object):
+    """
+        Sync Adapter (base class) - interface providing standard
+        synchronization methods for the respective repository type.
+
+        This class isn't meant to be instantiated or accessed directly,
+        but is normally accessed through the S3SyncRepository instance.
+    """
 
     def __init__(self, repository):
+        """
+            Constructor
+
+            @param repository: the repository (S3Repository instance)
+        """
 
         self.repository = repository
         self.log = repository.log
 
     # -------------------------------------------------------------------------
+    # Methods to be implemented by subclasses:
+    # -------------------------------------------------------------------------
     def register(self):
+        """
+            Register this site at the peer repository
+
+            @return: True to indicate success, otherwise False
+        """
 
         raise NotImplementedError
 
     # -------------------------------------------------------------------------
     def login(self):
+        """
+            Login at the peer repository
+
+            @return: None if successful, otherwise the error
+        """
 
         raise NotImplementedError
 
     # -------------------------------------------------------------------------
     def pull(self, task, onconflict=None):
+        """
+            Fetch updates from the peer repository and import them
+            into the local database (active pull)
+
+            @param task: the synchronization task (sync_task Row)
+            @param onconflict: callback for automatic conflict resolution
+
+            @return: tuple (error, mtime), with error=None if successful,
+                     else error=message, and mtime=modification timestamp
+                     of the youngest record sent
+        """
 
         raise NotImplementedError
 
     # -------------------------------------------------------------------------
     def push(self, task):
+        """
+            Extract new updates from the local database and send
+            them to the peer repository (active push)
+
+            @param task: the synchronization task (sync_task Row)
+
+            @return: tuple (error, mtime), with error=None if successful,
+                     else error=message, and mtime=modification timestamp
+                     of the youngest record sent
+        """
+
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    def send(self,
+             resource,
+             start=None,
+             limit=None,
+             msince=None,
+             filters=None,
+             mixed=False):
+        """
+            Respond to an incoming pull from the peer repository
+
+            @param resource: the resource to be synchronized
+            @param start: index of the first record to send
+            @param limit: maximum number of records to send
+            @param msince: minimum modification date/time for records to send
+            @param filters: URL filters for record extraction
+            @param mixed: negotiate resource with peer (disregard resource)
+
+            @return: a dict {status, remote, message, response}, with:
+                        - status....the outcome of the operation
+                        - remote....whether the error was remote (or local)
+                        - message...the log message
+                        - response..the response to send to the peer
+        """
+
+        raise NotImplementedError
+
+    # -------------------------------------------------------------------------
+    def receive(self,
+                source,
+                resource,
+                strategy=None,
+                update_policy=None,
+                conflict_policy=None,
+                onconflict=None,
+                last_sync=None,
+                mixed=False):
+        """
+            Respond to an incoming push from the peer repository
+
+            @param source: the input stream (list of file-like objects)
+            @param resource: the target resource
+            @param strategy: the import strategy
+            @param update_policy: the update policy
+            @param conflict_policy: the conflict resolution policy
+            @param onconflict: callback for conflict resolution
+            @param last_sync: the last synchronization date/time for the peer
+            @param mixed: negotiate resource with peer (disregard resource)
+
+            @return: a dict {status, remote, message, response}, with:
+                        - status....the outcome of the operation
+                        - remote....whether the error was remote (or local)
+                        - message...the log message
+                        - response..the response to send to the peer
+        """
 
         raise NotImplementedError
 
