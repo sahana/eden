@@ -193,6 +193,9 @@ def req_template():
 def req_controller(template = False):
     """ REST Controller """
 
+    REQ_STATUS_PARTIAL  = 1
+    REQ_STATUS_COMPLETE = 2
+
     def prep(r):
 
         table = r.table
@@ -315,6 +318,7 @@ def req_controller(template = False):
             else:
                 if r.id:
                     table.is_template.readable = table.is_template.writable = False
+                    
 
                 method = r.method
                 if method not in ("map", "read", "search", "update"):
@@ -348,14 +352,8 @@ def req_controller(template = False):
 
                 elif method == "map":
                     # Tell the client to request per-feature markers
-                    s3db.configure("req_req", marker_fn=marker_fn)
-
-            if r.record:
-                # @ToDo: Prevent deletion of Requests which have had items sent
-                if r.record.closed or r.record.cancel:
-                    # Prevent Items from being added to closed or cancelled requests
-                    s3db.configure("req_req_item",
-                                   insertable = False,
+                    s3db.configure("req_req",
+                                   marker_fn = marker_fn,
                                    )
 
         elif r.representation == "plain":
@@ -372,60 +370,77 @@ def req_controller(template = False):
                            marker_fn = marker_fn,
                            )
 
-        if r.component and r.component.name == "commit":
-            table = r.component.table
-            record = r.record
-            stable = s3db.org_site
-            commit_status = record.commit_status
+        if r.component:
+            if r.component.name == "req_item":
+                # Prevent Adding/Deleting Items from Requests which are complete, closed or cancelled
+                # @ToDo: deployment_setting to determine which exact rule to apply?
+                record = r.record
+                if record.fulfil_status == REQ_STATUS_COMPLETE or \
+                   record.transit_status == REQ_STATUS_COMPLETE or \
+                   record.req_status == REQ_STATUS_COMPLETE or \
+                   record.fulfil_status == REQ_STATUS_PARTIAL or \
+                   record.transit_status == REQ_STATUS_PARTIAL or \
+                   record.req_status == REQ_STATUS_PARTIAL or \
+                   record.closed or \
+                   record.cancel:
+                    s3db.configure("req_req_item",
+                                   deletable = False,
+                                   insertable = False,
+                                   )
+            elif r.component.name == "commit":
+                table = r.component.table
+                record = r.record
+                stable = s3db.org_site
+                commit_status = record.commit_status
 
-            # Commits belonging to this request
-            rsites = []
-            query = (table.deleted == False) & (table.req_id == record.id)
-            req_sites = db(query).select(table.site_id)
-            for req_site in req_sites:
-                rsites.append(req_site.site_id)
+                # Commits belonging to this request
+                rsites = []
+                query = (table.deleted == False) & (table.req_id == record.id)
+                req_sites = db(query).select(table.site_id)
+                for req_site in req_sites:
+                    rsites.append(req_site.site_id)
 
-            # All the sites
-            commit_sites = db((stable.deleted == False)).select(stable.id,
-                                                              stable.code)
+                # All the sites
+                commit_sites = db((stable.deleted == False)).select(stable.id,
+                                                                  stable.code)
 
-            # Sites which have not committed to this request yet
-            site_opts = {}
-            for site in commit_sites:
-                if (site.id not in site_opts) and (site.id not in rsites):
-                    site_opts[site.id] = site.code
+                # Sites which have not committed to this request yet
+                site_opts = {}
+                for site in commit_sites:
+                    if (site.id not in site_opts) and (site.id not in rsites):
+                        site_opts[site.id] = site.code
 
-            table.site_id.requires = IS_IN_SET(site_opts)
-            if (commit_status == 2) and settings.get_req_restrict_on_complete():
-                # Restrict from committing to completed requests
-                listadd = False
-            else:
-                # Allow commitments to be added when doing so as a component
-                listadd = True
+                table.site_id.requires = IS_IN_SET(site_opts)
+                if (commit_status == 2) and settings.get_req_restrict_on_complete():
+                    # Restrict from committing to completed requests
+                    listadd = False
+                else:
+                    # Allow commitments to be added when doing so as a component
+                    listadd = True
 
-            s3db.configure(table,
-                           # Don't want filter_widgets in the component view
-                           filter_widgets = None,
-                           listadd = listadd,
-                           )
+                s3db.configure(table,
+                               # Don't want filter_widgets in the component view
+                               filter_widgets = None,
+                               listadd = listadd,
+                               )
 
-            if type == 1: # Items
-                # Limit site_id to facilities the user has permissions for
-                auth.permitted_facilities(table=r.table,
-                                          error_msg=T("You do not have permission for any facility to make a commitment."))
-                if r.interactive:
-                    # Dropdown not Autocomplete
-                    itable = s3db.req_commit_item
-                    itable.req_item_id.widget = None
-                    itable.req_item_id.requires = \
-                                    IS_ONE_OF(db, "req_req_item.id",
-                                              s3db.req_item_represent,
-                                              filterby = "req_id",
-                                              filter_opts = [r.id],
-                                              orderby = "req_req_item.id",
-                                              sort = True,
-                                              )
-                    s3.jquery_ready.append('''
+                if type == 1: # Items
+                    # Limit site_id to facilities the user has permissions for
+                    auth.permitted_facilities(table=r.table,
+                                              error_msg=T("You do not have permission for any facility to make a commitment."))
+                    if r.interactive:
+                        # Dropdown not Autocomplete
+                        itable = s3db.req_commit_item
+                        itable.req_item_id.widget = None
+                        itable.req_item_id.requires = \
+                                        IS_ONE_OF(db, "req_req_item.id",
+                                                  s3db.req_item_represent,
+                                                  filterby = "req_id",
+                                                  filter_opts = [r.id],
+                                                  orderby = "req_req_item.id",
+                                                  sort = True,
+                                                  )
+                        s3.jquery_ready.append('''
 $.filterOptionsS3({
  'trigger':{'alias':'commit_item','name':'req_item_id'},
  'target':{'alias':'commit_item','name':'item_pack_id'},
@@ -438,101 +453,116 @@ $.filterOptionsS3({
  'fncPrep':S3.supply.fncPrepItem,
  'fncRepresent':S3.supply.fncRepresentItem
 })''')
-                    # Custom Form
-                    s3forms = s3base.s3forms
-                    crud_form = s3forms.S3SQLCustomForm(
+                        # Custom Form
+                        s3forms = s3base.s3forms
+                        crud_form = s3forms.S3SQLCustomForm(
+                                "site_id",
+                                "date",
+                                "date_available",
+                                "committer_id",
+                                s3forms.S3SQLInlineComponent(
+                                    "commit_item",
+                                    label = T("Items"),
+                                    fields = ["req_item_id",
+                                              "item_pack_id",
+                                              "quantity",
+                                              "comments"
+                                              ]
+                                ),
+                                "comments",
+                            )
+                        s3db.configure("req_commit",
+                                       crud_form = crud_form,
+                                       )
+                        # Redirect to the Items tab after creation
+                        #s3db.configure(table,
+                        #               create_next = URL(c="req", f="commit",
+                        #                                 args=["[id]", "commit_item"]),
+                        #               update_next = URL(c="req", f="commit",
+                        #                                 args=["[id]", "commit_item"]))
+
+                elif type == 3: # People
+                    # Limit site_id to orgs the user has permissions for
+                    # @ToDo: Make this customisable between Site/Org
+                    # @ToDo: is_affiliated() once Org is possible
+                    auth.permitted_facilities(table=r.table,
+                                              error_msg=T("You do not have permission for any facility to make a commitment."))
+                    # Limit organisation_id to organisations the user has permissions for
+                    #auth.permitted_organisations(table=r.table, redirect_on_error=False)
+                    if r.interactive:
+                        #table.organisation_id.readable = True
+                        #table.organisation_id.writable = True
+                        # Custom Form
+                        s3forms = s3base.s3forms
+                        crud_form = s3forms.S3SQLCustomForm(
                             "site_id",
                             "date",
                             "date_available",
                             "committer_id",
                             s3forms.S3SQLInlineComponent(
-                                "commit_item",
-                                label = T("Items"),
-                                fields = ["req_item_id",
-                                          "item_pack_id",
-                                          "quantity",
+                                "commit_skill",
+                                label = T("Skills"),
+                                fields = ["quantity",
+                                          "skill_id",
                                           "comments"
                                           ]
                             ),
                             "comments",
-                        )
-                    s3db.configure("req_commit",
-                                   crud_form = crud_form,
-                                   )
-                    # Redirect to the Items tab after creation
-                    #s3db.configure(table,
-                    #               create_next = URL(c="req", f="commit",
-                    #                                 args=["[id]", "commit_item"]),
-                    #               update_next = URL(c="req", f="commit",
-                    #                                 args=["[id]", "commit_item"]))
-
-            elif type == 3: # People
-                # Limit site_id to orgs the user has permissions for
-                # @ToDo: Make this customisable between Site/Org
-                # @ToDo: is_affiliated() once Org is possible
-                auth.permitted_facilities(table=r.table,
-                                          error_msg=T("You do not have permission for any facility to make a commitment."))
-                # Limit organisation_id to organisations the user has permissions for
-                #auth.permitted_organisations(table=r.table, redirect_on_error=False)
-                if r.interactive:
-                    #table.organisation_id.readable = True
-                    #table.organisation_id.writable = True
-                    # Custom Form
-                    s3forms = s3base.s3forms
-                    crud_form = s3forms.S3SQLCustomForm(
-                        "site_id",
-                        "date",
-                        "date_available",
-                        "committer_id",
-                        s3forms.S3SQLInlineComponent(
-                            "commit_skill",
-                            label = T("Skills"),
-                            fields = ["quantity",
-                                      "skill_id",
-                                      "comments"
-                                      ]
-                        ),
-                        "comments",
-                        )
-                    s3db.configure("req_commit",
-                                   crud_form = crud_form,
-                                   )
-                    # Redirect to the Skills tab after creation
-                    #s3db.configure(table,
-                    #               create_next = URL(c="req", f="commit",
-                    #                                 args=["[id]", "commit_skill"]),
-                    #               update_next = URL(c="req", f="commit",
-                    #                                 args=["[id]", "commit_skill"]))
-            else:
-                # Non-Item commits can have an Organisation
-                # Check if user is affiliated to an Organisation
-                if is_affiliated():
-                    # Limit organisation_id to organisations the user has permissions for
-                    auth.permitted_organisations(table=r.table,
-                                                 redirect_on_error=False)
-                    table.organisation_id.readable = table.organisation_id.writable = True
+                            )
+                        s3db.configure("req_commit",
+                                       crud_form = crud_form,
+                                       )
+                        # Redirect to the Skills tab after creation
+                        #s3db.configure(table,
+                        #               create_next = URL(c="req", f="commit",
+                        #                                 args=["[id]", "commit_skill"]),
+                        #               update_next = URL(c="req", f="commit",
+                        #                                 args=["[id]", "commit_skill"]))
                 else:
-                    # Unaffiliated people can't commit on behalf of others
-                    field = r.component.table.committer_id
-                    field.writable = False
-                    field.comment = None
+                    # Non-Item commits can have an Organisation
+                    # Check if user is affiliated to an Organisation
+                    if is_affiliated():
+                        # Limit organisation_id to organisations the user has permissions for
+                        auth.permitted_organisations(table=r.table,
+                                                     redirect_on_error=False)
+                        table.organisation_id.readable = table.organisation_id.writable = True
+                    else:
+                        # Unaffiliated people can't commit on behalf of others
+                        field = r.component.table.committer_id
+                        field.writable = False
+                        field.comment = None
 
-                # Non-Item commits shouldn't have a From Inventory
-                # @ToDo: Assets do? (Well, a 'From Site')
-                table.site_id.readable = table.site_id.writable = False
-                #if r.interactive and r.record.type == 3: # People
-                #    # Redirect to the Persons tab after creation
-                #    s3db.configure(table,
-                #                   create_next = URL(c="req", f="commit",
-                #                                     args=["[id]", "commit_person"]),
-                #                   update_next = URL(c="req", f="commit",
-                #                                     args=["[id]", "commit_person"])
-                #                   )
+                    # Non-Item commits shouldn't have a From Inventory
+                    # @ToDo: Assets do? (Well, a 'From Site')
+                    table.site_id.readable = table.site_id.writable = False
+                    #if r.interactive and r.record.type == 3: # People
+                    #    # Redirect to the Persons tab after creation
+                    #    s3db.configure(table,
+                    #                   create_next = URL(c="req", f="commit",
+                    #                                     args=["[id]", "commit_person"]),
+                    #                   update_next = URL(c="req", f="commit",
+                    #                                     args=["[id]", "commit_person"])
+                    #                   )
         else:
+            # Not r.component
             # Limit site_id to facilities the user has permissions for
             # @ToDo: Non-Item requests shouldn't be bound to a Facility?
             auth.permitted_facilities(table=r.table,
                                       error_msg=T("You do not have permission for any facility to make a request."))
+            if r.id:
+                # Prevent Deleting Requests which are complete or closed
+                record = r.record
+                if record.fulfil_status == REQ_STATUS_COMPLETE or \
+                   record.transit_status == REQ_STATUS_COMPLETE or \
+                   record.req_status == REQ_STATUS_COMPLETE or \
+                   record.fulfil_status == REQ_STATUS_PARTIAL or \
+                   record.transit_status == REQ_STATUS_PARTIAL or \
+                   record.req_status == REQ_STATUS_PARTIAL or \
+                   record.closed:
+                    s3db.configure("req_req",
+                                   deletable = False,
+                                   )
+
         return True
     s3.prep = prep
 
@@ -541,96 +571,104 @@ $.filterOptionsS3({
 
         if r.interactive and r.method != "import":
             if not r.component:
-                s3_action_buttons(r)
-                #s3_action_buttons(r, copyable=True)
-                # if "buttons" in output:
-                    # buttons = output["buttons"]
-                    # if "delete_btn" in buttons:
-                        # delete_btn = buttons["delete_btn"]
-                        # delete_btn = DIV(delete_btn,
-                                         # A(T("Copy Request"),
-                                           # _href=URL(args=[r.id, "copy"],
-                                                     ##vars={"type":r.record.type}
-                                                     # ),
-                                           # _class="action-btn"))
-                        # output["buttons"]["delete_btn"] = delete_btn
-                if not template and settings.get_req_use_commit():
-                    # This is appropriate to both Items and People
+                if not r.id:
+                    s3_action_buttons(r, deletable =False)
+                    # Add delete button for those records which are not completed
+                    # @ToDo: Handle icons
+                    table = r.table
+                    query = (table.fulfil_status != REQ_STATUS_COMPLETE) & \
+                            (table.transit_status != REQ_STATUS_COMPLETE) & \
+                            (table.req_status != REQ_STATUS_COMPLETE) & \
+                            (table.fulfil_status != REQ_STATUS_PARTIAL) & \
+                            (table.transit_status != REQ_STATUS_PARTIAL) & \
+                            (table.req_status != REQ_STATUS_PARTIAL)
+                    rows = db(query).select(table.id)
+                    restrict = [str(row.id) for row in rows]
                     s3.actions.append(
                         dict(url = URL(c="req", f="req",
-                                       args=["[id]", "commit_all"]),
-                             _class = "action-btn commit-btn",
-                             label = str(T("Commit"))
+                                       args=["[id]", "delete"]),
+                             _class="delete-btn",
+                             label = str(s3.crud_labels.DELETE),
+                             restrict = restrict
                             )
                         )
-                    s3.jquery_ready.append(
+                    if not template and settings.get_req_use_commit():
+                        # This is appropriate to both Items and People
+                        s3.actions.append(
+                            dict(url = URL(c="req", f="req",
+                                           args=["[id]", "commit_all"]),
+                                 _class = "action-btn commit-btn",
+                                 label = str(T("Commit"))
+                                )
+                            )
+                        s3.jquery_ready.append(
 '''S3.confirmClick('.commit-btn','%s')''' % T("Do you want to commit to this request?"))
-                # This is only appropriate for item requests
-                #query = (r.table.type == 1)
-                #rows = db(query).select(r.table.id)
-                #restrict = [str(row.id) for row in rows]
-                #s3.actions.append(
-                #    dict(url = URL(c="req", f="req",
-                #                   args=["[id]", "req_item"]),
-                #         _class = "action-btn",
-                #         label = str(T("View Items")),
-                #         restrict = restrict
-                #        )
-                #    )
-                # This is only appropriate for people requests
-                #query = (r.table.type == 3)
-                #rows = db(query).select(r.table.id)
-                #restrict = [str(row.id) for row in rows]
-                #s3.actions.append(
-                #    dict(url = URL(c="req", f="req",
-                #                   args=["[id]", "req_skill"]),
-                #         _class = "action-btn",
-                #         label = str(T("View Skills")),
-                #         restrict = restrict
-                #        )
-                #    )
-                if settings.get_req_copyable():
-                    s3.actions.append(
-                        dict(url = URL(c="req", f="req",
-                                       args=["[id]", "copy_all"]),
-                             _class = "action-btn copy_all",
-                             label = s3_unicode(T("Copy")).encode("utf8")
+                    # This is only appropriate for item requests
+                    #query = (table.type == 1)
+                    #rows = db(query).select(table.id)
+                    #restrict = [str(row.id) for row in rows]
+                    #s3.actions.append(
+                    #    dict(url = URL(c="req", f="req",
+                    #                   args=["[id]", "req_item"]),
+                    #         _class = "action-btn",
+                    #         label = str(T("View Items")),
+                    #         restrict = restrict
+                    #        )
+                    #    )
+                    # This is only appropriate for people requests
+                    #query = (table.type == 3)
+                    #rows = db(query).select(table.id)
+                    #restrict = [str(row.id) for row in rows]
+                    #s3.actions.append(
+                    #    dict(url = URL(c="req", f="req",
+                    #                   args=["[id]", "req_skill"]),
+                    #         _class = "action-btn",
+                    #         label = str(T("View Skills")),
+                    #         restrict = restrict
+                    #        )
+                    #    )
+                    if settings.get_req_copyable():
+                        s3.actions.append(
+                            dict(url = URL(c="req", f="req",
+                                           args=["[id]", "copy_all"]),
+                                 _class = "action-btn copy_all",
+                                 label = s3_unicode(T("Copy")).encode("utf8")
+                                )
                             )
-                        )
-                    confirm = T("Are you sure you want to create a new request as a copy of this one?")
-                    s3.jquery_ready.append('''S3.confirmClick('.copy_all','%s')''' % confirm)
-                if not template:
-                    if settings.get_req_use_commit():
-                        s3.actions.append(
-                                dict(url=URL(c="req", f="req",
-                                             args=["[id]", "commit_all", "send"]),
-                                     _class="action-btn send-btn dispatch",
-                                     label=s3_unicode(T("Send")).encode("utf8")
-                                     )
-                                )
-                        confirm = T("Are you sure you want to commit to this request and send a shipment?")
-                        s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
-                    elif auth.user and auth.user.site_id:
-                        s3.actions.append(
-                                     # Better to force users to go through the Check process
-                                dict(#url=URL(c="req", f="send_req",
-                                     #        args=["[id]"],
-                                     #        vars=dict(site_id=auth.user.site_id)
-                                     #        ),
-                                     url=URL(c="req", f="req",
-                                             args=["[id]", "check"],
-                                             vars={"site_id": auth.user.site_id}
-                                             ),
-                                     _class="action-btn send-btn dispatch",
-                                     #label=s3_unicode(T("Send")).encode("utf8")
-                                     label=s3_unicode(T("Check")).encode("utf8"),
-                                     )
-                                )
-                        confirm = T("Are you sure you want to send a shipment for this request?")
-                        s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+                        confirm = T("Are you sure you want to create a new request as a copy of this one?")
+                        s3.jquery_ready.append('''S3.confirmClick('.copy_all','%s')''' % confirm)
+                    if not template:
+                        if settings.get_req_use_commit():
+                            s3.actions.append(
+                                    dict(url=URL(c="req", f="req",
+                                                 args=["[id]", "commit_all", "send"]),
+                                         _class="action-btn send-btn dispatch",
+                                         label=s3_unicode(T("Send")).encode("utf8")
+                                         )
+                                    )
+                            confirm = T("Are you sure you want to commit to this request and send a shipment?")
+                            s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+                        elif auth.user and auth.user.site_id:
+                            s3.actions.append(
+                                         # Better to force users to go through the Check process
+                                    dict(#url=URL(c="req", f="send_req",
+                                         #        args=["[id]"],
+                                         #        vars=dict(site_id=auth.user.site_id)
+                                         #        ),
+                                         url=URL(c="req", f="req",
+                                                 args=["[id]", "check"],
+                                                 vars={"site_id": auth.user.site_id}
+                                                 ),
+                                         _class="action-btn send-btn dispatch",
+                                         #label=s3_unicode(T("Send")).encode("utf8")
+                                         label=s3_unicode(T("Check")).encode("utf8"),
+                                         )
+                                    )
+                            confirm = T("Are you sure you want to send a shipment for this request?")
+                            s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
 
             else:
-                s3_action_buttons(r)
+                s3_action_buttons(r, deletable=s3db.get_config(r.component.tablename, "deletable"))
                 if r.component.name == "req_item" and \
                    settings.get_req_prompt_match():
                     s3.actions.append(

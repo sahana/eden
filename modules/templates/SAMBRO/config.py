@@ -37,6 +37,27 @@ def config(settings):
     # cap_alert record requires approval before sending
     settings.auth.record_approval_required_for = ("cap_alert",)
 
+    # -----------------------------------------------------------------------------
+    # L10n (Localization) settings
+    settings.L10n.languages = OrderedDict([
+        #("ar", "العربية"),
+        ("dv", "ދިވެހި"), # Divehi (Maldives)
+        ("en-gb", "English"),
+        #("es", "Español"),
+        #("fr", "Français"),
+        #("km", "ភាសាខ្មែរ"),        # Khmer
+        #("mn", "Монгол хэл"),  # Mongolian
+        ("my", "မြန်မာစာ"),        # Burmese
+        #("ne", "नेपाली"),          # Nepali
+        #("prs", "دری"),        # Dari
+        #("ps", "پښتو"),        # Pashto
+        #("tet", "Tetum"),
+        #("th", "ภาษาไทย"),        # Thai
+        ("tl", "Tagalog"), # Filipino
+        #("vi", "Tiếng Việt"),   # Vietnamese
+        #("zh-cn", "中文 (简体)"),
+    ])
+
     # -------------------------------------------------------------------------
     # Messaging
     # Parser
