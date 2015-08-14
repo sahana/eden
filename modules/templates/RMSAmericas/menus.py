@@ -600,7 +600,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     M("Items", c="supply", f="item", m="summary", check=basic_warehouse)(
                         M("Create", m="create"),
-                        M("Import", f="catalog_item", m="import", p="create"),
+                        M("Import", f="catalog_item", m="import", p="create", restrict=[ORG_ADMIN]),
                     ),
                     # Catalog Items moved to be next to the Item Categories
                     #M("Catalog Items", c="supply", f="catalog_item")(
@@ -614,14 +614,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                     ),
                     M("Item Categories", c="supply", f="item_category",
-                      restrict=[ADMIN])(
+                      restrict=[ORG_ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M("Suppliers", c="inv", f="supplier", check=basic_warehouse)(
+                    M("Suppliers", c="inv", f="supplier")(
                         M("Create", m="create"),
-                        M("Import", m="import", p="create"),
+                        M("Import", m="import", p="create", restrict=[ORG_ADMIN]),
                     ),
-                    M("Facilities", c="inv", f="facility", check=basic_warehouse)(
+                    M("Facilities", c="inv", f="facility")(
                         M("Create", m="create", t="org_facility"),
                     ),
                     M("Facility Types", c="inv", f="facility_type",
