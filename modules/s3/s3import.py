@@ -2496,7 +2496,7 @@ class S3ImportItem(object):
                 modified_on_update = modified_on.update
                 modified_on.update = None
             else:
-                modifed_on_update = None
+                modified_on_update = None
 
             # Update super entity links
             s3db.update_super(table, form.vars)

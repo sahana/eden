@@ -17,6 +17,9 @@ def config(settings):
 
     T = current.T
 
+    settings.base.system_name = T("Sahana Alerting and Messaging Broker")
+    settings.base.system_name_short = T("SAMBRO")
+
     # Pre-Populate
     settings.base.prepopulate = ("SAMBRO", "SAMBRO/Demo", "default/users")
 
