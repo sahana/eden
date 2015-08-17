@@ -81,8 +81,12 @@ class index(S3CustomController):
         list_id = "cap_alert_datalist"
         list_fields = ["info.headline",
                        "area.name",
-                       "info.description",
-                       "info.sender_name",
+                       #"info.description",
+                       #"info.sender_name",
+                       "info.priority",
+                       "status",
+                       "scope",
+                       "info.event_type_id",
                        ]
         # Order with most recent Alert first
         orderby = "cap_info.expires desc"
@@ -104,8 +108,14 @@ class index(S3CustomController):
                           #                 levels=("L0",),
                           #                 widget="multiselect",
                           #                 ),
+                          S3OptionsFilter("info.priority",
+                                          #label=T("Priority"),
+                                          ),
                           S3OptionsFilter("info.event_type_id",
-                                          label=T("Alert Type"),
+                                          #label=T("Event Type"),
+                                          ),
+                          S3OptionsFilter("scope",
+                                          #label=T("Scope"),
                                           ),
                           S3DateFilter("info.expires",
                                        label = "",

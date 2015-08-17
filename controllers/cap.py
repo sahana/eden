@@ -104,18 +104,30 @@ def alert():
 
     tablename = "cap_alert"
 
-    if auth.permission.format == "dl":
-        list_fields = ["info.headline",
-                       "area.name",
-                       "info.description",
-                       "info.sender_name",
-                       ]
-
-        s3db.configure(tablename,
-                       list_fields = list_fields,
-                       )
-
     def prep(r):
+        
+        if r.representation == "dl":
+            # DataList: match list_layout
+            list_fields = ["info.headline",
+                           "area.name",
+                           "info.priority",
+                           "status",
+                           "scope",
+                           "info.event_type_id",
+                           ]
+
+            s3db.configure(tablename,
+                           list_fields = list_fields,
+                           )
+
+        #elif r.representation == "cap":
+        #    # This is either importing from or exporting to cap format. Set both
+        #    # postprocessing hooks so we don't have to enumerate methods.
+        #    s3db.configure("gis_location",
+        #                   xml_post_parse = s3db.cap_gis_location_xml_post_parse,
+        #                   xml_post_render = s3db.cap_gis_location_xml_post_render,
+        #                   )
+
         if r.id:
             if r.record.is_template:
                 redirect(URL(c="cap", f="template",
@@ -266,39 +278,30 @@ def alert():
                                                                   filter_opts=(r.id,),
                                                                   ))
 
-        #elif r.representation == "cap":
-        #    # This is either importing from or exporting to cap format. Set both
-        #    # postprocessing hooks so we don't have to enumerate methods.
-        #    s3db.configure("gis_location",
-        #                   xml_post_parse = s3db.cap_gis_location_xml_post_parse,
-        #                   xml_post_render = s3db.cap_gis_location_xml_post_render,
-        #                   )
-
-        post_vars = request.post_vars
-        if post_vars.get("edit_info", False):
-            tid = post_vars["template_id"]
-            if tid:
-                # Read template and copy locked fields to post_vars
-                table = db.cap_alert
-                template = db(table.id == tid).select(limitby=(0, 1)).first()
-                try:
-                    tsettings = json.loads(template.template_settings)
-                except ValueError:
-                    tsettings = dict()
-                if isinstance(tsettings.get("locked", False), dict):
-                    locked_fields = [lf for lf in tsettings["locked"] if tsettings["locked"]]
-                    for lf in locked_fields:
-                        post_vars[lf] = template[lf]
+            # @ToDo: Move inside correct component context (None?)
+            post_vars = request.post_vars
+            if post_vars.get("edit_info", False):
+                tid = post_vars["template_id"]
+                if tid:
+                    # Read template and copy locked fields to post_vars
+                    table = db.cap_alert
+                    template = db(table.id == tid).select(table.template_settings,
+                                                          limitby=(0, 1)).first()
+                    try:
+                        tsettings = json.loads(template.template_settings)
+                    except ValueError:
+                        tsettings = dict()
+                    if isinstance(tsettings.get("locked", False), dict):
+                        locked_fields = [lf for lf in tsettings["locked"] if tsettings["locked"]]
+                        for lf in locked_fields:
+                            post_vars[lf] = template[lf]
         info_prep(r)
         return True
     s3.prep = prep
 
     def postp(r, output):
-        """
-            REST post-processor:
-             - check to see if "Save and add information" was pressed
-        """
 
+        # Check to see if "Save and add information" was pressed
         lastid = r.resource.lastid
         if lastid and request.post_vars.get("edit_info", False):
             table = db.cap_alert
@@ -355,6 +358,32 @@ def alert():
                     form = output["form"]
                     form.update(_class="cap_alert_form")
                 set_priority_js()
+
+        elif r.representation == "plain":
+            # Map Popup: style like the dataList
+            list_fields = ["info.headline",
+                           "area.name",
+                           "info.priority",
+                           "status",
+                           "scope",
+                           "info.event_type_id",
+                           "info.description",
+                           "info.response_type",
+                           "info.sender_name",
+                           ]
+
+            record = r.resource.select(list_fields,
+                                       as_rows=True,
+                                       #represent=True,
+                                       #show_links=False,
+                                       ).first()
+
+            output = s3db.cap_alert_list_layout("map_popup", # list_id
+                                                "map_popup", # item_id
+                                                None, #r.resource,
+                                                None, # rfields
+                                                record
+                                                )
 
         return output
     s3.postp = postp

@@ -1804,10 +1804,13 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
     item_class = "thumbnail"
 
     #raw = record._row
+    # @ToDo: handle the case where we have multiple info segments &/or areas
     headline = record["cap_info.headline"]
     location = record["cap_area.name"]
-    description = record["cap_info.description"]
-    sender = record["cap_info.sender_name"]
+    priority = record["cap_info.priority"]
+    status = record["cap_alert.status"]
+    scope = record["cap_alert.scope"]
+    event = record["cap_info.event_type_id"]
 
     if current.auth.s3_logged_in():
         _href = URL(c="cap", f="alert", args=[record_id, "profile"])
@@ -1818,13 +1821,41 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
                  _href = _href,
                  _target = "_blank",
                  )
-    headline = DIV(headline,
-                   current.T("in %(location)s") % dict(location=location)
-                   )
+
+    if list_id == "map_popup":
+        # Map popup
+        event = current.s3db.cap_info.event_type_id.represent(event)
+        priority = priority or ""
+        description = record["cap_info.description"]
+        response_type = record["cap_info.response_type"]
+        sender = record["cap_info.sender_name"]
+        last = TAG[""](BR(),
+                       description,
+                       BR(),
+                       ", ".join(response_type),
+                       BR(),
+                       sender,
+                       BR(),
+                       )
+    else:
+        last = BR()
+
+    details = "%s %s %s" % (priority, status, scope)
+
+    more = A(current.T("Full Alert"),
+             _href = _href,
+             _target = "_blank",
+             )
 
     item = DIV(headline,
-               P(description),
-               P(sender, style="bold"),
+               BR(),
+               location,
+               BR(),
+               details,
+               BR(),
+               event,
+               last,
+               more,
                _class=item_class,
                _id=item_id,
                )
