@@ -729,6 +729,13 @@ class S3IncidentModel(S3Model):
                                                 #"autocomplete": "name",
                                                 "autodelete": False,
                                                 },
+                            event_team = "incident_id",
+                            pr_group = {"link": "event_team",
+                                        "joinby": "incident_id",
+                                        "key": "group_id",
+                                        "actuate": "hide",
+                                        "autodelete": False,
+                                        },
                             event_post = "incident_id",
                             event_site = "incident_id",
                             event_sitrep = {"name": "incident_sitrep",
@@ -1824,6 +1831,8 @@ class S3EventTeamModel(S3Model):
                           self.event_incident_id(ondelete = "CASCADE"),
                           self.pr_group_id(empty = False,
                                            ondelete = "RESTRICT",
+                                           # Dropdown, not Autocomplete
+                                           widget = None,
                                            ),
                           Field("status", "integer",
                                 default = 1,
@@ -2816,6 +2825,12 @@ def event_rheader(r):
                 append((STAFF, "human_resource"))
                 if current.auth.s3_has_permission("create", "event_human_resource"):
                      append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
+
+            # Teams tab:
+            teams_tab = settings.get_event_incident_teams_tab()
+            if teams_tab:
+                tab_label = T("Teams") if teams_tab is True else T(teams_tab)
+                append((tab_label, "group"))
 
             # Asset tab
             if settings.has_module("asset"):

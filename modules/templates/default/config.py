@@ -480,6 +480,8 @@ def config(settings):
     #settings.event.types_hierarchical = True
     # Make Incident Types Hierarchical
     #settings.event.incident_types_hierarchical = True
+    # Show tab with teams assigned for incidents
+    #settings.event.incident_teams_tab = True
 
     # -------------------------------------------------------------------------
     # Members

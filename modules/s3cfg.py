@@ -2416,6 +2416,13 @@ class S3Config(Storage):
         """
         return self.event.get("incident_impact_tab", False)
 
+    def get_event_incident_teams_tab(self):
+        """
+            Show tab with teams assigned for incidents, string to
+            define the label of the tab or True to use default label
+        """
+        return self.event.get("incident_teams_tab", False)
+
     # -------------------------------------------------------------------------
     # Evacuees
     #

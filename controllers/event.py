@@ -228,6 +228,22 @@ def person():
     return s3_rest_controller("pr", "person")
 
 # -----------------------------------------------------------------------------
+def group():
+    """ Module-specific controller for Teams """
+
+    return s3_rest_controller("pr", "group")
+
+# -----------------------------------------------------------------------------
+def team():
+    """ Controller for event_team option lookups (popups) """
+
+    # /options.s3json only
+    s3.prep = lambda r: r.method == "options" and \
+                        r.representation == "s3json"
+
+    return s3_rest_controller("event", "team")
+
+# -----------------------------------------------------------------------------
 def compose():
     """ Send message to people/teams """
 
