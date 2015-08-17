@@ -193,15 +193,115 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             @param mixed: negotiate resource with peer (disregard resource)
         """
 
-        #for s in source:
-            #s.seek(0)
-            #print s.read()
+        s3db = current.s3db
 
-        msg = "ADASHI push synchronization not implemented yet"
+        xml = current.xml
+        log = self.log
+        remote = False
 
-        return {"status": self.log.FATAL,
-                "message": msg,
-                "response": current.xml.json_message(False, 400, msg),
+        # Sync always has only one source per request
+        source = source[0]
+
+        # Parse the feed
+        tree = xml.parse(source)
+        if not tree:
+            # Parser error
+            msg = xml.error if xml.error else "Invalid source"
+            return {"status": log.FATAL,
+                    "message": msg,
+                    "remote": remote,
+                    "response": xml.json_message(False, 400, msg),
+                    }
+
+        # Identify feed category
+        category = tree.findall("//channel/category")
+        if not category:
+            msg = "Feed category missing"
+            return {"status": log.ERROR,
+                    "message": msg,
+                    "remote": remote,
+                    "response": xml.json_message(False, 400, msg),
+                    }
+        category = category[0].text
+
+        # Instantiate target resource after feed category
+        if category == "AVL":
+            resource = s3db.resource("pr_group")
+        elif category == "Incidents":
+            resource = s3db.resource("event_incident")
+        else:
+            msg = "Unknown feed category"
+            return {"status": log.WARNING,
+                    "message": msg,
+                    "remote": remote,
+                    "response": xml.json_message(False, 400, msg),
+                    }
+
+        # Import transformation stylesheet
+        stylesheet = os.path.join(current.request.folder,
+                                  "static",
+                                  "formats",
+                                  "georss",
+                                  "import.xsl",
+                                  )
+
+        # Import parameters
+        if onconflict:
+            onconflict_callback = lambda item: onconflict(item,
+                                                          repository,
+                                                          resource,
+                                                          )
+        else:
+            onconflict_callback = None
+        ignore_errors = True
+
+        # Import
+        output = resource.import_xml(tree,
+                                     format = "xml",
+                                     stylesheet = stylesheet,
+                                     ignore_errors = ignore_errors,
+                                     strategy = strategy,
+                                     update_policy = update_policy,
+                                     conflict_policy = conflict_policy,
+                                     last_sync = last_sync,
+                                     onconflict = onconflict_callback,
+                                     source_type = "adashi",
+                                     )
+
+        # Process validation errors, if any
+        if resource.error_tree is not None:
+
+            result = log.WARNING if ignore_errors else log.FATAL
+            message = "%s" % resource.error
+
+            for element in resource.error_tree.findall("resource"):
+                error_msg = element.get("error", "unknown error")
+                error_fields = element.findall("data[@error]")
+                if error_fields:
+                    for field in error_fields:
+                        error_msg = field.get("error", "unknown error")
+                        if error_msg:
+                            msg = "(UID: %s) %s.%s=%s: %s" % \
+                                    (element.get("uuid", None),
+                                     element.get("name", None),
+                                     field.get("field", None),
+                                     field.get("value", field.text),
+                                     error_msg)
+                            message = "%s, %s" % (message, msg)
+                else:
+                    msg = "(UID: %s) %s: %s" % \
+                          (element.get("uuid", None),
+                           element.get("name", None),
+                           error_msg)
+                    message = "%s, %s" % (message, msg)
+        else:
+            result = log.SUCCESS
+            message = "Data received from peer"
+
+        return {"status": result,
+                "remote": remote,
+                "message": message,
+                "response": output,
                 }
 
 # End =========================================================================

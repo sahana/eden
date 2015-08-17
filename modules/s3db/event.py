@@ -38,6 +38,7 @@ __all__ = ("S3EventModel",
            "S3EventAssetModel",
            "S3EventCMSModel",
            "S3EventHRModel",
+           "S3EventTeamModel",
            "S3EventImpactModel",
            #"S3EventIReportModel",
            "S3EventMapModel",
@@ -1778,6 +1779,81 @@ class S3EventHRModel(S3Model):
 
             query = (table.incident_id == incident_id) & \
                     (table.human_resource_id == human_resource_id)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+        return
+
+# =============================================================================
+class S3EventTeamModel(S3Model):
+    """ Link teams to incidents """
+
+    names = ("event_team",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        status_opts = {1: T("Alerted"),
+                       2: T("Standing By"),
+                       3: T("Active"),
+                       4: T("Deactivated"),
+                       5: T("Unable to activate"),
+                       }
+
+        # ---------------------------------------------------------------------
+        # Link table incident<=>team
+        #
+        tablename = "event_team"
+        self.define_table(tablename,
+                          self.event_incident_id(ondelete = "CASCADE"),
+                          self.pr_group_id(empty = False,
+                                           ondelete = "RESTRICT",
+                                           ),
+                          Field("status", "integer",
+                                default = 1,
+                                represent = lambda opt: \
+                                       status_opts.get(opt, current.messages.UNKNOWN_OPT),
+                                requires = IS_IN_SET(status_opts),
+                                ),
+                          *s3_meta_fields())
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Assign Team"),
+            title_display = T("Team Details"),
+            title_list = T("Assigned Teams"),
+            title_update = T("Edit Team"),
+            label_list_button = T("List Assigned Teams"),
+            label_delete_button = T("Remove Team from this incident"),
+            msg_record_created = T("Team assigned"),
+            msg_record_modified = T("Team Assignment updated"),
+            msg_record_deleted = T("Team Assignment removed"),
+            msg_list_empty = T("No Teams currently assigned to this incident"))
+
+        self.configure(tablename,
+                       deduplicate = self.event_team_duplicate,
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event_team_duplicate(item):
+        """ Import item de-duplication """
+
+        data = item.data
+        incident_id = data.get("incident_id")
+        group_id = data.get("group_id")
+
+        if incident_id and group_id:
+
+            table = item.table
+            query = (table.incident_id == incident_id) & \
+                    (table.group_id == group_id)
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
             if duplicate:

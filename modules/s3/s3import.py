@@ -2474,16 +2474,30 @@ class S3ImportItem(object):
 
         # Audit + onaccept on successful commits
         if self.committed:
+
+            # Create a pseudo-form for callbacks
             form = Storage()
             form.method = method
             form.vars = self.data
             prefix, name = tablename.split("_", 1)
             if self.id:
                 form.vars.id = self.id
+
+            # Audit
             current.audit(method, prefix, name,
                           form=form,
                           record=self.id,
                           representation="xml")
+
+            # Prevent that record post-processing breaks time-delayed
+            # synchronization by implicitly updating "modified_on"
+            if MTIME in table.fields:
+                modified_on = table[MTIME]
+                modified_on_update = modified_on.update
+                modified_on.update = None
+            else:
+                modifed_on_update = None
+
             # Update super entity links
             s3db.update_super(table, form.vars)
             if method == CREATE:
@@ -2500,6 +2514,10 @@ class S3ImportItem(object):
             onaccept = current.deployment_settings.get_import_callback(tablename, key)
             if onaccept:
                 callback(onaccept, form, tablename=tablename)
+
+            # Restore modified_on.update
+            if modified_on_update is not None:
+                modified_on.update = modified_on_update
 
         # Update referencing items
         if self.update and self.id:
@@ -2653,22 +2671,40 @@ class S3ImportItem(object):
             @param value: the value of the foreign key
         """
 
-        if not value or not self.table:
+        MTIME = xml.mtime
+
+        table = self.table
+        record_id = self.id
+
+        if not value or not table or not record_id or not self.permitted:
             return
-        if self.id and self.permitted:
-            db = current.db
-            fieldtype = str(self.table[field].type)
-            if fieldtype.startswith("list:reference"):
-                query = (self.table.id == self.id)
-                record = db(query).select(self.table[field],
-                                          limitby=(0,1)).first()
-                if record:
-                    values = record[field]
-                    if value not in values:
-                        values.append(value)
-                        db(self.table.id == self.id).update(**{field:values})
-            else:
-                db(self.table.id == self.id).update(**{field:value})
+
+        # Prevent that reference update breaks time-delayed
+        # synchronization by implicitly updating "modified_on"
+        if MTIME in table.fields:
+            modified_on = table[MTIME]
+            modified_on_update = modified_on.update
+            modified_on.update = None
+        else:
+            modifed_on_update = None
+
+        db = current.db
+        fieldtype = str(table[field].type)
+        if fieldtype.startswith("list:reference"):
+            query = (table._id == record_id)
+            record = db(query).select(table[field],
+                                        limitby=(0,1)).first()
+            if record:
+                values = record[field]
+                if value not in values:
+                    values.append(value)
+                    db(table._id == record_id).update(**{field:values})
+        else:
+            db(table._id == record_id).update(**{field:value})
+
+        # Restore modified_on.update
+        if modified_on_update is not None:
+            modified_on.update = modified_on_update
 
     # -------------------------------------------------------------------------
     def store(self, item_table=None):
