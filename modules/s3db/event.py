@@ -595,7 +595,7 @@ class S3IncidentModel(S3Model):
                           self.event_incident_type_id(),
                           self.scenario_scenario_id(),
                           Field("name", notnull=True, # Name could be a code
-                                length=64,
+                                length = 64,
                                 label = T("Name"),
                                 ),
                           Field("exercise", "boolean",
@@ -606,12 +606,18 @@ class S3IncidentModel(S3Model):
                                                                  # Should!
                                 #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
                                 ),
-                          s3_datetime(name="zero_hour",
+                          s3_datetime(name = "zero_hour",
                                       default = "now",
                                       label = T("Zero Hour"),
                                       comment = DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Zero Hour"),
                                                                       T("The time at which the Incident started."))),
+                                      ),
+                          s3_datetime(name = "end_date",
+                                      label = T("Closed at"),
+                                      comment = DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Closed at"),
+                                                                      T("The time when the Incident was closed."))),
                                       ),
                           Field("closed", "boolean",
                                 default = False,
@@ -797,14 +803,18 @@ class S3IncidentModel(S3Model):
         """
 
         form_vars = form.vars
+
+        closed = form_vars.get("closed", False)
+
         incident = form_vars.get("id", None)
-        if incident:
+        if incident and not closed:
             # Set the Incident in the session
             current.session.s3.incident = incident
         event = form_vars.get("event_id", None)
-        if event:
+        if event and not closed:
             # Set the Event in the session
             current.session.s3.event = event
+
         s3db = current.s3db
         db = current.db
         ctable = s3db.gis_config
@@ -872,7 +882,8 @@ class S3IncidentModel(S3Model):
             mtable.insert(incident_id=incident,
                           config_id=config)
             # Activate this config
-            current.gis.set_config(config)
+            if not closed:
+                current.gis.set_config(config)
             # @ToDo: Add to GIS Menu? Separate Menu?
 
         else:
@@ -883,7 +894,8 @@ class S3IncidentModel(S3Model):
             mtable.insert(incident_id=incident,
                           config_id=config)
             # Activate this config
-            current.gis.set_config(config)
+            if not closed:
+                current.gis.set_config(config)
             # Viewport can be saved from the Map's toolbar
             # @ToDo: Add to GIS Menu? Separate Menu?
 

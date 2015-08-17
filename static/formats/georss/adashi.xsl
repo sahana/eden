@@ -112,7 +112,16 @@
     <!-- ****************************************************************** -->
     <xsl:template name="AdashiIncident">
 
-        <xsl:variable name="IncidentName" select="incidentName/text()"/>
+        <xsl:variable name="IncidentName">
+            <xsl:choose>
+                <xsl:when test="incidentName/text()!=''">
+                    <xsl:value-of select="incidentName/text()"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="title/text()"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
         <xsl:variable name="IncidentUID" select="incidentId/text()"/>
         <xsl:variable name="IncidentType" select="type/text()"/>
 
@@ -149,6 +158,22 @@
                     </data>
                 </xsl:if>
 
+                <!-- End date -->
+                <xsl:if test="$EndDate!=''">
+                    <data field="end_date">
+                        <xsl:value-of select="$EndDate"/>
+                    </data>
+                    <!--  Assume that the incident is closed if it has an end
+                          date. This could also be an onaccept to check whether
+                          the end-date has actually passed - but what if not?
+                          No regular system event that could reliably update the
+                          "closed" flag when end_date arrives, and too complex
+                          to implement one whilst ADASHI specifies that end-date
+                          will only be present if it has already passed.
+                    -->
+                    <data field="closed" value="True"/>
+                </xsl:if>
+
                 <!-- Incident Type -->
                 <xsl:if test="$IncidentType!=''">
                     <reference field="incident_type_id" resource="event_incident_type">
@@ -162,8 +187,6 @@
                 <reference resource="gis_location" field="location_id">
                     <xsl:call-template name="AdashiIncidentLocation"/>
                 </reference>
-
-                <!-- @todo: ended = needs implementation -->
 
                 <!-- @todo: resources = event_team, needs implementation of component relationship first -->
 
