@@ -519,35 +519,6 @@ def area():
     return output
 
 # -----------------------------------------------------------------------------
-def area_location():
-    """
-        REST controller for CAP area location
-        - shouldn't ever be called
-    """
-
-    def prep(r):
-        if r.interactive:
-            # Don't allow changing the area_id.
-            altable = s3db.cap_area_location
-            afield = altable.area_id
-            afield.readable = False
-            afield.writable = False
-
-            # Hide the location hierarchy fields in the location widget.
-            #ltable = s3db.gis_location
-            #for f in ["L0", "L1", "L2", "L3", "L4", "L5"]:
-            #    field = ltable[f]
-            #    field.readable = False
-            #    field.writable = False
-            #    field.requires = None
-        return True
-    s3.prep = prep
-
-    output = s3_rest_controller("cap", "area_location",
-                                rheader = s3db.cap_rheader)
-    return output
-
-# -----------------------------------------------------------------------------
 def warning_priority():
     """
         RESTful CRUD controller

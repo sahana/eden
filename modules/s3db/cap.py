@@ -886,13 +886,12 @@ class S3CAPModel(S3Model):
                                     "is_template",
                                     "name",
                                     "info_id",
-                                    # Not yet working with default formstyle or multiple=True
-                                    #S3SQLInlineComponent("location",
-                                    #                     name = "location",
-                                    #                     label = "",
-                                    #                     multiple = False,
-                                    #                     fields = [("", "location_id")],
-                                    #                     ),
+                                    S3SQLInlineComponent("location",
+                                                         name = "location",
+                                                         label = "",
+                                                         multiple = False,
+                                                         fields = [("", "location_id")],
+                                                         ),
                                     S3SQLInlineComponent("tag",
                                                          name = "tag",
                                                          label = "",
@@ -1312,23 +1311,14 @@ def cap_rheader(r):
                     else:
                         submit_btn = None
 
-                    artable = s3db.cap_area
-                    row = current.db(artable.alert_id == alert_id).\
-                                            select(artable.id,
-                                                   limitby=(0, 1)).first()
-                    if row:
-                        # We have an Area, so we can add Locations
-                        location_tab = (T("Location"), "location")
-                    else:
-                        location_tab = ""
                     tabs = [(T("Alert Details"), None),
                             (T("Information"), "info"),
                             (T("Area"), "area"),
-                            location_tab,
                             (T("Resource Files"), "resource"),
                             ]
 
                     # Check to see if 'Predefined Areas' tab need to be added
+                    artable = s3db.cap_area
                     query = (artable.is_template == True) & \
                             (artable.deleted == False)
                     if update_auth:                        
@@ -1355,8 +1345,6 @@ def cap_rheader(r):
             elif tablename == "cap_area":
                 # Used only for Area Templates
                 tabs = [(T("Area"), None),
-                        (T("Locations"), "location"),
-                        #(T("Geocodes"), "tag"),
                         ]
                 rheader_tabs = s3_rheader_tabs(r, tabs)
                 rheader = DIV(TABLE(TR(TH("%s: " % T("Alert")),
@@ -1377,16 +1365,6 @@ def cap_rheader(r):
                                     ),
                               rheader_tabs
                               )
-
-            elif tablename == "cap_area_location":
-                # Shouldn't ever be called
-                # We need the rheader only for the link back to the area.
-                rheader = DIV(TABLE(TR(TH("%s: " % T("Area")),
-                                       TD(A(s3db.cap_area_represent(record.area_id),
-                                            _href=URL(c="cap", f="area",
-                                                      args=[record.area_id, "update"]))),
-                                       ),
-                                    ))
 
             elif tablename == "cap_info":
                 # Shouldn't ever be called
