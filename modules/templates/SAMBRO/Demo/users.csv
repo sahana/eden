@@ -1,0 +1,10 @@
+First Name,Last Name,Email,Password,Role
+Map,Admin1,mm_mapadmin@example.com,eden,MAP_ADMIN
+Map,Admin2,ph_mapadmin@example.com,eden,MAP_ADMIN
+Map,Admin3,mv_mapadmin@example.com,eden,MAP_ADMIN
+Alert,Editor1,mm_editor@example.com,eden,ALERT_EDITOR
+Alert,Editor2,ph_editor@example.com,eden,ALERT_EDITOR
+Alert,Editor3,mv_editor@example.com,eden,ALERT_EDITOR
+Alert,Approver1,mm_approver@example.com,eden,ALERT_APPROVER
+Alert,Approver2,ph_approver@example.com,eden,ALERT_APPROVER
+Alert,Approver3,mv_approver@example.com,eden,ALERT_APPROVER

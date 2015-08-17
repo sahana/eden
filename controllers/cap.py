@@ -14,9 +14,7 @@ if not settings.has_module(module):
 def index():
     """ Module's Home Page """
 
-    module_name = settings.modules[module].name_nice
-    response.title = module_name
-    return dict(module_name=module_name)
+    s3_redirect_default(URL(f="alert"))
 
 # -----------------------------------------------------------------------------
 def info_prep(r):

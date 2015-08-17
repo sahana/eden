@@ -1289,13 +1289,15 @@ def cap_rheader(r):
                         agtable = db.auth_group
                         rows = db(agtable.role == "Alert Approver")._select(agtable.id)
                         group_rows = db(agtable.id.belongs(rows)).select(agtable.id)
+                        group_members = current.auth.s3_group_members
+                        user_pe_id = current.auth.s3_user_pe_id
                         if group_rows:
                             for group_row in group_rows:
                                 group_id = group_row.id                            
-                                user_ids = auth.s3_group_members(group_id) # List of user_ids
+                                user_ids = group_members(group_id) # List of user_ids
                                 pe_ids = [] # List of pe_ids
                                 for user_id in user_ids:
-                                    pe_ids.append(auth.s3_user_pe_id(int(user_id)))
+                                    pe_ids.append(user_pe_id(int(user_id)))
                                     
                             submit_btn = A(T("Submit for Approval"),
                                            _href = URL(f = "compose",
@@ -1807,8 +1809,14 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
     description = record["cap_info.description"]
     sender = record["cap_info.sender_name"]
 
+    if current.auth.s3_logged_in():
+        _href = URL(c="cap", f="alert", args=[record_id, "profile"])
+    else:
+        _href = URL(c="cap", f="public", args=[record_id, "profile"])
+        
     headline = A(headline,
-                 _href = URL(c="cap", f="alert", args=[record_id, "profile"]),
+                 _href = _href,
+                 _target = "_blank",
                  )
     headline = DIV(headline,
                    current.T("in %(location)s") % dict(location=location)
