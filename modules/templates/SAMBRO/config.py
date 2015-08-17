@@ -45,7 +45,7 @@ def config(settings):
     # 6: Apply Controller, Function, Table ACLs and Entity Realm
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations    
-    settings.security.policy = 4 # Functional-ACLs
+    settings.security.policy = 4 # Controller-Function ACLs
     
     # Record Approval
     settings.auth.record_approval = True
