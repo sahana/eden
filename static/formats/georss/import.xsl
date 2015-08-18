@@ -56,9 +56,6 @@
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
-            <xsl:if test="$source_type='adashi' and $category='Incidents'">
-                <xsl:call-template name="adashiIncidentTypes"/>
-            </xsl:if>
             <xsl:for-each select="//item">
                 <xsl:choose>
                     <!-- ADASHI -->
@@ -84,6 +81,10 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:for-each>
+            <xsl:if test="$source_type='adashi' and $category='Incidents'">
+                <xsl:call-template name="AdashiIncidentTypes"/>
+                <xsl:apply-templates select="//item[resources/text()!='']" mode="generate-units"/>
+            </xsl:if>
         </s3xml>
     </xsl:template>
 

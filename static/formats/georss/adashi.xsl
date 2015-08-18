@@ -52,7 +52,7 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="adashiIncidentTypes">
+    <xsl:template name="AdashiIncidentTypes">
 
         <xsl:for-each select="//item[generate-id(.)=generate-id(key('incident_types',
                                                                     type/text())[1])]">
@@ -189,6 +189,14 @@
                 </reference>
 
                 <!-- @todo: resources = event_team, needs implementation of component relationship first -->
+                <xsl:variable name="Resources" select="resources/text()"/>
+                <xsl:if test="$Resources!=''">
+                    <xsl:call-template name="AdashiIncidentResources">
+                        <xsl:with-param name="Resources">
+                            <xsl:value-of select="normalize-space($Resources)"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:if>
 
             </resource>
         </xsl:if>
@@ -259,6 +267,97 @@
             </xsl:if>
 
         </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="AdashiIncidentResources">
+
+        <xsl:param name="Resources"/>
+        <xsl:variable name="tail">
+            <xsl:value-of select="substring-after($Resources, ' ')"/>
+        </xsl:variable>
+        <xsl:variable name="head">
+            <xsl:choose>
+                <xsl:when test="$tail!=''">
+                    <xsl:value-of select="substring-before($Resources, ' ')"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$Resources"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <xsl:if test="$tail!=''">
+            <xsl:call-template name="AdashiIncidentResources">
+                <xsl:with-param name="Resources">
+                    <xsl:value-of select="$tail"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:if>
+
+        <xsl:if test="$head!=''">
+            <resource name="event_team">
+                <reference field="group_id" resource="pr_group">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('ResponseUnit:', $head)"/>
+                    </xsl:attribute>
+                </reference>
+                <!-- Status: Active -->
+                <data field="status" value="3"/>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="item[resources/text()!='']" mode="generate-units">
+        <xsl:call-template name="AdashiResponseUnits">
+            <xsl:with-param name="Units">
+                <xsl:value-of select="normalize-space(resources/text())"/>
+            </xsl:with-param>
+        </xsl:call-template>
+    </xsl:template>
+
+    <xsl:template name="AdashiResponseUnits">
+
+        <xsl:param name="Units"/>
+        <xsl:variable name="tail">
+            <xsl:value-of select="substring-after($Units, ' ')"/>
+        </xsl:variable>
+        <xsl:variable name="head">
+            <xsl:choose>
+                <xsl:when test="$tail!=''">
+                    <xsl:value-of select="substring-before($Units, ' ')"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$Units"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <xsl:if test="$tail!=''">
+            <xsl:call-template name="AdashiResponseUnits">
+                <xsl:with-param name="Units">
+                    <xsl:value-of select="normalize-space($tail)"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:if>
+
+        <xsl:if test="$head!='' and not(preceding-sibling::item[resources/text()!=''][
+                contains(resources/text(), concat(' ', $head, ' ')) or
+                starts-with(resources/text(), concat($head, ' ')) or
+                contains(resources/text(), $head) and substring-after(resources/text(), concat(' ', $head))=''
+                ][1])">
+            <resource name="pr_group">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('ResponseUnit:', $head)"/>
+                </xsl:attribute>
+                <data field="name">
+                    <xsl:value-of select="$head"/>
+                </data>
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
