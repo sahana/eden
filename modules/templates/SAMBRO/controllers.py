@@ -69,6 +69,7 @@ class index(S3CustomController):
         output["_map"] = _map
 
         # Filterable List of Alerts
+        # @ToDo: Put filters in hidable section
         # - most recent first
         resource = s3db.resource("cap_alert")
         # Don't show Templates
@@ -151,6 +152,7 @@ class index(S3CustomController):
                                                    limit = 5,
                                                    list_id = list_id,
                                                    orderby = orderby,
+                                                   # @ToDo: Custom layout with more button to expand content block
                                                    layout = s3db.cms_post_list_layout
                                                    )
         ajax_url = URL(c="cms", f="post", args="datalist.dl", vars={"list_id": list_id})
@@ -177,8 +179,12 @@ class index(S3CustomController):
         output["title"] = current.deployment_settings.get_system_name()
         self._view(THEME, "index.html")
 
+        s3 = current.response.s3
         # Custom CSS
-        current.response.s3.stylesheets.append("../themes/SAMBRO/style.css")
+        s3.stylesheets.append("../themes/SAMBRO/style.css")
+
+        # Custom JS
+        s3.scripts.append("/%s/static/themes/SAMBRO/js/homepage.js" % request.application)
 
         return output
 

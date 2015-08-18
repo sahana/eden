@@ -540,7 +540,7 @@ class S3CAPModel(S3Model):
                            ),
                      *s3_meta_fields())
         
-        priority_represent = S3Represent(lookup = tablename)
+        priority_represent = S3Represent(lookup=tablename)
         
         crud_strings[tablename] = Storage(
             label_create = T("Create Warning Priority"),
@@ -614,6 +614,7 @@ class S3CAPModel(S3Model):
                                                 multiple = True),
                            widget = S3MultiSelectWidget(),
                            ), # 0 or more allowed
+                     # @ToDo: Make this a proper Foreign Key, not just a text field
                      Field("priority",
                            represent = priority_represent,
                            requires = IS_EMPTY_OR(
