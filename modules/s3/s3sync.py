@@ -428,6 +428,10 @@ class S3Sync(S3Method):
                       )
             return False
 
+        # Activate UUID synchronisation if required
+        s3 = current.response.s3
+        s3.synchronise_uuids = connector.synchronise_uuids
+
         success = True
         for task in tasks:
 
@@ -458,6 +462,8 @@ class S3Sync(S3Method):
                 task.update_record(last_push=mtime)
 
             current.log.debug("S3Sync.synchronize: %s done" % task.resource_name)
+
+        s3.synchronise_uuids = False
 
         return success
 
@@ -756,6 +762,7 @@ class S3SyncRepository(object):
         self.name = repository.name
 
         self.accept_push = repository.accept_push
+        self.synchronise_uuids = repository.synchronise_uuids
 
         self.url = repository.url
         self.username = repository.username

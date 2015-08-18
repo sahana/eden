@@ -1823,9 +1823,21 @@ class S3ImportItem(object):
         self.table = table
         self.tablename = table._tablename
 
+        UID = xml.UID
+
         if original is None:
             original = S3Resource.original(table, element,
-                                           mandatory=self._mandatory_fields())
+                                           mandatory = self._mandatory_fields())
+        elif isinstance(original, basestring) and UID in table.fields:
+            # Single-component update in add-item => load the original now
+            query = (table[UID] == original)
+            pkeys = set(fname for fname in table.fields if table[fname].unique)
+            fields = S3Resource.import_fields(table, pkeys,
+                                              mandatory = self._mandatory_fields())
+            original = current.db(query).select(limitby=(0, 1), *fields).first()
+        else:
+            original = None
+
         postprocess = s3db.get_config(self.tablename, "xml_post_parse")
         data = xml.record(table, element,
                           files=files,
@@ -1841,17 +1853,18 @@ class S3ImportItem(object):
 
         self.data = data
 
-        UID = xml.UID
         MCI = xml.MCI
         MTIME = xml.MTIME
 
+        self.uid = data.get(UID)
         if original is not None:
+
             self.original = original
             self.id = original[table._id.name]
-            if UID in original:
-                self.data[UID] = self.uid = original[UID]
-        elif UID in data:
-            self.uid = data[UID]
+
+            if not current.response.s3.synchronise_uuids and UID in original:
+                self.uid = self.data[UID] = original[UID]
+
         if MTIME in data:
             self.mtime = data[MTIME]
         if MCI in data:
@@ -1869,17 +1882,14 @@ class S3ImportItem(object):
         if self.id:
             return
 
-        RESOLVER = "deduplicate"
-
         METHOD = self.METHOD
+        CREATE = METHOD["CREATE"]
         UPDATE = METHOD["UPDATE"]
         DELETE = METHOD["DELETE"]
         MERGE = METHOD["MERGE"]
 
         xml = current.xml
         UID = xml.UID
-        DELETED = xml.DELETED
-        REPLACEDBY = xml.REPLACEDBY
 
         table = self.table
         mandatory = self._mandatory_fields()
@@ -1889,45 +1899,61 @@ class S3ImportItem(object):
         if self.original is not None:
             original = self.original
         elif self.data:
-            original = S3Resource.original(table, self.data,
-                                           mandatory=mandatory)
+            original = S3Resource.original(table,
+                                           self.data,
+                                           mandatory=mandatory,
+                                           )
         else:
             original = None
 
         data = self.data
-        if original is not None:
-            self.original = original
-            self.id = original[table._id.name]
-            if UID in original:
-                self.uid = original[UID]
-                data.update({UID:self.uid})
-            if data[DELETED]:
-                if data[REPLACEDBY]:
-                    self.method = MERGE
-                else:
-                    self.method = DELETE
+        synchronise_uuids = current.response.s3.synchronise_uuids
+
+        deleted = data[xml.DELETED]
+        if deleted:
+            if data[xml.REPLACEDBY]:
+                self.method = MERGE
             else:
+                self.method = DELETE
+
+        self.uid = data.get(UID)
+
+        if original is not None:
+
+            # The original record could be identified by a unique-key-match,
+            # so this must be an update
+            self.id = original[table._id.name]
+
+            if not deleted:
                 self.method = UPDATE
 
-        else:
-            if data[DELETED]:
-                if data[REPLACEDBY]:
-                    self.method = MERGE
-                else:
-                    self.method = DELETE
+        elif not deleted:
+
+            if UID in data and not synchronise_uuids:
+                # The import item has a UUID but there is no match
+                # in the database, so this must be a new record
+                self.id = None
+                self.method = CREATE
             else:
-                resolve = current.s3db.get_config(self.tablename, RESOLVER)
+                # Use the resource's deduplicator to identify the original
+                resolve = current.s3db.get_config(self.tablename, "deduplicate")
                 if data and resolve:
                     resolve(self)
-                if self.id and self.method in (UPDATE, DELETE, MERGE):
-                    fields = S3Resource.import_fields(table, data,
-                                                      mandatory=mandatory)
-                    self.original = current.db(table._id == self.id) \
-                                           .select(limitby=(0, 1),
-                                                   *fields).first()
-                    if original and UID in original:
-                        self.uid = original[UID]
-                        data.update({UID:self.uid})
+
+            if self.id and self.method in (UPDATE, DELETE, MERGE):
+                # Retrieve the original
+                fields = S3Resource.import_fields(table,
+                                                  data,
+                                                  mandatory=mandatory,
+                                                  )
+                original = current.db(table._id == self.id) \
+                                  .select(limitby=(0, 1), *fields).first()
+
+        # Retain the original UUID (except in synchronise_uuids mode)
+        if original and not synchronise_uuids and UID in original:
+            self.uid = data[UID] = original[UID]
+
+        self.original = original
 
     # -------------------------------------------------------------------------
     def authorize(self):
@@ -2824,9 +2850,8 @@ class S3ImportItem(object):
         if original is not None:
             self.original = original
             self.id = original[table._id.name]
-            if UID in original:
-                self.uid = original[UID]
-                self.data.update({UID:self.uid})
+            if not current.response.s3.synchronise_uuids and UID in original:
+                self.uid = self.data[UID] = original[UID]
         self.error = row.error
         postprocess = s3db.get_config(self.tablename, "xml_post_parse")
         if postprocess:
@@ -3014,8 +3039,8 @@ class S3ImportJob():
                                                       ctable = ctable,
                                                       pkey = pkey,
                                                       fkey = fkey,
-                                                      original = None,
-                                                      uid = None)
+                                                      first = True,
+                                                      )
             add_item = self.add_item
             xml = current.xml
             for celement in xml.components(element, names=cnames.keys()):
@@ -3039,23 +3064,40 @@ class S3ImportJob():
                     cinfo = cinfos[(ctablename, calias)]
 
                 component = cinfo.component
-                original = cinfo.original
                 ctable = cinfo.ctable
+
                 pkey = cinfo.pkey
                 fkey = cinfo.fkey
+
+                original = None
+
                 if not component.multiple:
-                    if cinfo.uid is not None:
+                    # Single-component: skip all subsequent items after
+                    # the first under the same master record
+                    if not cinfo.first:
                         continue
-                    if original is None and item.id:
+                    cinfo.first = False
+
+                    # Single component = the first component record
+                    # under the master record is always the original,
+                    # only relevant if the master record exists in
+                    # the db and hence item.id is not None
+                    if item.id:
+                        db = current.db
                         query = (table.id == item.id) & \
                                 (table[pkey] == ctable[fkey])
-                        original = current.db(query).select(ctable.ALL,
-                                                            limitby=(0, 1)).first()
-                    if original:
-                        cinfo.uid = uid = original.get(xml.UID, None)
-                        celement.set(xml.UID, uid)
-                    cinfo.original = original
+                        if UID in ctable.fields:
+                            # Load only the UUID now, parse will load any
+                            # required data later
+                            row = db(query).select(UID,
+                                                   limitby = (0, 1)).first()
+                            original = row[UID]
+                        else:
+                            # Not nice, but a rare edge-case
+                            original = db(query).select(ctable.ALL,
+                                                        limitby=(0, 1)).first()
 
+                # Recurse
                 item_id = add_item(element=celement,
                                    original=original,
                                    parent=item,
