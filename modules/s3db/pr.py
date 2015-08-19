@@ -1986,6 +1986,10 @@ class S3GroupModel(S3Model):
                                                      # multiple instances for tracking reasons
                                                      "multiple": False,
                                                      },
+                            # Response team status
+                            event_team_status_team = {"joinby": "group_id",
+                                                      "multiple": False,
+                                                      },
                             )
 
         # ---------------------------------------------------------------------

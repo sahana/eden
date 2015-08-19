@@ -81,9 +81,16 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:for-each>
-            <xsl:if test="$source_type='adashi' and $category='Incidents'">
-                <xsl:call-template name="AdashiIncidentTypes"/>
-                <xsl:apply-templates select="//item[resources/text()!='']" mode="generate-units"/>
+            <xsl:if test="$source_type='adashi'">
+                <xsl:choose>
+                    <xsl:when test="$category='Incidents'">
+                        <xsl:call-template name="AdashiIncidentTypes"/>
+                        <xsl:apply-templates select="//item[resources/text()!='']" mode="generate-units"/>
+                    </xsl:when>
+                    <xsl:when test="$category='AVL'">
+                        <xsl:call-template name="AdashiCADStatuses"/>
+                    </xsl:when>
+                </xsl:choose>
             </xsl:if>
         </s3xml>
     </xsl:template>

@@ -31,6 +31,7 @@
 
     *********************************************************************** -->
     <xsl:key name="incident_types" match="item" use="type/text()"/>
+    <xsl:key name="cad_statuses" match="item" use="status/text()"/>
 
     <!-- ****************************************************************** -->
     <xsl:template name="adashi">
@@ -57,14 +58,36 @@
         <xsl:for-each select="//item[generate-id(.)=generate-id(key('incident_types',
                                                                     type/text())[1])]">
             <xsl:variable name="TypeName" select="type/text()"/>
-            <resource name="event_incident_type">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('IncidentType:', $TypeName)"/>
-                </xsl:attribute>
-                <data field="name">
-                    <xsl:value-of select="type/text()"/>
-                </data>
-            </resource>
+            <xsl:if test="$TypeName!=''">
+                <resource name="event_incident_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('IncidentType:', $TypeName)"/>
+                    </xsl:attribute>
+                    <data field="name">
+                        <xsl:value-of select="$TypeName"/>
+                    </data>
+                </resource>
+            </xsl:if>
+        </xsl:for-each>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="AdashiCADStatuses">
+
+        <xsl:for-each select="//item[generate-id(.)=generate-id(key('cad_statuses',
+                                                                    status/text())[1])]">
+            <xsl:variable name="StatusCode" select="status/text()"/>
+            <xsl:if test="$StatusCode!=''">
+                <resource name="event_team_status">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('CADStatus:', $StatusCode)"/>
+                    </xsl:attribute>
+                    <data field="name">
+                        <xsl:value-of select="$StatusCode"/>
+                    </data>
+                </resource>
+            </xsl:if>
         </xsl:for-each>
 
     </xsl:template>
@@ -102,7 +125,17 @@
                     </reference>
                 </resource>
 
-                <!-- @todo: status -->
+                <!-- Status -->
+                <xsl:variable name="StatusCode" select="status/text()"/>
+                <xsl:if test="$StatusCode">
+                    <resource name="event_team_status_team">
+                        <reference field="status_id" resource="event_team_status">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('CADStatus:', $StatusCode)"/>
+                            </xsl:attribute>
+                        </reference>
+                    </resource>
+                </xsl:if>
 
             </resource>
         </xsl:if>

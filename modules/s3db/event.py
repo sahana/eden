@@ -1811,14 +1811,18 @@ class S3EventTeamModel(S3Model):
 
     names = ("event_team",
              "event_team_status",
+             "event_team_status_team",
              )
 
     def model(self):
 
         T = current.T
+        db = current.db
 
         define_table = self.define_table
         configure = self.configure
+
+        group_id = self.pr_group_id
 
         status_opts = {1: T("Alerted"),
                        2: T("Standing By"),
@@ -1833,11 +1837,11 @@ class S3EventTeamModel(S3Model):
         tablename = "event_team"
         define_table(tablename,
                      self.event_incident_id(ondelete = "CASCADE"),
-                     self.pr_group_id(empty = False,
-                                      ondelete = "RESTRICT",
-                                      # Dropdown, not Autocomplete
-                                      widget = None,
-                                      ),
+                     group_id(empty = False,
+                              ondelete = "RESTRICT",
+                              # Dropdown, not Autocomplete
+                              widget = None,
+                              ),
                      Field("status", "integer",
                            default = 1,
                            represent = lambda opt: \
@@ -1859,7 +1863,11 @@ class S3EventTeamModel(S3Model):
             msg_list_empty = T("No Teams currently assigned to this incident"))
 
         configure(tablename,
-                  deduplicate = self.event_team_duplicate,
+                  # Team can be assigned to multiple incidents,
+                  # so updates must match both incident_id and group_id:
+                  deduplicate = S3Duplicate(primary=("incident_id",
+                                                     "group_id",
+                                                     )),
                   )
 
         # ---------------------------------------------------------------------
@@ -1873,37 +1881,51 @@ class S3EventTeamModel(S3Model):
                            requires = IS_NOT_EMPTY(),
                            ),
                      Field("description"),
+                     # Not currently needed (...yet):
                      #self.org_organisation_id(),
                      s3_comments(),
                      *s3_meta_fields())
 
+        represent = S3Represent(lookup=tablename)
+        status_id = S3ReusableField("status_id", "reference %s" % tablename,
+                                    label = T("Status"),
+                                    ondelete = "RESTRICT",
+                                    represent = represent,
+                                    requires = IS_ONE_OF(db, "event_team_status.id",
+                                                         represent,
+                                                         orderby="event_team_status.name",
+                                                         sort=True,
+                                                         ),
+                                    sortby = "name",
+                                    )
+
         configure(tablename,
+                  # All name duplicates are updates (=default rule):
                   deduplicate = S3Duplicate(),
                   )
 
+        # ---------------------------------------------------------------------
+        # Link table status<=>team
+        #
+        tablename = "event_team_status_team"
+        define_table(tablename,
+                     group_id(empty = False,
+                              ondelete = "RESTRICT",
+                              # Dropdown, not Autocomplete
+                              widget = None,
+                              ),
+                     status_id(),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  # Team can only have one status at a time,
+                  # so any group_id match is an update:
+                  deduplicate = S3Duplicate(primary = ("group_id",)),
+                  )
+
+        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def event_team_duplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        incident_id = data.get("incident_id")
-        group_id = data.get("group_id")
-
-        if incident_id and group_id:
-
-            table = item.table
-            query = (table.incident_id == incident_id) & \
-                    (table.group_id == group_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-        return
 
 # =============================================================================
 class S3EventImpactModel(S3Model):
