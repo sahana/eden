@@ -112,11 +112,13 @@
     <!-- ****************************************************************** -->
     <xsl:template name="AdashiIncident">
 
-        <xsl:variable name="IncidentName">
+        <xsl:variable name="IncidentDisplayName">
             <xsl:choose>
-                <xsl:when test="incidentName/text()!=''">
-                    <xsl:value-of select="incidentName/text()"/>
+                <!-- Use incidentIdShort as display name -->
+                <xsl:when test="incidentIdShort/text()!=''">
+                    <xsl:value-of select="incidentIdShort/text()"/>
                 </xsl:when>
+                <!-- Fall back to item title if not present -->
                 <xsl:otherwise>
                     <xsl:value-of select="title/text()"/>
                 </xsl:otherwise>
@@ -125,7 +127,7 @@
         <xsl:variable name="IncidentUID" select="incidentId/text()"/>
         <xsl:variable name="IncidentType" select="type/text()"/>
 
-        <xsl:if test="$IncidentName!=''">
+        <xsl:if test="$IncidentDisplayName!=''">
 
             <xsl:variable name="ZeroHour" select="started/text()"/>
             <xsl:variable name="ModifiedOn" select="lastModified/text()"/>
@@ -136,7 +138,7 @@
                 <!-- UUID and modified_on -->
                 <xsl:if test="$IncidentUID!=''">
                     <xsl:attribute name="uuid">
-                        <xsl:value-of select="$IncidentUID"/>
+                        <xsl:value-of select="concat('CAD/', $IncidentUID)"/>
                     </xsl:attribute>
                 </xsl:if>
                 <xsl:if test="$ModifiedOn!=''">
@@ -147,7 +149,7 @@
 
                 <!-- Incident Name -->
                 <data field="name">
-                    <xsl:value-of select="$IncidentName"/>
+                    <xsl:value-of select="$IncidentDisplayName"/>
                 </data>
                 <data field="exercise" value="False"/>
 
@@ -188,7 +190,7 @@
                     <xsl:call-template name="AdashiIncidentLocation"/>
                 </reference>
 
-                <!-- @todo: resources = event_team, needs implementation of component relationship first -->
+                <!-- Units Assigned -->
                 <xsl:variable name="Resources" select="resources/text()"/>
                 <xsl:if test="$Resources!=''">
                     <xsl:call-template name="AdashiIncidentResources">
@@ -196,6 +198,14 @@
                             <xsl:value-of select="normalize-space($Resources)"/>
                         </xsl:with-param>
                     </xsl:call-template>
+                </xsl:if>
+
+                <!-- Capture the incidentName in comments field -->
+                <xsl:variable name="IncidentName" select="incidentName/text()"/>
+                <xsl:if test="$IncidentName!=''">
+                    <data field="comments">
+                        <xsl:value-of select="$IncidentName"/>
+                    </data>
                 </xsl:if>
 
             </resource>
