@@ -123,6 +123,7 @@ class S3DVRModel(S3Model):
                         comment=None,
                         requires=IS_ADD_PERSON_WIDGET2(),
                         widget=S3AddPersonWidget2(controller="pr"),
+                        represent=self.pr_PersonRepresent(show_link=True)
                      ),
                      #Field("damage", "integer",
                      #      label= T("Damage Assessment"),
@@ -169,7 +170,8 @@ class S3DVRModel(S3Model):
                                   )
 
         self.add_components(tablename,
-                            dvr_need = "need_id",
+                             dvr_need = \
+                                {"link": "dvr_case_need", "joinby": "case_id", "key": "need_id"},
                             pr_address = ({"name": "current_address",
                                            "link": "pr_person",
                                            "joinby": "id",

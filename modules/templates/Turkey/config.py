@@ -88,6 +88,10 @@ def config(settings):
         "USD" : T("United States Dollars"),
     }
     settings.fin.currency_default = "TRY"
+    
+    # Default Country Code for telephone numbers
+    settings.L10n.default_country_code = 90
+    settings.msg.require_international_phone_numbers = False
 
     # Security Policy
     # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -283,8 +287,17 @@ def config(settings):
     # =============================================================================
     def customise_hrm_training_resource(r, tablename):
         """ Configure hrm_training_resource """  
-        s3db = current.s3db      
+        s3db = current.s3db     
+        db = current.db 
         table = s3db.hrm_training
+        
+        #Customize Course dropdown in Volunteer > Training Tab > creating training
+        s3db.hrm_training.course_id.requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "hrm_course.id",
+                                                          S3Represent(lookup="hrm_course",
+                                                                      fields=["code", "name"], field_sep=": ", translate=True),
+                                                          filterby="organisation_id",
+                                                          ))
                 
         if r.representation == "html":
             s3db.configure(table,
@@ -293,7 +306,9 @@ def config(settings):
                                       "date",
                                       "hours"
                                       ],
-                       )          
+                       )
+                                    
+                
     
     settings.customise_hrm_training_resource = customise_hrm_training_resource  
     
@@ -807,12 +822,12 @@ def config(settings):
             restricted = True,
             module_type = 10
         )),
-        #("dvr", Storage(
-        #   name_nice = T("Disaster Victim Registry"),
-        #   #description = "Allow affected individuals & households to register to receive compensation and distributions",
-        #   restricted = True,
-        #   module_type = 10,
-        #)),
+        ("dvr", Storage(
+           name_nice = T("Disaster Victim Registry"),
+           #description = "Allow affected individuals & households to register to receive compensation and distributions",
+           restricted = True,
+           module_type = 10,
+        )),
         ("event", Storage(
             name_nice = T("Events"),
             #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
