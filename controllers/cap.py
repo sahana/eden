@@ -99,6 +99,16 @@ def public():
     return alert()
 
 # -----------------------------------------------------------------------------
+def recent():
+    """
+        Show Recent Alerts
+    """
+    
+    s3.filter = (s3base.FS("info.expires") < request.utcnow)
+    
+    return alert()
+
+# -----------------------------------------------------------------------------
 def alert():
     """ REST controller for CAP Alerts and Components """
 

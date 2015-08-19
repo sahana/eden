@@ -150,6 +150,30 @@ def config(settings):
     settings.customise_msg_twitter_channel_resource = customise_msg_twitter_channel_resource
 
     # -------------------------------------------------------------------------
+    def default_alert_filter(selector, tablename = None):
+        """
+            Default filter for alert
+             - show unexpired alerts by default
+        """
+        
+        s3db = current.s3db
+        itable = s3db.cap_info
+        rows = current.db(itable.expires >= current.request.utcnow).select(itable.id)
+        return [row.id for row in rows]
+    
+    # -------------------------------------------------------------------------
+    def customise_cap_alert_controller(**attr):
+        
+        from s3 import s3_set_default_filter
+        s3_set_default_filter("info.id",
+                              default_alert_filter,
+                              tablename = "cap_alert")
+        
+        return attr
+    
+    settings.customise_cap_alert_controller = customise_cap_alert_controller
+    
+    # -------------------------------------------------------------------------     
     # Comment/uncomment modules here to disable/enable them
     # @ToDo: Have the system automatically enable migrate if a module is enabled
     # Modules menu is defined in modules/eden/menu.py
