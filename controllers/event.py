@@ -244,6 +244,12 @@ def team():
     return s3_rest_controller("event", "team")
 
 # -----------------------------------------------------------------------------
+def team_status():
+    """ Team status taxonomy controller (for Admin and lookups) """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def compose():
     """ Send message to people/teams """
 

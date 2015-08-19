@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CadStatusConfigOptions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <CADStatuses>
+    <CadStatus>
+      <ShortDisplayString>ENR</ShortDisplayString>
+      <CadDatabaseString>ENR</CadDatabaseString>
+      <LongDisplayString>ENROUTE</LongDisplayString>
+      <Description>UNIT IS ENROUTE TO AN INCIDENT</Description>
+      <ClientCanRequest>true</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>Red</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>ONS</ShortDisplayString>
+      <CadDatabaseString>ONS</CadDatabaseString>
+      <LongDisplayString>ONSCENE</LongDisplayString>
+      <Description>UNIT IS ONSCENE OF AN INCIDENT</Description>
+      <ClientCanRequest>true</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>Red</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>TSP</ShortDisplayString>
+      <CadDatabaseString>TSP</CadDatabaseString>
+      <LongDisplayString>TRANSPORT</LongDisplayString>
+      <Description>UNIT IS TRANSPORTING A PATIENT TO A HOSPITAL</Description>
+      <ClientCanRequest>true</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>Yellow</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>HSP</ShortDisplayString>
+      <CadDatabaseString>HSP</CadDatabaseString>
+      <LongDisplayString>HOSPITAL</LongDisplayString>
+      <Description>INCIDENT RELATED - UNIT IS AT A HOSPITAL WITH A PATIENT</Description>
+      <ClientCanRequest>true</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>Red</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>AVR</ShortDisplayString>
+      <CadDatabaseString>AVR</CadDatabaseString>
+      <LongDisplayString>Available on Radio</LongDisplayString>
+      <Description>Available on Radio</Description>
+      <ClientCanRequest>true</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>LimeGreen</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>QTR</ShortDisplayString>
+      <CadDatabaseString>QTR</CadDatabaseString>
+      <LongDisplayString>QUARTERS</LongDisplayString>
+      <Description>UNIT IS IN QUARTERS AT A FIRE STATION OR OTHER LAFD FACILITY</Description>
+      <ClientCanRequest>true</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>LimeGreen</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>CAV</ShortDisplayString>
+      <CadDatabaseString>CAV</CadDatabaseString>
+      <LongDisplayString>CONDITIONALLY AVAILABLE</LongDisplayString>
+      <Description>CONDITIONALLY AVAILABLE</Description>
+      <ClientCanRequest>true</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>Silver</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>NAV</ShortDisplayString>
+      <CadDatabaseString>NAV</CadDatabaseString>
+      <LongDisplayString>NOT AVAILABLE</LongDisplayString>
+      <Description>NOT AVAILABLE FOR DISPATCH</Description>
+      <ClientCanRequest>true</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>DarkSlateGray</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>AVI</ShortDisplayString>
+      <CadDatabaseString>AVI</CadDatabaseString>
+      <LongDisplayString>AVAILABLE</LongDisplayString>
+      <Description>UNIT HAS BECOME AVAILABLE FROM AN INCIDENT</Description>
+      <ClientCanRequest>false</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>LimeGreen</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>OVQ</ShortDisplayString>
+      <CadDatabaseString>OVQ</CadDatabaseString>
+      <LongDisplayString>OVERDUE QUARTERS</LongDisplayString>
+      <Description>UNIT IN QTR AND HAS NOT PRESSED ENR WITHIN 90 SECONDS</Description>
+      <ClientCanRequest>false</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>DarkOrange</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>OVR</ShortDisplayString>
+      <CadDatabaseString>OVR</CadDatabaseString>
+      <LongDisplayString>OVERDUE RADIO</LongDisplayString>
+      <Description>UNIT IS ON RAD AND HAS NOT PRESSED ENR WITHIN 90 SECONDS</Description>
+      <ClientCanRequest>false</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>Orange</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>PGR</ShortDisplayString>
+      <CadDatabaseString>PGR</CadDatabaseString>
+      <LongDisplayString>PGR</LongDisplayString>
+      <Description>Unit is available via pager</Description>
+      <ClientCanRequest>false</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>PaleGreen</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>RAD</ShortDisplayString>
+      <CadDatabaseString>RAD</CadDatabaseString>
+      <LongDisplayString>RADIO</LongDisplayString>
+      <Description>UNIT IS OUT OF QUARTERS AND CAN BE REACHED BY RADIO</Description>
+      <ClientCanRequest>false</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>LimeGreen</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>WRQ</ShortDisplayString>
+      <CadDatabaseString>WRQ</CadDatabaseString>
+      <LongDisplayString>WAITING RESPONSE QUARTERS</LongDisplayString>
+      <Description>UNIT IS DISPATCHED FROM QUARTERS</Description>
+      <ClientCanRequest>false</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>DarkRed</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>WRR</ShortDisplayString>
+      <CadDatabaseString>WRR</CadDatabaseString>
+      <LongDisplayString>WAITING RESPONSE RADIO</LongDisplayString>
+      <Description>UNIT IS DISPATCHED WHILE ON THE RADIO</Description>
+      <ClientCanRequest>false</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>DarkRed</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+    <CadStatus>
+      <ShortDisplayString>INC</ShortDisplayString>
+      <CadDatabaseString>INC</CadDatabaseString>
+      <LongDisplayString>In Command at Incident</LongDisplayString>
+      <Description>In Command at Incident</Description>
+      <ClientCanRequest>false</ClientCanRequest>
+      <AvlLocationTransmit>
+        <MinFeetBetween xsi:nil="true" />
+        <MinSecondsBetween xsi:nil="true" />
+        <SecondsBeforeTransmitGPSDisconnected xsi:nil="true" />
+        <SecondsChangedInETABeforeTransmit xsi:nil="true" />
+        <MaxMinutesBetween xsi:nil="true" />
+      </AvlLocationTransmit>
+      <BackgroundString>DodgerBlue</BackgroundString>
+      <ForegroundString>Black</ForegroundString>
+    </CadStatus>
+  </CADStatuses>
+  <ShowStatus>true</ShowStatus>
+  <AllowSetStatus>true</AllowSetStatus>
+</CadStatusConfigOptions>

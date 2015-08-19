@@ -1810,11 +1810,15 @@ class S3EventTeamModel(S3Model):
     """ Link teams to incidents """
 
     names = ("event_team",
+             "event_team_status",
              )
 
     def model(self):
 
         T = current.T
+
+        define_table = self.define_table
+        configure = self.configure
 
         status_opts = {1: T("Alerted"),
                        2: T("Standing By"),
@@ -1827,20 +1831,20 @@ class S3EventTeamModel(S3Model):
         # Link table incident<=>team
         #
         tablename = "event_team"
-        self.define_table(tablename,
-                          self.event_incident_id(ondelete = "CASCADE"),
-                          self.pr_group_id(empty = False,
-                                           ondelete = "RESTRICT",
-                                           # Dropdown, not Autocomplete
-                                           widget = None,
-                                           ),
-                          Field("status", "integer",
-                                default = 1,
-                                represent = lambda opt: \
+        define_table(tablename,
+                     self.event_incident_id(ondelete = "CASCADE"),
+                     self.pr_group_id(empty = False,
+                                      ondelete = "RESTRICT",
+                                      # Dropdown, not Autocomplete
+                                      widget = None,
+                                      ),
+                     Field("status", "integer",
+                           default = 1,
+                           represent = lambda opt: \
                                        status_opts.get(opt, current.messages.UNKNOWN_OPT),
-                                requires = IS_IN_SET(status_opts),
-                                ),
-                          *s3_meta_fields())
+                           requires = IS_IN_SET(status_opts),
+                           ),
+                     *s3_meta_fields())
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Assign Team"),
@@ -1854,9 +1858,28 @@ class S3EventTeamModel(S3Model):
             msg_record_deleted = T("Team Assignment removed"),
             msg_list_empty = T("No Teams currently assigned to this incident"))
 
-        self.configure(tablename,
-                       deduplicate = self.event_team_duplicate,
-                       )
+        configure(tablename,
+                  deduplicate = self.event_team_duplicate,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Taxonomy for response team (unit) status
+        #
+        tablename = "event_team_status"
+        define_table(tablename,
+                     Field("name",
+                           length = 64,
+                           label = T("Status Code"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("description"),
+                     #self.org_organisation_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
 
         # Pass names back to global scope (s3.*)
         return {}
