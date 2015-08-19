@@ -381,6 +381,15 @@ class S3CAPModel(S3Model):
                                  ),
                      *s3_meta_fields())
 
+        list_fields = [(T("Sent"), "sent"),
+                       "info.expires",
+                       "scope",
+                       "info.priority",
+                       "info.event_type_id",
+                       "info.sender_name",
+                       "area.name",
+                       ]
+        
         filter_widgets = [
             S3TextFilter(["identifier",
                           "sender",
@@ -402,12 +411,18 @@ class S3CAPModel(S3Model):
             S3OptionsFilter("info.language",
                             label = T("Language"),
                             ),
+            S3OptionsFilter("info.id",
+                            label = T("Alerts"),
+                            cols = 2,
+                            ),
             ]
 
         configure(tablename,
                   context = {"location": "location.location_id",
                              },
                   filter_widgets = filter_widgets,
+                  list_fields = list_fields,
+                  orderby = "cap_info.expires desc",
                   list_layout = cap_alert_list_layout,
                   list_orderby = "cap_info.expires desc",
                   onvalidation = self.cap_alert_form_validation,
