@@ -6,4 +6,14 @@ $(document).ready(function(){
         S3.gis.refreshLayer('search_results', [['~.id', alert_id]]);
     });
 
+    // Show/Hide Filter options
+    $('#alert-filter-form-show').click(function() {
+        $('#alert-filter-form-show').hide();
+        $('#alert-filter-form, #alert-filter-form-hide').show();
+    });
+    $('#alert-filter-form-hide').click(function() {
+        $('#alert-filter-form, #alert-filter-form-hide').hide();
+        $('#alert-filter-form-show').show();
+    });
+
 });

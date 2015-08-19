@@ -69,7 +69,6 @@ class index(S3CustomController):
         output["_map"] = _map
 
         # Filterable List of Alerts
-        # @ToDo: Put filters in hidable section
         # - most recent first
         resource = s3db.resource("cap_alert")
         # Don't show Templates

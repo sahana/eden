@@ -2,7 +2,16 @@
 <h1>{{=title}}</h1>
 <div class='large-3 columns'>
 <h3>{{=T("Alerts")}}</h3>
-{{=alert_filter_form}}
+<fieldset>
+ <legend>
+  {{=T("Filter Options")}}
+  <button id='alert-filter-form-show' class='toggle-text btn' type='button' style='display:none'>{{=T("Show")}}</button>
+  <button id='alert-filter-form-hide' class='toggle-text btn' type='button' style='display:inline-block'>{{=T("Hide")}}</button>
+ </legend>
+ <div id='alert-filter-form'>
+  {{=alert_filter_form}}
+ <div>
+</fieldset>
 {{=cap_alert_datalist}}
 </div>
 <div class='large-6 columns'>
