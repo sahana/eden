@@ -31,6 +31,7 @@
 __all__ = ("S3Importer",
            "S3ImportJob",
            "S3ImportItem",
+           "S3Duplicate",
            "S3BulkImporter",
            )
 
@@ -3642,6 +3643,112 @@ class S3ImportJob():
                 else:
                     item.parent = parent
                 item.load_parent = None
+
+# =============================================================================
+class S3Duplicate(object):
+    """ Standard deduplicator method """
+
+    def __init__(self, primary=None, secondary=None, ignore_case=True):
+        """
+            Constructor
+
+            @param primary: list or tuple of primary fields to find a
+                            match, must always match (mandatory, defaults
+                            to "name" field)
+            @param secondary: list or tuple of secondary fields to
+                              find a match, must match if values are
+                              present in the import item
+            @param ignore_case: ignore case for string/text fields
+        """
+
+        if not primary:
+            primary = ("name",)
+        self.primary = set(primary)
+
+        if not secondary:
+            self.secondary = set()
+        else:
+            self.secondary = set(secondary)
+
+        self.ignore_case = ignore_case
+
+    # -------------------------------------------------------------------------
+    def __call__(self, item):
+        """
+            Entry point for importer
+
+            @param item: the import item
+
+            @return: the duplicate Row if match found, otherwise None
+
+            @raise SyntaxError: if any of the query fields doesn't exist
+                                in the item table
+        """
+
+        data = item.data
+        table = item.table
+
+        query = None
+        error = "Invalid field for duplicate detection: %s (%s)"
+        match = self.match
+
+        # Primary query (mandatory)
+        primary = self.primary
+        for fname in primary:
+
+            if fname not in table.fields:
+                raise SyntaxError(error % (fname, table))
+
+            field = table[fname]
+            value = data.get(fname)
+
+            q = self.match(field, value)
+            query = q if query is None else query & q
+
+        # Secondary queries (optional)
+        secondary = self.secondary
+        for fname in secondary:
+
+            if fname not in table.fields:
+                raise SyntaxError(error % (fname, table))
+
+            field = table[fname]
+            value = data.get(fname)
+            if value:
+                query &= self.match(field, value)
+
+        # Find a match
+        duplicate = current.db(query).select(table._id,
+                                             limitby = (0, 1)).first()
+
+        # Update import item if match found:
+        if duplicate:
+            item.id = duplicate[table._id]
+            item.method = item.METHOD.UPDATE
+
+        # For uses outside of imports:
+        return duplicate
+
+    # -------------------------------------------------------------------------
+    def match(self, field, value):
+        """
+            Helper function to generate a match-query
+
+            @param field: the Field
+            @param value: the value
+
+            @return: a Query
+        """
+
+        ftype = str(field.type)
+        ignore_case = self.ignore_case
+
+        if ignore_case and \
+           hasattr(value, "lower") and ftype in ("string", "text"):
+            query = (field.lower() == value.lower())
+        else:
+            query = (field == value)
+        return query
 
 # =============================================================================
 class S3BulkImporter(object):
