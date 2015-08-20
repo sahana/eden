@@ -885,6 +885,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         use_certs = lambda i: settings.get_hrm_use_certificates()
         use_skills = lambda i: settings.get_hrm_use_skills()
         show_programmes = lambda i: settings.get_hrm_vol_experience() in ("programme", "both")
+        sdhow_program_reports = lambda i: root_org != "Iraqi Red Crescent Society" and \
+                                          settings.get_hrm_vol_experience() in ("programme", "both")
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
         teams = settings.get_hrm_teams()
@@ -977,12 +979,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           vars=Storage(rows="job_title_id",
                                        cols="month",
                                        fact="sum(hours)"),
-                          check=show_programmes),
+                          check=sdhow_program_reports),
                         M("Hours by Program Report", f="programme_hours", m="report",
                           vars=Storage(rows="programme_id",
                                        cols="month",
                                        fact="sum(hours)"),
-                          check=show_programmes),
+                          check=sdhow_program_reports),
                         M("Training Report", f="training", m="report"),
                     ),
                     #M("My Profile", f="person",
