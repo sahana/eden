@@ -838,7 +838,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
             get_vars.viewing = "survey_complete.%s" % series_id
 
         return M(c="survey")(
-                    M("Branch Organisation Capacity Assessments", c="org", f="capacity_assessment")(
+                    M("Branch Organization Capacity Assessments", c="org", f="capacity_assessment")(
                         M("Create", m="create"),
                         M("Report", f="capacity_assessment_data", m="custom_report"),
                     ),
