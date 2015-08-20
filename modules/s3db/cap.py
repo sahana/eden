@@ -340,11 +340,10 @@ class S3CAPModel(S3Model):
                            #       this should eventually use the CAP contacts
                            #widget = S3CAPAddressesWidget,
                            ),
-                     Field("codes", "text",
+                     Field("codes", "list:string",
                            default = settings.get_cap_codes(),
                            label = T("Codes"),
-                           represent = S3KeyValueWidget.represent,
-                           widget = S3KeyValueWidget(),
+                           represent = self.list_string_represent,
                            ),
                      Field("note", "text",
                            label = T("Note"),
@@ -380,8 +379,17 @@ class S3CAPModel(S3Model):
                                  writable = False,
                                  ),
                      *s3_meta_fields())
+        
+        list_fields = [(T("Sent"), "sent"),
+                       "scope",
+                       "info.priority",
+                       "info.event_type_id",
+                       "info.sender_name",
+                       "area.name",
+                       ]
 
         filter_widgets = [
+            # @ToDo: Radio Button to choose between alert expired, unexpired and all
             S3TextFilter(["identifier",
                           "sender",
                           "incidents",
@@ -408,11 +416,13 @@ class S3CAPModel(S3Model):
                   context = {"location": "location.location_id",
                              },
                   filter_widgets = filter_widgets,
+                  list_fields = list_fields,
                   list_layout = cap_alert_list_layout,
                   list_orderby = "cap_info.expires desc",
                   onvalidation = self.cap_alert_form_validation,
                   # update the approved_on field on approve of the alert
                   onapprove = self.cap_alert_approve,
+                  orderby = "cap_info.expires desc",
                   )
 
         # Components
@@ -421,6 +431,9 @@ class S3CAPModel(S3Model):
                        cap_area_location = {"name": "location",
                                             "joinby": "alert_id",
                                             },
+                       cap_area_tag = {"name": "tag",
+                                        "joinby": "alert_id",
+                                        },
                        cap_info = "alert_id",
                        cap_resource = "alert_id",
                        )
@@ -997,6 +1010,9 @@ class S3CAPModel(S3Model):
 
         tablename = "cap_area_tag"
         define_table(tablename,
+                     alert_id(readable = False,
+                              writable = False,
+                              ),
                      area_id(),
                      # ToDo: Allow selecting from a dropdown list of pre-defined
                      # geocode system names.
@@ -1012,9 +1028,10 @@ class S3CAPModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        #configure(tablename,
-        #          deduplicate = self.cap_area_tag_deduplicate,
-        #          )
+        configure(tablename,
+                  create_onaccept = update_alert_id(tablename),
+        #         deduplicate = self.cap_area_tag_deduplicate,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -1438,7 +1455,7 @@ def update_alert_id(tablename):
         db = current.db
         table = db[tablename]
 
-        if tablename == "cap_area_location":
+        if tablename == "cap_area_location" or tablename == "cap_area_tag":
             area_id = form_vars.get("area_id", None)
             if not area_id:
                 # Get the full record
@@ -1782,6 +1799,7 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
     record_id = record["cap_alert.id"]
     item_class = "thumbnail"
 
+    T = current.T
     #raw = record._row
     # @ToDo: handle the case where we have multiple info segments &/or areas
     headline = record["cap_info.headline"]
@@ -1802,9 +1820,13 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
                  )
 
     if list_id == "map_popup":
+        itable = current.s3db.cap_info
         # Map popup
-        event = current.s3db.cap_info.event_type_id.represent(event)
-        priority = priority or ""
+        event = itable.event_type_id.represent(event)
+        if priority is None:
+            priority = T("Unknown")
+        else:
+            priority = itable.priority.represent(priority)
         description = record["cap_info.description"]
         response_type = record["cap_info.response_type"]
         sender = record["cap_info.sender_name"]
@@ -1817,11 +1839,13 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
                        BR(),
                        )
     else:
+        if priority == current.messages["NONE"]:
+            priority = T("Unknown")
         last = BR()
 
     details = "%s %s %s" % (priority, status, scope)
 
-    more = A(current.T("Full Alert"),
+    more = A(T("Full Alert"),
              _href = _href,
              _target = "_blank",
              )
