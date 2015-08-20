@@ -388,6 +388,31 @@ class S3CAPModel(S3Model):
                        "area.name",
                        ]
 
+        notify_fields = ["identifier",
+                         "sent",
+                         "status",
+                         "msg_type",
+                         "source",
+                         "scope",
+                         "restriction",
+                         "info.category",
+                         "info.event_type_id",
+                         "info.response_type",
+                         "info.priority",
+                         "info.urgency",
+                         "info.severity",
+                         "info.certainty",
+                         "info.effective",
+                         "info.expires",
+                         "info.sender_name",
+                         "info.headline",
+                         "info.description",
+                         "info.instruction",
+                         "info.contact",
+                         "info.web",
+                         "area.name",
+                         ]
+
         filter_widgets = [
             # @ToDo: Radio Button to choose between alert expired, unexpired and all
             S3TextFilter(["identifier",
@@ -402,6 +427,10 @@ class S3CAPModel(S3Model):
             S3OptionsFilter("info.category",
                             label = T("Category"),
                             options = cap_info_category_opts,
+                            ),
+            S3OptionsFilter("info.event_type_id",
+                            ),
+            S3OptionsFilter("info.priority",
                             ),
             S3LocationFilter("location.location_id",
                              label = T("Location(s)"),
@@ -419,6 +448,7 @@ class S3CAPModel(S3Model):
                   list_fields = list_fields,
                   list_layout = cap_alert_list_layout,
                   list_orderby = "cap_info.expires desc",
+                  notify_fields = notify_fields,
                   onvalidation = self.cap_alert_form_validation,
                   # update the approved_on field on approve of the alert
                   onapprove = self.cap_alert_approve,

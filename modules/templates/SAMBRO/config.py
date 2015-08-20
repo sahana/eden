@@ -52,6 +52,14 @@ def config(settings):
     # cap_alert record requires approval before sending
     settings.auth.record_approval_required_for = ("cap_alert",)
 
+    # =============================================================================
+    # Module Settings
+    # -----------------------------------------------------------------------------
+    # Notifications
+    
+    # Template for the subject line in update notifications
+    settings.msg.notify_subject = "$S %s" % T("Alert Notification")
+
     # -----------------------------------------------------------------------------
     # L10n (Localization) settings
     settings.L10n.languages = OrderedDict([
