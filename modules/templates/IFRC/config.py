@@ -1948,9 +1948,44 @@ def config(settings):
                 s3db = current.s3db
                 table = s3db.hrm_human_resource
                 table.start_date.label = T("Appointment Date")
-                from s3 import IS_ADD_PERSON_WIDGET2#, S3SQLCustomForm, S3SQLInlineComponent
+                # All staff have open-ended contracts
+                table.end_date.readable = table.end_date.writable = False
+                from s3 import IS_ADD_PERSON_WIDGET2, S3SQLCustomForm, S3SQLInlineComponent
                 table.person_id.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
                 table.code.label = T("Appointment Number")
+                hrm_status_opts = s3db.hrm_status_opts
+                hrm_status_opts[3] = T("End Service")
+                table.status.represent = lambda opt: \
+                                         hrm_status_opts.get(opt, UNKNOWN_OPT),
+                from gluon.validators import IS_IN_SET
+                table.status.requires = IS_IN_SET(hrm_status_opts,
+                                                  zero=None)
+                ctable = s3db.hrm_contract
+                ctable.name.label = T("Direct Number")
+                ctable.date.label = T("Direct Date")
+                crud_fields = ["organisation_id",
+                               "site_id",
+                               "person_id",
+                               "job_title_id",
+                               "department_id",
+                               "start_date",
+                               "code",
+                               S3SQLInlineComponent("contract",
+                                                    label=T("Contract"),
+                                                    fields=["name",
+                                                            "date"
+                                                            ],
+                                                    multiple=True,
+                                                    ),
+                               "comments",
+                               ]
+                if r.method in( "record" "update"):
+                    crud_fields.append("status")
+
+                s3db.configure("hrm_human_resource",
+                               crud_form = S3SQLCustomForm(*crud_fields),
+                               )
+                                       
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
@@ -2114,8 +2149,8 @@ def config(settings):
                     list_fields = ["person_id",
                                    "code",
                                    "start_date",
-                                   #"contract.name",
-                                   #"contract.date",
+                                   "contract.name",
+                                   "contract.date",
                                    "job_title_id",
                                    "department_id",
                                    ]

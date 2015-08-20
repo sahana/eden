@@ -2519,6 +2519,12 @@ class S3Config(Storage):
         """
         return self.hrm.get("location_vol", "person_id")
 
+    def get_hrm_multiple_contracts(self):
+        """
+            Whether Staff have multiple contracts recorded
+        """
+        return self.__lazy(self.hrm, "multiple_contracts", default=False)
+
     def get_hrm_org_dependent_job_titles(self):
         """
             If set to True then the Job Titles Catalog is Organisation-dependent (i.e. each root org sees a different Catalog)
