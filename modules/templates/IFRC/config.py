@@ -1871,7 +1871,8 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
 
-        if r.controller == "vol":
+        controller = r.controller
+        if controller == "vol":
             T = current.T
             root_org = current.auth.root_org_name()
             if root_org == IRCS:
@@ -1923,9 +1924,11 @@ def config(settings):
                                                                  ),
                                             "details.active",
                                             )
+
                 s3db.configure("hrm_human_resource",
-                               crud_form = crud_form,
+                               crud_form = crud_form
                                )
+
             elif root_org == NRCS:
                 # Expose volunteer_type field with these options:
                 types = {"PROGRAMME": T("Program Volunteer"),
@@ -1937,6 +1940,17 @@ def config(settings):
                 field.requires = IS_EMPTY_OR(IS_IN_SET(types))
                 from s3 import S3Represent
                 field.represent = S3Represent(options=types)
+
+        elif controller == "hrm":
+            root_org = current.auth.root_org_name()
+            if root_org == IRCS:
+                T = current.T
+                s3db = current.s3db
+                table = s3db.hrm_human_resource
+                table.start_date.label = T("Appointment Date")
+                from s3 import IS_ADD_PERSON_WIDGET2#, S3SQLCustomForm, S3SQLInlineComponent
+                table.person_id.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
+                table.code.label = T("Appointment Number")
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
@@ -2053,6 +2067,20 @@ def config(settings):
                                    crud_form = crud_form,
                                    )
 
+                elif root_org == IRCS:
+                    list_fields = ["person_id",
+                                   "code",
+                                   "start_date",
+                                   "programme_hours.contract",
+                                   "programme_hours.date",
+                                   "programme_hours.programme_id",
+                                   (T("Training"), "training.course_id"),
+                                   ]
+
+                    s3db.configure("hrm_human_resource",
+                                   list_fields = list_fields,
+                                   )
+
                 elif root_org == NRCS:
                     pos = 6
                     # Add volunteer type to list_fields
@@ -2081,7 +2109,22 @@ def config(settings):
                                     (T("Commune"), "location_id$L3"),
                                     ]
 
-            if controller == "deploy":
+            elif controller == "hrm":
+                if root_org == IRCS:
+                    list_fields = ["person_id",
+                                   "code",
+                                   "start_date",
+                                   #"contract.name",
+                                   #"contract.date",
+                                   "job_title_id",
+                                   "department_id",
+                                   ]
+
+                    s3db.configure("hrm_human_resource",
+                                   list_fields = list_fields,
+                                   )
+
+            elif controller == "deploy":
                 # Custom setting for RDRT
 
                 # Custom profile widgets for hrm_competency ("skills"):
