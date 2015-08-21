@@ -560,7 +560,7 @@ class S3CAPModel(S3Model):
                      Field("event_code",
                            label = T("Event Code"),
                            ),
-                     Field("name", notnull = True, length = 64,
+                     Field("name", notnull=True, length=64,
                            label = T("Name"),
                            ),
                      Field("event_type",

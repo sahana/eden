@@ -686,14 +686,8 @@ class GIS(object):
     @staticmethod
     def geocode_r(lat, lon):
         """
-            Geocode an Address
+            Reverse Geocode a Lat/Lon
             - used by S3LocationSelector
-                      settings.get_gis_geocode_imported_addresses
-
-            @param address: street address
-            @param postcode: postcode
-            @param Lx_ids: list of ancestor IDs
-            @param geocoder: which geocoder service to use
         """
 
         if not lat or not lon:
