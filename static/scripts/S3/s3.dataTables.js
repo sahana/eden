@@ -1301,7 +1301,8 @@
                     'dataType': 'json',
                     'data': '',
                     'success': function(data) {
-                        dt.dataTable().reloadAjax();
+                        //dt.dataTable().reloadAjax();
+                        dt.fnReloadAjax();
                     }
                 });
             } else {

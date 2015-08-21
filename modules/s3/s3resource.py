@@ -643,6 +643,7 @@ class S3Resource(object):
         rows = self.select(fields, as_rows=True)
         if not rows:
             # No rows? => that was it already :)
+            self.error = current.ERROR.BAD_RECORD
             return 0
 
         numrows = 0

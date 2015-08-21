@@ -3307,6 +3307,12 @@ class S3Config(Storage):
         """
         return self.project.get("activity_filter_year", False)
 
+    def get_project_assign_staff_tab(self):
+        """
+            Show the 'Assign Staff' tab in Projects (if the user has permission to do so)
+        """
+        return self.__lazy(self.project, "assign_staff_tab", default=True)
+
     def get_project_budget_monitoring(self):
         """
             Whether to Monitor Project Budgets
@@ -3379,6 +3385,15 @@ class S3Config(Storage):
             Use Outputs in Projects
         """
         return self.project.get("outputs", "inline")
+
+    def get_project_planning_ondelete(self):
+        """
+            Whether the Project Planning data should CASCADE ondelete or RESTRICT
+
+            NB This cannot be edited on the fly, or vary by context
+               It needs defining before the database is created.
+        """
+        return self.project.get("planning_ondelete", "CASCADE")
 
     def get_project_task_tag(self):
         """

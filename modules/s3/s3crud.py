@@ -542,7 +542,7 @@ class S3CRUD(S3Method):
                                     name="label_create",
                                     icon="add",
                                     _id="add-btn")
-                if buttons:
+                if add_btn:
                     output["buttons"] = {"add_btn": add_btn}
 
         view = self._view(r, "listadd.html")
