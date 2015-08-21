@@ -435,19 +435,30 @@ def template():
     s3.filter = (atable.is_template == True)
 
     viewing = request.vars["viewing"]
+    tablename = "cap_alert"
+    
     if viewing:
         table, _id = viewing.strip().split(".")
-        if table == "cap_alert":
+        if table == tablename:
             redirect(URL(c="cap", f="template", args=[_id]))
 
     def prep(r):
+        list_fields = ["template_title",
+                       "info.event_type_id",
+                       "scope",
+                       "incidents",
+                       "info.category",
+                       ]
+        
+        s3db.configure(tablename,
+                       list_fields = list_fields,
+                       )
+        
         for f in ("identifier", "msg_type"):
             field = atable[f]
             field.writable = False
             field.readable = False
             field.requires = None
-        for f in ("status", "scope"):
-            atable[f].requires = None
         atable.template_title.required = True
         atable.status.readable = atable.status.writable = False
         itable = db.cap_info
@@ -466,7 +477,7 @@ def template():
 
         itable.category.required = False
 
-        s3.crud_strings["cap_template"] = Storage(
+        s3.crud_strings[tablename] = Storage(
             label_create = T("Create Template"),
             title_display = T("Template"),
             title_list = T("Templates"),
@@ -495,7 +506,7 @@ def template():
         if r.interactive and "form" in output:
             s3.js_global.append('''i18n.cap_locked="%s"''' % T("Locked"))
             tablename = r.tablename
-            if tablename == "cap_alert":
+            if tablename == tablename:
                 output["form"].add_class("cap_template_form")
             elif tablename == "cap_info":
                 output["form"].add_class("cap_info_template_form")

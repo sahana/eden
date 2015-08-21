@@ -546,13 +546,10 @@
 
             <xsl:when test="starts-with($arg, '`')">
                 <xsl:variable name="valueName">
-                    <xsl:value-of select="substring-before(substring-after($item, ':'), ',')"/>
+                    <xsl:value-of select="substring-before(substring-after($item, 'key:'), ',')"/>
                 </xsl:variable>
                 <xsl:variable name="value">
-                    <xsl:call-template name="substring-after-last">
-                        <xsl:with-param name="string" select="$item"/>
-                        <xsl:with-param name="delimiter" select="':'"/>
-                    </xsl:call-template>
+                    <xsl:value-of select="substring-after($item, 'value:')"/>
                 </xsl:variable>
                 <xsl:element name="{substring-after($arg, '`')}">
                     <valueName><xsl:value-of select="$valueName"/></valueName>
@@ -673,39 +670,12 @@
                     <xsl:with-param name="arg" select="$arg"/>
                 </xsl:call-template>
                 <xsl:call-template name="key-value-processor">
-                    <xsl:with-param name="key-value" select="$remaining-kv-pairs"/>
+                    <xsl:with-param name="key-value-col" select="$remaining-kv-pairs"/>
                     <xsl:with-param name="key-value-start-sep" select="$key-value-start-sep"/>
                     <xsl:with-param name="key-value-end-sep" select="$key-value-end-sep"/>
                     <xsl:with-param name="arg" select="$arg"/>
                 </xsl:call-template>
             </xsl:when>
-        </xsl:choose>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <!-- returns the substring after the last character
-        @param string: 
-        @delimiter: eg. 
-        Example: 
-            string: "key:ZIP, value:00977"
-            delimiter: ":"
-            Output: 00977
-    -->
-    <xsl:template name="substring-after-last">
-        <xsl:param name="string"/>
-        <xsl:param name="delimiter"/>
-        <xsl:choose>
-            <xsl:when test="contains($string, $delimiter)">
-                <xsl:call-template name="substring-after-last">
-                    <xsl:with-param name="string"
-                        select="substring-after($string, $delimiter)"/>
-                    <xsl:with-param name="delimiter" select="$delimiter"/>
-                </xsl:call-template>
-            </xsl:when>
-            <xsl:otherwise>
-                <xsl:value-of
-                    select="$string"/>
-                </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
 

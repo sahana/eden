@@ -1201,12 +1201,19 @@ class S3CAPModel(S3Model):
         itable = db.cap_info
 
         info = db(itable.id == info_id).select(itable.alert_id,
+                                               itable.effective,
+                                               itable.expires,
                                                limitby=(0, 1)).first()
         if info:
             alert_id = info.alert_id
+            set_ = db(itable.id == info_id)
             if alert_id and cap_alert_is_template(alert_id):
-                db(itable.id == info_id).update(is_template = True)
-
+                set_.update(is_template = True)
+            if not info.expires:
+                set_.update(expires = info.effective + \
+                datetime.timedelta(days = \
+                    current.deployment_settings.get_cap_expire_offset()))
+                    
         return True
 
     # -------------------------------------------------------------------------
