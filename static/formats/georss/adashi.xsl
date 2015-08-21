@@ -96,12 +96,23 @@
     <xsl:template name="AdashiAVL">
 
         <xsl:variable name="UnitName" select="title/text()"/>
-        <xsl:variable name="Lat" select="Y/text()"/>
-        <xsl:variable name="Lon" select="X/text()"/>
-        <xsl:variable name="Time" select="/rss/channel/pubDate/text()"/>
+        <xsl:variable name="Time">
+            <xsl:choose>
+                <xsl:when test="lastModified/text()!=''">
+                    <xsl:value-of select="lastModified/text()"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="/rss/channel/pubDate/text()"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
 
-        <xsl:if test="$UnitName!='' and $Lat!='' and $Lon!='' and $Time!=''">
+        <xsl:if test="$UnitName!='' and $Time!=''">
             <resource name="pr_group">
+
+                <xsl:attribute name="modified_on">
+                    <xsl:value-of select="$Time"/>
+                </xsl:attribute>
 
                 <!-- Name -->
                 <data field="name">
@@ -109,21 +120,38 @@
                 </data>
 
                 <!-- Presence (location) -->
-                <resource name="sit_presence">
-                    <data field="timestmp">
-                        <xsl:value-of select="$Time"/>
-                    </data>
-                    <reference resource="gis_location" field="location_id">
-                        <resource name="gis_location">
-                            <data field="lat">
-                                <xsl:value-of select="$Lat"/>
-                            </data>
-                            <data field="lon">
-                                <xsl:value-of select="$Lon"/>
-                            </data>
-                        </resource>
-                    </reference>
-                </resource>
+                <xsl:variable name="LatLon" select="normalize-space(georss:point/text())"/>
+                <xsl:variable name="Lat" select="Y/text()"/>
+                <xsl:variable name="Lon" select="X/text()"/>
+                <xsl:if test="$LatLon!='' or $Lat!='' and $Lon!=''">
+                    <resource name="sit_presence">
+                        <data field="timestmp">
+                            <xsl:value-of select="$Time"/>
+                        </data>
+                        <reference resource="gis_location" field="location_id">
+                            <resource name="gis_location">
+                                <xsl:choose>
+                                    <xsl:when test="$LatLon!=''">
+                                        <data field="lat">
+                                            <xsl:value-of select="substring-before($LatLon, ' ')"/>
+                                        </data>
+                                        <data field="lon">
+                                            <xsl:value-of select="substring-after($LatLon, ' ')"/>
+                                        </data>
+                                    </xsl:when>
+                                    <xsl:otherwise>
+                                        <data field="lat">
+                                            <xsl:value-of select="$Lat"/>
+                                        </data>
+                                        <data field="lon">
+                                            <xsl:value-of select="$Lon"/>
+                                        </data>
+                                    </xsl:otherwise>
+                                </xsl:choose>
+                            </resource>
+                        </reference>
+                    </resource>
+                </xsl:if>
 
                 <!-- Status -->
                 <xsl:variable name="StatusCode" select="status/text()"/>
