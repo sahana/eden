@@ -630,7 +630,7 @@ class S3CAPModel(S3Model):
                                         IS_IN_SET(settings.get_cap_languages())
                                         ),
                            ),
-                     Field("category", "list:string",
+                     Field("category", "list:string", # 1 or more allowed
                            represent = S3Represent(options = cap_info_category_opts,
                                                    multiple = True,
                                                    ),
@@ -639,7 +639,7 @@ class S3CAPModel(S3Model):
                                                 multiple = True,
                                                 ),
                            widget = S3MultiSelectWidget(),
-                           ), # 1 or more allowed
+                           ),
                      self.event_type_id(empty = False,
                                         script = '''
                             $.filterOptionsS3({
@@ -649,14 +649,14 @@ class S3CAPModel(S3Model):
                              'lookupResource':'event_type'                         
                              })'''
                      ),
-                     Field("response_type", "list:string",
+                     Field("response_type", "list:string", # 0 or more allowed
                            represent = S3Represent(options = cap_info_responseType_opts,
                                                    multiple = True,
                                                    ),
                            requires = IS_IN_SET(cap_info_responseType_opts,
                                                 multiple = True),
                            widget = S3MultiSelectWidget(),
-                           ), # 0 or more allowed
+                           ),
                      # @ToDo: Make this a proper Foreign Key, not just a text field
                      Field("priority",
                            represent = priority_represent,

@@ -62,10 +62,10 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # L10n (Localization) settings
-    settings.L10n.languages = OrderedDict([
+    languages = OrderedDict([
         #("ar", "العربية"),
         ("dv", "ދިވެހި"), # Divehi (Maldives)
-        ("en-gb", "English"),
+        ("en-US", "English"),
         #("es", "Español"),
         #("fr", "Français"),
         #("km", "ភាសាខ្មែរ"),        # Khmer
@@ -80,6 +80,8 @@ def config(settings):
         #("vi", "Tiếng Việt"),   # Vietnamese
         #("zh-cn", "中文 (简体)"),
     ])
+    settings.L10n.languages = languages
+    settings.cap.languages = languages
 
     # -------------------------------------------------------------------------
     # Messaging

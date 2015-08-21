@@ -263,8 +263,8 @@ class subscriptions(S3CustomController):
             - for Subscriptions we don't want to see just the options available in current data
         """
         
-        T = current.T
         if fieldname == "event_type_id":
+            T = current.T
             etable = current.s3db.event_event_type
             rows = current.db(etable.deleted == False).select(etable.id,
                                                               etable.name)
@@ -272,6 +272,7 @@ class subscriptions(S3CustomController):
             for row in rows:
                 options[row.id] = T(row.name)
         elif fieldname == "priority":
+            T = current.T
             wptable = current.s3db.cap_warning_priority
             rows = current.db(wptable.deleted == False).select(wptable.id,
                                                                wptable.name)
