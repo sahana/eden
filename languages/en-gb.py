@@ -13,6 +13,7 @@
 'Add Organization Domain': 'Add Organisation Domain',
 'Add Organization to Project': 'Add Organisation to Project',
 'Add Program Hours': 'Add Programme Hours',
+'Alert Notification': 'Alert Notification',
 'Branch Organization Capacity Assessment': 'Branch Organisation Capacity Assessment',
 'Branch Organization Capacity Assessments': 'Branch Organisation Capacity Assessments',
 'Canceled': 'Cancelled',

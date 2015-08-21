@@ -824,6 +824,12 @@ h4.profile-sub-header {
   padding: 0.1rem 0.3rem;
   font-size: 1.2rem;
 }
+.profile-widget .icon-fullscreen {
+    float: right;
+    position: relative;
+    right: 9px;
+    top: 17px;
+}
 
 /* Comment feeds */
 .comment-box {

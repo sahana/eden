@@ -83,6 +83,7 @@ class S3CAPModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         # ---------------------------------------------------------------------
         # List of Incident Categories -- copied from irs module <--
@@ -310,10 +311,14 @@ class S3CAPModel(S3Model):
                      Field("status",
                            default = "Draft",
                            label = T("Status"),
+                           represent = lambda opt: \
+                            cap_alert_status_code_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_IN_SET(cap_alert_status_code_opts),
                            ),
                      Field("msg_type",
                            label = T("Message Type"),
+                           represent = lambda opt: \
+                            cap_alert_msgType_code_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(cap_alert_msgType_code_opts)
                                         ),
@@ -324,6 +329,8 @@ class S3CAPModel(S3Model):
                            ),
                      Field("scope",
                            label = T("Scope"),
+                           represent = lambda opt: \
+                            cap_alert_scope_code_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(cap_alert_scope_code_opts)
                                         ),
@@ -602,6 +609,7 @@ class S3CAPModel(S3Model):
         # ---------------------------------------------------------------------
         # CAP info priority
         # @ToDo: i18n: Need label=T("")
+        languages = settings.get_cap_languages()
         tablename = "cap_info"
         define_table(tablename,
                      alert_id(),
@@ -626,8 +634,10 @@ class S3CAPModel(S3Model):
                            ),
                      Field("language",
                            default = "en",
+                           represent = lambda opt: languages.get(opt,
+                                                                 UNKNOWN_OPT),
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET(settings.get_cap_languages())
+                                        IS_IN_SET(languages)
                                         ),
                            ),
                      Field("category", "list:string", # 1 or more allowed
@@ -668,12 +678,18 @@ class S3CAPModel(S3Model):
                                         ),
                            ),
                      Field("urgency",
+                           represent = lambda opt: \
+                            cap_info_urgency_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_IN_SET(cap_info_urgency_opts),
                            ),
                      Field("severity",
+                           represent = lambda opt: \
+                            cap_info_severity_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_IN_SET(cap_info_severity_opts),
                            ),
                      Field("certainty",
+                           represent = lambda opt: \
+                            cap_info_certainty_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_IN_SET(cap_info_certainty_opts),
                            ),
                      Field("audience", "text"),
@@ -879,7 +895,7 @@ class S3CAPModel(S3Model):
                            writable = False,
                            ),
                      Field("name",
-                           label = T("Area description"),
+                           label = T("Area Description"),
                            required = True,
                            ),
                      Field("altitude", "integer", # Feet above Sea-level in WGS84 (Specific or Minimum is using a range)

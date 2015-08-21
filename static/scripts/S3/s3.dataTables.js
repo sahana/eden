@@ -1301,7 +1301,6 @@
                     'dataType': 'json',
                     'data': '',
                     'success': function(data) {
-                        //dt.dataTable().reloadAjax();
                         dt.fnReloadAjax();
                     }
                 });

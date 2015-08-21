@@ -147,40 +147,59 @@ def alert():
                     # Hide the side menu
                     current.menu.options = None
 
-                    # Read the Components
+                    # Header
                     record = r.record
+                    profile_header = DIV(SPAN(SPAN("%s :: " % T("Message ID"),
+                                                   _class="cap-label upper"
+                                                   ),
+                                              SPAN(record.identifier,
+                                                   _class="cap-strong"
+                                                   ),
+                                              _class="medium-6 columns",
+                                              ),
+                                         SPAN(SPAN("%s :: " % T("Source"),
+                                                   _class="cap-label upper"
+                                                   ),
+                                              SPAN(record.source,
+                                                   _class="cap-strong"
+                                                   ),
+                                              _class="medium-6 columns",
+                                              ),
+                                         _class="row"
+                                         )
+
+                    # Read the Components
                     alert_id = record.id
 
                     # Info
                     # @ToDo: handle multiple languages
                     itable = s3db.cap_info
-                    info = db(itable.alert_id == alert_id).select(itable.headline,
+                    info = db(itable.alert_id == alert_id).select(itable.language,
+                                                                  itable.category,
+                                                                  itable.event_type_id,
+                                                                  itable.response_type,
+                                                                  itable.urgency,
+                                                                  itable.severity,
+                                                                  itable.certainty,
+                                                                  itable.audience,
+                                                                  itable.effective,
+                                                                  itable.onset,
+                                                                  itable.expires,
+                                                                  itable.sender_name,
+                                                                  itable.headline,
                                                                   itable.description,
                                                                   itable.instruction,
+                                                                  itable.contact,
+                                                                  itable.web,
+                                                                  itable.parameter,
                                                                   limitby=(0, 1)
                                                                   ).first()
-
-                    if info.instruction:
-                        instruction = TAG[""](H3(T("Instructions")),
-                                              P(info.instruction),
-                                              )
-                    else:
-                        instruction = None
 
                     # Area
                     # @ToDo: handle multiple areas
                     atable = s3db.cap_area
-                    area = db(atable.alert_id == alert_id).select(limitby=(0, 1)).first()
-                    location = TAG[""](H3(T("Location")),
-                                       P(area.name),
-                                       )
-
-                    profile_header = DIV(H2(info.headline),
-                                         P(info.description),
-                                         location,
-                                         instruction,
-                                         _class="profile-header",
-                                         )
+                    area = db(atable.alert_id == alert_id).select(atable.name,
+                                                                  limitby=(0, 1)).first()
 
                     # Map
                     ftable = s3db.gis_layer_feature
@@ -225,22 +244,264 @@ def alert():
                         # Default bounds
                         bbox = {}
 
-                    map_widget = dict(label = "Map",
+                    label = TAG[""](SPAN("%s :: " % T("Area"),
+                                         _class="cap-label upper"
+                                         ),
+                                    SPAN(area.name,
+                                         _class="cap-value"
+                                         ),
+                                    )
+                    map_widget = dict(label = label,
                                       type = "map",
-                                      context = "alert",
+                                      #context = "alert",
                                       icon = "icon-map",
                                       #height = 383,
                                       #width = 568,
                                       bbox = bbox,
                                       )
 
+                    table = r.table
+
+                    def custom_widget_fn_1(r, **attr):
+                        return DIV(DIV(SPAN("%s :: " % T("Headline"),
+                                            _class="cap-label upper"
+                                            ),
+                                       SPAN(info.headline,
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(" "),
+                                   DIV(SPAN("%s :: " % T("Description"),
+                                            _class="cap-label upper"
+                                            ),
+                                       SPAN(info.description,
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Response Type"),
+                                            _class="cap-label upper"
+                                            ),
+                                       SPAN(info.response_type,
+                                            _class="cap-strong"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Instructions"),
+                                            _class="cap-label upper"
+                                            ),
+                                       SPAN(info.instruction,
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   )
+
+                    custom_widget_1 = dict(type = "custom",
+                                           fn = custom_widget_fn_1,
+                                           )
+
+                    def custom_widget_fn_2(r, **attr):
+                        return DIV(DIV(SPAN("%s " % T("Information"),
+                                            _class="cap-value upper"
+                                            ),
+                                       SPAN("%s :: " % T("Event"),
+                                            _class="cap-label upper"
+                                            ),
+                                       SPAN(itable.event_type_id.represent(info.event_type_id),
+                                            _class="cap-strong"
+                                            ),
+                                       ),
+                                   DIV(_class="cap-label underline"
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Language"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(itable.language.represent(info.language),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Category"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(itable.category.represent(info.category),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Urgency"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(itable.urgency.represent(info.urgency),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Severity"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(itable.severity.represent(info.severity),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Certainty"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(itable.certainty.represent(info.certainty),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Audience"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(info.audience,
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Effective Date"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(itable.effective.represent(info.effective),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Onset Date"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(itable.onset.represent(info.onset),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Expiry Date"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(itable.expires.represent(info.expires),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Sender"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(info.sender_name,
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Information URL"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(info.web,
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Contact Info"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(info.contact,
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Parameters"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(itable.parameter.represent(info.parameter),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   )
+
+                    custom_widget_2 = dict(type = "custom",
+                                           fn = custom_widget_fn_2,
+                                           )
+
+                    def custom_widget_fn_3(r, **attr):
+                        return DIV(DIV(SPAN(T("Alert Qualifiers"),
+                                            _class="cap-value upper"
+                                            ),
+                                       ),
+                                   DIV(_class="underline"
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Sender ID"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(record.sender,
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Sent Date/Time"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(table.sent.represent(record.sent),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Message Status"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(table.status.represent(record.status),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Message Type"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(table.msg_type.represent(record.msg_type),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Scope"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(table.scope.represent(record.scope),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Handling Code"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(table.codes.represent(record.codes),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Note"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(record.note,
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Reference ID"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(table.reference.represent(record.reference),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(SPAN("%s :: " % T("Incident IDs"),
+                                            _class="cap-label"
+                                            ),
+                                       SPAN(table.incidents.represent(record.incidents),
+                                            _class="cap-value"
+                                            ),
+                                       ),
+                                   DIV(_class="underline"
+                                       ),
+                                   DIV(SPAN(T("Resources"),
+                                            _class="cap-value upper"
+                                            ),
+                                       ),
+                                   )
+
+                    custom_widget_3 = dict(type = "custom",
+                                           fn = custom_widget_fn_3,
+                                           )
+
                     s3db.configure(tablename,
                                    profile_header = profile_header,
                                    profile_layers = (layer,),
-                                   profile_widgets = (map_widget,
+                                   profile_widgets = (custom_widget_1,
+                                                      map_widget,
+                                                      custom_widget_2,
+                                                      custom_widget_3,
                                                       ),
                                    )
-                  
+
+                    response.s3.stylesheets.append("../themes/default/cap.css")
+
                 elif r.method != "import":
                     s3.crud.submit_style = "hide"
                     s3.crud.custom_submit = (("edit_info",
