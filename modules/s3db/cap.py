@@ -388,6 +388,31 @@ class S3CAPModel(S3Model):
                        "area.name",
                        ]
 
+        notify_fields = ["identifier",
+                         "sent",
+                         "status",
+                         "msg_type",
+                         "source",
+                         "scope",
+                         "restriction",
+                         "info.category",
+                         "info.event_type_id",
+                         "info.response_type",
+                         "info.priority",
+                         "info.urgency",
+                         "info.severity",
+                         "info.certainty",
+                         "info.effective",
+                         "info.expires",
+                         "info.sender_name",
+                         "info.headline",
+                         "info.description",
+                         "info.instruction",
+                         "info.contact",
+                         "info.web",
+                         "area.name",
+                         ]
+
         filter_widgets = [
             # @ToDo: Radio Button to choose between alert expired, unexpired and all
             S3TextFilter(["identifier",
@@ -402,6 +427,10 @@ class S3CAPModel(S3Model):
             S3OptionsFilter("info.category",
                             label = T("Category"),
                             options = cap_info_category_opts,
+                            ),
+            S3OptionsFilter("info.event_type_id",
+                            ),
+            S3OptionsFilter("info.priority",
                             ),
             S3LocationFilter("location.location_id",
                              label = T("Location(s)"),
@@ -419,6 +448,7 @@ class S3CAPModel(S3Model):
                   list_fields = list_fields,
                   list_layout = cap_alert_list_layout,
                   list_orderby = "cap_info.expires desc",
+                  notify_fields = notify_fields,
                   onvalidation = self.cap_alert_form_validation,
                   # update the approved_on field on approve of the alert
                   onapprove = self.cap_alert_approve,
@@ -600,7 +630,7 @@ class S3CAPModel(S3Model):
                                         IS_IN_SET(settings.get_cap_languages())
                                         ),
                            ),
-                     Field("category", "list:string",
+                     Field("category", "list:string", # 1 or more allowed
                            represent = S3Represent(options = cap_info_category_opts,
                                                    multiple = True,
                                                    ),
@@ -609,7 +639,7 @@ class S3CAPModel(S3Model):
                                                 multiple = True,
                                                 ),
                            widget = S3MultiSelectWidget(),
-                           ), # 1 or more allowed
+                           ),
                      self.event_type_id(empty = False,
                                         script = '''
                             $.filterOptionsS3({
@@ -619,14 +649,14 @@ class S3CAPModel(S3Model):
                              'lookupResource':'event_type'                         
                              })'''
                      ),
-                     Field("response_type", "list:string",
+                     Field("response_type", "list:string", # 0 or more allowed
                            represent = S3Represent(options = cap_info_responseType_opts,
                                                    multiple = True,
                                                    ),
                            requires = IS_IN_SET(cap_info_responseType_opts,
                                                 multiple = True),
                            widget = S3MultiSelectWidget(),
-                           ), # 0 or more allowed
+                           ),
                      # @ToDo: Make this a proper Foreign Key, not just a text field
                      Field("priority",
                            represent = priority_represent,
