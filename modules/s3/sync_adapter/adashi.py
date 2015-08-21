@@ -229,6 +229,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             resource = s3db.resource("pr_group")
         elif category == "Incidents":
             resource = s3db.resource("event_incident")
+            resource.configure(oncommit_import_item = self.update_assignments)
         else:
             msg = "Unknown feed category"
             return {"status": log.WARNING,
@@ -303,5 +304,64 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 "message": message,
                 "response": output,
                 }
+
+    # -------------------------------------------------------------------------
+    def update_assignments(self, item):
+        """
+            Deactivate all previous unit assignments (event_team) for
+            an incident which are not in this feed update.
+
+            @param item: the import item
+
+            @note: this assumes that the list of incident resources in
+                   the feed update is complete (confirmed for ADASHI)
+            @note: must not deactivate assignments which are newer
+                   than the feed update (Sync policy NEWER)
+        """
+
+        if item.tablename == "event_incident" and \
+           item.id and \
+           item.method == item.METHOD.UPDATE:
+
+            job = item.job
+            mtime = item.data.get("modified_on")
+
+            if not job or not mtime:
+                return
+            get_item = lambda item_id: job.items.get(item_id)
+
+            # Get the unit names of all current assignments in the feed
+            team_names = set()
+            add_name = team_names.add
+            for citem in item.components:
+                if citem.tablename == "event_team":
+                    for ref in citem.references:
+                        entry = ref.entry
+                        team_item_id = entry.item_id
+                        if entry.tablename == "pr_group" and team_item_id:
+                            team_item = get_item(team_item_id)
+                            team_name = team_item.data.get("name")
+                            if team_name:
+                                add_name(team_name)
+                            break
+
+            s3db = current.s3db
+
+            ltable = s3db.event_team
+            gtable = s3db.pr_group
+
+            # Get all active assignments in the database which are older
+            # than the feed update and which are not in the feed update,
+            # and deactivate them
+            left = gtable.on(ltable.group_id == gtable.id)
+            query = (ltable.incident_id == item.id) & \
+                    (ltable.modified_on <= mtime) & \
+                    (ltable.status == 3) & \
+                    (~(gtable.name.belongs(team_names)))
+            rows = current.db(query).select(ltable.id, left=left)
+
+            inactive = set(row.id for row in rows)
+            current.db(ltable.id.belongs(inactive)).update(status=4)
+
 
 # End =========================================================================

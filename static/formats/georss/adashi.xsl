@@ -157,6 +157,9 @@
                 <xsl:variable name="StatusCode" select="status/text()"/>
                 <xsl:if test="$StatusCode">
                     <resource name="event_team_status_team">
+                        <xsl:attribute name="modified_on">
+                            <xsl:value-of select="$Time"/>
+                        </xsl:attribute>
                         <reference field="status_id" resource="event_team_status">
                             <xsl:attribute name="tuid">
                                 <xsl:value-of select="concat('CADStatus:', $StatusCode)"/>
@@ -255,6 +258,9 @@
                 <xsl:variable name="Resources" select="resources/text()"/>
                 <xsl:if test="$Resources!=''">
                     <xsl:call-template name="AdashiIncidentResources">
+                        <xsl:with-param name="ModifiedOn">
+                            <xsl:value-of select="$ModifiedOn"/>
+                        </xsl:with-param>
                         <xsl:with-param name="Resources">
                             <xsl:value-of select="normalize-space($Resources)"/>
                         </xsl:with-param>
@@ -344,6 +350,7 @@
     <!-- ****************************************************************** -->
     <xsl:template name="AdashiIncidentResources">
 
+        <xsl:param name="ModifiedOn"/>
         <xsl:param name="Resources"/>
         <xsl:variable name="tail">
             <xsl:value-of select="substring-after($Resources, ' ')"/>
@@ -361,6 +368,9 @@
 
         <xsl:if test="$tail!=''">
             <xsl:call-template name="AdashiIncidentResources">
+                <xsl:with-param name="ModifiedOn">
+                    <xsl:value-of select="$ModifiedOn"/>
+                </xsl:with-param>
                 <xsl:with-param name="Resources">
                     <xsl:value-of select="$tail"/>
                 </xsl:with-param>
@@ -369,6 +379,11 @@
 
         <xsl:if test="$head!=''">
             <resource name="event_team">
+                <xsl:if test="$ModifiedOn!=''">
+                    <xsl:attribute name="modified_on">
+                        <xsl:value-of select="$ModifiedOn"/>
+                    </xsl:attribute>
+                </xsl:if>
                 <reference field="group_id" resource="pr_group">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('ResponseUnit:', $head)"/>
