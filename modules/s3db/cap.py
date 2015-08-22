@@ -656,7 +656,7 @@ class S3CAPModel(S3Model):
                              'trigger':'event_type_id',
                              'target':'priority',
                              'lookupURL':S3.Ap.concat('/cap/priority_get/'),
-                             'lookupResource':'event_type'                         
+                             'lookupResource':'event_type'                       
                              })'''
                      ),
                      Field("response_type", "list:string", # 0 or more allowed
@@ -1340,6 +1340,7 @@ def cap_rheader(r):
                         error = DIV(T("You need to create at least one alert information item in order to be able to broadcast this alert!"),
                                     _class="error")
                         export_btn = ""
+                        submit_btn = None
                     else:
                         error = ""
                         export_btn = A(DIV(_class="export_cap_large"),
@@ -1347,40 +1348,40 @@ def cap_rheader(r):
                                        _target="_blank",
                                        )
 
-                    update_auth = current.auth.s3_has_permission("update", "cap_alert",\
-                                                                 record_id=alert_id)
-                    # Display 'Submit for Approval' based on permission  
-                    # and deployment settings
-                    if not r.record.approved_by and \
-                       current.deployment_settings.get_cap_authorisation() and \
-                       update_auth:
-                        # Get the user ids for the role alert_approver
-                        db = current.db
-                        agtable = db.auth_group
-                        rows = db(agtable.role == "Alert Approver")._select(agtable.id)
-                        group_rows = db(agtable.id.belongs(rows)).select(agtable.id)
-                        group_members = current.auth.s3_group_members
-                        user_pe_id = current.auth.s3_user_pe_id
-                        if group_rows:
-                            for group_row in group_rows:
-                                group_id = group_row.id                            
-                                user_ids = group_members(group_id) # List of user_ids
-                                pe_ids = [] # List of pe_ids
-                                for user_id in user_ids:
-                                    pe_ids.append(user_pe_id(int(user_id)))
-                                    
-                            submit_btn = A(T("Submit for Approval"),
-                                           _href = URL(f = "compose",
-                                                       vars = {"cap_alert.id": record.id,
-                                                               "pe_ids": pe_ids,
-                                                               },
-                                                       ),
-                                           _class = "action-btn"
-                                           )
+                        # Display 'Submit for Approval' based on permission  
+                        # and deployment settings
+                        if not r.record.approved_by and \
+                           current.deployment_settings.get_cap_authorisation() and \
+                           current.auth.s3_has_permission("update", "cap_alert",
+                                                          record_id=alert_id):
+                            # Get the user ids for the role alert_approver
+                            db = current.db
+                            agtable = db.auth_group
+                            group_rows = db(agtable.role == "Alert Approver").\
+                                           select(agtable.id)
+                            if group_rows:
+                                group_members = current.auth.s3_group_members
+                                user_pe_id = current.auth.s3_user_pe_id
+                                for group_row in group_rows:
+                                    group_id = group_row.id                            
+                                    user_ids = group_members(group_id) # List of user_ids
+                                    pe_ids = [] # List of pe_ids
+                                    pe_append = pe_ids.append
+                                    for user_id in user_ids:
+                                        pe_append(user_pe_id(int(user_id)))
+                                        
+                                submit_btn = A(T("Submit for Approval"),
+                                               _href = URL(f = "compose",
+                                                           vars = {"cap_alert.id": record.id,
+                                                                   "pe_ids": pe_ids,
+                                                                   },
+                                                           ),
+                                               _class = "action-btn"
+                                               )
+                            else:
+                                submit_btn = None
                         else:
                             submit_btn = None
-                    else:
-                        submit_btn = None
 
                     tabs = [(T("Alert Details"), None),
                             (T("Information"), "info"),
@@ -1388,16 +1389,35 @@ def cap_rheader(r):
                             (T("Resource Files"), "resource"),
                             ]
 
-                    # Check to see if 'Predefined Areas' tab need to be added
-                    artable = s3db.cap_area
-                    query = (artable.is_template == True) & \
-                            (artable.deleted == False)
-                    if update_auth:                        
+                    if r.representation == "html" and \
+                       current.auth.s3_has_permission("update", "cap_alert",
+                                                      record_id=alert_id):
+                        # Check to see if 'Predefined Areas' tab need to be added
+                        artable = s3db.cap_area
+                        query = (artable.is_template == True) & \
+                                (artable.deleted == False)
+                                                        
                         template_area_rows = current.db(query)._select(artable.id,
                                                                        limitby=(0, 1))
                         if template_area_rows:
                             tabs.insert(2, (T("Predefined Areas"), "assign"))
                             
+                        # Display "Copy" Button to copy record from the opened info
+                        if r.component_name == "info" and \
+                           r.component_id:
+                            copy_btn = A(T("Copy"),
+                                         _href = URL(f = "alert",
+                                                     args = [r.id, "info", "create",],
+                                                     vars = {"from_record": r.component_id,
+                                                             },
+                                                     ),
+                                         _class = "action-btn"
+                                         )
+                        else:
+                            copy_btn = None
+                    else:
+                        copy_btn = None
+                                                        
                     rheader_tabs = s3_rheader_tabs(r, tabs)
 
                     rheader = DIV(TABLE(TR(TH("%s: " % T("Alert")),
@@ -1410,8 +1430,11 @@ def cap_rheader(r):
                                   rheader_tabs,
                                   error
                                   )
+                    if copy_btn:
+                        rheader.insert(1, TR(TD(copy_btn)))
+                        
                     if submit_btn:
-                        rheader.insert(1, TR(submit_btn))
+                        rheader.insert(1, TR(TD(submit_btn)))
 
             elif tablename == "cap_area":
                 # Used only for Area Templates
