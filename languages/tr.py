@@ -1477,7 +1477,7 @@
 "Group Number":"Ekip No",
 "Total Budget":"Toplam Bütçe",
 "Project Details":"Proje Detayları",
-"Short Title":"Kısa Ad",
+"Short Title / ID":"Kısa Ad / ID",
 "Activity Types":"Yapılan İşin Türleri",
 "Type":"Tür",
 "Assign Human Resource":"İnsan Kaynağı Ekle",
