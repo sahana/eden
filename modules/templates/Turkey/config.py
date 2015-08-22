@@ -175,7 +175,7 @@ def config(settings):
         current.s3db.configure("pr_contact",
                                realm_entity = pr_component_realm_entity,
                                )
-
+        
     settings.customise_pr_contact_resource = customise_pr_contact_resource
 
     # -------------------------------------------------------------------------
