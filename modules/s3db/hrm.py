@@ -4742,14 +4742,14 @@ class hrm_AssignMethod(S3Method):
                            "organisation_id",
                            ]
             if len(types) == 2:
-                list_fields.append("type")
+                list_fields.append((T("Type"),"type"))
             list_fields.append("job_title_id")
             if settings.get_hrm_use_certificates():
-                list_fields.append(("Certificates", "person_id$certification.certificate_id"))
+                list_fields.append((T("Certificates"), "person_id$certification.certificate_id"))
             if settings.get_hrm_use_skills():
-                list_fields.append(("Skills", "person_id$competency.skill_id"))
+                list_fields.append((T("Skills"), "person_id$competency.skill_id"))
             if settings.get_hrm_use_trainings():
-                list_fields.append(("Trainings", "person_id$training.course_id"))
+                list_fields.append((T("Trainings"), "person_id$training.course_id"))
 
             # Data table
             resource = s3db.resource("hrm_human_resource",
