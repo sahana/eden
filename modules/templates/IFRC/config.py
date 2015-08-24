@@ -2104,6 +2104,7 @@ def config(settings):
 
                 elif root_org == IRCS:
                     list_fields = ["person_id",
+                                   "details.active",
                                    "code",
                                    "start_date",
                                    "programme_hours.contract",
