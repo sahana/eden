@@ -785,11 +785,7 @@ def area():
         Should only be accessed for defining area template
     """
 
-    def prep(r):
-        # Should be accessed by people having permission to create area template
-        if not auth.s3_has_permission("create", "cap_area"):
-            r.unauthorised()
-        
+    def prep(r):        
         artable = s3db.cap_area
         for f in ("alert_id", "info_id"):
             field = artable[f]

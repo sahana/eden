@@ -82,7 +82,9 @@ def config(settings):
     ])
     settings.L10n.languages = languages
     settings.cap.languages = languages
-
+    # Translate the cap_area name
+    settings.L10n.translate_cap_area = True
+    
     # -------------------------------------------------------------------------
     # Messaging
     # Parser

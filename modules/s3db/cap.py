@@ -28,12 +28,14 @@
 """
 
 __all__ = ("S3CAPModel",
+           "S3CAPAreaNameModel",
            "cap_info_labels",
            "cap_alert_is_template",
            "cap_rheader",
            "cap_alert_list_layout",
            "add_area_from_template",
            "cap_AssignArea",
+           "cap_AreaRepresent",
            #"cap_gis_location_xml_post_parse",
            #"cap_gis_location_xml_post_render",
            )
@@ -66,6 +68,7 @@ class S3CAPModel(S3Model):
              "cap_info_represent",
              "cap_resource",
              "cap_area",
+             "cap_area_id",
              "cap_area_represent",
              "cap_area_location",
              "cap_area_tag",
@@ -966,7 +969,7 @@ class S3CAPModel(S3Model):
                                     "priority",
                                     )
 
-        area_represent = S3Represent(lookup=tablename)
+        area_represent = cap_AreaRepresent(show_link=True)
 
         configure(tablename,
                   #create_next = URL(f="area", args=["[id]", "location"]),
@@ -983,6 +986,10 @@ class S3CAPModel(S3Model):
                        cap_area_tag = {"name": "tag",
                                        "joinby": "area_id",
                                        },
+                       # Names
+                       cap_area_name = {"name": "name",
+                                        "joinby": "area_id",
+                                        },
                        )
 
         area_id = S3ReusableField("area_id", "reference %s" % tablename,
@@ -1083,6 +1090,7 @@ class S3CAPModel(S3Model):
         # Pass names back to global scope (s3.*)
         return dict(cap_alert_id = alert_id,
                     cap_alert_represent = alert_represent,
+                    cap_area_id = area_id,
                     cap_area_represent = area_represent,
                     cap_info_represent = info_represent,
                     cap_info_category_opts = cap_info_category_opts,
@@ -1249,6 +1257,72 @@ class S3CAPModel(S3Model):
             db = current.db
             approved_on = record["approved_on"]
             db(db.cap_alert.id == alert_id).update(approved_on = current.request.utcnow)
+
+# =============================================================================
+class S3CAPAreaNameModel(S3Model):
+    """
+        CAP Name Model:
+            -local names for CAP Area
+    """
+    
+    names = ("cap_area_name",
+             )
+    
+    def model(self):
+        
+        T = current.T
+        l10n_languages = current.deployment_settings.get_L10n_languages()
+        
+        # ---------------------------------------------------------------------
+        # Local Names
+        #
+        tablename = "cap_area_name"
+        self.define_table(tablename,
+                          self.cap_area_id(empty = False,
+                                           ondelete = "CASCADE",
+                                           ),
+                          Field("language",
+                                label = T("Language"),
+                                represent = lambda opt: l10n_languages.get(opt,
+                                                current.messages.UNKNOWN_OPT),
+                                requires = IS_ISO639_2_LANGUAGE_CODE(),
+                                ),
+                          Field("name_l10n",
+                                label = T("Local Name"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+        
+        self.configure(tablename,
+                       deduplicate = self.cap_area_name_deduplicate,
+                       )
+        
+        # Pass names back to global scope (s3.*)
+        return {}
+    
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_area_name_deduplicate(item):
+        """
+           If the record is a duplicate then it will set the item method to update
+        """
+        
+        data = item.data
+        language = data.get("language", None)
+        area = data.get("area_id", None)
+        
+        if not language or not area:
+            return
+        
+        table = item.table
+        query = (table.language == language) & \
+                (table.area_id == area)
+        
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE 
 
 # =============================================================================
 def cap_info_labels():
@@ -1440,6 +1514,10 @@ def cap_rheader(r):
                 # Used only for Area Templates
                 tabs = [(T("Area"), None),
                         ]
+                
+                if current.deployment_settings.get_L10n_translate_cap_area():
+                    tabs.insert(1, (T("Local Names"), "name"))
+                    
                 rheader_tabs = s3_rheader_tabs(r, tabs)
                 rheader = DIV(TABLE(TR(TH("%s: " % T("Alert")),
                                        TD(A(s3db.cap_alert_represent(record.alert_id),
@@ -2322,4 +2400,80 @@ class cap_AssignArea(S3Method):
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 
+# -----------------------------------------------------------------------------
+class cap_AreaRepresent(S3Represent):
+    """ Representation of CAP Area """
+    
+    def __init__(self,
+                 show_link=False,
+                 multiple=False):
+        
+        settings = current.deployment_settings
+        # Translation using cap_area_name & not T()
+        translate = settings.get_L10n_translate_cap_area()
+        if translate:
+            language = current.session.s3.language
+            if language == settings.get_L10n_default_language():
+                translate = False
+                
+        super(cap_AreaRepresent,
+              self).__init__(lookup="cap_area",
+                             show_link=show_link,
+                             translate=translate,
+                             multiple=multiple
+                             )
+    
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Custom lookup method for Area(CAP) rows.Parameters
+            key and fields are not used, but are kept for API
+            compatibility reasons.
+            
+            @param values: the cap_area IDs
+        """
+        
+        db = current.db
+        s3db = current.s3db
+        artable = s3db.cap_area
+        
+        fields = [artable.id,
+                  artable.name,
+                  ]
+        if self.translate:
+            ltable = s3db.cap_area_name
+            fields += [ltable.name_l10n,
+                       ]
+            left = [ltable.on((ltable.area_id == artable.id) & \
+                              (ltable.language == current.session.s3.language)),
+                        ]
+            count = len(values)
+            if count == 1:
+                query = (artable.id == values[0])
+            else:
+                query = (artable.id.belongs(values))
+            
+            rows = current.db(query).select(left = left,
+                                            limitby = (0, count),
+                                            *fields)
+            return rows
+    
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+            
+            @param row: the cap_area Row
+        """
+        
+        if self.translate:
+            name = row["cap_area_name.name_l10n"] or row["cap_area.name"]
+        else:
+            name = row["cap_area.name"]
+        
+        if not name:
+            return self.default
+        
+        return s3_unicode(name)
+    
 # END =========================================================================
