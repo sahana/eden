@@ -460,8 +460,8 @@ class S3ProjectModel(S3Model):
                                          "actuate": "hide",
                                          },
                        # Human Resources
-                       project_human_resource = "project_id",
-                       hrm_human_resource = {"link": "project_human_resource",
+                       project_human_resource_project = "project_id",
+                       hrm_human_resource = {"link": "project_human_resource_project",
                                              "joinby": "project_id",
                                              "key": "human_resource_id",
                                              "actuate": "hide",
@@ -2714,7 +2714,7 @@ class S3ProjectHRModel(S3Model):
         Optionally link Projects <> Human Resources
     """
 
-    names = ("project_human_resource",)
+    names = ("project_human_resource_project",)
 
     def model(self):
 
@@ -2733,7 +2733,7 @@ class S3ProjectHRModel(S3Model):
         # ---------------------------------------------------------------------
         # Projects <> Human Resources
         #
-        tablename = "project_human_resource"
+        tablename = "project_human_resource_project"
         self.define_table(tablename,
                           # Instance table
                           self.super_link("cost_item_id", "budget_cost_item"),
@@ -2810,7 +2810,7 @@ class S3ProjectHRModel(S3Model):
         """
 
         # The project human resource table
-        hr = current.s3db.project_human_resource
+        hr = current.s3db.project_human_resource_project
 
         # Fetch the first row that has the same project and human resource ids
         query = (hr.human_resource_id == form.vars.human_resource_id) & \
@@ -2818,8 +2818,8 @@ class S3ProjectHRModel(S3Model):
         row = current.db(query).select(hr.id,
                                        limitby=(0, 1)).first()
 
-        # If we found a row we have a duplicate. Return an error to the user.
         if row:
+            # We have a duplicate. Return an error to the user.
             form.errors.human_resource_id = current.T("Record already exists")
 
 # =============================================================================
@@ -3779,7 +3779,7 @@ class S3ProjectPlanningModel(S3Model):
         #
         tablename = "project_goal"
         define_table(tablename,
-                     project_id(),
+                     project_id(ondelete = ondelete),
                      Field("code",
                            label = T("Code"),
                            represent = lambda v: v or NONE,
@@ -3860,7 +3860,7 @@ class S3ProjectPlanningModel(S3Model):
         #
         tablename = "project_outcome"
         define_table(tablename,
-                     project_id(),
+                     project_id(ondelete = ondelete),
                      goal_id(readable = use_goals,
                              writable = use_goals,
                              ),
@@ -3940,6 +3940,7 @@ class S3ProjectPlanningModel(S3Model):
         tablename = "project_output"
         define_table(tablename,
                      project_id(
+                       ondelete = ondelete,
                        # Override requires so that update access to the projects isn't required
                        requires = IS_ONE_OF(db, "project_project.id",
                                             self.project_project_represent
@@ -4035,7 +4036,7 @@ class S3ProjectPlanningModel(S3Model):
         #
         tablename = "project_indicator"
         define_table(tablename,
-                     project_id(),
+                     project_id(ondelete = ondelete),
                      goal_id(readable = use_goals and not use_outcomes and not use_outputs,
                              writable = use_goals and not use_outcomes and not use_outputs,
                              ),
@@ -4050,7 +4051,7 @@ class S3ProjectPlanningModel(S3Model):
                            represent = lambda v: v or NONE,
                            ),
                      Field("name",
-                           label = T("Name"),
+                           label = T("Description"),
                            represent = lambda v: v or NONE,
                            ),
                      Field("definition", "text",
@@ -4133,6 +4134,7 @@ class S3ProjectPlanningModel(S3Model):
         tablename = "project_indicator_data"
         define_table(tablename,
                      project_id(
+                        ondelete = ondelete,
                         # Override requires so that update access to the projects isn't required
                         requires = IS_ONE_OF(db, "project_project.id",
                                              self.project_project_represent
@@ -7921,7 +7923,7 @@ def project_rheader(r):
                 #append((STAFF, "human_resource", dict(group="staff")))
                 append((STAFF, "human_resource"))
             if settings.get_project_assign_staff_tab() and \
-               current.auth.s3_has_permission("create", "project_human_resource"):
+               current.auth.s3_has_permission("create", "project_human_resource_project"):
                 append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
         #if settings.has_module("vol"):
         #    append((T("Volunteers"), "human_resource", dict(group="volunteer")))
