@@ -429,7 +429,7 @@ class S3CAPModel(S3Model):
                           "sender",
                           "incidents",
                           "cap_info.headline",
-                          "cap_info.event_type_id",
+                          "cap_info.event",
                           ],
                          label = T("Search"),
                          comment = T("Search for an Alert by sender, incident, headline or event."),
@@ -653,6 +653,7 @@ class S3CAPModel(S3Model):
                                                 ),
                            widget = S3MultiSelectWidget(),
                            ),
+                     Field("event", "text"),
                      self.event_type_id(empty = False,
                                         script = '''
                             $.filterOptionsS3({
@@ -707,6 +708,7 @@ class S3CAPModel(S3Model):
                      s3_datetime("onset"),
                      s3_datetime("expires",
                                  past = 0,
+                                 default = self.get_expirydate,
                                  ),
                      Field("sender_name"),
                      Field("headline"),
@@ -1148,6 +1150,17 @@ class S3CAPModel(S3Model):
                           current.deployment_settings.get_base_public_url())
 
     # -------------------------------------------------------------------------
+    @staticmethod    
+    def get_expirydate():
+        """
+            Default Expiry date based on the expire offset
+        """
+        
+        return current.request.utcnow + \
+               datetime.timedelta(days = current.deployment_settings.\
+                                  get_cap_expire_offset())
+               
+    # -------------------------------------------------------------------------
     @staticmethod
     def cap_template_represent(id, row=None):
         """
@@ -1225,20 +1238,17 @@ class S3CAPModel(S3Model):
         itable = db.cap_info
 
         info = db(itable.id == info_id).select(itable.alert_id,
-                                               itable.effective,
-                                               itable.expires,
+                                               itable.event,
+                                               itable.event_type_id,
                                                limitby=(0, 1)).first()
         if info:
             alert_id = info.alert_id
             set_ = db(itable.id == info_id)
             if alert_id and cap_alert_is_template(alert_id):
                 set_.update(is_template = True)
-            if not info.expires:
-                set_.update(expires = info.effective + \
-                datetime.timedelta(days = \
-                    current.deployment_settings.get_cap_expire_offset()))
-                    
-        return True
+            if not info.event:
+                set_.update(event = current.db.cap_info.event_type_id.\
+                            represent(info.event_type_id))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1309,7 +1319,7 @@ def cap_info_labels():
     T = current.T
     return dict(language=T("Language"),
                 category=T("Category"),
-                event_type_id=T("Event"),
+                event=T("Event"),
                 response_type=T("Response type"),
                 urgency=T("Urgency"),
                 severity=T("Severity"),

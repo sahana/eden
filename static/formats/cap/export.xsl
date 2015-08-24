@@ -73,10 +73,10 @@
             </sent>
 
             <status>
-                <xsl:value-of select="data[@field='status']"/>
+                <xsl:value-of select="translate(data[@field='status']/@value, '&quot;', '')"/>
             </status>
             <msgType>
-                <xsl:value-of select="data[@field='msg_type']"/>
+                <xsl:value-of select="translate(data[@field='msg_type']/@value, '&quot;', '')"/>
             </msgType>
             
             <xsl:if test="data[@field='source']!=''">
@@ -84,7 +84,7 @@
             </xsl:if>
 
             <scope>
-                <xsl:value-of select="data[@field='scope']"/>
+                <xsl:value-of select="translate(data[@field='scope']/@value, '&quot;', '')"/>
             </scope>
 
             <xsl:if test="data[@field='scope']='Restricted'">
@@ -137,25 +137,35 @@
 
             <xsl:if test="data[@field='category']">
                 <xsl:call-template name="split-into-nodes">
-                    <xsl:with-param name="string"><xsl:value-of select="translate(data[@field='category']/@value, '&quot;][', '')"/>
+                    <xsl:with-param name="string">
+                    	<xsl:value-of select="translate(data[@field='category']/@value, '&quot;][', '')"/>
                     </xsl:with-param>
                     <xsl:with-param name="node-name">category</xsl:with-param>
                 </xsl:call-template>
             </xsl:if>
 
-            <event><xsl:value-of select="reference[@field='event_type_id']"/></event>
+            <event><xsl:value-of select="data[@field='event']"/></event>
 
             <xsl:if test="data[@field='response_type']">
                 <xsl:call-template name="split-into-nodes">
-                    <xsl:with-param name="string"><xsl:value-of select="translate(data[@field='response_type']/@value, '&quot;][', '')"/>
+                    <xsl:with-param name="string">
+                    	<xsl:value-of select="translate(data[@field='response_type']/@value, '&quot;][', '')"/>
                     </xsl:with-param>
                     <xsl:with-param name="node-name">responseType</xsl:with-param>
                 </xsl:call-template>
             </xsl:if>
 
-            <urgency><xsl:value-of select="data[@field='urgency']"/></urgency>
-            <severity><xsl:value-of select="data[@field='severity']"/></severity>
-            <certainty><xsl:value-of select="data[@field='certainty']"/></certainty>
+            <urgency>
+            	<xsl:value-of select="translate(data[@field='urgency']/@value, '&quot;', '')"/>
+            </urgency>
+
+            <severity>
+            	<xsl:value-of select="translate(data[@field='severity']/@value, '&quot;', '')"/>
+            </severity>
+
+            <certainty>
+            	<xsl:value-of select="translate(data[@field='certainty']/@value, '&quot;', '')"/>
+            </certainty>
 
             <xsl:if test="data[@field='audience']!=''">
                 <audience><xsl:value-of select="data[@field='audience']"/></audience>
@@ -222,6 +232,13 @@
 
             <xsl:if test="data[@field='contact']!=''">
                 <contact><xsl:value-of select="data[@field='contact']"/></contact>
+            </xsl:if>
+
+            <xsl:if test="reference[@field='event_type_id']!=''">
+            	<parameter>
+                	<valueName>event type</valueName>
+                	<value><xsl:value-of select="reference[@field='event_type_id']"/></value>
+                </parameter>
             </xsl:if>
 
             <xsl:if test="data[@field='priority']!=''">
