@@ -1294,35 +1294,11 @@ class S3CAPAreaNameModel(S3Model):
                           *s3_meta_fields())
         
         self.configure(tablename,
-                       deduplicate = self.cap_area_name_deduplicate,
+                       deduplicate = S3Duplicate(primary=("area_id", "language")),
                        )
         
         # Pass names back to global scope (s3.*)
         return {}
-    
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def cap_area_name_deduplicate(item):
-        """
-           If the record is a duplicate then it will set the item method to update
-        """
-        
-        data = item.data
-        language = data.get("language", None)
-        area = data.get("area_id", None)
-        
-        if not language or not area:
-            return
-        
-        table = item.table
-        query = (table.language == language) & \
-                (table.area_id == area)
-        
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE 
 
 # =============================================================================
 def cap_info_labels():
