@@ -1492,6 +1492,12 @@ class S3Config(Storage):
         """
         return self.L10n.get("translate_org_organisation", False)
 
+    def get_L10n_translate_cap_area(self):
+        """
+            Whether to translate CAP Area names
+        """
+        return self.L10n.get("translate_cap_area", False)
+    
     def get_L10n_pootle_url(self):
         """ URL for Pootle server """
         return self.L10n.get("pootle_url", "http://pootle.sahanafoundation.org/")
