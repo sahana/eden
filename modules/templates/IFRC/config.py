@@ -329,7 +329,7 @@ def config(settings):
     # Finance settings
     #
     def currencies(default):
-        """ RMS- and NS-specific currencies (lazy setting) """
+        """ RMS- and NS-specific currencies """
 
         # Currencies that are common for all NS
         currencies = {"EUR" : T("Euros"),
@@ -365,7 +365,7 @@ def config(settings):
     settings.fin.currencies = currencies
 
     def currency_default(default):
-        """ NS-specific default currencies (lazy setting) """
+        """ NS-specific default currencies """
 
         root_org = current.auth.root_org_name()
         if root_org == ARCS:
@@ -393,8 +393,19 @@ def config(settings):
     settings.fin.currency_default = currency_default
 
     # -----------------------------------------------------------------------------
+    def pdf_bidi(default):
+        """ NS-specific selection of whether to support BiDi in PDF output """
+
+        root_org = current.auth.root_org_name()
+        if root_org in (ARCS, IRCS):
+            default = True
+        return default
+
+    settings.L10n.pdf_bidi = pdf_bidi
+
+    # -----------------------------------------------------------------------------
     def postcode_selector(default):
-        """ NS-specific selection of whether to show Postcode (lazy setting) """
+        """ NS-specific selection of whether to show Postcode """
 
         root_org = current.auth.root_org_name()
         if root_org in (ARCS, IRCS, VNRC):
