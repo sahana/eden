@@ -530,14 +530,6 @@ def alert():
                                                                   filterby="alert_id",
                                                                   filter_opts=(r.id,),
                                                                   ))
-            elif r.component_name == "location":
-                # Limit to those for this Alert
-                r.component.table.area_id.requires = IS_EMPTY_OR(
-                                                        IS_ONE_OF(db, "cap_area.id",
-                                                                  s3db.cap_area_represent,
-                                                                  filterby="alert_id",
-                                                                  filter_opts=(r.id,),
-                                                                  ))
 
             # @ToDo: Move inside correct component context (None?)
             post_vars = request.post_vars
@@ -1026,6 +1018,12 @@ def info_fields_comments():
           _title="%s|%s" % (
               T("Denotes the category of the subject event of the alert message"),
               T("You may select multiple categories by holding down control and then selecting the items.")))
+
+    table.event.comment = DIV(
+          _class="tooltip",
+          _title="%s|%s" % (
+              T("The text denoting the type of the subject event of the alert message"),
+              T("If not specified, will the same as the Event Type.")))
 
     table.response_type.comment = DIV(
           _class="tooltip",
