@@ -1979,7 +1979,8 @@ def config(settings):
                                                     ),
                                "comments",
                                ]
-                if r.method in( "record" "update"):
+                method = r.method
+                if method and method in ("record" "update"):
                     crud_fields.append("status")
 
                 s3db.configure("hrm_human_resource",
