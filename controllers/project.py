@@ -16,6 +16,8 @@ mode_task = settings.get_project_mode_task()
 def index():
     """ Module's Home Page """
 
+    #TODO: Need to add wrapper layer bindings at this level
+
     if mode_task:
         # Bypass home page & go direct to browsing Tasks for a Project
         s3_redirect_default(URL(f="project", vars={"tasks":1}))

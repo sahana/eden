@@ -38,17 +38,20 @@ else:
     check_reserved = None
 
 (db_string, pool_size) = settings.get_database_string()
-if db_string.find("sqlite") != -1:
-    db = DAL(db_string,
-             check_reserved=check_reserved,
-             migrate_enabled = migrate,
-             fake_migrate_all = fake_migrate,
-             lazy_tables = not migrate)
+
+
+if not request.env.web2py_runtime_gae:
+    if db_string.find("sqlite") != -1:
+        db = DAL(db_string,
+                 check_reserved=check_reserved,
+                 migrate_enabled = migrate,
+                 fake_migrate_all = fake_migrate,
+                 lazy_tables = not migrate)
     # on SQLite 3.6.19+ this enables foreign key support (included in Python 2.7+)
     # db.executesql("PRAGMA foreign_keys=ON")
-else:
-    try:
-        if db_string.find("mysql") != -1:
+    else:
+        try:
+            if db_string.find("mysql") != -1:
             # Use MySQLdb where available (pymysql has given broken pipes)
             # - done automatically now, no need to add this manually
             #try:
@@ -58,26 +61,31 @@ else:
             #except ImportError:
             #    # Fallback to pymysql
             #    pass
-            if check_reserved:
-                check_reserved = ["postgres"]
-            db = DAL(db_string,
-                     check_reserved = check_reserved,
-                     pool_size = pool_size,
-                     migrate_enabled = migrate,
-                     lazy_tables = not migrate)
-        else:
+                if check_reserved:
+                    check_reserved = ["postgres"]
+                db = DAL(db_string,
+                         check_reserved = check_reserved,
+                         pool_size = pool_size,
+                        migrate_enabled = migrate,
+                        lazy_tables = not migrate)
+            else:
             # PostgreSQL
-            if check_reserved:
-                check_reserved = ["mysql"]
-            db = DAL(db_string,
-                     check_reserved = check_reserved,
-                     pool_size = pool_size,
-                     migrate_enabled = migrate,
-                     lazy_tables = not migrate)
-    except:
-        db_type = db_string.split(":", 1)[0]
-        db_location = db_string.split("@", 1)[1]
-        raise(HTTP(503, "Cannot connect to %s Database: %s" % (db_type, db_location)))
+                if check_reserved:
+                    check_reserved = ["mysql"]
+                db = DAL(db_string,
+                         check_reserved = check_reserved,
+                         pool_size = pool_size,
+                         migrate_enabled = migrate,
+                         lazy_tables = not migrate)
+        except:
+            db_type = db_string.split(":", 1)[0]
+            db_location = db_string.split("@", 1)[1]
+            raise(HTTP(503, "Cannot connect to %s Database: %s" % (db_type, db_location)))
+
+else:
+    ## connect to Google BigTable (optional 'google:datastore://namespace')
+    db = DAL('google:datastore+ndb')
+
 
 current.db = db
 db.set_folder("upload")
