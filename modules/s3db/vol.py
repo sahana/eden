@@ -492,9 +492,15 @@ def vol_service_record(r, **attr):
 
         innerTable = TABLE(TR(TH(vol_name)),
                            TR(TD(org_name)))
-        person_details = TABLE(TR(TD(logo),
-                                  TD(innerTable)
-                                  ))
+        if current.response.s3.rtl:
+            # Right-to-Left
+            person_details = TABLE(TR(TD(innerTable),
+                                      TD(logo),
+                                      ))
+        else:
+            person_details = TABLE(TR(TD(logo),
+                                      TD(innerTable),
+                                      ))
 
         pe_id = person.pe_id
 

@@ -692,7 +692,7 @@ class S3HRModel(S3Model):
                                             "pkey": "person_id",
                                             },
                         # Projects
-                        project_project = {"link": "project_human_resource",
+                        project_project = {"link": "project_human_resource_project",
                                            "joinby": "human_resource_id",
                                            "key": "project_id",
                                            },

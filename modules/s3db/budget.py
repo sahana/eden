@@ -1314,7 +1314,7 @@ class S3BudgetAllocationModel(S3Model):
                                event_human_resource = T("Event Human Resource"),
                                event_site = T("Event Facility"),
                                #project_asset = T("Project Asset"),
-                               project_human_resource = T("Project Human Resource"),
+                               project_human_resource_project = T("Project Human Resource"),
                                #project_site = T("Project Facility"),
                                )
 

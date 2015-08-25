@@ -188,6 +188,9 @@
                         <xsl:value-of select="cap:event" />
                     </xsl:attribute>
                 </reference>
+                <data field="event">
+                    <xsl:value-of select="cap:event" />
+                </data>
             </xsl:if>
             <xsl:if test="cap:responseType!=''">
                 <data field="response_type">

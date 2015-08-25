@@ -139,7 +139,7 @@ class S3MainMenu(default.S3MainMenu):
             #),
             homepage("project")(
                 MM("Projects", c="project", f="project", m="summary"),
-                MM("Locations", c="project", f="location"),
+                #MM("Locations", c="project", f="location"),
                 #MM("Outreach", c="po", f="index", check=outreach),
             ),
             #homepage("vulnerability")(

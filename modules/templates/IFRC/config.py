@@ -329,7 +329,7 @@ def config(settings):
     # Finance settings
     #
     def currencies(default):
-        """ RMS- and NS-specific currencies (lazy setting) """
+        """ RMS- and NS-specific currencies """
 
         # Currencies that are common for all NS
         currencies = {"EUR" : T("Euros"),
@@ -365,7 +365,7 @@ def config(settings):
     settings.fin.currencies = currencies
 
     def currency_default(default):
-        """ NS-specific default currencies (lazy setting) """
+        """ NS-specific default currencies """
 
         root_org = current.auth.root_org_name()
         if root_org == ARCS:
@@ -393,8 +393,31 @@ def config(settings):
     settings.fin.currency_default = currency_default
 
     # -----------------------------------------------------------------------------
+    def pdf_bidi(default):
+        """ NS-specific selection of whether to support BiDi in PDF output """
+
+        root_org = current.auth.root_org_name()
+        if root_org in (ARCS, IRCS):
+            default = True
+        return default
+
+    settings.L10n.pdf_bidi = pdf_bidi
+
+    # -----------------------------------------------------------------------------
+    def pdf_export_font(default):
+        """ NS-specific selection of which font to use in PDF output """
+
+        root_org = current.auth.root_org_name()
+        if root_org in (ARCS, IRCS):
+            # Use Unifont even in English since there is data stored with non-English characters
+            default = ["unifont", "unifont"]
+        return default
+
+    settings.L10n.pdf_export_font = pdf_export_font
+
+    # -----------------------------------------------------------------------------
     def postcode_selector(default):
-        """ NS-specific selection of whether to show Postcode (lazy setting) """
+        """ NS-specific selection of whether to show Postcode """
 
         root_org = current.auth.root_org_name()
         if root_org in (ARCS, IRCS, VNRC):
@@ -1887,8 +1910,8 @@ def config(settings):
                 table.person_id.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
                 table.code.label = T("Appointment Number")
                 phtable = s3db.hrm_programme_hours
-                #phtable.date.label = T("Direct Date")
-                #phtable.contract.label = T("Direct Number")
+                phtable.date.label = T("Direct Date")
+                phtable.contract.label = T("Direct Number")
                 phtable.contract.readable = phtable.contract.writable = True
                 crud_form = S3SQLCustomForm("organisation_id",
                                             "person_id",
@@ -1906,9 +1929,9 @@ def config(settings):
                                             S3SQLInlineComponent("programme_hours",
                                                                  label = T("Contract"),
                                                                  fields = ["programme_id",
-                                                                           (T("Direct Date"), "date"),
+                                                                           "date",
                                                                            (T("End Date"), "end_date"),
-                                                                           (T("Direct Number"), "contract"),
+                                                                           "contract",
                                                                            ],
                                                                  link = False,
                                                                  multiple = False,
@@ -1979,7 +2002,8 @@ def config(settings):
                                                     ),
                                "comments",
                                ]
-                if r.method in( "record" "update"):
+                method = r.method
+                if method and method in ("record" "update"):
                     crud_fields.append("status")
 
                 s3db.configure("hrm_human_resource",

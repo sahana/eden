@@ -23,8 +23,15 @@ def config(settings):
     settings.base.system_name = T("Sahana: Washington Common Operating Picture (WA-COP)")
     settings.base.system_name_short = T("Sahana")
 
-    # PrePopulate data
-    settings.base.prepopulate = ("CAD", "default/users")
+    # Prepop options
+    settings.base.prepopulate_options = {"mandatory": "CAD",
+                                         "default": "default/users",
+                                         "demo": ("template:default",
+                                                  "CAD/Demo",
+                                                  ),
+                                         }
+    # Prepop default
+    settings.base.prepopulate = "template:default"
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "default"

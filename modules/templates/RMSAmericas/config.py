@@ -2105,6 +2105,15 @@ def config(settings):
     settings.customise_project_beneficiary_resource = customise_project_beneficiary_resource
 
     # -----------------------------------------------------------------------------
+    def customise_project_indicator_resource(r, tablename):
+
+        table = current.s3db.project_indicator
+        table.definition.label = T("Indicator Definition")
+        table.measures.label = T("Indicator Criteria and Sources of Verification")
+
+    settings.customise_project_indicator_resource = customise_project_indicator_resource
+
+    # -----------------------------------------------------------------------------
     def customise_project_location_resource(r, tablename):
 
         from s3 import S3SQLCustomForm, S3SQLInlineComponentCheckbox

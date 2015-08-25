@@ -53,13 +53,13 @@ try:
     from PIL import ImageOps
     from PIL import ImageStat
     PILImported = True
-except(ImportError):
+except ImportError:
     try:
         import Image
         import ImageOps
         import ImageStat
         PILImported = True
-    except(ImportError):
+    except ImportError:
         PILImported = False
 try:
     from reportlab.lib.enums import TA_CENTER, TA_RIGHT
@@ -88,9 +88,20 @@ except ImportError:
     canvas = Storage()
     canvas.Canvas = None
 
+try:
+    from bidi.algorithm import get_display
+    import arabic_reshaper
+    import unicodedata
+    biDiImported = True
+except ImportError:
+    biDiImported = False
+    from s3 import s3_debug
+    s3_debug("S3PDF", "BiDirectional Support not available: Install Python-BiDi")
+
 PDF_WIDTH = 0
 PDF_HEIGHT = 1
 
+# -----------------------------------------------------------------------------
 def set_fonts(self):
     """
         DRY Helper function for all classes which use PDF to set the appropriate Fonts
@@ -124,6 +135,38 @@ def set_fonts(self):
         self.font_name = "Helvetica"
         self.font_name_bold = "Helvetica-Bold"
 
+# -----------------------------------------------------------------------------
+def biDiText(text):
+    """
+        Ensure that RTL text is rendered RTL & also that Arabic text is
+        rewritten to use the joined format.
+    """
+
+    text = s3_unicode(text)
+
+    if biDiImported and current.deployment_settings.get_pdf_bidi():
+
+        isArabic = False
+        isBidi = False
+    
+        for c in text:
+            cat = unicodedata.bidirectional(c)
+    
+            if cat in ("AL", "AN"):
+                isArabic = True
+                isBidi = True
+                break
+            elif cat in ("R", "RLE", "RLO"):
+                isBidi = True
+    
+        if isArabic:
+            text = arabic_reshaper.reshape(text)
+    
+        if isBidi:
+            text = get_display(text)
+
+    return text
+
 # =============================================================================
 class S3RL_PDF(S3Codec):
     """
@@ -136,7 +179,6 @@ class S3RL_PDF(S3Codec):
         """
 
         # Error codes
-        T = current.T
         self.ERROR = Storage(
             PIL_ERROR = "PIL (Python Image Library) not installed, images cannot be embedded in the PDF report",
             RL_ERROR = "Python needs the ReportLab module installed for PDF export"
@@ -214,7 +256,7 @@ class S3RL_PDF(S3Codec):
         # Get the title & filename
         now = current.request.now.isoformat()[:19].replace("T", " ")
         title = attr.get("pdf_title")
-        if title == None:
+        if title is None:
             title = "Report"
         docTitle = "%s %s" % (title, now)
         filename = attr.get("pdf_filename")
@@ -260,7 +302,6 @@ class S3RL_PDF(S3Codec):
         # Build report template
 
         # Get data for the body of the text
-        data = None
         body_flowable = None
 
         doc.calc_body_size(header_flowable, footer_flowable)
@@ -330,7 +371,7 @@ class S3RL_PDF(S3Codec):
             # Static HTML
             html = rules
 
-        parser = S3html2pdf(pageWidth = printable_width,
+        parser = S3html2pdf(pageWidth=printable_width,
                             exclude_class_list=["tabs"])
         result = parser.parse(html)
         return result
@@ -601,6 +642,7 @@ class EdenDocTemplate(BaseDocTemplate):
             if style == None:
                 styleSheet = getSampleStyleSheet()
                 style = styleSheet["Normal"]
+            text = biDiText(text)
             para = Paragraph(text, style)
             if append and self.body_flowable:
                 self.body_flowable.append(para)
@@ -678,6 +720,9 @@ class S3PDFTable(object):
         # Fonts
         set_fonts(self)
 
+        # Right-to-Left
+        rtl = current.response.s3.rtl
+
         self.pdf = document
         # @todo: Change the code to use raw_data directly rather than this
         #        conversion to an ordered list of values
@@ -694,7 +739,7 @@ class S3PDFTable(object):
                 dvalue = None
                 while True:
                     if isinstance(value, (basestring, lazyT)):
-                        dvalue = value
+                        dvalue = biDiText(value)
                     elif isinstance(value, IMG):
                         dvalue = S3html2pdf.parse_img(value, selector.field.uploadfolder)
                         if dvalue:
@@ -704,15 +749,23 @@ class S3PDFTable(object):
                             value = value.components[0]
                             continue
                         else:
-                            dvalue = s3_unicode(value)
+                            dvalue = biDiText(value)
                     else:
-                        dvalue = s3_unicode(value)
+                        dvalue = biDiText(value)
                     break
                 dappend(dvalue)
-            rdata.append(data)
+            if rtl:
+                data.reverse()
+            rappend(data)
         self.raw_data = rdata
-        self.labels = [selector.label for selector in self.rfields]
-        self.list_fields = [selector.fname for selector in self.rfields]
+        labels = [biDiText(selector.label) for selector in self.rfields]
+        if rtl:
+            labels.reverse()
+        self.labels = labels
+        list_fields = [selector.fname for selector in self.rfields]
+        if rtl:
+            list_fields.reverse()
+        self.list_fields = list_fields
         self.pdf_groupby = groupby
         self.hideComments = hide_comments
         self.autogrow = autogrow
@@ -758,6 +811,7 @@ class S3PDFTable(object):
         # Only build the table if we have some data
         if not data or not (data[0]):
             return None
+
         endCol = len(self.labels) - 1
         rowCnt = len(data)
 
@@ -1225,9 +1279,9 @@ class S3html2pdf():
             return self.parse_div(html)
         elif (isinstance(html, basestring) or isinstance(html, lazyT)):
             if title:
-                para = [Paragraph(s3_unicode(html), self.boldstyle)]
+                para = [Paragraph(biDiText(html), self.boldstyle)]
             else:
-                para = [Paragraph(s3_unicode(html), self.normalstyle)]
+                para = [Paragraph(biDiText(html), self.normalstyle)]
             self.normalstyle = self.plainstyle
             return para
         return None
@@ -1394,7 +1448,7 @@ class S3html2pdf():
                       hAlign="LEFT",
                       vAlign="Top",
                       )
-        cw = table._colWidths
+        #cw = table._colWidths
         return [table]
 
     # -------------------------------------------------------------------------

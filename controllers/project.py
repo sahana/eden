@@ -302,12 +302,12 @@ def project():
                     if hr_group == "staff":
                         filter_opts = (1,)
                         human_resource_id.label = T("Staff")
-                        crud_strings["project_human_resource"] = crud_strings["hrm_staff"]
+                        crud_strings["project_human_resource_project"] = crud_strings["hrm_staff"]
 
                     elif hr_group == "volunteer":
                         filter_opts = (2,)
                         human_resource_id.label = T("Volunteer")
-                        crud_strings["project_human_resource"] = crud_strings["hrm_volunteer"]
+                        crud_strings["project_human_resource_project"] = crud_strings["hrm_volunteer"]
 
                 if filter_opts:
                     # Use the group to filter the form widget when

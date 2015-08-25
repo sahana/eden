@@ -1514,15 +1514,26 @@ class S3Config(Storage):
     def get_paper_size(self):
         return self.base.get("paper_size", "A4")
 
+    def get_pdf_bidi(self):
+        """
+            Whether to enable BiDi support for PDF exports
+            - without this RTL text will be LTR
+
+            Defaults to off to enhance performance
+        """
+        return self.__lazy(self.L10n, "pdf_bidi", False)
+
     def get_pdf_logo(self):
         return self.ui.get("pdf_logo")
 
     def get_pdf_export_font(self):
         language = current.session.s3.language
-        return self.fonts.get(language)
+        return self.__lazy(self.L10n, "pdf_export_font", self.fonts.get(language))
 
-    # Optical Character Recognition (OCR)
     def get_pdf_excluded_fields(self, resourcename):
+        """
+            Optical Character Recognition (OCR)
+        """
         excluded_fields_dict = {
             "hms_hospital" : [
                 "hrm_human_resource",
