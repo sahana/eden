@@ -1,0 +1,10 @@
+uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
+ADASHI,ADASHI,,sync,sync,,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,event_incident,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,event_incident_type,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,event_team,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,event_team_status,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,event_team_status_team,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,pr_group,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,gis_location,,READ|CREATE|UPDATE,,,true,true,
+ADASHI,ADASHI,,,,sit_presence,,READ|CREATE|UPDATE,,,true,true,
