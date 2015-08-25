@@ -404,6 +404,18 @@ def config(settings):
     settings.L10n.pdf_bidi = pdf_bidi
 
     # -----------------------------------------------------------------------------
+    def pdf_export_font(default):
+        """ NS-specific selection of which font to use in PDF output """
+
+        root_org = current.auth.root_org_name()
+        if root_org in (ARCS, IRCS):
+            # Use Unifont even in English since there is data stored with non-English characters
+            default = ["unifont", "unifont"]
+        return default
+
+    settings.L10n.pdf_export_font = pdf_export_font
+
+    # -----------------------------------------------------------------------------
     def postcode_selector(default):
         """ NS-specific selection of whether to show Postcode """
 
@@ -1898,8 +1910,8 @@ def config(settings):
                 table.person_id.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
                 table.code.label = T("Appointment Number")
                 phtable = s3db.hrm_programme_hours
-                #phtable.date.label = T("Direct Date")
-                #phtable.contract.label = T("Direct Number")
+                phtable.date.label = T("Direct Date")
+                phtable.contract.label = T("Direct Number")
                 phtable.contract.readable = phtable.contract.writable = True
                 crud_form = S3SQLCustomForm("organisation_id",
                                             "person_id",
@@ -1917,9 +1929,9 @@ def config(settings):
                                             S3SQLInlineComponent("programme_hours",
                                                                  label = T("Contract"),
                                                                  fields = ["programme_id",
-                                                                           (T("Direct Date"), "date"),
+                                                                           "date",
                                                                            (T("End Date"), "end_date"),
-                                                                           (T("Direct Number"), "contract"),
+                                                                           "contract",
                                                                            ],
                                                                  link = False,
                                                                  multiple = False,

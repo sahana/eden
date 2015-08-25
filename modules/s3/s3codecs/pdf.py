@@ -96,7 +96,7 @@ try:
 except ImportError:
     biDiImported = False
     from s3 import s3_debug
-    s3_debug("S3PDF", "BiDirectiional Support not available: Install Py-BiDi")
+    s3_debug("S3PDF", "BiDirectional Support not available: Install Python-BiDi")
 
 PDF_WIDTH = 0
 PDF_HEIGHT = 1
@@ -720,6 +720,9 @@ class S3PDFTable(object):
         # Fonts
         set_fonts(self)
 
+        # Right-to-Left
+        rtl = current.response.s3.rtl
+
         self.pdf = document
         # @todo: Change the code to use raw_data directly rather than this
         #        conversion to an ordered list of values
@@ -751,10 +754,18 @@ class S3PDFTable(object):
                         dvalue = biDiText(value)
                     break
                 dappend(dvalue)
+            if rtl:
+                data.reverse()
             rappend(data)
         self.raw_data = rdata
-        self.labels = [biDiText(selector.label) for selector in self.rfields]
-        self.list_fields = [selector.fname for selector in self.rfields]
+        labels = [biDiText(selector.label) for selector in self.rfields]
+        if rtl:
+            labels.reverse()
+        self.labels = labels
+        list_fields = [selector.fname for selector in self.rfields]
+        if rtl:
+            list_fields.reverse()
+        self.list_fields = list_fields
         self.pdf_groupby = groupby
         self.hideComments = hide_comments
         self.autogrow = autogrow
@@ -800,6 +811,7 @@ class S3PDFTable(object):
         # Only build the table if we have some data
         if not data or not (data[0]):
             return None
+
         endCol = len(self.labels) - 1
         rowCnt = len(data)
 
