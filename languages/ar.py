@@ -716,6 +716,7 @@
 'Fingerprints': 'بصمات الأصابع',
 'Fire': 'حريق',
 'First': 'اولاً',
+'First Name': 'الاسم',
 'Flash Flood': 'طوفان مفاجئ',
 'Flash Freeze': 'فلاش تجميد',
 'Fleet Manager': 'مدير الموكب',
