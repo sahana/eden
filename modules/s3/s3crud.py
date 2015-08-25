@@ -2447,7 +2447,7 @@ class S3CRUD(S3Method):
         """
 
         link = dict(attr)
-        link["label"] = str(label)
+        link["label"] = str(label) #s3_unicode(label).encode("utf8")
         link["url"] = url
         if icon and current.deployment_settings.get_ui_use_button_icons():
             link["icon"] = ICON.css_class(icon)

@@ -2423,9 +2423,16 @@ class cap_AreaRepresent(S3Represent):
         s3db = current.s3db
         artable = s3db.cap_area
         
+        count = len(values)
+        if count == 1:
+            query = (artable.id == values[0])
+        else:
+            query = (artable.id.belongs(values))
+
         fields = [artable.id,
                   artable.name,
                   ]
+
         if self.translate:
             ltable = s3db.cap_area_name
             fields += [ltable.name_l10n,
@@ -2433,17 +2440,15 @@ class cap_AreaRepresent(S3Represent):
             left = [ltable.on((ltable.area_id == artable.id) & \
                               (ltable.language == current.session.s3.language)),
                         ]
-            count = len(values)
-            if count == 1:
-                query = (artable.id == values[0])
-            else:
-                query = (artable.id.belongs(values))
             
-            rows = current.db(query).select(left = left,
-                                            limitby = (0, count),
-                                            *fields)
-            return rows
-    
+        else:
+            left = None
+
+        rows = current.db(query).select(left = left,
+                                        limitby = (0, count),
+                                        *fields)
+        return rows
+
     # -------------------------------------------------------------------------
     def represent_row(self, row):
         """
