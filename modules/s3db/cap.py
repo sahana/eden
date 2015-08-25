@@ -671,12 +671,10 @@ class S3CAPModel(S3Model):
                                                 multiple = True),
                            widget = S3MultiSelectWidget(),
                            ),
-                     # @ToDo: Make this a proper Foreign Key, not just a text field
-                     Field("priority", db.cap_warning_priority,
+                     Field("priority", "reference cap_warning_priority",
                            represent = priority_represent,
                            requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(
-                                                  db, "cap_warning_priority.id",
+                                        IS_ONE_OF(db, "cap_warning_priority.id",
                                                   priority_represent
                                                   ),
                                         ),
