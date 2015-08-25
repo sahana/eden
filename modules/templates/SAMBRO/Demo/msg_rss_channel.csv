@@ -1,0 +1,5 @@
+Name,URL
+Alberta Alerts,http://www.emergencyalert.alberta.ca/aeapublic/feed.atom
+NOAA,http://wcatwc.arh.noaa.gov/events/xml/PAAQAtom.xml
+PTWC Public Ocean,http://ptwc.weather.gov/feeds/ptwc_rss_pacific.xml
+PTWC Hawaii,http://ptwc.weather.gov/feeds/ptwc_rss_hawaii.xml

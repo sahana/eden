@@ -5434,14 +5434,16 @@ class gis_LocationRepresent(S3Represent):
         elif self.address_only and not self.show_marker_icon:
             gis_fields = fields + [ltable.parent,
                                    ltable.addr_street,
-                                   ltable.addr_postcode]
+                                   ltable.addr_postcode,
+                                   ]
         else:
             gis_fields = fields + [ltable.parent,
                                    ltable.addr_street,
                                    ltable.addr_postcode,
                                    ltable.inherited,
                                    ltable.lat,
-                                   ltable.lon]
+                                   ltable.lon,
+                                   ]
         if count == 1:
             query = (ltable.id == values[0])
         else:

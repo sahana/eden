@@ -263,7 +263,11 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
         for sheet in sheets:
             # Header row
             colCnt = 0
-            headerRow = sheet.row(0)
+            # Move this down if a title row will be added
+            if settings.get_xls_title_row():
+                headerRow = sheet.row(2)
+            else:
+                headerRow = sheet.row(0)
             fieldWidths = []
             id = False
             for selector in lfields:
@@ -290,26 +294,31 @@ List Fields %s""" % (request.url, len(headers), len(items[0]), headers, list_fie
                 fieldWidths.append(width)
                 sheet.col(writeCol).width = width
                 colCnt += 1
-        # Title row
-        # - has been removed to allow columns to be easily sorted post-export.
-        # - add deployment_setting if an Org wishes a Title Row
-        # for sheet in sheets:
-            # currentRow = sheet.row(0)
-            # if colCnt > 0:
-                # sheet.write_merge(0, 0, 0, colCnt, str(title),
-                                # styleLargeHeader)
-                # currentRow.height = 500
-                # currentRow = sheet.row(1)
-                # currentRow.write(0, str(current.T("Date Exported:")), styleNotes)
-                # currentRow.write(1, request.now, styleNotes)
-                # Fix the size of the last column to display the date
-            #if 16 * COL_WIDTH_MULTIPLIER > width:
-            #    sheet.col(colCnt).width = 16 * COL_WIDTH_MULTIPLIER
 
-            # Initialize counters
-            totalCols = colCnt
-        #rowCnt = 2
-        rowCnt = 0
+        # Title row (optional, deployment setting)
+        if settings.get_xls_title_row():
+            for sheet in sheets:
+                # First row => Title (standard = "title_list" CRUD string)
+                currentRow = sheet.row(0)
+                if colCnt > 0:
+                    sheet.write_merge(0, 0, 0, colCnt, str(title),
+                                      styleLargeHeader)
+                currentRow.height = 500
+                # Second row => Export date/time
+                currentRow = sheet.row(1)
+                currentRow.write(0, str(current.T("Date Exported:")), styleNotes)
+                currentRow.write(1, request.now, styleNotes)
+                # Fix the size of the last column to display the date
+                if 16 * COL_WIDTH_MULTIPLIER > width:
+                    sheet.col(colCnt).width = 16 * COL_WIDTH_MULTIPLIER
+
+        # Initialize counters
+        totalCols = colCnt
+        # Move the rows down if a title row is included
+        if settings.get_xls_title_row():
+            rowCnt = 2
+        else:
+            rowCnt = 0
 
         subheading = None
         for row in rows:

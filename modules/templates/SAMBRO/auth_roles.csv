@@ -1,0 +1,22 @@
+uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
+ANONYMOUS,Anonymous,,cap,public,,READ,,,,,Can only see scope=public alerts
+ANONYMOUS,Anonymous,,cms,post,,READ,,,,,
+AUTHENTICATED,Authenticated,,cap,index,,READ,,,,,
+AUTHENTICATED,Authenticated,,cap,alert,,READ,,,,,
+AUTHENTICATED,Authenticated,,pr,,,READ,,,,,
+AUTHENTICATED,Authenticated,,pr,person,,READ|CREATE,READ|UPDATE,,,,Can edit their own record
+AUTHENTICATED,Authenticated,,gis,,,READ,,,,,
+AUTHENTICATED,Authenticated,,org,,,READ,,,,,
+MAP_ADMIN,Map Admin,,gis,,,ALL,,,,,
+MAP_ADMIN,Map Admin,,cap,area,,READ|CREATE|UPDATE|DELETE,,,,,
+ALERT_EDITOR,Alert Editor,Can create and disseminate the CAP Message,cap,alert,,READ|CREATE|UPDATE|PUBLISH,,,,,
+ALERT_EDITOR,Alert Editor,,cap,template,,READ,,,,,Use template to create actual alert
+ALERT_EDITOR,Alert Editor,,cap,area,,READ,,,,,For predefined area 
+ALERT_EDITOR,Alert Editor,,cap,compose,,READ,,,,,To send message to Alert Approver
+ALERT_EDITOR,Alert Editor,,cap,priority_get,,READ,,,,,Priority based on event
+ALERT_EDITOR,Alert Editor,,msg,,,READ,,,,,
+ALERT_APPROVER,Alert Approver,"Besides Authorizing Message to disseminate, they can also act as CAP Editor",cap,alert,,READ|CREATE|UPDATE|REVIEW|APPROVE|PUBLISH,,,,,
+ALERT_APPROVER,Alert Approver,,cap,template,,READ,,,,,
+ALERT_APPROVER,Alert Approver,,cap,area,,READ,,,,,
+ALERT_APPROVER,Alert Approver,,cap,priority_get,,READ,,,,,
+ALERT_APPROVER,Alert Approver,,msg,,,READ,,,,,

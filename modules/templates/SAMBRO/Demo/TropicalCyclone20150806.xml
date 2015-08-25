@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2"><identifier>6e8cb0c9-e44e-4c75-8b74-bd1974680833</identifier><sender>PAGASA-DOST</sender><sent>2015-08-05T03:46:52+00:00</sent><status>Actual</status><msgType>Alert</msgType><scope>Public</scope><info><category>Met</category><event>Tropical Cyclone Alert</event><responseType>Prepare</responseType><urgency>Expected</urgency><severity>Minor</severity><certainty>Possible</certainty><expires>2015-08-06T00:44:08+08:00</expires><senderName>PAGASA-DOST</senderName><headline>Tropical Cyclone Alert : Typhoon HANNA (SOUDELOR)  </headline><description>The Typhoon east of extreme Northern Luzon has entered the Philippine Area of Responsibility and was named &#x201C;HANNA&#x201D;.&#xD;
+&#xD;
+Location of eye/center:	At 10:00 AM today, the eye of Typhoon &#x201C;HANNA&#x201D; was located based on all available data at 1,380 km East of Calayan, Cagayan (19.6&#xB0;N, 134.6&#xB0;E).	 &#xD;
+&#xD;
+Strength:	Maximum sustained winds of 195 kph near the center and gustiness of up to 230 kph	&#xD;
+Forecast Movement: Forecast to move West Northwest at 20 kph	&#xD;
+&#xD;
+Forecast Positions:	&#xD;
+&#xD;
+&#x2022;	24 hour (Tomorrow morning): 910 km East Northeast of Calayan, Cagayan or at 850 km East of Itbayat, Batanes&#xD;
+&#x2022;	48 hour (Friday morning): 375 km East Northeast of Itbayat, Batanes&#xD;
+&#x2022;	72 hour (Saturday morning): 400 km North Northwest of Itbayat, Batanes&#xD;
+&#x2022;	96 hour (Sunday morning): Outside PAR or at 770 km Northwest of Itbayat, Batanes&#xD;
+	&#xD;
+&#xD;
+&#x2022;	Estimated rainfall amount is from moderate to heavy within the 600 km diameter of the typhoon. &#xD;
+&#x2022;	Fisher folk are advised not to venture out over the eastern seaboard of Visayas and the seaboards of Mindanao.&#xD;
+No public storm warning signal is in effect in any part of the country. </description><instruction>  </instruction><web>http://kidlat.pagasa.dost.gov.ph/index.php/tropical-cyclones/weather-bulletin</web><contact>PAGASA DOST</contact><parameter><valueName>layer:Google:Region:0.1</valueName><value>Philippine Area of Responsibility</value></parameter><area><areaDesc>Philippine Area of Responsibility</areaDesc><polygon>21,120 21,130 5,130 5,121.5 9.5,113 15,113 21,120</polygon></area></info><Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><SignedInfo><CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><Reference URI=""><Transforms><Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></Transforms><DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><DigestValue>JdXQz8N29jP+2UiRmxgjiuRTwUA=</DigestValue></Reference></SignedInfo><SignatureValue>jDolXJuK7gN53tnermBlRmuk9SHIxb0YimY/flbedxosfjVZ6D+/NKyLHye/TQ/6
+2e29+mQozDrsef4TYRoPzP5WKoqHHH8kbzYPsQge42ookJ2EXZLs4fdbtEHpR2Bl
+bsCBxn+oilgxhC/broxk06LZaH6VXhVfMewbXycVkaGHdJiPEHLLxQj8v5Srgwbb
+pe2gOLAXeM7s8A2ErrcuivH8QCQJ8pA14uw6x8SUfrGPlS/wLCJyqDx9Kbe6eihl
+AS3aWL3fXcZTqRk55QE11QGE+JOpLJH1EydDliQuhxoFHpMmLkQl7KWm3i7WqlE6
+7jJHAhI6L87ynHyod38kOQ==</SignatureValue><KeyInfo><KeyValue>
+<RSAKeyValue>
+<Modulus>
+yVfF/fKxLtHIbctP7JfrM6OHY3L956UkjaRSRw2cng6M7dumT0DVmefl19dzc2YY
+CqvEefXC1ebZsNai7DCVG5CzUm8gaOnrzvzIhJPCOcI8FYrkG+Wb3Ni23gfoldA/
+DwD/rR2dBtLT6xSJEmqMcb+z5ofAEvv8kg/nD0JSXgE3r4V3BF0C3Bk11PkZdtag
+hVRtLSSsbygP26TdHL9VmmXlB6p0/MY55Qk2XAlUUP81ufycX1y58oTVAJPP3uDa
+LwFm5ae8NeBp2MiF5kF0u7foxy+uh7RH0H8TbvF7IQCdMK3EN7SFSm89tAi7E/Ao
+KTuICl584Dd97ZDFeVVBqw==
+</Modulus>
+<Exponent>
+AQAB
+</Exponent>
+</RSAKeyValue>
+</KeyValue></KeyInfo></Signature></alert>

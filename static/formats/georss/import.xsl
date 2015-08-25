@@ -8,7 +8,7 @@
     <!-- **********************************************************************
          GeoRSS Import Templates for Sahana-Eden
 
-         Copyright (c) 2011-2012 Sahana Software Foundation
+         Copyright (c) 2011-2015 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -32,9 +32,14 @@
          OTHER DEALINGS IN THE SOFTWARE.
 
     *********************************************************************** -->
+    <xsl:import href="adashi.xsl"/>
+
     <xsl:output method="xml" indent="yes"/>
+
     <xsl:include href="../xml/commons.xsl"/>
 
+    <!-- Source type -->
+    <xsl:param name="source_type"/>
     <!-- Which Resource? -->
     <xsl:param name="name"/>
     <!-- Source URL for Feed caching -->
@@ -44,11 +49,20 @@
     <!-- Image element for Feed caching -->
     <xsl:param name="image_field"/>
 
+    <xsl:variable name="category">
+        <xsl:value-of select="/rss/channel/category/text()"/>
+    </xsl:variable>
+
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
             <xsl:for-each select="//item">
                 <xsl:choose>
+                    <!-- ADASHI -->
+                    <xsl:when test="$source_type='adashi'">
+                        <xsl:call-template name="adashi"/>
+                    </xsl:when>
+
                     <!-- Cache -->
                     <xsl:when test="$name='cache'">
                         <xsl:call-template name="cache"/>
@@ -67,6 +81,17 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:for-each>
+            <xsl:if test="$source_type='adashi'">
+                <xsl:choose>
+                    <xsl:when test="$category='Incidents'">
+                        <xsl:call-template name="AdashiIncidentTypes"/>
+                        <xsl:apply-templates select="//item[resources/text()!='']" mode="generate-units"/>
+                    </xsl:when>
+                    <xsl:when test="$category='AVL'">
+                        <xsl:call-template name="AdashiCADStatuses"/>
+                    </xsl:when>
+                </xsl:choose>
+            </xsl:if>
         </s3xml>
     </xsl:template>
 
@@ -207,6 +232,10 @@
             <xsl:with-param name="s" select="substring-after($latlon, ' ')"/>
         </xsl:call-template>
     </xsl:template>
+
+    <!-- Dummy templates for Xalan to pass validation -->
+    <xsl:template name="resource"/>
+    <xsl:template name="quote"/>
 
     <!-- ****************************************************************** -->
 

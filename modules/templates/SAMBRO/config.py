@@ -17,6 +17,9 @@ def config(settings):
 
     T = current.T
 
+    settings.base.system_name = T("Sahana Alerting and Messaging Broker")
+    settings.base.system_name_short = T("SAMBRO")
+
     # Pre-Populate
     settings.base.prepopulate = ("SAMBRO", "SAMBRO/Demo", "default/users")
 
@@ -29,20 +32,78 @@ def config(settings):
     # GeoNames username
     settings.gis.geonames_username = "eden_test"
 
-    # =============================================================================
+    # =========================================================================
     # System Settings
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # Security Policy
+    # http://eden.sahanafoundation.org/wiki/S3/S3AAA#System-widePolicy
+    # 1: Simple (default): Global as Reader, Authenticated as Editor
+    # 2: Editor role required for Update/Delete, unless record owned by session
+    # 3: Apply Controller ACLs
+    # 4: Apply both Controller & Function ACLs
+    # 5: Apply Controller, Function & Table ACLs
+    # 6: Apply Controller, Function, Table ACLs and Entity Realm
+    # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
+    # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations    
+    settings.security.policy = 4 # Controller-Function ACLs
+    
     # Record Approval
     settings.auth.record_approval = True
     # cap_alert record requires approval before sending
     settings.auth.record_approval_required_for = ("cap_alert",)
 
+    # =============================================================================
+    # Module Settings
     # -----------------------------------------------------------------------------
+    # Notifications
+    
+    # Template for the subject line in update notifications
+    settings.msg.notify_subject = "$S %s" % T("Alert Notification")
+
+    # -----------------------------------------------------------------------------
+    # L10n (Localization) settings
+    languages = OrderedDict([
+        #("ar", "العربية"),
+        ("dv", "ދިވެހި"), # Divehi (Maldives)
+        ("en-US", "English"),
+        #("es", "Español"),
+        #("fr", "Français"),
+        #("km", "ភាសាខ្មែរ"),        # Khmer
+        #("mn", "Монгол хэл"),  # Mongolian
+        ("my", "မြန်မာစာ"),        # Burmese
+        #("ne", "नेपाली"),          # Nepali
+        #("prs", "دری"),        # Dari
+        #("ps", "پښتو"),        # Pashto
+        #("tet", "Tetum"),
+        #("th", "ภาษาไทย"),        # Thai
+        ("tl", "Tagalog"), # Filipino
+        #("vi", "Tiếng Việt"),   # Vietnamese
+        #("zh-cn", "中文 (简体)"),
+    ])
+    settings.L10n.languages = languages
+    settings.cap.languages = languages
+    # Translate the cap_area name
+    settings.L10n.translate_cap_area = True
+    
+    # -------------------------------------------------------------------------
     # Messaging
     # Parser
     settings.msg.parser = "SAMBRO"
 
+    # -------------------------------------------------------------------------
     def customise_msg_rss_channel_resource(r, tablename):
+
+        # @ToDo: We won't be able to automate this as we have 2 sorts, so will need the user to select manually
+        # Can we add a component for the parser for S3CSV imports?
+
+        # UX: separate menu items distinguished via get_var
+        # @ToDo: Add menu entries for "Create RSS Feed for CAP" & "Create RSS Feed for CMS"
+        type = current.request.get_vars.get("type", None)
+        if type == "cap":
+            fn = "parse_rss_2_cap"
+        else:
+            fn = "parse_rss_2_cms"
+
         s3db = current.s3db
         def onaccept(form):
             # Normal onaccept
@@ -54,7 +115,7 @@ def config(settings):
                                                     limitby=(0, 1)).first().channel_id
             # Link to Parser
             table = s3db.msg_parser
-            _id = table.insert(channel_id=channel_id, function_name="parse_rss", enabled=True)
+            _id = table.insert(channel_id=channel_id, function_name=fn, enabled=True)
             s3db.msg_parser_enable(_id)
 
             async = current.s3task.async
@@ -62,7 +123,7 @@ def config(settings):
             async("msg_poll", args=["msg_rss_channel", channel_id])
 
             # Parse
-            async("msg_parse", args=[channel_id, "parse_rss"])
+            async("msg_parse", args=[channel_id, fn])
 
         s3db.configure(tablename,
                        create_onaccept = onaccept,
@@ -70,6 +131,37 @@ def config(settings):
 
     settings.customise_msg_rss_channel_resource = customise_msg_rss_channel_resource
 
+    # -------------------------------------------------------------------------
+    def customise_msg_twitter_channel_resource(r, tablename):
+
+        s3db = current.s3db
+        def onaccept(form):
+            # Normal onaccept
+            s3db.msg_channel_onaccept(form)
+            _id = form.vars.id
+            db = current.db
+            table = db.msg_twitter_channel
+            channel_id = db(table.id == _id).select(table.channel_id,
+                                                    limitby=(0, 1)).first().channel_id
+            # Link to Parser
+            table = s3db.msg_parser
+            _id = table.insert(channel_id=channel_id, function_name="parse_tweet", enabled=True)
+            s3db.msg_parser_enable(_id)
+
+            async = current.s3task.async
+            # Poll
+            async("msg_poll", args=["msg_twitter_channel", channel_id])
+
+            # Parse
+            async("msg_parse", args=[channel_id, "parse_tweet"])
+
+        s3db.configure(tablename,
+                       create_onaccept = onaccept,
+                       )
+
+    settings.customise_msg_twitter_channel_resource = customise_msg_twitter_channel_resource
+
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # @ToDo: Have the system automatically enable migrate if a module is enabled
     # Modules menu is defined in modules/eden/menu.py
@@ -117,7 +209,7 @@ def config(settings):
             module_type = None,
         )),
         ("gis", Storage(
-            name_nice = T("Map"),
+            name_nice = T("Mapping"),
             #description = "Situation Awareness & Geospatial Analysis",
             restricted = True,
             module_type = 6,     # 6th item in the menu
@@ -143,7 +235,7 @@ def config(settings):
         #    module_type = 2,
         #)),
         ("cap", Storage(
-            name_nice = T("CAP"),
+            name_nice = T("Alerting"),
             #description = "Create & broadcast CAP alerts",
             restricted = True,
             module_type = 1,
@@ -166,12 +258,6 @@ def config(settings):
             restricted = True,
             # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
             module_type = None,
-        )),
-        ("irs", Storage(
-            name_nice = T("Incidents"),
-            #description = "Incident Reporting System",
-            restricted = True,
-            module_type = 10
         )),
         ("event", Storage(
             name_nice = T("Events"),

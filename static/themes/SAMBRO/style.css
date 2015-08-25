@@ -3,3 +3,6 @@
 .dl-header {
     display: none;
 }
+legend button {
+    margin: 0;
+}

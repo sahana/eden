@@ -1,4 +1,4 @@
-require(['converse'], function (converse) {
+require(['converse'], function(converse) {
     converse.initialize({
         allow_otr: true,
         auto_list_rooms: true,

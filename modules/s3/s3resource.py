@@ -643,6 +643,8 @@ class S3Resource(object):
         rows = self.select(fields, as_rows=True)
         if not rows:
             # No rows? => that was it already :)
+            # Can't do this as breaks cascades but otherwise we see in console S3Log Error: None
+            #self.error = current.ERROR.BAD_RECORD
             return 0
 
         numrows = 0
@@ -2535,14 +2537,15 @@ class S3Resource(object):
         else:
             tree = None
 
-        import_info = {"records":self.import_count}
-        created = self.import_created
+        # Import Summary Info
+        import_info = {"records": self.import_count}
+        created = list(set(self.import_created))
         if created:
             import_info["created"] = created
-        updated = self.import_updated
+        updated = list(set(self.import_updated))
         if updated:
             import_info["updated"] = updated
-        deleted = self.import_deleted
+        deleted = list(set(self.import_deleted))
         if deleted:
             import_info["deleted"] = deleted
 

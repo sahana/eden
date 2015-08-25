@@ -56,8 +56,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         Wrike® Synchronization Adapter
 
         http://www.wrike.com/wiki/dev/api3
-
-        @status: experimental
     """
 
     # -------------------------------------------------------------------------
@@ -71,6 +69,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         self.access_token = None
         self.token_type = None
 
+    # -------------------------------------------------------------------------
+    # Methods to be implemented by subclasses:
     # -------------------------------------------------------------------------
     def register(self):
         """
@@ -132,9 +132,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             self.access_token = None
 
             # Get refresh token from peer
-            response, message = self.send(method = "POST",
-                                          data = data,
-                                          auth = True)
+            response, message = self._send_request(method = "POST",
+                                                   data = data,
+                                                   auth = True,
+                                                   )
             if not response:
                 result = log.FATAL
                 remote = True
@@ -191,9 +192,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 "grant_type": "refresh_token",
                 "refresh_token": refresh_token
             }
-            response, message = self.send(method = "POST",
-                                          data = data,
-                                          auth = True)
+            response, message = self._send_request(method = "POST",
+                                                   data = data,
+                                                   auth = True,
+                                                   )
             if not response:
                 result = log.FATAL
                 remote = True
@@ -395,14 +397,14 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
             # ...or report success
             elif not message:
-                message = "data imported successfully (%s records)" % count
+                message = "Data imported successfully (%s records)" % count
                 output = None
 
         else:
             # No data received from peer
             result = log.WARNING
             remote = True
-            message = "no data received from peer"
+            message = "No data received from peer"
             output = None
 
         # Log the operation
@@ -435,6 +437,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         return (error, None)
 
     # -------------------------------------------------------------------------
+    # Internal methods:
+    # -------------------------------------------------------------------------
     def fetch_accounts(self, root):
         """
             Get all accessible accounts
@@ -442,7 +446,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             @return: dict {account_id: (rootFolderId, recycleBinId)}
         """
 
-        response, message = self.send(path="accounts")
+        response, message = self._send_request(path="accounts")
         if not response:
             return None, message
 
@@ -473,7 +477,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             @param account_id: the Wrike account ID
         """
 
-        response, message = self.send(path="accounts/%s/folders" % account_id)
+        response, message = self._send_request(path="accounts/%s/folders" % account_id)
         if not response:
             return None, message
 
@@ -521,8 +525,9 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 }
         if msince is not None:
             args["updatedDate"] = "%sZ," % msince
-        response, message = self.send(path = "folders/%s/tasks" % folder_id,
-                                      args = args)
+        response, message = self._send_request(path = "folders/%s/tasks" % folder_id,
+                                               args = args,
+                                               )
         if not response:
             return None, message
 
@@ -605,7 +610,12 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         return
 
     # -------------------------------------------------------------------------
-    def send(self, method="GET", path=None, args=None, data=None, auth=False):
+    def _send_request(self,
+                      method="GET",
+                      path=None,
+                      args=None,
+                      data=None,
+                      auth=False):
         """
             Send a request to the Wrike API
 

@@ -31,6 +31,7 @@
 __all__ = ("S3Importer",
            "S3ImportJob",
            "S3ImportItem",
+           "S3Duplicate",
            "S3BulkImporter",
            )
 
@@ -65,7 +66,7 @@ from gluon.storage import Storage, Messages
 from gluon.tools import callback, fetch
 
 from s3datetime import s3_utc
-from s3rest import S3Method
+from s3rest import S3Method, S3Request
 from s3resource import S3Resource
 from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
 from s3xml import S3XML
@@ -1193,8 +1194,6 @@ class S3Importer(S3Method):
             @param timestmp: the timestamp of the completion
         """
 
-        session = current.session
-
         messages = self.messages
         msg = "%s - %s - %s" % \
               (messages.commit_total_records_imported,
@@ -1203,14 +1202,14 @@ class S3Importer(S3Method):
         msg = msg % totals
 
         if timestmp != None:
-            session.flash = messages.job_completed % \
-                            (self.date_represent(timestmp), msg)
+            current.session.flash = messages.job_completed % \
+                                        (self.date_represent(timestmp), msg)
         elif totals[1] is not 0:
-            session.error = msg
+            current.session.error = msg
         elif totals[2] is not 0:
-            session.warning = msg
+            current.session.warning = msg
         else:
-            session.flash = msg
+            current.session.flash = msg
 
     # -------------------------------------------------------------------------
     def _dataTable(self,
@@ -1825,9 +1824,21 @@ class S3ImportItem(object):
         self.table = table
         self.tablename = table._tablename
 
+        UID = xml.UID
+
         if original is None:
             original = S3Resource.original(table, element,
-                                           mandatory=self._mandatory_fields())
+                                           mandatory = self._mandatory_fields())
+        elif isinstance(original, basestring) and UID in table.fields:
+            # Single-component update in add-item => load the original now
+            query = (table[UID] == original)
+            pkeys = set(fname for fname in table.fields if table[fname].unique)
+            fields = S3Resource.import_fields(table, pkeys,
+                                              mandatory = self._mandatory_fields())
+            original = current.db(query).select(limitby=(0, 1), *fields).first()
+        else:
+            original = None
+
         postprocess = s3db.get_config(self.tablename, "xml_post_parse")
         data = xml.record(table, element,
                           files=files,
@@ -1843,17 +1854,18 @@ class S3ImportItem(object):
 
         self.data = data
 
-        UID = xml.UID
         MCI = xml.MCI
         MTIME = xml.MTIME
 
+        self.uid = data.get(UID)
         if original is not None:
+
             self.original = original
             self.id = original[table._id.name]
-            if UID in original:
-                self.data[UID] = self.uid = original[UID]
-        elif UID in data:
-            self.uid = data[UID]
+
+            if not current.response.s3.synchronise_uuids and UID in original:
+                self.uid = self.data[UID] = original[UID]
+
         if MTIME in data:
             self.mtime = data[MTIME]
         if MCI in data:
@@ -1871,17 +1883,14 @@ class S3ImportItem(object):
         if self.id:
             return
 
-        RESOLVER = "deduplicate"
-
         METHOD = self.METHOD
+        CREATE = METHOD["CREATE"]
         UPDATE = METHOD["UPDATE"]
         DELETE = METHOD["DELETE"]
         MERGE = METHOD["MERGE"]
 
         xml = current.xml
         UID = xml.UID
-        DELETED = xml.DELETED
-        REPLACEDBY = xml.REPLACEDBY
 
         table = self.table
         mandatory = self._mandatory_fields()
@@ -1891,45 +1900,61 @@ class S3ImportItem(object):
         if self.original is not None:
             original = self.original
         elif self.data:
-            original = S3Resource.original(table, self.data,
-                                           mandatory=mandatory)
+            original = S3Resource.original(table,
+                                           self.data,
+                                           mandatory=mandatory,
+                                           )
         else:
             original = None
 
         data = self.data
-        if original is not None:
-            self.original = original
-            self.id = original[table._id.name]
-            if UID in original:
-                self.uid = original[UID]
-                data.update({UID:self.uid})
-            if data[DELETED]:
-                if data[REPLACEDBY]:
-                    self.method = MERGE
-                else:
-                    self.method = DELETE
+        synchronise_uuids = current.response.s3.synchronise_uuids
+
+        deleted = data[xml.DELETED]
+        if deleted:
+            if data[xml.REPLACEDBY]:
+                self.method = MERGE
             else:
+                self.method = DELETE
+
+        self.uid = data.get(UID)
+
+        if original is not None:
+
+            # The original record could be identified by a unique-key-match,
+            # so this must be an update
+            self.id = original[table._id.name]
+
+            if not deleted:
                 self.method = UPDATE
 
-        else:
-            if data[DELETED]:
-                if data[REPLACEDBY]:
-                    self.method = MERGE
-                else:
-                    self.method = DELETE
+        elif not deleted:
+
+            if UID in data and not synchronise_uuids:
+                # The import item has a UUID but there is no match
+                # in the database, so this must be a new record
+                self.id = None
+                self.method = CREATE
             else:
-                resolve = current.s3db.get_config(self.tablename, RESOLVER)
+                # Use the resource's deduplicator to identify the original
+                resolve = current.s3db.get_config(self.tablename, "deduplicate")
                 if data and resolve:
                     resolve(self)
-                if self.id and self.method in (UPDATE, DELETE, MERGE):
-                    fields = S3Resource.import_fields(table, data,
-                                                      mandatory=mandatory)
-                    self.original = current.db(table._id == self.id) \
-                                           .select(limitby=(0, 1),
-                                                   *fields).first()
-                    if original and UID in original:
-                        self.uid = original[UID]
-                        data.update({UID:self.uid})
+
+            if self.id and self.method in (UPDATE, DELETE, MERGE):
+                # Retrieve the original
+                fields = S3Resource.import_fields(table,
+                                                  data,
+                                                  mandatory=mandatory,
+                                                  )
+                original = current.db(table._id == self.id) \
+                                  .select(limitby=(0, 1), *fields).first()
+
+        # Retain the original UUID (except in synchronise_uuids mode)
+        if original and not synchronise_uuids and UID in original:
+            self.uid = data[UID] = original[UID]
+
+        self.original = original
 
     # -------------------------------------------------------------------------
     def authorize(self):
@@ -2476,16 +2501,30 @@ class S3ImportItem(object):
 
         # Audit + onaccept on successful commits
         if self.committed:
+
+            # Create a pseudo-form for callbacks
             form = Storage()
             form.method = method
             form.vars = self.data
             prefix, name = tablename.split("_", 1)
             if self.id:
                 form.vars.id = self.id
+
+            # Audit
             current.audit(method, prefix, name,
                           form=form,
                           record=self.id,
                           representation="xml")
+
+            # Prevent that record post-processing breaks time-delayed
+            # synchronization by implicitly updating "modified_on"
+            if MTIME in table.fields:
+                modified_on = table[MTIME]
+                modified_on_update = modified_on.update
+                modified_on.update = None
+            else:
+                modified_on_update = None
+
             # Update super entity links
             s3db.update_super(table, form.vars)
             if method == CREATE:
@@ -2502,6 +2541,10 @@ class S3ImportItem(object):
             onaccept = current.deployment_settings.get_import_callback(tablename, key)
             if onaccept:
                 callback(onaccept, form, tablename=tablename)
+
+            # Restore modified_on.update
+            if modified_on_update is not None:
+                modified_on.update = modified_on_update
 
         # Update referencing items
         if self.update and self.id:
@@ -2655,22 +2698,40 @@ class S3ImportItem(object):
             @param value: the value of the foreign key
         """
 
-        if not value or not self.table:
+        MTIME = xml.mtime
+
+        table = self.table
+        record_id = self.id
+
+        if not value or not table or not record_id or not self.permitted:
             return
-        if self.id and self.permitted:
-            db = current.db
-            fieldtype = str(self.table[field].type)
-            if fieldtype.startswith("list:reference"):
-                query = (self.table.id == self.id)
-                record = db(query).select(self.table[field],
-                                          limitby=(0,1)).first()
-                if record:
-                    values = record[field]
-                    if value not in values:
-                        values.append(value)
-                        db(self.table.id == self.id).update(**{field:values})
-            else:
-                db(self.table.id == self.id).update(**{field:value})
+
+        # Prevent that reference update breaks time-delayed
+        # synchronization by implicitly updating "modified_on"
+        if MTIME in table.fields:
+            modified_on = table[MTIME]
+            modified_on_update = modified_on.update
+            modified_on.update = None
+        else:
+            modifed_on_update = None
+
+        db = current.db
+        fieldtype = str(table[field].type)
+        if fieldtype.startswith("list:reference"):
+            query = (table._id == record_id)
+            record = db(query).select(table[field],
+                                        limitby=(0,1)).first()
+            if record:
+                values = record[field]
+                if value not in values:
+                    values.append(value)
+                    db(table._id == record_id).update(**{field:values})
+        else:
+            db(table._id == record_id).update(**{field:value})
+
+        # Restore modified_on.update
+        if modified_on_update is not None:
+            modified_on.update = modified_on_update
 
     # -------------------------------------------------------------------------
     def store(self, item_table=None):
@@ -2790,9 +2851,8 @@ class S3ImportItem(object):
         if original is not None:
             self.original = original
             self.id = original[table._id.name]
-            if UID in original:
-                self.uid = original[UID]
-                self.data.update({UID:self.uid})
+            if not current.response.s3.synchronise_uuids and UID in original:
+                self.uid = self.data[UID] = original[UID]
         self.error = row.error
         postprocess = s3db.get_config(self.tablename, "xml_post_parse")
         if postprocess:
@@ -2980,8 +3040,8 @@ class S3ImportJob():
                                                       ctable = ctable,
                                                       pkey = pkey,
                                                       fkey = fkey,
-                                                      original = None,
-                                                      uid = None)
+                                                      first = True,
+                                                      )
             add_item = self.add_item
             xml = current.xml
             for celement in xml.components(element, names=cnames.keys()):
@@ -3005,23 +3065,40 @@ class S3ImportJob():
                     cinfo = cinfos[(ctablename, calias)]
 
                 component = cinfo.component
-                original = cinfo.original
                 ctable = cinfo.ctable
+
                 pkey = cinfo.pkey
                 fkey = cinfo.fkey
+
+                original = None
+
                 if not component.multiple:
-                    if cinfo.uid is not None:
+                    # Single-component: skip all subsequent items after
+                    # the first under the same master record
+                    if not cinfo.first:
                         continue
-                    if original is None and item.id:
+                    cinfo.first = False
+
+                    # Single component = the first component record
+                    # under the master record is always the original,
+                    # only relevant if the master record exists in
+                    # the db and hence item.id is not None
+                    if item.id:
+                        db = current.db
                         query = (table.id == item.id) & \
                                 (table[pkey] == ctable[fkey])
-                        original = current.db(query).select(ctable.ALL,
-                                                            limitby=(0, 1)).first()
-                    if original:
-                        cinfo.uid = uid = original.get(xml.UID, None)
-                        celement.set(xml.UID, uid)
-                    cinfo.original = original
+                        if UID in ctable.fields:
+                            # Load only the UUID now, parse will load any
+                            # required data later
+                            row = db(query).select(UID,
+                                                   limitby = (0, 1)).first()
+                            original = row[UID]
+                        else:
+                            # Not nice, but a rare edge-case
+                            original = db(query).select(ctable.ALL,
+                                                        limitby=(0, 1)).first()
 
+                # Recurse
                 item_id = add_item(element=celement,
                                    original=original,
                                    parent=item,
@@ -3568,6 +3645,112 @@ class S3ImportJob():
                 item.load_parent = None
 
 # =============================================================================
+class S3Duplicate(object):
+    """ Standard deduplicator method """
+
+    def __init__(self, primary=None, secondary=None, ignore_case=True):
+        """
+            Constructor
+
+            @param primary: list or tuple of primary fields to find a
+                            match, must always match (mandatory, defaults
+                            to "name" field)
+            @param secondary: list or tuple of secondary fields to
+                              find a match, must match if values are
+                              present in the import item
+            @param ignore_case: ignore case for string/text fields
+        """
+
+        if not primary:
+            primary = ("name",)
+        self.primary = set(primary)
+
+        if not secondary:
+            self.secondary = set()
+        else:
+            self.secondary = set(secondary)
+
+        self.ignore_case = ignore_case
+
+    # -------------------------------------------------------------------------
+    def __call__(self, item):
+        """
+            Entry point for importer
+
+            @param item: the import item
+
+            @return: the duplicate Row if match found, otherwise None
+
+            @raise SyntaxError: if any of the query fields doesn't exist
+                                in the item table
+        """
+
+        data = item.data
+        table = item.table
+
+        query = None
+        error = "Invalid field for duplicate detection: %s (%s)"
+        match = self.match
+
+        # Primary query (mandatory)
+        primary = self.primary
+        for fname in primary:
+
+            if fname not in table.fields:
+                raise SyntaxError(error % (fname, table))
+
+            field = table[fname]
+            value = data.get(fname)
+
+            q = self.match(field, value)
+            query = q if query is None else query & q
+
+        # Secondary queries (optional)
+        secondary = self.secondary
+        for fname in secondary:
+
+            if fname not in table.fields:
+                raise SyntaxError(error % (fname, table))
+
+            field = table[fname]
+            value = data.get(fname)
+            if value:
+                query &= self.match(field, value)
+
+        # Find a match
+        duplicate = current.db(query).select(table._id,
+                                             limitby = (0, 1)).first()
+
+        # Update import item if match found:
+        if duplicate:
+            item.id = duplicate[table._id]
+            item.method = item.METHOD.UPDATE
+
+        # For uses outside of imports:
+        return duplicate
+
+    # -------------------------------------------------------------------------
+    def match(self, field, value):
+        """
+            Helper function to generate a match-query
+
+            @param field: the Field
+            @param value: the value
+
+            @return: a Query
+        """
+
+        ftype = str(field.type)
+        ignore_case = self.ignore_case
+
+        if ignore_case and \
+           hasattr(value, "lower") and ftype in ("string", "text"):
+            query = (field.lower() == value.lower())
+        else:
+            query = (field == value)
+        return query
+
+# =============================================================================
 class S3BulkImporter(object):
     """
         Import CSV files of data to pre-populate the database.
@@ -3788,6 +3971,12 @@ class S3BulkImporter(object):
                 return
             else:
                 S.close()
+
+            # Customise the resource
+            customise = current.deployment_settings.customise_resource(tablename)
+            if customise:
+                request = S3Request(prefix, name, current.request)
+                customise(request, tablename)
 
             extra_data = None
             if task[5]:
@@ -4292,7 +4481,15 @@ class S3BulkImporter(object):
         else:
             S.close()
 
-        resource = current.s3db.resource("%s_%s" % (prefix, resourcename))
+        tablename = "%s_%s" % (prefix, resourcename)
+        resource = current.s3db.resource(tablename)
+
+        # Customise the resource
+        customise = current.deployment_settings.customise_resource(tablename)
+        if customise:
+            request = S3Request(prefix, resourcename, current.request)
+            customise(request, tablename)
+
         auth = current.auth
         auth.rollback = True
         try:
@@ -4309,7 +4506,7 @@ class S3BulkImporter(object):
             # Must roll back if there was an error!
             error = resource.error
             self.errorList.append("%s - %s: %s" % (
-                                  filepath, resource.tablename, error))
+                                  filepath, tablename, error))
             errors = current.xml.collect_errors(resource)
             if errors:
                 self.errorList.extend(errors)

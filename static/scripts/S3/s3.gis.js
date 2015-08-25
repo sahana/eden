@@ -334,6 +334,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
      * Parameters:
      * layer_id - {String} ID of the layer to be refreshed
      * queries - {Array} Optional list of Queries to be applied to the Layer
+     *                   [[key, value], [key, value], ...]
      */
     S3.gis.refreshLayer = function(layer_id, queries) {
         var maps = S3.gis.maps;

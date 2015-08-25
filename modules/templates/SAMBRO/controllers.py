@@ -24,7 +24,11 @@ class index(S3CustomController):
     def __call__(self):
         """ Main entry point, configuration """
 
-        # @ToDo: Have 2 Pages which reuse common info with just the different URL for cap_alert
+        logged_in = current.auth.s3_logged_in()
+        if logged_in:
+            fn = "alert"
+        else:
+            fn = "public"
 
         T = current.T
         s3db = current.s3db
@@ -33,8 +37,33 @@ class index(S3CustomController):
         output = {}
 
         # Map
-        _map = current.gis.show_map(catalogue_layers=True,
+        ftable = s3db.gis_layer_feature
+        query = (ftable.controller == "cap") & \
+                (ftable.function == fn)
+        layer = current.db(query).select(ftable.layer_id,
+                                         limitby=(0, 1)
+                                         ).first()
+        try:
+            layer_id = layer.layer_id
+        except:
+            from s3 import s3_debug
+            s3_debug("Cannot find Layer for Map")
+            layer_id = None
+
+        feature_resources = [{"name"      : T("Alerts"),
+                              "id"        : "search_results",
+                              "layer_id"  : layer_id,
+                              "tablename" : "cap_alert",
+                              "url"       : URL(c="cap", f=fn,
+                                                extension="geojson"),
+                              # We activate in callback after ensuring URL is updated for current filter status
+                              "active"    : False,
+                              }]
+
+        _map = current.gis.show_map(callback='''S3.search.s3map()''',
+                                    catalogue_layers=True,
                                     collapsed=True,
+                                    feature_resources=feature_resources,
                                     save=False,
                                     )
         output["_map"] = _map
@@ -44,15 +73,20 @@ class index(S3CustomController):
         resource = s3db.resource("cap_alert")
         # Don't show Templates
         resource.add_filter(FS("is_template") == False)
-        # Only show Public Alerts
-        resource.add_filter(FS("scope") == "Public")
+        if not logged_in:
+            # Only show Public Alerts
+            resource.add_filter(FS("scope") == "Public")
         # Only show Alerts which haven't expired
         #resource.add_filter(FS("info.expires") >= request.utcnow)
         list_id = "cap_alert_datalist"
         list_fields = ["info.headline",
                        "area.name",
-                       "info.description",
-                       "info.sender_name",
+                       #"info.description",
+                       #"info.sender_name",
+                       "info.priority",
+                       "status",
+                       "scope",
+                       "info.event_type_id",
                        ]
         # Order with most recent Alert first
         orderby = "cap_info.expires desc"
@@ -63,20 +97,25 @@ class index(S3CustomController):
                                                    orderby = orderby,
                                                    layout = s3db.cap_alert_list_layout
                                                    )
-        ajax_url = URL(c="cap", f="public", args="datalist.dl", vars={"list_id": list_id})
+        ajax_url = URL(c="cap", f=fn, args="datalist.dl", vars={"list_id": list_id})
         output[list_id] = datalist.html(ajaxurl = ajax_url,
                                         pagesize = 5
                                         )
 
         # @ToDo: Options are currently built from the full-set rather than the filtered set
-        filter_widgets = [S3LocationFilter("location.location_id",
-                                           label = "",
-                                           #label=T("Country"),
-                                           levels=("L0",),
-                                           widget="multiselect",
-                                           ),
+        filter_widgets = [#S3LocationFilter("location.location_id",
+                          #                 label=T("Location"),
+                          #                 levels=("L0",),
+                          #                 widget="multiselect",
+                          #                 ),
+                          S3OptionsFilter("info.priority",
+                                          #label=T("Priority"),
+                                          ),
                           S3OptionsFilter("info.event_type_id",
-                                          label=T("Alert Type"),
+                                          #label=T("Event Type"),
+                                          ),
+                          S3OptionsFilter("scope",
+                                          #label=T("Scope"),
                                           ),
                           S3DateFilter("info.expires",
                                        label = "",
@@ -112,6 +151,7 @@ class index(S3CustomController):
                                                    limit = 5,
                                                    list_id = list_id,
                                                    orderby = orderby,
+                                                   # @ToDo: Custom layout with more button to expand content block
                                                    layout = s3db.cms_post_list_layout
                                                    )
         ajax_url = URL(c="cms", f="post", args="datalist.dl", vars={"list_id": list_id})
@@ -119,27 +159,31 @@ class index(S3CustomController):
                                         pagesize = 5
                                         )
 
-        filter_widgets = [S3LocationFilter("location_id",
-                                           label="",
-                                           levels=("L0",),
-                                           widget="multiselect",
-                                           ),
-                          # @ToDo: Source (Series? Tag?)
-                          #S3OptionsFilter(),
-                          ]
-        filter_form = S3FilterForm(filter_widgets,
-                                   ajax=True,
-                                   submit=True,
-                                   url=ajax_url,
-                                   )
-        output["news_filter_form"] = filter_form.html(resource, request.get_vars, list_id)
+        #filter_widgets = [#S3LocationFilter("location_id",
+        #                  #                 label="",
+        #                  #                 levels=("L0",),
+        #                  #                 widget="multiselect",
+        #                  #                 ),
+        #                  # @ToDo: Source (Series? Tag?)
+        #                  #S3OptionsFilter(),
+        #                  ]
+        #filter_form = S3FilterForm(filter_widgets,
+        #                           ajax=True,
+        #                           submit=True,
+        #                           url=ajax_url,
+        #                           )
+        #output["news_filter_form"] = filter_form.html(resource, request.get_vars, list_id)
 
         # Title and view
         output["title"] = current.deployment_settings.get_system_name()
         self._view(THEME, "index.html")
 
+        s3 = current.response.s3
         # Custom CSS
-        current.response.s3.stylesheets.append("../themes/SAMBRO/style.css")
+        s3.stylesheets.append("../themes/SAMBRO/style.css")
+
+        # Custom JS
+        s3.scripts.append("/%s/static/themes/SAMBRO/js/homepage.js" % request.application)
 
         return output
 
@@ -171,18 +215,24 @@ class subscriptions(S3CustomController):
         # @note: subscription manager has no resource context, so
         #        must configure fixed options or lookup resources
         #        for filter widgets which need it.
-        filters = [S3OptionsFilter("category",
-                                   label = T("Category"),
-                                   options = s3db.cap_info_category_opts,
-                                   represent = "%(name)s",
+        filters = [S3OptionsFilter("event_type_id",
+                                   label = T("Event Type"),
+                                   options=self._options("event_type_id"),
+                                   widget="multiselect",
                                    resource = "cap_info",
-                                   _name = "category-filter",
+                                   _name = "event-filter",
+                                   ),
+                   S3OptionsFilter("priority",
+                                   label = T("Priority"),
+                                   options=self._options("priority"),
+                                   widget="multiselect",
+                                   resource = "cap_info",
+                                   _name = "priority-filter",
                                    ),
                    S3LocationFilter("location_id",
                                     label = T("Location(s)"),
-                                    levels = ("L0",),
                                     resource = "cap_area_location",
-                                    options = gis.get_countries().keys(),
+                                    options = self._options("location_id"),
                                     _name = "location-filter",
                                     ),
                    S3OptionsFilter("language",
@@ -195,7 +245,7 @@ class subscriptions(S3CustomController):
                    ]
 
         # Title and view
-        title = T("Notification Settings")
+        title = T("Subscriptions")
         self._view(THEME, "subscriptions.html")
 
         # Form
@@ -204,6 +254,39 @@ class subscriptions(S3CustomController):
         return dict(title = title,
                     form = form,
                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _options(fieldname):
+        """
+            Lookup the full set of options for a Filter Widget
+            - for Subscriptions we don't want to see just the options available in current data
+        """
+        
+        if fieldname == "event_type_id":
+            T = current.T
+            etable = current.s3db.event_event_type
+            rows = current.db(etable.deleted == False).select(etable.id,
+                                                              etable.name)
+            options = {}
+            for row in rows:
+                options[row.id] = T(row.name)
+        elif fieldname == "priority":
+            T = current.T
+            wptable = current.s3db.cap_warning_priority
+            rows = current.db(wptable.deleted == False).select(wptable.id,
+                                                               wptable.name)
+            options = {}
+            for row in rows:
+                options[row.id] = T(row.name)
+        elif fieldname == "location_id":
+            ltable = current.s3db.gis_location
+            query = (ltable.deleted == False)
+            # IDs converted inside widget's _options() function
+            rows = current.db(query).select(ltable.id)
+            options = [row.id for row in rows]
+            
+        return options
 
     # -------------------------------------------------------------------------
     def _manage_subscriptions(self, resources, filters):
@@ -270,13 +353,18 @@ class subscriptions(S3CustomController):
                             _id="frequency_selector"),
                      ""))
 
-        # Deactivated: method selector
-        #rows.append(("method_selector__row",
-                     #"%s:" % labels.NOTIFY_BY,
-                     #selector(stable.method,
-                              #subscription["method"],
-                              #_id="method_selector"),
-                     #""))
+        methods = [("EMAIL", T("Email")),
+                   ("SMS", T("SMS"))
+                   ]
+                        
+        method_options = Storage(name = "method", requires = IS_IN_SET(methods))
+        
+        rows.append(("method_selector__row",
+                     "%s:" % labels.NOTIFY_BY,
+                     selector(method_options,
+                              subscription["method"],
+                              _id="method_selector"),
+                     ""))
 
         fieldset = formstyle(form, rows)
         fieldset.insert(0,
@@ -325,10 +413,7 @@ class subscriptions(S3CustomController):
 
             subscription["notify_on"] = listify(formvars.notify_on)
             subscription["frequency"] = formvars.frequency
-            # Fixed method:
-            subscription["method"] = ["EMAIL"]
-            # Alternatively, with method selector:
-            #subscription["method"] = listify(formvars.method)
+            subscription["method"] = formvars.method
 
             success = self._update_subscription(subscription)
 
@@ -356,7 +441,7 @@ class subscriptions(S3CustomController):
         row = db(query).select(stable.id,
                                stable.notify_on,
                                stable.frequency,
-                               #stable.method,
+                               stable.method,
                                ftable.id,
                                ftable.query,
                                left=left,
@@ -398,7 +483,7 @@ class subscriptions(S3CustomController):
                            "resources": rows,
                            "notify_on": s.notify_on,
                            "frequency": s.frequency,
-                           "method": ["EMAIL"] #s.method,
+                           "method": s.method
                            })
 
         else:
@@ -409,7 +494,7 @@ class subscriptions(S3CustomController):
                            "resources": None,
                            "notify_on": stable.notify_on.default,
                            "frequency": stable.frequency.default,
-                           "method": ["EMAIL"] #stable.method.default
+                           "method": stable.method.default
                            })
 
         return output

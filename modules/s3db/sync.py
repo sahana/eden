@@ -134,6 +134,7 @@ class SyncDataModel(S3Model):
             "ccrm": "CiviCRM",
             "wrike": "Wrike",
             "mcb": "Mariner CommandBridge",
+            "adashi": "ADASHI (passive)"
         }
         password_widget = S3PasswordWidget()
         tablename = "sync_repository"
@@ -221,6 +222,15 @@ class SyncDataModel(S3Model):
                                          _title="%s|%s" % (
                                                 T("Accept Push"),
                                                 T("Accept unsolicited data transmissions from the repository."))),
+                           ),
+                     Field("synchronise_uuids", "boolean",
+                           represent = s3_yes_no_represent,
+                           default = False,
+                           label = T("Synchronize UUIDs"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Synchronize UUIDs"),
+                                                T("Allow records to be synchronized even if the remote record has a different unique identifier (UUID), and update local identifiers. Useful in active repositories when there are known duplicates in the remote database. Must be activated before the first synchronization run to take effect."))),
                            ),
                      Field.Method("last_pull_time",
                                   self.sync_repository_last_pull_time),

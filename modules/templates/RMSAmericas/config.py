@@ -431,6 +431,7 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Projects
+    settings.project.assign_staff_tab = False
     # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
     settings.project.mode_3w = True
     # Uncomment this to use DRR (Disaster Risk Reduction) extensions
@@ -450,6 +451,8 @@ def config(settings):
     settings.project.multiple_budgets = True
     # Uncomment this to use multiple Organisations per project
     settings.project.multiple_organisations = True
+    # Ondelete behaviour for ProjectPlanningModel
+    settings.project.planning_ondelete = "RESTRICT"
     # Uncomment this to enable Programmes in projects
     settings.project.programmes = True
     # Uncomment this to enable Themes in 3W projects
@@ -1715,32 +1718,35 @@ def config(settings):
             # unique=True violation
             budget.update_record(name = "Budget for %s" % project.name)
 
-        # Create Monitoring Data entries
-        # Assume Monthly
-        #monitoring_frequency = budget.monitoring_frequency
-        #if not monitoring_frequency:
-        #    return
-        #total_budget = budget.total_budget
-        currency = budget.currency
-        start_date = project.start_date
-        end_date = project.end_date
-        if not start_date or not end_date:
-            return
-        # Create entries for the 1st of every month between start_date and end_date
-        from dateutil import rrule
-        dates = list(rrule.rrule(rrule.MONTHLY, bymonthday=1, dtstart=start_date, until=end_date))
         mtable = s3db.budget_monitoring
-        for d in dates:
-            mtable.insert(budget_entity_id = budget_entity_id,
-                          # @ToDo: This needs to be modified whenever entries are manually edited
-                          # Set/update this in budget_monitoring_onaccept
-                          # - also check here that we don't exceed overall budget
-                          start_date = start_date,
-                          end_date = d,
-                          currency = currency,
-                          )
-            # Start date relates to previous entry
-            start_date = d
+        exists = db(mtable.budget_entity_id == budget_entity_id).select(mtable.id,
+                                                                        limitby=(0, 1))
+        if not exists:
+            # Create Monitoring Data entries
+            start_date = project.start_date
+            end_date = project.end_date
+            if not start_date or not end_date:
+                return
+            # Assume Monthly
+            #monitoring_frequency = budget.monitoring_frequency
+            #if not monitoring_frequency:
+            #    return
+            #total_budget = budget.total_budget
+            currency = budget.currency
+            # Create entries for the 1st of every month between start_date and end_date
+            from dateutil import rrule
+            dates = list(rrule.rrule(rrule.MONTHLY, bymonthday=1, dtstart=start_date, until=end_date))
+            for d in dates:
+                mtable.insert(budget_entity_id = budget_entity_id,
+                              # @ToDo: This needs to be modified whenever entries are manually edited
+                              # Set/update this in budget_monitoring_onaccept
+                              # - also check here that we don't exceed overall budget
+                              start_date = start_date,
+                              end_date = d,
+                              currency = currency,
+                              )
+                # Start date relates to previous entry
+                start_date = d
 
     # -----------------------------------------------------------------------------
     def customise_project_project_controller(**attr):

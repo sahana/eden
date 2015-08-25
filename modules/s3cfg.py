@@ -64,6 +64,7 @@ class S3Config(Storage):
     date_formats = {"ar": "%d/%m/%Y",
                     "bs": "%d.%m.%Y",
                     "de": "%d.%m.%Y",
+                    #"dv": "",
                     "el": "%d/%m/%Y",
                     "es": "%d/%m/%Y",
                     "fr": "%d/%m/%Y",
@@ -100,6 +101,7 @@ class S3Config(Storage):
     # Requires installation of appropriate font - e.g. using import_font in tasks.cfg
     # Unifont can be downloaded from http://unifoundry.com/pub/unifont-7.0.06/font-builds/unifont-7.0.06.ttf
     fonts = {"ar": ["unifont", "unifont"],
+             #"dv": ["unifont", "unifont"],
              "km": ["unifont", "unifont"],
              "ko": ["unifont", "unifont"],
              "mn": ["unifont", "unifont"],
@@ -845,6 +847,9 @@ class S3Config(Storage):
                             on a populated production database this could
                             take quite a long time (but is needed only once)!
 
+            @note: SQLite fails on Windows Python 2.7.10 with current PyDAL
+                   (PR coming for PyDAL)
+
             @note: AIRegex is much less scalable than normal LIKE or even
                    ILIKE, enable/disable on a case-by-case basis in case
                    of performance issues (which is also why this is a lazy
@@ -1487,6 +1492,12 @@ class S3Config(Storage):
         """
         return self.L10n.get("translate_org_organisation", False)
 
+    def get_L10n_translate_cap_area(self):
+        """
+            Whether to translate CAP Area names
+        """
+        return self.L10n.get("translate_cap_area", False)
+    
     def get_L10n_pootle_url(self):
         """ URL for Pootle server """
         return self.L10n.get("pootle_url", "http://pootle.sahanafoundation.org/")
@@ -1499,6 +1510,7 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # PDF settings
+    #
     def get_paper_size(self):
         return self.base.get("paper_size", "A4")
 
@@ -1524,6 +1536,18 @@ class S3Config(Storage):
                 excluded_fields_dict.get(resourcename, [])
 
         return excluded_fields
+
+    # -------------------------------------------------------------------------
+    # XLS Export Settings
+    #
+    def get_xls_title_row(self):
+        """
+            Include a title row in XLS Exports
+            - default=False to allow easy post-export column sorting
+            - uses the "title_list" CRUD string + export date/time
+            - standard title can be overridden in exporter call
+        """
+        return self.base.get("xls_title_row", False)
 
     # -------------------------------------------------------------------------
     # UI Settings
@@ -2398,6 +2422,13 @@ class S3Config(Storage):
         """
         return self.event.get("incident_impact_tab", False)
 
+    def get_event_incident_teams_tab(self):
+        """
+            Show tab with teams assigned for incidents, string to
+            define the label of the tab or True to use default label
+        """
+        return self.event.get("incident_teams_tab", False)
+
     # -------------------------------------------------------------------------
     # Evacuees
     #
@@ -2493,6 +2524,12 @@ class S3Config(Storage):
             - onaccept is used for performance (avoiding joins)
         """
         return self.hrm.get("location_vol", "person_id")
+
+    def get_hrm_multiple_contracts(self):
+        """
+            Whether Staff have multiple contracts recorded
+        """
+        return self.__lazy(self.hrm, "multiple_contracts", default=False)
 
     def get_hrm_org_dependent_job_titles(self):
         """
@@ -3276,6 +3313,12 @@ class S3Config(Storage):
         """
         return self.project.get("activity_filter_year", False)
 
+    def get_project_assign_staff_tab(self):
+        """
+            Show the 'Assign Staff' tab in Projects (if the user has permission to do so)
+        """
+        return self.__lazy(self.project, "assign_staff_tab", default=True)
+
     def get_project_budget_monitoring(self):
         """
             Whether to Monitor Project Budgets
@@ -3348,6 +3391,15 @@ class S3Config(Storage):
             Use Outputs in Projects
         """
         return self.project.get("outputs", "inline")
+
+    def get_project_planning_ondelete(self):
+        """
+            Whether the Project Planning data should CASCADE ondelete or RESTRICT
+
+            NB This cannot be edited on the fly, or vary by context
+               It needs defining before the database is created.
+        """
+        return self.project.get("planning_ondelete", "CASCADE")
 
     def get_project_task_tag(self):
         """

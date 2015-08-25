@@ -2227,6 +2227,12 @@ $.filterOptionsS3({
                                    editable = False,
                                    listadd = False,
                                    )
+                    s3db.configure("inv_track_item",
+                                   create = False,
+                                   deletable = False,
+                                   editable = False,
+                                   listadd = False,
+                                   )
 
             if r.component:
                 record = r.record

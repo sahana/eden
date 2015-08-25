@@ -35,6 +35,15 @@ from gluon.storage import Storage
 
 from ..s3sync import S3SyncBaseAdapter
 
+DEBUG = False
+if DEBUG:
+    print >> sys.stderr, "S3SYNC: DEBUG MODE"
+
+    def _debug(m):
+        print >> sys.stderr, m
+else:
+    _debug = lambda m: None
+
 # =============================================================================
 class S3SyncAdapter(S3SyncBaseAdapter):
     """
@@ -52,15 +61,25 @@ class S3SyncAdapter(S3SyncBaseAdapter):
     }
 
     # -------------------------------------------------------------------------
+    # Methods to be implemented by subclasses:
+    # -------------------------------------------------------------------------
     def register(self):
-        """ Register at the repository """
+        """
+            Register this site at the peer repository
+
+            @return: True to indicate success, otherwise False
+        """
 
         # CiviCRM does not support via-web peer registration
         return True
 
     # -------------------------------------------------------------------------
     def login(self):
-        """ Login to the repository """
+        """
+            Login at the peer repository
+
+            @return: None if successful, otherwise the error
+        """
 
         _debug("S3SyncCiviCRM.login()")
 
@@ -71,7 +90,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             "name": repository.username,
             "pass": repository.password,
         }
-        response, error = self.send(**request)
+        response, error = self._send_request(**request)
 
         if error:
             _debug("S3SyncCiviCRM.login FAILURE: %s" % error)
@@ -98,10 +117,15 @@ class S3SyncAdapter(S3SyncBaseAdapter):
     # -------------------------------------------------------------------------
     def pull(self, task, onconflict=None):
         """
-            Pull updates from this repository
+            Fetch updates from the peer repository and import them
+            into the local database (active pull)
 
-            @param task: the task Row
-            @param onconflict: synchronization conflict resolver
+            @param task: the synchronization task (sync_task Row)
+            @param onconflict: callback for automatic conflict resolution
+
+            @return: tuple (error, mtime), with error=None if successful,
+                     else error=message, and mtime=modification timestamp
+                     of the youngest record sent
         """
 
         xml = current.xml
@@ -125,7 +149,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             args = Storage(self.RESOURCE[resource_name])
             args["q"] += "/get"
 
-            tree, error = self.send(method="GET", **args)
+            tree, error = self._send_request(method="GET", **args)
             if error:
 
                 result = log.FATAL
@@ -210,14 +234,14 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
                 # ...or report success
                 elif not message:
-                    message = "data imported successfully (%s records)" % count
+                    message = "Data imported successfully (%s records)" % count
                     output = None
 
             else:
                 # No data received from peer
                 result = log.ERROR
                 remote = True
-                message = "no data received from peer"
+                message = "No data received from peer"
                 output = None
 
         # Log the operation
@@ -236,9 +260,14 @@ class S3SyncAdapter(S3SyncBaseAdapter):
     # -------------------------------------------------------------------------
     def push(self, task):
         """
-            Push data for a task
+            Extract new updates from the local database and send
+            them to the peer repository (active push)
 
-            @param task: the task Row
+            @param task: the synchronization task (sync_task Row)
+
+            @return: tuple (error, mtime), with error=None if successful,
+                     else error=message, and mtime=modification timestamp
+                     of the youngest record sent
         """
 
         xml = current.xml
@@ -268,7 +297,9 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         return(output, None)
 
     # -------------------------------------------------------------------------
-    def send(self, method="GET", **args):
+    # Internal methods:
+    # -------------------------------------------------------------------------
+    def _send_request(self, method="GET", **args):
 
         repository = self.repository
         config = repository.config

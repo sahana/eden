@@ -9,9 +9,6 @@ except ImportError:
     pass
 import s3menus as default
 
-# Below is an example which you can base your own template's menus.py on
-# - there are also other examples in the other templates folders
-
 # =============================================================================
 class S3MainMenu(default.S3MainMenu):
     """
@@ -46,13 +43,11 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        return [
-            homepage(name="EVASS"),
-            homepage("gis"),
-            homepage("org"),
-            homepage("msg"),
-
-       ]
+        return [homepage(name="EVASS"),
+                homepage("gis"),
+                homepage("org"),
+                homepage("msg"),
+                ]
 
 # =============================================================================
 class S3OptionsMenu(default.S3OptionsMenu):

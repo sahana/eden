@@ -1275,16 +1275,37 @@ class S3Msg(object):
         if not channel_id:
             # Try the 1st enabled one in the DB
             query = (table.enabled == True)
+            limitby = None
         else:
             query = (table.channel_id == channel_id)
+            limitby = (0, 1)
 
-        c = current.db(query).select(table.twitter_account,
-                                     table.consumer_key,
-                                     table.consumer_secret,
-                                     table.access_token,
-                                     table.access_token_secret,
-                                     limitby=(0, 1)
-                                     ).first()
+        rows = current.db(query).select(table.login,
+                                        table.twitter_account,
+                                        table.consumer_key,
+                                        table.consumer_secret,
+                                        table.access_token,
+                                        table.access_token_secret,
+                                        limitby=limitby
+                                        )
+        if len(rows) == 1:
+            c = rows.first()
+        elif not len(rows):
+            current.log.error("s3msg", "No Twitter channels configured")
+            return None
+        else:
+            # Filter to just the login channel
+            rows.exclude(lambda row: row.login != True)
+            if len(rows) == 1:
+                c = rows.first()
+            elif not len(rows):
+                current.log.error("s3msg", "No Twitter channels configured for login")
+                return None
+
+        if not c.consumer_key:
+            current.log.error("s3msg", "Twitter channel has no consumer key")
+            return None
+
         try:
             oauth = tweepy.OAuthHandler(c.consumer_key,
                                         c.consumer_secret)
@@ -1963,12 +1984,12 @@ class S3Msg(object):
                 try:
                     query = (gtable.lat == lat) &\
                             (gtable.lon == lon)
-                    exists = db(query).select(gtable.id,
-                                              limitby=(0, 1),
-                                              orderby=gtable.level,
-                                              ).first()
-                    if exists:
-                        location_id = exists.id
+                    lexists = db(query).select(gtable.id,
+                                               limitby=(0, 1),
+                                               orderby=gtable.level,
+                                               ).first()
+                    if lexists:
+                        location_id = lexists.id
                     else:
                         data = dict(lat=lat,
                                     lon=lon,
@@ -2039,20 +2060,40 @@ class S3Msg(object):
         """
             Function  to call to fetch tweets into msg_twitter table
             - called via Scheduler or twitter_inbox controller
+
+            http://tweepy.readthedocs.org/en/v3.3.0/api.html  
         """
 
-        # Initialize Twitter API
-        twitter_settings = S3Msg.get_twitter_api(channel_id)
-        if not twitter_settings:
-            # Abort
+        try:
+            import tweepy
+        except ImportError:
+            current.log.error("s3msg", "Tweepy not available, so non-Tropo Twitter support disabled")
             return False
-
-        import tweepy
-
-        twitter_api = twitter_settings[0]
 
         db = current.db
         s3db = current.s3db
+
+        # Initialize Twitter API
+        twitter_settings = S3Msg.get_twitter_api(channel_id)
+        if twitter_settings:
+            # This is can account with login info, so pull DMs
+            dm = True
+        else:
+            # This is can account without login info, so pull public tweets
+            dm = False
+            table = s3db.msg_twitter_channel
+            channel = db(table.channel_id == channel_id).select(table.twitter_account,
+                                                                limitby=(0, 1)
+                                                                ).first()
+            screen_name = channel.twitter_account
+            # Authenticate using login account
+            twitter_settings = S3Msg.get_twitter_api()
+            if twitter_settings is None:
+                # Cannot authenticate
+                return False
+
+        twitter_api = twitter_settings[0]
+
         table = s3db.msg_twitter
 
         # Get the latest Twitter message ID to use it as since_id
@@ -2064,12 +2105,22 @@ class S3Msg(object):
                                   ).first()
 
         try:
-            if latest:
-                messages = twitter_api.direct_messages(since_id=latest.msg_id)
+            if dm:
+                if latest:
+                    messages = twitter_api.direct_messages(since_id=latest.msg_id)
+                else:
+                    messages = twitter_api.direct_messages()
             else:
-                messages = twitter_api.direct_messages()
+                if latest:
+                    messages = twitter_api.user_timeline(screen_name=screen_name,
+                                                         since_id=latest.msg_id)
+                else:
+                    messages = twitter_api.user_timeline(screen_name=screen_name)
         except tweepy.TweepError as e:
-            error = e.message[0]["message"]
+            error = e.message
+            if isinstance(error, (tuple, list)):
+                # Older Tweepy?
+                error = e.message[0]["message"]
             current.log.error("Unable to get the Tweets for the user: %s" % error)
             return False
 
@@ -2078,10 +2129,16 @@ class S3Msg(object):
         tinsert = table.insert
         update_super = s3db.update_super
         for message in messages:
+            if dm:
+                from_address = message.sender_screen_name
+                to_address = message.recipient_screen_name
+            else:
+                from_address = message.author.screen_name
+                to_address = message.in_reply_to_screen_name
             _id = tinsert(channel_id = channel_id,
                           body = message.text,
-                          from_address = message.sender_screen_name,
-                          to_address = message.recipient_screen_name,
+                          from_address = from_address,
+                          to_address = to_address,
                           date = message.created_at,
                           inbound = True,
                           msg_id = message.id,

@@ -2,7 +2,7 @@
 
 """ S3 Synchronization: Peer Repository Adapter
 
-    @copyright: 2011-14 (c) Sahana Software Foundation
+    @copyright: 2011-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -28,7 +28,7 @@
 """
 
 import sys
-import urllib, urllib2
+import urllib2
 import traceback
 
 try:
@@ -62,26 +62,32 @@ else:
 # =============================================================================
 class S3SyncAdapter(S3SyncBaseAdapter):
     """
-        API Adapter for Sahana Eden
+        Sahana Eden Synchronization Adapter (default sync adapter)
     """
 
     # -------------------------------------------------------------------------
+    # Methods to be implemented by subclasses:
+    # -------------------------------------------------------------------------
     def register(self):
-        """ Register at the repository """
+        """
+            Register this site at the peer repository
+
+            @return: True to indicate success, otherwise False
+        """
 
         repository = self.repository
 
         if not repository.url:
             return True
 
-        _debug("S3SyncRepository.register(%s)" % (repository.url))
+        current.log.debug("S3Sync: register at %s" % (repository.url))
 
         # Construct the URL
         config = repository.config
         url = "%s/sync/repository/register.xml?repository=%s" % \
               (repository.url, config.uuid)
 
-        _debug("...send to URL %s" % url)
+        current.log.debug("S3Sync: send registration to URL %s" % url)
 
         # Generate the request
         req = urllib2.Request(url=url)
@@ -105,7 +111,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             passwd_manager.add_password(realm=None,
                                         uri=url,
                                         user=username,
-                                        passwd=password)
+                                        passwd=password,
+                                        )
             auth_handler = urllib2.HTTPBasicAuthHandler(passwd_manager)
             handlers.append(auth_handler)
 
@@ -144,7 +151,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 message = message_json.get("message", message)
                 ruid = message_json.get("sender", None)
             except:
-                message = "registration successful"
+                message = "Registration successful"
             result = log.SUCCESS
             if ruid is not None:
                 db = current.db
@@ -161,23 +168,34 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                   action="request registration",
                   remote=remote,
                   result=result,
-                  message=message)
+                  message=message,
+                  )
 
         return success
 
     # -------------------------------------------------------------------------
     def login(self):
-        """ Login to the repository """
+        """
+            Login at the peer repository
 
-        # Sahana Eden uses HTTP Basic Auth, no login required
+            @return: None if successful, otherwise the error
+        """
+
+        # Sahana Eden uses HTTP Basic Auth, no explicit login required
         return None
 
     # -------------------------------------------------------------------------
     def pull(self, task, onconflict=None):
         """
-            Outgoing pull
+            Fetch updates from the peer repository and import them
+            into the local database (active pull)
 
-            @param task: the task (sync_task Row)
+            @param task: the synchronization task (sync_task Row)
+            @param onconflict: callback for automatic conflict resolution
+
+            @return: tuple (error, mtime), with error=None if successful,
+                     else error=message, and mtime=modification timestamp
+                     of the youngest record sent
         """
 
         repository = self.repository
@@ -185,7 +203,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         config = repository.config
         resource_name = task.resource_name
 
-        _debug("S3SyncRepository.pull(%s, %s)" % (repository.url, resource_name))
+        current.log.debug("S3Sync: pull %s from %s" % (resource_name,
+                                                       repository.url))
 
         # Construct the URL
         url = "%s/sync/sync.xml?resource=%s&repository=%s" % \
@@ -206,8 +225,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 urlfilter = "[%s]%s=%s" % (prefix, k, v)
                 url += "&%s" % urlfilter
 
-        _debug("...pull from URL %s" % url)
-
         # Figure out the protocol from the URL
         url_split = url.split("://", 1)
         if len(url_split) == 2:
@@ -222,7 +239,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         # Proxy handling
         proxy = repository.proxy or config.proxy or None
         if proxy:
-            _debug("using proxy=%s" % proxy)
+            current.log.debug("S3Sync: pull, using proxy=%s" % proxy)
             proxy_handler = urllib2.ProxyHandler({protocol: proxy})
             handlers.append(proxy_handler)
 
@@ -251,8 +268,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
         # Execute the request
         remote = False
-        output = None
+        action = "fetch"
         response = None
+        output = None
+
         log = repository.log
         try:
             f = urllib2.urlopen(req)
@@ -301,6 +320,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
             success = True
             message = ""
+            action = "import"
 
             # Import the data
             resource = current.s3db.resource(resource_name)
@@ -319,7 +339,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                                 update_policy=update_policy,
                                 conflict_policy=conflict_policy,
                                 last_sync=last_pull,
-                                onconflict=onconflict_callback)
+                                onconflict=onconflict_callback,
+                                )
                 count = resource.import_count
             except IOError, e:
                 result = log.FATAL
@@ -364,33 +385,38 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
             # ...or report success
             elif not message:
-                message = "data imported successfully (%s records)" % count
+                message = "Data imported successfully (%s records)" % count
 
         elif result == log.SUCCESS:
             # No data received from peer
             result = log.ERROR
             remote = True
-            message = "no data received from peer"
+            message = "No data received from peer"
 
         # Log the operation
         log.write(repository_id=repository.id,
                   resource_name=task.resource_name,
                   transmission=log.OUT,
                   mode=log.PULL,
-                  action=None,
+                  action=action,
                   remote=remote,
                   result=result,
                   message=message)
 
-        _debug("S3SyncRepository.pull import %s: %s" % (result, message))
+        current.log.debug("S3Sync: import %s: %s" % (result, message))
         return (output, mtime)
 
     # -------------------------------------------------------------------------
     def push(self, task):
         """
-            Outgoing push
+            Extract new updates from the local database and send
+            them to the peer repository (active push)
 
-            @param task: the sync_task Row
+            @param task: the synchronization task (sync_task Row)
+
+            @return: tuple (error, mtime), with error=None if successful,
+                     else error=message, and mtime=modification timestamp
+                     of the youngest record sent
         """
 
         xml = current.xml
@@ -517,7 +543,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                   resource_name=task.resource_name,
                   transmission=log.OUT,
                   mode=log.PUSH,
-                  action=None,
+                  action="send",
                   remote=remote,
                   result=result,
                   message=message)
@@ -525,5 +551,152 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         if output is not None:
             mtime = None
         return (output, mtime)
+
+    # -------------------------------------------------------------------------
+    def send(self,
+             resource,
+             start=None,
+             limit=None,
+             msince=None,
+             filters=None,
+             mixed=False):
+        """
+            Respond to an incoming pull from the peer repository
+
+            @param resource: the resource to be synchronized
+            @param start: index of the first record to send
+            @param limit: maximum number of records to send
+            @param msince: minimum modification date/time for records to send
+            @param filters: URL filters for record extraction
+            @param mixed: negotiate resource with peer (disregard resource)
+
+            @return: a dict {status, remote, message, response}, with:
+                        - status....the outcome of the operation
+                        - remote....whether the error was remote (or local)
+                        - message...the log message
+                        - response..the response to send to the peer
+        """
+
+        if not resource or mixed:
+            msg = "Mixed resource synchronization not supported"
+            return {"status": self.log.FATAL,
+                    "message": msg,
+                    "response": current.xml.json_message(False, 400, msg),
+                    }
+
+        # Export the data as S3XML
+        output = resource.export_xml(start=start,
+                                     limit=limit,
+                                     filters=filters,
+                                     msince=msince)
+        count = resource.results
+        msg = "Data sent to peer (%s records)" % count
+
+        # Set content type header
+        headers = current.response.headers
+        headers["Content-Type"] = "text/xml"
+
+        return {"status": self.log.SUCCESS,
+                "message": msg,
+                "response": output,
+                }
+
+    # -------------------------------------------------------------------------
+    def receive(self,
+                source,
+                resource,
+                strategy=None,
+                update_policy=None,
+                conflict_policy=None,
+                onconflict=None,
+                last_sync=None,
+                mixed=False):
+        """
+            Respond to an incoming push from the peer repository
+
+            @param source: the input stream (list of file-like objects)
+            @param resource: the target resource
+            @param strategy: the import strategy
+            @param update_policy: the update policy
+            @param conflict_policy: the conflict resolution policy
+            @param onconflict: callback for conflict resolution
+            @param last_sync: the last synchronization date/time for the peer
+            @param mixed: negotiate resource with peer (disregard resource)
+
+            @return: a dict {status, remote, message, response}, with:
+                        - status....the outcome of the operation
+                        - remote....whether the error was remote (or local)
+                        - message...the log message
+                        - response..the response to send to the peer
+        """
+
+        if not resource or mixed:
+            msg = "Mixed resource synchronization not supported"
+            return {"status": self.log.FATAL,
+                    "remote": False,
+                    "message": msg,
+                    "response": current.xml.json_message(False, 400, msg),
+                    }
+
+        repository = self.repository
+
+        ignore_errors = True
+        if onconflict:
+            onconflict_callback = lambda item: onconflict(item,
+                                                          repository,
+                                                          resource)
+        else:
+            onconflict_callback = None
+
+        output = resource.import_xml(source, format="xml",
+                                     ignore_errors=ignore_errors,
+                                     strategy=strategy,
+                                     update_policy=update_policy,
+                                     conflict_policy=conflict_policy,
+                                     last_sync=last_sync,
+                                     onconflict=onconflict_callback,
+                                     )
+
+        log = self.log
+
+        if resource.error_tree is not None:
+            # Validation error (log in any case)
+            if ignore_errors:
+                result = log.WARNING
+            else:
+                result = log.FATAL
+            remote = True
+            message = "%s" % resource.error
+            for element in resource.error_tree.findall("resource"):
+                error_msg = element.get("error", "unknown error")
+
+                error_fields = element.findall("data[@error]")
+                if error_fields:
+                    for field in error_fields:
+                        error_msg = field.get("error", "unknown error")
+                        if error_msg:
+                            msg = "(UID: %s) %s.%s=%s: %s" % \
+                                    (element.get("uuid", None),
+                                     element.get("name", None),
+                                     field.get("field", None),
+                                     field.get("value", field.text),
+                                     error_msg)
+                            message = "%s, %s" % (message, msg)
+                else:
+                    msg = "(UID: %s) %s: %s" % \
+                          (element.get("uuid", None),
+                           element.get("name", None),
+                           error_msg)
+                    message = "%s, %s" % (message, msg)
+        else:
+            result = log.SUCCESS
+            remote = False
+            message = "Data received from peer"
+
+        return {"status": result,
+                "remote": remote,
+                "message": message,
+                "response": output,
+                }
 
 # End =========================================================================

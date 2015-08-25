@@ -1868,6 +1868,7 @@ class S3GroupModel(S3Model):
                      # Instances
                      super_link("doc_id", "doc_entity"),
                      super_link("pe_id", "pr_pentity"),
+                     super_link("track_id", "sit_trackable"),
                      Field("group_type", "integer",
                            default = 4,
                            label = T("Group Type"),
@@ -1898,6 +1899,10 @@ class S3GroupModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
+                     # Base location
+                     self.gis_location_id(readable=False,
+                                          writable=False,
+                                          ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -1932,7 +1937,10 @@ class S3GroupModel(S3Model):
                   deduplicate = self.group_deduplicate,
                   extra = "description",
                   main = "name",
-                  super_entity = ("doc_entity", "pr_pentity"),
+                  super_entity = ("doc_entity",
+                                  "pr_pentity",
+                                  "sit_trackable",
+                                  ),
                   )
 
         # Reusable field
@@ -1978,6 +1986,10 @@ class S3GroupModel(S3Model):
                                                      # multiple instances for tracking reasons
                                                      "multiple": False,
                                                      },
+                            # Response team status
+                            event_team_status_team = {"joinby": "group_id",
+                                                      "multiple": False,
+                                                      },
                             )
 
         # ---------------------------------------------------------------------
@@ -2411,16 +2423,17 @@ class S3AddressModel(S3Model):
         self.define_table(tablename,
                           # Component not Instance
                           self.super_link("pe_id", "pr_pentity",
-                                           orderby = "instance_type",
-                                           represent = self.pr_pentity_represent,
-                                           ),
+                                          orderby = "instance_type",
+                                          represent = self.pr_pentity_represent,
+                                          ),
                           Field("type", "integer",
                                 default = 1,
                                 label = T("Address Type"),
                                 represent = lambda opt: \
                                             pr_address_type_opts.get(opt,
                                                     messages.UNKNOWN_OPT),
-                                requires = IS_IN_SET(pr_address_type_opts, zero=None),
+                                requires = IS_IN_SET(pr_address_type_opts,
+                                                     zero=None),
                                 widget = RadioWidget.widget,
                                 ),
                           self.gis_location_id(),
@@ -2437,7 +2450,17 @@ class S3AddressModel(S3Model):
             msg_record_created = T("Address added"),
             msg_record_modified = T("Address updated"),
             msg_record_deleted = T("Address deleted"),
-            msg_list_empty = T("There is no address for this person yet. Add new address."))
+            msg_list_empty = T("There is no address for this person yet. Add new address.")
+            )
+
+        list_fields = ["id",
+                       "type",
+                       (T("Address"), "location_id$addr_street"),
+                       ]
+
+        if settings.get_gis_postcode_selector():
+            list_fields.append((settings.get_ui_label_postcode(),
+                                "location_id$addr_postcode"))
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
@@ -2445,13 +2468,6 @@ class S3AddressModel(S3Model):
         # Display in reverse order, like Addresses
         levels.reverse()
 
-        list_fields = ["id",
-                       "type",
-                       (T("Address"), "location_id$addr_street"),
-                       ]
-        if settings.get_gis_postcode_selector():
-            list_fields.append((settings.get_ui_label_postcode(),
-                                "location_id$addr_postcode"))
         for level in levels:
             list_fields.append("location_id$%s" % level)
 

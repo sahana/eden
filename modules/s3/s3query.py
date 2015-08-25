@@ -2264,7 +2264,7 @@ class S3AIRegex(object):
         u"eêèềẻểẽễéếẹệë",
         u"gǵĝ",
         u"hĥ",
-        u"iìỉĩíịîï",
+        u"iìỉĩíịîïİ",
         u"jĵ",
         u"kḱ",
         u"lĺ",
@@ -2328,7 +2328,7 @@ class S3AIRegex(object):
                 for group in GROUPS:
                     if character in group:
                         match = True
-                        result = "[%s]{1}" % group
+                        result = "[%s%s]{1}" % (group, group.upper())
                         break
             append(result)
         return "".join(output) if match else None

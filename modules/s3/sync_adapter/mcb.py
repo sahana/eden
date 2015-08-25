@@ -141,11 +141,12 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         log = repository.log
         if data and count:
 
-            print data
+            #print data
             #response, message = None, None
-            response, message = self.send(method = "POST",
-                                          path = "BulkStream",
-                                          data = data)
+            response, message = self._send_request(method = "POST",
+                                                   path = "BulkStream",
+                                                   data = data,
+                                                   )
 
             if response is None:
                 result = log.FATAL
@@ -155,18 +156,18 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 output = message
             else:
                 result = log.SUCCESS
-                message = "data sent successfully (%s records)" % count
+                message = "Data sent successfully (%s records)" % count
         else:
             # No data to send
             result = log.WARNING
-            message = "no data to send"
+            message = "No data to send"
 
         # Log the operation
         log.write(repository_id = repository.id,
                   resource_name = resource_name,
                   transmission = log.OUT,
                   mode = log.PUSH,
-                  action = "send data",
+                  action = "send",
                   remote = remote,
                   result = result,
                   message = message)
@@ -176,12 +177,14 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         return (output, mtime)
 
     # -------------------------------------------------------------------------
-    def send(self,
-             method="GET",
-             path=None,
-             args=None,
-             data=None,
-             auth=False):
+    # Internal methods:
+    # -------------------------------------------------------------------------
+    def _send_request(self,
+                      method="GET",
+                      path=None,
+                      args=None,
+                      data=None,
+                      auth=False):
         """
             Send a request to the CommandBridge API
 

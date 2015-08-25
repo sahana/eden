@@ -38,6 +38,7 @@ __all__ = ("S3EventModel",
            "S3EventAssetModel",
            "S3EventCMSModel",
            "S3EventHRModel",
+           "S3EventTeamModel",
            "S3EventImpactModel",
            #"S3EventIReportModel",
            "S3EventMapModel",
@@ -594,7 +595,7 @@ class S3IncidentModel(S3Model):
                           self.event_incident_type_id(),
                           self.scenario_scenario_id(),
                           Field("name", notnull=True, # Name could be a code
-                                length=64,
+                                length = 64,
                                 label = T("Name"),
                                 ),
                           Field("exercise", "boolean",
@@ -605,12 +606,18 @@ class S3IncidentModel(S3Model):
                                                                  # Should!
                                 #                                T("Exercises mean all screens have a watermark & all notifications have a prefix."))),
                                 ),
-                          s3_datetime(name="zero_hour",
+                          s3_datetime(name = "zero_hour",
                                       default = "now",
                                       label = T("Zero Hour"),
                                       comment = DIV(_class="tooltip",
                                                     _title="%s|%s" % (T("Zero Hour"),
                                                                       T("The time at which the Incident started."))),
+                                      ),
+                          s3_datetime(name = "end_date",
+                                      label = T("Closed at"),
+                                      comment = DIV(_class="tooltip",
+                                                    _title="%s|%s" % (T("Closed at"),
+                                                                      T("The time when the Incident was closed."))),
                                       ),
                           Field("closed", "boolean",
                                 default = False,
@@ -722,6 +729,13 @@ class S3IncidentModel(S3Model):
                                                 #"autocomplete": "name",
                                                 "autodelete": False,
                                                 },
+                            event_team = "incident_id",
+                            pr_group = {"link": "event_team",
+                                        "joinby": "incident_id",
+                                        "key": "group_id",
+                                        "actuate": "hide",
+                                        "autodelete": False,
+                                        },
                             event_post = "incident_id",
                             event_site = "incident_id",
                             event_sitrep = {"name": "incident_sitrep",
@@ -796,14 +810,18 @@ class S3IncidentModel(S3Model):
         """
 
         form_vars = form.vars
+
+        closed = form_vars.get("closed", False)
+
         incident = form_vars.get("id", None)
-        if incident:
+        if incident and not closed:
             # Set the Incident in the session
             current.session.s3.incident = incident
         event = form_vars.get("event_id", None)
-        if event:
+        if event and not closed:
             # Set the Event in the session
             current.session.s3.event = event
+
         s3db = current.s3db
         db = current.db
         ctable = s3db.gis_config
@@ -871,7 +889,8 @@ class S3IncidentModel(S3Model):
             mtable.insert(incident_id=incident,
                           config_id=config)
             # Activate this config
-            current.gis.set_config(config)
+            if not closed:
+                current.gis.set_config(config)
             # @ToDo: Add to GIS Menu? Separate Menu?
 
         else:
@@ -882,7 +901,8 @@ class S3IncidentModel(S3Model):
             mtable.insert(incident_id=incident,
                           config_id=config)
             # Activate this config
-            current.gis.set_config(config)
+            if not closed:
+                current.gis.set_config(config)
             # Viewport can be saved from the Map's toolbar
             # @ToDo: Add to GIS Menu? Separate Menu?
 
@@ -1784,6 +1804,128 @@ class S3EventHRModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
+
+# =============================================================================
+class S3EventTeamModel(S3Model):
+    """ Link teams to incidents """
+
+    names = ("event_team",
+             "event_team_status",
+             "event_team_status_team",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        define_table = self.define_table
+        configure = self.configure
+
+        group_id = self.pr_group_id
+
+        status_opts = {1: T("Alerted"),
+                       2: T("Standing By"),
+                       3: T("Active"),
+                       4: T("Deactivated"),
+                       5: T("Unable to activate"),
+                       }
+
+        # ---------------------------------------------------------------------
+        # Link table incident<=>team
+        #
+        tablename = "event_team"
+        define_table(tablename,
+                     self.event_incident_id(ondelete = "CASCADE"),
+                     group_id(empty = False,
+                              ondelete = "RESTRICT",
+                              # Dropdown, not Autocomplete
+                              widget = None,
+                              ),
+                     Field("status", "integer",
+                           default = 1,
+                           represent = lambda opt: \
+                                       status_opts.get(opt, current.messages.UNKNOWN_OPT),
+                           requires = IS_IN_SET(status_opts),
+                           ),
+                     *s3_meta_fields())
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Assign Team"),
+            title_display = T("Team Details"),
+            title_list = T("Assigned Teams"),
+            title_update = T("Edit Team"),
+            label_list_button = T("List Assigned Teams"),
+            label_delete_button = T("Remove Team from this incident"),
+            msg_record_created = T("Team assigned"),
+            msg_record_modified = T("Team Assignment updated"),
+            msg_record_deleted = T("Team Assignment removed"),
+            msg_list_empty = T("No Teams currently assigned to this incident"))
+
+        configure(tablename,
+                  # Team can be assigned to multiple incidents,
+                  # so updates must match both incident_id and group_id:
+                  deduplicate = S3Duplicate(primary=("incident_id",
+                                                     "group_id",
+                                                     )),
+                  )
+
+        # ---------------------------------------------------------------------
+        # Taxonomy for response team (unit) status
+        #
+        tablename = "event_team_status"
+        define_table(tablename,
+                     Field("name",
+                           length = 64,
+                           label = T("Status Code"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("description"),
+                     # Not currently needed (...yet):
+                     #self.org_organisation_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        represent = S3Represent(lookup=tablename)
+        status_id = S3ReusableField("status_id", "reference %s" % tablename,
+                                    label = T("Status"),
+                                    ondelete = "RESTRICT",
+                                    represent = represent,
+                                    requires = IS_ONE_OF(db, "event_team_status.id",
+                                                         represent,
+                                                         orderby="event_team_status.name",
+                                                         sort=True,
+                                                         ),
+                                    sortby = "name",
+                                    )
+
+        configure(tablename,
+                  # All name duplicates are updates (=default rule):
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # ---------------------------------------------------------------------
+        # Link table status<=>team
+        #
+        tablename = "event_team_status_team"
+        define_table(tablename,
+                     group_id(empty = False,
+                              ondelete = "RESTRICT",
+                              # Dropdown, not Autocomplete
+                              widget = None,
+                              ),
+                     status_id(),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  # Team can only have one status at a time,
+                  # so any group_id match is an update:
+                  deduplicate = S3Duplicate(primary = ("group_id",)),
+                  )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class S3EventImpactModel(S3Model):
@@ -2728,6 +2870,12 @@ def event_rheader(r):
                 append((STAFF, "human_resource"))
                 if current.auth.s3_has_permission("create", "event_human_resource"):
                      append((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
+
+            # Teams tab:
+            teams_tab = settings.get_event_incident_teams_tab()
+            if teams_tab:
+                tab_label = T("Teams") if teams_tab is True else T(teams_tab)
+                append((tab_label, "group"))
 
             # Asset tab
             if settings.has_module("asset"):

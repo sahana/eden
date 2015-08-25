@@ -326,6 +326,7 @@ class S3Model(object):
         if s3.all_models_loaded:
             # Already loaded
             return
+        s3.load_all_models = True
 
         models = current.models
 
@@ -343,8 +344,8 @@ class S3Model(object):
         S3ImportJob.define_item_table()
 
         # Don't do this again within the current request cycle
+        s3.load_all_models = False
         s3.all_models_loaded = True
-        return
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -490,6 +491,7 @@ class S3Model(object):
         """
 
         components = current.model.components
+        load_all_models = current.response.s3.load_all_models
 
         master = master._tablename if type(master) is Table else master
 
@@ -530,6 +532,30 @@ class S3Model(object):
                     linktable = link.get("link")
                     linktable = linktable._tablename \
                                 if type(linktable) is Table else linktable
+
+                    if load_all_models:
+                        # Warn for redeclaration of components (different table
+                        # under the same alias) - this is wrong most of the time,
+                        # even though it would produce valid+consistent results:
+                        if alias in hooks and hooks[alias].tablename != tablename:
+                            current.log.warning("Redeclaration of component (%s.%s)" %
+                                              (master, alias))
+
+                        # Ambiguous aliases can cause accidental deletions and
+                        # other serious integrity problems, so we warn for ambiguous
+                        # aliases (not raising exceptions just yet because there
+                        # are a number of legacy cases),
+                        # Currently only logging during load_all_models to not
+                        # completely submerge other important log messages
+                        if linktable and alias == linktable.split("_", 1)[1]:
+                            # @todo: fix legacy cases (e.g. renaming the link tables)
+                            # @todo: raise Exception once all legacy cases are fixed
+                            current.log.warning("Ambiguous link/component alias (%s.%s)" %
+                                                (master, alias))
+                        if alias == master.split("_", 1)[1]:
+                            # No legacy cases, so crash to prevent introduction of any
+                            raise SyntaxError("Ambiguous master/component alias (%s.%s)" %
+                                              (master, alias))
 
                     pkey = link.get("pkey")
                     if linktable is None:

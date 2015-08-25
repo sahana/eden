@@ -2501,14 +2501,15 @@ def config(settings):
                                                         #P(record.comments),
                                                         _class="profile-header",
                                                         ),
-                                   profile_widgets = [alerts_widget,
+                                   profile_widgets = (alerts_widget,
                                                       map_widget,
                                                       incidents_widget,
                                                       assessments_widget,
                                                       activities_widget,
                                                       reports_widget,
                                                       #comments_widget,
-                                                      ])
+                                                      ),
+                                   )
 
                 # Include a Location inline
                 location_field = s3db.event_event_location.location_id
@@ -2753,14 +2754,14 @@ def config(settings):
                                                         H2(name),
                                                         _class="profile-header",
                                                         ),
-                                   profile_widgets = [#locations_widget,
+                                   profile_widgets = (#locations_widget,
                                                       resources_widget,
                                                       map_widget,
                                                       incidents_widget,
                                                       reports_widget,
                                                       projects_widget,
                                                       activities_widget,
-                                                      ],
+                                                      ),
                                    )
 
             # Call standard prep
@@ -3220,7 +3221,7 @@ def config(settings):
                                                         H2(record.name),
                                                         _class="profile-header",
                                                         ),
-                                   profile_widgets = [contacts_widget,
+                                   profile_widgets = (contacts_widget,
                                                       map_widget,
                                                       offices_widget,
                                                       resources_widget,
@@ -3228,8 +3229,9 @@ def config(settings):
                                                       activities_widget,
                                                       reports_widget,
                                                       assessments_widget,
-                                                      ]
+                                                      ),
                                    )
+
                 elif r.method == "datalist":
                     # Stakeholder selection page
                     # 2-column datalist, 6 rows per page

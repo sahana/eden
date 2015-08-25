@@ -209,6 +209,9 @@ def config(settings):
     # Location of Logo used in pdfs headers
     #settings.ui.pdf_logo = "static/img/mylogo.png"
 
+    #Uncomment to add a title row to XLS exports
+    #settings.base.xls_title_row = True
+
     # GIS (Map) settings
     # Size of the Embedded Map
     # Change this if-required for your theme
@@ -477,6 +480,8 @@ def config(settings):
     #settings.event.types_hierarchical = True
     # Make Incident Types Hierarchical
     #settings.event.incident_types_hierarchical = True
+    # Show tab with teams assigned for incidents
+    #settings.event.incident_teams_tab = True
 
     # -------------------------------------------------------------------------
     # Members

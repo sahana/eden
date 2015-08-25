@@ -5,7 +5,7 @@
 
     Template-specific Message Parsers are defined here.
 
-    @copyright: 2013-14 (c) Sahana Software Foundation
+    @copyright: 2013-15 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -110,6 +110,7 @@ class S3Parser(object):
                 person_id = ptable.insert(first_name = first_name,
                                           middle_name = middle_name,
                                           last_name = last_name)
+                s3db.update_super(ptable, dict(id=person_id))
         else:
             person_id = None
 

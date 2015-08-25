@@ -229,6 +229,8 @@ class S3Profile(S3CRUD):
                     w = self._map(r, widget, widgets, **attr)
                 elif w_type == "report":
                     w = self._report(r, widget, **attr)
+                elif w_type == "custom":
+                    w = self._custom(r, widget, **attr)
                 else:
                     if response.s3.debug:
                         raise SyntaxError("Unsupported widget type %s" %
@@ -255,6 +257,10 @@ class S3Profile(S3CRUD):
                 # We have an incomplete row of widgets
                 append(row)
             output["rows"] = rows
+
+            # Activate this if a project needs it
+            #response.view = get_config(tablename, "profile_view") or \
+            #                self._view(r, "profile.html")
             response.view = self._view(r, "profile.html")
 
         return output
@@ -305,19 +311,20 @@ class S3Profile(S3CRUD):
         return resource, query
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def _comments(r, widget, **attr):
+    def _comments(self, r, widget, **attr):
         """
             Generate a Comments widget
 
             @param r: the S3Request instance
-            @param widget: the widget as a tuple: (label, type, icon)
+            @param widget: the widget definition as dict
             @param attr: controller attributes for the request
 
             @ToDo: Configurable to use either Disqus or internal Comments
         """
 
         label = widget.get("label", "")
+        # Activate if-required
+        #if label and isinstance(label, basestring):
         if label:
             label = current.T(label)
         icon = widget.get("icon", "")
@@ -326,11 +333,47 @@ class S3Profile(S3CRUD):
 
         _class = self._lookup_class(r, widget)
 
+        comments = "@ToDo"
+
         # Render the widget
         output = DIV(H4(icon,
                         label,
                         _class="profile-sub-header"),
-                     DIV(_class="thumbnail"),
+                     DIV(comments,
+                         _class="card-holder"),
+                     _class=_class)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def _custom(self, r, widget, **attr):
+        """
+            Generate a Custom widget
+
+            @param r: the S3Request instance
+            @param widget: the widget definition as dict
+            @param attr: controller attributes for the request
+        """
+
+        label = widget.get("label", "")
+        # Activate if-required
+        #if label and isinstance(label, basestring):
+        if label:
+            label = current.T(label)
+        icon = widget.get("icon", "")
+        if icon:
+            icon = ICON(icon)
+
+        _class = self._lookup_class(r, widget)
+
+        contents = widget["fn"](r, **attr)
+
+        # Render the widget
+        output = DIV(H4(icon,
+                        label,
+                        _class="profile-sub-header"),
+                     DIV(contents,
+                         _class="card-holder"),
                      _class=_class)
 
         return output
@@ -433,6 +476,8 @@ class S3Profile(S3CRUD):
 
         # Interactive only below here
         label = widget.get("label", "")
+        # Activate if-required
+        #if label and isinstance(label, basestring):
         if label:
             label = T(label)
         icon = widget.get("icon", "")
@@ -639,6 +684,8 @@ class S3Profile(S3CRUD):
 
             # Card holder label and icon
             label = widget.get("label", "")
+            # Activate if-required
+            #if label and isinstance(label, basestring):
             if label:
                 label = current.T(label)
             else:
@@ -728,6 +775,8 @@ class S3Profile(S3CRUD):
         """
 
         label = widget.get("label", "")
+        # Activate if-required
+        #if label and isinstance(label, basestring):
         if label:
             label = current.T(label)
         icon = widget.get("icon", "")
@@ -810,11 +859,13 @@ class S3Profile(S3CRUD):
         s3db = current.s3db
 
         label = widget.get("label", "")
-        if label:
+        if label and isinstance(label, basestring):
             label = T(label)
         icon = widget.get("icon", "")
         if icon:
             icon = ICON(icon)
+
+        _class = self._lookup_class(r, widget)
 
         context = widget.get("context", None)
         # Map widgets have no separate tablename
@@ -943,8 +994,6 @@ class S3Profile(S3CRUD):
             script = "/%s/static/scripts/S3/s3.gis.fullscreen.min.js" % current.request.application
         s3.scripts.append(script)
 
-        _class = self._lookup_class(r, widget)
-
         # Render the widget
         output = DIV(fullscreen,
                      H4(icon,
@@ -990,6 +1039,8 @@ class S3Profile(S3CRUD):
 
         # Card holder label and icon
         label = widget.get("label", "")
+        # Activate if-required
+        #if label and isinstance(label, basestring):
         if label:
             label = current.T(label)
         icon = widget.get("icon", "")

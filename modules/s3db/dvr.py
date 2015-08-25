@@ -120,10 +120,10 @@ class S3DVRModel(S3Model):
                            ),
                      self.pr_person_id(
                         # @ToDo: Modify this to update location_id if the selected person has a Home Address already
-                        comment=None,
-                        requires=IS_ADD_PERSON_WIDGET2(),
-                        widget=S3AddPersonWidget2(controller="pr"),
-                        represent=self.pr_PersonRepresent(show_link=True)
+                        comment = None,
+                        represent = self.pr_PersonRepresent(show_link=True),
+                        requires = IS_ADD_PERSON_WIDGET2(),
+                        widget = S3AddPersonWidget2(controller="pr"),
                      ),
                      #Field("damage", "integer",
                      #      label= T("Damage Assessment"),

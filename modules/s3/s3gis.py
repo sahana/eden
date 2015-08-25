@@ -686,14 +686,8 @@ class GIS(object):
     @staticmethod
     def geocode_r(lat, lon):
         """
-            Geocode an Address
+            Reverse Geocode a Lat/Lon
             - used by S3LocationSelector
-                      settings.get_gis_geocode_imported_addresses
-
-            @param address: street address
-            @param postcode: postcode
-            @param Lx_ids: list of ancestor IDs
-            @param geocoder: which geocoder service to use
         """
 
         if not lat or not lon:
@@ -1336,6 +1330,7 @@ class GIS(object):
                     mtable.on(mtable.id == stable.marker_id),
                     )
             row = db(query).select(*fields,
+                                   left=left,
                                    limitby=(0, 1)).first()
             if not row:
                 # No configs found at all
@@ -3723,7 +3718,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         #ttable.insert(location_id = location_id,
                         #              tag = "area",
                         #              value = area)
-                    except db._adapter.driver.OperationalError, exception:
+                    except db._adapter.driver.OperationalError, e:
                         current.log.error(sys.exc_info[1])
 
             else:
@@ -4534,7 +4529,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def update_location_tree(feature=None, all_locations=False):
+    def update_location_tree(feature=None, all_locations=False, propagating=False):
         """
             Update GIS Locations' Materialized path, Lx locations, Lat/Lon & the_geom
 
@@ -4542,6 +4537,10 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             - if not provided then update the whole tree
             @param all_locations: passed to recursive calls to indicate that this
             is an update of the whole tree. Used to avoid repeated attempts to
+            update hierarchy locations with missing data (e.g. lacking some
+            ancestor level).
+            @param propagating: passed to recursive calls to indicate that this
+            is a propagation update. Used to avoid repeated attempts to
             update hierarchy locations with missing data (e.g. lacking some
             ancestor level).
 
@@ -4626,16 +4625,15 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 Propagate Lat/Lon down to any Features which inherit from this one
 
                 @param parent: gis_location id of parent
-                @param all_locations: passed to recursive calls to indicate that
-                this is an update of the whole tree
             """
 
+            # No need to filter out deleted since the parent FK is None for these records 
             query = (table.parent == parent) & \
                     (table.inherited == True)
             rows = db(query).select(*fields)
             for row in rows:
                 try:
-                    update_location_tree(row)
+                    update_location_tree(row, propagating=True)
                 except RuntimeError:
                     current.log.error("Cannot propagate inherited latlon to child %s of location ID %s: too much recursion" % \
                         (row.id, parent))
@@ -4975,7 +4973,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     L1_name = Lx.L1
                     L2_name = Lx.name
                     _path = Lx.path
-                    if _path and L0_name and L1_name:
+                    # Don't try to fixup ancestors when we're coming from a propagate
+                    if propagating or (_path and L0_name and L1_name):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
@@ -4995,7 +4994,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     L1_name = Lx.name
                     L2_name = None
                     _path = Lx.path
-                    if _path and L0_name:
+                    # Don't try to fixup ancestors when we're coming from a propagate
+                    if propagating or (_path and L0_name):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
@@ -5117,7 +5117,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     L2_name = Lx.L2
                     L3_name = Lx.name
                     _path = Lx.path
-                    if _path and L0_name and L1_name and L2_name:
+                    # Don't try to fixup ancestors when we're coming from a propagate
+                    if propagating or (_path and L0_name and L1_name and L2_name):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
@@ -5140,7 +5141,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     L2_name = Lx.name
                     L3_name = None
                     _path = Lx.path
-                    if _path and L0_name and L1_name:
+                    # Don't try to fixup ancestors when we're coming from a propagate
+                    if propagating or (_path and L0_name and L1_name):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
@@ -5161,7 +5163,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     L2_name = None
                     L3_name = None
                     _path = Lx.path
-                    if _path and L0_name:
+                    # Don't try to fixup ancestors when we're coming from a propagate
+                    if propagating or (_path and L0_name):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
@@ -5289,7 +5292,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     L3_name = Lx.L3
                     L4_name = Lx.name
                     _path = Lx.path
-                    if _path and L0_name and L1_name and L2_name and L3_name:
+                    # Don't try to fixup ancestors when we're coming from a propagate
+                    if propagating or (_path and L0_name and L1_name and L2_name and L3_name):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
@@ -5315,7 +5319,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     L3_name = Lx.name
                     L4_name = None
                     _path = Lx.path
-                    if _path and L0_name and L1_name and L2_name:
+                    # Don't try to fixup ancestors when we're coming from a propagate
+                    if propagating or (_path and L0_name and L1_name and L2_name):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
@@ -5339,7 +5344,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     L3_name = None
                     L4_name = None
                     _path = Lx.path
-                    if _path and L0_name and L1_name:
+                    # Don't try to fixup ancestors when we're coming from a propagate
+                    if propagating or (_path and L0_name and L1_name):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
@@ -5361,7 +5367,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     L3_name = None
                     L4_name = None
                     _path = Lx.path
-                    if _path and L0_name:
+                    # Don't try to fixup ancestors when we're coming from a propagate
+                    if propagating or (_path and L0_name):
                         _path = "%s/%s" % (_path, id)
                     else:
                         # This feature needs to be updated
@@ -5501,7 +5508,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 L4_name = Lx.L4
                 L5_name = Lx.name
                 _path = Lx.path
-                if _path and L0_name and L1_name and L2_name and L3_name and L4_name:
+                # Don't try to fixup ancestors when we're coming from a propagate
+                if propagating or (_path and L0_name and L1_name and L2_name and L3_name and L4_name):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
@@ -5529,7 +5537,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 L3_name = Lx.L3
                 L4_name = Lx.name
                 _path = Lx.path
-                if _path and L0_name and L1_name and L2_name and L3_name:
+                # Don't try to fixup ancestors when we're coming from a propagate
+                if propagating or (_path and L0_name and L1_name and L2_name and L3_name):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
@@ -5554,7 +5563,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 L2_name = Lx.L2
                 L3_name = Lx.name
                 _path = Lx.path
-                if _path and L0_name and L1_name and L2_name:
+                # Don't try to fixup ancestors when we're coming from a propagate
+                if propagating or (_path and L0_name and L1_name and L2_name):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
@@ -5576,7 +5586,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 L1_name = Lx.L1
                 L2_name = Lx.name
                 _path = Lx.path
-                if _path and L0_name and L1_name:
+                # Don't try to fixup ancestors when we're coming from a propagate
+                if propagating or (_path and L0_name and L1_name):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
@@ -5595,7 +5606,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 L0_name = Lx.L0
                 L1_name = Lx.name
                 _path = Lx.path
-                if _path and L0_name:
+                # Don't try to fixup ancestors when we're coming from a propagate
+                if propagating or (_path and L0_name):
                     _path = "%s/%s" % (_path, id)
                 else:
                     # This feature needs to be updated
