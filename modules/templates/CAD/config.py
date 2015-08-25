@@ -25,10 +25,9 @@ def config(settings):
 
     # Prepop options
     settings.base.prepopulate_options = {"mandatory": "CAD",
-                                         "default": "default/users",
-                                         "demo": ("template:default",
-                                                  "CAD/Demo",
-                                                  ),
+                                         "default": ("default/users",
+                                                     "CAD/Demo",
+                                                     ),
                                          }
     # Prepop default
     settings.base.prepopulate = "template:default"
