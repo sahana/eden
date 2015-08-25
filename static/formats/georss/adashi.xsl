@@ -433,7 +433,7 @@
         <xsl:if test="$head!='' and not(preceding-sibling::item[resources/text()!=''][
                 contains(resources/text(), concat(' ', $head, ' ')) or
                 starts-with(resources/text(), concat($head, ' ')) or
-                contains(resources/text(), $head) and substring-after(resources/text(), concat(' ', $head))=''
+                contains(resources/text(), concat(' ', $head)) and substring-after(resources/text(), concat(' ', $head))=''
                 ][1])">
             <resource name="pr_group">
                 <xsl:attribute name="tuid">
