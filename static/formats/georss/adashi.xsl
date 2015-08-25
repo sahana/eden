@@ -33,6 +33,9 @@
     <xsl:key name="incident_types" match="item" use="type/text()"/>
     <xsl:key name="cad_statuses" match="item" use="status/text()"/>
 
+    <xsl:variable name="Namespace" select="'adashi'"/>
+    <xsl:variable name="DefaultL0" select="'urn:iso:std:iso:3166:-1:code:US'"/>
+
     <!-- ****************************************************************** -->
     <xsl:template name="adashi">
 
@@ -130,6 +133,11 @@
                         </data>
                         <reference resource="gis_location" field="location_id">
                             <resource name="gis_location">
+                                <reference field="parent" resource="gis_location">
+                                    <xsl:attribute name="uuid">
+                                        <xsl:value-of select="$DefaultL0"/>
+                                    </xsl:attribute>
+                                </reference>
                                 <xsl:choose>
                                     <xsl:when test="$LatLon!=''">
                                         <data field="lat">
@@ -202,7 +210,7 @@
                 <!-- UUID and modified_on -->
                 <xsl:if test="$IncidentUID!=''">
                     <xsl:attribute name="uuid">
-                        <xsl:value-of select="concat('CAD/', $IncidentUID)"/>
+                        <xsl:value-of select="concat('urn:', $Namespace, ':incident:', $IncidentUID)"/>
                     </xsl:attribute>
                 </xsl:if>
                 <xsl:if test="$ModifiedOn!=''">
@@ -283,6 +291,7 @@
     <!-- ****************************************************************** -->
     <xsl:template name="AdashiIncidentLocation">
 
+        <xsl:variable name="IncidentUID" select="incidentId/text()"/>
         <xsl:variable name="LocationName" select="addressName/text()"/>
 
         <xsl:variable name="Address1" select="address1/text()"/>
@@ -303,47 +312,62 @@
             </xsl:choose>
         </xsl:variable>
 
-        <!-- @todo: indexed template for hierarchy locations, hierarchy location reference -->
-        <xsl:variable name="L3" select="city/text()"/>
-        <xsl:variable name="L1" select="state/text()"/>
-
         <xsl:variable name="LatLon" select="normalize-space(georss:point/text())"/>
 
-        <!-- @todo: check that we have /any/ location data before creating a location -->
-        <resource name="gis_location">
+        <!-- L1/L3 available in feed, but inconsistent/invalid so can't easily be used here -->
+        <!-- <xsl:variable name="L3" select="city/text()"/> -->
+        <!-- <xsl:variable name="L1" select="state/text()"/> -->
 
-            <data field="name">
-                <xsl:choose>
-                    <xsl:when test="$LocationName!=''">
-                        <xsl:value-of select="$LocationName"/>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:value-of select="title/text()"/>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </data>
+        <xsl:if test="$LatLon!='' or $StreetAddress!=''">
+            <resource name="gis_location">
 
-            <xsl:if test="$StreetAddress!=''">
-                <data field="addr_street">
-                    <xsl:value-of select="$StreetAddress"/>
-                </data>
-            </xsl:if>
-            <xsl:if test="$Postcode!=''">
-                <data field="addr_postcode">
-                    <xsl:value-of select="$Postcode"/>
-                </data>
-            </xsl:if>
+                <!-- Add a UUID so that we don't create a new location record for every feed update -->
+                <xsl:if test="$IncidentUID!=''">
+                    <xsl:attribute name="uuid">
+                        <xsl:value-of select="concat('urn:', $Namespace, ':incident:location:', $IncidentUID)"/>
+                    </xsl:attribute>
+                </xsl:if>
 
-            <xsl:if test="$LatLon">
-                <data field="lat">
-                    <xsl:value-of select="substring-before($LatLon, ' ')"/>
-                </data>
-                <data field="lon">
-                    <xsl:value-of select="substring-after($LatLon, ' ')"/>
-                </data>
-            </xsl:if>
+                <!-- Hardcoded parent location -->
+                <reference field="parent" resource="gis_location">
+                    <xsl:attribute name="uuid">
+                        <xsl:value-of select="$DefaultL0"/>
+                    </xsl:attribute>
+                </reference>
 
-        </resource>
+                <data field="name">
+                    <xsl:choose>
+                        <xsl:when test="$LocationName!=''">
+                            <xsl:value-of select="$LocationName"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="title/text()"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </data>
+
+                <xsl:if test="$StreetAddress!=''">
+                    <data field="addr_street">
+                        <xsl:value-of select="$StreetAddress"/>
+                    </data>
+                </xsl:if>
+                <xsl:if test="$Postcode!=''">
+                    <data field="addr_postcode">
+                        <xsl:value-of select="$Postcode"/>
+                    </data>
+                </xsl:if>
+
+                <xsl:if test="$LatLon">
+                    <data field="lat">
+                        <xsl:value-of select="substring-before($LatLon, ' ')"/>
+                    </data>
+                    <data field="lon">
+                        <xsl:value-of select="substring-after($LatLon, ' ')"/>
+                    </data>
+                </xsl:if>
+
+            </resource>
+        </xsl:if>
 
     </xsl:template>
 
