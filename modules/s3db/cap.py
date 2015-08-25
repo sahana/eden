@@ -636,7 +636,7 @@ class S3CAPModel(S3Model):
                            readable = False,
                            ),
                      Field("language",
-                           default = "en",
+                           default = "en-US",
                            represent = lambda opt: languages.get(opt,
                                                                  UNKNOWN_OPT),
                            requires = IS_EMPTY_OR(
@@ -672,7 +672,7 @@ class S3CAPModel(S3Model):
                            widget = S3MultiSelectWidget(),
                            ),
                      # @ToDo: Make this a proper Foreign Key, not just a text field
-                     Field("priority",
+                     Field("priority", db.cap_warning_priority,
                            represent = priority_represent,
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(
