@@ -152,7 +152,15 @@
                         }
                         break;
                     case 'object':
-                        break;
+                        if (f == 'incidents'){
+                            if (overwrite || locked) {
+                                $f.val(values[f]['@value'] || '');
+                                //refresh multiselect wizard for display
+                                $('select#cap_alert_incidents').multiselect('refresh');
+                            }                                                
+                        } else {
+                            break;
+                        }
                     }
                 } catch(e) {
                     s3_debug('ERROR', e);
