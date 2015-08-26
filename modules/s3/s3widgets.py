@@ -6466,7 +6466,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
         if feature and onvalidation:
 
-            form = Storage(errors = errors, vars = feature)
+            form = Storage(errors = errors,
+                           vars = feature,
+                           )
             try:
                 # @todo: should use callback()
                 onvalidation(form)

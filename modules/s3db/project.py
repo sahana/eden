@@ -4209,6 +4209,7 @@ class S3ProjectPlanningModel(S3Model):
                                       "comments",
                                       ],
                        onaccept = self.project_indicator_data_onaccept,
+                       ondelete = self.project_indicator_data_ondelete,
                        report_options = report_options,
                        )
 
@@ -4910,6 +4911,71 @@ class S3ProjectPlanningModel(S3Model):
                                                   ).first()
         try:
             indicator_id = record.indicator_id
+        except:
+            s3_debug("Cannot find Project Indicator Data record (no record for this ID), so can't update start_date or statuses")
+            return
+        start_date = record.start_date
+        end_date = record.end_date
+
+        # Locate the immediately preceding record
+        query = (table.indicator_id == indicator_id)  & \
+                (table.deleted == False) & \
+                (table.end_date < end_date)
+        date_field = table.end_date
+        record = db(query).select(date_field,
+                                  limitby=(0, 1),
+                                  orderby=date_field,
+                                  ).first()
+        if record and record[date_field] != start_date:
+            # Update this record's start_date
+            db(table.id == record_id).update(start_date = record[date_field])
+
+        # Locate the immediately succeeding record
+        query = (table.indicator_id == indicator_id)  & \
+                (table.deleted == False) & \
+                (table.end_date > end_date)
+        record = db(query).select(table.id,
+                                  table.start_date,
+                                  date_field, # Needed for orderby on Postgres
+                                  limitby=(0, 1),
+                                  orderby=date_field,
+                                  ).first()
+        if record and record.start_date != end_date:
+            # Update that record's start_date
+            db(table.id == record.id).update(start_date = end_date)
+
+        # Update Statuses
+        table = s3db.project_indicator
+        row = db(table.id == indicator_id).select(table.project_id,
+                                                  limitby=(0, 1)
+                                                  ).first()
+        try:
+            self.project_planning_status_update(row.project_id)
+        except:
+            s3_debug("Cannot find Project record (no record for this ID), so can't update statuses")
+
+    # -------------------------------------------------------------------------
+    def project_indicator_data_ondelete(self, row):
+        """
+            Handle Updates of entries to reset the hidden start_date
+
+            Update Project Status at all levels
+        """
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.project_indicator_data
+        record_id = row.get("id")
+
+        # Read the Indicator Data record
+        record = db(table.id == record_id).select(table.deleted_fk,
+                                                  table.start_date,
+                                                  table.end_date,
+                                                  limitby=(0, 1)
+                                                  ).first()
+        try:
+            fks = json.loads(record.deleted_fk)
+            indicator_id = fks["indicator_id"]
         except:
             s3_debug("Cannot find Project Indicator Data record (no record for this ID), so can't update start_date or statuses")
             return
