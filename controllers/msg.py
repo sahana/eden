@@ -308,7 +308,7 @@ def sms_outbox():
                                   ],
                    )
 
-    return s3_rest_controller(module, "outbox")
+    return s3_rest_controller(module, "sms")
 
 # -----------------------------------------------------------------------------
 def twitter_outbox():
@@ -360,7 +360,7 @@ def twitter_outbox():
                                   ],
                    )
 
-    return s3_rest_controller(module, "outbox")
+    return s3_rest_controller(module, "twitter")
 
 # =============================================================================
 def inbox():
