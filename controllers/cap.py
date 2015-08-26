@@ -712,10 +712,11 @@ def template():
             field.writable = False
             field.readable = False
             field.requires = None
-        atable.template_title.required = True
+        atable.template_title.requires = IS_NOT_EMPTY()
         atable.status.readable = atable.status.writable = False
         itable = db.cap_info
-        for f in ("urgency",
+        for f in ("event",
+                  "urgency",
                   "certainty",
                   "priority",
                   "severity",
