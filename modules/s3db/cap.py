@@ -381,7 +381,7 @@ class S3CAPModel(S3Model):
                                                   multiple = True,
                                                   sort = True,
                                                   )),
-                           widget = S3MultiSelectWidget(),
+                           widget = S3MultiSelectWidget(selectedList = 10),
                            ),
                      # approved_on field for recording when the alert was approved
                      s3_datetime("approved_on",
@@ -636,7 +636,7 @@ class S3CAPModel(S3Model):
                            readable = False,
                            ),
                      Field("language",
-                           default = "en",
+                           default = "en-US",
                            represent = lambda opt: languages.get(opt,
                                                                  UNKNOWN_OPT),
                            requires = IS_EMPTY_OR(
@@ -651,7 +651,7 @@ class S3CAPModel(S3Model):
                            requires = IS_IN_SET(cap_info_category_opts,
                                                 multiple = True,
                                                 ),
-                           widget = S3MultiSelectWidget(),
+                           widget = S3MultiSelectWidget(selectedList = 10),
                            ),
                      Field("event", "text"),
                      self.event_type_id(empty = False,
@@ -669,14 +669,12 @@ class S3CAPModel(S3Model):
                                                    ),
                            requires = IS_IN_SET(cap_info_responseType_opts,
                                                 multiple = True),
-                           widget = S3MultiSelectWidget(),
+                           widget = S3MultiSelectWidget(selectedList = 10),
                            ),
-                     # @ToDo: Make this a proper Foreign Key, not just a text field
-                     Field("priority",
+                     Field("priority", "reference cap_warning_priority",
                            represent = priority_represent,
                            requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(
-                                                  db, "cap_warning_priority.id",
+                                        IS_ONE_OF(db, "cap_warning_priority.id",
                                                   priority_represent
                                                   ),
                                         ),
@@ -2423,9 +2421,16 @@ class cap_AreaRepresent(S3Represent):
         s3db = current.s3db
         artable = s3db.cap_area
         
+        count = len(values)
+        if count == 1:
+            query = (artable.id == values[0])
+        else:
+            query = (artable.id.belongs(values))
+
         fields = [artable.id,
                   artable.name,
                   ]
+
         if self.translate:
             ltable = s3db.cap_area_name
             fields += [ltable.name_l10n,
@@ -2433,17 +2438,15 @@ class cap_AreaRepresent(S3Represent):
             left = [ltable.on((ltable.area_id == artable.id) & \
                               (ltable.language == current.session.s3.language)),
                         ]
-            count = len(values)
-            if count == 1:
-                query = (artable.id == values[0])
-            else:
-                query = (artable.id.belongs(values))
             
-            rows = current.db(query).select(left = left,
-                                            limitby = (0, count),
-                                            *fields)
-            return rows
-    
+        else:
+            left = None
+
+        rows = current.db(query).select(left = left,
+                                        limitby = (0, count),
+                                        *fields)
+        return rows
+
     # -------------------------------------------------------------------------
     def represent_row(self, row):
         """

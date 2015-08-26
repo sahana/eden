@@ -6466,7 +6466,9 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
         if feature and onvalidation:
 
-            form = Storage(errors = errors, vars = feature)
+            form = Storage(errors = errors,
+                           vars = feature,
+                           )
             try:
                 # @todo: should use callback()
                 onvalidation(form)
@@ -6481,9 +6483,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 error = "\n".join(errors[fn] for fn in errors)
                 return (values, error)
             elif feature:
-                # Required because gis_location_onvalidation updates form
-                # vars, and without these updates, wkt would get lost in
-                # update_location_tree :/
+                # gis_location_onvalidation adds/updates form vars (e.g.
+                # gis_feature_type, the_geom) => must also update values
                 values.update(feature)
 
         # Success
@@ -6527,6 +6528,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         lat = values.get("lat")
         lon = values.get("lon")
         wkt = values.get("wkt")
+        the_geom = values.get("the_geom")
         address = values.get("address")
         postcode = values.get("postcode")
         parent = values.get("parent")
@@ -6547,8 +6549,13 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                               addr_postcode=postcode,
                               parent=parent,
                               )
+
+            # These could have been added during validate:
             if gis_feature_type:
                 feature.gis_feature_type = gis_feature_type
+            if the_geom:
+                feature.the_geom = the_geom
+
             location_id = table.insert(**feature)
             feature.id = location_id
             current.gis.update_location_tree(feature)
@@ -6569,8 +6576,12 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                     feature.wkt = wkt
                     feature.inherited = False
 
+                # These could have been added during validate:
                 if gis_feature_type:
                     feature.gis_feature_type = gis_feature_type
+                if the_geom:
+                    feature.the_geom = the_geom
+
                 db(table.id == location_id).update(**feature)
                 feature.id = location_id
                 current.gis.update_location_tree(feature)

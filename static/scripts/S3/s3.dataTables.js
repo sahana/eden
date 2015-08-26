@@ -889,12 +889,15 @@
         }
 
         // Action Buttons
+        var rowActionsJSON = false;
         if (tableConfig['rowActions'].length < 1) {
             if (S3.dataTables.Actions) {
                 tableConfig['rowActions'] = S3.dataTables.Actions;
             } else {
                 tableConfig['rowActions'] = [];
             }
+        } else {
+            rowActionsJSON = true;
         }
         if (tableConfig['rowActions'].length > 0) {
             tableColumns[tableConfig['actionCol']] = {
@@ -1094,7 +1097,10 @@
                                 }
                             }
                             var c = action._class;
-                            var label = S3.Utf8.decode(action.label);
+                            var label = action.label;
+                            if (!rowActionsJSON) {
+                                var label = S3.Utf8.decode(action.label);
+                            }
                             var title = label;
                             re = /%5Bid%5D/g;
                             if (action.icon) {
