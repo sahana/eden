@@ -6795,7 +6795,11 @@ def hrm_human_resource_controller(extra_filter=None):
                                                 P(comments),
                                                 _class="profile-header",
                                                 ),
+<<<<<<< HEAD
                            profile_title = "%s : %s" % (s3.crud_strings["hrm_human_resource"].title_display,
+=======
+                           profile_title = "%s : %s" % (s3_unicode(s3.crud_strings["hrm_human_resource"].title_display),
+>>>>>>> b471bf3... change unicode for turkish language
                                                         name),
                            profile_widgets = profile_widgets,
                            )
