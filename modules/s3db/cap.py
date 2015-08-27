@@ -609,6 +609,10 @@ class S3CAPModel(S3Model):
             msg_list_empty = T("No Warning Priorities currently registered")
             )
         
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary=("event_type", "name")),
+                  )
+                
         # ---------------------------------------------------------------------
         # CAP info priority
         # @ToDo: i18n: Need label=T("")
