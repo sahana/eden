@@ -8850,6 +8850,7 @@ class project_Details(S3Method):
                     form = form(r)
                 if form is not None:
                     profile_widgets.append(form)
+
             if settings.get_project_multiple_organisations():
                 orgs_widget = dict(label = "Organizations",
                                    label_create = "Add Organization",
@@ -8863,6 +8864,7 @@ class project_Details(S3Method):
                                    pagesize = None, # all records
                                    )
                 profile_widgets.append(orgs_widget)
+
             if settings.get_project_community():
                 label = "Communities"
                 label_create = "Add Community"
@@ -8881,6 +8883,7 @@ class project_Details(S3Method):
                                     pagesize = None, # all records
                                     )
             profile_widgets.append(locations_widget)
+
             if settings.get_project_mode_3w():
                 beneficiaries_widget = dict(label = "Beneficiaries",
                                             label_create = "Add Beneficiaries",
@@ -8896,7 +8899,8 @@ class project_Details(S3Method):
                 profile_widgets.append(beneficiaries_widget)
                 label = T("Documents")
             else:
-                label = attachments_label
+                label = settings.get_ui_label_attachments()
+
             docs_widget = dict(label = label,
                                label_create = "Add Document",
                                type = "datatable",
@@ -8911,6 +8915,7 @@ class project_Details(S3Method):
                                pagesize = None, # all records
                                )
             profile_widgets.append(docs_widget)
+
             if settings.get_hrm_show_staff():
                 STAFF = settings.get_hrm_staff_label()
                 hr_widget = dict(label = STAFF,
