@@ -1018,13 +1018,6 @@ def indicator_data():
 
     return s3_rest_controller()
 
-# =============================================================================
-# Community Volunteers
-# =============================================================================
-#def human_resource():
-#    """ RESTful controller for Project <> Staff Assignments """
-#    return s3_rest_controller()
-
 def person():
     """ RESTful controller for Community Volunteers """
 
@@ -1214,6 +1207,15 @@ def campaign_response():
 def campaign_response_summary():
     """ RESTful CRUD controller """
 
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def human_resource_project():
+    """
+        REST controller for options.s3json lookups
+    """
+
+    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
     return s3_rest_controller()
 
 # END =========================================================================
