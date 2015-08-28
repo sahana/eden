@@ -83,7 +83,7 @@ def s3_debug(message, value=None):
        Provide an easy, safe, systematic way of handling Debug output
        (print to stdout doesn't work with WSGI deployments)
 
-       @ToDo: Should be using python's built-in logging module?
+       @ToDo: Should be using current.log.warning instead?
     """
 
     output = "S3 Debug: %s" % s3_unicode(message)

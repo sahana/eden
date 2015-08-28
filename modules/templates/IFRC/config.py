@@ -3769,6 +3769,20 @@ def config(settings):
     settings.customise_po_area_controller = customise_po_area_controller
 
     # -----------------------------------------------------------------------------
+    def customise_project_programme_controller(**attr):
+
+        # Organisation needs to be an NS/Branch
+        ns_only("project_programme",
+                required = True,
+                branches = False,
+                updateable = True,
+                )
+
+        return attr
+
+    settings.customise_project_programme_controller = customise_project_programme_controller
+
+    # -----------------------------------------------------------------------------
     def customise_project_project_controller(**attr):
 
         tablename = "project_project"

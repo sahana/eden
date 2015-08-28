@@ -4595,7 +4595,9 @@ class S3ProjectPlanningModel(S3Model):
         try:
             goal_id = record.goal_id
         except:
-            s3_debug("Cannot find Project Outcome record (no record for this ID), so can't setup default weightings")
+            error = "Cannot find Project Outcome record (no record for this ID), so can't setup default weightings"
+            s3_debug(error)
+            current.session.error = error
             return
 
         # Read the records
@@ -4619,7 +4621,8 @@ class S3ProjectPlanningModel(S3Model):
         """
 
         db = current.db
-        record_id = form.record_id
+        form_vars = form.vars
+        record_id = form_vars.id
 
         # Find the project_id
         table = current.s3db.project_outcome
@@ -4630,7 +4633,9 @@ class S3ProjectPlanningModel(S3Model):
         try:
             project_id = record.project_id
         except:
-            s3_debug("Cannot find Project Outcome record (no record for this ID), so can't update statuses or validate weighting")
+            error = "Cannot find Project Outcome record (no record for this ID), so can't update statuses or validate weighting"
+            s3_debug(error)
+            current.session.error = error
             return
 
         if not create:
@@ -4643,7 +4648,7 @@ class S3ProjectPlanningModel(S3Model):
             for r in records:
                 total += r.weighting
             # Add what we're trying to add
-            total += form.vars.weighting
+            total += form_vars.weighting
 
             # Check if we're on 1.0
             if total <> 1.0:
