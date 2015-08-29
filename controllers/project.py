@@ -221,13 +221,17 @@ def project():
                                                                    )
 
             elif component_name == "indicator_data":
+                ctable = r.component.table
                 # Filter to just those for this Project & make mandatory
-                r.component.table.indicator_id.requires = IS_ONE_OF(db, "project_indicator.id",
-                                                                    s3db.project_indicator_represent,
-                                                                    sort=True,
-                                                                    filterby="project_id",
-                                                                    filter_opts=[r.id],
-                                                                    )
+                ctable.indicator_id.requires = IS_ONE_OF(db, "project_indicator.id",
+                                                         s3db.project_indicator_represent,
+                                                         sort=True,
+                                                         filterby="project_id",
+                                                         filter_opts=[r.id],
+                                                         )
+                # @ToDo: end_date cannot be before Project Start
+                #ctable.end_date.requires = 
+
                 # Have a filter for indicator in indicator data report
                 #if r.method == "report":
                 #    from s3 import S3OptionsFilter
