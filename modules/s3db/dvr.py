@@ -170,7 +170,7 @@ class S3DVRModel(S3Model):
                                   )
 
         self.add_components(tablename,
-                            dvr_need =  {"link": "dvr_need_case",
+                            dvr_need =  {"link": "dvr_case_need",
                                          "joinby": "case_id",
                                          "key": "need_id",
                                          },
