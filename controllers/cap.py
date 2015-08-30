@@ -502,7 +502,7 @@ def alert():
 
                     response.s3.stylesheets.append("../themes/default/cap.css")
 
-                elif r.method != "import":
+                elif r.method != "import" and not get_vars.get("_next"):
                     s3.crud.submit_style = "hide"
                     s3.crud.custom_submit = (("edit_info",
                                               T("Save and edit information"),
@@ -592,6 +592,8 @@ def alert():
             r.next = URL(c="cap", f="alert", args=[lastid, "info"])
 
         if r.interactive:
+            if get_vars.get("_next"):
+                r.next = get_vars.get("_next")
             #if r.component_name == "info":
             #    update_url = URL(f="info", args=["[id]"])
             #    s3_action_buttons(r, update_url=update_url)

@@ -1128,8 +1128,8 @@ class S3CAPModel(S3Model):
         oid = settings.get_cap_identifier_oid()
         suffix = settings.get_cap_identifier_suffix()
 
-        return "%s-%s-%s-%03d%s%s" % \
-                    (prefix, oid, _time, next_id, ["", "-"][bool(suffix)], suffix)
+        return "%s-%s-%s-%03d-%s" % \
+                    (prefix, oid, _time, next_id, suffix)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1414,7 +1414,8 @@ def cap_rheader(r):
 
                         # Display 'Submit for Approval' based on permission  
                         # and deployment settings
-                        if not r.record.approved_by and \
+                        if not current.request.get_vars.get("_next") and \
+                           not r.record.approved_by and \
                            current.deployment_settings.get_cap_authorisation() and \
                            current.auth.s3_has_permission("update", "cap_alert",
                                                           record_id=alert_id):
