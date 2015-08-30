@@ -444,7 +444,7 @@
                             .appendTo(ul);
         };
         dummy_input.blur(function() {
-            if (existing && existing.full_name != dummy_input.val()) {
+            if (existing.hasOwnProperty('full_name') && existing.full_name != dummy_input.val()) {
                 // New Entry - without letting AC complete (e.g. tab out)
                 real_input.val('').change();
             }
