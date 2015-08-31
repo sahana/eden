@@ -4260,8 +4260,8 @@ class S3ProjectPlanningModel(S3Model):
                                           )
         for d in indicator_data:
             indicator_id = d.indicator_id
-            target_value = d.target_value
-            value = d.value
+            target_value = d.target_value or 0
+            value = d.value or 0
             end_date = d.end_date
             if indicator_id not in indicators:
                 indicators[indicator_id] = {"total_target": target_value,
