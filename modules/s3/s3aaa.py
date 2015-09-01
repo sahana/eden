@@ -5931,9 +5931,8 @@ class S3Permission(object):
             if "approved_by" in table.fields:
 
                 approval_methods = ("approve", "review", "reject")
-                review_methods = ("approve", "review", "reject", "update")
                 access_approved = not all([m in approval_methods for m in method])
-                access_unapproved = any([m in method for m in review_methods])
+                access_unapproved = any([m in method for m in approval_methods])
 
                 if access_unapproved:
                     if not access_approved:
@@ -5942,7 +5941,8 @@ class S3Permission(object):
                             _debug("==> Record already approved")
                 else:
                     permitted = self.approved(table, record) or \
-                                self.is_owner(table, record, owners, strict=True)
+                                self.is_owner(table, record, owners, strict=True) or \
+                                self.has_permission("review", t=table, record=record)
                     if not permitted:
                         _debug("==> Record not approved")
                         _debug("==> is owner: %s" % is_owner)

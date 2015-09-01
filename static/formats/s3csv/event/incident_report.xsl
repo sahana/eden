@@ -8,7 +8,7 @@
          CSV fields:
          Name.................................event_incident_report.name
          Type.................................event_incident_report.incident_type_id
-         Date.................................event_incident_report.datetime
+         Date.................................event_incident_report.date
          Reported By First Name...............person_id.first_name
          Reported By Last Name................person_id.first_name
          Reported By Phone....................person_id -> pr_contact.value
@@ -72,7 +72,7 @@
         <!-- Incident Report -->
         <resource name="event_incident_report">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="datetime"><xsl:value-of select="col[@field='Date']"/></data>
+            <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
             
             <xsl:if test="col[@field='Type']!=''">
                 <reference field="incident_type_id" resource="event_incident_type">
