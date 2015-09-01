@@ -1436,8 +1436,6 @@ class S3XML(S3Codec):
                 # Override default-approver:
                 if "approved_by" in table:
                     approved = element.get(f)
-                    from s3utils import s3_debug
-                    s3_debug("Approved", approved)
                     if approved:
                         if approved.lower() == "false":
                             record["approved_by"] = None
