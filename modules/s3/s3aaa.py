@@ -5751,10 +5751,11 @@ class S3Permission(object):
             @param table: the table
         """
 
-        auth = current.auth
         APPROVER = "approved_by"
 
-        if APPROVER in table:
+        if APPROVER in table and \
+           table._tablename not in current.deployment_settings.get_auth_record_approval_manual():
+            auth = current.auth
             approver = table[APPROVER]
             if auth.override:
                 approver.default = 0
