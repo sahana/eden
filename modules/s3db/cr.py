@@ -448,8 +448,7 @@ class S3ShelterModel(S3Model):
                        "location_id$name",
                        ]
 
-        list_fields = ["id",
-                       "name",
+        list_fields = ["name",
                        "status",
                        "shelter_type_id",
                        #"shelter_service_id",
@@ -488,8 +487,8 @@ class S3ShelterModel(S3Model):
 
         filter_widgets = [
                 S3TextFilter(text_fields,
-                             label = T("Name"),
-                             _class = "filter-search",
+                             label = T("Search"),
+                             #_class = "filter-search",
                              ),
                 S3OptionsFilter("shelter_type_id",
                                 label = T("Type"),

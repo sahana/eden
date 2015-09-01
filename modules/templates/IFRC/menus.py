@@ -162,8 +162,8 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Map", c="vulnerability", f="index"),
             ),
             homepage("event")(
-                MM("Events", c="event", f="event"),
-                MM("Incident Reports", c="event", f="incident_report"),
+                MM("Events", c="event", f="event", m="summary"),
+                MM("Incident Reports", c="event", f="incident_report", m="summary"),
             ),
             homepage("deploy", name="RDRT", f="mission", m="summary",
                      vars={"~.status__belongs": "2"})(
