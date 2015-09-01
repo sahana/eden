@@ -3538,16 +3538,16 @@ class RecordApprovalTests(unittest.TestCase):
                            uacl=acl.READ|acl.CREATE|acl.REVIEW|acl.APPROVE,
                            oacl=acl.READ|acl.UPDATE|acl.REVIEW|acl.APPROVE)
 
-            # Normal user can still not see unapproved record even if they have approve-permissions
+            # Normal user read/update unapproved records now that he has review-permission
             auth.s3_impersonate("normaluser@example.com")
             permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
-            assertFalse(permitted)
+            assertTrue(permitted)
             permitted = has_permission("update", otable, record_id=org_id, c="org", f="organisation")
-            assertFalse(permitted)
+            assertTrue(permitted)
             permitted = has_permission("delete", otable, record_id=org_id, c="org", f="organisation")
-            assertFalse(permitted)
+            assertFalse(permitted) # not allows as per ACL!
 
-            # Normal user can review/approve/reject if they have the approver role
+            # Normal user can review/approve/reject according to permissions
             permitted = has_permission(["read", "review"], otable, record_id=org_id, c="org", f="organisation")
             assertTrue(permitted)
             permitted = has_permission("review", otable, record_id=org_id, c="org", f="organisation")
@@ -3575,7 +3575,18 @@ class RecordApprovalTests(unittest.TestCase):
             permitted = has_permission("reject", otable, record_id=org_id, c="org", f="organisation")
             assertFalse(permitted)
 
-            # Normal user can now see the record without having the approver role
+            # Withdraw review and approve permissions on this table for normal users
+            acl.update_acl(AUTHENTICATED,
+                           c="org",
+                           uacl=acl.READ,
+                           oacl=acl.READ|acl.UPDATE)
+
+            acl.update_acl(AUTHENTICATED,
+                           t="org_organisation",
+                           uacl=acl.READ|acl.CREATE,
+                           oacl=acl.READ|acl.UPDATE)
+
+            # Normal user can now see the record without having review/approve permissions
             auth.s3_impersonate("normaluser@example.com")
             permitted = has_permission("read", otable, record_id=org_id, c="org", f="organisation")
             assertTrue(permitted)
