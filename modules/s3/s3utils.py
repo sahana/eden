@@ -597,7 +597,10 @@ def s3_trunk8(selector=None, lines=None, less=None, more=None):
 
     s3 = current.response.s3
     scripts = s3.scripts
-    script = "/%s/static/scripts/trunk8.js" % current.request.application
+    if s3.debug:
+        script = "/%s/static/scripts/trunk8.js" % current.request.application
+    else:
+        script = "/%s/static/scripts/trunk8.min.js" % current.request.application
     if script not in scripts:
         scripts.append(script)
 
@@ -618,11 +621,11 @@ $(document).on('click','.s3-truncate-less',function(event){
 
     # Init-script
     # - required separately for each selector
-    script = """S3.trunk8('%(selector)s', %(lines)s, '%(more)s')""" % \
+    script = """S3.trunk8('%(selector)s',%(lines)s,'%(more)s')""" % \
              dict(selector = ".s3-truncate" if selector is None else selector,
                   lines = "null" if lines is None else lines,
-                  more=T("more") if more is None else more,
-                 )
+                  more = T("more") if more is None else more,
+                  )
 
     s3.jquery_ready.append(script)
     return

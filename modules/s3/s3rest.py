@@ -212,7 +212,11 @@ class S3Request(object):
         if components is None:
             components = cnames
 
-        if self.method == "review":
+        method = self.method
+        if method == "update":
+            # Approvers should be able to edit records during review
+            approved, unapproved = True, True
+        elif method == "review":
             approved, unapproved = False, True
         else:
             approved, unapproved = True, False

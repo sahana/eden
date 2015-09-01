@@ -1404,6 +1404,12 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         subtitle.append(body)
         body = TAG[""](*subtitle)
 
+    # Allow records to be truncated
+    # (not yet working for HTML)
+    body = DIV(body,
+               _class="s3-truncate",
+               )
+
     date = record["cms_post.date"]
     date = SPAN(date,
                 _class="date-title",

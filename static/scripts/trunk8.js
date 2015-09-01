@@ -1,5 +1,5 @@
 /**!
- * trunk8 v1.3.1
+ * trunk8 v1.3.3
  * https://github.com/rviscomi/trunk8
  * 
  * Copyright 2012 Rick Viscomi
@@ -25,7 +25,7 @@
 	
 	function trunk8(element) {
 		this.$element = $(element);
-		this.original_text = this.$element.html();
+		this.original_text = $.trim(this.$element.html());
 		this.settings = $.extend({}, $.fn.trunk8.defaults);
 	}
 	
@@ -36,7 +36,12 @@
 	function stripHTML(html) {
 		var tmp = document.createElement("DIV");
 		tmp.innerHTML = html;
-		return tmp.textContent||tmp.innerText;
+		
+		if (typeof tmp.textContent != 'undefined') {
+			return tmp.textContent;
+		}
+
+		return tmp.innerText
 	}
 
 	function getHtmlArr(str) {
@@ -46,7 +51,7 @@
 			return str.split(/\s/g);
 		}
 		var allResults = [],
-			reg = /<([a-z]+)([^<]*)(?:>(.*?(?!<\1>)*)<\/\1>|\s+\/>)(['.?!,]*)|((?:[^<>\s])+['.?!,]*\w?|<br\s?\/?>)/ig,
+			reg = /<([a-z]+)([^<]*)(?:>(.*?(?!<\1>))<\/\1>|\s+\/>)(['.?!,]*)|((?:[^<>\s])+['.?!,]*\w?|<br\s?\/?>)/ig,
 			outArr = reg.exec(str),
 			lastI,
 			ind;
@@ -91,7 +96,7 @@
 					biteLength = $.trim(bite).split(' ').length;
 					if ($.trim(bite).length) {
 						if (typeof content === 'string') {
-							if (!/<br\s*\/?>/.test(content)) {
+							if (!/<br\s*\/?>/i.test(content)) {
 								if (biteLength === 1 && $.trim(bite).length <= content.length) {
 									content = bite;
 									// We want the fill to go inside of the last HTML
@@ -214,7 +219,9 @@
 		}
 		else {
 			$.error('Invalid width "' + width + '".');
+			return;
 		}
+		settings.onTruncate();
 	}
 
 	methods = {
@@ -371,6 +378,7 @@
 		side: SIDES.right,
 		tooltip: true,
 		width: WIDTH.auto,
-		parseHTML: false
+		parseHTML: false,
+		onTruncate: function () {}
 	};
 })(jQuery);

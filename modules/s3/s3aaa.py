@@ -5799,7 +5799,7 @@ class S3Permission(object):
 
         # Auth override, system roles and login
         auth = self.auth
-        if self.auth.override:
+        if auth.override:
             _debug("==> auth.override")
             _debug("*** GRANTED ***")
             return True
@@ -5928,7 +5928,7 @@ class S3Permission(object):
                 table = t
             if "approved_by" in table.fields:
 
-                approval_methods = ("approve", "review", "reject")
+                approval_methods = ("approve", "review", "reject", "update")
                 access_approved = not all([m in approval_methods for m in method])
                 access_unapproved = any([m in method for m in approval_methods])
 

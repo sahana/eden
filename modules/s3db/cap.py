@@ -657,7 +657,9 @@ class S3CAPModel(S3Model):
                                                 ),
                            widget = S3MultiSelectWidget(selectedList = 10),
                            ),
-                     Field("event", "text"),
+                     Field("event",
+                           label = T("Event"),
+                           ),
                      self.event_type_id(empty = False,
                                         script = '''
                             $.filterOptionsS3({

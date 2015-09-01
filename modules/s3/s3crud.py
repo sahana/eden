@@ -606,7 +606,7 @@ class S3CRUD(S3Method):
             # Redirect to update if user has permission unless
             # a method has been specified in the URL
             # MH: Is this really desirable? Many users would prefer to open as read
-            if not r.method or r.method == "review":
+            if not r.method: #or r.method == "review":
                 authorised = self._permitted("update")
                 if authorised and representation == "html" and editable:
                     return self.update(r, **attr)
