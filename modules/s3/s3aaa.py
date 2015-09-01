@@ -5744,17 +5744,18 @@ class S3Permission(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def set_default_approver(cls, table):
+    def set_default_approver(cls, table, force=False):
         """
             Set the default approver for new records in table
 
             @param table: the table
+            @param force: whether to force approval for tables which require manual approval
         """
 
         APPROVER = "approved_by"
 
-        if APPROVER in table and \
-           table._tablename not in current.deployment_settings.get_auth_record_approval_manual():
+        if APPROVER in table and (force or table._tablename not in \
+            current.deployment_settings.get_auth_record_approval_manual()):
             auth = current.auth
             approver = table[APPROVER]
             if auth.override:

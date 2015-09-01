@@ -1435,10 +1435,17 @@ class S3XML(S3Codec):
             if f == APPROVED:
                 # Override default-approver:
                 if "approved_by" in table:
-                    if element.get(f, "true").lower() == "false":
-                        record["approved_by"] = None
+                    approved = element.get(f)
+                    from s3utils import s3_debug
+                    s3_debug("Approved", approved)
+                    if approved:
+                        if approved.lower() == "false":
+                            record["approved_by"] = None
+                        else:
+                            if table["approved_by"].default is None:
+                                auth.permission.set_default_approver(table, force=True)
                     else:
-                        if table["approved_by"].default == None:
+                        if table["approved_by"].default is None:
                             auth.permission.set_default_approver(table)
                 continue
 
