@@ -5928,9 +5928,10 @@ class S3Permission(object):
                 table = t
             if "approved_by" in table.fields:
 
-                approval_methods = ("approve", "review", "reject", "update")
+                approval_methods = ("approve", "review", "reject")
+                review_methods = ("approve", "review", "reject", "update")
                 access_approved = not all([m in approval_methods for m in method])
-                access_unapproved = any([m in method for m in approval_methods])
+                access_unapproved = any([m in method for m in review_methods])
 
                 if access_unapproved:
                     if not access_approved:
