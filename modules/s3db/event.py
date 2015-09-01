@@ -1015,13 +1015,56 @@ class S3IncidentReportModel(S3Model):
             msg_record_deleted = T("Incident Report removed"),
             msg_list_empty = T("No Incident Reports currently registered for this event"))
 
-        filter_widgets = [S3OptionsFilter("incident_type_id",
+        # Which levels of Hierarchy are we using?
+        levels = current.gis.get_relevant_hierarchy_levels()
+
+        report_fields = ["name",
+                         "incident_type_id",
+                         "closed",
+                         ]
+
+        text_fields = ["name",
+                       "comments",
+                       #"organisation_id$name",
+                       #"organisation_id$acronym",
+                       "location_id$name",
+                       ]
+
+        list_fields = ["name",
+                       "date",
+                       "incident_type_id",
+                       "closed",
+                       ]
+
+        for level in levels:
+            lfield = "location_id$%s" % level
+            report_fields.append(lfield)
+            text_fields.append(lfield)
+            list_fields.append(lfield)
+
+        filter_widgets = [S3TextFilter(text_fields,
+                                       label = T("Search"),
+                                       ),
+                          S3OptionsFilter("incident_type_id",
                                           label = T("Type"),
                                           ),
+                          S3LocationFilter("location_id",
+                                           levels = levels,
+                                           ),
                           ]
 
         self.configure(tablename,
                        filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       report_options = Storage(
+                        rows=report_fields,
+                        cols=report_fields,
+                        fact=report_fields,
+                        defaults=Storage(rows = "location_id$L1", #lfield, # Lowest-level of hierarchy
+                                         cols = "incident_type_id",
+                                         fact = "count(name)",
+                                         totals = True)
+                        ),
                        super_entity = "doc_entity",
                        )
 

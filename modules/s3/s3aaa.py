@@ -5744,17 +5744,19 @@ class S3Permission(object):
 
     # -------------------------------------------------------------------------
     @classmethod
-    def set_default_approver(cls, table):
+    def set_default_approver(cls, table, force=False):
         """
             Set the default approver for new records in table
 
             @param table: the table
+            @param force: whether to force approval for tables which require manual approval
         """
 
-        auth = current.auth
         APPROVER = "approved_by"
 
-        if APPROVER in table:
+        if APPROVER in table and (force or table._tablename not in \
+            current.deployment_settings.get_auth_record_approval_manual()):
+            auth = current.auth
             approver = table[APPROVER]
             if auth.override:
                 approver.default = 0
@@ -5799,7 +5801,7 @@ class S3Permission(object):
 
         # Auth override, system roles and login
         auth = self.auth
-        if self.auth.override:
+        if auth.override:
             _debug("==> auth.override")
             _debug("*** GRANTED ***")
             return True
@@ -5939,7 +5941,8 @@ class S3Permission(object):
                             _debug("==> Record already approved")
                 else:
                     permitted = self.approved(table, record) or \
-                                self.is_owner(table, record, owners, strict=True)
+                                self.is_owner(table, record, owners, strict=True) or \
+                                self.has_permission("review", t=table, record=record)
                     if not permitted:
                         _debug("==> Record not approved")
                         _debug("==> is owner: %s" % is_owner)

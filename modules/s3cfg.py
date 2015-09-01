@@ -562,6 +562,10 @@ class S3Config(Storage):
         """ Which tables record approval is required for """
         return self.auth.get("record_approval_required_for", [])
 
+    def get_auth_record_approval_manual(self):
+        """ Which tables record approval is not automatic for """
+        return self.auth.get("record_approval_manual", [])
+
     def get_auth_realm_entity_types(self):
         """ Which entity types to use as realm entities in role manager """
 

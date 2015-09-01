@@ -3941,7 +3941,7 @@ def req_customise_req_fields():
     """
 
     # Truncate purpose field
-    from s3.s3utils import s3_trunk8
+    from s3 import s3_trunk8
     s3_trunk8(lines=2)
 
     T = current.T
@@ -4343,7 +4343,7 @@ def req_customise_commit_fields():
     """
 
     # Truncate comments field
-    from s3.s3utils import s3_trunk8
+    from s3 import s3_trunk8
     s3_trunk8(lines=2)
 
     T = current.T

@@ -1397,12 +1397,21 @@ def config(settings):
 
         settings = current.deployment_settings
 
-        # Alter rheader tabs for Suppliers (=hide Offices, Warehouses and Contacts)
         if type_filter == "Supplier":
+            # Suppliers have simpler Tabs (hide Offices, Warehouses and Contacts)
             tabs = [(T("Basic Details"), None, {"native": 1}),
                     ]
             if settings.get_L10n_translate_org_organisation():
                 tabs.append((T("Local Names"), "name"))
+            attr["rheader"] = lambda r: current.s3db.org_rheader(r, tabs=tabs)
+
+        elif type_filter == "Academic,Bilateral,Government,Intergovernmental,NGO,UN agency":
+            # Partners have simpler Tabs (hide Offices, Warehouses and Contacts)
+            tabs = [(T("Basic Details"), None, {"native": 1}),
+                    (T("Projects"), "project"),
+                    ]
+            if settings.get_L10n_translate_org_organisation():
+                tabs.insert(1, (T("Local Names"), "name"))
             attr["rheader"] = lambda r: current.s3db.org_rheader(r, tabs=tabs)
 
         return attr
@@ -1747,6 +1756,20 @@ def config(settings):
                               )
                 # Start date relates to previous entry
                 start_date = d
+
+    # -----------------------------------------------------------------------------
+    def customise_project_programme_controller(**attr):
+
+        # Organisation needs to be an NS/Branch
+        ns_only("project_programme",
+                required = True,
+                branches = False,
+                updateable = True,
+                )
+
+        return attr
+
+    settings.customise_project_programme_controller = customise_project_programme_controller
 
     # -----------------------------------------------------------------------------
     def customise_project_project_controller(**attr):
@@ -2112,6 +2135,18 @@ def config(settings):
         table.measures.label = T("Indicator Criteria and Sources of Verification")
 
     settings.customise_project_indicator_resource = customise_project_indicator_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_project_indicator_data_resource(r, tablename):
+
+        # Only M & E should be updating the Actuals
+        has_role = current.auth.s3_has_role
+        if has_role("monitoring_evaluation") or has_role("ORG_ADMIN"):
+            pass
+        else:
+            current.s3db.project_indicator_data.value.writable = False
+
+    settings.customise_project_indicator_data_resource = customise_project_indicator_data_resource
 
     # -----------------------------------------------------------------------------
     def customise_project_location_resource(r, tablename):

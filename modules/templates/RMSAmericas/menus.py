@@ -652,12 +652,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def project():
         """ PROJECT / Project Tracking & Management """
 
-        root_org = current.auth.root_org_name()
-        def community_volunteers(i):
-            if root_org == "Honduran Red Cross":
-                return True
-            else:
-                return False
+        #root_org = current.auth.root_org_name()
+        #def community_volunteers(i):
+        #    if root_org == "Honduran Red Cross":
+        #        return True
+        #    else:
+        #        return False
 
         menu = M(c="project")(
              M("Programs", f="programme")(
@@ -671,8 +671,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 #M("Create", m="create"),
                 M("Map", m="map"),
                 M("Community Contacts", f="location_contact"),
-                M("Community Volunteers", f="volunteer",
-                  check=community_volunteers),
+                #M("Community Volunteers", f="volunteer",
+                #  check=community_volunteers),
              ),
             M("Reports", f="location", m="report")(
                 M("3W", f="location", m="report"),

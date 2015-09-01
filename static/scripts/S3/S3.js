@@ -337,6 +337,8 @@ S3.trunk8 = function(selector, lines, more) {
     // Line-truncation, see s3utils.s3_trunk8
     var settings = {
         fill: '&hellip; <a class="s3-truncate-more" href="#">' + more + '</a>'
+        // Not yet working for me
+        //parseHTML: true
     };
     if (lines) {
         settings['lines'] = lines;

@@ -221,13 +221,17 @@ def project():
                                                                    )
 
             elif component_name == "indicator_data":
+                ctable = r.component.table
                 # Filter to just those for this Project & make mandatory
-                r.component.table.indicator_id.requires = IS_ONE_OF(db, "project_indicator.id",
-                                                                    s3db.project_indicator_represent,
-                                                                    sort=True,
-                                                                    filterby="project_id",
-                                                                    filter_opts=[r.id],
-                                                                    )
+                ctable.indicator_id.requires = IS_ONE_OF(db, "project_indicator.id",
+                                                         s3db.project_indicator_represent,
+                                                         sort=True,
+                                                         filterby="project_id",
+                                                         filter_opts=[r.id],
+                                                         )
+                # @ToDo: end_date cannot be before Project Start
+                #ctable.end_date.requires = 
+
                 # Have a filter for indicator in indicator data report
                 #if r.method == "report":
                 #    from s3 import S3OptionsFilter
@@ -1018,13 +1022,6 @@ def indicator_data():
 
     return s3_rest_controller()
 
-# =============================================================================
-# Community Volunteers
-# =============================================================================
-#def human_resource():
-#    """ RESTful controller for Project <> Staff Assignments """
-#    return s3_rest_controller()
-
 def person():
     """ RESTful controller for Community Volunteers """
 
@@ -1214,6 +1211,15 @@ def campaign_response():
 def campaign_response_summary():
     """ RESTful CRUD controller """
 
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def human_resource_project():
+    """
+        REST controller for options.s3json lookups
+    """
+
+    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
     return s3_rest_controller()
 
 # END =========================================================================

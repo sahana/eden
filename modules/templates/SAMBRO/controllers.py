@@ -158,6 +158,9 @@ class index(S3CustomController):
         output[list_id] = datalist.html(ajaxurl = ajax_url,
                                         pagesize = 5
                                         )
+        # Truncate body
+        #from s3 import s3_trunk8
+        #s3_trunk8(lines=8)
 
         #filter_widgets = [#S3LocationFilter("location_id",
         #                  #                 label="",

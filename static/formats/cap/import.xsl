@@ -48,6 +48,10 @@
                 <xsl:text>urn:uuid:</xsl:text>
                 <xsl:value-of select="cap:identifier" />
             </xsl:attribute>
+            <!-- All Imported CAP files are auto-approved -->
+            <xsl:attribute name="approved">
+                <xsl:text>true</xsl:text>
+            </xsl:attribute>
 
             <data field="is_template">false</data>
             <xsl:if test="cap:identifier!=''">

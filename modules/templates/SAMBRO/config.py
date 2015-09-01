@@ -51,6 +51,8 @@ def config(settings):
     settings.auth.record_approval = True
     # cap_alert record requires approval before sending
     settings.auth.record_approval_required_for = ("cap_alert",)
+    # Don't auto-approve so that can save draft
+    settings.auth.record_approval_manual = ("cap_alert",)
 
     # =============================================================================
     # Module Settings

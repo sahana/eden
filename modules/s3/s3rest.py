@@ -112,6 +112,8 @@ class S3Request(object):
                    current web2py request object
         """
 
+        auth = current.auth
+
         # Common settings
 
         # XSLT Paths
@@ -129,7 +131,6 @@ class S3Request(object):
             if extension is None:
                 extension = ext
         if c or f:
-            auth = current.auth
             if not auth.permission.has_permission("read",
                                                   c=self.controller,
                                                   f=self.function):
@@ -212,12 +213,18 @@ class S3Request(object):
         if components is None:
             components = cnames
 
+        tablename = "%s_%s" % (self.prefix, self.name)
+
         if self.method == "review":
             approved, unapproved = False, True
+        elif auth.s3_has_permission("review", tablename, self.id):
+            # Approvers should be able to edit records during review
+            # @ToDo: deployment_setting to allow Filtering out from
+            #        multi-record methods even for those with Review permission
+            approved, unapproved = True, True
         else:
             approved, unapproved = True, False
 
-        tablename = "%s_%s" % (self.prefix, self.name)
         self.resource = S3Resource(tablename,
                                    id=self.id,
                                    filter=_filter,

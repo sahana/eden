@@ -2033,7 +2033,7 @@ class S3GISConfigModel(S3Model):
                   onaccept = self.gis_config_onaccept,
                   ondelete = self.gis_config_ondelete,
                   onvalidation = self.gis_config_onvalidation,
-                  orderby = "name",
+                  orderby = "gis_config.name",
                   )
 
         # Components

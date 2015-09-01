@@ -6,35 +6,40 @@
     <!-- CAP -->
 
     <!-- cap_info -->
-    <xsl:template match="resource[@name='cap_info']" mode="contents">
+    <!-- @ToDo: Handle multiple info -->
+    <xsl:template match="resource[@name='cap_alert']" mode="contents">
         <xsl:if test="./data[@field='is_template' and @value='false']">
             <title>
-                <xsl:value-of select="./data[@field='headline']/text()"/>
+                <xsl:value-of select="./resource[@name='cap_info']/data[@field='headline']/text()"/>
             </title>
             <description>
-                <xsl:value-of select="./data[@field='description']/text()"/>
+                <xsl:value-of select="./resource[@name='cap_info']/data[@field='description']/text()"/>
             </description>
             <link>
-                <!--info-id substring after last character "/" --> 
-                <xsl:variable name="info-id">
+            	<!--alert-id substring after last character "/" --> 
+            	<xsl:variable name="alert-id">
                     <xsl:call-template name="substring-after-last">
                         <xsl:with-param name="string" select="./@url" />
                         <xsl:with-param name="delimiter" select="'/'" />
                     </xsl:call-template>
                 </xsl:variable>
-                <xsl:variable name="alert-uuid" select="reference[@resource='cap_alert']/@uuid"/>
-                <xsl:variable name="alert-url" select="following-sibling::resource[@name='cap_alert' and @uuid=$alert-uuid]/@url"/>
-                <xsl:value-of select="concat($alert-url,'/info/',$info-id,'.cap')"/>
+                <xsl:choose>
+                	<xsl:when test="translate(data[@field='scope']/@value, '&quot;', '') = 'Public'">
+                    	<xsl:value-of select="concat(../@url,'/cap/public/', $alert-id, '/profile')"/>
+                	</xsl:when>
+                	<xsl:otherwise>
+                    	<xsl:value-of select="concat(../@url,'/cap/alert/', $alert-id, '/profile')"/>
+                	</xsl:otherwise>
+            	</xsl:choose>
             </link>
             <pubDate>
-                <xsl:variable name="alert-uuid" select="reference[@resource='cap_alert']/@uuid"/>
-                <xsl:value-of select="following-sibling::resource[@name='cap_alert' and @uuid=$alert-uuid]/data[@field='sent']/text()"/>
+                <xsl:value-of select="./data[@field='sent']/@value"/>
             </pubDate>
             <category>
-                <xsl:value-of select="./data[@field='category']/text()"/>
+                <xsl:value-of select="./resource[@name='cap_info']/data[@field='category']/text()"/>
             </category>
             <author>
-                <xsl:value-of select="./data[@field='sender_name']/text()"/>
+                <xsl:value-of select="./resource[@name='cap_info']/data[@field='sender_name']/text()"/>
             </author>
         </xsl:if>
     </xsl:template>
