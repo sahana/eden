@@ -61,7 +61,7 @@ class S3GroupedItemsReport(S3Method):
 
         output = {}
         if r.http == "GET":
-            r.error(405, current.ERROR.NOT_IMPLEMENTED)
+            return self.report(r, **attr)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
         return output
@@ -80,11 +80,211 @@ class S3GroupedItemsReport(S3Method):
 
         output = {}
         if r.http == "GET":
-            # @todo: add specific methods
-            pass
+            r.error(405, current.ERROR.NOT_IMPLEMENTED)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
         return output
+
+    # -------------------------------------------------------------------------
+    def report(self, r, **attr):
+        """
+            Report generator
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        # Get the report configuration
+        report_config = self.get_report_config()
+
+        # Resolve selectors in the report configuration
+        fields = self.resolve(report_config)
+
+        # Get extraction method
+        extract = report_config.get("extract")
+        if not callable(extract):
+            extract = self.extract
+
+        selectors = [s for s in fields if fields[s] is not None]
+        orderby = report_config.get("orderby_cols")
+
+        # Extract the data
+        items = extract(self.resource, selectors, orderby)
+
+        # Group and aggregate
+        groupby = report_config.get("groupby_cols")
+        aggregate = report_config.get("aggregate_cols")
+
+        gi = S3GroupedItems(items, groupby=groupby, aggregate=aggregate)
+
+        # @todo: produce output
+        #print gi
+
+        # @todo: choose view
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    def get_report_config(self):
+        """
+            Get the configuration for the requested report, updated
+            with URL options
+        """
+
+        get_vars = self.request.get_vars
+
+        # Get the resource configuration
+        config = self.resource.get_config("grouped")
+        if not config:
+            # No reports implemented for this resource
+            r.error(405, current.ERROR.NOT_IMPLEMENTED)
+
+        # Which report?
+        report = get_vars.get("report", "default")
+        if isinstance(report, list):
+            report = report[-1]
+
+        # Get the report config
+        report_config = config.get(report)
+        if not report_config:
+            # This report is not implemented
+            r.error(405, current.ERROR.NOT_IMPLEMENTED)
+        else:
+            report_config = dict(report_config)
+
+        # Orderby
+        orderby = get_vars.get("orderby")
+        if isinstance(orderby, list):
+            orderby = ",".join(orderby).split(",")
+        if not orderby:
+            orderby = report_config.get("orderby")
+        if not orderby:
+            orderby = report_config.get("groupby")
+        report_config["orderby"] = orderby
+
+        return report_config
+
+    # -------------------------------------------------------------------------
+    def resolve(self, report_config):
+        """
+            Get all field selectors for the report, and resolve them
+            against the resource
+
+            @param resource: the resource
+            @param config: the report config (will be updated)
+
+            @return: a dict {selector: rfield}, where rfield can be None
+                     if the selector does not resolve against the resource
+        """
+
+        resource = self.resource
+
+        # Get selectors for visible fields
+        fields = report_config.get("fields")
+        if not fields:
+            # Fall back to list_fields
+            selectors = resource.list_fields("grouped_fields")
+        else:
+            selectors = list(fields)
+
+        # Get selectors for grouping axes
+        groupby = report_config.get("groupby")
+        if isinstance(groupby, (list, tuple)):
+            selectors.extend(groupby)
+        elif groupby:
+            selectors.append(groupby)
+
+        # Get selectors for aggregation
+        aggregate = report_config.get("aggregate")
+        if aggregate:
+            for method, selector in aggregate:
+                selectors.append(selector)
+
+        # Get selectors for orderby
+        orderby = report_config.get("orderby")
+        if orderby:
+            for selector in orderby:
+                s, d = ("%s asc" % selector).split(" ")[:2]
+            selectors.append(s)
+
+        # Resolve all selectors against the resource
+        rfields = {}
+        id_field = str(resource._id)
+        for f in selectors:
+            selector, label = f if type(f) is tuple else (f, None)
+            if selector in rfields:
+                # Already resolved
+                continue
+            try:
+                rfield = resource.resolve_selector(selector)
+            except (SyntaxError, AttributeError):
+                rfield = None
+            if label and rfield:
+                rfield.label = label
+            if id_field and rfield and rfield.colname == id_field:
+                id_field = None
+            rfields[selector] = rfield
+
+        # Make sure id field is always included
+        if id_field:
+            id_name = resource._id.name
+            rfields[id_name] = resource.resolve_selector(id_name)
+
+        # Get column names for orderby
+        orderby_cols = []
+        orderby = report_config.get("orderby")
+        if orderby:
+            for selector in orderby:
+                s, d = ("%s asc" % selector).split(" ")[:2]
+                rfield = rfields.get(s)
+                colname = rfield.colname if rfield else None
+                if colname:
+                    orderby_cols.append("%s %s" % (colname, d))
+        if not orderby_cols:
+            orderby_cols = None
+        report_config["orderby_cols"] = orderby_cols
+
+        # Get column names for grouping
+        groupby_cols = []
+        groupby = report_config.get("groupby")
+        if groupby:
+            for selector in groupby:
+                rfield = rfields.get(selector)
+                colname = rfield.colname if rfield else selector
+                groupby_cols.append(colname)
+        report_config["groupby_cols"] = groupby_cols
+
+        # Get columns names for aggregation
+        aggregate_cols = []
+        aggregate = report_config.get("aggregate")
+        if aggregate:
+            for method, selector in aggregate:
+                rfield = rfields.get(selector)
+                colname = rfield.colname if rfield else selector
+                aggregate_cols.append((method, colname))
+        report_config["aggregate_cols"] = aggregate_cols
+
+        return rfields
+
+    # -------------------------------------------------------------------------
+    def extract(self, resource, selectors, orderby):
+        """
+            Extract the data from the resource (default method, can be
+            overridden in report config)
+
+            @param resource: the resource
+            @param selectors: the field selectors
+
+            @returns: data dict {colname: value} including raw data (_row)
+        """
+
+        data = resource.select(selectors,
+                               limit=None,
+                               orderby=orderby,
+                               raw_data = True,
+                               represent = True,
+                               )
+        return data.rows
 
 # =============================================================================
 class S3GroupedItems(object):
@@ -243,7 +443,17 @@ class S3GroupedItems(object):
 
         for item in self.items:
 
-            value = item.get(key)
+            raw = item.get("_row")
+            if raw is None:
+                # Prefer raw values for aggregation over representations
+                value = item.get(key)
+            else:
+                try:
+                    value = raw.get(key)
+                except AttributeError, TypeError:
+                    # _row is not a dict
+                    value = item.get(key)
+
             if type(value) is list:
                 extend(value)
             else:
@@ -298,6 +508,17 @@ class S3GroupedItems(object):
         output = ""
         indent = " " * level
 
+        aggregates = self._aggregates
+        for aggregate in aggregates.values():
+            output = "%s\n%s  %s(%s) = %s" % (output,
+                                               indent,
+                                               aggregate.method,
+                                               aggregate.key,
+                                               aggregate.result,
+                                               )
+        if aggregates:
+            output = "%s\n" % output
+
         key = self.key
         if key:
             for group in self.groups:
@@ -310,7 +531,7 @@ class S3GroupedItems(object):
                          (output, indent, key, value, group_repr)
         else:
             for item in self.items:
-                output = "%s\n%s%s" % (output, indent, item)
+                output = "%s\n%s  %s" % (output, indent, item)
             output = "%s\n" % output
 
         return output
