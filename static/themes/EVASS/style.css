@@ -811,6 +811,13 @@ h4.profile-sub-header {
   font-size: 1.2rem;
 }
 
+.profile-widget .icon-fullscreen {
+  float: right;
+  position: relative;
+  right: 9px;
+  top: 17px;
+}
+
 /* Comment feeds */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
