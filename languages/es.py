@@ -255,7 +255,7 @@
 'Activity': 'Actividad',
 'Actual Spend': 'Monto Ejecutado',
 'Actual Spend': 'Monto Ejecutado',
-'Actual Value': 'Valor',
+'Actual Value': 'Real',
 'Add %(site_label)s Status': 'Añadir %(site_label)s Estado',
 'Add %(staff)s': 'Añadir %(staff)s',
 'Add a new certificate to the catalog.': 'Añadir un nuevo certificado en el catálogo.',
