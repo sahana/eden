@@ -6915,7 +6915,17 @@ def pr_image_modify(image_file,
             thumb_size.append(im.size[1])
         else:
             thumb_size.append(size[1])
-        im.thumbnail(thumb_size, Image.ANTIALIAS)
+        try:
+            im.thumbnail(thumb_size, Image.ANTIALIAS)
+        except IOError:
+            # Maybe need to reinstall pillow:
+            #pip uninstall pillow
+            #apt-get install libjpeg-dev
+            #pip install pillow
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            s3_debug(exc_value)
+            current.session.error = exc_value
+            return
 
         if not to_format:
             to_format = fileExtension[1:]
@@ -6925,7 +6935,7 @@ def pr_image_modify(image_file,
             im = im.convert("RGB")
         save_im_name = "%s.%s" % (fileName, to_format)
         tempFile = TemporaryFile()
-        im.save(tempFile,to_format)
+        im.save(tempFile, to_format)
         tempFile.seek(0)
         newfile = table.new_name.store(tempFile,
                                        save_im_name,
@@ -6957,6 +6967,8 @@ def pr_image_resize(image_file,
         @param image_name:    the name of the original image
         @param original_name: the original name of the file
         @param size:          the required size of the image (width, height)
+
+        @ToDo: Move thisdds function to Doc?
     """
 
     return pr_image_modify(image_file,

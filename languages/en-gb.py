@@ -114,6 +114,7 @@
 'No Organizations currently registered': 'No Organisations currently registered',
 'No Organizations for this Project': 'No Organisations for this Project',
 'No Partner Organizations currently registered': 'No Partner Organisations currently registered',
+'Notification': 'Notification',
 'Office/Center': 'Office/Centre',
 'Order canceled': 'Order cancelled',
 'Organization': 'Organisation',
