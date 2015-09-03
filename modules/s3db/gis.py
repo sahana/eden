@@ -4530,7 +4530,7 @@ class S3MapModel(S3Model):
             dbtable.truncate()
             # Populate table with data
             for feature in features:
-                dtable.insert(**feature)
+                dbtable.insert(**feature)
 
         # Normal Layer onaccept
         gis_layer_onaccept(form)
