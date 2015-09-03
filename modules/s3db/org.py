@@ -794,16 +794,16 @@ class S3OrganisationModel(S3Model):
         if newfilename:
             s3db = current.s3db
             image = form.request_vars.logo
-            s3db.pr_image_resize(image.file,
+            s3db.pr_image_modify(image.file,
                                  newfilename,
                                  image.filename,
-                                 (None, 60),
+                                 size = (None, 60),
                                  )
             s3db.pr_image_modify(image.file,
                                  newfilename,
                                  image.filename,
-                                 (None, 60),
-                                 "bmp",
+                                 size = (None, 60),
+                                 to_format = "bmp",
                                  )
 
         # Set default root_organisation ID
