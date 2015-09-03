@@ -710,21 +710,21 @@ $.filterOptionsS3({
                        super_entity = "supply_item_entity",
                        # Experimental
                        #grouped = {
-                       #    "default": {
-                       #        "title": T("Warehouse Stock Report"),
-                       #        "fields": ["site_id$name",
-                       #                   "item_id$name",
-                       #                   "quantity",
+                       #   "default": {
+                       #       "title": T("Warehouse Stock Report"),
+                       #       "fields": [(T("Warehouse"), "site_id$name"),
+                       #                  "item_id$name",
+                       #                  "quantity",
+                       #                  ],
+                       #       "groupby": ["site_id",
+                       #                   "item_id",
                        #                   ],
-                       #        "groupby": ["site_id",
-                       #                    "item_id",
-                       #                    ],
-                       #        "orderby": ["site_id$name",
-                       #                    "item_id$name",
-                       #                    ],
-                       #        "aggregate": [("sum", "quantity"),
-                       #                      ],
-                       #    },
+                       #       "orderby": ["site_id$name",
+                       #                   "item_id$name",
+                       #                   ],
+                       #       "aggregate": [("sum", "quantity"),
+                       #                     ],
+                       #   },
                        #},
                        )
 

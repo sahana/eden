@@ -46,6 +46,10 @@ except ImportError:
 from gluon import current
 
 from s3rest import S3Method
+from s3utils import s3_unicode
+
+# Compact JSON encoding
+SEPARATORS = (",", ":")
 
 # =============================================================================
 class S3GroupedItemsReport(S3Method):
@@ -127,8 +131,15 @@ class S3GroupedItemsReport(S3Method):
 
         gi = S3GroupedItems(items, groupby=groupby, aggregate=aggregate)
 
-        # @todo: produce output
-        #print gi
+        # Generate JSON data
+        display_cols = report_config.get("display_cols")
+        labels = report_config.get("labels")
+        represent = report_config.get("groupby_represent")
+        data = gi.json(fields=display_cols,
+                       labels=labels,
+                       represent=represent,
+                       )
+        #print data
 
         # Widget ID
         widget_id = "groupeditems"
@@ -146,6 +157,9 @@ class S3GroupedItemsReport(S3Method):
                 tablename = self.resource.tablename
                 title = self.crud_string(tablename, "title_report")
             output["title"] = title
+
+            # Inject data
+            # @todo
 
             # Empty section
             output["empty"] = current.T("No data available")
@@ -178,7 +192,8 @@ class S3GroupedItemsReport(S3Method):
             with URL options
         """
 
-        get_vars = self.request.get_vars
+        r = self.request
+        get_vars = r.get_vars
 
         # Get the resource configuration
         config = self.resource.get_config("grouped")
@@ -231,6 +246,7 @@ class S3GroupedItemsReport(S3Method):
         if not fields:
             # Fall back to list_fields
             selectors = resource.list_fields("grouped_fields")
+            fields = list(selectors)
         else:
             selectors = list(fields)
 
@@ -256,9 +272,10 @@ class S3GroupedItemsReport(S3Method):
 
         # Resolve all selectors against the resource
         rfields = {}
+        labels = {}
         id_field = str(resource._id)
         for f in selectors:
-            selector, label = f if type(f) is tuple else (f, None)
+            label, selector = f if type(f) is tuple else (None, f)
             if selector in rfields:
                 # Already resolved
                 continue
@@ -271,11 +288,26 @@ class S3GroupedItemsReport(S3Method):
             if id_field and rfield and rfield.colname == id_field:
                 id_field = None
             rfields[selector] = rfield
+            if rfield:
+                labels[rfield.colname] = rfield.label
+            elif label:
+                labels[selector] = label
+        report_config["labels"] = labels
 
         # Make sure id field is always included
         if id_field:
             id_name = resource._id.name
             rfields[id_name] = resource.resolve_selector(id_name)
+
+        # Get column names for vsibile fields
+        display_cols = []
+        for f in fields:
+            label, selector = f if type(f) is tuple else (None, f)
+            rfield = rfields.get(selector)
+            colname = rfield.colname if rfield else selector
+            if colname:
+                display_cols.append(colname)
+        report_config["display_cols"] = display_cols
 
         # Get column names for orderby
         orderby_cols = []
@@ -293,13 +325,21 @@ class S3GroupedItemsReport(S3Method):
 
         # Get column names for grouping
         groupby_cols = []
+        groupby_represent = {}
         groupby = report_config.get("groupby")
         if groupby:
             for selector in groupby:
                 rfield = rfields.get(selector)
-                colname = rfield.colname if rfield else selector
+                if rfield:
+                    colname = rfield.colname
+                    field = rfield.field
+                    if field:
+                        groupby_represent[colname] = field.represent
+                else:
+                    colname = selector
                 groupby_cols.append(colname)
         report_config["groupby_cols"] = groupby_cols
+        report_config["groupby_represent"] = groupby_represent
 
         # Get columns names for aggregation
         aggregate_cols = []
@@ -469,7 +509,7 @@ class S3GroupedItems(object):
                 # Prefer raw values for grouping over representations
                 try:
                     value = raw.get(key)
-                except AttributeError, TypeError:
+                except (AttributeError, TypeError):
                     # _row is not a dict
                     value = item.get(key)
 
@@ -535,7 +575,7 @@ class S3GroupedItems(object):
             else:
                 try:
                     value = raw.get(key)
-                except AttributeError, TypeError:
+                except (AttributeError, TypeError):
                     # _row is not a dict
                     value = item.get(key)
 
@@ -619,6 +659,122 @@ class S3GroupedItems(object):
                 output = "%s\n%s  %s" % (output, indent, item)
             output = "%s\n" % output
 
+        return output
+
+    # -------------------------------------------------------------------------
+    def json(self,
+             fields=None,
+             labels=None,
+             represent=None,
+             as_dict=False,
+             master=True):
+        """
+            Serialize this group as JSON
+
+            @param columns: the columns to include for each item
+            @param labels: columns labels as dict {key: label},
+                           including the labels for grouping axes
+            @param represent: dict of representation methods for grouping
+                              axis values {colname: function}
+            @param as_dict: return output as dict rather than JSON string
+            @param master: this is the top-level group (internal)
+        """
+
+        T = current.T
+
+        output = {}
+
+        if not fields:
+            raise SyntaxError
+
+        if master:
+            # Add columns and grouping information to top level group
+            if labels is None:
+                labels = {}
+
+            def check_label(colname):
+                if colname in labels:
+                    label = labels[colname] or ""
+                else:
+                    fname = colname.split(".", 1)[-1]
+                    label = " ".join([s.strip().capitalize()
+                                    for s in fname.split("_") if s])
+                    label = labels[colname] = T(label)
+                return str(label)
+
+            grouping = []
+            groupby = self.groupby
+            if groupby:
+                for axis in groupby:
+                    check_label(axis)
+                    grouping.append(axis)
+            output["g"] = grouping
+
+            columns = []
+            for colname in fields:
+                check_label(colname)
+                columns.append(colname)
+            output["c"] = columns
+
+            output["l"] = dict((c, str(l)) for c, l in labels.items())
+
+        key = self.key
+        if key:
+            output["k"] = key
+
+            data = []
+            add_group = data.append
+            for group in self.groups:
+                # Render subgroup
+                gdict = group.json(fields, labels,
+                                   represent = represent,
+                                   as_dict = True,
+                                   master = False,
+                                   )
+
+                # Add subgroup attribute value
+                value = group[key]
+                renderer = represent.get(key) if represent else None
+                if renderer is None:
+                    value = s3_unicode(value).encode("utf-8")
+                else:
+                    # @todo: call bulk-represent if available
+                    value = s3_unicode(renderer(value)).encode("utf-8")
+                gdict["v"] = value
+                add_group(gdict)
+
+            output["d"] = data
+            output["i"] = None
+        else:
+            oitems = []
+            add_item = oitems.append
+            for item in self.items:
+                # Render item
+                oitem = {}
+                for colname in fields:
+                    if colname in item:
+                        value = item[colname] or ""
+                    else:
+                        # Fall back to raw value
+                        raw = item.get("_row")
+                        try:
+                            value = raw.get(colname)
+                        except (AttributeError, TypeError):
+                            # _row is not a dict
+                            value = None
+                    if value is None:
+                        value = ""
+                    else:
+                        value = s3_unicode(value).encode("utf-8")
+                    oitem[colname] = value
+                add_item(oitem)
+
+            output["d"] = None
+            output["i"] = oitems
+
+        # Convert to JSON unless requested otherwise
+        if master and not as_dict:
+            output = json.dumps(output, separators=SEPARATORS)
         return output
 
 # =============================================================================
