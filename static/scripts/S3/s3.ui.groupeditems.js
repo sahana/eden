@@ -60,11 +60,21 @@
          */
         refresh: function() {
 
-            var opts = this.options;
+            var el = $(this.element),
+                opts = this.options;
+
+            // Show throbber
+            el.find('.gi-throbber').hide();
 
             this._unbindEvents();
 
+            // @todo: hide empty section when data available
+            // el.find('.gi-empty').hide();
+
             this._bindEvents();
+
+            // Hide throbber
+            el.find('.gi-throbber').hide();
         },
 
         /**

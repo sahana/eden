@@ -35,6 +35,14 @@ __all__ = ("S3GroupedItemsReport",
 import math
 import sys
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except ImportError:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import current
 
 from s3rest import S3Method
@@ -94,6 +102,8 @@ class S3GroupedItemsReport(S3Method):
             @param attr: controller attributes
         """
 
+        output = {}
+
         # Get the report configuration
         report_config = self.get_report_config()
 
@@ -120,9 +130,46 @@ class S3GroupedItemsReport(S3Method):
         # @todo: produce output
         #print gi
 
-        # @todo: choose view
+        # Widget ID
+        widget_id = "groupeditems"
 
-        return {}
+        # Render output
+        if r.representation in ("html", "iframe"):
+            # Page load
+
+            output["report_type"] = "groupeditems"
+            output["widget_id"] = widget_id
+
+            # Report title
+            title = report_config.get("title")
+            if title is None:
+                tablename = self.resource.tablename
+                title = self.crud_string(tablename, "title_report")
+            output["title"] = title
+
+            # Empty section
+            output["empty"] = current.T("No data available")
+
+            # Inject script
+            options = {}
+            self.inject_script(widget_id, options=options)
+
+            # Detect and store theme-specific inner layout
+            self._view(r, "grouped.html")
+
+            # View
+            response = current.response
+            response.view = self._view(r, "report.html")
+
+        # @todo: implement
+        #elif r.representation == "json":
+            ## Ajax load
+            #output = json.dumps(data, separators=SEPARATORS)
+
+        else:
+            r.error(501, current.ERROR.BAD_FORMAT)
+
+        return output
 
     # -------------------------------------------------------------------------
     def get_report_config(self):
@@ -267,7 +314,8 @@ class S3GroupedItemsReport(S3Method):
         return rfields
 
     # -------------------------------------------------------------------------
-    def extract(self, resource, selectors, orderby):
+    @staticmethod
+    def extract(resource, selectors, orderby):
         """
             Extract the data from the resource (default method, can be
             overridden in report config)
@@ -285,6 +333,43 @@ class S3GroupedItemsReport(S3Method):
                                represent = True,
                                )
         return data.rows
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inject_script(widget_id, options=None):
+        """
+            Inject the groupedItems script and bind it to the container
+
+            @param widget_id: the widget container DOM ID
+            @param options: dict with options for the widget
+
+            @note: options dict must be JSON-serializable
+        """
+
+        s3 = current.response.s3
+
+        scripts = s3.scripts
+        appname = current.request.application
+
+        # Inject UI widget script
+        # @todo: add minify config
+        #if s3.debug:
+        script = "/%s/static/scripts/S3/s3.ui.groupeditems.js" % appname
+        if script not in scripts:
+            scripts.append(script)
+        #else:
+            #script = "/%s/static/scripts/S3/s3.grouped.min.js" % appname
+            #if script not in scripts:
+                #scripts.append(script)
+
+        # Inject widget instantiation
+        if not options:
+            options = {}
+        script = """$("#%(widget_id)s").groupedItems(%(options)s)""" % \
+                    {"widget_id": widget_id,
+                     "options": json.dumps(options),
+                     }
+        s3.jquery_ready.append(script)
 
 # =============================================================================
 class S3GroupedItems(object):
