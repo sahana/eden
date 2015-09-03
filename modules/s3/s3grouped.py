@@ -392,15 +392,14 @@ class S3GroupedItemsReport(S3Method):
         appname = current.request.application
 
         # Inject UI widget script
-        # @todo: add minify config
-        #if s3.debug:
-        script = "/%s/static/scripts/S3/s3.ui.groupeditems.js" % appname
-        if script not in scripts:
-            scripts.append(script)
-        #else:
-            #script = "/%s/static/scripts/S3/s3.grouped.min.js" % appname
-            #if script not in scripts:
-                #scripts.append(script)
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.ui.groupeditems.js" % appname
+            if script not in scripts:
+                scripts.append(script)
+        else:
+            script = "/%s/static/scripts/S3/s3.groupeditems.min.js" % appname
+            if script not in scripts:
+                scripts.append(script)
 
         # Inject widget instantiation
         if not options:
