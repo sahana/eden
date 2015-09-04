@@ -43,7 +43,7 @@ except ImportError:
     except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from gluon import current
+from gluon import current, INPUT
 
 from s3rest import S3Method
 from s3utils import s3_unicode
@@ -159,7 +159,13 @@ class S3GroupedItemsReport(S3Method):
             output["title"] = title
 
             # Inject data
-            # @todo
+            items = INPUT(_type = "hidden",
+                          _id = "%s-data" % widget_id,
+                          _class = "gi-data",
+                          _value = data,
+                          #data = {"items": data},
+                          )
+            output["items"] = items
 
             # Empty section
             output["empty"] = current.T("No data available")
@@ -677,6 +683,30 @@ class S3GroupedItems(object):
                               axis values {colname: function}
             @param as_dict: return output as dict rather than JSON string
             @param master: this is the top-level group (internal)
+
+            JSON Format:
+
+            {"c": [key, ...],          ....... list of keys for visible columns
+             "g": [key, ...],          ....... list of keys for grouping axes
+             "l": [(key, label), ...], ....... list of key-label pairs
+             "k": key,                 ....... grouping key for subgroups
+             "d": [                    ....... list of sub-groups
+                 {"v": string,         ....... the grouping value for this subgroup (represented)
+                  "k": key             ....... the grouping key for subgroups
+                  "d": [...]           ....... list of subgroups (nested)
+                  "i": [               ....... list of items in this group
+                       {key: value,    ....... key-value pairs for visible columns
+                       }, ...
+                  ],
+                  "t": {               ....... list of group totals
+                      key: value,      ....... key-value pairs for totals
+                  }
+                 }, ...
+                ],
+            "i": [...],                ....... list of items (if no grouping)
+            "t": [...],                ....... list of grand totals
+            "e": boolean               ....... empty-flag
+            }
         """
 
         T = current.T
@@ -742,8 +772,11 @@ class S3GroupedItems(object):
                 gdict["v"] = value
                 add_group(gdict)
 
+            if master:
+                output["e"] = len(data) == 0
             output["d"] = data
             output["i"] = None
+
         else:
             oitems = []
             add_item = oitems.append
@@ -768,8 +801,19 @@ class S3GroupedItems(object):
                     oitem[colname] = value
                 add_item(oitem)
 
+            if master:
+                output["e"] = len(oitems) == 0
             output["d"] = None
             output["i"] = oitems
+
+        # Render group totals
+        aggregates = self._aggregates
+        totals = {}
+        for k, a in aggregates.items():
+            method, colname = k
+            # @todo: call represent for totals
+            totals[colname] = s3_unicode(a.result).encode("utf-8")
+        output["t"] = totals
 
         # Convert to JSON unless requested otherwise
         if master and not as_dict:

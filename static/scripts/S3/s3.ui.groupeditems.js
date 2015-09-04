@@ -44,6 +44,7 @@
 
             var el = $(this.element);
 
+            this.items = el.find('.gi-data').first();
             this.refresh();
         },
 
@@ -68,13 +69,73 @@
 
             this._unbindEvents();
 
-            // @todo: hide empty section when data available
-            // el.find('.gi-empty').hide();
+            // Read data from hidden input
+            if (!this.data) {
+                this._deserialize();
+            }
+            var data = this.data;
+
+            var table = el.find('.gi-table');
+            if (!data.e) {
+                // Hide empty section
+                el.find('.gi-empty').hide();
+
+                // Remove the table
+                table.empty();
+
+                // @todo: render the table
+
+                // Show the table container
+                table.show();
+
+            } else {
+                // Hide the table container
+                table.hide();
+
+                // Remove the table
+                table.empty();
+
+                // Show the empty section
+                el.find('.gi-empty').show();
+            }
 
             this._bindEvents();
 
             // Hide throbber
             el.find('.gi-throbber').hide();
+        },
+
+        /**
+         * @todo: docstring
+         */
+        _serialize: function() {
+
+            var items = this.items;
+            if (items) {
+                var value = '';
+                if (this.data) {
+                    value = JSON.stringify(this.data);
+                }
+                items.val(value)
+            }
+            return value;
+        },
+
+        /**
+         * @todo: docstring
+         */
+        _deserialize: function() {
+
+            this.data = {}
+
+            var items = this.items;
+            if (items) {
+                var value = items.val();
+                if (value) {
+                    this.data = JSON.parse(value);
+                }
+            }
+            return this.data;
         },
 
         /**
