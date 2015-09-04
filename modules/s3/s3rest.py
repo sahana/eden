@@ -891,19 +891,25 @@ class S3Request(object):
                                                       default)
 
         # Export the resource
-        output = r.resource.export_xml(start=start,
-                                       limit=limit,
-                                       msince=msince,
-                                       fields=fields,
-                                       dereference=True,
-                                       # maxdepth in args
-                                       references=references,
-                                       mcomponents=mcomponents,
-                                       rcomponents=rcomponents,
-                                       stylesheet=stylesheet,
-                                       as_json=as_json,
-                                       maxbounds=maxbounds,
-                                       **args)
+        resource = r.resource
+        target = r.target()[3]
+        if target == resource.tablename:
+            # Master resource targetted
+            target = None
+        output = resource.export_xml(start=start,
+                                     limit=limit,
+                                     msince=msince,
+                                     fields=fields,
+                                     dereference=True,
+                                     # maxdepth in args
+                                     references=references,
+                                     mcomponents=mcomponents,
+                                     rcomponents=rcomponents,
+                                     stylesheet=stylesheet,
+                                     as_json=as_json,
+                                     maxbounds=maxbounds,
+                                     target= target,
+                                     **args)
         # Transformation error?
         if not output:
             r.error(400, "XSLT Transformation Error: %s " % current.xml.error)
