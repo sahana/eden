@@ -1887,36 +1887,8 @@ class S3Resource(object):
         # Total number of results
         results = self.count()
 
-        if not location_data:
-            format = current.auth.permission.format
-            if format == "geojson":
-                if results > current.deployment_settings.get_gis_max_features():
-                    headers = {"Content-Type": "application/json"}
-                    message = "Too Many Records"
-                    status = 509
-                    raise HTTP(status,
-                               body=xml.json_message(success=False,
-                                                     statuscode=status,
-                                                     message=message),
-                               web2py_error=message,
-                               **headers)
-                # Lookups per layer not per record
-                if tablename == "gis_layer_shapefile":
-                    # GIS Shapefile Layer
-                    location_data = current.gis.get_shapefile_geojson(self) or {}
-                elif tablename == "gis_theme_data":
-                    # GIS Theme Layer
-                    location_data = current.gis.get_theme_geojson(self) or {}
-                else:
-                    # e.g. GIS Feature Layer
-                    # e.g. Search results
-                    # @ToDo: Support component URLs by passing in component resource if we have a target
-                    location_data = current.gis.get_location_data(self) or {}
-            elif format in ("georss", "kml", "gpx"):
-                location_data = current.gis.get_location_data(self) or {}
-            else:
-                # @ToDo: Bulk lookup of LatLons for S3XML.latlon()
-                location_data = {}
+        if not target and not location_data:
+            location_data = current.gis.get_location_data(self, count=results) or {}
 
         # Build the tree
         #if DEBUG:
@@ -2251,6 +2223,9 @@ class S3Resource(object):
                 map_record = c.__map_record
                 if target == ctablename:
                     master = True
+                    if not location_data:
+                        count = c.count()
+                        location_data = current.gis.get_location_data(c, count=count) or {}
                 else:
                     master = False
                 for crecord in crecords:
