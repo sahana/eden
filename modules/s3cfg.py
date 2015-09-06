@@ -2184,6 +2184,20 @@ class S3Config(Storage):
         """
             OID for the CAP issuing authority
         """
+
+        # See if the User has an Org-specific OID
+        auth = current.auth
+        if auth.user and auth.user.organisation_id:
+            table = current.s3db.org_organisation_tag
+            query = ((table.organisation_id == auth.user.organisation_id) & \
+                     (table.tag == "cap_oid"))
+            record = current.db(query).select(table.value,
+                                              limitby=(0, 1)
+                                              ).first()
+            if record and record.value:
+                return record.value
+
+        # Else fallback to the default OID
         return self.cap.get("identifier_oid", "")
 
     def get_cap_identifier_suffix(self):

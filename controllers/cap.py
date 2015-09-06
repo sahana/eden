@@ -120,6 +120,20 @@ def alert():
                            list_fields = list_fields,
                            )
 
+        elif r.representation == "json":
+            # @ToDo: fix JSON representation's ability to use component list_fields
+            list_fields = ["info.headline",
+                           "area.name",
+                           "info.priority",
+                           "status",
+                           "scope",
+                           "info.event_type_id",
+                           ]
+            
+            s3db.configure(tablename, 
+                           list_fields = list_fields,
+                           )
+
         #elif r.representation == "cap":
         #    # This is either importing from or exporting to cap format. Set both
         #    # postprocessing hooks so we don't have to enumerate methods.

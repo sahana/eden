@@ -29,6 +29,9 @@ def config(settings):
     # The Registration functionality shouldn't be visible to the Public
     settings.security.registration_visible = False
 
+    # Link Users to Organisations
+    settings.auth.registration_requests_organisation = True
+
     # GeoNames username
     settings.gis.geonames_username = "eden_test"
 
@@ -91,6 +94,13 @@ def config(settings):
     # Messaging
     # Parser
     settings.msg.parser = "SAMBRO"
+
+    # -------------------------------------------------------------------------
+    # Organisations
+    # Enable the use of Organisation Branches
+    settings.org.branches = True
+    # Show branches as tree rather than as table
+    settings.org.branches_tree_view = True
 
     # -------------------------------------------------------------------------
     def customise_msg_rss_channel_resource(r, tablename):
@@ -162,6 +172,37 @@ def config(settings):
                        )
 
     settings.customise_msg_twitter_channel_resource = customise_msg_twitter_channel_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+        crud_form = S3SQLCustomForm("name",
+                                    "acronym",
+                                    S3SQLInlineLink("organisation_type",
+                                                    field = "organisation_type_id",
+                                                    label = T("Type"),
+                                                    multiple = False,
+                                                    #widget = "hierarchy",
+                                                    ),
+                                    S3SQLInlineComponent(
+                                        "tag",
+                                        label = T("CAP OID"),
+                                        multiple = False,
+                                        fields = [("", "value")],
+                                        filterby = dict(field = "tag",
+                                                        options = "cap_oid",
+                                                        ),
+                                        ),
+                                    "website",
+                                    "comments",
+                                    )
+
+        current.s3db.configure("org_organisation",
+                               crud_form = crud_form,
+                               )
+
+    settings.customise_org_organisation_resource = customise_org_organisation_resource
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
