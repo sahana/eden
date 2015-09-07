@@ -258,8 +258,9 @@ class S3HRModel(S3Model):
                             hrm_type_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_IN_SET(hrm_type_opts),
                            ),
-                     s3_comments(label=T("Description"),
-                                 comment=None),
+                     s3_comments(comment = None,
+                                 label = T("Description"),
+                                 ),
                      *s3_meta_fields())
 
         if group == "volunteer":
@@ -474,8 +475,6 @@ class S3HRModel(S3Model):
                      Field("site_contact", "boolean",
                            label = T("Facility Contact"),
                            represent = s3_yes_no_represent,
-                           #represent = lambda opt: \
-                            #(T("No"), T("Yes"))[opt == True],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -785,11 +784,12 @@ class S3HRModel(S3Model):
             crud_fields.extend(("details.volunteer_type",
                                 "details.availability",
                                 "details.card",
-                                # @ToDo: Move these to the IFRC Template
+                                # @ToDo: Move these to the IFRC Template (PH RC only people to use this)
                                 "volunteer_cluster.vol_cluster_type_id",
                                 "volunteer_cluster.vol_cluster_id",
                                 "volunteer_cluster.vol_cluster_position_id",
                                 ))
+            import pydevd;pydevd.settrace()
             vol_active = settings.get_hrm_vol_active()
             if vol_active and not callable(vol_active):
                 # Set manually
