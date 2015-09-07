@@ -474,7 +474,6 @@ def config(settings):
             else:
                 # Default
                 record_method = "human_resource"
-    
             if profile:
                 # Configure for personal mode
                 if record_method:
@@ -504,7 +503,7 @@ def config(settings):
                          teams_tab,
                          #(T("Assets"), "asset"),
                          ]
-            elif current.session.s3.hrm.mode is not None:
+            elif current.session.s3.hrm is not None and current.session.s3.hrm.mode is not None:
                 # Configure for personal mode
                 tabs = [(T("Person Details"), None),
                         id_tab,
@@ -676,6 +675,37 @@ def config(settings):
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller
+    
+    # -------------------------------------------------------------------------    
+    def dvr_case_onvalidation(form):
+
+        try:
+            form_vars = form.vars
+            case_number = form_vars.get("reference") 
+            org_id = form_vars.get("organisation_id")
+            
+            table = current.s3db.dvr_case
+            query = (table.reference == case_number) & \
+                    (table.organisation_id == org_id)
+            record = current.db(query).select(limitby=(0, 1)).first()  
+            if record:
+                form.errors["reference"] = "Bu dosya numarası kullanılmıştır!"
+        except AttributeError:
+            return
+
+        #if case_number :
+        #    form.errors["reference"] = current.T("Test problem")
+        return
+        
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_resource(r, tablename):
+        """ Configure dvr_case_resource """  
+        s3db = current.s3db        
+        s3db.configure("dvr_case",
+                  onvalidation = dvr_case_onvalidation,
+                  )
+    
+    settings.customise_dvr_case_resource = customise_dvr_case_resource  
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
