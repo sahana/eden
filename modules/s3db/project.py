@@ -4248,7 +4248,8 @@ class S3ProjectPlanningModel(S3Model):
         outputs = {}
         indicators = {}
 
-        # Read all of the Indicator Data for this Project
+        # Read all of the past Indicator Data for this Project
+        # (We ignore future values)
         table = s3db.project_indicator_data
         query = (table.project_id == project_id) & \
                 (table.deleted == False) & \
@@ -5041,12 +5042,14 @@ class S3ProjectPlanningModel(S3Model):
         if hasattr(row, "target_value"):
             planned = row.target_value
             if planned == 0.0:
-                # Can't divide by Zero
-                return current.messages["NONE"]
+                # No target means we treat as complete
+                return project_status_represent(100.0)
         else:
             planned = None
         if hasattr(row, "value"):
             actual = row.value
+            if actual is None:
+                return current.messages["NONE"]
         else:
             actual = None
 
@@ -5065,11 +5068,15 @@ class S3ProjectPlanningModel(S3Model):
                 planned = r.target_value
                 value = r.value
                 if planned and value:
-                    if planned == 0.0:
-                        # Can't divide by Zero
-                        return current.messages["NONE"]
                     percentage = value / planned * 100
                     return project_status_represent(percentage)
+                elif planned is None:
+                    return current.messages["NONE"]
+                elif planned == 0.0:
+                    # No target means we treat as complete
+                    return project_status_represent(100.0)
+                elif value is None:
+                    return current.messages["NONE"]
                 else:
                     return project_status_represent(0.0)
 
