@@ -229,6 +229,7 @@ def config(settings):
         if record is None:
             # List or Create form: rheader makes no sense here
             return None
+<<<<<<< HEAD
 
         #from gluon.html import DIV
         person_id = r.id
@@ -240,6 +241,233 @@ def config(settings):
             if current.auth.user.organisation_id != hr.organisation_id:
                 # Only show Org if not the same as user's
                 rheader = table.organisation_id.represent(hr.organisation_id)
+=======
+    
+        T = current.T
+        table = r.table
+        resourcename = r.name
+    
+        if resourcename == "person":
+            settings = current.deployment_settings
+            get_vars = r.get_vars
+            hr = get_vars.get("human_resource.id", None)
+            if hr:
+                name = current.s3db.hrm_human_resource_represent(int(hr))
+            else:
+                name = s3_fullname(record)
+            group = get_vars.get("group", None)
+            if group is None:
+                controller = r.controller
+                if controller == "vol":
+                    group = "volunteer"
+                else:
+                    group = "staff"
+            use_cv = settings.get_hrm_cv_tab()
+            record_tab = settings.get_hrm_record_tab()
+            experience_tab = None
+            service_record = ""
+            tbl = TABLE(TR(TH(name,
+                              # @ToDo: Move to CSS
+                              _style="padding-top:15px")
+                           ))
+            experience_tab2 = None
+            if settings.get_hrm_staff_experience() == "experience" and not use_cv:
+                experience_tab = (T("Experience"), "experience")
+    
+            if settings.get_hrm_use_certificates():
+                certificates_tab = (T("Certificates"), "certification")
+            else:
+                certificates_tab = None
+    
+            if settings.get_hrm_use_credentials():
+                credentials_tab = (T("Credentials"), "credential")
+            else:
+                credentials_tab = None
+    
+            if settings.get_hrm_use_description():
+                description_tab = (T("Description"), "physical_description")
+            else:
+                description_tab = None
+    
+            if settings.get_hrm_use_education() and not use_cv:
+                education_tab = (T("Education"), "education")
+            else:
+                education_tab = None
+    
+            if settings.get_hrm_use_id():
+                id_tab = (T("ID"), "identity")
+            else:
+                id_tab = None
+    
+            if settings.get_hrm_use_address():
+                address_tab = (T("Address"), "address")
+            else:
+                address_tab = None
+    
+            if settings.get_hrm_salary():
+                salary_tab = (T("Salary"), "salary")
+            else:
+                salary_tab = None
+    
+            if settings.get_hrm_use_skills() and not use_cv:
+                skills_tab = (T("Skills"), "competency")
+            else:
+                skills_tab = None
+    
+            if record_tab != "record":
+                teams = settings.get_hrm_teams()
+                if teams:
+                    teams_tab = (T(teams), "group_membership")
+                else:
+                    teams_tab = None
+            else:
+                teams_tab = None
+    
+            trainings_tab = instructor_tab = None
+            if settings.get_hrm_use_trainings():
+                if not use_cv:
+                    trainings_tab = (T("Trainings"), "training")
+                if settings.get_hrm_training_instructors() in ("internal", "both"):
+                    instructor_tab = (T("Instructor"), "training_event")
+    
+            if use_cv:
+                trainings_tab = (T("CV"), "cv")
+    
+            hr_tab = None
+            if not record_tab:
+                record_method = None
+            elif record_tab == "record":
+                record_method = "record"
+            else:
+                # Default
+                record_method = "human_resource"
+            if profile:
+                # Configure for personal mode
+                if record_method:
+                    hr_tab = (T("Staff/Volunteer Record"), record_method)
+                tabs = [(T("Person Details"), None),
+                        (T("User Account"), "user"),
+                        hr_tab,
+                        id_tab,
+                        description_tab,
+                        address_tab,
+                        ]
+                contacts_tabs = settings.get_pr_contacts_tabs()
+                if "all" in contacts_tabs:
+                    tabs.append((T("Contacts"), "contacts"))
+                if "public" in contacts_tabs:
+                    tabs.append((T("Public Contacts"), "public_contacts"))
+                if "private" in contacts_tabs:
+                    tabs.append((T("Private Contacts"), "private_contacts"))
+                tabs += [education_tab,
+                         trainings_tab,
+                         certificates_tab,
+                         skills_tab,
+                         credentials_tab,
+                         experience_tab,
+                         experience_tab2,
+                         instructor_tab,
+                         teams_tab,
+                         #(T("Assets"), "asset"),
+                         ]
+            elif current.session.s3.hrm is not None and current.session.s3.hrm.mode is not None:
+                # Configure for personal mode
+                tabs = [(T("Person Details"), None),
+                        id_tab,
+                        description_tab,
+                        address_tab,
+                        ]
+                contacts_tabs = settings.get_pr_contacts_tabs()
+                if "all" in contacts_tabs:
+                    tabs.append((T("Contacts"), "contacts"))
+                if "public" in contacts_tabs:
+                    tabs.append((T("Public Contacts"), "public_contacts"))
+                if "private" in contacts_tabs:
+                    tabs.append((T("Private Contacts"), "private_contacts"))
+                if record_method is not None:
+                    hr_tab = (T("Positions"), "human_resource")
+                tabs += [trainings_tab,
+                         certificates_tab,
+                         skills_tab,
+                         credentials_tab,
+                         experience_tab,
+                         experience_tab2,
+                         hr_tab,
+                         teams_tab,
+                         (T("Assets"), "asset"),
+                         ]
+            else:
+                # Configure for HR manager mode
+                if group == "staff":
+                    hr_record = T("Staff Record")
+                    awards_tab = None
+                elif group == "volunteer":
+                    hr_record = T("Volunteer Record")
+                    if settings.get_hrm_use_awards() and not use_cv:
+                        awards_tab = (T("Awards"), "award")
+                    else:
+                        awards_tab = None
+                if record_method:
+                    hr_tab = (hr_record, record_method)
+                tabs = [(T("Person Details"), None),
+                        hr_tab,
+                        id_tab,
+                        description_tab,
+                        address_tab,
+                        ]
+                contacts_tabs = settings.get_pr_contacts_tabs()
+                if "all" in contacts_tabs:
+                    tabs.append((T("Contacts"), "contacts"))
+                if "public" in contacts_tabs:
+                    tabs.append((T("Public Contacts"), "public_contacts"))
+                if "private" in contacts_tabs:
+                    tabs.append((T("Private Contacts"), "private_contacts"))
+                tabs += [salary_tab,
+                         education_tab,
+                         trainings_tab,
+                         certificates_tab,
+                         skills_tab,
+                         credentials_tab,
+                         experience_tab,
+                         experience_tab2,
+                         instructor_tab,
+                         awards_tab,
+                         teams_tab,
+                         (T("Assets"), "asset"),
+                         ]
+                # Add role manager tab if a user record exists
+                user_id = current.auth.s3_get_user_id(record.id)
+                if user_id:
+                    tabs.append((T("Roles"), "roles"))
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            rheader = DIV(service_record,
+                          A(s3_avatar_represent(record.id,
+                                                "pr_person",
+                                                _class="rheader-avatar"),
+                            _href=URL(f="person", args=[record.id, "image"],
+                                      vars = get_vars),
+                            ),
+                          tbl,
+                          rheader_tabs)
+    
+        elif resourcename == "training_event":
+            # Tabs
+            tabs = [(T("Training Event Details"), None),
+                    (T("Participants"), "participant"),
+                    ]
+            rheader_tabs = s3_rheader_tabs(r, tabs)
+            if current.deployment_settings.has_module("msg") and \
+                   current.auth.permission.has_permission("update", c="hrm", f="compose"):
+                # @ToDo: Be able to see who has been messaged, whether messages bounced, receive confirmation responses, etc
+                action = A(T("Message Participants"),
+                           _href = URL(f = "compose",
+                                       vars = {"training_event.id": record.id,
+                                               "pe_id": record.pe_id,
+                                               },
+                                       ),
+                           _class = "action-btn send"
+                           )
+>>>>>>> aad931e... Add organisation_id to dvr_case
             else:
                 rheader = None
         else:
@@ -253,7 +481,42 @@ def config(settings):
         attr["rheader"] = vol_rheader
         return attr
 
+<<<<<<< HEAD
     #settings.customise_pr_person_controller = customise_pr_person_controller
+=======
+    settings.customise_pr_person_controller = customise_pr_person_controller
+    
+    # -------------------------------------------------------------------------    
+    def dvr_case_onvalidation(form):
+
+        try:
+            form_vars = form.vars
+            case_number = form_vars.get("reference") 
+            org_id = form_vars.get("organisation_id")
+            
+            table = current.s3db.dvr_case
+            query = (table.reference == case_number) & \
+                    (table.organisation_id == org_id)
+            record = current.db(query).select(limitby=(0, 1)).first()  
+            if record:
+                form.errors["reference"] = "Bu dosya numarası kullanılmıştır!"
+        except AttributeError:
+            return
+
+        #if case_number :
+        #    form.errors["reference"] = current.T("Test problem")
+        return
+        
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_resource(r, tablename):
+        """ Configure dvr_case_resource """  
+        s3db = current.s3db        
+        s3db.configure("dvr_case",
+                  onvalidation = dvr_case_onvalidation,
+                  )
+    
+    settings.customise_dvr_case_resource = customise_dvr_case_resource  
+>>>>>>> aad931e... Add organisation_id to dvr_case
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

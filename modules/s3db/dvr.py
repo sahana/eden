@@ -125,6 +125,7 @@ class S3DVRModel(S3Model):
                         requires = IS_ADD_PERSON_WIDGET2(),
                         widget = S3AddPersonWidget2(controller="pr"),
                      ),
+                     self.org_organisation_id(),
                      #Field("damage", "integer",
                      #      label= T("Damage Assessment"),
                      #      represent = lambda opt: \
@@ -196,6 +197,7 @@ class S3DVRModel(S3Model):
                             )
 
         crud_form = S3SQLCustomForm("reference",
+                                    "organisation_id",
                                     "person_id",
                                     S3SQLInlineComponent("current_address",
                                                          label = T("Current Address"),
