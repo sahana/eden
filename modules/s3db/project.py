@@ -4262,16 +4262,17 @@ class S3ProjectPlanningModel(S3Model):
         for d in indicator_data:
             indicator_id = d.indicator_id
             target_value = d.target_value or 0
-            value = d.value or 0
+            value = d.value
             end_date = d.end_date
             if indicator_id not in indicators:
+                value = value or 0
                 indicators[indicator_id] = {"total_target": target_value,
                                             "total_value": value,
                                             "current_target": target_value,
                                             "current_value": value,
                                             "current_date": end_date,
                                             }
-            elif target_value:
+            elif target_value and value is not None:
                 # Add this data to Totals
                 i = indicators[indicator_id]
                 i["total_target"] = i["total_target"] + target_value
