@@ -12,6 +12,9 @@
          status......................string.............CAP template sender
          msg_type....................string.............CAP template msg_type
          scope.......................string.............CAP template scope
+         Approved....................optional...........cap_alert.approved_by
+                                                        Set to 'false' to not approve records.
+                                                        Note this only works for prepop or users with acl.APPROVE rights
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -25,9 +28,23 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
+        <xsl:variable name="approved">
+            <xsl:choose>
+                <xsl:when test="col[@field='Approved']='false'">
+                    <xsl:text>false</xsl:text>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:text>true</xsl:text>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
         <resource name="cap_alert">
             <xsl:attribute name="uuid">
                 <xsl:value-of select="concat('urn:capid:', col[@field='identifier']/text())"/>
+            </xsl:attribute>
+            <xsl:attribute name="approved">
+                <xsl:value-of select="$approved"/>
             </xsl:attribute>
             <data field="is_template">
                 <xsl:attribute name="value">

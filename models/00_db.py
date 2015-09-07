@@ -33,9 +33,9 @@ migrate = settings.get_base_migrate()
 fake_migrate = settings.get_base_fake_migrate()
 
 if migrate:
-    check_reserved = ["mysql", "postgres"]
+    check_reserved = ("mysql", "postgres")
 else:
-    check_reserved = None
+    check_reserved = []
 
 (db_string, pool_size) = settings.get_database_string()
 if db_string.find("sqlite") != -1:

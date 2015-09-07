@@ -1,0 +1,23 @@
+<div>
+ <div class='gi-container' {{try:}}id='{{=widget_id}}{{except:}}{{pass}}'>
+  <!-- Form -->
+  <div class='gi-form-container form-container'>
+   {{try:}}{{=form}}{{except:}}{{pass}}
+  </div>
+  <!-- Throbber -->
+  <div class='gi-throbber inline-throbber'></div>
+  <!-- Table Container -->
+  <div class='gi-table-container'>
+   <div>
+    <div class='gi-table-contents'>
+     <div class='gi-table'></div>
+   </div>
+  </div>
+  <!-- Empty-Section -->
+  <div class='gi-empty'>
+   {{try:}}{{=empty}}{{except:}}{{pass}}
+  </div>
+  <!-- Data -->
+  {{try:}}{{=items}}{{except:}}{{pass}}
+ </div>
+</div>

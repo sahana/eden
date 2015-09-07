@@ -1686,6 +1686,7 @@ class S3Resource(object):
                    pretty_print=False,
                    location_data=None,
                    map_data=None,
+                   target=None,
                    **args):
         """
             Export this resource as S3XML
@@ -1715,6 +1716,7 @@ class S3Resource(object):
             @param location_data: dictionary of location data which has been
                                   looked-up in bulk ready for xml.gis_encode()
             @param map_data: dictionary of options which can be read by the map
+            @param target: alias of component targetted (or None to target master resource)
             @param args: dict of arguments to pass to the XSLT stylesheet
         """
 
@@ -1743,7 +1745,8 @@ class S3Resource(object):
                                 maxbounds=maxbounds,
                                 xmlformat=xmlformat,
                                 location_data=location_data,
-                                map_data=map_data)
+                                map_data=map_data,
+                                target=target)
         #if DEBUG:
             #end = datetime.datetime.now()
             #duration = end - _start
@@ -1806,6 +1809,7 @@ class S3Resource(object):
                     xmlformat=None,
                     location_data=None,
                     map_data=None,
+                    target=None,
                     ):
         """
             Export the resource as element tree
@@ -1830,6 +1834,7 @@ class S3Resource(object):
             @param xmlformat:
             @param location_data: dictionary of location data which has been
                                   looked-up in bulk ready for xml.gis_encode()
+            @param target: alias of component targetted (or None to target master resource)
             @param map_data: dictionary of options which can be read by the map
         """
 
@@ -1868,7 +1873,7 @@ class S3Resource(object):
 
         # Fields to load
         if xmlformat:
-            include, exclude = xmlformat.get_fields(self.tablename)
+            include, exclude = xmlformat.get_fields(target or tablename)
         else:
             include, exclude = None, None
         self.load(fields=include,
@@ -1882,35 +1887,8 @@ class S3Resource(object):
         # Total number of results
         results = self.count()
 
-        if not location_data:
-            format = current.auth.permission.format
-            if format == "geojson":
-                if results > current.deployment_settings.get_gis_max_features():
-                    headers = {"Content-Type": "application/json"}
-                    message = "Too Many Records"
-                    status = 509
-                    raise HTTP(status,
-                               body=xml.json_message(success=False,
-                                                     statuscode=status,
-                                                     message=message),
-                               web2py_error=message,
-                               **headers)
-                # Lookups per layer not per record
-                if tablename == "gis_layer_shapefile":
-                    # GIS Shapefile Layer
-                    location_data = current.gis.get_shapefile_geojson(self) or {}
-                elif tablename == "gis_theme_data":
-                    # GIS Theme Layer
-                    location_data = current.gis.get_theme_geojson(self) or {}
-                else:
-                    # e.g. GIS Feature Layer
-                    # e.g. Search results
-                    location_data = current.gis.get_location_data(self) or {}
-            elif format in ("georss", "kml", "gpx"):
-                location_data = current.gis.get_location_data(self) or {}
-            else:
-                # @ToDo: Bulk lookup of LatLons for S3XML.latlon()
-                location_data = {}
+        if not target and not location_data:
+            location_data = current.gis.get_location_data(self, count=results) or {}
 
         # Build the tree
         #if DEBUG:
@@ -1944,6 +1922,7 @@ class S3Resource(object):
 
         # Collect all references from master records
         reference_map = []
+        master = not target
         for record in self._rows:
             element = export_resource(record,
                                       rfields=rfields,
@@ -1955,6 +1934,8 @@ class S3Resource(object):
                                       lazy=lazy,
                                       components=mcomponents,
                                       filters=filters,
+                                      master=master,
+                                      target=target,
                                       msince=msince,
                                       location_data=location_data,
                                       xmlformat=xmlformat)
@@ -2054,6 +2035,7 @@ class S3Resource(object):
                                               lazy=lazy,
                                               filters=filters,
                                               master=False,
+                                              target=target,
                                               location_data=location_data,
                                               xmlformat=xmlformat)
 
@@ -2108,8 +2090,10 @@ class S3Resource(object):
                           filters=None,
                           msince=None,
                           master=True,
+                          target=None,
                           location_data=None,
-                          xmlformat=None):
+                          xmlformat=None,
+                          ):
         """
             Add a <resource> to the element tree
 
@@ -2127,6 +2111,7 @@ class S3Resource(object):
                             {tablename: {url_var: string}}
             @param msince: the minimum update datetime for exported records
             @param master: True of this is the master resource
+            @param target: alias of component targetted (or None to target master resource)
             @param location_data: the location_data for GIS encoding
             @param xmlformat:
         """
@@ -2187,6 +2172,7 @@ class S3Resource(object):
                     calias = c.alias
                     lalias = None
 
+                ctablename = c.tablename
                 # Before loading the component: add filters
                 if c._rows is None:
 
@@ -2197,7 +2183,6 @@ class S3Resource(object):
                         c.add_filter(mci_filter)
 
                     # Sync filters
-                    ctablename = c.tablename
                     if filters and ctablename in filters:
                         queries = S3URLQuery.parse(self, filters[ctablename])
                         [c.add_filter(q) for a in queries for q in queries[a]]
@@ -2236,6 +2221,13 @@ class S3Resource(object):
                 # Export records
                 export = c._export_record
                 map_record = c.__map_record
+                if target == ctablename:
+                    master = True
+                    if not location_data:
+                        count = c.count()
+                        location_data = current.gis.get_location_data(c, count=count) or {}
+                else:
+                    master = False
                 for crecord in crecords:
                     # Construct the component record URL
                     if component_url:
@@ -2251,7 +2243,7 @@ class S3Resource(object):
                                              lazy=lazy,
                                              url=crecord_url,
                                              msince=msince,
-                                             master=False,
+                                             master=master,
                                              location_data=location_data)
                     if celement is not None:
                         add = True # keep the parent record

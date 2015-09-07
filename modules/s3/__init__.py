@@ -92,6 +92,7 @@ from s3forms import *
 from s3filter import *
 
 # Reporting
+from s3grouped import *
 from s3report import *
 from s3timeplot import *
 

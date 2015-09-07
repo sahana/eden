@@ -65,6 +65,8 @@ class index(S3CustomController):
                                     collapsed=True,
                                     feature_resources=feature_resources,
                                     save=False,
+                                    search=True,
+                                    toolbar=True,
                                     )
         output["_map"] = _map
 

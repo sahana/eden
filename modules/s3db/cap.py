@@ -454,14 +454,14 @@ class S3CAPModel(S3Model):
         configure(tablename,
                   context = {"location": "location.location_id",
                              },
+                  create_onaccept = self.cap_alert_create_onaccept,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   list_layout = cap_alert_list_layout,
                   list_orderby = "cap_info.expires desc",
                   notify_fields = notify_fields,
-                  onvalidation = self.cap_alert_form_validation,
-                  # update the approved_on field on approve of the alert
                   onapprove = self.cap_alert_approve,
+                  onvalidation = self.cap_alert_onvalidation,
                   orderby = "cap_info.expires desc",
                   )
 
@@ -770,7 +770,7 @@ class S3CAPModel(S3Model):
 
         configure(tablename,
                   #create_next = URL(f="info", args=["[id]", "area"]),
-                  onaccept = self.info_onaccept,
+                  onaccept = self.cap_info_onaccept,
                   )
 
         # Components
@@ -1128,8 +1128,8 @@ class S3CAPModel(S3Model):
         oid = settings.get_cap_identifier_oid()
         suffix = settings.get_cap_identifier_suffix()
 
-        return "%s-%s-%s-%03d%s%s" % \
-                    (prefix, oid, _time, next_id, ["", "-"][bool(suffix)], suffix)
+        return "%s-%s-%s-%03d-%s" % \
+                    (prefix, oid, _time, next_id, suffix)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1206,20 +1206,34 @@ class S3CAPModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def cap_alert_form_validation(form):
+    def cap_alert_create_onaccept(form):
         """
-            On Validation for CAP alert form
+            Auto-approve Templates
+        """
+
+        form_vars = form.vars
+        if form_vars.get("is_template"):
+            user = current.auth.user
+            if user:
+                current.db(current.s3db.cap_alert.id == form_vars.id).update(
+                                                        approved_by = user.id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_alert_onvalidation(form):
+        """
+            Custom Form Validation:
+                mujlti-field level
         """
 
         form_vars = form.vars
         if form_vars.get("scope") == "Private" and not form_vars.get("addresses"):
             form.errors["addresses"] = \
                 current.T("'Recipients' field mandatory in case of 'Private' scope")
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def info_onaccept(form):
+    def cap_info_onaccept(form):
         """
             After DB I/O
         """
@@ -1414,7 +1428,8 @@ def cap_rheader(r):
 
                         # Display 'Submit for Approval' based on permission  
                         # and deployment settings
-                        if not r.record.approved_by and \
+                        if not current.request.get_vars.get("_next") and \
+                           not r.record.approved_by and \
                            current.deployment_settings.get_cap_authorisation() and \
                            current.auth.s3_has_permission("update", "cap_alert",
                                                           record_id=alert_id):

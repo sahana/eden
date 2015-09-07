@@ -4248,7 +4248,8 @@ class S3ProjectPlanningModel(S3Model):
         outputs = {}
         indicators = {}
 
-        # Read all of the Indicator Data for this Project
+        # Read all of the past Indicator Data for this Project
+        # (We ignore future values)
         table = s3db.project_indicator_data
         query = (table.project_id == project_id) & \
                 (table.deleted == False) & \
@@ -4261,20 +4262,21 @@ class S3ProjectPlanningModel(S3Model):
         for d in indicator_data:
             indicator_id = d.indicator_id
             target_value = d.target_value or 0
-            value = d.value or 0
+            value = d.value
             end_date = d.end_date
             if indicator_id not in indicators:
+                value = value or 0
                 indicators[indicator_id] = {"total_target": target_value,
                                             "total_value": value,
                                             "current_target": target_value,
                                             "current_value": value,
                                             "current_date": end_date,
                                             }
-            else:
+            elif target_value and value is not None:
                 # Add this data to Totals
                 i = indicators[indicator_id]
-                i["total_target"] = i["total_target"] + (target_value or 0)
-                i["total_value"] = i["total_value"] + (value or 0)
+                i["total_target"] = i["total_target"] + target_value
+                i["total_value"] = i["total_value"] + value
                 if end_date > i["current_date"]:
                     # Replace the Current data
                     i.update(current_target = target_value,
@@ -5041,12 +5043,14 @@ class S3ProjectPlanningModel(S3Model):
         if hasattr(row, "target_value"):
             planned = row.target_value
             if planned == 0.0:
-                # Can't divide by Zero
-                return current.messages["NONE"]
+                # No target means we treat as complete
+                return project_status_represent(100.0)
         else:
             planned = None
         if hasattr(row, "value"):
             actual = row.value
+            if actual is None:
+                return current.messages["NONE"]
         else:
             actual = None
 
@@ -5065,11 +5069,15 @@ class S3ProjectPlanningModel(S3Model):
                 planned = r.target_value
                 value = r.value
                 if planned and value:
-                    if planned == 0.0:
-                        # Can't divide by Zero
-                        return current.messages["NONE"]
                     percentage = value / planned * 100
                     return project_status_represent(percentage)
+                elif planned is None:
+                    return current.messages["NONE"]
+                elif planned == 0.0:
+                    # No target means we treat as complete
+                    return project_status_represent(100.0)
+                elif value is None:
+                    return current.messages["NONE"]
                 else:
                     return project_status_represent(0.0)
 

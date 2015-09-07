@@ -257,6 +257,9 @@ class S3VolunteerAwardModel(S3Model):
 
 # =============================================================================
 class S3VolunteerClusterModel(S3Model):
+    """
+        Fucntionality to support the Philippines Red Cross
+    """
 
     names = ("vol_cluster_type",
              "vol_cluster",
