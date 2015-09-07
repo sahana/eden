@@ -4271,11 +4271,11 @@ class S3ProjectPlanningModel(S3Model):
                                             "current_value": value,
                                             "current_date": end_date,
                                             }
-            else:
+            elif target_value:
                 # Add this data to Totals
                 i = indicators[indicator_id]
-                i["total_target"] = i["total_target"] + (target_value or 0)
-                i["total_value"] = i["total_value"] + (value or 0)
+                i["total_target"] = i["total_target"] + target_value
+                i["total_value"] = i["total_value"] + value
                 if end_date > i["current_date"]:
                     # Replace the Current data
                     i.update(current_target = target_value,
