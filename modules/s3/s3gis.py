@@ -2312,7 +2312,7 @@ class GIS(object):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def get_location_data(resource, attr_fields=None):
+    def get_location_data(resource, attr_fields=None, count=None):
         """
             Returns the locations, markers and popup tooltips for an XML export
             e.g. Feature Layers or Search results (Feature Resources)
@@ -2322,12 +2322,48 @@ class GIS(object):
             @param: resource - S3Resource instance (required)
             @param: attr_fields - list of attr_fields to use instead of reading
                                   from get_vars or looking up in gis_layer_feature
+            @param: count - total number of features
         """
 
         tablename = resource.tablename
         if tablename == "gis_feature_query":
             # Requires no special handling: XSLT uses normal fields
-            return dict()
+            return {}
+
+        format = current.auth.permission.format
+        if format == "geojson":
+            if count and \
+               count > current.deployment_settings.get_gis_max_features():
+                headers = {"Content-Type": "application/json"}
+                message = "Too Many Records"
+                status = 509
+                raise HTTP(status,
+                           body=current.xml.json_message(success=False,
+                                                         statuscode=status,
+                                                         message=message),
+                           web2py_error=message,
+                           **headers)
+            # Lookups per layer not per record
+            if len(tablename) > 19 and \
+               tablename.startswith("gis_layer_shapefile"):
+                # GIS Shapefile Layer
+                location_data = GIS.get_shapefile_geojson(resource) or {}
+                return location_data
+            elif tablename == "gis_theme_data":
+                # GIS Theme Layer
+                location_data = GIS.get_theme_geojson(resource) or {}
+                return location_data
+            else:
+                # e.g. GIS Feature Layer
+                # e.g. Search results
+                # Lookup Data using this function
+                pass
+        elif format in ("georss", "kml", "gpx"):
+            # Lookup Data using this function
+            pass
+        else:
+            # @ToDo: Bulk lookup of LatLons for S3XML.latlon()
+            return {}
 
         NONE = current.messages["NONE"]
         #if DEBUG:
@@ -2415,7 +2451,7 @@ class GIS(object):
         _pkey = table[pkey]
         # Ensure there are no ID represents to confuse things
         _pkey.represent = None
-        geojson = current.auth.permission.format == "geojson"
+        geojson = format == "geojson"
         if geojson:
             # Build the Attributes now so that representations can be
             # looked-up in bulk rather than as a separate lookup per record
@@ -2936,7 +2972,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
         """
 
         db = current.db
-        tablename = "gis_layer_shapefile_%s" % resource._ids[0]
+        #tablename = "gis_layer_shapefile_%s" % resource._ids[0]
+        tablename = resource.tablename
         table = db[tablename]
         query = resource.get_query()
         fields = []

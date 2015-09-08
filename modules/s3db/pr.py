@@ -82,8 +82,6 @@ __all__ = ("S3PersonEntity",
            "pr_role_rebuild_path",
            # Helpers for ImageLibrary
            "pr_image_modify",
-           "pr_image_resize",
-           "pr_image_format",
            #"pr_address_list_layout",
            #"pr_contact_list_layout",
            #"pr_filter_list_layout",
@@ -242,7 +240,15 @@ class S3PersonEntity(S3Model):
                                       },
                                      ),
                        pr_contact_emergency = pe_id,
-                       pr_image = pe_id,
+                       pr_image = ({"name": "image",
+                                    "joinby": "pe_id",
+                                    },
+                                    {"name": "picture",
+                                     "joinby": "pe_id",
+                                     "filterby": "profile",
+                                     "filterfor": (True,),
+                                     },
+                                    ),
                        pr_note = pe_id,
                        pr_role = pe_id,
                        pr_physical_description = {"joinby": pe_id,
@@ -2762,20 +2768,20 @@ class S3PersonImageModel(S3Model):
 
         if newfilename:
             _image = form.request_vars.image
-            pr_image_resize(_image.file,
+            pr_image_modify(_image.file,
                             newfilename,
                             _image.filename,
-                            (50, 50)
+                            size = (50, 50),
                             )
-            pr_image_resize(_image.file,
+            pr_image_modify(_image.file,
                             newfilename,
                             _image.filename,
-                            (None, 60)
+                            size = (None, 60),
                             )
-            pr_image_resize(_image.file,
+            pr_image_modify(_image.file,
                             newfilename,
                             _image.filename,
-                            (160, None)
+                            size = (160, None),
                             )
 
         if profile:
@@ -6885,6 +6891,8 @@ def pr_image_modify(image_file,
         @param original_name: the original name of the file
         @param size:          the required size of the image (width, height)
         @param to_format:     the format of the image (jpeg, bmp, png, gif, etc.)
+
+        @ToDo: Move this function to Doc? (however - operates on a PR table)
     """
 
     # Import the specialist libraries
@@ -6919,7 +6927,17 @@ def pr_image_modify(image_file,
             thumb_size.append(im.size[1])
         else:
             thumb_size.append(size[1])
-        im.thumbnail(thumb_size, Image.ANTIALIAS)
+        try:
+            im.thumbnail(thumb_size, Image.ANTIALIAS)
+        except IOError:
+            # Maybe need to reinstall pillow:
+            #pip uninstall pillow
+            #apt-get install libjpeg-dev
+            #pip install pillow
+            msg = sys.exc_info()[1]
+            s3_debug(msg)
+            current.session.error = msg
+            return
 
         if not to_format:
             to_format = fileExtension[1:]
@@ -6929,7 +6947,7 @@ def pr_image_modify(image_file,
             im = im.convert("RGB")
         save_im_name = "%s.%s" % (fileName, to_format)
         tempFile = TemporaryFile()
-        im.save(tempFile,to_format)
+        im.save(tempFile, to_format)
         tempFile.seek(0)
         newfile = table.new_name.store(tempFile,
                                        save_im_name,
@@ -6947,46 +6965,6 @@ def pr_image_modify(image_file,
         return True
     else:
         return False
-
-# -----------------------------------------------------------------------------
-def pr_image_resize(image_file,
-                    image_name,
-                    original_name,
-                    size,
-                    ):
-    """
-        Resize the image passed in and store on the table
-
-        @param image_file:    the image stored in a file object
-        @param image_name:    the name of the original image
-        @param original_name: the original name of the file
-        @param size:          the required size of the image (width, height)
-    """
-
-    return pr_image_modify(image_file,
-                           image_name,
-                           original_name,
-                           size = size)
-
-# -----------------------------------------------------------------------------
-def pr_image_format(image_file,
-                    image_name,
-                    original_name,
-                    to_format,
-                    ):
-    """
-        Change the file format of the image passed in and store on the table
-
-        @param image_file:    the image stored in a file object
-        @param image_name:    the name of the original image
-        @param original_name: the original name of the file
-        @param to_format:     the format of the image (jpeg, bmp, png, gif, etc.)
-    """
-
-    return pr_image_modify(image_file,
-                           image_name,
-                           original_name,
-                           to_format = to_format)
 
 # =============================================================================
 def pr_address_list_layout(list_id, item_id, resource, rfields, record):

@@ -950,7 +950,7 @@ class S3XML(S3Codec):
             return
 
         elif len(tablename) > 19 and \
-           tablename.startswith("gis_layer_shapefile"):
+             tablename.startswith("gis_layer_shapefile"):
             # Shapefile data
             if tablename in geojsons:
                 # These have been looked-up in bulk

@@ -52,9 +52,14 @@ class S3MainMenu(default.S3MainMenu):
             else:
                 # Publisher sees minimal options
                 # @ToDo: Add role check here once role defined
-                return [homepage(),
-                        homepage("cap"),
-                        ]
+                menus_ = [homepage(),
+                          homepage("cap"),
+                          ]
+                
+                if auth.s3_has_role("MAP_ADMIN"):
+                    menus_.append(homepage("gis"),)
+                    
+                return menus_ 
 
         # Public or CUG reader sees minimal options
         return [homepage(),

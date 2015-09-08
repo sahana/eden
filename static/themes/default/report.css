@@ -201,6 +201,7 @@
 }
 
 /* Empty-sections */
+.gi-empty,
 .tp-empty,
 .pt-empty,
 .pt-no-data {

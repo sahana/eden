@@ -46,6 +46,11 @@ def config(settings):
     }
     settings.fin.currency_default = "PHP"
 
+    # Restrict the Location Selector to just certain countries
+    # NB This can also be over-ridden for specific contexts later
+    # e.g. Activities filtered to those of parent Project
+    settings.gis.countries= ("PH",)
+
     # Security Policy
     settings.security.policy = 6 # Warehouse-specific restrictions
     settings.security.map = True

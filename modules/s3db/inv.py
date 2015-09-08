@@ -708,6 +708,24 @@ $.filterOptionsS3({
                        onvalidation = self.inv_inv_item_onvalidate,
                        report_options = report_options,
                        super_entity = "supply_item_entity",
+                       # Experimental
+                       grouped = {
+                        "default": {
+                            "title": T("Warehouse Stock Report"),
+                            "fields": [(T("Warehouse"), "site_id$name"),
+                                       "item_id$name",
+                                       "quantity",
+                                       ],
+                            "groupby": ["site_id",
+                                        "item_id",
+                                        ],
+                            "orderby": ["site_id$name",
+                                        "item_id$name",
+                                        ],
+                            "aggregate": [("sum", "quantity"),
+                                          ],
+                        },
+                       },
                        )
 
         # ---------------------------------------------------------------------

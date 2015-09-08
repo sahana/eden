@@ -157,6 +157,7 @@ class S3Config(Storage):
         self.xforms = Storage()
 
         self._debug = None
+        self._lazy_unwrapped = []
 
     # -------------------------------------------------------------------------
     # Template
@@ -575,7 +576,7 @@ class S3Config(Storage):
                    "inv_warehouse",
                    "pr_group",
                    )
-        return self.__lazy(self.auth, "realm_entity_types", default=default)
+        return self.__lazy("auth", "realm_entity_types", default=default)
 
     def get_auth_realm_entity(self):
         """ Hook to determine the owner entity of a record """
@@ -860,7 +861,7 @@ class S3Config(Storage):
                    setting), or consider switching to MySQL altogether
         """
         if self.get_database_type() != "mysql":
-            airegex = self.__lazy(self.database, "airegex", False)
+            airegex = self.__lazy("database", "airegex", False)
         else:
             airegex = False
         return airegex
@@ -903,7 +904,7 @@ class S3Config(Storage):
         """
             Which Currencies can the user select?
         """
-        currencies = self.__lazy(self.fin, "currencies")
+        currencies = self.__lazy("fin", "currencies")
         if currencies is None:
             T = current.T
             currencies = {
@@ -917,7 +918,7 @@ class S3Config(Storage):
         """
             What is the default Currency?
         """
-        return self.__lazy(self.fin, "currency_default", default="USD")
+        return self.__lazy("fin", "currency_default", default="USD")
 
     # -------------------------------------------------------------------------
     # GIS (Map) Settings
@@ -1229,7 +1230,7 @@ class S3Config(Storage):
         """
             Display Postcode form field when selecting Locations
         """
-        return self.__lazy(self.gis, "postcode_selector", default=True)
+        return self.__lazy("gis", "postcode_selector", default=True)
 
     def get_gis_print(self):
         """
@@ -1430,7 +1431,7 @@ class S3Config(Storage):
             Currently supported calendars:
             - "Gregorian"
         """
-        return self.__lazy(self.L10n, "calendar", None)
+        return self.__lazy("L10n", "calendar", None)
 
     def get_L10n_lat_lon_format(self):
         """
@@ -1449,7 +1450,7 @@ class S3Config(Storage):
         return self.L10n.get("default_country_code", 1)
 
     def get_L10n_mandatory_lastname(self):
-        return self.__lazy(self.L10n, "mandatory_lastname", False)
+        return self.__lazy("L10n", "mandatory_lastname", False)
 
     def get_L10n_decimal_separator(self):
         """
@@ -1525,14 +1526,14 @@ class S3Config(Storage):
 
             Defaults to off to enhance performance
         """
-        return self.__lazy(self.L10n, "pdf_bidi", False)
+        return self.__lazy("L10n", "pdf_bidi", False)
 
     def get_pdf_logo(self):
         return self.ui.get("pdf_logo")
 
     def get_pdf_export_font(self):
         language = current.session.s3.language
-        return self.__lazy(self.L10n, "pdf_export_font", self.fonts.get(language))
+        return self.__lazy("L10n", "pdf_export_font", self.fonts.get(language))
 
     def get_pdf_excluded_fields(self, resourcename):
         """
@@ -1903,7 +1904,7 @@ class S3Config(Storage):
 
             @todo: currently only applied in S3AddPersonWidget2
         """
-        return self.__lazy(self.ui, "autocomplete_delay", 800)
+        return self.__lazy("ui", "autocomplete_delay", 800)
 
     def get_ui_autocomplete_min_chars(self):
         """
@@ -1911,7 +1912,7 @@ class S3Config(Storage):
 
             @todo: currently only applied in S3AddPersonWidget2
         """
-        return self.__lazy(self.ui, "autocomplete_min_chars", 2)
+        return self.__lazy("ui", "autocomplete_min_chars", 2)
 
     def get_ui_filter_auto_submit(self):
         """
@@ -1963,7 +1964,7 @@ class S3Config(Storage):
             Whether or not to show a bulk-select option in location
             filter widgets (overrides per-widget setting)
         """
-        return self.__lazy(self.ui, "location_filter_bulk_select_option")
+        return self.__lazy("ui", "location_filter_bulk_select_option")
 
     def get_ui_inline_component_layout(self):
         """
@@ -2184,6 +2185,20 @@ class S3Config(Storage):
         """
             OID for the CAP issuing authority
         """
+
+        # See if the User has an Org-specific OID
+        auth = current.auth
+        if auth.user and auth.user.organisation_id:
+            table = current.s3db.org_organisation_tag
+            query = ((table.organisation_id == auth.user.organisation_id) & \
+                     (table.tag == "cap_oid"))
+            record = current.db(query).select(table.value,
+                                              limitby=(0, 1)
+                                              ).first()
+            if record and record.value:
+                return record.value
+
+        # Else fallback to the default OID
         return self.cap.get("identifier_oid", "")
 
     def get_cap_identifier_suffix(self):
@@ -2544,7 +2559,7 @@ class S3Config(Storage):
         """
             Whether Staff have multiple contracts recorded
         """
-        return self.__lazy(self.hrm, "multiple_contracts", default=False)
+        return self.__lazy("hrm", "multiple_contracts", default=False)
 
     def get_hrm_org_dependent_job_titles(self):
         """
@@ -2638,7 +2653,7 @@ class S3Config(Storage):
             Whether Human Resources should use Teams
             & what to call them (Teams or Groups currently supported)
         """
-        return self.__lazy(self.hrm, "teams", default="Teams")
+        return self.__lazy("hrm", "teams", default="Teams")
 
     def get_hrm_teams_orgs(self):
         """
@@ -2649,7 +2664,7 @@ class S3Config(Storage):
                 1:    single Org
                 2:    multiple Orgs
         """
-        return self.__lazy(self.hrm, "teams_orgs", default=1)
+        return self.__lazy("hrm", "teams_orgs", default=1)
 
     def get_hrm_cv_tab(self):
         """
@@ -2685,7 +2700,7 @@ class S3Config(Storage):
         """
             Whether Human Resources should use Certificates
         """
-        return self.__lazy(self.hrm, "use_certificates", default=True)
+        return self.__lazy("hrm", "use_certificates", default=True)
 
     def get_hrm_use_code(self):
         """
@@ -2693,7 +2708,7 @@ class S3Config(Storage):
             either True or False, or "staff" to use code for staff
             only
         """
-        return self.__lazy(self.hrm, "use_code", default=False)
+        return self.__lazy("hrm", "use_code", default=False)
 
     def get_hrm_use_credentials(self):
         """
@@ -2732,7 +2747,7 @@ class S3Config(Storage):
         """
             Whether Human Resources should use Skills
         """
-        return self.__lazy(self.hrm, "use_skills", default=True)
+        return self.__lazy("hrm", "use_skills", default=True)
 
     def get_hrm_use_trainings(self):
         """
@@ -2746,7 +2761,7 @@ class S3Config(Storage):
             from the registry), or "external" (=just names), or "both",
             ...or None (=don't track instructors at all)
         """
-        return self.__lazy(self.hrm, "training_instructors", "external")
+        return self.__lazy("hrm", "training_instructors", "external")
 
     def get_hrm_activity_types(self):
         """
@@ -2761,7 +2776,7 @@ class S3Config(Storage):
             this is set manually or calculated by a function
             - options are: False, True or a function
         """
-        return self.__lazy(self.hrm, "vol_active", default=False)
+        return self.__lazy("hrm", "vol_active", default=False)
 
     def get_hrm_vol_active_tooltip(self):
         """
@@ -2776,32 +2791,32 @@ class S3Config(Storage):
     #            9 = 'Other Role'
     #            None = default ('Other Role')
     #    """
-    #    return self.__lazy(self.hrm, "vol_affiliation", default=None)
+    #    return self.__lazy("hrm", "vol_affiliation", default=None)
 
     def get_hrm_vol_experience(self):
         """
             Whether to use Experience for Volunteers &, if so, which table to use
             - options are: False, "experience", "programme" or "both"
         """
-        return self.__lazy(self.hrm, "vol_experience", default="programme")
+        return self.__lazy("hrm", "vol_experience", default="programme")
 
     def get_hrm_vol_departments(self):
         """
             Whether Volunteers should use Departments
         """
-        return self.__lazy(self.hrm, "vol_departments", default=False)
+        return self.__lazy("hrm", "vol_departments", default=False)
 
     def get_hrm_vol_roles(self):
         """
             Whether Volunteers should use Roles
         """
-        return self.__lazy(self.hrm, "vol_roles", default=True)
+        return self.__lazy("hrm", "vol_roles", default=True)
 
     def get_hrm_vol_service_record_manager(self):
         """
             What should be put into the 'Manager' field of the Volunteer Service Record
         """
-        return self.__lazy(self.hrm, "vol_service_record_manager",
+        return self.__lazy("hrm", "vol_service_record_manager",
                            default=current.T("Branch Coordinator"))
 
     # -------------------------------------------------------------------------
@@ -3190,7 +3205,7 @@ class S3Config(Storage):
         """
             Whether to hide the third gender ("Other")
         """
-        return self.__lazy(self.pr, "hide_third_gender", default=True)
+        return self.__lazy("pr", "hide_third_gender", default=True)
 
     def get_pr_import_update_requires_email(self):
         """
@@ -3209,31 +3224,31 @@ class S3Config(Storage):
 
     def get_pr_request_dob(self):
         """ Include Date of Birth in the AddPersonWidget[2] """
-        return self.__lazy(self.pr, "request_dob", default=True)
+        return self.__lazy("pr", "request_dob", default=True)
 
     def get_pr_request_email(self):
         """ Include Email in the AddPersonWidget2 """
-        return self.__lazy(self.pr, "request_email", default=True)
+        return self.__lazy("pr", "request_email", default=True)
 
     def get_pr_request_father_name(self):
         """ Include Father Name in the AddPersonWidget2 """
-        return self.__lazy(self.pr, "request_father_name", default=False)
+        return self.__lazy("pr", "request_father_name", default=False)
 
     def get_pr_request_grandfather_name(self):
         """ Include GrandFather Name in the AddPersonWidget2 """
-        return self.__lazy(self.pr, "request_grandfather_name", default=False)
+        return self.__lazy("pr", "request_grandfather_name", default=False)
 
     def get_pr_request_gender(self):
         """ Include Gender in the AddPersonWidget[2] """
-        return self.__lazy(self.pr, "request_gender", default=True)
+        return self.__lazy("pr", "request_gender", default=True)
 
     def get_pr_request_home_phone(self):
         """ Include Home Phone in the AddPersonWidget2 """
-        return self.__lazy(self.pr, "request_home_phone", default=False)
+        return self.__lazy("pr", "request_home_phone", default=False)
 
     def get_pr_request_year_of_birth(self):
         """ Include Year of Birth in the AddPersonWidget2 """
-        return self.__lazy(self.pr, "request_year_of_birth", default=False)
+        return self.__lazy("pr", "request_year_of_birth", default=False)
 
     def get_pr_name_format(self):
         """
@@ -3241,7 +3256,7 @@ class S3Config(Storage):
 
             Generally want an option in AddPersonWidget2 to handle the input like this too
         """
-        return self.__lazy(self.pr, "name_format", default="%(first_name)s %(middle_name)s %(last_name)s")
+        return self.__lazy("pr", "name_format", default="%(first_name)s %(middle_name)s %(last_name)s")
 
     def get_pr_select_existing(self):
         """
@@ -3332,7 +3347,7 @@ class S3Config(Storage):
         """
             Show the 'Assign Staff' tab in Projects (if the user has permission to do so)
         """
-        return self.__lazy(self.project, "assign_staff_tab", default=True)
+        return self.__lazy("project", "assign_staff_tab", default=True)
 
     def get_project_budget_monitoring(self):
         """
@@ -3852,8 +3867,7 @@ class S3Config(Storage):
         return result
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def __lazy(subset, key, default=None):
+    def __lazy(self, subset, key, default=None):
         """
             Resolve a "lazy" setting: when the config setting is callable,
             call it once and store the result. A callable setting takes
@@ -3867,15 +3881,23 @@ class S3Config(Storage):
                 return self.<subset>.get(key, default)
 
             Lazy pattern:
-                return self.__lazy(self.<subset>, key, default)
+                return self.__lazy(subset, key, default)
 
-            @param subset: the subset of settings
+            @param subset: the name of the subset of settings (typically the module)
             @param key: the setting name
             @param default: the default value
         """
-        setting = subset.get(key, default)
+
+        setting = self[subset].get(key, default)
         if callable(setting):
-            setting = subset[key] = setting(default)
+            # Check to see if we have already done the lazy lookup
+            # (Some settings options are callables themselves)
+            _key = "%s_%s" % (subset, key)
+            if _key not in self._lazy_unwrapped:
+                # Unwrap
+                self[subset][key] = setting = setting(default)
+                # Mark as unwrapped, so we don't do it a 2nd time
+                self._lazy_unwrapped.append(_key)
         return setting
 
 # END =========================================================================

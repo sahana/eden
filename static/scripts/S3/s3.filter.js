@@ -906,6 +906,8 @@ S3.search = {};
                 });
             } else if (t.hasClass('map_wrapper')) {
                 S3.gis.refreshLayer('search_results');
+            } else if (t.hasClass('gi-container')) {
+                t.groupedItems('reload', null, target_data['queries']);
             } else if (t.hasClass('pt-container')) {
                 t.pivottable('reload', null, target_data['queries']);
             } else if (t.hasClass('tp-container')) {
@@ -978,6 +980,7 @@ S3.search = {};
                 }
                 t = $('#' + target_id);
                 if (t.hasClass('dl') ||
+                    t.hasClass('gi-container') ||
                     t.hasClass('pt-container') ||
                     t.hasClass('tp-container') ||
                     t.hasClass('map_wrapper')) {
@@ -1457,14 +1460,14 @@ S3.search = {};
                 } else if (t.hasClass('cms_content')) {
                     // CMS widgets do not need page reload
                     needs_reload = false;
+                } else if (t.hasClass('gi-container')) {
+                    // GroupedItems do not need page reload
+                    needs_reload = false;
                 } else if (t.hasClass('pt-container')) {
                     // PivotTables do not need page reload
                     needs_reload = false;
                 } else if (t.hasClass('tp-container')) {
                     // TimePlots do not need page reload
-                    needs_reload = false;
-                } else if (t.hasClass('ts-container')) {
-                    // Timesheets do not need page reload
                     needs_reload = false;
                 } else {
                     // all other targets need page reload
@@ -1506,6 +1509,8 @@ S3.search = {};
                     });
                 } else if (t.hasClass('map_wrapper')) {
                     S3.gis.refreshLayer('search_results', queries);
+                } else if (t.hasClass('gi-container')) {
+                    t.groupedItems('reload', null, queries);
                 } else if (t.hasClass('pt-container')) {
                     t.pivottable('reload', null, queries);
                 } else if (t.hasClass('tp-container')) {

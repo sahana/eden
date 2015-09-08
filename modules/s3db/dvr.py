@@ -118,6 +118,7 @@ class S3DVRModel(S3Model):
                      Field("reference",
                            label = T("Case Number"),
                            ),
+                     self.org_organisation_id(),
                      self.pr_person_id(
                         # @ToDo: Modify this to update location_id if the selected person has a Home Address already
                         comment = None,
