@@ -45,14 +45,21 @@
         // Initialization of the cap_form
         var restriction_row = $('#cap_alert_restriction__row, #cap_alert_restriction__row1');
         var recipient_row = $('#cap_alert_addresses__row, #cap_alert_addresses__row1');
-        // Hide the restriction text box by default
-        restriction_row.hide();
+        // Show the restriction field if scope is restricted otherwise hide by default
+        if ($('#cap_alert_scope').val() == 'Restricted') {
+        	restriction_row.show();
+        } else {
+        	restriction_row.hide();
+        }
         // On change in scope
         $('#cap_alert_scope').change(function() {
             var scope = $(this).val();
             switch(scope) {
                 case 'Public':
                     restriction_row.hide();
+                	if ($('#cap_alert_restriction').val()) {
+                		$('#cap_alert_restriction').val('');
+                	}
                     recipient_row.show();
                     break;
                 case 'Restricted':
@@ -61,6 +68,9 @@
                     break;
                 case 'Private':
                     restriction_row.hide();
+                	if ($('#cap_alert_restriction').val()) {
+                		$('#cap_alert_restriction').val('');	
+                	}
                     recipient_row.show();
                     break;
             }
@@ -134,6 +144,12 @@
 
                     switch(typeof(values[f])) {
                     case 'string':
+                    	if (f == 'restriction') {
+                    		$f.val(values[f] || '');
+                    		if ($f.val() != '') {
+                    			restriction_row.show();
+                    		}
+                    	}
                     case 'undefined':
                         // change field only if locked or overwrite flag is set
                         if ($f.is(':text') || $f.is('textarea') || $f.is('select')) {
@@ -152,7 +168,14 @@
                         }
                         break;
                     case 'object':
-                        if (f == 'incidents'){
+                    	var prop = ['scope', 'addresses', 'codes'];
+                    	for (var i = 0; i < prop.length; i++) {
+                    		if (f == prop[i]) {
+                    			$f.val(values[f]['@value'] || '');
+                    		}
+                    	}
+
+                        if (f == 'incidents') {
                             if (overwrite || locked) {
                                 $f.val(values[f]['@value'] || '');
                                 //refresh multiselect wizard for display
