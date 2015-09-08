@@ -4258,30 +4258,51 @@ class S3ProjectPlanningModel(S3Model):
                                           table.target_value,
                                           table.value,
                                           table.end_date,
+                                          orderby = ~table.end_date,
                                           )
+        latest_date = indicator_data.first().end_date
         for d in indicator_data:
-            indicator_id = d.indicator_id
-            target_value = d.target_value or 0
+            target_value = d.target_value
             value = d.value
-            end_date = d.end_date
-            if indicator_id not in indicators:
-                value = value or 0
-                indicators[indicator_id] = {"total_target": target_value,
-                                            "total_value": value,
-                                            "current_target": target_value,
-                                            "current_value": value,
-                                            "current_date": end_date,
-                                            }
-            elif target_value and value is not None:
-                # Add this data to Totals
-                i = indicators[indicator_id]
-                i["total_target"] = i["total_target"] + target_value
-                i["total_value"] = i["total_value"] + value
-                if end_date > i["current_date"]:
-                    # Replace the Current data
-                    i.update(current_target = target_value,
-                             current_value = value,
-                             current_date = end_date)
+            if target_value is None or value is None:
+                # Ignore
+                continue
+            elif target_value == 0.0 and value == 0.0:
+                # Ignore
+                continue
+            else:
+                indicator_id = d.indicator_id
+                end_date = d.end_date
+                if indicator_id not in indicators:
+                    indicators[indicator_id] = {"total_target": target_value,
+                                                "total_value": value,
+                                                "current_target": target_value,
+                                                "current_value": value,
+                                                "current_date": end_date,
+                                                }
+                else:
+                    # Add this data to Totals
+                    i = indicators[indicator_id]
+                    i["total_target"] = i["total_target"] + target_value
+                    i["total_value"] = i["total_value"] + value
+                    # Should never happen due to the orderby:
+                    #if end_date > i["current_date"]:
+                    #    # Replace the Current data
+                    #    i.update(current_target = target_value,
+                    #             current_value = value,
+                    #             current_date = end_date)
+
+        # Current Status only includes data in the Current Month
+        latest_month = latest_date.month
+        latest_year = latest_date.year
+        for indicator_id in indicators:
+            i = indicators[indicator_id]
+            current_date = i["current_date"]
+            if current_date.month != latest_month or \
+               current_date.year != latest_year:
+                # This indicator should be ignored for Current Status
+                i.update(current_target = None,
+                         current_value = None)
 
         # Read all of the Indicators for this Project
         table = s3db.project_indicator
@@ -4296,48 +4317,74 @@ class S3ProjectPlanningModel(S3Model):
         for r in rows:
             indicator_id = r.id
             if indicator_id not in indicators:
-                # We have no data for this indicator, so assume complete
-                current_status = overall_status = 100.0
+                # We have no data for this indicator, so ignore
+                current_status = overall_status = None
             else:
                 i = indicators[indicator_id]
                 total_target = i["total_target"]
                 total_value = i["total_value"]
                 current_target = i["current_target"]
                 current_value = i["current_value"]
-                if total_target == 0.0:
-                    # Assume complete
-                    overall_status = 100.0
-                elif total_value in (0.0, None):
+                if total_target is None:
+                    # Ignore
+                    overall_status = None
+                elif total_target == 0.0:
+                    if total_value == 0.0:
+                        # Ignore
+                        overall_status = None
+                    else:
+                        # Assume complete
+                        overall_status = 100.0
+                elif total_value == 0.0:
                     overall_status = 0.0
                 else:
                     overall_status = total_value / total_target * 100
-                if current_target == 0.0:
-                    # Assume complete
-                    current_status = 100.0
-                elif current_value in (0.0, None):
+                if current_target is None:
+                    # Ignore
+                    current_status = None
+                elif current_target == 0.0:
+                    if current_value == 0.0:
+                        # Ignore
+                        current_status = None
+                    else:
+                        # Assume complete
+                        current_status = 100.0
+                elif current_value == 0.0:
                     current_status = 0.0
                 else:
                     current_status = current_value / current_target * 100
-
-            # Populate Outputs dict
-            output_id = r.output_id
-            weighting = r.weighting
-            if output_id not in outputs:
-                outputs[output_id] = {"current_status": current_status * weighting,
-                                      "overall_status": overall_status * weighting,
-                                      "total_weighting": weighting,
-                                      }
-            else:
-                o = outputs[output_id]
-                o.update(current_status = o["current_status"] + (current_status * weighting),
-                         overall_status = o["overall_status"] + (overall_status * weighting),
-                         total_weighting = o["total_weighting"] + weighting,
-                         )
 
             # Update Indicator Status
             r.update_record(current_status = current_status,
                             overall_status = overall_status,
                             )
+
+            # Populate Outputs dict
+            output_id = r.output_id
+            weighting = r.weighting
+            if current_status is None:
+                current_status = current_weighting = 0
+            else:
+                current_status = current_status * weighting
+                current_weighting = weighting
+            if overall_status is None:
+                overall_status = overall_weighting = 0
+            else:
+                overall_status = overall_status * weighting
+                overall_weighting = weighting
+            if output_id not in outputs:
+                outputs[output_id] = {"current_status": current_status,
+                                      "overall_status": overall_status,
+                                      "total_current_weighting": current_weighting,
+                                      "total_overall_weighting": overall_weighting,
+                                      }
+            else:
+                o = outputs[output_id]
+                o.update(current_status = o["current_status"] + current_status,
+                         overall_status = o["overall_status"] + overall_status,
+                         total_current_weighting = o["total_current_weighting"] + current_weighting,
+                         total_overall_weighting = o["total_overall_weighting"] + overall_weighting,
+                         )
 
         # Read all of the Outputs for this Project
         table = s3db.project_output
@@ -4351,33 +4398,54 @@ class S3ProjectPlanningModel(S3Model):
         for r in rows:
             output_id = r.id
             if output_id not in outputs:
-                # We have no data for this output, so assume complete
-                current_status = overall_status = 100.0
+                # We have no data for this output, so ignore
+                current_status = overall_status = None
             else:
                 o = outputs[output_id]
-                total_weighting = o["total_weighting"]
-                current_status = o["current_status"] / total_weighting
-                overall_status = o["overall_status"] / total_weighting
-
-            # Populate Outcomes dict
-            outcome_id = r.outcome_id
-            weighting = r.weighting
-            if outcome_id not in outcomes:
-                outcomes[outcome_id] = {"current_status": current_status * weighting,
-                                        "overall_status": overall_status * weighting,
-                                        "total_weighting": weighting,
-                                        }
-            else:
-                o = outcomes[outcome_id]
-                o.update(current_status = o["current_status"] + (current_status * weighting),
-                         overall_status = o["overall_status"] + (overall_status * weighting),
-                         total_weighting = o["total_weighting"] + weighting,
-                         )
+                total_current_weighting = o["total_current_weighting"]
+                if total_current_weighting:
+                    current_status = o["current_status"] / total_current_weighting
+                else:
+                    # Weightings are zero, so ignore
+                    current_status = None
+                total_overall_weighting = o["total_overall_weighting"]
+                if total_overall_weighting:
+                    overall_status = o["overall_status"] / total_overall_weighting
+                else:
+                    # Weightings are zero, so ignore
+                    overall_status = None
 
             # Update Output Status
             r.update_record(current_status = current_status,
                             overall_status = overall_status,
                             )
+
+            # Populate Outcomes dict
+            outcome_id = r.outcome_id
+            weighting = r.weighting
+            if current_status is None:
+                current_status = current_weighting = 0
+            else:
+                current_status = current_status * weighting
+                current_weighting = weighting
+            if overall_status is None:
+                overall_status = overall_weighting = 0
+            else:
+                overall_status = overall_status * weighting
+                overall_weighting = weighting
+            if outcome_id not in outcomes:
+                outcomes[outcome_id] = {"current_status": current_status,
+                                        "overall_status": overall_status,
+                                        "total_current_weighting": current_weighting,
+                                        "total_overall_weighting": overall_weighting,
+                                        }
+            else:
+                o = outcomes[outcome_id]
+                o.update(current_status = o["current_status"] + current_status,
+                         overall_status = o["overall_status"] + overall_status,
+                         total_current_weighting = o["total_current_weighting"] + current_weighting,
+                         total_overall_weighting = o["total_overall_weighting"] + overall_weighting,
+                         )
 
         # Read all of the Outcomes for this Project
         table = s3db.project_outcome
@@ -4390,33 +4458,54 @@ class S3ProjectPlanningModel(S3Model):
         for r in rows:
             outcome_id = r.id
             if outcome_id not in outcomes:
-                # We have no data for this outcome, so assume complete
-                current_status = overall_status = 100.0
+                # We have no data for this outcome, so ignore
+                current_status = overall_status = None
             else:
                 o = outcomes[outcome_id]
-                total_weighting = o["total_weighting"]
-                current_status = o["current_status"] / total_weighting
-                overall_status = o["overall_status"] / total_weighting
-
-            # Populate Goals dict
-            goal_id = r.goal_id
-            weighting = r.weighting
-            if goal_id not in goals:
-                goals[goal_id] = {"current_status": current_status * weighting,
-                                  "overall_status": overall_status * weighting,
-                                  "total_weighting": weighting,
-                                  }
-            else:
-                g = goals[goal_id]
-                g.update(current_status = g["current_status"] + (current_status * weighting),
-                         overall_status = g["overall_status"] + (overall_status * weighting),
-                         total_weighting = g["total_weighting"] + weighting,
-                         )
+                total_current_weighting = o["total_current_weighting"]
+                if total_current_weighting:
+                    current_status = o["current_status"] / total_current_weighting
+                else:
+                    # Weightings are zero, so ignore
+                    current_status = None
+                total_overall_weighting = o["total_overall_weighting"]
+                if total_overall_weighting:
+                    overall_status = o["overall_status"] / total_overall_weighting
+                else:
+                    # Weightings are zero, so ignore
+                    overall_status = None
 
             # Update Outcome Status
             r.update_record(current_status = current_status,
                             overall_status = overall_status,
                             )
+
+            # Populate Goals dict
+            goal_id = r.goal_id
+            weighting = r.weighting
+            if current_status is None:
+                current_status = current_weighting = 0
+            else:
+                current_status = current_status * weighting
+                current_weighting = weighting
+            if overall_status is None:
+                overall_status = overall_weighting = 0
+            else:
+                overall_status = overall_status * weighting
+                overall_weighting = weighting
+            if goal_id not in goals:
+                goals[goal_id] = {"current_status": current_status,
+                                  "overall_status": overall_status,
+                                  "total_current_weighting": current_weighting,
+                                  "total_overall_weighting": overall_weighting,
+                                  }
+            else:
+                g = goals[goal_id]
+                g.update(current_status = g["current_status"] + current_status,
+                         overall_status = g["overall_status"] + overall_status,
+                         total_current_weighting = g["total_current_weighting"] + current_weighting,
+                         total_overall_weighting = g["total_overall_weighting"] + overall_weighting,
+                         )
 
         # Read all of the Goals for this Project
         table = s3db.project_goal
@@ -4428,36 +4517,66 @@ class S3ProjectPlanningModel(S3Model):
         for r in rows:
             goal_id = r.id
             if goal_id not in goals:
-                # We have no data for this goal, so assume complete
-                current_status = overall_status = 100.0
+                # We have no data for this goal, so ignore
+                current_status = overall_status = None
             else:
                 g = goals[goal_id]
-                total_weighting = g["total_weighting"]
-                current_status = g["current_status"] / total_weighting
-                overall_status = g["overall_status"] / total_weighting
-
-            # Populate Project dict
-            weighting = r.weighting
-            if project is None:
-                project = {"current_status": current_status * weighting,
-                           "overall_status": overall_status * weighting,
-                           "total_weighting": weighting,
-                           }
-            else:
-                project.update(current_status = project["current_status"] + (current_status * weighting),
-                               overall_status = project["overall_status"] + (overall_status * weighting),
-                               total_weighting = project["total_weighting"] + weighting,
-                               )
+                total_current_weighting = g["total_current_weighting"]
+                if total_current_weighting:
+                    current_status = g["current_status"] / total_current_weighting
+                else:
+                    # Weightings are zero, so ignore
+                    current_status = None
+                total_overall_weighting = g["total_overall_weighting"]
+                if total_overall_weighting:
+                    overall_status = g["overall_status"] / total_overall_weighting
+                else:
+                    # Weightings are zero, so ignore
+                    overall_status = None
 
             # Update Goal Status
             r.update_record(current_status = current_status,
                             overall_status = overall_status,
                             )
 
+            # Populate Project dict
+            weighting = r.weighting
+            if current_status is None:
+                current_status = current_weighting = 0
+            else:
+                current_status = current_status * weighting
+                current_weighting = weighting
+            if overall_status is None:
+                overall_status = overall_weighting = 0
+            else:
+                overall_status = overall_status * weighting
+                overall_weighting = weighting
+            if project is None:
+                project = {"current_status": current_status,
+                           "overall_status": overall_status,
+                           "total_current_weighting": current_weighting,
+                           "total_overall_weighting": overall_weighting,
+                           }
+            else:
+                project.update(current_status = project["current_status"] + current_status,
+                               overall_status = project["overall_status"] + overall_status,
+                               total_current_weighting = project["total_current_weighting"] + current_weighting,
+                               total_overall_weighting = project["total_overall_weighting"] + overall_weighting,
+                               )
+
         # Update Project Status
-        total_weighting = project["total_weighting"]
-        current_status = project["current_status"] / total_weighting
-        overall_status = project["overall_status"] / total_weighting
+        total_current_weighting = project["total_current_weighting"]
+        if total_current_weighting:
+            current_status = project["current_status"] / total_current_weighting
+        else:
+            # Nothing available
+            current_status = None
+        total_overall_weighting = project["total_overall_weighting"]
+        if total_overall_weighting:
+            overall_status = project["overall_status"] / total_overall_weighting
+        else:
+            # Nothing available
+            overall_status = None
         table = s3db.project_project
         db(table.id == project_id).update(current_status_by_indicators = current_status,
                                           overall_status_by_indicators = overall_status,
@@ -5040,25 +5159,24 @@ class S3ProjectPlanningModel(S3Model):
 
         if hasattr(row, "project_indicator_data"):
             row = row.project_indicator_data
+
         if hasattr(row, "target_value"):
             planned = row.target_value
-            if planned == 0.0:
-                # No target means we treat as complete
-                return project_status_represent(100.0)
+            if planned is None:
+                # Ignored
+                return current.messages["NONE"]
         else:
             planned = None
+
         if hasattr(row, "value"):
             actual = row.value
             if actual is None:
+                # Ignored
                 return current.messages["NONE"]
         else:
             actual = None
 
-        if planned is not None and actual is not None:
-            percentage = actual / planned * 100
-            return project_status_represent(percentage)
-
-        if hasattr(row, "id"):
+        if (planned is None or actual is None) and hasattr(row, "id"):
             # Reload the record
             table = current.s3db.project_indicator_data
             r = current.db(table.id == row.id).select(table.target_value,
@@ -5068,19 +5186,20 @@ class S3ProjectPlanningModel(S3Model):
             if r:
                 planned = r.target_value
                 value = r.value
-                if planned and value:
-                    percentage = value / planned * 100
-                    return project_status_represent(percentage)
-                elif planned is None:
-                    return current.messages["NONE"]
-                elif planned == 0.0:
-                    # No target means we treat as complete
-                    return project_status_represent(100.0)
-                elif value is None:
+
+        if planned is not None and actual is not None:
+            if planned == 0.0:
+                if actual == 0.0:
+                    # Ignored
                     return current.messages["NONE"]
                 else:
-                    return project_status_represent(0.0)
+                    # Treat as complete
+                    return project_status_represent(100.0)
+            # Calculate
+            percentage = actual / planned * 100
+            return project_status_represent(percentage)
 
+        # Ignored
         return current.messages["NONE"]
 
 # =============================================================================
