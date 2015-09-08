@@ -20,11 +20,13 @@
         /**
          * Default options
          *
-         * @todo document options
+         * @prop {bool} renderGroupHeaders - whether to render group headers
+         * @prop {string} totalsLabel - the label for group totals
          */
         options: {
 
-            renderGroupHeaders: false
+            renderGroupHeaders: false,
+            totalsLabel: 'TOTAL'
 
         },
 
@@ -151,12 +153,11 @@
          *
          * @param {object} data - the data object
          * @return {jQuery} - the table footer (tfoot)
-         *
-         * @todo: render 'Total' label
          */
         _renderTableFooter: function(data) {
 
-            var tfoot = $('<tfoot>'),
+            var opts = this.options,
+                tfoot = $('<tfoot>'),
                 footerRow = $('<tr class="gi-column-totals">');
 
             var totals = data.t,
@@ -169,8 +170,21 @@
 
                 var columns = data.c,
                     value,
-                    cell;
+                    cell,
+                    footerLabel = null,
+                    titleSpan = 0;
                 for (var i = 0, len = columns.length; i < len; i++) {
+                    if (!footerLabel) {
+                        if (!totals.hasOwnProperty(columns[i])) {
+                            titleSpan++;
+                            continue;
+                        }
+                        if (titleSpan > 1) {
+                            footerLabel = $('<td class="gi-group-footer-label" colspan="' + titleSpan + '">');
+                            $('<span> ' + opts.totalsLabel + '</span>').appendTo(footerLabel);
+                            footerLabel.appendTo(footerRow);
+                        }
+                    }
                     cell = $('<td>').appendTo(footerRow);
                     value = totals[columns[i]];
                     if (value) {
@@ -251,7 +265,8 @@
          */
         _renderGroupFooter: function(table, data, group, level) {
 
-            var groupTotals = group.t,
+            var opts = this.options,
+                groupTotals = group.t,
                 hasTotals = false;
             for (var key in groupTotals) {
                 hasTotals = true;
@@ -284,7 +299,7 @@
                         }
                         if (titleSpan > 1) {
                             footerLabel = $('<td class="gi-group-footer-label" colspan="' + titleSpan + '">').html(value);
-                            $('<span> TOTAL</span>').appendTo(footerLabel);
+                            $('<span> ' + opts.totalsLabel + '</span>').appendTo(footerLabel);
                             footerLabel.appendTo(footerRow);
                         }
                     }

@@ -106,6 +106,7 @@ class S3GroupedItemsReport(S3Method):
             @param attr: controller attributes
         """
 
+        T = current.T
         output = {}
 
         # Get the report configuration
@@ -168,10 +169,14 @@ class S3GroupedItemsReport(S3Method):
             output["items"] = items
 
             # Empty section
-            output["empty"] = current.T("No data available")
+            output["empty"] = T("No data available")
+
+            # Script options
+            totals_label = report_config.get("totals_label", T("Total"))
+            options = {"totalsLabel": str(totals_label).upper(),
+                       }
 
             # Inject script
-            options = {}
             self.inject_script(widget_id, options=options)
 
             # Detect and store theme-specific inner layout
