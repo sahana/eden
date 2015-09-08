@@ -20,10 +20,13 @@
         /**
          * Default options
          *
+         * @prop {string} ajaxURL - the URL to retrieve updated data from
          * @prop {bool} renderGroupHeaders - whether to render group headers
          * @prop {string} totalsLabel - the label for group totals
          */
         options: {
+
+            ajaxURL: null,
 
             renderGroupHeaders: false,
             totalsLabel: 'TOTAL'
@@ -47,6 +50,8 @@
         _init: function() {
 
             var el = $(this.element);
+
+            this.widget_id = el.attr('id');
 
             this.items = el.find('.gi-data').first();
             this.refresh();
@@ -337,6 +342,190 @@
                 cell.appendTo(itemRow);
             }
             itemRow.appendTo(table);
+        },
+
+        /**
+         * Ajax-reload the data and refresh all widget elements
+         *
+         * @param {object} options - the report options as object
+         * @param {object} filters - the filter options as object
+         * @param {bool} force - reload regardless whether options or
+         *                       filters have changed (e.g. after db
+         *                       update in popup), default = true
+         */
+        reload: function(options, filters, force) {
+
+            force = typeof force != 'undefined' ? force : true;
+
+            if (typeof filters == 'undefined') {
+                // Reload not triggered by the filter form
+                // itself => get the current filters
+                filters = this._getFilters();
+            }
+
+            var self = this,
+                needs_reload = false;
+
+            $(this.element).find('.gi-throbber').show();
+
+            if (options || filters) {
+                needs_reload = this._updateAjaxURL(options, filters);
+            }
+
+            if (needs_reload || force) {
+
+                // Reload data and refresh
+                var ajaxURL = this.options.ajaxURL;
+                $.ajax({
+                    'url': ajaxURL,
+                    'dataType': 'json'
+                }).done(function(data) {
+                    self.items.val(JSON.stringify(data));
+                    self.data = null; // enforce deserialize
+                    self.refresh();
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    if (errorThrown == 'UNAUTHORIZED') {
+                        msg = i18n.gis_requires_login;
+                    } else {
+                        msg = jqXHR.responseText;
+                    }
+                    console.log(msg);
+                });
+            } else {
+                // Refresh without reloading the data
+                self.refresh();
+            }
+        },
+
+        /**
+         * Get current filters from the associated filter form
+         *
+         * This is needed when the reload is not triggered /by/ the filter form
+         */
+        _getFilters: function() {
+
+            var filters = $('#' + this.widget_id + '-filters');
+            try {
+                if (filters.length) {
+                    return S3.search.getCurrentFilters(filters.first());
+                } else {
+                    return null;
+                }
+            } catch (e) {
+                return null;
+            }
+        },
+
+        /**
+         * Update the Ajax URL with new options and filters
+         *
+         * @param {object} options - the report options as object
+         * @param {object} filters - the filter options as object
+         */
+        _updateAjaxURL: function(options, filters) {
+
+            var ajaxURL = this.options.ajaxURL;
+
+            if (!ajaxURL) {
+                return false;
+            }
+
+            // Construct the URL
+            var qstr,
+                url_parts = ajaxURL.split('?'),
+                url_vars;
+
+            if (url_parts.length > 1) {
+                qstr = url_parts[1];
+                url_vars = qstr.split('&');
+            } else {
+                qstr = '';
+                url_vars = [];
+            }
+
+            var query = [],
+                needs_reload = false;
+
+            // Check options to update/remove
+            if (options) {
+                var option, newopt;
+                for (option in options) {
+                    newopt = options[option];
+                    qstr = option + '=' + newopt;
+                    if (!(needs_reload || $.inArray(qstr, url_vars) != -1 )) {
+                        needs_reload = true;
+                    }
+                    query.push(qstr);
+                }
+            }
+
+            var update = {},
+                remove = {},
+                i, len, k, v, q;
+
+            // Check filters to update/remove
+            if (filters) {
+                for (i=0, len=filters.length; i < len; i++) {
+                    q = filters[i];
+                    k = q[0];
+                    v = q[1];
+                    if (v === null) {
+                        if (!update[k]) {
+                            remove[k] = true;
+                        }
+                    } else {
+                        if (remove[k]) {
+                            remove[k] = false;
+                        }
+                        if (update[k]) {
+                            update[k].push(k + '=' + v);
+                        } else {
+                            update[k] = [k + '=' + v];
+                        }
+                    }
+                }
+            }
+
+            // Replace/retain existing URL variables
+            for (i=0, len=url_vars.length; i < len; i++) {
+                q = url_vars[i].split('=');
+                if (q.length > 1) {
+                    k = decodeURIComponent(q[0]);
+                    v = decodeURIComponent(q[1]);
+
+                    if (remove[k]) {
+                        needs_reload = true;
+                        continue;
+                    } else if (update[k]) {
+                        if (!(needs_reload || $.inArray(k + '=' + v, update[k]) != -1)) {
+                            needs_reload = true;
+                        }
+                        continue;
+                    } else if (options && options.hasOwnProperty(k)) {
+                        continue;
+                    } else {
+                        query.push(url_vars[i]);
+                    }
+                }
+            }
+
+            // Add new filters
+            for (k in update) {
+                for (i=0, len=update[k].length; i < len; i++) {
+                    if (!(needs_reload || $.inArray(update[k][i], url_vars) != -1)) {
+                        needs_reload = true;
+                    }
+                    query.push(update[k][i]);
+                }
+            }
+
+            var url_query = query.join('&'),
+                filtered_url = url_parts[0];
+            if (url_query) {
+                filtered_url = filtered_url + '?' + url_query;
+            }
+            this.options.ajaxURL = filtered_url;
+            return needs_reload;
         },
 
         /**

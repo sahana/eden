@@ -44,6 +44,7 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import current, INPUT
+from gluon.storage import Storage
 
 from s3rest import S3Method
 from s3utils import s3_unicode
@@ -109,6 +110,20 @@ class S3GroupedItemsReport(S3Method):
         T = current.T
         output = {}
 
+        resource = self.resource
+        tablename = resource.tablename
+
+        get_config = resource.get_config
+
+        # Apply filter defaults before rendering the data
+        show_filter_form = False
+        if r.representation in ("html", "iframe"):
+            filter_widgets = get_config("filter_widgets", None)
+            if filter_widgets and not self.hide_filter:
+                show_filter_form = True
+                from s3filter import S3FilterForm
+                S3FilterForm.apply_filter_defaults(r, resource)
+
         # Get the report configuration
         report_config = self.get_report_config()
 
@@ -140,7 +155,6 @@ class S3GroupedItemsReport(S3Method):
                        labels=labels,
                        represent=represent,
                        )
-        #print data
 
         # Widget ID
         widget_id = "groupeditems"
@@ -149,22 +163,51 @@ class S3GroupedItemsReport(S3Method):
         if r.representation in ("html", "iframe"):
             # Page load
 
+
             output["report_type"] = "groupeditems"
             output["widget_id"] = widget_id
 
             # Report title
             title = report_config.get("title")
             if title is None:
-                tablename = self.resource.tablename
                 title = self.crud_string(tablename, "title_report")
             output["title"] = title
+
+            # Filter form
+            if show_filter_form:
+
+                settings = current.deployment_settings
+
+                # Filter form options
+                filter_formstyle = get_config("filter_formstyle", None)
+                filter_clear = get_config("filter_clear",
+                                          settings.get_ui_filter_clear())
+                filter_submit = get_config("filter_submit", True)
+
+                # Instantiate form
+                filter_form = S3FilterForm(filter_widgets,
+                                           formstyle=filter_formstyle,
+                                           submit=filter_submit,
+                                           clear=filter_clear,
+                                           ajax=True,
+                                           _class="filter-form",
+                                           _id="%s-filter-form" % widget_id,
+                                           )
+
+                # Render against unfiltered resource
+                fresource = current.s3db.resource(tablename)
+                alias = resource.alias if resource.parent else None
+                output["filter_form"] = filter_form.html(fresource,
+                                                         r.get_vars,
+                                                         target = widget_id,
+                                                         alias = alias
+                                                         )
 
             # Inject data
             items = INPUT(_type = "hidden",
                           _id = "%s-data" % widget_id,
                           _class = "gi-data",
                           _value = data,
-                          #data = {"items": data},
                           )
             output["items"] = items
 
@@ -172,8 +215,14 @@ class S3GroupedItemsReport(S3Method):
             output["empty"] = T("No data available")
 
             # Script options
+            ajaxurl = attr.get("ajaxurl", r.url(method = "grouped",
+                                                representation = "json",
+                                                vars = r.get_vars,
+                                                ))
             totals_label = report_config.get("totals_label", T("Total"))
-            options = {"totalsLabel": str(totals_label).upper(),
+
+            options = {"ajaxURL": ajaxurl,
+                       "totalsLabel": str(totals_label).upper(),
                        }
 
             # Inject script
@@ -186,10 +235,9 @@ class S3GroupedItemsReport(S3Method):
             response = current.response
             response.view = self._view(r, "report.html")
 
-        # @todo: implement
-        #elif r.representation == "json":
-            ## Ajax load
-            #output = json.dumps(data, separators=SEPARATORS)
+        elif r.representation == "json":
+            # Ajax reload
+            output = data
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
