@@ -119,6 +119,11 @@ def config(settings):
     #settings.security.policy = 6 # Organisation-ACLs
 
     # -------------------------------------------------------------------------
+    # Human Resource Management
+    # Uncomment to change the label for 'Staff'
+    settings.hrm.staff_label = "Contacts"
+
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
     settings.modules = OrderedDict([
@@ -205,7 +210,7 @@ def config(settings):
             name_nice = T("Documents"),
             #description = "A library of digital resources, such as photos, documents and reports",
             restricted = True,
-            module_type = 10,
+            module_type = None,
         )),
         ("msg", Storage(
             name_nice = T("Messaging"),
