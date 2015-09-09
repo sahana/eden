@@ -1674,12 +1674,6 @@ def update_alert_id(tablename):
 
         if alert_id:
             db(table.id == _id).update(alert_id = alert_id)
-            # Set is_template to true for one created from Alert Template
-            if tablename == "cap_resource":
-                resource_id = form_vars.get("id", None)
-                if resource_id:
-                    if cap_alert_is_template(alert_id):
-                        db(table.id == resource_id).update(is_template = True)
 
     return func
 
