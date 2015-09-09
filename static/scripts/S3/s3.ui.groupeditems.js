@@ -74,7 +74,7 @@
                 opts = this.options;
 
             // Show throbber
-            el.find('.gi-throbber').hide();
+            el.find('.gi-throbber').show();
 
             this._unbindEvents();
 
