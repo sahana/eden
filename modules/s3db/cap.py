@@ -2050,14 +2050,23 @@ def add_area_from_template(area_id, alert_id):
     db = current.db
     s3db = current.s3db
     atable = s3db.cap_area
+    itable = s3db.cap_info
     ltable = s3db.cap_area_location
     ttable = s3db.cap_area_tag
     
     # Create Area Record from Template
-    atemplate = db(atable.id == area_id).select(limitby=(0, 1),
-                                                *afieldnames).first()
+    atemplate = db(atable.id == area_id).select(*afieldnames,
+                                                limitby=(0, 1)).first()
+    rows = db(itable.alert_id == alert_id).select(itable.id)
+    
+    if len(rows) == 1:
+        info_id = rows.first().id
+    else:
+        info_id = ""
+        
     adata = {"is_template": False,
-             "alert_id": alert_id
+             "alert_id": alert_id,
+             "info_id": info_id
              }
     for field in afieldnames:
         adata[field] = atemplate[field]
@@ -2067,7 +2076,8 @@ def add_area_from_template(area_id, alert_id):
     ltemplate = db(ltable.area_id == area_id).select(*lfieldnames)
     for rows in ltemplate:
         ldata = {"area_id": aid,
-                 "alert_id": alert_id}
+                 "alert_id": alert_id
+                 }
         for field in lfieldnames:
             ldata[field] = rows[field]
         lid = ltable.insert(**ldata)
@@ -2075,7 +2085,9 @@ def add_area_from_template(area_id, alert_id):
     # Add Area Tag Components of Template
     ttemplate = db(ttable.area_id == area_id).select(*tfieldnames)      
     for row in ttemplate:
-        tdata = {"area_id": aid}
+        tdata = {"area_id": aid,
+                 "alert_id": alert_id
+                 }
         for field in tfieldnames:
             tdata[field] = row[field]
         tid = ttable.insert(**tdata)

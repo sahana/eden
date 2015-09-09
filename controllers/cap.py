@@ -622,6 +622,10 @@ def alert():
                     itable.insert(**row_clone)
 
                 # Clone all cap_resource entries from the alert template
+                # First get the info_id
+                itable = s3db.cap_info
+                rows = db(itable.alert_id == lastid).select(itable.id)
+                    
                 rtable = s3db.cap_resource
                 r_unwanted_fields = set(("deleted_rb",
                                          "owned_by_user",
@@ -643,9 +647,13 @@ def alert():
                 for row in rows_:
                     row_clone = row.as_dict()
                     del row_clone["id"]
-                    del row_clone["info_id"]
                     row_clone["alert_id"] = lastid
                     row_clone["is_template"] = False
+                    # Use the info_id here
+                    if len(rows) == 1:
+                        row_clone["info_id"] = rows.first().id
+                    else:
+                        del row_clone["info_id"]
                     rtable.insert(**row_clone)
 
             r.next = URL(c="cap", f="alert", args=[lastid, "info"])
