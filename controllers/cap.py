@@ -603,6 +603,33 @@ def alert():
                     row_clone["is_template"] = False
                     itable.insert(**row_clone)
 
+                # Clone all cap_resource entries from the alert template
+                rtable = s3db.cap_resource
+                r_unwanted_fields = set(("deleted_rb",
+                                         "owned_by_user",
+                                         "approved_by",
+                                         "mci",
+                                         "deleted",
+                                         "modified_on",
+                                         "realm_entity",
+                                         "uuid",
+                                         "created_on",
+                                         "deleted_fk",
+                                         "created_by",
+                                         "modified_by",
+                                         "owned_by_group",
+                                         ))
+                rfields = [rtable[f] for f in rtable.fields
+                                     if f not in r_unwanted_fields]
+                rows_ = db(rtable.alert_id == alert.template_id).select(*rfields)
+                for row in rows_:
+                    row_clone = row.as_dict()
+                    del row_clone["id"]
+                    del row_clone["info_id"]
+                    row_clone["alert_id"] = lastid
+                    row_clone["is_template"] = False
+                    rtable.insert(**row_clone)
+
             r.next = URL(c="cap", f="alert", args=[lastid, "info"])
 
         if r.interactive:
@@ -747,6 +774,14 @@ def template():
 
         itable.category.required = False
 
+        if r.component_name == "resource":
+            # Limit to those for this Alert
+            r.component.table.info_id.requires = IS_EMPTY_OR(
+                                                   IS_ONE_OF(db, "cap_info.id",
+                                                             s3db.cap_info_represent,
+                                                             filterby="alert_id",
+                                                             filter_opts=(r.id,),
+                                                             ))
         s3.crud_strings[tablename] = Storage(
             label_create = T("Create Template"),
             title_display = T("Template"),

@@ -792,6 +792,11 @@ class S3CAPModel(S3Model):
                      alert_id(writable = False,
                               ),
                      info_id(),
+                     Field("is_template", "boolean",
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
                      self.super_link("doc_id", "doc_entity"),
                      Field("resource_desc",
                            requires = IS_NOT_EMPTY(),
@@ -831,8 +836,9 @@ class S3CAPModel(S3Model):
                     msg_list_empty = T("No resources currently defined for this alert"))
 
         # @todo: complete custom form
-        crud_form = S3SQLCustomForm(#"name",
+        crud_form = S3SQLCustomForm("alert_id",
                                     "info_id",
+                                    "is_template",
                                     "resource_desc",
                                     S3SQLInlineComponent("image",
                                                          label=T("Image"),
@@ -845,11 +851,11 @@ class S3CAPModel(S3Model):
                                                                  ],
                                                          ),
                                     )
-        configure(tablename,
-                  super_entity = "doc_entity",
-                  crud_form = crud_form,
+        configure(tablename,                  
                   # Shouldn't be required if all UI actions go through alert controller & XSLT configured appropriately
                   create_onaccept = update_alert_id(tablename),
+                  crud_form = crud_form,
+                  super_entity = "doc_entity",
                   )
 
         # ---------------------------------------------------------------------
@@ -1396,10 +1402,10 @@ def cap_rheader(r):
                     else:
                         error = ""
 
-                    tabs = [(T("Template"), None),
-                            (T("Information template"), "info"),
+                    tabs = [(T("Alert Details"), None),
+                            (T("Information"), "info"),
                             #(T("Area"), "area"),
-                            #(T("Resource Files"), "resource"),
+                            (T("Resource Files"), "resource"),
                             ]
 
                     rheader_tabs = s3_rheader_tabs(r, tabs)
@@ -1668,6 +1674,12 @@ def update_alert_id(tablename):
 
         if alert_id:
             db(table.id == _id).update(alert_id = alert_id)
+            # Set is_template to true for one created from Alert Template
+            if tablename == "cap_resource":
+                resource_id = form_vars.get("id", None)
+                if resource_id:
+                    if cap_alert_is_template(alert_id):
+                        db(table.id == resource_id).update(is_template = True)
 
     return func
 
