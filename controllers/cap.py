@@ -542,7 +542,7 @@ def alert():
                 rows = db(itable.alert_id == r.record.id).select(itable.id)
                 if len(rows) == 1:
                     field = atable.info_id
-                    field.default = rows[0]["id"]
+                    field.default = rows.first().id
                     field.writable = field.readable = False
                     
             elif r.component_name == "resource":
@@ -560,7 +560,7 @@ def alert():
                 rows = db(itable.alert_id == r.record.id).select(itable.id)
                 if len(rows) == 1:
                     field = atable.info_id
-                    field.default = rows[0]["id"]
+                    field.default = rows.first().id
                     field.writable = field.readable = False
 
             # @ToDo: Move inside correct component context (None?)
@@ -810,7 +810,7 @@ def template():
             rows = db(itable.alert_id == r.record.id).select(itable.id)
             if len(rows) == 1:
                 field = rtable.info_id
-                field.default = rows[0]["id"]
+                field.default = rows.first().id
                 field.writable = field.readable = False
             
         s3.crud_strings[tablename] = Storage(
