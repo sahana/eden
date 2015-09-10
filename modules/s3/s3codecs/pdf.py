@@ -148,20 +148,20 @@ def biDiText(text):
 
         isArabic = False
         isBidi = False
-    
+
         for c in text:
             cat = unicodedata.bidirectional(c)
-    
+
             if cat in ("AL", "AN"):
                 isArabic = True
                 isBidi = True
                 break
             elif cat in ("R", "RLE", "RLO"):
                 isBidi = True
-    
+
         if isArabic:
             text = arabic_reshaper.reshape(text)
-    
+
         if isBidi:
             text = get_display(text)
 
@@ -1427,20 +1427,11 @@ class S3html2pdf():
                  ("FONTNAME", (0, 0), (-1, -1), self.font_name),
                  ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
                  ]
-        content = []
-        cappend = content.append
-        rowCnt = 0
-        result = None
-        exclude_tag = self.exclude_tag
-        parse_tr = self.parse_tr
-        for component in html.components:
-            if exclude_tag(component):
-                continue
-            if isinstance(component, TR):
-                result = parse_tr(component, style, rowCnt)
-                rowCnt += 1
-            if result != None:
-                cappend(result)
+
+        content, row_count = self.parse_table_components(html,
+                                                         style = style,
+                                                         )
+
         if content == []:
             return None
         table = Table(content,
@@ -1450,6 +1441,54 @@ class S3html2pdf():
                       )
         #cw = table._colWidths
         return [table]
+
+    # -------------------------------------------------------------------------
+    def parse_table_components(self,
+                               table,
+                               content=None,
+                               row_count=None,
+                               style=None):
+        """
+            Parses TABLE components
+
+            @param table: the TABLE instance or a subcomponent of it
+            @param content: the current content array
+            @param row_count: the current number of rows in the content array
+            @param style: the style list
+        """
+
+        if content is None:
+            content = []
+        cappend = content.append
+
+        if row_count is None:
+            row_count = 0
+
+        exclude_tag = self.exclude_tag
+        parse_tr = self.parse_tr
+        parse = self.parse_table_components
+
+        for component in table.components:
+            result = None
+
+            if exclude_tag(component):
+                continue
+
+            if isinstance(component, (THEAD, TBODY, TFOOT)):
+                content, row_count = parse(component,
+                                           content = content,
+                                           row_count = row_count,
+                                           style=style,
+                                           )
+
+            elif isinstance(component, TR):
+                result = parse_tr(component, style, row_count)
+                row_count += 1
+
+            if result != None:
+                cappend(result)
+
+        return content, row_count
 
     # -------------------------------------------------------------------------
     def parse_tr (self, html, style, rowCnt):

@@ -30,6 +30,9 @@
 """
 
 __all__ = ("S3GroupedItemsReport",
+           "S3GroupedItemsTable",
+           "S3GroupedItems",
+           "S3GroupAggregate",
            )
 
 import math
@@ -43,7 +46,7 @@ except ImportError:
     except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from gluon import current, INPUT
+from gluon import current, INPUT, TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
 from gluon.storage import Storage
 
 from s3rest import S3Method
@@ -115,9 +118,11 @@ class S3GroupedItemsReport(S3Method):
 
         get_config = resource.get_config
 
+        representation = r.representation
+
         # Apply filter defaults before rendering the data
         show_filter_form = False
-        if r.representation in ("html", "iframe"):
+        if representation in ("html", "iframe"):
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets and not self.hide_filter:
                 show_filter_form = True
@@ -147,30 +152,37 @@ class S3GroupedItemsReport(S3Method):
 
         gi = S3GroupedItems(items, groupby=groupby, aggregate=aggregate)
 
+        # Report title
+        title = report_config.get("title")
+        if title is None:
+            title = self.crud_string(tablename, "title_report")
+
         # Generate JSON data
         display_cols = report_config.get("display_cols")
         labels = report_config.get("labels")
         represent = report_config.get("groupby_represent")
-        data = gi.json(fields=display_cols,
-                       labels=labels,
-                       represent=represent,
+
+        if representation == "pdf":
+            as_dict = True
+        else:
+            as_dict = False
+
+        data = gi.json(fields = display_cols,
+                       labels = labels,
+                       represent = represent,
+                       as_dict = as_dict,
                        )
 
         # Widget ID
         widget_id = "groupeditems"
 
         # Render output
-        if r.representation in ("html", "iframe"):
+        if representation in ("html", "iframe"):
             # Page load
 
 
             output["report_type"] = "groupeditems"
             output["widget_id"] = widget_id
-
-            # Report title
-            title = report_config.get("title")
-            if title is None:
-                title = self.crud_string(tablename, "title_report")
             output["title"] = title
 
             # Filter form
@@ -235,9 +247,17 @@ class S3GroupedItemsReport(S3Method):
             response = current.response
             response.view = self._view(r, "report.html")
 
-        elif r.representation == "json":
+        elif representation == "json":
             # Ajax reload
             output = data
+
+        elif representation == "pdf":
+            # PDF Export
+            gi_table = S3GroupedItemsTable(resource,
+                                           title = title,
+                                           data = data,
+                                           )
+            return gi_table.pdf()
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -468,6 +488,199 @@ class S3GroupedItemsReport(S3Method):
                      "options": json.dumps(options),
                      }
         s3.jquery_ready.append(script)
+
+# =============================================================================
+class S3GroupedItemsTable(object):
+    """
+        Helper class to render representations of a grouped items report
+    """
+
+    def __init__(self, resource, title=None, data=None, group_headers=False):
+        """
+            Constructor
+
+            @param resource: the resource
+            @param title: the report title
+            @param data: the JSON data (as dict)
+        """
+
+        self.resource = resource
+        self.title = title
+        self.data = data
+
+        self.group_headers = group_headers
+
+    # -------------------------------------------------------------------------
+    def html(self):
+        """
+            Produce a HTML representation of the grouped table
+
+            @return: a TABLE instance
+        """
+
+        table = TABLE()
+
+        self.html_render_table_header(table)
+
+        tbody = TBODY()
+        self.html_render_group(tbody, self.data)
+        table.append(tbody)
+
+        self.html_render_table_footer(table)
+
+        return table
+
+    # -------------------------------------------------------------------------
+    def html_render_table_header(self, table):
+        """
+            Render the table header
+
+            @param table: the TABLE instance
+        """
+
+        data = self.data
+
+        columns = data.get("c")
+        labels = data.get("l")
+
+        header_row = TR(_class="gi-column-headers")
+        if columns:
+            for column in columns:
+                label = labels.get(column, column)
+                header_row.append(TH(label))
+        table.append(THEAD(header_row))
+
+    # -------------------------------------------------------------------------
+    def html_render_table_footer(self, table):
+        """
+            Render the table footer
+
+            @param table: the TABLE instance
+
+            @todo: add footer label
+        """
+
+        data = self.data
+
+        columns = data.get("c")
+        totals = data.get("t")
+
+        footer_row = TR(_class="gi-column-totals")
+        if columns:
+            for column in columns:
+                value = totals[column] if column in totals else ""
+                footer_row.append(TD(value))
+        table.append(TFOOT(footer_row))
+
+    # -------------------------------------------------------------------------
+    def html_render_group(self, tbody, group, level=0):
+        """
+            Render a group of rows
+
+            @param tbody: the TBODY or TABLE to append to
+            @param group: the group dict
+            @param level: the grouping level
+        """
+
+        if self.group_headers and level > 0:
+            self.html_render_group_header(tbody, group, level=level)
+
+        subgroups = group.get("d")
+        items = group.get("i")
+
+        if subgroups:
+            for subgroup in subgroups:
+                self.html_render_group(tbody, subgroup,
+                                       level = level + 1,
+                                       )
+        elif items:
+            for item in items:
+                self.html_render_item(tbody, item, level=level)
+
+        if level > 0:
+            self.html_render_group_footer(tbody, group, level=level)
+
+    # -------------------------------------------------------------------------
+    def html_render_group_header(self, tbody, group, level=0):
+        """
+            Render the group header (=group label)
+
+            @param tbody: the TBODY or TABLE to append to
+            @param group: the group dict
+            @param level: the grouping level
+        """
+
+        columns = data.get("c")
+        value = data.get("v")
+
+        if not value:
+            value = ""
+        header = TD(value,
+                    _colspan = len(columns) if columns else None,
+                    )
+
+        tbody.append(TR(header,
+                        _class="gi-group-header gi-level-%s" % level,
+                        ))
+
+    # -------------------------------------------------------------------------
+    def html_render_group_footer(self, tbody, group, level=0):
+        """
+            Render the group footer (=group totals)
+
+            @param tbody: the TBODY or TABLE to append to
+            @param group: the group dict
+            @param level: the grouping level
+
+            @todo: add group label to footer if no group headers
+            @todo: add totals label
+        """
+
+        data = self.data
+
+        columns = data.get("c")
+        totals = group.get("t")
+
+        footer_row = TR(_class="gi-group-footer gi-level-%s" % level)
+        if columns:
+            for column in columns:
+                value = totals[column] if column in totals else ""
+                footer_row.append(TD(value))
+        tbody.append(footer_row)
+
+    # -------------------------------------------------------------------------
+    def html_render_item(self, tbody, item, level=0):
+        """
+            Render an item
+
+            @param tbody: the TBODY or TABLE to append to
+            @param item: the item dict
+            @param level: the grouping level
+        """
+
+        data = self.data
+
+        columns = data["c"]
+        cells = []
+
+        for column in columns:
+            cells.append(TD(item.get(column, "")))
+        tbody.append(TR(cells, _class="gi-item gi-level-%s" % level))
+
+    # -------------------------------------------------------------------------
+    def pdf(self):
+        """
+            Produce a PDF representation of the grouped table
+
+            @return: the PDF document
+        """
+
+        from s3.s3export import S3Exporter
+        exporter = S3Exporter().pdf
+        return exporter(self.resource,
+                        pdf_title = self.title,
+                        pdf_callback = lambda r: self.html(),
+                        )
 
 # =============================================================================
 class S3GroupedItems(object):
