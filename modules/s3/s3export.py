@@ -75,6 +75,7 @@ class S3Exporter(object):
              limit=None,
              fields=None,
              orderby=None,
+             represent=False,
              tooltip=None):
         """
             Export a resource as JSON
@@ -85,6 +86,7 @@ class S3Exporter(object):
             @param fields: list of field selectors for fields to include in
                            the export (None for all fields)
             @param orderby: ORDERBY expression
+            @param represent: whether values should be represented
             @param tooltip: additional tooltip field, either a field selector
                             or an expression "f(k,v)" where f is a function
                             name that can be looked up from s3db, and k,v are
@@ -96,7 +98,12 @@ class S3Exporter(object):
         """
 
         if fields is None:
-            fields = [f.name for f in resource.table if f.readable]
+            # json_fields falls back to list_fields if not-defined.
+            # If that's not defined either, it falls back to all readable fields in the table
+            fields = resource.list_fields("json_fields", id_column=True)
+
+        if orderby is None:
+            orderby = resource.get_config("orderby", None)
 
         tooltip_function = None
         if tooltip:
@@ -106,7 +113,7 @@ class S3Exporter(object):
             match = re.match("(\w+)\((\w+),(\w+)\)", tooltip)
             if match:
                 function_name, kname, vname = match.groups()
-                # Try resolve the function name
+                # Try to resolve the function name
                 tooltip_function = current.s3db.get(function_name)
                 if tooltip_function:
                     if kname not in fields:
@@ -117,22 +124,34 @@ class S3Exporter(object):
                 if tooltip not in fields:
                     fields.append(tooltip)
 
-        # Get the rows and return as json
-        rows = resource.select(fields,
-                               start=start,
-                               limit=limit,
-                               orderby=orderby,
-                               as_rows=True)
+        # Get the data
+        _rows = resource.select(fields,
+                                start=start,
+                                limit=limit,
+                                orderby=orderby,
+                                represent=represent).rows
+
+        # Simplify to plain fieldnames for fields in this table
+        tn = "%s." % resource.tablename
+        rows = []
+        rappend = rows.append
+        for _row in _rows:
+            row = {}
+            for f in _row:
+                v = _row[f]
+                if tn in f:
+                    f = f.split(tn, 1)[1]
+                row[f] = v
+            rappend(row)
 
         if tooltip:
-            import sys
-            from s3utils import s3_unicode
             if tooltip_function:
                 # Resolve key and value names against the resource
                 try:
                     krfield = resource.resolve_selector(kname)
                     vrfield = resource.resolve_selector(vname)
                 except (AttributeError, SyntaxError):
+                    import sys
                     current.log.error(sys.exc_info()[1])
                 else:
                     # Extract key and value fields from each row and
@@ -154,23 +173,27 @@ class S3Exporter(object):
                     try:
                         tooltips = tooltip_function(options)
                     except:
+                        import sys
                         current.log.error(sys.exc_info()[1])
                     else:
                         # Add tooltips as "_tooltip" to the corresponding rows
                         if isinstance(tooltips, dict):
+                            from s3utils import s3_unicode
                             for k, v in tooltips.items():
                                 if k in items:
                                     items[k]["_tooltip"] = s3_unicode(v)
-                pass
+
             else:
                 # Resolve the tooltip field name against the resource
                 try:
                     tooltip_rfield = resource.resolve_selector(tooltip)
                 except (AttributeError, SyntaxError):
+                    import sys
                     current.log.error(sys.exc_info()[1])
                 else:
                     # Extract the tooltip field from each row
                     # and add it as _tooltip
+                    from s3utils import s3_unicode
                     for row in rows:
                         try:
                             value = tooltip_rfield.extract(row)
@@ -179,11 +202,13 @@ class S3Exporter(object):
                         if value:
                             row["_tooltip"] = s3_unicode(value)
 
+        # Return as JSON
         response = current.response
         if response:
             response.headers["Content-Type"] = "application/json"
 
-        return rows.json()
+        from gluon.serializers import json as jsons
+        return jsons(rows)
 
     # -------------------------------------------------------------------------
     def pdf(self, *args, **kwargs):

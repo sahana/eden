@@ -2335,9 +2335,8 @@ class S3ProjectCampaignModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_CAMPAIGN_KW = T("Add Keyword")
         crud_strings[tablename] = Storage(
-            label_create = ADD_CAMPAIGN_KW,
+            label_create = T("Add Keyword"),
             title_display = T("Keyword"),
             title_list = T("Keywords"),
             title_update = T("Edit Keyword"),
@@ -2381,9 +2380,8 @@ class S3ProjectCampaignModel(S3Model):
         #             *s3_meta_fields())
 
         # CRUD Strings
-        #ADD_CAMPAIGN_RESP = T("Add Response")
         #crud_strings[tablename] = Storage(
-        #    label_create = ADD_CAMPAIGN_RESP,
+        #    label_create = T("Add Response"),
         #    title_display = T("Response Details"),
         #    title_list = T("Responses"),
         #    title_update = T("Edit Response"),
@@ -2439,9 +2437,8 @@ class S3ProjectCampaignModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_CAMPAIGN_RESP_SUMM = T("Add Response Summary")
         crud_strings[tablename] = Storage(
-            label_create = ADD_CAMPAIGN_RESP_SUMM,
+            label_create = T("Add Response Summary"),
             title_display = T("Response Summary Details"),
             title_list = T("Response Summaries"),
             title_update = T("Edit Response Summary"),

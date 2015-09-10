@@ -489,9 +489,8 @@ class S3CAPModel(S3Model):
         if crud_strings["cap_template"]:
             crud_strings[tablename] = crud_strings["cap_template"]
         else:
-            ADD_ALERT = T("Create Alert")
             crud_strings[tablename] = Storage(
-                label_create = ADD_ALERT,
+                label_create = T("Create Alert"),
                 title_display = T("Alert Details"),
                 title_list = T("Alerts"),
                 # If already-published, this should create a new "Update"
