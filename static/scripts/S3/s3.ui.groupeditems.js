@@ -74,7 +74,7 @@
                 opts = this.options;
 
             // Show throbber
-            el.find('.gi-throbber').hide();
+            el.find('.gi-throbber').show();
 
             this._unbindEvents();
 
@@ -304,7 +304,7 @@
                         }
                         if (titleSpan > 1) {
                             footerLabel = $('<td class="gi-group-footer-label" colspan="' + titleSpan + '">').html(value);
-                            $('<span> ' + opts.totalsLabel + '</span>').appendTo(footerLabel);
+                            $('<span class="gi-group-footer-inline-label"> ' + opts.totalsLabel + '</span>').appendTo(footerLabel);
                             footerLabel.appendTo(footerRow);
                         }
                     }
