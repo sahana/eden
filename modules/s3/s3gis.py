@@ -2267,13 +2267,21 @@ class GIS(object):
                     rows = db(query).select(table.id,
                                             gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
                 for row in rows:
-                    output[row[tablename].id] = row.geojson
+                    key = row[tablename].id
+                    if key in output:
+                        output[key].append(row.geojson)
+                    else:
+                        output[key] = [row.geojson]
             else:
                 # Do the Simplify direct from the DB
                 rows = db(query).select(table.id,
                                         gtable.the_geom.st_simplify(tolerance).st_astext().with_alias("wkt"))
                 for row in rows:
-                    output[row[tablename].id] = row.wkt
+                    key = row[tablename].id
+                    if key in output:
+                        output[key].append(row.wkt)
+                    else:
+                        output[key] = [row.wkt]
         else:
             rows = db(query).select(table.id,
                                     gtable.wkt)
@@ -2286,14 +2294,20 @@ class GIS(object):
                                      tolerance=tolerance,
                                      output="geojson")
                         if g:
-                            output[row[tablename].id] = g
+                            key = row[tablename].id
+                            if key in output:
+                                output[key].append(g)
+                            else:
+                                output[key] = [g]
                 else:
+                    # gis_location: always single
                     for row in rows:
                         g = simplify(row.wkt,
                                      tolerance=tolerance,
                                      output="geojson")
                         if g:
                             output[row.id] = g
+
             else:
                 # Simplify the polygon to reduce download size
                 # & also to work around the recursion limit in libxslt
@@ -2302,12 +2316,18 @@ class GIS(object):
                     for row in rows:
                         wkt = simplify(row["gis_location"].wkt)
                         if wkt:
-                            output[row[tablename].id] = wkt
+                            key = row[tablename].id
+                            if key in output:
+                                output[key].append(wkt)
+                            else:
+                                output[key] = [wkt]
                 else:
+                    # gis_location: always single
                     for row in rows:
                         wkt = simplify(row.wkt)
                         if wkt:
                             output[row.id] = wkt
+
         return output
 
     # -------------------------------------------------------------------------
@@ -2323,6 +2343,7 @@ class GIS(object):
             @param: attr_fields - list of attr_fields to use instead of reading
                                   from get_vars or looking up in gis_layer_feature
             @param: count - total number of features
+                           (can actually be more if features have multiple locations)
         """
 
         tablename = resource.tablename
@@ -2472,9 +2493,8 @@ class GIS(object):
                                        represent = True,
                                        show_links = False)
 
-                rfields = data["rfields"]
                 attr_cols = {}
-                for f in rfields:
+                for f in data["rfields"]:
                     fname = f.fname
                     selector = f.selector
                     if fname in attr_fields or selector in attr_fields:
@@ -2492,8 +2512,7 @@ class GIS(object):
                         attr_cols[fieldname] = (ftype, fname)
 
                 _pkey = str(_pkey)
-                rows = data["rows"]
-                for row in rows:
+                for row in data["rows"]:
                     record_id = int(row[_pkey])
                     if attr_cols:
                         attribute = {}
@@ -2685,13 +2704,14 @@ class GIS(object):
                 #if custom:
                 #    # Add geoJSONs
                 #elif join:
-                # @ToDo: Support records with multiple locations
-                #        (e.g. an Org with multiple Facs)
                 if join:
                     for row in rows:
+                        # @ToDo: Support records with multiple locations
+                        #        (e.g. an Org with multiple Facs)
                         _location = row["gis_location"]
                         latlons[row[tablename].id] = (_location.lat, _location.lon)
                 else:
+                    # gis_location: Always single
                     for row in rows:
                         latlons[row.id] = (row.lat, row.lon)
 
