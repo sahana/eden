@@ -259,18 +259,18 @@ class S3CAPModel(S3Model):
         ])
         # CAP info categories
         cap_info_category_opts = OrderedDict([
-            ("Geo", T("Geophysical (inc. landslide)")),
-            ("Met", T("Meteorological (inc. flood)")),
-            ("Safety", T("General emergency and public safety")),
-            ("Security", T("Law enforcement, military, homeland and local/private security")),
-            ("Rescue", T("Rescue and recovery")),
-            ("Fire", T("Fire suppression and rescue")),
-            ("Health", T("Medical and public health")),
-            ("Env", T("Pollution and other environmental")),
-            ("Transport", T("Public and private transportation")),
-            ("Infra", T("Utility, telecommunication, other non-transport infrastructure")),
-            ("CBRNE", T("Chemical, Biological, Radiological, Nuclear or High-Yield Explosive threat or attack")),
-            ("Other", T("Other events")),
+            ("Geo", T("Geo - Geophysical (inc. landslide)")),
+            ("Met", T("Met - Meteorological (inc. flood)")),
+            ("Safety", T("Safety - General emergency and public safety")),
+            ("Security", T("Security - Law enforcement, military, homeland and local/private security")),
+            ("Rescue", T("Rescue - Rescue and recovery")),
+            ("Fire", T("Fire - Fire suppression and rescue")),
+            ("Health", T("Health - Medical and public health")),
+            ("Env", T("Env - Pollution and other environmental")),
+            ("Transport", T("Transport - Public and private transportation")),
+            ("Infra", T("Infra - Utility, telecommunication, other non-transport infrastructure")),
+            ("CBRNE", T("CBRNE - Chemical, Biological, Radiological, Nuclear or High-Yield Explosive threat or attack")),
+            ("Other", T("Other - Other events")),
         ])
 
         tablename = "cap_alert"
@@ -1461,8 +1461,10 @@ def cap_rheader(r):
                                                                    "pe_ids": pe_ids,
                                                                    },
                                                            ),
-                                               _class = "action-btn"
+                                               _class = "action-btn confirm-btn"
                                                )
+                                current.response.s3.jquery_ready.append(
+'''S3.confirmClick('.confirm-btn','%s')''' % T("Do you want to submit the alert for approval?"))
                             else:
                                 submit_btn = None
                         else:
@@ -2066,7 +2068,7 @@ def add_area_from_template(area_id, alert_id):
         
     adata = {"is_template": False,
              "alert_id": alert_id,
-             "info_id": info_id
+             "info_id": info_id,
              }
     for field in afieldnames:
         adata[field] = atemplate[field]
@@ -2076,7 +2078,7 @@ def add_area_from_template(area_id, alert_id):
     ltemplate = db(ltable.area_id == area_id).select(*lfieldnames)
     for rows in ltemplate:
         ldata = {"area_id": aid,
-                 "alert_id": alert_id
+                 "alert_id": alert_id,
                  }
         for field in lfieldnames:
             ldata[field] = rows[field]
@@ -2086,7 +2088,7 @@ def add_area_from_template(area_id, alert_id):
     ttemplate = db(ttable.area_id == area_id).select(*tfieldnames)      
     for row in ttemplate:
         tdata = {"area_id": aid,
-                 "alert_id": alert_id
+                 "alert_id": alert_id,
                  }
         for field in tfieldnames:
             tdata[field] = row[field]
