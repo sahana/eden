@@ -320,6 +320,11 @@
         <!-- Feature Layer -->
         <xsl:variable name="geometry" select="./map[1]/geometry/@value"/>
         <xsl:variable name="attributes" select="./map[1]/@attributes"/>
+        <xsl:variable name="id" select="@id"/>
+        <xsl:variable name="marker" select="./map[1]/@marker"/>
+        <xsl:variable name="marker_url" select="./map[1]/@marker_url"/>
+        <xsl:variable name="marker_height" select="./map[1]/@marker_height"/>
+        <xsl:variable name="marker_width" select="./map[1]/@marker_width"/>
         <xsl:variable name="style" select="./map[1]/style/@value"/>
         <xsl:choose>
             <xsl:when test="$geometry!='null'">
@@ -336,6 +341,21 @@
                             <xsl:call-template name="Properties">
                                 <xsl:with-param name="attributes">
                                     <xsl:value-of select="$attributes"/>
+                                </xsl:with-param>
+                                <xsl:with-param name="id">
+                                    <xsl:value-of select="$id"/>
+                                </xsl:with-param>
+                                <xsl:with-param name="marker">
+                                    <xsl:value-of select="$marker"/>
+                                </xsl:with-param>
+                                <xsl:with-param name="marker_url">
+                                    <xsl:value-of select="$marker_url"/>
+                                </xsl:with-param>
+                                <xsl:with-param name="marker_height">
+                                    <xsl:value-of select="$marker_height"/>
+                                </xsl:with-param>
+                                <xsl:with-param name="marker_width">
+                                    <xsl:value-of select="$marker_width"/>
                                 </xsl:with-param>
                                 <xsl:with-param name="style">
                                     <xsl:value-of select="$style"/>
@@ -389,50 +409,40 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Properties">
-        <!--<xsl:param name="uuid"/>
-        <xsl:variable name="attributes" select="./map[1]/@attributes"/>
-        <xsl:variable name="style" select="./map[1]/style/@value"/> -->
         <xsl:param name="attributes"/>
+        <xsl:param name="id"/>
+        <xsl:param name="marker"/>
+        <xsl:param name="marker_url"/>
+        <xsl:param name="marker_height"/>
+        <xsl:param name="marker_width"/>
         <xsl:param name="style"/>
 
-        <!-- We don't need the UUID, so save bandwidth
-        <id>-->
-            <!-- We want the Resource's UUID here, not the associated Location's or Site's
-            <xsl:value-of select="substring-after($uuid, 'urn:uuid:')"/>
-        </id>-->
-
-        <xsl:if test="map[1]/@marker!=''">
+        <xsl:if test="$marker!=''">
             <marker>
-                <xsl:value-of select="map[1]/@marker"/>
+                <xsl:value-of select="$marker"/>
             </marker>
         </xsl:if>
 
-        <xsl:if test="map[1]/@marker_url">
+        <xsl:if test="$marker_url">
             <!-- Per-feature Marker -->
             <marker_url>
-                <xsl:value-of select="map[1]/@marker_url"/>
+                <xsl:value-of select="$marker_url"/>
             </marker_url>
             <marker_height>
-                <xsl:value-of select="map[1]/@marker_height"/>
+                <xsl:value-of select="$marker_height"/>
             </marker_height>
             <marker_width>
-                <xsl:value-of select="map[1]/@marker_width"/>
+                <xsl:value-of select="$marker_width"/>
             </marker_width>
         </xsl:if>
 
-        <!--
-        <xsl:if test="map[1]/@popup_url!=''">
-            <url>
-                <xsl:value-of select="map[1]/@popup_url"/>
-            </url>
-        </xsl:if> -->
         <!-- id is used for url_format -->
         <id>
             <!-- Numeric -->
             <xsl:attribute name="type">
                 <xsl:text>numeric</xsl:text>
             </xsl:attribute>
-            <xsl:value-of select="@id"/>
+            <xsl:value-of select="$id"/>
         </id>
 
         <xsl:if test="$style!=''">
