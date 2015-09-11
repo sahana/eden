@@ -40,6 +40,21 @@ class S3MainMenu(default.S3MainMenu):
 
     # -------------------------------------------------------------------------
     @classmethod
+    def menu(cls):
+        """ Compose Menu """
+
+        main_menu = MM()(
+                         
+            cls.menu_modules(),
+            cls.menu_lang(right=True),
+            cls.menu_auth(),
+            cls.menu_admin(),
+        )
+
+        return main_menu
+
+    # -------------------------------------------------------------------------
+    @classmethod
     def menu_modules(cls):
         """ Custom Modules Menu """
 
@@ -64,5 +79,53 @@ class S3MainMenu(default.S3MainMenu):
         # Public or CUG reader sees minimal options
         return [homepage(),
                 ]
+        
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_auth(cls, **attr):
+        """ Auth Menu """
+
+        auth = current.auth
+        
+        if not auth.is_logged_in():
+            menu_auth = MM("Login", link=False, right=True)(
+                           MM("Login", c="default", f="user", m="login",
+                              vars={"_next": URL(c="cap", f="alert")}),
+                           MM("Lost Password", c="default", f="user",
+                              m="retrieve_password")
+                        )
+        else:
+            # Logged-in
+            user_id = auth.s3_logged_in_person()
+            menu_auth = MM(auth.user.email, link=False, right=True)(
+                           MM("Edit Profile", c="pr", f="person", args=[user_id]),
+                           MM("Details", c="default", f="user", m="profile"),
+                           MM("Notification Settings", c="default", f="index",
+                              m="subscriptions"),
+                           MM("Change Password", c="default", f="user",
+                              m="change_password"),
+                           MM("Logout", c="default", f="user", m="logout"),
+                        )
+                                         
+        return menu_auth
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_admin(cls, **attr):
+        """ Administrator Menu """        
+
+        if current.auth.s3_has_role("ADMIN"):
+            name_nice = current.deployment_settings.modules["admin"].name_nice
+            menu_admin = MM(name_nice, c="admin", right=True, **attr)(
+                            MM("Settings", f="setting"),
+                            MM("Manage Users", f="user"),
+                            MM("Database", c="appadmin", f="index"),
+                            MM("Error Tickets", f="errors"),
+                            MM("Synchronization", c="sync", f="index"),
+                         )
+        else:
+            menu_admin = None
+
+        return menu_admin
 
 # END =========================================================================
