@@ -46,7 +46,7 @@ except ImportError:
     except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from gluon import current, INPUT, TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
+from gluon import current, INPUT, SPAN, TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
 from gluon.storage import Storage
 
 from s3rest import S3Method
@@ -556,8 +556,6 @@ class S3GroupedItemsTable(object):
             Render the table footer
 
             @param table: the TABLE instance
-
-            @todo: add footer label
         """
 
         data = self.data
@@ -567,8 +565,21 @@ class S3GroupedItemsTable(object):
 
         footer_row = TR(_class="gi-column-totals")
         if columns:
+            label = None
+            span = 0
             for column in columns:
-                value = totals[column] if column in totals else ""
+                has_value = column in totals
+                if label is None:
+                    if not has_value:
+                        span += 1
+                        continue
+                    else:
+                        label = TD(SPAN("TOTAL"),
+                                   _class = "gi-group-footer-label",
+                                   _colspan = span,
+                                   )
+                        footer_row.append(label)
+                value = totals[column] if has_value else ""
                 footer_row.append(TD(value))
         table.append(TFOOT(footer_row))
 
