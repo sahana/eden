@@ -717,7 +717,7 @@ $.filterOptionsS3({
                                        "quantity",
                                        ],
                             "groupby": ["site_id",
-                                        "item_id",
+                                        #"item_id",
                                         ],
                             "orderby": ["site_id$name",
                                         "item_id$name",

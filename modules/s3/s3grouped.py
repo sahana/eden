@@ -50,7 +50,7 @@ from gluon import current, INPUT, SPAN, TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
 from gluon.storage import Storage
 
 from s3rest import S3Method
-from s3utils import s3_unicode
+from s3utils import s3_strip_markup, s3_unicode
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -173,6 +173,8 @@ class S3GroupedItemsReport(S3Method):
                        as_dict = as_dict,
                        )
 
+        group_headers = report_config.get("group_headers", False)
+
         # Widget ID
         widget_id = "groupeditems"
 
@@ -235,6 +237,7 @@ class S3GroupedItemsReport(S3Method):
 
             options = {"ajaxURL": ajaxurl,
                        "totalsLabel": str(totals_label).upper(),
+                       "renderGroupHeaders": group_headers,
                        }
 
             # Inject script
@@ -253,9 +256,12 @@ class S3GroupedItemsReport(S3Method):
 
         elif representation == "pdf":
             # PDF Export
+            totals_label = report_config.get("totals_label", T("Total"))
             gi_table = S3GroupedItemsTable(resource,
                                            title = title,
                                            data = data,
+                                           group_headers = group_headers,
+                                           totals_label = totals_label,
                                            )
             return gi_table.pdf()
 
@@ -341,6 +347,8 @@ class S3GroupedItemsReport(S3Method):
         if aggregate:
             for method, selector in aggregate:
                 selectors.append(selector)
+        else:
+            report_config["group_headers"] = True
 
         # Get selectors for orderby
         orderby = report_config.get("orderby")
@@ -495,7 +503,12 @@ class S3GroupedItemsTable(object):
         Helper class to render representations of a grouped items report
     """
 
-    def __init__(self, resource, title=None, data=None, group_headers=False):
+    def __init__(self,
+                 resource,
+                 title = None,
+                 data = None,
+                 group_headers = False,
+                 totals_label = None):
         """
             Constructor
 
@@ -508,6 +521,7 @@ class S3GroupedItemsTable(object):
         self.title = title
         self.data = data
 
+        self.totals_label = totals_label
         self.group_headers = group_headers
 
     # -------------------------------------------------------------------------
@@ -563,6 +577,9 @@ class S3GroupedItemsTable(object):
         columns = data.get("c")
         totals = data.get("t")
 
+        if not totals:
+            return
+
         footer_row = TR(_class="gi-column-totals")
         if columns:
             label = None
@@ -574,8 +591,8 @@ class S3GroupedItemsTable(object):
                         span += 1
                         continue
                     else:
-                        label = TD(SPAN("TOTAL"),
-                                   _class = "gi-group-footer-label",
+                        label = TD(SPAN(self.totals_label),
+                                   _class = "gi-column-totals-label",
                                    _colspan = span,
                                    )
                         footer_row.append(label)
@@ -651,12 +668,35 @@ class S3GroupedItemsTable(object):
 
         columns = data.get("c")
         totals = group.get("t")
+        value = group.get("v")
 
         footer_row = TR(_class="gi-group-footer gi-level-%s" % level)
+        if not totals:
+            if not self.group_headers:
+                footer_row.append(TD(value, _colspan = len(columns)))
+                tbody.append(footer_row)
+            return
+
         if columns:
+            label = None
+            span = 0
             for column in columns:
-                value = totals[column] if column in totals else ""
+                has_value = column in totals
+                if label is None:
+                    if not has_value:
+                        span += 1
+                        continue
+                    else:
+                        label = TD("%s %s" % (s3_unicode(s3_strip_markup(value)),
+                                              self.totals_label,
+                                              ),
+                                   _class = "gi-group-footer-label",
+                                   _colspan = span,
+                                   )
+                        footer_row.append(label)
+                value = totals[column] if has_value else ""
                 footer_row.append(TD(value))
+
         tbody.append(footer_row)
 
     # -------------------------------------------------------------------------
