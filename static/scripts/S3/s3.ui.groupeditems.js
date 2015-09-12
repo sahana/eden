@@ -112,7 +112,7 @@
             this._bindEvents();
 
             // Hide throbber
-            el.find('.gi-throbber').hide();
+            el.find('.gi-throbber').css('visibility', 'hidden');;
         },
 
         /**
@@ -366,7 +366,7 @@
             var self = this,
                 needs_reload = false;
 
-            $(this.element).find('.gi-throbber').show();
+            $(this.element).find('.gi-throbber').css('visibility', 'visible');
 
             if (options || filters) {
                 needs_reload = this._updateAjaxURL(options, filters);
