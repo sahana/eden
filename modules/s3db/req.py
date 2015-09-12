@@ -2232,7 +2232,11 @@ class S3RequestSummaryModel(S3Model):
         #
         tablename = "req_site_needs"
         define_table(tablename,
-                     self.super_link("site_id", "org_site"),
+                     self.super_link("site_id", "org_site",
+                                     readable = True,
+                                     represent = self.org_site_represent,
+                                     label = T("Site"),
+                                     ),
                      Field("vol", "boolean",
                            label = T("Opportunities to Volunteer On-Site?"),
                            represent = s3_yes_no_represent,
@@ -2241,6 +2245,7 @@ class S3RequestSummaryModel(S3Model):
                      Field("vol_details", "text",
                            label = T("Details"),
                            widget = s3_richtext_widget,
+                           represent = lambda v: XML(v),
                            ),
                      Field("goods", "boolean",
                            label = T("Drop-off Location for Goods?"),
@@ -2250,6 +2255,7 @@ class S3RequestSummaryModel(S3Model):
                      Field("goods_details", "text",
                            label = T("Details"),
                            widget = s3_richtext_widget,
+                           represent = lambda v: XML(v),
                            ),
                      #s3_comments("needs",
                      #            label=T("Needs"),
@@ -2261,12 +2267,14 @@ class S3RequestSummaryModel(S3Model):
         # CRUD strings
         ADD_NEEDS = T("Add Site Needs")
         crud_strings[tablename] = Storage(
-            title_display=T("Site Needs"),
-            title_update=T("Edit Site Needs"),
-            label_delete_button=T("Delete Site Needs"),
-            msg_record_created=T("Site Needs added"),
-            msg_record_modified=T("Site Needs updated"),
-            msg_record_deleted=T("Site Needs deleted"))
+            title_display = T("Site Needs"),
+            title_list = T("Site Needs"),
+            title_update = T("Edit Site Needs"),
+            label_list_button = T("List Site Needs"),
+            label_delete_button = T("Delete Site Needs"),
+            msg_record_created = T("Site Needs added"),
+            msg_record_modified = T("Site Needs updated"),
+            msg_record_deleted = T("Site Needs deleted"))
 
         configure(tablename,
                   context = {"location": "site_id$location_id",
