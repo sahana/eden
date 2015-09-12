@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='utf-8'?>
+<cap:alert xmlns:cap = "urn:oasis:names:tc:emergency:cap:1.2">
+    <cap:identifier>MaldivesMeteorology-2.49.0.0.462.0-20150910-017-alert</cap:identifier>
+    <cap:sender>http://www.meteorology.gov.mv/</cap:sender>
+    <cap:sent>2015-09-10T02:10:29+00:00</cap:sent>
+    <cap:status>Actual</cap:status>
+    <cap:msgType>Alert</cap:msgType>
+    <cap:source>sambro-serv@ndmc.gov.mv</cap:source>
+    <cap:scope>Public</cap:scope>
+    <cap:addresses>"National Disaster Management Centre"</cap:addresses>
+    <cap:note>This template is intended for CAP on Map projects 'Exercise' The template is Tsunami alerts and warnings. </cap:note>
+    <cap:incidents>Tsunami</cap:incidents>
+    <cap:info>
+        <cap:language>dv</cap:language>
+        <cap:category>Met</cap:category>
+        <cap:event>Tsunami</cap:event>
+        <cap:responseType>Shelter</cap:responseType>
+        <cap:urgency>Immediate</cap:urgency>
+        <cap:severity>Severe</cap:severity>
+        <cap:certainty>Observed</cap:certainty>
+        <cap:audience>ޖެނެރަލް ޕްބްލިކް، މީޑިއާ</cap:audience>
+        <cap:effective>2015-09-10T02:09:33+00:00</cap:effective>
+        <cap:expires>2015-09-12T02:09:33+00:00</cap:expires>
+        <cap:senderName>މޯލްޑިވްސް މީޓިއޮރޮލޮޖިކަލް ސަރވިސް</cap:senderName>
+        <cap:headline>ސުނާމީގެ އިންޒާރު ވަރަށް ބޮޑަށް ސީރިއަސް ކަމާއެކު މިކަންތައް ނަގައި </cap:headline>
+        <cap:description>ހެޔޮނުވާނެ ވީހާވެސް އަވަހަށް އެންމެ ކައިރި ހުރި ކަނޑއެޅިފައިވާ އީއޯސީ އަށް ވަޑައިގަންނަވާ. އާދޭސް ކޮށްފައި މި ބުނަނީ.</cap:description>
+        <cap:parameter>
+            <cap:valueName>event type</cap:valueName>
+            <cap:value>Tsunami</cap:value>
+        </cap:parameter>
+        <cap:parameter>
+            <cap:valueName>warning priority</cap:valueName>
+            <cap:value>High</cap:value>
+        </cap:parameter>
+        <cap:area>
+            <cap:areaDesc>K.Dhiffushi</cap:areaDesc>
+            <cap:polygon>4.443561196575404,73.71340716045277 4.443144029578718,73.71498429935336 4.441047494432323,73.71250593822386 4.441218640381846,73.71235573451844 4.441988796663735,73.71274197261654 4.443561196575404,73.71340716045277</cap:polygon>
+        </cap:area>
+    </cap:info>
+    <cap:info>
+        <cap:category>Met</cap:category>
+        <cap:event>Tsunami</cap:event>
+        <cap:responseType>Shelter</cap:responseType>
+        <cap:urgency>Immediate</cap:urgency>
+        <cap:severity>Severe</cap:severity>
+        <cap:certainty>Observed</cap:certainty>
+        <cap:effective>2015-09-09T02:42:43+00:00</cap:effective>
+        <cap:expires>2015-09-11T02:42:43+00:00</cap:expires>
+        <cap:senderName>Maldives Meterological Service</cap:senderName>
+        <cap:headline>Tsunami Warninig</cap:headline>
+        <cap:description>Earthquake the MAGNITUDE and it create a  NUMBER of wave</cap:description>
+        <cap:parameter>
+            <cap:valueName>event type</cap:valueName>
+            <cap:value>Earthquake</cap:value>
+        </cap:parameter>
+        <cap:parameter>
+            <cap:valueName>warning priority</cap:valueName>
+            <cap:value>High</cap:value>
+        </cap:parameter>
+        <cap:area>
+            <cap:areaDesc>K.Dhiffushi</cap:areaDesc>
+            <cap:polygon>4.443561196575404,73.71340716045277 4.443144029578718,73.71498429935336 4.441047494432323,73.71250593822386 4.441218640381846,73.71235573451844 4.441988796663735,73.71274197261654 4.443561196575404,73.71340716045277</cap:polygon>
+        </cap:area>
+    </cap:info>
+</cap:alert>
