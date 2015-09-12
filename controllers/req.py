@@ -79,6 +79,7 @@ def marker_fn(record):
         marker = "%s_red" % marker
     elif priority == 2:
         # Medium
+        #marker = "%s_orange" % marker
         marker = "%s_yellow" % marker
     #elif priority == 1:
     #    # Low
@@ -387,6 +388,7 @@ def req_controller(template = False):
                                    deletable = False,
                                    insertable = False,
                                    )
+
             elif r.component.name == "commit":
                 table = r.component.table
                 record = r.record

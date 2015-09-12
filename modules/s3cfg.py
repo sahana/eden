@@ -3548,7 +3548,7 @@ class S3Config(Storage):
             * Other
             tbc: Assets, Shelter, Food
         """
-        return self.req.get("req_type", ["Stock", "People", "Other"])
+        return self.req.get("req_type", ("Stock", "People", "Other"))
 
     def get_req_type_inv_label(self):
         return current.T(self.req.get("type_inv_label", "Warehouse Stock"))
