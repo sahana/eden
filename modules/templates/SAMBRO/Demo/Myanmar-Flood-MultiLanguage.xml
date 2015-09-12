@@ -1,0 +1,94 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<cap:alert xmlns:cap = "urn:oasis:names:tc:emergency:cap:1.2">
+    <cap:identifier>MyanmarDMH-2.49.0.0.104.0-20150910-058-alert</cap:identifier>
+    <cap:sender>dmh.gov.mm</cap:sender>
+    <cap:sent>2015-09-10T02:29:56+00:00</cap:sent>
+    <cap:status>Draft</cap:status>
+    <cap:msgType>Alert</cap:msgType>
+    <cap:source>sambro-server@dmh.gov.mm</cap:source>
+    <cap:scope>Restricted</cap:scope>
+    <cap:addresses>RRD "Water Related Organization and Department" "Local Government" "Local DMH" "Ministry of Information"</cap:addresses>
+    <cap:note>This template is intended for CAP on a Map project 'Exercise'. The template is flood alert warning and bulletin. Simultaneously targeting the public and First Responders. It contain info segments for both English and Myanmar languages. </cap:note>
+    <cap:incidents>Flood</cap:incidents>
+    <cap:info>
+        <cap:category>Met</cap:category>
+        <cap:category>Env</cap:category>
+        <cap:category>Infra</cap:category>
+        <cap:event>Flood</cap:event>
+        <cap:responseType>Prepare</cap:responseType>
+        <cap:urgency>Immediate</cap:urgency>
+        <cap:severity>Unknown</cap:severity>
+        <cap:certainty>Unknown</cap:certainty>
+        <cap:effective>2015-09-08T05:30:25+00:00</cap:effective>
+        <cap:expires>2015-09-10T05:30:25+00:00</cap:expires>
+        <cap:senderName>Hydrological Division, Department of Meteorology and Hydrology, Myanmar</cap:senderName>
+        <cap:headline>Flood Warning in Effect for Magway City</cap:headline>
+        <cap:description>According to the (06:30) hrs M.S.T observation today, the water level of Ayeyarwaddy River at  Magway is observed as (60) cm (about  2- ft) below its danger level. It may reach its danger level during next (24) hours commencing noon today.</cap:description>
+        <cap:instruction>It is especially advised to the people who settle near the river bank and low lying areas, to take precaution measure.&#13;
+&#13;
+&#13;
+Category 1. Flood Warning&#13;
+Category 2. Flood Bulletin (Rising condition above danger levels)&#13;
+Category 3. Flood Bulletin (Falling condition above danger levels)</cap:instruction>
+        <cap:web>http://www.dmh.gov.mm/flood-warning%20</cap:web>
+        <cap:contact>+9567411254</cap:contact>
+        <cap:parameter>
+            <cap:valueName>event type</cap:valueName>
+            <cap:value>Flood</cap:value>
+        </cap:parameter>
+        <cap:parameter>
+            <cap:valueName>warning priority</cap:valueName>
+            <cap:value>Rising</cap:value>
+        </cap:parameter>
+        <cap:parameter>
+            <cap:valueName>Rising Condition</cap:valueName>
+            <cap:value>Number</cap:value>
+        </cap:parameter>
+        <cap:parameter>
+            <cap:valueName>Falling Condition</cap:valueName>
+            <cap:value>Number</cap:value>
+        </cap:parameter>
+        <cap:area>
+            <cap:areaDesc>Magway</cap:areaDesc>
+            <cap:polygon>20.153248147290533,94.91566847897617 20.157760318961916,94.9182433996302 20.15904948691015,94.92510985470162 20.15550424942971,94.92974471188069 20.150025087678582,94.93249129391106 20.145512692452282,94.92922972775166 20.143578768872462,94.92459487057262 20.14196714759809,94.9196166906409 20.146963119423337,94.91635512448153 20.153248147290533,94.91566847897617</cap:polygon>
+        </cap:area>
+    </cap:info>
+    <cap:info>
+        <cap:language>my</cap:language>
+        <cap:category>Met</cap:category>
+        <cap:category>Env</cap:category>
+        <cap:category>Infra</cap:category>
+        <cap:event>Flood</cap:event>
+        <cap:responseType>Prepare</cap:responseType>
+        <cap:urgency>Immediate</cap:urgency>
+        <cap:severity>Unknown</cap:severity>
+        <cap:certainty>Unknown</cap:certainty>
+        <cap:effective>2015-09-10T02:22:59+00:00</cap:effective>
+        <cap:expires>2015-09-12T02:22:59+00:00</cap:expires>
+        <cap:senderName>ံဇလေဗဒဌာနခြဲ။ မုိး၊ဇလ(ေနျပည္ေတာ္)</cap:senderName>
+        <cap:headline>ျမစ္ေရႀကီးျခင္း သတိေပးခ်က္ (မေကြး)</cap:headline>
+        <cap:description>ယေန႕ ျမန္မာစံေတာ္ခ်ိန္ (၀၆း၃၀) နာရီ အခ်ိန္တုိင္းထြာခ်က္အရ သံလြင္ျမစ္ေရသည္ ဘားအံၿမဳိ႕တြင္ ယင္းၿမဳိ႕၏ စုိးရိမ္ေရမွတ္ေအာက္ (၆၀) စင္တီမီတာ (၂-ေပခန္႕) တြင္ ေရာက္ရွိေန ပါသည္။ အဆုိပါ ျမစ္ေရသည္ ယေနမြန္းတည့္မွေနာက္ ေနာက္(၄၈) နာရီအတြင္း ယင္းၿမဳိ႕၏ စုိးရိမ္ေရမွတ္သုိ့ ေရာက္ရွိႏုိင္ပါသည္။</cap:description>
+        <cap:instruction>ေျမနိမ့္ပုိင္းႏွင့္ ျမစ္ကမ္းနံေဘးေနထုိင္သူမ်ား သတိျပဳ ေနထုိင္ၾကပါရန္</cap:instruction>
+        <cap:contact>+၉၅၆၇၄၁၁၂၅၄</cap:contact>
+        <cap:parameter>
+            <cap:valueName>event type</cap:valueName>
+            <cap:value>Flood</cap:value>
+        </cap:parameter>
+        <cap:parameter>
+            <cap:valueName>warning priority</cap:valueName>
+            <cap:value>Rising</cap:value>
+        </cap:parameter>
+        <cap:parameter>
+            <cap:valueName>Rising Condition</cap:valueName>
+            <cap:value>Number</cap:value>
+        </cap:parameter>
+        <cap:parameter>
+            <cap:valueName>Falling Condition</cap:valueName>
+            <cap:value>Number</cap:value>
+        </cap:parameter>
+        <cap:area>
+            <cap:areaDesc>Magway</cap:areaDesc>
+            <cap:polygon>20.153248147290533,94.91566847897617 20.157760318961916,94.9182433996302 20.15904948691015,94.92510985470162 20.15550424942971,94.92974471188069 20.150025087678582,94.93249129391106 20.145512692452282,94.92922972775166 20.143578768872462,94.92459487057262 20.14196714759809,94.9196166906409 20.146963119423337,94.91635512448153 20.153248147290533,94.91566847897617</cap:polygon>
+        </cap:area>
+    </cap:info>
+</cap:alert>
