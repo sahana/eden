@@ -185,7 +185,7 @@
                             continue;
                         }
                         if (titleSpan > 1) {
-                            footerLabel = $('<td class="gi-group-footer-label" colspan="' + titleSpan + '">');
+                            footerLabel = $('<td class="gi-column-totals-label" colspan="' + titleSpan + '">');
                             $('<span> ' + opts.totalsLabel + '</span>').appendTo(footerLabel);
                             footerLabel.appendTo(footerRow);
                         }
