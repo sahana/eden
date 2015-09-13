@@ -148,9 +148,15 @@ class S3RequestModel(S3Model):
         if "Other" in req_types_deployed:
             req_type_opts[9] = T("Other")
 
+        if len(req_type_opts) == 1:
+            default_type, v = req_type_opts.items()[0]
+        else:
+            default_type = None
+
         use_commit = settings.get_req_use_commit()
-        req_ask_security = settings.get_req_ask_security()
-        req_ask_transport = settings.get_req_ask_transport()
+        use_req_number = settings.get_req_use_req_number()
+        ask_security = settings.get_req_ask_security()
+        ask_transport = settings.get_req_ask_transport()
         date_writable = settings.get_req_date_writable()
         recurring = settings.get_req_recurring()
         requester_label = settings.get_req_requester_label()
@@ -188,12 +194,17 @@ class S3RequestModel(S3Model):
                                writable = False,
                                ),
                           Field("type", "integer",
+                                default = default_type,
                                 label = T("Request Type"),
                                 represent = lambda opt: \
                                             req_type_opts.get(opt, UNKNOWN_OPT),
                                 requires = IS_IN_SET(req_type_opts, zero=None),
+                                readable = not default_type,
+                                writable = not default_type,
                                 ),
-                          req_ref(),
+                          req_ref(readable = use_req_number,
+                                  writable = use_req_number,
+                                  ),
                           s3_datetime(default = "now",
                                       label = T("Date Requested"),
                                       past = 8760, # Hours, so 1 year
@@ -293,14 +304,14 @@ class S3RequestModel(S3Model):
                           Field("transport_req", "boolean",
                                 label = T("Transportation Required"),
                                 represent = s3_yes_no_represent,
-                                readable = req_ask_transport,
-                                writable = req_ask_transport,
+                                readable = ask_transport,
+                                writable = ask_transport,
                                 ),
                           Field("security_req", "boolean",
                                 label = T("Security Required"),
                                 represent = s3_yes_no_represent,
-                                readable = req_ask_security,
-                                writable = req_ask_security,
+                                readable = ask_security,
+                                writable = ask_security,
                                 ),
                           s3_datetime("date_recv",
                                       label = T("Date Received"), # Could be T("Date Delivered") - make deployment_setting
@@ -348,19 +359,6 @@ class S3RequestModel(S3Model):
                           Field.Method("drivers", req_req_drivers),
                           s3_comments(comment = ""),
                           *s3_meta_fields())
-
-        # @todo: make lazy_table
-        table = db[tablename]
-        if len(req_type_opts) == 1:
-            k, v = req_type_opts.items()[0]
-            field = table.type
-            field.default = k
-            field.writable = False
-            field.readable = False
-
-        if not settings.get_req_use_req_number():
-            table.req_ref.readable = False
-            table.req_ref.writable = False
 
         # CRUD strings
         crud_strings[tablename] = Storage(
@@ -486,7 +484,7 @@ class S3RequestModel(S3Model):
                        #(T("Skills"), "skill.skill_id"),
                        ]
 
-        if settings.get_req_use_req_number():
+        if use_req_number:
             list_fields.insert(1, "req_ref")
         #if len(settings.get_req_req_type()) > 1:
         #    list_fields.append("type")
@@ -510,7 +508,7 @@ class S3RequestModel(S3Model):
                                   "site": "site_id",
                                   },
                        deduplicate = self.req_req_duplicate,
-                       extra_fields = ["req_ref", "type"],
+                       extra_fields = ("req_ref", "type"),
                        filter_widgets = filter_widgets,
                        onaccept = self.req_onaccept,
                        ondelete = self.req_req_ondelete,

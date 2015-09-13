@@ -114,6 +114,10 @@ def config(settings):
     # Uncomment to Commit Named People rather than simply Anonymous Skills
     #settings.req.commit_people = True
 
+    # Disable Inline Forms, unless we enable separate controllers
+    # (otherwise Create form cannot redirect to next tab correctly)
+    settings.req.inline_forms = False
+
     # -------------------------------------------------------------------------
     def pr_component_realm_entity(table, row):
         """

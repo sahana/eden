@@ -214,8 +214,8 @@ def req_controller(template = False):
         #        pass
         #    s3db.configure("req_req", list_fields=list_fields)
 
-        type = (r.record and r.record.type) or \
-               (get_vars.type and int(get_vars.type))
+        req_type = (r.record and r.record.type) or \
+                   (get_vars.type and int(get_vars.type))
 
         if r.interactive:
             # Set the req_item site_id (Requested From), called from action buttons on req/req_item_inv_item/x page
@@ -242,25 +242,25 @@ def req_controller(template = False):
             table.requester_id.represent = requester_represent
 
             # Set Fields and Labels depending on type
-            if type:
-                table.type.default = type
+            if req_type:
+                table.type.default = req_type
 
                 # This prevents the type from being edited AFTER it is set
                 table.type.readable = table.type.writable = False
 
-                crud_strings = settings.get_req_req_crud_strings(type)
+                crud_strings = settings.get_req_req_crud_strings(req_type)
                 if crud_strings:
                     s3.crud_strings["req_req"] = crud_strings
-                elif type == 1:
+                elif req_type == 1:
                     s3.crud_strings["req_req"].label_create = T("Make Supplies Request")
-                elif type == 3:
+                elif req_type == 3:
                     s3.crud_strings["req_req"].label_create = T("Make People Request")
 
                 # Filter the query based on type
-                r.resource.add_filter(table.type == type)
+                r.resource.add_filter(table.type == req_type)
 
             # These changes are applied via JS in create forms where type is editable
-            if type == 1: # Item
+            if req_type == 1: # Item
                 table.date_recv.readable = table.date_recv.writable = True
 
                 if settings.get_req_items_ask_purpose():
@@ -271,7 +271,7 @@ def req_controller(template = False):
                 #table.requester_id.label = T("Site Contact")
                 table.recv_by_id.label = T("Delivered To")
 
-            elif type == 3: # Person
+            elif req_type == 3: # Person
                 table.date_required_until.readable = table.date_required_until.writable = True
 
                 table.purpose.label = T("Task Details")
@@ -319,7 +319,6 @@ def req_controller(template = False):
                 if r.id:
                     table.is_template.readable = table.is_template.writable = False
                     
-
                 method = r.method
                 if method in (None, "create"):
                     # Hide fields which don't make sense in a Create form
@@ -327,9 +326,9 @@ def req_controller(template = False):
                     # - list_fields over-rides, so still visible within list itself
                     s3db.req_create_form_mods()
 
-                    if type and settings.get_req_inline_forms():
+                    if req_type and settings.get_req_inline_forms():
                         # Inline Forms
-                        s3db.req_inline_form(type, method)
+                        s3db.req_inline_form(req_type, method)
 
                     # Get the default Facility for this user
                     #if settings.has_module("hrm"):
@@ -340,14 +339,13 @@ def req_controller(template = False):
                     #    if site:
                     #        r.table.site_id.default = site.site_id
                     # Use site_id in User Profile
-                    if auth.is_logged_in():
-                        if not table.site_id.default:
-                            table.site_id.default = auth.user.site_id
+                    if auth.is_logged_in() and not table.site_id.default:
+                        table.site_id.default = auth.user.site_id
 
                 elif method == "update":
                     if settings.get_req_inline_forms():
                         # Inline Forms
-                        s3db.req_inline_form(type, method)
+                        s3db.req_inline_form(req_type, method)
                     s3.scripts.append("/%s/static/scripts/S3/s3.req_update.js" % appname)
 
                 elif method == "map":
@@ -425,7 +423,7 @@ def req_controller(template = False):
                                listadd = listadd,
                                )
 
-                if type == 1: # Items
+                if req_type == 1: # Items
                     # Limit site_id to facilities the user has permissions for
                     auth.permitted_facilities(table=r.table,
                                               error_msg=T("You do not have permission for any facility to make a commitment."))
@@ -482,7 +480,7 @@ $.filterOptionsS3({
                         #               update_next = URL(c="req", f="commit",
                         #                                 args=["[id]", "commit_item"]))
 
-                elif type == 3: # People
+                elif req_type == 3: # People
                     # Limit site_id to orgs the user has permissions for
                     # @ToDo: Make this customisable between Site/Org
                     # @ToDo: is_affiliated() once Org is possible
@@ -603,8 +601,8 @@ $.filterOptionsS3({
                                                _class="action-btn",
                                                _id="commit-btn",
                                                )
-                                s3.jquery_ready.append('''
-    S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this request?"))
+                                s3.jquery_ready.append(
+'''S3.confirmClick('#commit-btn','%s')''' % T("Do you want to commit to this request?"))
                             elif r.record.type == 1:
                                 # Items
                                 s3.actions.append(
@@ -615,7 +613,7 @@ $.filterOptionsS3({
                                                    )
                                            )
                                 s3.jquery_ready.append(
-    '''S3.confirmClick('.send-btn','%s')''' % T("Are you sure you want to send this shipment?"))
+'''S3.confirmClick('.send-btn','%s')''' % T("Are you sure you want to send this shipment?"))
 
                     elif r.component.alias == "job":
                         record_id = r.id
@@ -638,114 +636,139 @@ $.filterOptionsS3({
 
                 else:
                     # No Component
-                    s3_action_buttons(r, deletable =False)
-                    # Add delete button for those records which are not completed
-                    # @ToDo: Handle icons
-                    table = r.table
-                    query = (table.fulfil_status != REQ_STATUS_COMPLETE) & \
-                            (table.transit_status != REQ_STATUS_COMPLETE) & \
-                            (table.req_status != REQ_STATUS_COMPLETE) & \
-                            (table.fulfil_status != REQ_STATUS_PARTIAL) & \
-                            (table.transit_status != REQ_STATUS_PARTIAL) & \
-                            (table.req_status != REQ_STATUS_PARTIAL)
-                    rows = db(query).select(table.id)
-                    restrict = [str(row.id) for row in rows]
-                    s3.actions.append(
-                        dict(label = s3_unicode(s3.crud_labels.DELETE).encode("utf8"),
-                             url = URL(c="req", f="req",
-                                       args=["[id]", "delete"]),
-                             _class="delete-btn",
-                             restrict = restrict,
-                             )
-                        )
-                    if not template and settings.get_req_use_commit():
-                        # This is appropriate to both Items and People
+                    if r.http == "POST":
+                        # Create form
+                        # @ToDo: DRY
+                        if not settings.get_req_inline_forms():
+                            form_vars = output["form"].vars 
+                            type = form_vars.type
+                            if type == "1":
+                                # Stock: Open Tab for Items
+                                r.next = URL(args=[form_vars.id, "req_item"])
+                            elif type == "3":
+                                # People: Open tab for Skills
+                                r.next = URL(args=[form_vars.id, "req_skill"])
+                    else:
+                        s3_action_buttons(r, deletable =False)
+                        # Add delete button for those records which are not completed
+                        # @ToDo: Handle icons
+                        table = r.table
+                        query = (table.fulfil_status != REQ_STATUS_COMPLETE) & \
+                                (table.transit_status != REQ_STATUS_COMPLETE) & \
+                                (table.req_status != REQ_STATUS_COMPLETE) & \
+                                (table.fulfil_status != REQ_STATUS_PARTIAL) & \
+                                (table.transit_status != REQ_STATUS_PARTIAL) & \
+                                (table.req_status != REQ_STATUS_PARTIAL)
+                        rows = db(query).select(table.id)
+                        restrict = [str(row.id) for row in rows]
                         s3.actions.append(
-                            dict(label = s3_unicode(T("Commit")).encode("utf8"),
+                            dict(label = s3_unicode(s3.crud_labels.DELETE).encode("utf8"),
                                  url = URL(c="req", f="req",
-                                           args=["[id]", "commit_all"]),
-                                 _class = "action-btn commit-btn",
+                                           args=["[id]", "delete"]),
+                                 _class="delete-btn",
+                                 restrict = restrict,
                                  )
                             )
-                        s3.jquery_ready.append(
+                        if not template and settings.get_req_use_commit():
+                            # This is appropriate to both Items and People
+                            s3.actions.append(
+                                dict(label = s3_unicode(T("Commit")).encode("utf8"),
+                                     url = URL(c="req", f="req",
+                                               args=["[id]", "commit_all"]),
+                                     _class = "action-btn commit-btn",
+                                     )
+                                )
+                            s3.jquery_ready.append(
 '''S3.confirmClick('.commit-btn','%s')''' % T("Do you want to commit to this request?"))
-                    # This is only appropriate for item requests
-                    #query = (table.type == 1)
-                    #rows = db(query).select(table.id)
-                    #restrict = [str(row.id) for row in rows]
-                    #s3.actions.append(
-                    #    dict(label = s3_unicode(T("View Items")).encode("utf8"),
-                    #         url = URL(c="req", f="req",
-                    #                   args=["[id]", "req_item"]),
-                    #         _class = "action-btn",
-                    #         restrict = restrict,
-                    #         )
-                    #    )
-                    # This is only appropriate for people requests
-                    #query = (table.type == 3)
-                    #rows = db(query).select(table.id)
-                    #restrict = [str(row.id) for row in rows]
-                    #s3.actions.append(
-                    #    dict(label = s3_unicode(T("View Skills")).encode("utf8"),
-                    #         url = URL(c="req", f="req",
-                    #                   args=["[id]", "req_skill"]),
-                    #         _class = "action-btn",
-                    #         restrict = restrict,
-                    #         )
-                    #    )
-                    if settings.get_req_copyable():
-                        s3.actions.append(
-                            dict(label = s3_unicode(T("Copy")).encode("utf8"),
-                                 url = URL(c="req", f="req",
-                                           args=["[id]", "copy_all"]),
-                                 _class = "action-btn copy_all",
-                                 )
-                            )
-                        confirm = T("Are you sure you want to create a new request as a copy of this one?")
-                        s3.jquery_ready.append('''S3.confirmClick('.copy_all','%s')''' % confirm)
-                    req_types = settings.get_req_req_type()
-                    if not template and "Stock" in req_types:
-                        # Items
-                        if len(req_types) != 1 and (get_vars.type != "1"):
-                            # Restrict these Action Buttons to just those which are Items Reqiests
-                            table = r.table
-                            query = (table.deleted == False) & \
-                                    (table.type == 1)
-                            rows = db(query).select(table.id)
-                            restrict = [str(row.id) for row in rows]
-                        else:
-                            # All Requests are Items requests so no need to restrict
-                            restrict = None
-                        if settings.get_req_use_commit():
-                            action = dict(label = s3_unicode(T("Send")).encode("utf8"),
-                                          url = URL(c="req", f="req",
-                                                    args=["[id]", "commit_all", "send"]),
-                                          _class = "action-btn send-btn dispatch",
-                                          )
-                            if restrict is not None:
-                                action["restrict"] = restrict
-                            s3.actions.append(action)
-                            confirm = T("Are you sure you want to commit to this request and send a shipment?")
-                            s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
-                        elif auth.user and auth.user.site_id:
-                            action = dict(# Better to force users to go through the Check process
-                                          #label = s3_unicode(T("Send")).encode("utf8"),
-                                          #url=URL(c="req", f="send_req",
-                                          #        args=["[id]"],
-                                          #        vars=dict(site_id=auth.user.site_id)
-                                          #        ),
-                                          label = s3_unicode(T("Check")).encode("utf8"),
-                                          url=URL(c="req", f="req",
-                                                  args=["[id]", "check"],
-                                                  vars={"site_id": auth.user.site_id}
-                                                  ),
-                                          _class="action-btn send-btn dispatch",
-                                          )
-                            if restrict is not None:
-                                action["restrict"] = restrict
-                            s3.actions.append(action)
-                            confirm = T("Are you sure you want to send a shipment for this request?")
-                            s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+                        # This is only appropriate for item requests
+                        #query = (table.type == 1)
+                        #rows = db(query).select(table.id)
+                        #restrict = [str(row.id) for row in rows]
+                        #s3.actions.append(
+                        #    dict(label = s3_unicode(T("View Items")).encode("utf8"),
+                        #         url = URL(c="req", f="req",
+                        #                   args=["[id]", "req_item"]),
+                        #         _class = "action-btn",
+                        #         restrict = restrict,
+                        #         )
+                        #    )
+                        # This is only appropriate for people requests
+                        #query = (table.type == 3)
+                        #rows = db(query).select(table.id)
+                        #restrict = [str(row.id) for row in rows]
+                        #s3.actions.append(
+                        #    dict(label = s3_unicode(T("View Skills")).encode("utf8"),
+                        #         url = URL(c="req", f="req",
+                        #                   args=["[id]", "req_skill"]),
+                        #         _class = "action-btn",
+                        #         restrict = restrict,
+                        #         )
+                        #    )
+                        if settings.get_req_copyable():
+                            s3.actions.append(
+                                dict(label = s3_unicode(T("Copy")).encode("utf8"),
+                                     url = URL(c="req", f="req",
+                                               args=["[id]", "copy_all"]),
+                                     _class = "action-btn copy_all",
+                                     )
+                                )
+                            confirm = T("Are you sure you want to create a new request as a copy of this one?")
+                            s3.jquery_ready.append('''S3.confirmClick('.copy_all','%s')''' % confirm)
+                        req_types = settings.get_req_req_type()
+                        if not template and "Stock" in req_types:
+                            # Items
+                            if len(req_types) != 1 and (get_vars.type != "1"):
+                                # Restrict these Action Buttons to just those which are Items Reqiests
+                                table = r.table
+                                query = (table.deleted == False) & \
+                                        (table.type == 1)
+                                rows = db(query).select(table.id)
+                                restrict = [str(row.id) for row in rows]
+                            else:
+                                # All Requests are Items requests so no need to restrict
+                                restrict = None
+                            if settings.get_req_use_commit():
+                                action = dict(label = s3_unicode(T("Send")).encode("utf8"),
+                                              url = URL(c="req", f="req",
+                                                        args=["[id]", "commit_all", "send"]),
+                                              _class = "action-btn send-btn dispatch",
+                                              )
+                                if restrict is not None:
+                                    action["restrict"] = restrict
+                                s3.actions.append(action)
+                                confirm = T("Are you sure you want to commit to this request and send a shipment?")
+                                s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+                            elif auth.user and auth.user.site_id:
+                                action = dict(# Better to force users to go through the Check process
+                                              #label = s3_unicode(T("Send")).encode("utf8"),
+                                              #url=URL(c="req", f="send_req",
+                                              #        args=["[id]"],
+                                              #        vars=dict(site_id=auth.user.site_id)
+                                              #        ),
+                                              label = s3_unicode(T("Check")).encode("utf8"),
+                                              url=URL(c="req", f="req",
+                                                      args=["[id]", "check"],
+                                                      vars={"site_id": auth.user.site_id}
+                                                      ),
+                                              _class="action-btn send-btn dispatch",
+                                              )
+                                if restrict is not None:
+                                    action["restrict"] = restrict
+                                s3.actions.append(action)
+                                confirm = T("Are you sure you want to send a shipment for this request?")
+                                s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+            elif r.method == "create" and r.http == "POST":
+                # Create form
+                # @ToDo: DRY
+                if not settings.get_req_inline_forms():
+                    form_vars = output["form"].vars 
+                    req_type = form_vars.type
+                    if req_type == "1":
+                        # Stock: Open Tab for Items
+                        r.next = URL(args=[form_vars.id, "req_item"])
+                    elif req_type == "3":
+                        # People: Open tab for Skills
+                        r.next = URL(args=[form_vars.id, "req_skill"])
 
         return output
     s3.postp = postp

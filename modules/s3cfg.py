@@ -3626,7 +3626,7 @@ class S3Config(Storage):
 
     def get_req_inline_forms(self):
         """
-            Whether Requests module should use inline forms for Items
+            Whether Requests module should use inline forms for Items/Skills
         """
         return self.req.get("inline_forms", True)
 
