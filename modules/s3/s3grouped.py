@@ -731,6 +731,8 @@ class S3GroupedItemsTable(object):
         return exporter(self.resource,
                         pdf_title = self.title,
                         pdf_callback = lambda r: self.html(),
+                        pdf_table_autogrow = "B",
+                        pdf_paper_alignment = "Landscape",
                         )
 
 # =============================================================================
