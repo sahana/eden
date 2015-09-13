@@ -8,9 +8,11 @@
   <div class='gi-throbber inline-throbber'></div>
   <!-- Table Container -->
   <div class='gi-table-container'>
-   <div>
-    <div class='gi-table-contents'>
-     <div class='gi-table'></div>
+   <div class='gi-table-controls'>
+    {{try:}}{{=formats}}{{except:}}{{pass}}
+   </div>
+   <div class='gi-table-contents'>
+    <div class='gi-table'></div>
    </div>
   </div>
   <!-- Empty-Section -->

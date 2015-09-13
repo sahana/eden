@@ -42,6 +42,9 @@
 
             this.id = groupedItemsID;
             groupedItemsID += 1;
+
+            // Namespace for events
+            this.namespace = '.groupeditems';
         },
 
         /**
@@ -54,6 +57,8 @@
             this.widget_id = el.attr('id');
 
             this.items = el.find('.gi-data').first();
+            this.download = $('<iframe style="display:none">').appendTo(el);
+
             this.refresh();
         },
 
@@ -404,7 +409,7 @@
          */
         _getFilters: function() {
 
-            var filters = $('#' + this.widget_id + '-filters');
+            var filters = $('#' + this.widget_id + '-filter-form');
             try {
                 if (filters.length) {
                     return S3.search.getCurrentFilters(filters.first());
@@ -567,14 +572,32 @@
          * Bind events to generated elements (after refresh)
          */
         _bindEvents: function() {
-            return true;
+
+            var el = $(this.element),
+                ns = this.namespace,
+                self = this;
+
+            el.delegate('.gi-export', 'click' + ns, function() {
+
+                var url = $(this).data('url'),
+                    queries = self._getFilters();
+
+                if (queries) {
+                    url = S3.search.filterURL(url, queries);
+                }
+                self.download.get(0).src = url;
+            });
         },
 
         /**
          * Unbind events (before refresh)
          */
         _unbindEvents: function() {
-            return true;
+
+            var el = $(this.element),
+                ns = this.namespace;
+
+            el.undelegate(ns);
         }
     });
 })(jQuery);

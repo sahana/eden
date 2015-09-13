@@ -46,7 +46,7 @@ except ImportError:
     except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from gluon import current, INPUT, SPAN, TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
+from gluon import current, DIV, INPUT, SPAN, TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
 from gluon.storage import Storage
 
 from s3rest import S3Method
@@ -242,6 +242,19 @@ class S3GroupedItemsReport(S3Method):
 
             # Inject script
             self.inject_script(widget_id, options=options)
+
+            # Export formats
+            formats = DIV(DIV(_title = T("Export as PDF"),
+                              _class = "gi-export export_pdf",
+                              data = {"url": r.url(method = "grouped",
+                                                   representation = "pdf",
+                                                   vars = r.get_vars,
+                                                   ),
+                                      },
+                              ),
+                          _class="gi-export-formats",
+                          )
+            output["formats"] = formats
 
             # Detect and store theme-specific inner layout
             self._view(r, "grouped.html")
@@ -726,6 +739,13 @@ class S3GroupedItemsTable(object):
             @return: the PDF document
         """
 
+        styles = {"tr.gi-column-totals": {"background-color": "black",
+                                          "color": "white",
+                                          },
+                  "tr.gi-group-footer.gi-level-1": {"background-color": "lightgrey",
+                                                    },
+                  }
+
         from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(self.resource,
@@ -733,6 +753,7 @@ class S3GroupedItemsTable(object):
                         pdf_callback = lambda r: self.html(),
                         pdf_table_autogrow = "B",
                         pdf_paper_alignment = "Landscape",
+                        pdf_html_styles = styles,
                         )
 
 # =============================================================================

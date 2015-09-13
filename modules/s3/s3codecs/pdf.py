@@ -233,6 +233,8 @@ class S3RL_PDF(S3Codec):
             @keyword pdf_paper_alignment: Portrait (default) or Landscape
             @keyword use_colour:      True to add colour to the cells. default False
 
+            @keyword pdf_html_styles: styles for S3html2pdf (dict)
+
             @ToDo: Add Page Numbers in Footer:
                    http://www.blog.pythonlibrary.org/2013/08/12/reportlab-how-to-add-page-numbers/
         """
@@ -277,6 +279,9 @@ class S3RL_PDF(S3Codec):
                               paper_size = paper_size,
                               paper_alignment = pdf_paper_alignment)
 
+        # HTML styles
+        pdf_html_styles = attr.get("pdf_html_styles")
+
         # Get the header
         header_flowable = None
         header = attr.get("pdf_header")
@@ -284,7 +289,9 @@ class S3RL_PDF(S3Codec):
             header = attr.get("rheader")
         if header:
             header_flowable = self.get_html_flowable(header,
-                                                     doc.printable_width)
+                                                     doc.printable_width,
+                                                     styles = pdf_html_styles,
+                                                     )
             if self.pdf_header_padding:
                 header_flowable.append(Spacer(1, self.pdf_header_padding))
 
@@ -295,7 +302,9 @@ class S3RL_PDF(S3Codec):
             footer = attr.get("rfooter")
         if footer:
             footer_flowable = self.get_html_flowable(footer,
-                                                     doc.printable_width)
+                                                     doc.printable_width,
+                                                     styles = pdf_html_styles,
+                                                     )
             if self.pdf_footer_padding:
                 footer_flowable.append(Spacer(1, self.pdf_footer_padding))
 
@@ -311,7 +320,9 @@ class S3RL_PDF(S3Codec):
         if callback:
             # Get the document body from the callback
             body_flowable = self.get_html_flowable(callback(r),
-                                                   doc.printable_width)
+                                                   doc.printable_width,
+                                                   styles = pdf_html_styles,
+                                                   )
 
         elif pdf_componentname: # and resource.parent is None:
             # Enforce a particular component
@@ -350,10 +361,16 @@ class S3RL_PDF(S3Codec):
         return doc.output.getvalue()
 
     # -------------------------------------------------------------------------
-    def get_html_flowable(self, rules, printable_width):
+    def get_html_flowable(self, rules, printable_width, styles=None):
         """
             Function to convert the rules passed in to a flowable.
             The rules (for example) could be an rHeader callback
+
+            @param rules: the HTML (web2py helper class) or a callback
+                          to produce it. The callback receives the
+                          S3Request as parameter.
+            @param printable_width: the printable width
+            @param styles: styles for HTML=>PDF conversion
         """
 
         if callable(rules):
@@ -372,7 +389,9 @@ class S3RL_PDF(S3Codec):
             html = rules
 
         parser = S3html2pdf(pageWidth=printable_width,
-                            exclude_class_list=["tabs"])
+                            exclude_class_list=["tabs"],
+                            styles = styles,
+                            )
         result = parser.parse(html)
         return result
 
@@ -1222,34 +1241,49 @@ class S3html2pdf():
 
     def __init__(self,
                  pageWidth,
-                 exclude_class_list = []):
+                 exclude_class_list = [],
+                 styles = None):
         """
-            @param pageWidth:
-            @param exclude_class_list:
+            Constructor
+
+            @param pageWidth: the printable width
+            @param exclude_class_list: list of classes for elements to skip
+            @param styles: the styles dict from the caller
         """
 
         # Fonts
         set_fonts(self)
 
         self.exclude_class_list = exclude_class_list
+
         self.pageWidth = pageWidth
         self.fontsize = 10
+
+        # Standard styles
         styleSheet = getSampleStyleSheet()
+
         self.plainstyle = styleSheet["Normal"]
         self.plainstyle.fontName = self.font_name
         self.plainstyle.fontSize = 9
+
         self.boldstyle = deepcopy(styleSheet["Normal"])
         self.boldstyle.fontName = self.font_name_bold
         self.boldstyle.fontSize = 10
+
         self.titlestyle = deepcopy(styleSheet["Normal"])
         self.titlestyle.fontName = self.font_name_bold
         self.titlestyle.fontSize = 16
+
         self.normalstyle = self.plainstyle
+
         # To add more PDF styles define the style above (just like the titlestyle)
         # Then add the style and the name to the lookup dict below
         # These can then be added to the html in the code as follows:
         # TD("Waybill", _class="pdf_title")
         self.style_lookup = {"pdf_title": self.titlestyle}
+
+        # Additional styles from the caller
+        self.styles = styles
 
     # -------------------------------------------------------------------------
     def parse(self, html):
@@ -1498,6 +1532,8 @@ class S3html2pdf():
             @param html: the TR element  to convert
             @return: a list containing text that ReportLab can use
         """
+
+        #styles = self.styles
 
         row = []
         rappend = row.append
