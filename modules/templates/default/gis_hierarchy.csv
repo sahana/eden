@@ -12,7 +12,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,BI,Province,Commune,Colline,Sous Colline,
 ,CF,Prefecture,Sub-Prefecture,Commune,,
 ,CM,Region,Division,Sub-Division,Village,
-,DE,State,Region,District,,,
+,DE,"Federal State","Government District","Rural District / District","Town / Municipality","Village",
 ,FI,"Regional State Administrative Agency",Region,Sub-region,Municipality,,
 ,GE,"Region / Republic",District,,,,
 ,GN,Region,Prefecture,Sub-prefecture,,,
