@@ -35,6 +35,7 @@ ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all recor
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,pr_person,READ|CREATE|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,pr,person,,READ|CREATE|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,project,,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,req,,,READ|CREATE|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,vol,,,READ|CREATE|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,inv,,,READ|CREATE|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,inv,warehouse,,READ|CREATE|UPDATE|DELETE,,,,,

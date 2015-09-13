@@ -3648,6 +3648,15 @@ class S3Config(Storage):
         """
         return self.req.get("use_commit", True)
 
+    def get_req_commit_people(self):
+        """
+            Whether Skills Requests should be Committed with Named Indviduals
+            or just Anonymous Skill 
+
+            @ToDo: Make this do something
+        """
+        return self.req.get("commit_people", False)
+
     def get_req_commit_value(self):
         """
             Whether Donations should have a Value field

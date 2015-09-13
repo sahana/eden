@@ -98,16 +98,21 @@ def config(settings):
     #
     settings.security.policy = 8 # Entity Realm + Hierarchy and Delegations
 
+    # Uncomment to have Person records owned by the Org they are an HR for
+    settings.auth.person_realm_human_resource_site_then_org = True
+
+    # -------------------------------------------------------------------------
+    # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
+    #settings.hrm.skill_types = True
+
     # Uncomment to have Volunteers be hierarchical organisational units
     # (& hence HR realms propagate down to Address & Contacts)
     # NB Doesn't seem to make any difference
     #settings.hrm.vol_affiliation = 1
 
-    # Uncomment to have Person records owned by the Org they are an HR for
-    settings.auth.person_realm_human_resource_site_then_org = True
-
-    # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
-    settings.hrm.skill_types = True
+    # -------------------------------------------------------------------------
+    # Uncomment to Commit Named People rather than simply Anonymous Skills
+    #settings.req.commit_people = True
 
     # -------------------------------------------------------------------------
     def pr_component_realm_entity(table, row):

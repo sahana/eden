@@ -698,7 +698,6 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
 
         else:
             s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % current.request.application)
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -791,7 +790,9 @@ $.filterOptionsS3({
                 crud_form = S3SQLCustomForm(*fields, postprocess=postprocess)
             else:
                 crud_form = S3SQLCustomForm(*fields)
-            s3db.configure("req_req", crud_form=crud_form)
+            s3db.configure("req_req",
+                           crud_form = crud_form,
+                           )
 
         elif type == 3:
             # Custom Form
@@ -857,7 +858,9 @@ $.filterOptionsS3({
                 crud_form = S3SQLCustomForm(*fields, postprocess=postprocess)
             else:
                 crud_form = S3SQLCustomForm(*fields)
-            s3db.configure("req_req", crud_form=crud_form)
+            s3db.configure("req_req",
+                           crud_form = crud_form,
+                           )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -871,13 +874,11 @@ $.filterOptionsS3({
             default_type = current.db.req_req.type.default
             if default_type:
                 T = current.T
-                req_submit_button = {1:T("Save and add Items"),
-                                     3:T("Save and add People"),
-                                     9:T("Save"),
+                req_submit_button = {1: T("Save and add Items"),
+                                     3: T("Save and add People"),
+                                     9: T("Save"),
                                      }
                 current.response.s3.crud.submit_button = req_submit_button[default_type]
-
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1172,6 +1173,9 @@ $.filterOptionsS3({
                                                          rstable.quantity,
                                                          rstable.comments)
             if skills:
+                # @ToDo:
+                #if current.deployment_settings.get_req_commit_people():
+                #else:
                 cstable = s3db.req_commit_skill
                 insert = cstable.insert
                 for skill in skills:
@@ -2448,9 +2452,8 @@ class S3CommitModel(S3Model):
                                                      ))
 
         # CRUD strings
-        ADD_COMMIT = T("Make Commitment")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_COMMIT,
+            label_create = T("Make Commitment"),
             title_display = T("Commitment Details"),
             title_list = T("Commitments"),
             title_update = T("Edit Commitment"),
@@ -3077,6 +3080,8 @@ class S3CommitItemModel(S3Model):
 class S3CommitPersonModel(S3Model):
     """
         Commit a named individual to a Request
+
+        Used when settings.req.commit_people = True
     """
 
     names = ("req_commit_person",)
@@ -3092,11 +3097,11 @@ class S3CommitPersonModel(S3Model):
         self.define_table(tablename,
                           self.req_commit_id(),
                           # For reference
-                          self.hrm_multi_skill_id(
-                              writable=False,
-                              comment=None,
-                          ),
-                          # This should be person not hrm as we want to mark them as allocated
+                          self.hrm_multi_skill_id(comment = None,
+                                                  writable = False,
+                                                  ),
+                          # This should be person not hrm as we want to mark
+                          # them as allocated across all their Org-affiliations
                           self.pr_person_id(),
                           s3_comments(),
                           *s3_meta_fields())
@@ -3162,6 +3167,8 @@ class S3CommitPersonModel(S3Model):
 class S3CommitSkillModel(S3Model):
     """
         Commit anonymous people to a Request
+
+        Used when settings.req.commit_people = False (default)
     """
 
     names = ("req_commit_skill",)
@@ -3178,7 +3185,8 @@ class S3CommitSkillModel(S3Model):
                           self.req_commit_id(),
                           self.hrm_multi_skill_id(),
                           Field("quantity", "double", notnull=True,
-                                label = T("Quantity")),
+                                label = T("Quantity"),
+                                ),
                           s3_comments(),
                           *s3_meta_fields())
 
@@ -3196,7 +3204,8 @@ class S3CommitSkillModel(S3Model):
             msg_list_empty = T("No People currently committed"))
 
         self.configure(tablename,
-                       onaccept = self.commit_skill_onaccept)
+                       onaccept = self.commit_skill_onaccept,
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -3210,12 +3219,10 @@ class S3CommitSkillModel(S3Model):
             Update the Commit Status for the Request Skill & Request
         """
 
-        db = current.db
-
-        vars = form.vars
-        req_skill_id = vars.req_skill_id
+        req_skill_id = form.vars.req_skill_id
 
         # Get the req_id
+        db = current.db
         rstable = db.req_req_skill
         req = db(rstable.id == req_skill_id).select(rstable.req_id,
                                                     limitby=(0, 1)).first()
@@ -3475,6 +3482,7 @@ def req_skill_onaccept(form):
         if table:
             table.insert(task_id = task,
                          req_id = req_id)
+            # @ToDo: Fire onaccept which may send them a notification?
 
 # =============================================================================
 def req_req_details(row):
