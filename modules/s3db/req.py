@@ -3110,9 +3110,8 @@ class S3CommitPersonModel(S3Model):
                           *s3_meta_fields())
 
         # CRUD strings
-        ADD_COMMIT_PERSON = T("Add Person to Commitment")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_COMMIT_PERSON,
+            label_create = T("Add Person to Commitment"),
             title_display = T("Committed Person Details"),
             title_list = T("Committed People"),
             title_update = T("Edit Committed Person"),
@@ -3289,7 +3288,7 @@ def req_item_onaccept(form):
     if not req_id:
         req_id = s3_get_last_record_id("req_req")
     if not req_id:
-        raise HTTP(500, "can not get req_id")
+        raise HTTP(500, "Cannot get req_id")
 
     # Update Request Status
     req_update_status(req_id)
@@ -3587,7 +3586,7 @@ def req_rheader(r, check_page=False):
                         req_item_tab_label = T("Item")
                     tabs.append((req_item_tab_label, "req_item"))
                 elif type == 3 and settings.has_module("hrm"):
-                    tabs.append((T("People"), "req_skill"))
+                    tabs.append((T("Skills"), "req_skill"))
                 tabs.append((T("Documents"), "document"))
                 if is_template:
                     tabs.append((T("Schedule"), "job"))

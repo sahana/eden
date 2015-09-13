@@ -115,13 +115,46 @@ def config(settings):
     # 6: Apply Controller, Function, Table ACLs and Entity Realm
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
-    #
-    #settings.security.policy = 6 # Organisation-ACLs
+
+    settings.security.policy = 6 # Organisation-ACLs
 
     # -------------------------------------------------------------------------
     # Human Resource Management
     # Uncomment to change the label for 'Staff'
     settings.hrm.staff_label = "Contacts"
+
+    # Uncomment to disable Staff experience
+    settings.hrm.staff_experience = False
+    # Uncomment to disable the use of HR Credentials
+    settings.hrm.use_credentials = False
+    # Uncomment to disable the use of HR Skills
+    settings.hrm.use_skills = False
+    # Uncomment to disable the use of HR Teams
+    settings.hrm.teams = False
+
+    # -----------------------------------------------------------------------------
+    # Inventory
+    settings.inv.direct_stock_edits = True
+
+    # -----------------------------------------------------------------------------
+    # Projects
+    # Uncomment this to use multiple Organisations per project
+    #settings.project.multiple_organisations = True
+
+    # -----------------------------------------------------------------------------
+    # Requests
+    settings.req.req_type = ["Other"]
+    settings.req.requester_label = "Contact"
+    # Uncomment if the User Account logging the Request is NOT normally the Requester
+    settings.req.requester_is_author = False
+    # Uncomment to have Donations include a 'Value' field
+    settings.req.commit_value = True
+    # Uncomment if the User Account logging the Commitment is NOT normally the Committer
+    #settings.req.comittter_is_author = False
+    # Uncomment to allow Donations to be made without a matching Request
+    #settings.req.commit_without_request = True
+    # Set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
+    settings.req.requester_to_site = True
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -200,12 +233,12 @@ def config(settings):
         #    restricted = True,
         #    module_type = 2,
         #)),
-        #("cms", Storage(
-        #  name_nice = T("Content Management"),
-        #  #description = "Content Management System",
-        #  restricted = True,
-        #  module_type = 10,
-        #)),
+        ("cms", Storage(
+          name_nice = T("Content Management"),
+          #description = "Content Management System",
+          restricted = True,
+          module_type = 10,
+        )),
         ("doc", Storage(
             name_nice = T("Documents"),
             #description = "A library of digital resources, such as photos, documents and reports",
