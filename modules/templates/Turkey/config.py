@@ -112,7 +112,7 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Uncomment to Commit Named People rather than simply Anonymous Skills
-    #settings.req.commit_people = True
+    settings.req.commit_people = True
 
     # Disable Inline Forms, unless we enable separate controllers
     # (otherwise Create form cannot redirect to next tab correctly)

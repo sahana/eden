@@ -4617,13 +4617,15 @@ class hrm_AssignMethod(S3Method):
         @ToDo: be able to filter by deployable status for the role
     """
 
-    def __init__(self, component, types=None):
+    def __init__(self, component, next_tab="human_resource", types=None):
         """
             @param component: the Component in which to create records
             @param types: a list of types to pick from: Staff, Volunteers, Deployables
+            @param next_tab: the component/method to redirect to after assigning
         """
 
         self.component = component
+        self.next_tab = next_tab
         self.types = types
 
     def apply_method(self, r, **attr):
@@ -4669,7 +4671,17 @@ class hrm_AssignMethod(S3Method):
             controller = "hrm"
 
         T = current.T
+        db = current.db
         s3db = current.s3db
+
+        table = s3db[tablename]
+        fkey = component.fkey
+        record = r.record
+        if fkey in record:
+            # SuperKey
+            record_id = record[fkey]
+        else:
+            record_id = r.id
 
         get_vars = r.get_vars
         response = current.response
@@ -4678,21 +4690,12 @@ class hrm_AssignMethod(S3Method):
             added = 0
             post_vars = r.post_vars
             if all([n in post_vars for n in ("assign", "selected", "mode")]):
-                fkey = component.fkey
-                record = r.record
-                if fkey in record:
-                    # SuperKey
-                    record_id = r.record[fkey]
-                else:
-                    record_id = r.id
+
                 selected = post_vars.selected
                 if selected:
                     selected = selected.split(",")
                 else:
                     selected = []
-
-                db = current.db
-                table = s3db[tablename]
 
                 # Handle exclusion filter
                 if post_vars.mode == "Exclusive":
@@ -4707,6 +4710,7 @@ class hrm_AssignMethod(S3Method):
                     rows = hresource.select(["id"], as_rows=True)
                     selected = [str(row.id) for row in rows]
 
+                # Prevent multiple entries in the link table
                 query = (table.human_resource_id.belongs(selected)) & \
                         (table[fkey] == record_id) & \
                         (table.deleted != True)
@@ -4731,7 +4735,7 @@ class hrm_AssignMethod(S3Method):
             current.session.confirmation = T("%(number)s assigned") % \
                                            dict(number=added)
             if added > 0:
-                redirect(URL(args=[r.id, "human_resource"], vars={}))
+                redirect(URL(args=[r.id, self.next_tab], vars={}))
             else:
                 redirect(URL(args=r.args, vars={}))
 
@@ -4745,8 +4749,12 @@ class hrm_AssignMethod(S3Method):
             else:
                 # Both
                 resource_type = None
+            if r.controller == "req":
+                module = "req"
+            else:
+                module = controller
             filter_widgets = hrm_human_resource_filters(resource_type=resource_type,
-                                                        module=controller)
+                                                        module=module)
 
             # List fields
             list_fields = ["id",
@@ -4780,17 +4788,18 @@ class hrm_AssignMethod(S3Method):
                 limit = 4 * display_length
             else:
                 limit = None
-            filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+            filter, orderby, left = resource.datatable_filter(list_fields,
+                                                              get_vars)
             resource.add_filter(filter)
-            data = resource.select(list_fields,
-                                   start=0,
-                                   limit=limit,
-                                   orderby=orderby,
-                                   left=left,
-                                   count=True,
-                                   represent=True)
-            filteredrows = data["numrows"]
-            dt = S3DataTable(data["rfields"], data["rows"])
+
+            # Hide people already in the link table
+            query = (table[fkey] == record_id) & \
+                    (table.deleted != True)
+            rows = db(query).select(table.human_resource_id)
+            already = [row.human_resource_id for row in rows]
+            filter = (~db.hrm_human_resource.id.belongs(already))
+            resource.add_filter(filter)
+
             dt_id = "datatable"
 
             # Bulk actions
@@ -4809,23 +4818,16 @@ class hrm_AssignMethod(S3Method):
                                       update_url = profile_url)
                 response.s3.no_formats = True
 
-                # Data table (items)
-                items = dt.html(totalrows,
-                                filteredrows,
-                                dt_id,
-                                dt_ajax_url=r.url(representation="aadata"),
-                                dt_bulk_actions=dt_bulk_actions,
-                                dt_pageLength=display_length,
-                                dt_pagination="true",
-                                dt_searching="false",
-                                )
-
                 # Filter form
                 if filter_widgets:
 
                     # Where to retrieve filtered data from:
                     _vars = resource.crud._remove_filters(r.get_vars)
                     filter_submit_url = r.url(vars=_vars)
+
+                    # Default Filters (before selecting data!)
+                    resource.configure(filter_widgets=filter_widgets)
+                    S3FilterForm.apply_filter_defaults(r, resource)
 
                     # Where to retrieve updated filter options from:
                     filter_ajax_url = URL(f="human_resource",
@@ -4855,6 +4857,27 @@ class hrm_AssignMethod(S3Method):
                 else:
                     ff = ""
 
+                # Data table (items)
+                data = resource.select(list_fields,
+                                       start=0,
+                                       limit=limit,
+                                       orderby=orderby,
+                                       left=left,
+                                       count=True,
+                                       represent=True)
+                filteredrows = data["numrows"]
+                dt = S3DataTable(data["rfields"], data["rows"])
+
+                items = dt.html(totalrows,
+                                filteredrows,
+                                dt_id,
+                                dt_ajax_url=r.url(representation="aadata"),
+                                dt_bulk_actions=dt_bulk_actions,
+                                dt_pageLength=display_length,
+                                dt_pagination="true",
+                                dt_searching="false",
+                                )
+
                 STAFF = settings.get_hrm_staff_label()
                 output = dict(items = items,
                               title = T("Assign %(staff)s") % dict(staff=STAFF),
@@ -4869,6 +4892,17 @@ class hrm_AssignMethod(S3Method):
                     echo = int(get_vars.draw)
                 else:
                     echo = None
+
+                data = resource.select(list_fields,
+                                       start=0,
+                                       limit=limit,
+                                       orderby=orderby,
+                                       left=left,
+                                       count=True,
+                                       represent=True)
+                filteredrows = data["numrows"]
+                dt = S3DataTable(data["rfields"], data["rows"])
+
                 items = dt.json(totalrows,
                                 filteredrows,
                                 dt_id,
@@ -8797,7 +8831,7 @@ def hrm_human_resource_filters(resource_type=None,
         append_filter(S3OptionsFilter("competency.skill_id",
                                       # Better to default (easier to customise/consistency)
                                       #label = T("Skill"),
-                                      hidden = True,
+                                      hidden = module != "req",
                                       ))
 
     # Training filter

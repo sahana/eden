@@ -760,7 +760,7 @@ $.filterOptionsS3({
                                     s3.actions.append(action)
                                     confirm = T("Are you sure you want to send a shipment for this request?")
                                     s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
-                            if "People" in req_types:
+                            if "People" in req_types and settings.get_req_commit_people():
                                 if len(req_types) != 1 and (get_vars.type != "3"):
                                     # Restrict these Action Buttons to just those which are Skills Requests
                                     table = r.table
@@ -1122,8 +1122,27 @@ def commit():
                        insertable = False,
                        )
 
-    def prep(r):
+    if "assign" in request.args:
+        def skill_default_filter(selector, tablename=None):
+            # Lookup Skills in the Request
+            commit_id = request.args[0]
+            ctable = s3db.req_commit
+            rstable = s3db.req_req_skill
+            query = (ctable.id == commit_id) & \
+                    (ctable.req_id == rstable.req_id)
+            multi_skills = db(query).select(rstable.skill_id,
+                                            )
+            skills = []
+            for row in multi_skills:
+                m = row.skill_id
+                for s in m:
+                    skills.append(s)
+            return skills
+        s3base.s3_set_default_filter("competency.skill_id",
+                                     skill_default_filter,
+                                     tablename = "hrm_human_resource")
 
+    def prep(r):
         if r.interactive and r.record:
             # Commitments created through UI should be done via components
             if r.component:
@@ -1360,6 +1379,9 @@ def commit_rheader(r):
             elif type == 3:
                 if settings.get_req_commit_people():
                     tabs.append((T("People"), "commit_person"))
+                    if auth.s3_has_permission("create", "req_commit_person") and \
+                       auth.s3_has_permission("update", "req_commit", r.id):
+                        tabs.append((T("Assign"), "assign"))
                 else:
                     tabs.append((T("Skills"), "commit_skill"))
 

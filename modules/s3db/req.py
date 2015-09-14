@@ -933,9 +933,9 @@ $.filterOptionsS3({
                 args = [id]
                 _title = current.T("Go to Request")
             return A(req,
-                     _href = URL(c = "req",
-                                 f = "req",
-                                 args = args),
+                     _href = URL(c="req", f="req",
+                                 args=args,
+                                 ),
                      _title = _title)
         else:
             return req
@@ -978,8 +978,8 @@ $.filterOptionsS3({
                     else:
                         args = [req_row.id]
                     return A(value,
-                             _href = URL(c = "req", f = "req",
-                                         args = args
+                             _href = URL(c="req", f="req",
+                                         args=args,
                                          ),
                              )
             return B(value)
@@ -1130,7 +1130,8 @@ $.filterOptionsS3({
     def req_commit_all(r, **attr):
         """
             Custom Method to commit to a Request
-            - creates a commit with commit_items for each req_item
+            - creates a commit with commit_items for each req_item or
+                                    commit_skills for each req_skill
         """
 
         T = current.T
@@ -1215,8 +1216,12 @@ $.filterOptionsS3({
         if "send" in r.args:
             redirect(URL(f="send_commit", args=[cid]))
 
-        current.session.confirmation = msg
-        redirect(URL(c="req", f="commit", args=[cid]))
+        elif "assign" in r.args:
+            redirect(URL(f="commit", args=[cid, "assign"]))
+
+        else:
+            current.session.confirmation = msg
+            redirect(URL(c="req", f="commit", args=[cid]))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2392,7 +2397,9 @@ class S3CommitModel(S3Model):
         # Custom Method to Assign HRs
         self.set_method("req", "commit",
                         method = "assign",
-                        action = self.hrm_AssignMethod(component="commit_person"))
+                        action = self.hrm_AssignMethod(component="commit_person",
+                                                       next_tab="commit_person",
+                                                       ))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2978,9 +2985,9 @@ class S3CommitPersonModel(S3Model):
         self.define_table(tablename,
                           self.req_commit_id(),
                           # For reference
-                          self.hrm_multi_skill_id(comment = None,
-                                                  writable = False,
-                                                  ),
+                          #self.hrm_multi_skill_id(comment = None,
+                          #                        writable = False,
+                          #                        ),
                           # This should be person not hrm as we want to mark
                           # them as allocated across all their Org-affiliations
                           #self.pr_person_id(),
@@ -3881,7 +3888,8 @@ class req_CheckMethod(S3Method):
                         dict(site_name=site_name)
             else:
                 commit_btn = A(s3_unicode(T("Send from %s")) % site_name,
-                               _href = URL(c = "req",
+                               _href = URL(#c = "inv", or "req"
+                                           #c = "req",
                                            f = "send_req",
                                            args = [r.id],
                                            vars = dict(site_id = site_id)
@@ -4035,10 +4043,10 @@ class req_CheckMethod(S3Method):
             s3.no_formats = True
 
             if not no_match:
-                commit_btn = A(T("Commit to this Request"),
+                commit_btn = A(T("Assign People to this Request"),
                                _href = URL(c = "req",
                                            f = "req",
-                                           args = [r.id, "commit", "create"],
+                                           args = [r.id, "commit_all", "assign"],
                                            ),
                                _class = "action-btn"
                                )
