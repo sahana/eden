@@ -91,7 +91,7 @@ class S3RequestModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
 
-        s3_string_represent = lambda str: str if str else NONE
+        s3_string_represent = lambda s: s if s else NONE
 
         add_components = self.add_components
         crud_strings = s3.crud_strings
@@ -135,23 +135,25 @@ class S3RequestModel(S3Model):
                              }
 
         req_types_deployed = settings.get_req_req_type()
-        req_type_opts = {}
+        req_types = {}
         if settings.has_module("inv") and "Stock" in req_types_deployed:
             # Number hardcoded in controller & JS
-            req_type_opts[1] = settings.get_req_type_inv_label()
+            req_types[1] = settings.get_req_type_inv_label()
         #if settings.has_module("asset") and "Asset" in req_types_deployed:
-        #    req_type_opts[2] = T("Assets")
+        #    req_types[2] = T("Assets")
         if settings.has_module("hrm") and "People" in req_types_deployed:
-            req_type_opts[3] = settings.get_req_type_hrm_label()
+            req_types[3] = settings.get_req_type_hrm_label()
         #if settings.has_module("cr") and "Shelter" in req_types_deployed:
-        #    req_type_opts[4] = T("Shelter")
+        #    req_types[4] = T("Shelter")
         if "Other" in req_types_deployed:
-            req_type_opts[9] = T("Other")
+            req_types[9] = T("Other")
 
-        if len(req_type_opts) == 1:
-            default_type, v = req_type_opts.items()[0]
+        if len(req_types) == 1:
+            default_type, v = req_types.items()[0]
         else:
-            default_type = None
+            default_type = current.request.get_vars.get("type")
+            if default_type:
+                default_type = int(default_type)
 
         use_commit = settings.get_req_use_commit()
         use_req_number = settings.get_req_use_req_number()
@@ -197,8 +199,8 @@ class S3RequestModel(S3Model):
                                 default = default_type,
                                 label = T("Request Type"),
                                 represent = lambda opt: \
-                                            req_type_opts.get(opt, UNKNOWN_OPT),
-                                requires = IS_IN_SET(req_type_opts, zero=None),
+                                            req_types.get(opt, UNKNOWN_OPT),
+                                requires = IS_IN_SET(req_types, zero=None),
                                 readable = not default_type,
                                 writable = not default_type,
                                 ),
@@ -333,7 +335,7 @@ class S3RequestModel(S3Model):
                                      ),
                           # Detailed Status
                           req_status("commit_status",
-                                     label = T("Commit. Status"),
+                                     label = T("Commit Status"),
                                      represent = self.req_commit_status_represent,
                                      readable = use_commit,
                                      writable = req_status_writable and use_commit,
@@ -432,21 +434,29 @@ class S3RequestModel(S3Model):
                          ),
             ]
 
-        if "Stock" in req_type_opts:
-            filter_widgets.insert(4, S3OptionsFilter("item_category.name",
+        if not default_type:
+            filter_widgets.insert(2, S3OptionsFilter("type",
+                                                     label = T("Type"),
+                                                     cols = len(req_types),
+                                                     ))
+        if default_type == 1 or (not default_type and 1 in req_types):
+            filter_widgets.insert(4, S3OptionsFilter("req_item.item_id$item_category_id",
                                                      label = T("Item Category"),
                                                      hidden = True,
                                                      ))
-        if len(req_type_opts) > 1:
-            filter_widgets.insert(2, S3OptionsFilter("type",
-                                                     label = T("Type"),
-                                                     cols = len(req_type_opts),
+        if default_type == 3 or (not default_type and 3 in req_types):
+            filter_widgets.insert(4, S3OptionsFilter("req_skill.skill_id",
+                                                     # Better to default (easier to customise/consistency)
+                                                     #label = T("Skill"),
+                                                     hidden = True,
                                                      ))
         if use_commit:
             filter_widgets.insert(2, S3OptionsFilter("commit_status",
-                                                     label = T("Commit Status"),
+                                                     # Better to default (easier to customise/consistency)
+                                                     #label = T("Commit Status"),
                                                      options = req_status_opts,
                                                      cols = 3,
+                                                     hidden = True,
                                                      ))
 
         report_fields = ["priority",
@@ -482,21 +492,21 @@ class S3RequestModel(S3Model):
                        "site_id",
                        "requester_id",
                        #"event_id",
-                       # @ToDo: Vary by deployment_setting (easy)
-                       # @ToDo: Allow a single column to support different components based on type
-                       # @ToDo: Include Qty too (Computed VF in component?)
-                       #(T("Items"), "item.item_id"),
-                       #(T("Skills"), "skill.skill_id"),
                        ]
+
+        # @ToDo: Allow a single column to support different components based on type
+        # @ToDo: Include Qty too (Computed VF in component?)
+        #if default_type == 1 or (not default_type and 1 in req_types):
+        #    list_fields.append((T("Requested Items"), "req_item.item_id"))
+        #if default_type == 3 or (not default_type and 3 in req_types):
+        #    list_fields.append((T("Requested Skills"), "req_skill.skill_id"))
 
         if use_req_number:
             list_fields.insert(1, "req_ref")
-        #if len(settings.get_req_req_type()) > 1:
-        #    list_fields.append("type")
-        list_fields.extend(((T("Drivers"), "drivers"),
-                            "priority",
-                            # @ToDo: Deprecate with type-based components (see above)
-                            (T("Details"), "details")
+        list_fields.extend(("priority",
+                            # @ToDo: Deprecate with type-based components? (see above)
+                            (T("Details"), "details"),
+                            (T("Drivers"), "drivers"),
                             ))
         if use_commit:
             list_fields.append("commit_status")
@@ -598,7 +608,6 @@ class S3RequestModel(S3Model):
                     req_req_ref = req_ref,
                     req_ref_represent = self.req_ref_represent,
                     req_status_opts = req_status_opts,
-                    req_type_opts = req_type_opts,
                     req_tabs = self.req_tabs,
                     )
 
@@ -668,7 +677,8 @@ $.filterOptionsS3({
             # (gets turned-off by JS for other types)
             table.date_required_until.writable = True
 
-        if "type" not in current.request.vars:
+        request = current.request
+        if "type" not in request.get_vars:
             # Script to inject into Pages which include Request create forms
             req_helptext = '''
 i18n.req_purpose="%s"
@@ -697,10 +707,10 @@ i18n.req_details_mandatory="%s"''' % (table.purpose.label,
                                       T("Please enter request details here."),
                                       T("Details field is required!"))
             s3.js_global.append(req_helptext)
-            s3.scripts.append("/%s/static/scripts/S3/s3.req_create_variable.js" % current.request.application)
+            s3.scripts.append("/%s/static/scripts/S3/s3.req_create_variable.js" % request.application)
 
         else:
-            s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % current.request.application)
+            s3.scripts.append("/%s/static/scripts/S3/s3.req_create.js" % request.application)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2959,8 +2969,7 @@ class S3CommitItemModel(S3Model):
 
         db = current.db
 
-        vars = form.vars
-        req_item_id = vars.req_item_id
+        req_item_id = form.vars.req_item_id
 
         # Get the req_id
         ritable = db.req_req_item
@@ -3055,14 +3064,15 @@ class S3CommitItemModel(S3Model):
         # If we have mulitple matches then provide a UI to allow the user to select which stock items to use
 
         # Create an inv_send and link to the commit
-        vars = Storage(sender_id = record.req_commit.committer_id,
-                       site_id = record.req_commit.site_id,
-                       recipient_id = record.req_req.requester_id,
-                       to_site_id = record.req_req.site_id,
-                       req_ref = record.req_req.req_ref,
-                       status = 0)
-        send_id = send_table.insert(**vars)
-        vars.id = send_id
+        form_vars = Storage(sender_id = record.req_commit.committer_id,
+                            site_id = record.req_commit.site_id,
+                            recipient_id = record.req_req.requester_id,
+                            to_site_id = record.req_req.site_id,
+                            req_ref = record.req_req.req_ref,
+                            status = 0,
+                            )
+        send_id = send_table.insert(**form_vars)
+        form_vars.id = send_id
 
         # Get all of the committed items
         query = (cim_table.commit_id == commit_id) & \
@@ -3098,7 +3108,7 @@ class S3CommitItemModel(S3Model):
 
         # Create the Waybill
         form = Storage()
-        form.vars = vars
+        form.vars = form_vars
         s3db.inv_send_onaccept(form)
 
         # Redirect to inv_send for the send id just created
@@ -3317,7 +3327,8 @@ def req_item_onaccept(form):
         Update req_item_category link table
     """
 
-    req_id = form.vars.get("req_id", None)
+    form_vars = form.vars
+    req_id = form_vars.get("req_id", None)
     if not req_id:
         req_id = s3_get_last_record_id("req_req")
     if not req_id:
@@ -3327,7 +3338,7 @@ def req_item_onaccept(form):
     req_update_status(req_id)
 
     # Update req_item_category link table
-    item_id = form.vars.get("item_id", None)
+    item_id = form_vars.get("item_id", None)
     db = current.db
     citable = db.supply_catalog_item
     cats = db(citable.item_id == item_id).select(citable.item_category_id)

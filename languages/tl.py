@@ -145,7 +145,7 @@
 'Collection At': 'Koleksyon Sa',
 'Comments': 'Mga Komento',
 'Commit': 'Manindigan',
-'Commit. Status': 'Manindigan. Katayuan',
+'Commit Status': 'Manindigan Katayuan',
 'Commitment': 'Paninindigan',
 'Competency': 'Kakayahan',
 'Computer repair': 'Pag-aayos ng computer',

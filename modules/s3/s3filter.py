@@ -1738,8 +1738,8 @@ class S3OptionsFilter(S3FilterWidget):
                         val = row[colname]
                         if virtual and callable(val):
                             val = val()
-                        if multiple or \
-                           virtual and isinstance(val, (list, tuple, set)):
+                        if (multiple or \
+                            virtual) and isinstance(val, (list, tuple, set)):
                             kextend([v for v in val
                                        if v not in opt_keys])
                         elif val not in opt_keys:

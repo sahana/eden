@@ -650,7 +650,7 @@
 'Commit Date': 'Abgabetermin',
 'Commit from %s': 'Verpflichtung von %s',
 'Commit': 'Festschreiben',
-'Commit. Status': 'Verpflichten. status',
+'Commit Status': 'Verpflichten. status',
 'Commiting a changed spreadsheet to the database': 'Ein verändertes Spreadsheet zu der Datenbank hinzufügen.',
 'Commitment Added': 'Bestätigung hinzugefügt',
 'Commitment Canceled': 'Bestätigung abgebrochen',

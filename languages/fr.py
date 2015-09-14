@@ -1039,7 +1039,7 @@
 'Commit': 'Valider',
 'Commit Date': "Date d'engagement",
 'Commit from %s': 'Validation de s%',
-'Commit. Status': 'Commettre. statut',
+'Commit Status': "Statut d'engagement",
 'Commiting a changed spreadsheet to the database': 'Commettre une chiffrier modifié dans une base de données',
 'Commitment': 'Engagement',
 'Commitment Added': 'Engagement ajouté',

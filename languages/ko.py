@@ -644,7 +644,7 @@
 'Commit Date': '확약 날짜',
 'Commit from %s': '커미트% s',
 'Commit': '확약',
-'Commit. Status': '확약 STATUS',
+'Commit Status': '확약 상태',
 'Commiting a changed spreadsheet to the database': '데이터베이스에 변경된 스프레드시트 확약',
 'Commitment Added': '추가 확약',
 'Commitment Canceled': '확약 취소됨',

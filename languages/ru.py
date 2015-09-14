@@ -652,7 +652,7 @@
 'Commit Date': 'Дата передачи на выполнение',
 'Commit from %s': 'Передавать на выполнение от %s',
 'Commit': 'Фиксировать',
-'Commit. Status': 'Commit. статус',
+'Commit Status': 'статус запроса на выполнение',
 'Commiting a changed spreadsheet to the database': 'Фиксацией изменения таблицы для базы',
 'Commitment Added': 'Делу Добавлен',
 'Commitment Canceled': 'Делу Отменена',

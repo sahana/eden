@@ -652,7 +652,7 @@
 'Commit Date': '落实日期',
 'Commit from %s': '落实从%s',
 'Commit': '落实',
-'Commit. Status': '落实。 状态',
+'Commit Status': '承诺状态',
 'Commiting a changed spreadsheet to the database': '更改提交到数据库电子表格',
 'Commitment Added': '承诺添加',
 'Commitment Canceled': '取消承诺',

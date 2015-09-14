@@ -1333,7 +1333,7 @@
 'Commit Date': 'Fecha de compromiso',
 'Commit from %s': 'Confirmación de %s',
 'Commit': 'Confirmar',
-'Commit. Status': 'Confirmar. status',
+'Commit Status': 'Estado del compromiso',
 'Commiting a changed spreadsheet to the database': 'Actualizar en la base de datos una hoja modificada',
 'Commitment Added': 'Compromiso añadido',
 'Commitment Canceled': 'Compromiso cancelado',

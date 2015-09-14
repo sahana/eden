@@ -811,7 +811,7 @@
 'Commit Date': '受け入れ日',
 'Commit from %s': '%sからのコミット',
 'Commit': 'コミット',
-'Commit. Status': '物資到着の見込み',
+'Commit Status': '支援の引き受け状況',
 'Commiting a changed spreadsheet to the database': '変更後のスプレッドシートをデータベースに反映します',
 'Commitment Added': 'コミットメントを追加しました',
 'Commitment Canceled': 'コミットをキャンセルしました',

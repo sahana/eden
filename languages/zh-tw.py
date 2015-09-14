@@ -928,7 +928,7 @@
 'Commit Date': '確定日期',
 'Commit from %s': '確定從%s',
 'Commit': '確定',
-'Commit. Status': '確定。 狀態',
+'Commit Status': '承諾狀態',
 'Commiting a changed spreadsheet to the database': '正在確定變更資料庫,試算表',
 'Commitment Added': '新增的承諾書',
 'Commitment Canceled': '取消承諾',
