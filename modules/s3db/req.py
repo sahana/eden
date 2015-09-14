@@ -391,12 +391,14 @@ class S3RequestModel(S3Model):
             #             comment=T("Search for a commitment by Committer name, Request ID, Site or Organization."),
             #             ),
             S3OptionsFilter("transit_status",
-                            label = T("Transit Status"),
+                            # Better to default (easier to customise/consistency)
+                            #label = T("Transit Status"),
                             options = req_status_opts,
                             cols = 3,
                             ),
             S3OptionsFilter("fulfil_status",
-                            label = T("Fulfill Status"),
+                            # Better to default (easier to customise/consistency)
+                            #label = T("Fulfill Status"),
                             cols = 3,
                             ),
             S3LocationFilter("site_id$location_id",
@@ -404,7 +406,8 @@ class S3RequestModel(S3Model):
                              hidden = True,
                              ),
             S3OptionsFilter("site_id",
-                            label = T("Requested For Facility"),
+                            # Better to default (easier to customise/consistency)
+                            #label = T("Requested For Facility"),
                             hidden = True,
                             ),
             S3OptionsFilter("created_by",
@@ -412,14 +415,16 @@ class S3RequestModel(S3Model):
                             hidden = True,
                             ),
             S3DateFilter("date",
-                         label = T("Date"),
+                         # Better to default (easier to customise/consistency)
+                         #label = T("Date Requested"),
                          hide_time = True,
                          input_labels = {"ge": "From", "le": "To"},
                          comment = T("Search for requests made between these dates."),
                          hidden = True,
                          ),
             S3DateFilter("date_required",
-                         label = T("Date Needed By"),
+                         # Better to default (easier to customise/consistency)
+                         #label = T("Date Needed By"),
                          hide_time = True,
                          input_labels = {"ge": "From", "le": "To"},
                          comment = T("Search for requests required between these dates."),
@@ -534,21 +539,21 @@ class S3RequestModel(S3Model):
 
         # Custom Methods
         set_method("req", "req",
-                   method="check",
-                   action=self.req_check)
+                   method = "check",
+                   action = self.req_check)
 
         set_method("req", "req",
-                   method="commit_all",
-                   action=self.req_commit_all)
+                   method = "commit_all",
+                   action = self.req_commit_all)
 
         set_method("req", "req",
-                   method="copy_all",
-                   action=self.req_copy_all)
+                   method = "copy_all",
+                   action = self.req_copy_all)
 
         # Print Forms
         set_method("req", "req",
-                   method="form",
-                   action=self.req_form)
+                   method = "form",
+                   action = self.req_form)
 
         # Components
         add_components(tablename,
@@ -1771,7 +1776,8 @@ $.filterOptionsS3({
                             cols = 3,
                             ),
             S3OptionsFilter("req_id$priority",
-                            label = T("Priority"),
+                            # Better to default (easier to customise/consistency)
+                            #label = T("Priority"),
                             options = self.req_priority_opts,
                             cols = 3,
                             ),
@@ -1800,7 +1806,7 @@ $.filterOptionsS3({
         #
         tablename = "req_req_item_category"
         define_table(tablename,
-                     req_id(empty=False),
+                     req_id(empty = False),
                      self.supply_item_category_id(),
                      *s3_meta_fields()
                      )
@@ -1830,6 +1836,8 @@ $.filterOptionsS3({
     def req_item_represent(id, row=None):
         """
             Represent a Request Item
+
+            @ToDo: Migrate to S3Represent
         """
 
         if row:
@@ -1968,6 +1976,7 @@ class S3RequestSkillModel(S3Model):
         settings = current.deployment_settings
         quantities_writable = settings.get_req_skill_quantities_writable()
         use_commit = settings.get_req_use_commit()
+        show_transit = settings.get_req_show_quantity_transit()
 
         define_table = self.define_table
 
@@ -1976,7 +1985,7 @@ class S3RequestSkillModel(S3Model):
         #
         tablename = "req_req_skill"
         define_table(tablename,
-                     self.req_req_id(empty=False),
+                     self.req_req_id(empty = False),
                      # Make this a Component
                      #Field("task",
                      #      readable=False,
@@ -2002,7 +2011,8 @@ class S3RequestSkillModel(S3Model):
                            default = 0,
                            requires = IS_INT_IN_RANGE(0, 999999),
                            readable = use_commit,
-                           writable = use_commit and quantities_writable),
+                           writable = use_commit and quantities_writable,
+                           ),
                      Field("quantity_transit", "integer",
                            label = T("Quantity in Transit"),
                            #represent = lambda quantity_transit: \
@@ -2010,14 +2020,16 @@ class S3RequestSkillModel(S3Model):
                            #                        "transit"),
                            default = 0,
                            requires = IS_INT_IN_RANGE(0, 999999),
-                           writable = quantities_writable),
+                           readable = show_transit,
+                           writable = show_transit and quantities_writable,
+                           ),
                      Field("quantity_fulfil", "integer",
                            label = T("Quantity Fulfilled"),
                            default = 0,
                            requires = IS_INT_IN_RANGE(0, 999999),
-                           writable = quantities_writable),
-                     s3_comments(
-                                 #label = T("Task Details"),
+                           writable = quantities_writable,
+                           ),
+                     s3_comments(#label = T("Task Details"),
                                  #comment = DIV(_class="tooltip",
                                  #              _title="%s|%s" % (T("Task Details"),
                                  #                                T("Include any special requirements such as equipment which they need to bring.")))
@@ -2028,13 +2040,9 @@ class S3RequestSkillModel(S3Model):
         table = current.db[tablename]
         table.site_id.label = T("Requested From")
 
-        if not settings.get_req_show_quantity_transit():
-            table.quantity_transit.writable = table.quantity_transit.readable= False
-
         # CRUD strings
-        ADD_REQUEST_SKILL = T("Add Skill to Request")
         current.response.s3.crud_strings[tablename] = Storage(
-            label_create = ADD_REQUEST_SKILL,
+            label_create = T("Add Skill to Request"),
             title_display = T("Requested Skill Details"),
             title_list = T("Requested Skills"),
             title_update = T("Edit Requested Skill"),
@@ -2372,21 +2380,18 @@ class S3CommitModel(S3Model):
                                           updateable = True,
                                           widget = site_widget,
                                           ),
-                          self.gis_location_id(
-                                # Used for reporting on where Donations originated
-                                readable = False,
-                                writable = False
-                                ),
+                          # Used for reporting on where Donations originated
+                          self.gis_location_id(readable = False,
+                                               writable = False
+                                               ),
                           # Non-Item Requests make True in the prep
-                          self.org_organisation_id(
-                                readable = False,
-                                writable = False
-                                ),
-                          # @ToDo: deployment_setting for whether this can be empty
-                          self.req_req_id(
-                            empty = not unsolicited_commit,
-                            ),
+                          self.org_organisation_id(readable = False,
+                                                   writable = False
+                                                   ),
+                          self.req_req_id(empty = not unsolicited_commit,
+                                          ),
                           Field("type", "integer",
+                                label = T("Type"),
                                 # These are copied automatically from the Req
                                 readable = False,
                                 writable = False,
@@ -2438,21 +2443,25 @@ class S3CommitModel(S3Model):
                              hidden = True,
                              ),
             S3DateFilter("date",
-                         label = T("Date"),
+                         # Better to default (easier to customise/consistency)
+                         #label = T("Date"),
                          hide_time = True,
                          comment = T("Search for commitments made between these dates."),
                          hidden = True,
                          ),
             S3DateFilter("date_available",
-                         label = T("Date Available"),
+                         # Better to default (easier to customise/consistency)
+                         #label = T("Date Available"),
                          hide_time = True,
                          comment = T("Search for commitments available between these dates."),
                          hidden = True,
                          ),
             ]
+
         if len(req_types) > 1:
             filter_widgets.insert(1, S3OptionsFilter("type",
-                                                     label = T("Type"),
+                                                     # Better to default (easier to customise/consistency)
+                                                     #label = T("Type"),
                                                      cols = len(req_types),
                                                      hidden = True,
                                                      ))
@@ -2483,28 +2492,37 @@ class S3CommitModel(S3Model):
                                     sortby = "date",
                                     )
 
+        list_fields = ["site_id",
+                       "req_id",
+                       "committer_id",
+                       ]
+
+        # @ToDo: Allow a single column to support different components based on type
+        # @ToDo: Include Qty too (Computed VF in component?)
+        if "Stock" in req_types:
+            list_fields.append((T("Committed Items"), "commit_item.req_item_id$item_id"))
+        if "People" in req_types:
+            if settings.get_req_commit_people():
+                list_fields.append((T("Committed People"), "commit_person.person_id"))
+            else:
+                list_fields.append((T("Committed Skills"), "commit_skill.skill_id"))
+
+        list_fields += ["date",
+                        "date_available",
+                        "comments",
+                        ]
+
         self.configure(tablename,
                        context = {"event": "req_id$event_id",
                                   "location": "location_id",
                                   "organisation": "organisation_id",
                                   "request": "req_id",
+                                  # We want 'For Sites XX' not 'From Site XX'
                                   #"site": "site_id",
                                   "site": "req_id$site_id",
                                   },
                        filter_widgets = filter_widgets,
-                       list_fields = ["site_id",
-                                      "req_id",
-                                      "committer_id",
-                                      # @ToDo: Vary by deployment_setting (easy)
-                                      # @ToDo: Allow a single column to support different components based on type
-                                      # @ToDo: Include Qty too (Computed VF in component?)
-                                      (T("Committed Items"), "commit_item.req_item_id$item_id"),
-                                      #(T("Committed People"), "commit_person.person_id"),
-                                      #(T("Committed Skills"), "commit_skill.skill_id"),
-                                      "date",
-                                      "date_available",
-                                      "comments",
-                                      ],
+                       list_fields = list_fields,
                        # Commitments should only be made to a specific request
                        listadd = unsolicited_commit,
                        onaccept = self.commit_onaccept,
@@ -2520,7 +2538,12 @@ class S3CommitModel(S3Model):
                        req_commit_person = "commit_id",
                        # Committed Skills
                        req_commit_skill = "commit_id",
-                      )
+                       )
+
+        # Custom Method to Assign HRs
+        self.set_method("req", "commit",
+                        method = "assign",
+                        action = self.hrm_AssignMethod(component="commit_person"))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2533,6 +2556,8 @@ class S3CommitModel(S3Model):
     def commit_represent(id, row=None):
         """
             Represent a Commit
+
+            @ToDo: Migrate to S3Represent
         """
 
         if row:
@@ -2913,8 +2938,9 @@ class S3CommitItemModel(S3Model):
             msg_list_empty = T("No Commitment Items currently registered"))
 
         self.configure(tablename,
+                       extra_fields = ["item_pack_id"],
                        onaccept = self.commit_item_onaccept,
-                       extra_fields = ["item_pack_id"])
+                       )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -3108,7 +3134,9 @@ class S3CommitPersonModel(S3Model):
                                                   ),
                           # This should be person not hrm as we want to mark
                           # them as allocated across all their Org-affiliations
-                          self.pr_person_id(),
+                          #self.pr_person_id(),
+                          # Using HR to use hrm_Assign method (can mark person as allocated onaccept)
+                          self.hrm_human_resource_id(),
                           s3_comments(),
                           *s3_meta_fields())
 

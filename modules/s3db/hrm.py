@@ -8784,17 +8784,26 @@ def hrm_human_resource_filters(resource_type=None,
                                    hidden = True,
                                    ))
 
+    # Certificate filter
+    if settings.get_hrm_use_certificates():
+        append_filter(S3OptionsFilter("certification.certificate_id",
+                                      # Better to default (easier to customise/consistency)
+                                      #label = T("Certificate"),
+                                      hidden = True,
+                                      ))
+
+    # Skills filter
+    if settings.get_hrm_use_skills():
+        append_filter(S3OptionsFilter("competency.skill_id",
+                                      # Better to default (easier to customise/consistency)
+                                      #label = T("Skill"),
+                                      hidden = True,
+                                      ))
+
     # Training filter
     if settings.get_hrm_use_trainings():
         append_filter(S3OptionsFilter("training.course_id",
                                       label = T("Training"),
-                                      hidden = True,
-                                      ))
-
-    # Certificate filter
-    if settings.get_hrm_use_certificates():
-        append_filter(S3OptionsFilter("certification.certificate_id",
-                                      label = T("Certificate"),
                                       hidden = True,
                                       ))
 
