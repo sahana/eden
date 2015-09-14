@@ -1200,7 +1200,11 @@ class S3GroupAggregate(object):
             else:
                 if method == "count":
                     result = len(set(values))
-                elif method == "sum":
+                else:
+                    values = [v for v in values
+                              if isinstance(v, (float, int, long))]
+
+                if method == "sum":
                     try:
                         result = math.fsum(values)
                     except (TypeError, ValueError):
