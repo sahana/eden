@@ -1530,42 +1530,116 @@ class S3html2pdf():
             Parses a TR element and converts it into a format for ReportLab
 
             @param html: the TR element  to convert
+            @param style: the default style
+            @param rowCnt: the row counter
+
             @return: a list containing text that ReportLab can use
         """
 
-        #styles = self.styles
+        # Identify custom styles
+        row_styles = self._styles(html)
+
+        background = self._color(row_styles.get("background-color"))
+        color = self._color(row_styles.get("color"))
 
         row = []
         rappend = row.append
         sappend = style.append
-        colCnt = 0
-        exclude_tag = self.exclude_tag
+
         select_tag = self.select_tag
         font_name_bold = self.font_name_bold
+
+        exclude_tag = self.exclude_tag
+
+        colCnt = 0
         for component in html.components:
-            if isinstance(component, (TH, TD)):
-                if exclude_tag(component):
-                    continue
-                colspan = component.attributes.get("_colspan", 1)
-                if component.components == []:
-                    rappend("")
+
+            if not isinstance(component, (TH, TD)) or \
+               exclude_tag(component):
+                continue
+
+            if component.components == []:
+                rappend("")
+                continue
+
+            colspan = component.attributes.get("_colspan", 1)
+            for detail in component.components:
+                if color:
+                    self.normalstyle.textColor = color
                 else:
-                    for detail in component.components:
-                        result = select_tag(detail, title=isinstance(component, TH))
-                        if result != None:
-                            rappend(result)
-                            if isinstance(component, TH):
-                                sappend(("BACKGROUND", (colCnt, rowCnt), (colCnt, rowCnt), colors.lightgrey))
-                                sappend(("FONTNAME", (colCnt, rowCnt), (colCnt, rowCnt), font_name_bold))
-                            if colspan > 1:
-                                for i in xrange(1, colspan):
-                                    rappend("")
-                                sappend(("SPAN", (colCnt, rowCnt), (colCnt + colspan - 1, rowCnt)))
-                                colCnt += colspan
-                            else:
-                                colCnt += 1
-        if row == []:
-            return None
-        return row
+                    # Reset to black
+                    self.normalstyle.textColor = colors.black
+
+                # Render cell content
+                result = select_tag(detail, title=isinstance(component, TH))
+                if result is None:
+                    continue
+                rappend(result)
+
+                # Add cell styles
+                cell = (colCnt, rowCnt)
+                if color:
+                    sappend(("TEXTCOLOR", cell, cell, color))
+                if background:
+                    sappend(("BACKGROUND", cell, cell, background))
+                elif isinstance(component, TH):
+                    sappend(("BACKGROUND", cell, cell, colors.lightgrey))
+                    sappend(("FONTNAME", cell, cell, font_name_bold))
+
+                # Column span
+                if colspan > 1:
+                    for i in xrange(1, colspan):
+                        rappend("")
+                    sappend(("SPAN", cell, (colCnt + colspan - 1, rowCnt)))
+                    colCnt += colspan
+                else:
+                    colCnt += 1
+
+        return None if row == [] else row
+
+    # -------------------------------------------------------------------------
+    def _styles(self, element):
+        """
+            Get the custom styles for the given element (match by tag and
+            classes)
+
+            @param element: the HTML element (web2py helper)
+            @param styles: the pdf_html_styles dict
+        """
+
+        styles = self.styles
+        element_styles = {}
+
+        tag = element.tag
+        classes = element["_class"]
+
+        if classes:
+            classes = set(classes.split(" "))
+            for k, v in styles.items():
+                t, c = k.split(".", 1)
+                if t != tag:
+                    continue
+                keys = set(c.split("."))
+                if keys <= classes:
+                    element_styles.update(v)
+        return element_styles
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _color(name):
+        """
+            Get the Color instance from colors for a given name
+
+            @param name: the name
+        """
+
+        if not name:
+            color = None
+        else:
+            try:
+                color = object.__getattribute__(colors, name)
+            except AttributeError:
+                color = None
+        return color
 
 # END =========================================================================
