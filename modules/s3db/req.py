@@ -37,6 +37,7 @@ __all__ = ("S3RequestModel",
            "S3CommitItemModel",
            "S3CommitPersonModel",
            "S3CommitSkillModel",
+           #"req_CheckMethod",
            "req_item_onaccept",
            "req_update_status",
            "req_rheader",
@@ -495,7 +496,9 @@ class S3RequestModel(S3Model):
                        ]
 
         # @ToDo: Allow a single column to support different components based on type
+        # - this is the 'Details' VF
         # @ToDo: Include Qty too (Computed VF in component?)
+        # - this is done in the 'Details' VF
         #if default_type == 1 or (not default_type and 1 in req_types):
         #    list_fields.append((T("Requested Items"), "req_item.item_id"))
         #if default_type == 3 or (not default_type and 3 in req_types):
@@ -504,7 +507,6 @@ class S3RequestModel(S3Model):
         if use_req_number:
             list_fields.insert(1, "req_ref")
         list_fields.extend(("priority",
-                            # @ToDo: Deprecate with type-based components? (see above)
                             (T("Details"), "details"),
                             (T("Drivers"), "drivers"),
                             ))
@@ -550,7 +552,7 @@ class S3RequestModel(S3Model):
         # Custom Methods
         set_method("req", "req",
                    method = "check",
-                   action = self.req_check)
+                   action = req_CheckMethod())
 
         set_method("req", "req",
                    method = "commit_all",
@@ -1263,169 +1265,6 @@ $.filterOptionsS3({
                     tabs.append((T("Commit"), "commit"))
                 return tabs
         return []
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_check(r, **attr):
-        """
-            Check to see if your Inventory can be used to match any open Requests
-        """
-
-        T = current.T
-        db = current.db
-        s3db = current.s3db
-        response = current.response
-        s3 = response.s3
-
-        NONE = current.messages["NONE"]
-
-        site_id = r.vars.site_id
-        site_name = s3db.org_site_represent(site_id, show_link=False)
-
-        output = {}
-        output["title"] = T("Check Request")
-        output["rheader"] = req_rheader(r, check_page=True)
-
-        stable = s3db.org_site
-        ltable = s3db.gis_location
-        query = (stable.id == site_id) & \
-                (stable.location_id == ltable.id)
-        location_r = db(query).select(ltable.lat,
-                                      ltable.lon,
-                                      limitby=(0, 1)).first()
-        query = (stable.id == r.record.site_id ) & \
-                (stable.location_id == ltable.id)
-        req_location_r = db(query).select(ltable.lat,
-                                          ltable.lon,
-                                          limitby=(0, 1)).first()
-
-        try:
-            distance = current.gis.greatCircleDistance(location_r.lat,
-                                                       location_r.lon,
-                                                       req_location_r.lat,
-                                                       req_location_r.lon)
-            output["rheader"][0].append(TR(TH(# Can't use %(site_name)s as gluon/languages.py def translate has a str() which can give a Unicode error
-                                              #T("Distance from %s:") % site_name,
-                                              T("Distance from Site")),
-                                           TD(T("%.1f km") % distance)
-                                           ))
-        except:
-            pass
-
-        output["subtitle"] = T("Request Items")
-
-        # Read req_items
-        table = s3db.req_req_item
-        query = (table.req_id == r.id ) & \
-                (table.deleted == False )
-        req_items = db(query).select(table.id,
-                                     table.item_id,
-                                     table.quantity,
-                                     table.item_pack_id,
-                                     table.quantity_commit,
-                                     table.quantity_transit,
-                                     table.quantity_fulfil,
-                                     )
-
-        if len(req_items):
-            # Get inv_items from this site which haven't expired and are in good condition
-            iitable = s3db.inv_inv_item
-            query = (iitable.site_id == site_id) & \
-                    (iitable.deleted == False) & \
-                    ((iitable.expiry_date >= r.now) | ((iitable.expiry_date == None))) & \
-                    (iitable.status == 0)
-            inv_items_dict = {}
-            inv_items = db(query).select(iitable.item_id,
-                                         iitable.quantity,
-                                         iitable.item_pack_id,
-                                         # VF
-                                         #iitable.pack_quantity,
-                                         )
-            for item in inv_items:
-                item_id = item.item_id
-                if item_id in inv_items_dict:
-                    inv_items_dict[item_id] += item.quantity * item.pack_quantity()
-                else:
-                    inv_items_dict[item_id] = item.quantity * item.pack_quantity()
-
-            row = TR(TH(table.item_id.label),
-                     TH(table.quantity.label),
-                     TH(table.item_pack_id.label),
-                     #TH(table.quantity_transit.label),
-                     #TH(table.quantity_fulfil.label),
-                     TH(T("Quantity Oustanding")),
-                     # Can't use %(site_name)s as gluon/languages.py def translate has a str() which can give a Unicode error
-                     #TH(T("Quantity in %s's Warehouse") % site_name),
-                     TH(T("Quantity in this Warehouse")),
-                     TH(T("Match?"))
-                     )
-            #use_commit = current.deployment_settings.get_req_use_commit()
-            #if use_commit:
-            #    row.insert(3, TH(table.quantity_commit.label))
-            items = TABLE(THEAD(row),
-                          _id="list",
-                          _class="dataTable display",
-                          )
-
-            supply_item_represent = table.item_id.represent
-            item_pack_represent = table.item_pack_id.represent
-            no_match = True
-            for req_item in req_items:
-                # Do we have any outstanding quantity?
-                quantity_outstanding = req_item.quantity - max(req_item.quantity_fulfil, req_item.quantity_transit)
-                if quantity_outstanding:
-                    # Convert Packs inv item quantity to req item quantity
-                    item_id = req_item.item_id
-                    if item_id in inv_items_dict:
-                        inv_quantity = inv_items_dict[item_id] / req_item.pack_quantity()
-                    else:
-                        inv_quantity = 0
-
-                    if inv_quantity != 0:
-                        no_match = False
-                        if inv_quantity < req_item.quantity:
-                            status = SPAN(T("Partial"), _class="req_status_partial")
-                        else:
-                            status = SPAN(T("YES"), _class="req_status_complete")
-                    else:
-                        status = SPAN(T("NO"), _class="req_status_none"),
-                else:
-                    inv_quantity = T("N/A")
-                    status = SPAN(T("N/A"), _class="req_status_none"),
-
-                items.append(TR(#A(req_item.id),
-                                supply_item_represent(req_item.item_id),
-                                req_item.quantity,
-                                item_pack_represent(req_item.item_pack_id),
-                                # This requires an action btn to get the req_id
-                                #req_item.quantity_commit, # if use_commit
-                                #req_item.quantity_transit,
-                                #req_item.quantity_fulfil,
-                                #req_quantity_represent(req_item.quantity_commit, "commit"), # if use_commit
-                                #req_quantity_represent(req_item.quantity_fulfil, "fulfil"),
-                                #req_quantity_represent(req_item.quantity_transit, "transit"),
-                                quantity_outstanding,
-                                inv_quantity,
-                                status,
-                                )
-                            )
-            output["items"] = items
-            #s3.actions = [req_item_inv_item_btn]
-            s3.no_sspag = True # pag won't work
-
-            if no_match:
-                # Can't use %(site_name)s as gluon/languages.py def translate has a str() which can give a Unicode error
-                current.response.warning = \
-                    T("This site has no items exactly matching this request. Use Alternative Items if wishing to use other items to fulfill this request!")
-                    #T("This site has no items exactly matching this request. There may still be other items in stock which can fulfill this request!")
-                s3.rfooter = None
-        else:
-            output["items"] = s3.crud_strings.req_req_item.msg_list_empty
-
-        response.view = "list.html"
-        s3.no_formats = True
-
-        return output
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3165,7 +3004,7 @@ class S3CommitPersonModel(S3Model):
 
         # @ToDo: Fix this before enabling
         #self.configure(tablename,
-        #                onaccept = self.commit_person_onaccept)
+        #               onaccept = self.commit_person_onaccept)
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -3615,7 +3454,6 @@ def req_rheader(r, check_page=False):
 
                 T = current.T
                 s3db = current.s3db
-                request = current.request
                 s3 = current.response.s3
                 settings = current.deployment_settings
 
@@ -3643,22 +3481,9 @@ def req_rheader(r, check_page=False):
                 else:
                     rheader_tabs = DIV()
 
-                site_id = request.vars.site_id
-                if site_id and not is_template:
-                    commit_btn = A(# Web2Py has a str() in gluon/languages.py in translate()
-                                   #T("Send from %s") % site_name,
-                                   T("Send from this Site"),
-                                   _href = URL(c = "req",
-                                               f = "send_req",
-                                               args = [r.id],
-                                               vars = dict(site_id = site_id)
-                                               ),
-                                   _class = "action-btn"
-                                   )
-                    s3.rfooter = TAG[""](commit_btn)
-                elif r.component and \
-                     r.component_name == "commit" and \
-                     r.component_id:
+                if type == 1 and r.component and \
+                                 r.component_name == "commit" and \
+                                 r.component_id:
                     prepare_btn = A(T("Prepare Shipment"),
                                     _href = URL(f = "send_commit",
                                                 args = [r.component_id]
@@ -3807,12 +3632,12 @@ def req_match(rheader=None):
     else:
         return output
 
-    actions = [dict(url=URL(c="req", f="req",
-                            args=["[id]", "check"],
-                            vars={"site_id": site_id}
-                            ),
-                    _class="action-btn",
-                    label=s3_unicode(T("Check")).encode("utf8"),
+    actions = [dict(label = s3_unicode(T("Check")).encode("utf8"),
+                    url = URL(c="req", f="req",
+                              args=["[id]", "check"],
+                              vars={"site_id": site_id}
+                              ),
+                    _class = "action-btn",
                     )
                ]
 
@@ -3820,22 +3645,22 @@ def req_match(rheader=None):
         # @ToDo: restrict to those which we've not already committed/sent?
         if settings.get_req_use_commit():
             actions.append(
-                dict(url=URL(c="req", f="commit_req",
-                             args=["[id]"],
-                             vars={"site_id": site_id}
-                             ),
-                     _class="action-btn",
-                     label=s3_unicode(T("Commit")).encode("utf8"),
+                dict(label = s3_unicode(T("Commit")).encode("utf8"),
+                     url = URL(c="req", f="commit_req",
+                               args=["[id]"],
+                               vars={"site_id": site_id}
+                               ),
+                     _class = "action-btn",
                      )
                 )
         # Better to force people to go through the Check process
         #actions.append(
-        #        dict(url=URL(c="req", f="send_req",
-        #                     args=["[id]"],
-        #                     vars={"site_id": site_id}
-        #                     ),
-        #             _class="action-btn dispatch",
-        #             label=s3_unicode(T("Send")).encode("utf8"),
+        #        dict(label = s3_unicode(T("Send")).encode("utf8"),
+        #             url = URL(c="req", f="send_req",
+        #                       args=["[id]"],
+        #                       vars={"site_id": site_id}
+        #                       ),
+        #             _class = "action-btn dispatch",
         #             )
         #        )
 
@@ -3873,9 +3698,357 @@ def req_match(rheader=None):
     s3.postp = postp
 
     output = current.rest_controller("req", "req",
-                                     rheader=rheader,
+                                     rheader = rheader,
                                      )
     return output
+
+# =============================================================================
+class req_CheckMethod(S3Method):
+    """
+        Check to see if you can match a Request
+            - Using the Inventory of your Site if this is an Items request
+            - Using the Skills of your HRs if this is a Skills request
+    """
+
+    def apply_method(self, r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        req_type = r.record.type
+        if req_type == 1:
+            return self.inv_match(r, **attr)
+        elif req_type == 3:
+            return self.skills_match(r, **attr)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inv_match(r, **attr):
+        """
+            Match a Request's Items with a Site's Inventory
+        """
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        response = current.response
+        s3 = response.s3
+
+        NONE = current.messages["NONE"]
+
+        output = {}
+        output["title"] = T("Check Request")
+        output["rheader"] = req_rheader(r, check_page=True)
+
+        site_id = r.get_vars.get("site_id") or current.auth.user.site_id
+        site_name = s3db.org_site_represent(site_id, show_link=False)
+
+        stable = s3db.org_site
+        ltable = s3db.gis_location
+        query = (stable.id == site_id) & \
+                (stable.location_id == ltable.id)
+        location_r = db(query).select(ltable.lat,
+                                      ltable.lon,
+                                      limitby=(0, 1)).first()
+        query = (stable.id == r.record.site_id ) & \
+                (stable.location_id == ltable.id)
+        req_location_r = db(query).select(ltable.lat,
+                                          ltable.lon,
+                                          limitby=(0, 1)).first()
+
+        try:
+            distance = current.gis.greatCircleDistance(location_r.lat,
+                                                       location_r.lon,
+                                                       req_location_r.lat,
+                                                       req_location_r.lon)
+            output["rheader"][0].append(TR(TH(s3_unicode(T("Distance from %s:")) % site_name,
+                                              ),
+                                           TD(T("%.1f km") % distance)
+                                           ))
+        except:
+            pass
+
+        output["subtitle"] = T("Requested Items")
+
+        # Read req_items
+        table = s3db.req_req_item
+        query = (table.req_id == r.id ) & \
+                (table.deleted == False )
+        req_items = db(query).select(table.id,
+                                     table.item_id,
+                                     table.quantity,
+                                     table.item_pack_id,
+                                     table.quantity_commit,
+                                     table.quantity_transit,
+                                     table.quantity_fulfil,
+                                     )
+
+        if len(req_items):
+            # Get inv_items from this site which haven't expired and are in good condition
+            iitable = s3db.inv_inv_item
+            query = (iitable.site_id == site_id) & \
+                    (iitable.deleted == False) & \
+                    ((iitable.expiry_date >= r.now) | ((iitable.expiry_date == None))) & \
+                    (iitable.status == 0)
+            inv_items_dict = {}
+            inv_items = db(query).select(iitable.item_id,
+                                         iitable.quantity,
+                                         iitable.item_pack_id,
+                                         # VF
+                                         #iitable.pack_quantity,
+                                         )
+            for item in inv_items:
+                item_id = item.item_id
+                if item_id in inv_items_dict:
+                    inv_items_dict[item_id] += item.quantity * item.pack_quantity()
+                else:
+                    inv_items_dict[item_id] = item.quantity * item.pack_quantity()
+
+            # Build the Output Representation
+            row = TR(TH(table.item_id.label),
+                     TH(table.quantity.label),
+                     TH(table.item_pack_id.label),
+                     #TH(table.quantity_transit.label),
+                     #TH(table.quantity_fulfil.label),
+                     TH(T("Quantity Oustanding")),
+                     TH(s3_unicode(T("Quantity in %s")) % site_name),
+                     TH(T("Match?"))
+                     )
+            #use_commit = current.deployment_settings.get_req_use_commit()
+            #if use_commit:
+            #    row.insert(3, TH(table.quantity_commit.label))
+            items = TABLE(THEAD(row),
+                          _id="list",
+                          _class="dataTable display",
+                          )
+
+            supply_item_represent = table.item_id.represent
+            item_pack_represent = table.item_pack_id.represent
+            no_match = True
+            for req_item in req_items:
+                req_quantity = req_item.quantity
+                # Do we have any outstanding quantity?
+                quantity_outstanding = req_quantity - max(req_item.quantity_fulfil, req_item.quantity_transit)
+                if quantity_outstanding:
+                    # Convert Packs inv item quantity to req item quantity
+                    item_id = req_item.item_id
+                    if item_id in inv_items_dict:
+                        inv_quantity = inv_items_dict[item_id] / req_item.pack_quantity()
+                    else:
+                        inv_quantity = 0
+
+                    if inv_quantity != 0:
+                        no_match = False
+                        if inv_quantity < req_quantity:
+                            status = SPAN(T("Partial"), _class="req_status_partial")
+                        else:
+                            status = SPAN(T("YES"), _class="req_status_complete")
+                    else:
+                        status = SPAN(T("NO"), _class="req_status_none"),
+                else:
+                    inv_quantity = T("N/A")
+                    status = SPAN(T("N/A"), _class="req_status_none"),
+
+                items.append(TR(#A(req_item.id),
+                                supply_item_represent(req_item.item_id),
+                                req_quantity,
+                                item_pack_represent(req_item.item_pack_id),
+                                # This requires an action btn to get the req_id
+                                #req_item.quantity_commit, # if use_commit
+                                #req_item.quantity_transit,
+                                #req_item.quantity_fulfil,
+                                #req_quantity_represent(req_item.quantity_commit, "commit"), # if use_commit
+                                #req_quantity_represent(req_item.quantity_fulfil, "fulfil"),
+                                #req_quantity_represent(req_item.quantity_transit, "transit"),
+                                quantity_outstanding,
+                                inv_quantity,
+                                status,
+                                )
+                             )
+            output["items"] = items
+            #s3.actions = [req_item_inv_item_btn]
+            s3.no_sspag = True # pag won't work
+            s3.no_formats = True
+
+            if no_match:
+                response.warning = \
+                    s3_unicode(T("%(site_name)s has no items exactly matching this request. Use Alternative Items if wishing to use other items to fulfill this request!")) % \
+                        dict(site_name=site_name)
+            else:
+                commit_btn = A(s3_unicode(T("Send from %s")) % site_name,
+                               _href = URL(c = "req",
+                                           f = "send_req",
+                                           args = [r.id],
+                                           vars = dict(site_id = site_id)
+                                           ),
+                               _class = "action-btn"
+                               )
+                s3.rfooter = TAG[""](commit_btn)
+        else:
+            output["items"] = s3.crud_strings.req_req_item.msg_list_empty
+
+        response.view = "list.html"
+
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def skills_match(r, **attr):
+        """
+            Match a Request's Skills with an Organisation's HRs
+
+            @ToDo: Optionally Filter by Site
+                (Volunteers don't currently link to a Site)
+            @ToDo: Check Availability
+                    - when the Volunteer has said they will work
+                    - where the Volunteer has said they will work
+                    - don't commit the same time slot twice
+        """
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        response = current.response
+        s3 = response.s3
+
+        NONE = current.messages["NONE"]
+
+        output = {}
+        output["title"] = T("Check Request")
+        output["rheader"] = req_rheader(r, check_page=True)
+
+        output["subtitle"] = T("Requested Skills")
+
+        organisation_id = r.get_vars.get("organisation_id") or current.auth.user.organisation_id
+        org_name = s3db.org_organisation_represent(organisation_id, show_link=False)
+
+        # Read req_skills
+        table = s3db.req_req_skill
+        query = (table.req_id == r.id ) & \
+                (table.deleted == False )
+        req_skills_multi = db(query).select(table.id,
+                                            table.skill_id,
+                                            table.quantity,
+                                            table.quantity_commit,
+                                            table.quantity_transit,
+                                            table.quantity_fulfil,
+                                            )
+
+        if len(req_skills_multi):
+            req_skills = []
+            for row in req_skills_multi:
+                skills_multi = row.skill_id
+                for skill_id in skills_multi:
+                    if skill_id not in req_skills:
+                        req_skills.append(skill_id)
+
+            # Get the People from this Org with at least one of the Requested Skills
+            # NB This isn't exact yet since we may need people to have multiple skills
+            htable = s3db.hrm_human_resource
+            #ptable = s3db.pr_person
+            ctable = s3db.hrm_competency
+            query = (htable.organisation_id == organisation_id) & \
+                    (htable.deleted == False) & \
+                    (htable.person_id == ctable.person_id) & \
+                    (ctable.deleted == False) & \
+                    (ctable.skill_id.belongs(req_skills))
+            skills = db(query).select(htable.id,
+                                      ctable.skill_id,
+                                      )
+            people = {}
+            for s in skills:
+                hr_id = s[htable.id]
+                if hr_id in people:
+                    people[hr_id].append(s[ctable.skill_id])
+                else:
+                    people[hr_id] = [s[ctable.skill_id]]
+
+            # Build the Output Representation
+            row = TR(TH(table.skill_id.label),
+                     TH(table.quantity.label),
+                     #TH(table.quantity_transit.label),
+                     #TH(table.quantity_fulfil.label),
+                     TH(T("Quantity Oustanding")),
+                     TH(s3_unicode(T("Quantity in %s")) % org_name),
+                     TH(T("Match?"))
+                     )
+            #use_commit = current.deployment_settings.get_req_use_commit()
+            #if use_commit:
+            #    row.insert(3, TH(table.quantity_commit.label))
+            items = TABLE(THEAD(row),
+                          _id="list",
+                          _class="dataTable display",
+                          )
+
+            multi_skill_represent = table.skill_id.represent
+            no_match = True
+            for req_skill in req_skills_multi:
+                skills = req_skill.skill_id
+                req_quantity = req_skill.quantity
+                # Do we have any outstanding quantity?
+                quantity_outstanding = req_quantity - max(req_skill.quantity_fulfil, req_skill.quantity_transit)
+                if quantity_outstanding:
+                    len_skills = len(skills)
+                    matches = []
+                    for p in people:
+                        smatches = 0
+                        for s in skills:
+                            if s in people[p]:
+                                smatches += 1
+                        if smatches == len_skills:
+                            matches.append(p)
+                    org_quantity = len(matches)
+                    if org_quantity != 0:
+                        no_match = False
+                        if org_quantity < req_quantity:
+                            status = SPAN(T("Partial"), _class="req_status_partial")
+                        else:
+                            status = SPAN(T("YES"), _class="req_status_complete")
+                    else:
+                        status = SPAN(T("NO"), _class="req_status_none"),
+                else:
+                    org_quantity = T("N/A")
+                    status = SPAN(T("N/A"), _class="req_status_none"),
+
+                items.append(TR(#A(req_item.id),
+                                multi_skill_represent(skills),
+                                req_quantity,
+                                # This requires an action btn to get the req_id
+                                #req_skill.quantity_commit, # if use_commit
+                                #req_skill.quantity_transit,
+                                #req_skill.quantity_fulfil,
+                                #req_quantity_represent(req_skill.quantity_commit, "commit"), # if use_commit
+                                #req_quantity_represent(req_skill.quantity_fulfil, "fulfil"),
+                                #req_quantity_represent(req_skill.quantity_transit, "transit"),
+                                quantity_outstanding,
+                                org_quantity,
+                                status,
+                                )
+                             )
+            output["items"] = items
+            s3.no_sspag = True # pag won't work
+            s3.no_formats = True
+
+            if not no_match:
+                commit_btn = A(T("Commit to this Request"),
+                               _href = URL(c = "req",
+                                           f = "req",
+                                           args = [r.id, "commit", "create"],
+                                           ),
+                               _class = "action-btn"
+                               )
+                s3.rfooter = TAG[""](commit_btn)
+        else:
+            output["items"] = s3.crud_strings.req_req_skill.msg_list_empty
+
+        response.view = "list.html"
+
+        return output
 
 # =============================================================================
 def req_job_reset(r, **attr):

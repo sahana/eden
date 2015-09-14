@@ -719,48 +719,69 @@ $.filterOptionsS3({
                             confirm = T("Are you sure you want to create a new request as a copy of this one?")
                             s3.jquery_ready.append('''S3.confirmClick('.copy_all','%s')''' % confirm)
                         req_types = settings.get_req_req_type()
-                        if not template and "Stock" in req_types:
-                            # Items
-                            if len(req_types) != 1 and (get_vars.type != "1"):
-                                # Restrict these Action Buttons to just those which are Items Requests
-                                table = r.table
-                                query = (table.deleted == False) & \
-                                        (table.type == 1)
-                                rows = db(query).select(table.id)
-                                restrict = [str(row.id) for row in rows]
-                            else:
-                                # All Requests are Items requests so no need to restrict
-                                restrict = None
-                            if settings.get_req_use_commit():
-                                action = dict(label = s3_unicode(T("Send")).encode("utf8"),
-                                              url = URL(c="req", f="req",
-                                                        args=["[id]", "commit_all", "send"]),
-                                              _class = "action-btn send-btn dispatch",
-                                              )
-                                if restrict is not None:
-                                    action["restrict"] = restrict
-                                s3.actions.append(action)
-                                confirm = T("Are you sure you want to commit to this request and send a shipment?")
-                                s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
-                            elif auth.user and auth.user.site_id:
-                                action = dict(# Better to force users to go through the Check process
-                                              #label = s3_unicode(T("Send")).encode("utf8"),
-                                              #url=URL(c="req", f="send_req",
-                                              #        args=["[id]"],
-                                              #        vars=dict(site_id=auth.user.site_id)
-                                              #        ),
-                                              label = s3_unicode(T("Check")).encode("utf8"),
-                                              url=URL(c="req", f="req",
-                                                      args=["[id]", "check"],
-                                                      vars={"site_id": auth.user.site_id}
-                                                      ),
-                                              _class="action-btn send-btn dispatch",
-                                              )
-                                if restrict is not None:
-                                    action["restrict"] = restrict
-                                s3.actions.append(action)
-                                confirm = T("Are you sure you want to send a shipment for this request?")
-                                s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+                        if not template:
+                            if "Stock" in req_types:
+                                if len(req_types) != 1 and (get_vars.type != "1"):
+                                    # Restrict these Action Buttons to just those which are Items Requests
+                                    table = r.table
+                                    query = (table.deleted == False) & \
+                                            (table.type == 1)
+                                    rows = db(query).select(table.id)
+                                    restrict = [str(row.id) for row in rows]
+                                else:
+                                    # All Requests are Items requests so no need to restrict
+                                    restrict = None
+                                if settings.get_req_use_commit():
+                                    action = dict(label = s3_unicode(T("Send")).encode("utf8"),
+                                                  url = URL(c="req", f="req",
+                                                            args=["[id]", "commit_all", "send"]),
+                                                  _class = "action-btn send-btn dispatch",
+                                                  )
+                                    if restrict is not None:
+                                        action["restrict"] = restrict
+                                    s3.actions.append(action)
+                                    confirm = T("Are you sure you want to commit to this request and send a shipment?")
+                                    s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+                                elif auth.user and auth.user.site_id:
+                                    action = dict(# Better to force users to go through the Check process
+                                                  #label = s3_unicode(T("Send")).encode("utf8"),
+                                                  #url = URL(c="req", f="send_req",
+                                                  #          args=["[id]"],
+                                                  #          vars=dict(site_id=auth.user.site_id)
+                                                  #          ),
+                                                  label = s3_unicode(T("Check")).encode("utf8"),
+                                                  url = URL(c="req", f="req",
+                                                            args=["[id]", "check"],
+                                                            ),
+                                                  _class = "action-btn send-btn dispatch",
+                                                  )
+                                    if restrict is not None:
+                                        action["restrict"] = restrict
+                                    s3.actions.append(action)
+                                    confirm = T("Are you sure you want to send a shipment for this request?")
+                                    s3.jquery_ready.append('''S3.confirmClick('.send-btn','%s')''' % confirm)
+                            if "People" in req_types:
+                                if len(req_types) != 1 and (get_vars.type != "3"):
+                                    # Restrict these Action Buttons to just those which are Skills Requests
+                                    table = r.table
+                                    query = (table.deleted == False) & \
+                                            (table.type == 3)
+                                    rows = db(query).select(table.id)
+                                    restrict = [str(row.id) for row in rows]
+                                else:
+                                    # All Requests are Skills requests so no need to restrict
+                                    restrict = None
+                                if auth.user and auth.user.organisation_id:
+                                    action = dict(label = s3_unicode(T("Check")).encode("utf8"),
+                                                  url = URL(c="req", f="req",
+                                                            args=["[id]", "check"],
+                                                            ),
+                                                  _class = "action-btn",
+                                                  )
+                                    if restrict is not None:
+                                        action["restrict"] = restrict
+                                    s3.actions.append(action)
+
             elif r.method == "create" and r.http == "POST":
                 # Create form
                 # @ToDo: DRY
@@ -1072,6 +1093,11 @@ def skills_filter(req_id):
         multi_skill_id = r.skill_id
         for skill_id in multi_skill_id:
             filter_opts.append(skill_id)
+    if len(filter_opts) == 1:
+        field = s3db.req_commit_skill.skill_id
+        field.default = skill_id
+        field.writable = False
+        return
     s3db.req_commit_skill.skill_id.requires = IS_ONE_OF(db, "hrm_skill.id",
                                                         s3db.hrm_multi_skill_represent,
                                                         filterby = "id",
@@ -1389,6 +1415,9 @@ def send():
 def send_commit():
     """
         Send a Shipment containing all items in a Commitment
+
+        @ToDo: Rewrite as S3Method
+                - means that permissions are better-controlled
     """
 
     return s3db.req_send_commit()
@@ -1495,6 +1524,9 @@ def send_req():
         - i.e. copy data from a req into a send
         arg: req_id
         vars: site_id
+
+        @ToDo: Rewrite as S3Method
+                - means that permissions are better-controlled
     """
 
     req_id = request.args[0]
