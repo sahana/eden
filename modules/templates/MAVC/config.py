@@ -30,13 +30,17 @@ def config(settings):
     # Should users be allowed to register themselves?
     #settings.security.self_registration = False
     # Do new users need to verify their email address?
-    #settings.auth.registration_requires_verification = True
+    settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
-    #settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requests_organisation = True
+
+    # Terms of Service to be able to Register on the system
+    # uses <template>/views/tos.html
+    settings.auth.terms_of_service = True
 
     # Approval emails get sent to all admins
-    settings.mail.approver = "ADMIN"
+    #settings.mail.approver = "ADMIN"
 
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
@@ -118,6 +122,16 @@ def config(settings):
 
     settings.security.policy = 6 # Organisation-ACLs
 
+    # Record Approval
+    settings.auth.record_approval = True
+    # cap_alert record requires approval before sending
+    settings.auth.record_approval_required_for = ("org_organisation",
+                                                  "org_facility",
+                                                  "hrm_human_resource",
+                                                  "req_req",
+                                                  "inv_send",
+                                                  )
+
     # -------------------------------------------------------------------------
     # Human Resource Management
     # Uncomment to change the label for 'Staff'
@@ -143,7 +157,9 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Requests
-    settings.req.req_type = ["Other"]
+    settings.req.req_type = ["Stock"]
+    # Uncomment to disable the Commit step in the workflow & simply move direct to Ship
+    settings.req.use_commit = False
     settings.req.requester_label = "Contact"
     # Uncomment if the User Account logging the Request is NOT normally the Requester
     settings.req.requester_is_author = False
@@ -155,6 +171,31 @@ def config(settings):
     #settings.req.commit_without_request = True
     # Set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
     settings.req.requester_to_site = True
+
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_resource(r, tablename):
+
+        s3db = current.s3db
+
+        # Simplify form
+        table = s3db.org_organisation
+        field = table.year
+        field.readable = field.writable = False
+        field = table.country
+        field.readable = field.writable = False
+
+        s3db.org_organisation_organisation_type.organisation_type_id
+
+        if not current.auth.is_logged_in():
+            field = table.logo
+            field.readable = field.writable = False
+            # User can create records since we need this during registration,
+            # but we don't want to let the user do this from the list view
+            s3db.configure("org_organisation",
+                           listadd = False,
+                           )
+
+    settings.customise_org_organisation_resource = customise_org_organisation_resource
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
