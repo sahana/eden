@@ -16,8 +16,23 @@ class index(S3CustomController):
         output = {}
 
         s3 = response.s3
-        # Image Carousel
-        s3.jquery_ready.append('''$('#myCarousel').carousel()''')
+        # Slick slider
+        # Only 1 image currently, so enable if/when we need this
+        if s3.debug:
+            s3.scripts.append("/%s/static/scripts/slick.js" % current.request.application)
+        else:
+            s3.scripts.append("/%s/static/scripts/slick.min.js" % current.request.application)
+        script = '''
+$(document).ready(function(){
+ $('#title-image').slick({
+  autoplay:true,
+  autoplaySpeed:5000,
+  speed:1000,
+  fade:true,
+  cssEase:'linear'
+ });
+});'''
+        s3.jquery_ready.append(script)
 
         # Latest 4 Requests
         s3db = current.s3db
@@ -47,46 +62,47 @@ class index(S3CustomController):
         output["latest_offers"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
 
         # What We Do
-        table = s3db.cms_post
-        ltable = s3db.cms_post_module
-        query = (ltable.module == "default") & \
-                (ltable.resource == "index") & \
-                (ltable.post_id == table.id) & \
-                (table.deleted != True)
-        item = current.db(query).select(table.id,
-                                        table.body,
-                                        limitby=(0, 1)).first()
-        if item:
-            what_we_do = DIV(XML(item.body))
-            if current.auth.s3_has_role("ADMIN"):
-                if s3.crud.formstyle == "bootstrap":
-                    _class = "btn"
-                else:
-                    _class = "action-btn"
-                what_we_do.append(A(current.T("Edit"),
-                                    _href=URL(c="cms", f="post",
-                                              args=[item.id, "update"],
-                                              vars={"module": "default",
-                                                    "resource": "index",
-                                                    }),
-                                    _class="%s cms-edit" % _class))
-        else:
-            what_we_do = DIV()
-            if current.auth.s3_has_role("ADMIN"):
-                if s3.crud.formstyle == "bootstrap":
-                    _class = "btn"
-                else:
-                    _class = "action-btn"
-                what_we_do.append(A(current.T("Edit"),
-                                    _href=URL(c="cms", f="post",
-                                              args=["create"],
-                                              vars={"module": "default",
-                                                    "resource": "index",
-                                                    }),
-                                    _class="%s cms-edit" % _class))
+        #table = s3db.cms_post
+        #ltable = s3db.cms_post_module
+        #query = (ltable.module == "default") & \
+        #        (ltable.resource == "index") & \
+        #        (ltable.post_id == table.id) & \
+        #        (table.deleted != True)
+        #item = current.db(query).select(table.id,
+        #                                table.body,
+        #                                limitby=(0, 1)).first()
+        #if item:
+        #    what_we_do = DIV(XML(item.body))
+        #    if current.auth.s3_has_role("ADMIN"):
+        #        if s3.crud.formstyle == "bootstrap":
+        #            _class = "btn"
+        #        else:
+        #            _class = "action-btn"
+        #        what_we_do.append(A(current.T("Edit"),
+        #                            _href=URL(c="cms", f="post",
+        #                                      args=[item.id, "update"],
+        #                                      vars={"module": "default",
+        #                                            "resource": "index",
+        #                                            }),
+        #                            _class="%s cms-edit" % _class))
+        #else:
+        #    what_we_do = DIV()
+        #    if current.auth.s3_has_role("ADMIN"):
+        #        if s3.crud.formstyle == "bootstrap":
+        #            _class = "btn"
+        #        else:
+        #            _class = "action-btn"
+        #        what_we_do.append(A(current.T("Edit"),
+        #                            _href=URL(c="cms", f="post",
+        #                                      args=["create"],
+        #                                      vars={"module": "default",
+        #                                            "resource": "index",
+        #                                            }),
+        #                            _class="%s cms-edit" % _class))
 
-        output["what_we_do"] = what_we_do
+        #output["what_we_do"] = what_we_do
 
+        s3.stylesheets.append("../themes/MAVC/homepage.css")
         self._view(THEME, "index.html")
         return output
 
