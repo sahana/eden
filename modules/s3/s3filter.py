@@ -2477,9 +2477,6 @@ class S3FilterForm(object):
                 break
             filter_defaults = filter_defaults[level]
 
-        if filter_defaults is None:
-            return
-
         # Which filter widgets do we need to apply defaults for?
         filter_widgets = resource.get_config("filter_widgets")
         for filter_widget in filter_widgets:
@@ -2492,6 +2489,8 @@ class S3FilterForm(object):
             has_default = False
             if "default" in filter_widget.opts:
                 has_default = True
+            elif filter_defaults is None:
+                continue
 
             defaults = set()
             variable = filter_widget.variable(resource, get_vars)
@@ -2534,7 +2533,7 @@ class S3FilterForm(object):
                 else:
                     selector, operator = variable, None
 
-                if selector in filter_defaults:
+                if filter_defaults and selector in filter_defaults:
                     applicable_defaults = filter_defaults[selector]
                 elif variable in widget_default:
                     applicable_defaults = widget_default[variable]
