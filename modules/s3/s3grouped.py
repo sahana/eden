@@ -1190,9 +1190,9 @@ class S3GroupAggregate(object):
             @return: the aggregated value
         """
 
-        if values is None:
-            result = None
-        else:
+        result = None
+
+        if values is not None:
             try:
                 values = [v for v in values if v is not None]
             except TypeError:
@@ -1228,8 +1228,6 @@ class S3GroupAggregate(object):
                             result = None
                     else:
                         result = None
-                else:
-                    result = None
         return result
 
     # -------------------------------------------------------------------------
