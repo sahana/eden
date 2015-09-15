@@ -46,7 +46,7 @@ except ImportError:
     except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from gluon import current, DIV, INPUT, SPAN, TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
+from gluon import current, DIV, H2, INPUT, SPAN, TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
 from gluon.storage import Storage
 
 from s3rest import S3Method
@@ -739,22 +739,35 @@ class S3GroupedItemsTable(object):
             @return: the PDF document
         """
 
-        styles = {"tr.gi-column-totals": {"background-color": "black",
-                                          "color": "white",
-                                          },
-                  "tr.gi-group-footer.gi-level-1": {"background-color": "lightgrey",
-                                                    },
+        # Styles for totals and group totals rows
+        styles = {"tr.gi-column-totals": {
+                        "background-color": "black",
+                        "color": "white",
+                        },
+                  "tr.gi-group-footer.gi-level-1": {
+                        "background-color": "lightgrey",
+                        },
                   }
 
         from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(self.resource,
                         pdf_title = self.title,
+                        pdf_header = lambda r: self.pdf_header(),
+                        pdf_header_padding = 12,
                         pdf_callback = lambda r: self.html(),
                         pdf_table_autogrow = "B",
                         pdf_paper_alignment = "Landscape",
                         pdf_html_styles = styles,
                         )
+
+    # -------------------------------------------------------------------------
+    def pdf_header(self):
+        """
+            Default PDF header (report title as H2)
+        """
+
+        return H2(self.title)
 
 # =============================================================================
 class S3GroupedItems(object):

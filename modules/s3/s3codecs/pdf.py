@@ -377,13 +377,21 @@ class S3RL_PDF(S3Codec):
             # Callback to produce the HTML (e.g. rheader)
             r = self.r
             # Switch to HTML representation
-            representation = r.representation
-            r.representation = "html"
+            if r is not None:
+                representation = r.representation
+                r.representation = "html"
             try:
                 html = rules(r)
             except:
-                html = ""
-            r.representation = representation
+                # Unspecific except => must raise in debug mode
+                if current.response.s3.debug:
+                    raise
+                else:
+                    import sys
+                    current.log.error(sys.exc_info()[1])
+                    html = ""
+            if r is not None:
+                r.representation = representation
         else:
             # Static HTML
             html = rules
@@ -1305,7 +1313,7 @@ class S3html2pdf():
             return self.parse_table(html)
         elif isinstance(html, A):
             return self.parse_a(html)
-        elif isinstance(html, P):
+        elif isinstance(html, (P, H1, H2, H3, H4, H5, H6)):
             return self.parse_p(html)
         elif isinstance(html, IMG):
             return S3html2pdf.parse_img(html)
@@ -1437,12 +1445,40 @@ class S3html2pdf():
             @return: a list containing text that ReportLab can use
         """
 
+        font_sizes = {"p": 9,
+                      "h1": 18,
+                      "h2": 16,
+                      "h3": 14,
+                      "h4": 12,
+                      "h5": 10,
+                      "h6": 9,
+                      }
+
+        font_size = None
+        title = False
+        try:
+            tag = html.tag
+        except AttributeError:
+            pass
+        else:
+            font_size = font_sizes.get(tag)
+            title = tag != "p"
+        style = self.boldstyle if title else self.normalstyle
+
+        if font_size:
+            default_font_size = style.fontSize
+            style.fontSize = font_size
+
         content = []
         select_tag = self.select_tag
         for component in html.components:
-            result = select_tag(component)
+            result = select_tag(component, title=title)
             if result != None:
                 content += result
+
+        if font_size:
+            style.fontSize = default_font_size
+
         if content == []:
             return None
         return content
