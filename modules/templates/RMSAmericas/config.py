@@ -1105,13 +1105,94 @@ def config(settings):
     settings.customise_inv_home = customise_inv_home
 
     # -----------------------------------------------------------------------------
+    def inv_pdf_header(r, title=None):
+        """
+            PDF header for Stock Reports
+
+            @todo
+        """
+
+        if title:
+            from gluon.html import H2
+            return H2(title)
+        else:
+            return ""
+
+    # -----------------------------------------------------------------------------
     def customise_inv_inv_item_resource(r, tablename):
+
+        if r.method == "grouped" and \
+           r.get_vars.get("report") == "weight_and_volume":
+
+            s3db = current.s3db
+            from gluon import Field
+            table = s3db.inv_inv_item
+            table.total_weight = Field.Method("total_weight",
+                                              s3db.inv_item_total_weight,
+                                              )
+            table.total_volume = Field.Method("total_volume",
+                                              s3db.inv_item_total_volume,
+                                              )
+            current.s3db.configure("inv_inv_item",
+                                   extra_fields = ["item_id$weight",
+                                                   "item_id$volume",
+                                                   ],
+                                   )
+
+        # Stock Reports
+        stock_reports = {"default": {
+                            "title": T("Stock Position Report"),
+                            "fields": [(T("Warehouse"), "site_id$name"),
+                                       "item_id$item_category_id",
+                                       "bin",
+                                       "item_id$name",
+                                       "quantity",
+                                       "pack_value",
+                                       "total_value",
+                                       ],
+                            "groupby": ["site_id",
+                                        ],
+                            "orderby": ["site_id$name",
+                                        "item_id$name",
+                                        ],
+                            "aggregate": [("sum", "quantity"),
+                                          ("sum", "total_value"),
+                                          ],
+                            "pdf_header": inv_pdf_header,
+                            },
+                         "weight_and_volume": {
+                            "title": T("Weight and Volume Report"),
+                            "fields": [(T("Warehouse"), "site_id$name"),
+                                       "item_id$item_category_id",
+                                       "bin",
+                                       "item_id$name",
+                                       "quantity",
+                                       "item_id$weight",
+                                       "item_id$volume",
+                                       "total_weight",
+                                       "total_volume",
+                                       ],
+                            "groupby": ["site_id",
+                                        ],
+                            "orderby": ["site_id$name",
+                                        "item_id$name",
+                                        ],
+                            "aggregate": [("sum", "quantity"),
+                                          ("sum", "total_weight"),
+                                          ("sum", "total_volume"),
+                                          ],
+                            "pdf_header": inv_pdf_header,
+                            },
+                         # @todo
+                         #"movements": {},
+                         }
 
         current.s3db.configure("inv_inv_item",
                                create = False,
                                deletable = False,
                                editable = False,
                                listadd = False,
+                               grouped = stock_reports,
                                )
 
     settings.customise_inv_inv_item_resource = customise_inv_inv_item_resource

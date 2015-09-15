@@ -43,6 +43,8 @@ __all__ = ("S3WarehouseModel",
            "inv_adj_rheader",
            "depends",
            "inv_InvItemRepresent",
+           "inv_item_total_weight",
+           "inv_item_total_volume",
            )
 
 import datetime
@@ -4663,6 +4665,76 @@ class S3InventoryAdjustModel(S3Model):
                 return SPAN(repr)
             else:
                 return repr
+
+# =============================================================================
+def inv_item_total_weight(row):
+    """
+        Compute the total weight of an inventory item (Field.Method)
+
+        @param row: the Row
+    """
+
+    try:
+        inv_item = getattr(row, "inv_inv_item")
+    except AttributeError:
+        inv_item = row
+    try:
+        quantity = inv_item.quantity
+    except AttributeError:
+        return 0.0
+
+    try:
+        supply_item = getattr(row, "supply_item")
+        weight = supply_item.weight
+    except AttributeError:
+        # Need to reload the supply item
+        itable = current.s3db.inv_inv_item
+        stable = current.s3db.supply_item
+        query = (itable.id == inv_item.id) & \
+                (itable.item_id == stable.id)
+        supply_item = current.db(query).select(stable.weight,
+                                                limitby=(0, 1)).first()
+        if not supply_item:
+            return
+        else:
+            weight = supply_item.weight
+
+    return quantity * weight
+
+# -----------------------------------------------------------------------------
+def inv_item_total_volume(row):
+    """
+        Compute the total volume of an inventory item (Field.Method)
+
+        @param row: the Row
+    """
+
+    try:
+        inv_item = getattr(row, "inv_inv_item")
+    except AttributeError:
+        inv_item = row
+    try:
+        quantity = inv_item.quantity
+    except AttributeError:
+        return 0.0
+
+    try:
+        supply_item = getattr(row, "supply_item")
+        volume = supply_item.volume
+    except AttributeError:
+        # Need to reload the supply item
+        itable = current.s3db.inv_inv_item
+        stable = current.s3db.supply_item
+        query = (itable.id == inv_item.id) & \
+                (itable.item_id == stable.id)
+        supply_item = current.db(query).select(stable.volume,
+                                                limitby=(0, 1)).first()
+        if not supply_item:
+            return
+        else:
+            volume = supply_item.volume
+
+    return quantity * volume
 
 # =============================================================================
 def inv_adj_rheader(r):

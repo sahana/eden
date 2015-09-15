@@ -55,15 +55,14 @@ from s3utils import s3_strip_markup, s3_unicode
 # Compact JSON encoding
 SEPARATORS = (",", ":")
 
+DEFAULT = lambda: None
+
 # =============================================================================
 class S3GroupedItemsReport(S3Method):
     """
         REST Method Handler for Grouped Items Reports
 
-        @todo: page method
-        @todo: filter form and ajax method
         @todo: widget method
-        @todo: config and URL options, defaults
     """
 
     # -------------------------------------------------------------------------
@@ -270,13 +269,15 @@ class S3GroupedItemsReport(S3Method):
         elif representation == "pdf":
             # PDF Export
             totals_label = report_config.get("totals_label", T("Total"))
+            pdf_header = report_config.get("pdf_header", DEFAULT)
             gi_table = S3GroupedItemsTable(resource,
                                            title = title,
                                            data = data,
                                            group_headers = group_headers,
                                            totals_label = totals_label,
+                                           pdf_header = pdf_header,
                                            )
-            return gi_table.pdf()
+            return gi_table.pdf(r)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -521,7 +522,8 @@ class S3GroupedItemsTable(object):
                  title = None,
                  data = None,
                  group_headers = False,
-                 totals_label = None):
+                 totals_label = None,
+                 pdf_header = DEFAULT):
         """
             Constructor
 
@@ -536,6 +538,11 @@ class S3GroupedItemsTable(object):
 
         self.totals_label = totals_label
         self.group_headers = group_headers
+
+        if pdf_header is DEFAULT:
+            self.pdf_header = self._pdf_header
+        else:
+            self.pdf_header = pdf_header
 
     # -------------------------------------------------------------------------
     def html(self):
@@ -732,10 +739,11 @@ class S3GroupedItemsTable(object):
         tbody.append(TR(cells, _class="gi-item gi-level-%s" % level))
 
     # -------------------------------------------------------------------------
-    def pdf(self):
+    def pdf(self, r):
         """
             Produce a PDF representation of the grouped table
 
+            @param r: the S3Request
             @return: the PDF document
         """
 
@@ -749,11 +757,18 @@ class S3GroupedItemsTable(object):
                         },
                   }
 
+        title = self.title
+
+        pdf_header = self.pdf_header
+        if pdf_header:
+            pdf_header = lambda r, title=title: self.pdf_header(r, title=title)
+
         from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
         return exporter(self.resource,
-                        pdf_title = self.title,
-                        pdf_header = lambda r: self.pdf_header(),
+                        request = r,
+                        pdf_title = title,
+                        pdf_header = pdf_header,
                         pdf_header_padding = 12,
                         pdf_callback = lambda r: self.html(),
                         pdf_table_autogrow = "B",
@@ -762,12 +777,13 @@ class S3GroupedItemsTable(object):
                         )
 
     # -------------------------------------------------------------------------
-    def pdf_header(self):
+    @staticmethod
+    def _pdf_header(r, title=None):
         """
             Default PDF header (report title as H2)
         """
 
-        return H2(self.title)
+        return H2(title)
 
 # =============================================================================
 class S3GroupedItems(object):
