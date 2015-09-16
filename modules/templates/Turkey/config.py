@@ -689,7 +689,7 @@ def config(settings):
                     (table.organisation_id == org_id)
             record = current.db(query).select(limitby=(0, 1)).first()  
             if record:
-                form.errors["reference"] = "Bu dosya numarası kullanılmıştır!"
+                form.errors["reference"] = current.T("This Case Number is already used!")
         except AttributeError:
             return
 
