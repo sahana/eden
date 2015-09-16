@@ -21,7 +21,7 @@ def config(settings):
     #settings.base.system_name_short = T("MAVC")
 
     # PrePopulate data
-    settings.base.prepopulate = ("MAVC", "default/users")
+    settings.base.prepopulate = ("MAVC", "default/users", "MAVC/Demo")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "MAVC"
@@ -183,8 +183,6 @@ def config(settings):
         field.readable = field.writable = False
         field = table.country
         field.readable = field.writable = False
-
-        s3db.org_organisation_organisation_type.organisation_type_id
 
         if not current.auth.is_logged_in():
             field = table.logo

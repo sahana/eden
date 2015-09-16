@@ -438,4 +438,102 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                 )
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis():
+        """ GIS / GIS Controllers """
+
+        if not current.auth.is_logged_in():
+            # No Side Menu
+            return None
+
+        MAP_ADMIN = current.session.s3.system_roles.MAP_ADMIN
+
+        settings = current.deployment_settings
+        gis_menu = settings.get_gis_menu()
+        def pois(i):
+            poi_resources = settings.get_gis_poi_create_resources()
+            if not poi_resources:
+                return False
+            for res in poi_resources:
+                if res["table"] == "gis_poi":
+                    return True
+            return False
+
+        def config_menu(i):
+            auth = current.auth
+            if not auth.is_logged_in():
+                # Anonymous users can never cofnigure the Map
+                return False
+            s3db = current.s3db
+            if auth.s3_has_permission("create",
+                                      s3db.gis_config):
+                # If users can create configs then they can see the menu item
+                return True
+            # Look for this user's config
+            table = s3db.gis_config
+            query = (table.pe_id == auth.user.pe_id)
+            config = current.db(query).select(table.id,
+                                              limitby=(0, 1),
+                                              cache=s3db.cache).first()
+            if config:
+                return True
+
+        def config_args():
+            auth = current.auth
+            if not auth.user:
+                # Won't show anyway due to check
+                return []
+
+            if auth.s3_has_role(MAP_ADMIN):
+                # Full List
+                return []
+
+            # Look for this user's config
+            s3db = current.s3db
+            table = s3db.gis_config
+            query = (table.pe_id == auth.user.pe_id)
+            config = current.db(query).select(table.id,
+                                              limitby=(0, 1),
+                                              cache=s3db.cache).first()
+            if config:
+                # Link direct to the User's config
+                return [config.id, "layer_entity"]
+            # Link to the Create form
+            return ["create"]
+
+        return M(c="gis")(
+                    M("Fullscreen Map", c="gis", f="map_viewing_client"),
+                    # Currently not got geocoding support
+                    #M("Bulk Uploader", c="doc", f="bulk_upload"),
+                    M("Locations", c="gis", f="location")(
+                        M("Create", m="create"),
+                        #M("Create Location Group", m="create", vars={"group": 1}),
+                        M("Import from CSV", m="import", restrict=[MAP_ADMIN]),
+                        M("Import from OpenStreetMap", m="import_poi",
+                          restrict=[MAP_ADMIN]),
+                        #M("Geocode", f="geocode_manual"),
+                    ),
+                    M("PoIs", c="gis", f="poi", check=pois)(),
+                    #M("Population Report", f="location", m="report",
+                    # vars=dict(rows="name",
+                    #           fact="sum(population)",
+                    #           ),
+                    # ),
+                    M("Configuration", c="gis", f="config", args=config_args(),
+                      _id="gis_menu_config",
+                      check=config_menu),
+                    M("Admin", c="gis", restrict=[MAP_ADMIN])(
+                        M("Hierarchy", f="hierarchy"),
+                        M("Layers", f="catalog"),
+                        M("Markers", f="marker"),
+                        M("Menu", f="menu",
+                          check=[gis_menu]),
+                        M("PoI Types", f="poi_type",
+                          check=[pois]),
+                        M("Projections", f="projection"),
+                        M("Styles", f="style"),
+                    )
+                )
+
 # END =========================================================================
