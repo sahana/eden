@@ -2129,11 +2129,11 @@ class S3RequestSummaryModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_NEEDS = T("Add Site Needs")
         crud_strings[tablename] = Storage(
             title_display = T("Site Needs"),
             title_list = T("Site Needs"),
             title_update = T("Edit Site Needs"),
+            label_create = T("Add Site Needs"),
             label_list_button = T("List Site Needs"),
             label_delete_button = T("Delete Site Needs"),
             msg_record_created = T("Site Needs added"),

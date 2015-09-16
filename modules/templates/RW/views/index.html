@@ -1,0 +1,82 @@
+{{extend "layout.html"}}
+<div class='row home-top' style='margin-top:20px'>
+ <div class='large-5 large-offset-1 columns'>
+  <div class="row hide-for-small">
+   <div id='title-image small-12 columns'>
+    <div>
+     <img src='{{=URL(c="static", f="themes", args=["RW", "img", "map.png"])}}' alt='slide 1' />
+    </div>
+   </div>
+  </div>
+  <div class='row homepage-menu-box'>
+   <div class='medium-12 columns'>
+    <ul class='button-group even-3 hide-for-small'>
+     <li>
+      <a href='{{=URL(c="cms", f="newsfeed")}}' class='small secondary button'>
+       {{=ICON("news")}}
+       <label>{{=T("News")}}</label>
+      </a>
+     </li>
+     <li>
+      <a href='{{=URL(c="req", f="site_needs")}}' class='small secondary button'>
+       {{=ICON("needs")}}
+       <label>{{=T("Current Needs")}}</label>
+      </a>
+     </li>
+     <li>
+      <a href='{{=URL(c="org", f="organisation")}}' class='small secondary button'>
+       {{=ICON("organisations")}}
+       <label>{{=T("Organizations")}}</label>
+      </a>
+     </li>
+    </ul>
+    <ul class='button-group stack hide-for-medium-up'>
+     <li>
+      <a href='{{=URL(c="cms", f="newsfeed")}}' class='small secondary button'>
+       {{=ICON("news")}}
+       <label>{{=T("News")}}</label>
+      </a>
+     </li>
+     <li>
+      <a href='{{=URL(c="req", f="site_needs")}}' class='small secondary button'>
+       {{=ICON("needs")}}
+       <label>{{=T("Current Needs")}}</label>
+      </a>
+     </li>
+     <li>
+      <a href='{{=URL(c="org", f="organisation")}}' class='small secondary button'>
+       {{=ICON("organisations")}}
+       <label>{{=T("Organizations")}}</label>
+      </a>
+     </li>
+    </ul>
+   </div>
+  </div>
+ </div>
+ <div class='large-5 columns end'>
+  <div id='intro' class='callout panel'>
+   <h4>Sahana #RefugeesWelcome</h4>
+   <p>{{=T("This is a coordination system for organizations and facilities providing support for refugees in Europe.")}}</p>
+   {{=H4("%s:" % T("Fill in the form below for more information"))}}
+    {{=contact_form}}
+    {{if AUTHENTICATED not in session.s3.roles:}}
+    {{=login_buttons}}
+    {{pass}}
+  </div>
+  {{if AUTHENTICATED not in session.s3.roles:}}
+  <div id='login_box' class='panel' style='display:none'>
+   <div id='login_form'>
+    {{=login_div}}
+    {{include "auth/_login.html"}}
+   </div>
+   {{if self_registration:}}
+    <div id='register_form'>
+     {{=register_div}}
+     {{include "auth/_register.html"}}
+    </div>
+   {{pass}}
+   <a id='show-mailform' class='tiny secondary button'>Contact Form</a>
+  </div>
+  {{pass}}
+ </div>  
+</div>
