@@ -856,7 +856,7 @@ def config(settings):
            name_nice = T("Disaster Victim Registry"),
            #description = "Allow affected individuals & households to register to receive compensation and distributions",
            restricted = True,
-           module_type = 10,
+           module_type = 6,
         )),
         ("event", Storage(
             name_nice = T("Events"),
