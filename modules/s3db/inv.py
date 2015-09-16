@@ -4728,13 +4728,16 @@ def inv_item_total_volume(row):
         query = (itable.id == inv_item.id) & \
                 (itable.item_id == stable.id)
         supply_item = current.db(query).select(stable.volume,
-                                                limitby=(0, 1)).first()
+                                               limitby=(0, 1)).first()
         if not supply_item:
             return
         else:
             volume = supply_item.volume
 
-    return quantity * volume
+    if volume is None:
+        return current.messages["NONE"]
+    else:
+        return quantity * volume
 
 # =============================================================================
 def inv_adj_rheader(r):
