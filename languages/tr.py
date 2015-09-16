@@ -1488,5 +1488,11 @@
 "Contact People":"İlgili Kişi",
 "Add Beneficiaries":"Yararlanıcı Ekle",
 "Beneficiary Type":"Yararlanıcı Türü",
-"Targeted Number":"Hedeflenen Sayı"
+"Targeted Number":"Hedeflenen Sayı",
+"Disaster Victim Registry":"Afetzede Kaydı",
+"Cases":"Vakalar",
+"Case":"Vaka",
+"Case Number":"Vaka Numarası",
+"Current Address":"Suanki Adresi",
+"Normal Address":"Daimi Adresi"
 }
