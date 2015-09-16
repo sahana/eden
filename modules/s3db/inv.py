@@ -4734,7 +4734,7 @@ def inv_item_total_volume(row):
         else:
             volume = supply_item.volume
 
-    if volume is None:
+    if quantity is None or volume is None:
         return current.messages["NONE"]
     else:
         return quantity * volume
