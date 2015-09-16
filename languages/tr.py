@@ -1494,5 +1494,6 @@
 "Case":"Vaka",
 "Case Number":"Vaka Numarası",
 "Current Address":"Suanki Adresi",
-"Normal Address":"Daimi Adresi"
+"Normal Address":"Daimi Adresi",
+"Create Case":"Vaka Ekle",
 }
