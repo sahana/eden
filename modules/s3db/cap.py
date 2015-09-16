@@ -774,6 +774,8 @@ class S3CAPModel(S3Model):
 
         configure(tablename,
                   #create_next = URL(f="info", args=["[id]", "area"]),
+                  # Required Fields
+                  mark_required = ("urgency", "severity", "certainty",),
                   onaccept = self.cap_info_onaccept,
                   onvalidation = self.cap_info_onvalidation,
                   )
@@ -1234,7 +1236,7 @@ class S3CAPModel(S3Model):
     def cap_alert_onvalidation(form):
         """
             Custom Form Validation:
-                mujlti-field level
+                multi-field level
         """
 
         form_vars = form.vars
@@ -1287,9 +1289,9 @@ class S3CAPModel(S3Model):
                 used for import from CSV
         """
 
-        form_vars = form.vars
         form_record = form.record
         if form_record and form_record.is_template == False:
+            form_vars = form.vars
             if not form_vars.get("urgency"):
                 form.errors["urgency"] = \
                     current.T("'Urgency' field is mandatory")
