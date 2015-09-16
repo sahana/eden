@@ -4699,7 +4699,10 @@ def inv_item_total_weight(row):
         else:
             weight = supply_item.weight
 
-    return quantity * weight
+    if weight is None:
+        return current.messages["NONE"]
+    else:
+        return quantity * weight
 
 # -----------------------------------------------------------------------------
 def inv_item_total_volume(row):
@@ -4734,7 +4737,7 @@ def inv_item_total_volume(row):
         else:
             volume = supply_item.volume
 
-    if quantity is None or volume is None:
+    if volume is None:
         return current.messages["NONE"]
     else:
         return quantity * volume
