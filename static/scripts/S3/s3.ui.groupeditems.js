@@ -57,7 +57,6 @@
             this.widget_id = el.attr('id');
 
             this.items = el.find('.gi-data').first();
-            this.download = $('<iframe style="display:none">').appendTo(el);
 
             this.refresh();
         },
@@ -585,7 +584,7 @@
                 if (queries) {
                     url = S3.search.filterURL(url, queries);
                 }
-                self.download.get(0).src = url;
+                window.location = url;
             });
         },
 
