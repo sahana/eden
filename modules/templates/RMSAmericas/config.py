@@ -1109,14 +1109,23 @@ def config(settings):
         """
             PDF header for Stock Reports
 
-            @todo
+            @param r: the S3Request
+            @param title: the report title
         """
 
-        if title:
-            from gluon.html import H2
-            return H2(title)
-        else:
-            return ""
+        from layouts import OM
+        name, logo = OM().render()
+
+        from gluon.html import DIV, H2, H4, TABLE, TR, TD
+        title = H2(title) if title else ""
+
+
+        output = TABLE(TR(TD(DIV(logo, H4(name))),
+                          TD(H2(title)),
+                          ),
+                       )
+
+        return output
 
     # -----------------------------------------------------------------------------
     def customise_inv_inv_item_resource(r, tablename):

@@ -1420,18 +1420,19 @@ class S3html2pdf():
 
         iwidth = I.drawWidth
         iheight = I.drawHeight
-        # @todo: extract the number from a 60px value
-        #        if "_height" in html.attributes:
-        #            height = int(html.attributes["_height"]) * inch / 80.0
-        #            width = iwidth * (height / iheight)
-        #        elif "_width" in html.attributes:
-        #            width = int(html.attributes["_width"]) * inch / 80.0
-        #            height = iheight * (width / iwidth)
-        #        else:
-        #            height = 1.0 * inch
-        #            width = iwidth * (height / iheight)
-        height = 1.0 * inch
-        width = iwidth * (height / iheight)
+
+        # Assuming 96dpi original resolution
+        resolution = 96
+        if "_height" in html.attributes:
+            height = int(html.attributes["_height"]) * inch / resolution
+            width = iwidth * (height / iheight)
+        elif "_width" in html.attributes:
+            width = int(html.attributes["_width"]) * inch / resolution
+            height = iheight * (width / iwidth)
+        else:
+            height = 1.0 * inch
+            width = iwidth * (height / iheight)
+
         I.drawHeight = height
         I.drawWidth = width
         return [I]
