@@ -936,7 +936,7 @@ class S3CAPModel(S3Model):
                              })'''
                      ),
                      # Only used for Templates
-                     Field("priority",
+                     Field("priority", "reference cap_warning_priority",
                            label = T("Priority"),
                            represent = priority_represent,
                            requires = IS_EMPTY_OR(
