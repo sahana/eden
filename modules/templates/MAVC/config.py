@@ -133,6 +133,10 @@ def config(settings):
                                                   )
 
     # -------------------------------------------------------------------------
+    # Organisations
+    settings.org.sector = True
+
+    # -------------------------------------------------------------------------
     # Human Resource Management
     # Uncomment to change the label for 'Staff'
     settings.hrm.staff_label = "Contacts"
