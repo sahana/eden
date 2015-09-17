@@ -105,7 +105,6 @@
         <c:country><c:code>BN</c:code><c:name>Brunei Darussalam</c:name></c:country>
         <c:country><c:code>BG</c:code><c:name>Bulgaria</c:name></c:country>
         <c:country><c:code>BF</c:code><c:name>Burkina Faso</c:name></c:country>
-        <c:country><c:code>MM</c:code><c:name>Burma</c:name></c:country>
         <c:country><c:code>BI</c:code><c:name>Burundi</c:name></c:country>
         <c:country><c:code>KH</c:code><c:name>Cambodia</c:name></c:country>
         <c:country><c:code>CM</c:code><c:name>Cameroon</c:name></c:country>
