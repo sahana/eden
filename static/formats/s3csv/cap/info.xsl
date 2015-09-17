@@ -2,7 +2,7 @@
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
     <!-- **********************************************************************
-         CAP template - CSV Import Stylesheet
+         CAP Info template - CSV Import Stylesheet
 
          CSV column..................Format.............Content
 

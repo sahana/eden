@@ -219,6 +219,7 @@
         <c:country><c:code>MS</c:code><c:name>Montserrat</c:name></c:country>
         <c:country><c:code>MA</c:code><c:name>Morocco</c:name></c:country>
         <c:country><c:code>MZ</c:code><c:name>Mozambique</c:name></c:country>
+        <c:country><c:code>MM</c:code><c:name>Myanmar</c:name></c:country>
         <c:country><c:code>NA</c:code><c:name>Namibia</c:name></c:country>
         <c:country><c:code>NR</c:code><c:name>Nauru</c:name></c:country>
         <c:country><c:code>NP</c:code><c:name>Nepal</c:name></c:country>
