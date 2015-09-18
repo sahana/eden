@@ -156,9 +156,9 @@ def assess_tables():
     def baseline_type_comment():
         # ToDo: Is this membership check required?
         if auth.has_membership(auth.id_group("'Administrator'")):
-            return S3AddResourceLink(c="assess",
-                                     f="baseline_type",
-                                     label=ADD_BASELINE_TYPE)
+            return S3PopupLink(c="assess",
+                               f="baseline_type",
+                               label=ADD_BASELINE_TYPE)
         else:
             return None
 
@@ -1883,9 +1883,9 @@ def impact_tables():
 
     def impact_type_comment():
         if auth.has_membership(auth.id_group("'Administrator'")):
-            return S3AddResourceLink(c="assess",
-                                     f="type",
-                                     vars=dict(child="impact_type_id"))
+            return S3PopupLink(c="assess",
+                               f="type",
+                               vars=dict(child="impact_type_id"))
         else:
             return None
 
