@@ -63,6 +63,7 @@ class S3CAPModel(S3Model):
 
     names = ("cap_alert",
              "cap_alert_represent",
+             "cap_alert_approve",
              "cap_warning_priority",
              "cap_info",
              "cap_info_represent",
@@ -1109,6 +1110,7 @@ class S3CAPModel(S3Model):
         # Pass names back to global scope (s3.*)
         return dict(cap_alert_id = alert_id,
                     cap_alert_represent = alert_represent,
+                    cap_alert_approve = self.cap_alert_approve,
                     cap_area_id = area_id,
                     cap_area_represent = area_represent,
                     cap_info_represent = info_represent,

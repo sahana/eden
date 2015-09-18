@@ -10,6 +10,8 @@ except:
 from gluon import current
 from gluon.storage import Storage
 
+from datetime import datetime
+
 def config(settings):
     """
         Template settings for CAP: Common Alerting Protocol
@@ -65,6 +67,14 @@ def config(settings):
     # Template for the subject line in update notifications
     settings.msg.notify_subject = "$S %s" % T("Alert Notification")
 
+    # Filename for FTP
+    # Characters not allowed are [\ / : * ? " < > | % .]
+    # https://en.wikipedia.org/wiki/Filename
+    # http://docs.attachmate.com/reflection/ftp/15.6/guide/en/index.htm?toc.htm?6503.htm
+    settings.sync.upload_filename = "$s-$r-%s" % (datetime.strftime\
+                                                 (current.request.utcnow,
+                                                  "%Y-%m-%dT%H-%M-%S"))
+    
     # -----------------------------------------------------------------------------
     # L10n (Localization) settings
     languages = OrderedDict([
@@ -204,6 +214,53 @@ def config(settings):
 
     settings.customise_org_organisation_resource = customise_org_organisation_resource
 
+    # -------------------------------------------------------------------------
+    def customise_cap_alert_resource(r, tablename):
+        
+        s3db = current.s3db
+        def onapprove(record):
+            # Normal onapprove
+            s3db.cap_alert_approve(record)
+            
+            # Sync FTP Repository
+            current.s3task.async("cap_ftp_sync")
+            
+        s3db.configure(tablename,
+                       onapprove = onapprove,
+                       ) 
+    
+    settings.customise_cap_alert_resource = customise_cap_alert_resource
+    
+    # -------------------------------------------------------------------------
+    def customise_sync_repository_controller(**attr):
+        
+        s3 = current.response.s3
+        
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+            
+            if r.representation == "popup":
+                table = r.table
+                table.apitype.default = "ftp"
+                table.apitype.readable = table.apitype.writable = False
+                table.accept_push.readable = table.accept_push.writable = False
+                table.synchronise_uuids.readable = \
+                                        table.synchronise_uuids.writable = False
+                table.uuid.readable = table.uuid.writable = False
+            
+            return result
+        s3.prep = custom_prep
+        
+        return attr
+        
+    settings.customise_sync_repository_controller = customise_sync_repository_controller
+    
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # @ToDo: Have the system automatically enable migrate if a module is enabled
