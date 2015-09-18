@@ -1,9 +1,9 @@
 uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
-ANONYMOUS,Anonymous,,gis,,,READ,,,"Anonymous users can see the Map"
-ANONYMOUS,Anonymous,,cr,,,READ,,,"Anonymous users can see Shelters"
-ANONYMOUS,Anonymous,,hms,,,READ,,,"Anonymous users can see Hospitals"
-ANONYMOUS,Anonymous,,org,,,READ,,,"Anonymous users can see Organisations and Offices"
-ANONYMOUS,Anonymous,,req,,,READ,,,"Anonymous users can see Requests"
+ANONYMOUS,Anonymous,,gis,,,READ,,,,,"Anonymous users can see the Map"
+ANONYMOUS,Anonymous,,cr,,,READ,,,,,"Anonymous users can see Shelters"
+ANONYMOUS,Anonymous,,hms,,,READ,,,,,"Anonymous users can see Hospitals"
+ANONYMOUS,Anonymous,,org,,,READ,,,,,"Anonymous users can see Organisations and Offices"
+ANONYMOUS,Anonymous,,req,,,READ,,,,,"Anonymous users can see Requests"
 AUTHENTICATED,Authenticated,,doc,,,"READ",,,,,"Authenticated users can access documents"
 AUTHENTICATED,Authenticated,,gis,,,"READ","READ|CREATE|UPDATE|DELETE",,,,
 AUTHENTICATED,Authenticated,,gis,location,,"READ|CREATE","READ|CREATE|UPDATE|DELETE",,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
