@@ -93,7 +93,7 @@ from gluon.storage import Storage
 
 from s3dal import Row
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3ResourceLink
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -397,9 +397,9 @@ class S3ProjectModel(S3Model):
                                   )
                         ),
             sortby = "name",
-            comment = S3AddResourceLink(c="project", f="project",
-                                        tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Create Project'."),
-                                        ),
+            comment = S3ResourceLink(c="project", f="project",
+                                     tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Create Project'."),
+                                     ),
             )
 
         # Custom Methods
@@ -1139,9 +1139,9 @@ class S3ProjectActivityModel(S3Model):
         # Reusable Field
         represent = project_ActivityRepresent()
         activity_id = S3ReusableField("activity_id", "reference %s" % tablename,
-                        comment = S3AddResourceLink(ADD_ACTIVITY,
-                                                    c="project", f="activity",
-                                                    tooltip=ACTIVITY_TOOLTIP),
+                        comment = S3ResourceLink(ADD_ACTIVITY,
+                                                 c="project", f="activity",
+                                                 tooltip=ACTIVITY_TOOLTIP),
                         label = T("Activity"),
                         ondelete = "CASCADE",
                         represent = represent,
@@ -1397,10 +1397,10 @@ class S3ProjectActivityTypeModel(S3Model):
                                                                   represent,
                                                                   sort=True)),
                                            sortby = "name",
-                                           comment = S3AddResourceLink(title=ADD_ACTIVITY_TYPE,
-                                                                       c="project",
-                                                                       f="activity_type",
-                                                                       tooltip=T("If you don't see the type in the list, you can add a new one by clicking link 'Create Activity Type'.")),
+                                           comment = S3ResourceLink(title=ADD_ACTIVITY_TYPE,
+                                                                    c="project",
+                                                                    f="activity_type",
+                                                                    tooltip=T("If you don't see the type in the list, you can add a new one by clicking link 'Create Activity Type'.")),
                                            )
 
         if current.deployment_settings.get_project_sectors():
@@ -1818,12 +1818,12 @@ class S3ProjectBeneficiaryModel(S3Model):
                                                         ),
                                 readable = True,
                                 writable = True,
-                                comment = S3AddResourceLink(c="project",
-                                                            f="beneficiary_type",
-                                                            vars = dict(child="parameter_id"),
-                                                            title=ADD_BNF_TYPE,
-                                                            tooltip=T("Please record Beneficiary according to the reporting needs of your project")
-                                                            ),
+                                comment = S3ResourceLink(c="project",
+                                                         f="beneficiary_type",
+                                                         vars = dict(child="parameter_id"),
+                                                         title=ADD_BNF_TYPE,
+                                                         tooltip=T("Please record Beneficiary according to the reporting needs of your project")
+                                                         ),
                                 ),
                      # Populated automatically from project_location
                      self.gis_location_id(readable = False,
@@ -2012,9 +2012,9 @@ class S3ProjectBeneficiaryModel(S3Model):
                                   self.project_beneficiary_represent,
                                   sort=True)),
             sortby = "name",
-            comment = S3AddResourceLink(c="project", f="beneficiary",
-                                        title=ADD_BNF,
-                                        tooltip=\
+            comment = S3ResourceLink(c="project", f="beneficiary",
+                                     title=ADD_BNF,
+                                     tooltip=\
                 T("If you don't see the beneficiary in the list, you can add a new one by clicking link 'Add Beneficiaries'.")),
             )
 
@@ -2249,10 +2249,10 @@ class S3ProjectCampaignModel(S3Model):
                                                               sort=True)),
                                       represent = represent,
                                       label = T("Campaign"),
-                                      comment = S3AddResourceLink(c="project",
-                                                                  f="campaign",
-                                                                  title=ADD_CAMPAIGN,
-                                                                  tooltip=\
+                                      comment = S3ResourceLink(c="project",
+                                                               f="campaign",
+                                                               title=ADD_CAMPAIGN,
+                                                               tooltip=\
                                         T("If you don't see the campaign in the list, you can add a new one by clicking link 'Add Campaign'.")),
                                       ondelete = "CASCADE")
 
@@ -2908,10 +2908,10 @@ class S3ProjectIndicatorModel(S3Model):
                                                         ),
                                 readable = True,
                                 writable = True,
-                                comment = S3AddResourceLink(c="project",
-                                                            f="indicator",
-                                                            vars = dict(child="parameter_id"),
-                                                            title=ADD_INDICATOR),
+                                comment = S3ResourceLink(c="project",
+                                                         f="indicator",
+                                                         vars = dict(child="parameter_id"),
+                                                         title=ADD_INDICATOR),
                                 ),
                      #self.gis_location_id(),
                      s3_date(empty = False,
@@ -3154,11 +3154,11 @@ class S3ProjectLocationModel(S3Model):
                         represent = self.gis_LocationRepresent(sep=", "),
                         requires = IS_LOCATION(),
                         widget = S3LocationAutocompleteWidget(),
-                        comment = S3AddResourceLink(c="gis",
-                                                    f="location",
-                                                    label = T("Create Location"),
-                                                    title=T("Location"),
-                                                    tooltip=messages.AUTOCOMPLETE_HELP),
+                        comment = S3ResourceLink(c="gis",
+                                                 f="location",
+                                                 label = T("Create Location"),
+                                                 title=T("Location"),
+                                                 tooltip=messages.AUTOCOMPLETE_HELP),
                      ),
                      # % breakdown by location
                      Field("percentage", "decimal(3,2)",
@@ -3357,9 +3357,9 @@ class S3ProjectLocationModel(S3Model):
                                   project_location_represent,
                                   updateable = True,
                                   sort=True)),
-            comment = S3AddResourceLink(ADD_LOCATION,
-                                        c="project", f="location",
-                                        tooltip=LOCATION_TOOLTIP),
+            comment = S3ResourceLink(ADD_LOCATION,
+                                     c="project", f="location",
+                                     tooltip=LOCATION_TOOLTIP),
             )
 
         # ---------------------------------------------------------------------
@@ -3527,11 +3527,11 @@ class S3ProjectOrganisationModel(S3Model):
         tablename = "project_organisation"
         self.define_table(tablename,
                           self.project_project_id(
-                            comment=S3AddResourceLink(c="project",
-                                                      f="project",
-                                                      vars = dict(prefix="project"),
-                                                      tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Create Project'."),
-                                                      )
+                            comment=S3ResourceLink(c="project",
+                                                   f="project",
+                                                   vars = dict(prefix="project"),
+                                                   tooltip=T("If you don't see the project in the list, you can add a new one by clicking link 'Create Project'."),
+                                                   )
                           ),
                           self.org_organisation_id(
                           requires = self.org_organisation_requires(
@@ -3540,11 +3540,11 @@ class S3ProjectOrganisationModel(S3Model):
                                          #updateable=True,
                                          ),
                           widget = None,
-                          comment=S3AddResourceLink(c="org",
-                                                    f="organisation",
-                                                    label=T("Create Organization"),
-                                                    title=messages.ORGANISATION,
-                                                    tooltip=organisation_help)
+                          comment=S3ResourceLink(c="org",
+                                                 f="organisation",
+                                                 label=T("Create Organization"),
+                                                 title=messages.ORGANISATION,
+                                                 tooltip=organisation_help)
                           ),
                           Field("role", "integer",
                                 label = T("Role"),
@@ -3855,7 +3855,7 @@ class S3ProjectPlanningModel(S3Model):
                                                           )
                                                 ),
                                   sortby = "name",
-                                  #comment = S3AddResourceLink(c="project", f="goal"),
+                                  #comment = S3ResourceLink(c="project", f="goal"),
                                   )
 
         # ---------------------------------------------------------------------
@@ -3936,7 +3936,7 @@ class S3ProjectPlanningModel(S3Model):
                                                               )
                                                     ),
                                      sortby = "name",
-                                     #comment = S3AddResourceLink(c="project", f="outcome"),
+                                     #comment = S3ResourceLink(c="project", f="outcome"),
                                      )
 
         # ---------------------------------------------------------------------
@@ -4035,7 +4035,7 @@ class S3ProjectPlanningModel(S3Model):
                                                               )
                                                     ),
                                     sortby = "name",
-                                    #comment = S3AddResourceLink(c="project", f="output"),
+                                    #comment = S3ResourceLink(c="project", f="output"),
                                     )
 
         # ---------------------------------------------------------------------
@@ -4140,7 +4140,7 @@ class S3ProjectPlanningModel(S3Model):
                                                         ),
                                        # Match the Represent
                                        sortby = ("code", "name"),
-                                       #comment = S3AddResourceLink(c="project", f="indicator"),
+                                       #comment = S3ResourceLink(c="project", f="indicator"),
                                        )
 
         self.add_components(tablename,
@@ -5314,9 +5314,9 @@ class S3ProjectProgrammeModel(S3Model):
                                                       updateable = True,
                                                       )),
                             sortby = "name",
-                            comment = S3AddResourceLink(c="project",
-                                                        f="programme",
-                                                        ),
+                            comment = S3ResourceLink(c="project",
+                                                     f="programme",
+                                                     ),
                        )
 
         self.configure(tablename,
@@ -5468,9 +5468,9 @@ class S3ProjectStatusModel(S3Model):
         represent = S3Represent(lookup=tablename, translate=True)
                                 #none = T("Unknown"))
         status_id = S3ReusableField("status_id", "reference %s" % tablename,
-                        comment = S3AddResourceLink(title=ADD_STATUS,
-                                                    c="project",
-                                                    f="status"),
+                        comment = S3ResourceLink(title=ADD_STATUS,
+                                                 c="project",
+                                                 f="status"),
                         label = T("Status"),
                         ondelete = "SET NULL",
                         represent = represent,
@@ -6174,10 +6174,10 @@ class S3ProjectTaskModel(S3Model):
                                                     IS_ONE_OF(db, "project_milestone.id",
                                                               represent)),
                                        sortby = "name",
-                                       comment = S3AddResourceLink(c="project",
-                                                                   f="milestone",
-                                                                   title=ADD_MILESTONE,
-                                                                   tooltip=T("A project milestone marks a significant date in the calendar which shows that progress towards the overall objective is being made.")),
+                                       comment = S3ResourceLink(c="project",
+                                                                f="milestone",
+                                                                title=ADD_MILESTONE,
+                                                                tooltip=T("A project milestone marks a significant date in the calendar which shows that progress towards the overall objective is being made.")),
                                        )
 
         configure(tablename,
@@ -6220,10 +6220,10 @@ class S3ProjectTaskModel(S3Model):
                                               IS_ONE_OF(db, "project_tag.id",
                                                         represent)),
                                  sortby = "name",
-                                 comment = S3AddResourceLink(c="project",
-                                                             f="tag",
-                                                             title=ADD_TAG,
-                                                             tooltip=T("A project tag helps to assosiate keywords with projects/tasks.")),
+                                 comment = S3ResourceLink(c="project",
+                                                          f="tag",
+                                                          title=ADD_TAG,
+                                                          tooltip=T("A project tag helps to assosiate keywords with projects/tasks.")),
                                  )
 
         # ---------------------------------------------------------------------
@@ -6564,10 +6564,10 @@ class S3ProjectTaskModel(S3Model):
                                                 IS_ONE_OF(db, "project_task.id",
                                                           represent)),
                                   sortby = "name",
-                                  comment = S3AddResourceLink(c="project",
-                                                              f="task",
-                                                              title=ADD_TASK,
-                                                              tooltip=T("A task is a piece of work that an individual or team can do in 1-2 days.")),
+                                  comment = S3ResourceLink(c="project",
+                                                           f="task",
+                                                           title=ADD_TASK,
+                                                           tooltip=T("A task is a piece of work that an individual or team can do in 1-2 days.")),
                                   )
 
         # Representation with project name, for time log form

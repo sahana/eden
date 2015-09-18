@@ -8,6 +8,7 @@ AUTHENTICATED,Authenticated,,pr,contact,,CREATE,READ|UPDATE|DELETE,,,,Can edit t
 AUTHENTICATED,Authenticated,,pr,person,,READ|CREATE,READ|UPDATE,,,,Can edit their own record
 AUTHENTICATED,Authenticated,,gis,,,READ,,,,,
 AUTHENTICATED,Authenticated,,org,,,READ,,,,,
+AUTHENTICATED,Authenticated,,sync,repository,,CREATE,READ|UPDATE|DELETE,,,,
 MAP_ADMIN,Map Admin,,gis,,,ALL,,,,,
 MAP_ADMIN,Map Admin,,cap,area,,READ|CREATE|UPDATE|DELETE,,,,,
 ALERT_EDITOR,Alert Editor,Can create and disseminate the CAP Message,cap,alert,,READ|CREATE|UPDATE|PUBLISH,,,,,

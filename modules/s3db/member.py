@@ -36,7 +36,7 @@ import datetime
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3ResourceLink
 
 # =============================================================================
 class S3MembersModel(S3Model):
@@ -117,10 +117,10 @@ class S3MembersModel(S3Model):
                                                                       filterby="organisation_id",
                                                                       filter_opts=filter_opts)),
                                              sortby = "name",
-                                             comment=S3AddResourceLink(f="membership_type",
-                                                                       label=ADD_MEMBERSHIP_TYPE,
-                                                                       title=ADD_MEMBERSHIP_TYPE,
-                                                                       tooltip=T("Add a new membership type to the catalog.")),
+                                             comment=S3ResourceLink(f="membership_type",
+                                                                    label=ADD_MEMBERSHIP_TYPE,
+                                                                    title=ADD_MEMBERSHIP_TYPE,
+                                                                    tooltip=T("Add a new membership type to the catalog.")),
                                              )
 
         configure(tablename,

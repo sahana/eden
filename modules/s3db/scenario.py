@@ -40,7 +40,7 @@ __all__ = ("S3ScenarioModel",
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from ..s3layouts import S3AddResourceLink
+from ..s3layouts import S3ResourceLink
 
 # =============================================================================
 class S3ScenarioModel(S3Model):
@@ -241,8 +241,8 @@ class S3ScenarioAssetModel(S3Model):
         self.define_table(tablename,
                           self.scenario_scenario_id(),
                           self.asset_asset_id(
-                            comment = S3AddResourceLink(c="asset", f="asset",
-                                                        tooltip = T("If you don't see the asset in the list, you can add a new one by clicking link 'Create Asset'.")),
+                            comment = S3ResourceLink(c="asset", f="asset",
+                                                     tooltip = T("If you don't see the asset in the list, you can add a new one by clicking link 'Create Asset'.")),
                             ),
                           *s3_meta_fields())
 

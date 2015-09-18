@@ -619,8 +619,10 @@ if settings.has_module("sync"):
         """
             Run all tasks for a repository, to be called from scheduler
         """
-
-        auth.s3_impersonate(user_id)
+        
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
 
         rtable = s3db.sync_repository
         query = (rtable.deleted != True) & \

@@ -47,7 +47,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3ResourceLink
 
 # =============================================================================
 class S3VolunteerModel(S3Model):
@@ -174,11 +174,11 @@ class S3VolunteerAwardModel(S3Model):
             msg_record_deleted = T("Award deleted"),
             msg_list_empty = T("No Awards found"))
 
-        comment = S3AddResourceLink(c = "vol",
-                                    f = "award",
-                                    label = crud_strings[tablename].label_create,
-                                    title = T("Award"),
-                                    )
+        comment = S3ResourceLink(c = "vol",
+                                 f = "award",
+                                 label = crud_strings[tablename].label_create,
+                                 title = T("Award"),
+                                 )
 
         represent = S3Represent(lookup=tablename)
         award_id = S3ReusableField("award_id", "reference %s" % tablename,
@@ -296,13 +296,13 @@ class S3VolunteerClusterModel(S3Model):
             msg_record_deleted = T("Volunteer Cluster Type deleted"),
             msg_list_empty = T("No Volunteer Cluster Types"))
 
-        comment = S3AddResourceLink(c = "vol",
-                                    f = "cluster_type",
-                                    vars = dict(child = "vol_cluster_type_id",
-                                                parent = "volunteer_cluster"),
-                                    label = crud_strings[tablename].label_create,
-                                    title = T("Volunteer Cluster Type"),
-                                    )
+        comment = S3ResourceLink(c = "vol",
+                                 f = "cluster_type",
+                                 vars = dict(child = "vol_cluster_type_id",
+                                             parent = "volunteer_cluster"),
+                                 label = crud_strings[tablename].label_create,
+                                 title = T("Volunteer Cluster Type"),
+                                 )
 
         represent = S3Represent(lookup=tablename)
         vol_cluster_type_id = S3ReusableField("vol_cluster_type_id", "reference %s" % tablename,
@@ -337,13 +337,13 @@ class S3VolunteerClusterModel(S3Model):
             msg_record_deleted = T("Volunteer Cluster deleted"),
             msg_list_empty = T("No Volunteer Clusters"))
 
-        comment = S3AddResourceLink(c = "vol",
-                                    f = "cluster",
-                                    vars = dict(child = "vol_cluster_id",
-                                                parent = "volunteer_cluster"),
-                                    label = crud_strings[tablename].label_create,
-                                    title = T("Volunteer Cluster"),
-                                    )
+        comment = S3ResourceLink(c = "vol",
+                                 f = "cluster",
+                                 vars = dict(child = "vol_cluster_id",
+                                             parent = "volunteer_cluster"),
+                                 label = crud_strings[tablename].label_create,
+                                 title = T("Volunteer Cluster"),
+                                 )
 
         represent = S3Represent(lookup=tablename)
         vol_cluster_id = S3ReusableField("vol_cluster_id", "reference %s" % tablename,
@@ -378,13 +378,13 @@ class S3VolunteerClusterModel(S3Model):
             msg_record_deleted = T("Volunteer Cluster Position deleted"),
             msg_list_empty = T("No Volunteer Cluster Positions"))
 
-        comment = S3AddResourceLink(c = "vol",
-                                    f = "cluster_position",
-                                    vars = dict(child = "vol_cluster_position_id",
-                                                parent = "volunteer_cluster"),
-                                    label = crud_strings[tablename].label_create,
-                                    title = T("Volunteer Cluster Position"),
-                                    )
+        comment = S3ResourceLink(c = "vol",
+                                 f = "cluster_position",
+                                 vars = dict(child = "vol_cluster_position_id",
+                                             parent = "volunteer_cluster"),
+                                 label = crud_strings[tablename].label_create,
+                                 title = T("Volunteer Cluster Position"),
+                                 )
 
         represent = S3Represent(lookup=tablename)
         vol_cluster_position_id = S3ReusableField("vol_cluster_position_id", "reference %s" % tablename,

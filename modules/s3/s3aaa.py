@@ -1685,11 +1685,11 @@ Thank you"""
             else:
                 organisation_id.requires = IS_EMPTY_OR(requires)
 
-            from s3layouts import S3AddResourceLink
-            organisation_id.comment = S3AddResourceLink(c="org",
-                                                        f="organisation",
-                                                        label=s3db.crud_strings["org_organisation"].label_create,
-                                                        title=s3db.crud_strings["org_organisation"].title_list,)
+            from s3layouts import S3ResourceLink
+            organisation_id.comment = S3ResourceLink(c="org",
+                                                     f="organisation",
+                                                     label=s3db.crud_strings["org_organisation"].label_create,
+                                                     title=s3db.crud_strings["org_organisation"].title_list,)
             #from s3widgets import S3OrganisationAutocompleteWidget
             #organisation_id.widget = S3OrganisationAutocompleteWidget()
             #organisation_id.comment = DIV(_class="tooltip",
@@ -1717,11 +1717,11 @@ Thank you"""
                 org_group_id.requires = requires
             else:
                 org_group_id.requires = IS_EMPTY_OR(requires)
-            #from s3layouts import S3AddResourceLink
-            #org_group_id.comment = S3AddResourceLink(c="org",
-            #                                         f="group",
-            #                                         label=s3db.crud_strings["org_group"].label_create,
-            #                                         title=s3db.crud_strings["org_group"].title_list,)
+            #from s3layouts import S3ResourceLink
+            #org_group_id.comment = S3ResourceLink(c="org",
+            #                                      f="group",
+            #                                      label=s3db.crud_strings["org_group"].label_create,
+            #                                      title=s3db.crud_strings["org_group"].title_list,)
             if multiselect_widget:
                 org_group_id.widget = S3MultiSelectWidget(multiple=False)
 

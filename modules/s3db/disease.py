@@ -51,7 +51,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3ResourceLink
 
 # Monitoring upgrades {new_level:previous_levels}
 MONITORING_UPGRADE = {"OBSERVATION": ("NONE",
@@ -118,9 +118,9 @@ class DiseaseDataModel(S3Model):
                                                           represent,
                                                           ),
                                      sortby = "name",
-                                     comment = S3AddResourceLink(f="disease",
-                                                                 tooltip=T("Add a new disease to the catalog"),
-                                                                 ),
+                                     comment = S3ResourceLink(f="disease",
+                                                              tooltip=T("Add a new disease to the catalog"),
+                                                              ),
                                      )
 
         self.add_components(tablename,
@@ -365,9 +365,9 @@ class CaseTrackingModel(S3Model):
                                   requires = IS_ONE_OF(db, "disease_case.id",
                                                        represent,
                                                        ),
-                                  comment = S3AddResourceLink(f="case",
-                                                              tooltip=T("Add a new case"),
-                                                              ),
+                                  comment = S3ResourceLink(f="case",
+                                                           tooltip=T("Add a new case"),
+                                                           ),
                                   )
 
         # Components
@@ -465,9 +465,9 @@ class CaseTrackingModel(S3Model):
                                     requires = IS_ONE_OF(db, "disease_case.id",
                                                          represent,
                                                          ),
-                                    comment = S3AddResourceLink(f="case",
-                                                                tooltip=T("Add a new case"),
-                                                                ),
+                                    comment = S3ResourceLink(f="case",
+                                                             tooltip=T("Add a new case"),
+                                                             ),
                                     )
 
         # Components
@@ -881,9 +881,9 @@ class ContactTracingModel(S3Model):
                                                               represent,
                                                               )),
                                      sortby = "date",
-                                     comment = S3AddResourceLink(f="tracing",
-                                                                 tooltip=T("Add a new contact tracing information"),
-                                                                 ),
+                                     comment = S3ResourceLink(f="tracing",
+                                                              tooltip=T("Add a new contact tracing information"),
+                                                              ),
                                      )
 
         self.add_components(tablename,
@@ -1237,11 +1237,11 @@ class DiseaseStatsModel(S3Model):
                                 readable = True,
                                 writable = True,
                                 empty = False,
-                                comment = S3AddResourceLink(c="disease",
-                                                            f="statistic",
-                                                            vars = dict(child = "parameter_id"),
-                                                            title=ADD_STATISTIC,
-                                                            ),
+                                comment = S3ResourceLink(c="disease",
+                                                         f="statistic",
+                                                         vars = dict(child = "parameter_id"),
+                                                         title=ADD_STATISTIC,
+                                                         ),
                                 ),
                      location_id(
                          requires = IS_LOCATION(),

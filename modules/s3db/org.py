@@ -85,7 +85,7 @@ from gluon import *
 
 from ..s3 import *
 from s3dal import Row
-from s3layouts import S3AddResourceLink
+from s3layouts import S3ResourceLink
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -199,12 +199,12 @@ class S3OrganisationModel(S3Model):
                                   )),
             sortby = "name",
             widget = organisation_type_widget,
-            comment = S3AddResourceLink(c="org",
-                                        f="organisation_type",
-                                        label=T("Create Organization Type"),
-                                        title=T("Organization Type"),
-                                        tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Organization Type'.")
-                                        ),
+            comment = S3ResourceLink(c="org",
+                                     f="organisation_type",
+                                     label=T("Create Organization Type"),
+                                     title=T("Organization Type"),
+                                     tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Organization Type'.")
+                                     ),
             )
 
         configure(tablename,
@@ -289,12 +289,12 @@ class S3OrganisationModel(S3Model):
                                       not_filter_opts=(None,)
                                       )),
                 sortby = "name",
-                comment = S3AddResourceLink(c="org",
-                                            f="region",
-                                            label=T("Add Region"),
-                                            title=T("Region"),
-                                            tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Region'.")
-                                            ),
+                comment = S3ResourceLink(c="org",
+                                         f="region",
+                                         label=T("Add Region"),
+                                         title=T("Region"),
+                                         tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Add Region'.")
+                                         ),
                 )
 
             configure(tablename,
@@ -487,17 +487,17 @@ class S3OrganisationModel(S3Model):
         else:
             text_comment = T("You can search by name, acronym or comments")
 
-        organisation_comment = S3AddResourceLink(c="org", f="organisation",
-                                                 label=ADD_ORGANIZATION,
-                                                 title=ADD_ORGANIZATION,
-                                                 tooltip=help)
+        organisation_comment = S3ResourceLink(c="org", f="organisation",
+                                              label=ADD_ORGANIZATION,
+                                              title=ADD_ORGANIZATION,
+                                              tooltip=help)
 
-        from_organisation_comment = S3AddResourceLink(c="org",
-                                                      f="organisation",
-                                                      vars=dict(child="from_organisation_id"),
-                                                      label=ADD_ORGANIZATION,
-                                                      title=ADD_ORGANIZATION,
-                                                      tooltip=help)
+        from_organisation_comment = S3ResourceLink(c="org",
+                                                   f="organisation",
+                                                   vars=dict(child="from_organisation_id"),
+                                                   label=ADD_ORGANIZATION,
+                                                   title=ADD_ORGANIZATION,
+                                                   tooltip=help)
 
         # Reusable field
         auth = current.auth
@@ -2035,10 +2035,10 @@ class S3OrganisationResourceModel(S3Model):
                                      readable = True,
                                      writable = True,
                                      empty = False,
-                                     comment = S3AddResourceLink(c="org",
-                                                                 f="resource_type",
-                                                                 vars = dict(child = "parameter_id"),
-                                                                 title=ADD_RESOURCE_TYPE),
+                                     comment = S3ResourceLink(c="org",
+                                                              f="resource_type",
+                                                              vars = dict(child = "parameter_id"),
+                                                              title=ADD_RESOURCE_TYPE),
                                      ),
                           Field("value", "integer",
                                 label = T("Quantity"),
@@ -2196,11 +2196,11 @@ class S3OrganisationSectorModel(S3Model):
                   onaccept = self.org_sector_onaccept,
                   )
 
-        sector_comment = lambda child: S3AddResourceLink(c="org", f="sector",
-                                                         vars={"child": child},
-                                                         label=ADD_SECTOR,
-                                                         title=SECTOR,
-                                                         tooltip=help)
+        sector_comment = lambda child: S3ResourceLink(c="org", f="sector",
+                                                      vars={"child": child},
+                                                      label=ADD_SECTOR,
+                                                      title=SECTOR,
+                                                      tooltip=help)
 
         represent = S3Represent(lookup=tablename, translate=True)
         sector_id = S3ReusableField("sector_id", "reference %s" % tablename,
@@ -3452,11 +3452,11 @@ class S3FacilityModel(S3Model):
                                  sort = True,
                                  ),
             sortby = "name",
-            comment = S3AddResourceLink(c = "org",
-                                        f = "facility_type",
-                                        label = ADD_FAC,
-                                        title = T("Facility Type"),
-                                        tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Facility Type'.")),
+            comment = S3ResourceLink(c = "org",
+                                     f = "facility_type",
+                                     label = ADD_FAC,
+                                     title = T("Facility Type"),
+                                     tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Facility Type'.")),
             )
 
         configure(tablename,
@@ -4059,10 +4059,10 @@ class S3RoomModel(S3Model):
             msg_list_empty = T("No Rooms currently registered"))
 
         room_comment = DIV(
-                           S3AddResourceLink(c="org",
-                                         f="room",
-                                         label=ADD_ROOM,
-                                         tooltip=T("Select a Room from the list or click 'Create Room'")),
+                           S3ResourceLink(c="org",
+                                          f="room",
+                                          label=ADD_ROOM,
+                                          tooltip=T("Select a Room from the list or click 'Create Room'")),
                            # Filters Room based on site
                            SCRIPT(
 '''$.filterOptionsS3({
@@ -4186,7 +4186,7 @@ class S3OfficeModel(S3Model):
                                                   filter_opts=filter_opts
                                                   )),
                             sortby = "name",
-                            comment = S3AddResourceLink(c="org",
+                            comment = S3ResourceLink(c="org",
                                 f="office_type",
                                 label=ADD_OFFICE_TYPE,
                                 title=T("Office Type"),

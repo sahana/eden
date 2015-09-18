@@ -62,7 +62,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3ResourceLink
 from s3.s3widgets import set_match_strings
 
 # Compact JSON encoding
@@ -1761,15 +1761,15 @@ class S3GISConfigModel(S3Model):
                                                           zero=T("Use default"))),
                                     sortby = "name",
                                     widget = S3SelectWidget(icons=self.gis_marker_options),
-                                    comment=S3AddResourceLink(c="gis",
-                                                              f="marker",
-                                                              #vars={"child": "marker_id",
-                                                              #      "parent": "symbology"},
-                                                              label=ADD_MARKER,
-                                                              title=T("Marker"),
-                                                              tooltip="%s|%s|%s" % (T("Defines the icon used for display of features on interactive map & KML exports."),
-                                                                                    T("A Marker assigned to an individual Location is set if there is a need to override the Marker assigned to the Feature Class."),
-                                                                                    T("If neither are defined, then the Default Marker is used."))),
+                                    comment=S3ResourceLink(c="gis",
+                                                           f="marker",
+                                                           #vars={"child": "marker_id",
+                                                           #      "parent": "symbology"},
+                                                           label=ADD_MARKER,
+                                                           title=T("Marker"),
+                                                           tooltip="%s|%s|%s" % (T("Defines the icon used for display of features on interactive map & KML exports."),
+                                                                                 T("A Marker assigned to an individual Location is set if there is a need to override the Marker assigned to the Feature Class."),
+                                                                                 T("If neither are defined, then the Default Marker is used."))),
                                     )
 
         # Components
@@ -1846,13 +1846,13 @@ class S3GISConfigModel(S3Model):
                                                               represent)),
                                         represent = represent,
                                         label = T("Projection"),
-                                        comment=S3AddResourceLink(c="gis",
-                                                                  f="projection",
-                                                                  label=ADD_PROJECTION,
-                                                                  title=T("Projection"),
-                                                                  tooltip="%s|%s|%s" % (T("The system supports 2 projections by default:"),
-                                                                                        T("Spherical Mercator (900913) is needed to use OpenStreetMap/Google/Bing base layers."),
-                                                                                        T("WGS84 (EPSG 4236) is required for many WMS servers."))),
+                                        comment=S3ResourceLink(c="gis",
+                                                               f="projection",
+                                                               label=ADD_PROJECTION,
+                                                               title=T("Projection"),
+                                                               tooltip="%s|%s|%s" % (T("The system supports 2 projections by default:"),
+                                                                                     T("Spherical Mercator (900913) is needed to use OpenStreetMap/Google/Bing base layers."),
+                                                                                     T("WGS84 (EPSG 4236) is required for many WMS servers."))),
                                         ondelete = "RESTRICT")
 
         configure(tablename,
