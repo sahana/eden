@@ -524,26 +524,44 @@ def alert():
                                               ),)
 
             elif r.component_name == "area":
+                atable = r.component.table
                 # Limit to those for this Alert
-                r.component.table.info_id.requires = IS_EMPTY_OR(
-                                                        IS_ONE_OF(db, "cap_info.id",
-                                                                  s3db.cap_info_represent,
-                                                                  filterby="alert_id",
-                                                                  filter_opts=(r.id,),
-                                                                  ))
+                atable.info_id.requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "cap_info.id",
+                                                          s3db.cap_info_represent,
+                                                          filterby="alert_id",
+                                                          filter_opts=(r.id,),
+                                                          ))
                 for f in ("event_type_id", "priority"):
                     # Do not show for the actual area
-                    field = r.component.table[f]
+                    field = atable[f]
+                    field.writable = field.readable = False
+                
+                # Auto assign the info_id to area if only one info segment
+                itable = s3db.cap_info
+                rows = db(itable.alert_id == r.record.id).select(itable.id)
+                if len(rows) == 1:
+                    field = atable.info_id
+                    field.default = rows.first().id
                     field.writable = field.readable = False
                     
             elif r.component_name == "resource":
+                atable = r.component.table
                 # Limit to those for this Alert
-                r.component.table.info_id.requires = IS_EMPTY_OR(
-                                                        IS_ONE_OF(db, "cap_info.id",
-                                                                  s3db.cap_info_represent,
-                                                                  filterby="alert_id",
-                                                                  filter_opts=(r.id,),
-                                                                  ))
+                atable.info_id.requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "cap_info.id",
+                                                          s3db.cap_info_represent,
+                                                          filterby="alert_id",
+                                                          filter_opts=(r.id,),
+                                                          ))
+                
+                # Auto assign the info_id to area if only one info segment
+                itable = s3db.cap_info
+                rows = db(itable.alert_id == r.record.id).select(itable.id)
+                if len(rows) == 1:
+                    field = atable.info_id
+                    field.default = rows.first().id
+                    field.writable = field.readable = False
 
             # @ToDo: Move inside correct component context (None?)
             post_vars = request.post_vars
@@ -602,6 +620,41 @@ def alert():
                     row_clone["template_info_id"] = row.id
                     row_clone["is_template"] = False
                     itable.insert(**row_clone)
+
+                # Clone all cap_resource entries from the alert template
+                # First get the info_id
+                itable = s3db.cap_info
+                rows = db(itable.alert_id == lastid).select(itable.id)
+                    
+                rtable = s3db.cap_resource
+                r_unwanted_fields = set(("deleted_rb",
+                                         "owned_by_user",
+                                         "approved_by",
+                                         "mci",
+                                         "deleted",
+                                         "modified_on",
+                                         "realm_entity",
+                                         "uuid",
+                                         "created_on",
+                                         "deleted_fk",
+                                         "created_by",
+                                         "modified_by",
+                                         "owned_by_group",
+                                         ))
+                rfields = [rtable[f] for f in rtable.fields
+                                     if f not in r_unwanted_fields]
+                rows_ = db(rtable.alert_id == alert.template_id).select(*rfields)
+                for row in rows_:
+                    row_clone = row.as_dict()
+                    del row_clone["id"]
+                    row_clone["alert_id"] = lastid
+                    row_clone["is_template"] = False
+                    # Use the info_id here
+                    if len(rows) == 1:
+                        row_clone["info_id"] = rows.first().id
+                    else:
+                        del row_clone["info_id"]
+                    rtable.insert(**row_clone)
 
             r.next = URL(c="cap", f="alert", args=[lastid, "info"])
 
@@ -747,6 +800,27 @@ def template():
 
         itable.category.required = False
 
+        if r.component_name == "resource":
+            rtable = r.component.table
+            # Limit to those for this Alert
+            rtable.info_id.requires = IS_EMPTY_OR(
+                                            IS_ONE_OF(db, "cap_info.id",
+                                                      s3db.cap_info_represent,
+                                                      filterby="alert_id",
+                                                      filter_opts=(r.id,),
+                                                      ))
+            
+            # Set is_template to true as only accessed by template
+            rtable.is_template.default = True
+            
+            # Auto assign the info_id to area if only one info segment
+            itable = s3db.cap_info
+            rows = db(itable.alert_id == r.record.id).select(itable.id)
+            if len(rows) == 1:
+                field = rtable.info_id
+                field.default = rows.first().id
+                field.writable = field.readable = False
+            
         s3.crud_strings[tablename] = Storage(
             label_create = T("Create Template"),
             title_display = T("Template"),

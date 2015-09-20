@@ -477,6 +477,8 @@ def newsfeed():
     if org_field:
         nappend((T("Organization"), org_field))
     if org_group_field:
+        if isinstance(group_label, bool):
+           group_label = T("Organisation Group")
         nappend((T(group_label), org_group_field))
     if contact_field:
         nappend((T("Contact"), contact_field))
@@ -664,6 +666,10 @@ def newsfeed():
                            (T("Details"), "body"),
                            ]
             lappend = list_fields.append
+            # Which levels of Hierarchy are we using?
+            gis = current.gis
+            levels = gis.get_relevant_hierarchy_levels()
+            hierarchy = gis.get_location_hierarchy()
             for level in levels:
                 lappend((hierarchy[level], "location_id$%s" % level))
             if contact_field:

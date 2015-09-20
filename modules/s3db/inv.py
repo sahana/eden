@@ -43,6 +43,8 @@ __all__ = ("S3WarehouseModel",
            "inv_adj_rheader",
            "depends",
            "inv_InvItemRepresent",
+           "inv_item_total_weight",
+           "inv_item_total_volume",
            )
 
 import datetime
@@ -708,24 +710,27 @@ $.filterOptionsS3({
                        onvalidation = self.inv_inv_item_onvalidate,
                        report_options = report_options,
                        super_entity = "supply_item_entity",
-                       # Experimental
                        grouped = {
                         "default": {
                             "title": T("Warehouse Stock Report"),
                             "fields": [(T("Warehouse"), "site_id$name"),
+                                       "item_id$item_category_id",
+                                       "bin",
                                        "item_id$name",
                                        "quantity",
+                                       "pack_value",
+                                       "total_value",
                                        ],
                             "groupby": ["site_id",
-                                        "item_id",
                                         ],
                             "orderby": ["site_id$name",
                                         "item_id$name",
                                         ],
                             "aggregate": [("sum", "quantity"),
+                                          ("sum", "total_value"),
                                           ],
+                         },
                         },
-                       },
                        )
 
         # ---------------------------------------------------------------------
@@ -4660,6 +4665,82 @@ class S3InventoryAdjustModel(S3Model):
                 return SPAN(repr)
             else:
                 return repr
+
+# =============================================================================
+def inv_item_total_weight(row):
+    """
+        Compute the total weight of an inventory item (Field.Method)
+
+        @param row: the Row
+    """
+
+    try:
+        inv_item = getattr(row, "inv_inv_item")
+    except AttributeError:
+        inv_item = row
+    try:
+        quantity = inv_item.quantity
+    except AttributeError:
+        return 0.0
+
+    try:
+        supply_item = getattr(row, "supply_item")
+        weight = supply_item.weight
+    except AttributeError:
+        # Need to reload the supply item
+        itable = current.s3db.inv_inv_item
+        stable = current.s3db.supply_item
+        query = (itable.id == inv_item.id) & \
+                (itable.item_id == stable.id)
+        supply_item = current.db(query).select(stable.weight,
+                                                limitby=(0, 1)).first()
+        if not supply_item:
+            return
+        else:
+            weight = supply_item.weight
+
+    if weight is None:
+        return current.messages["NONE"]
+    else:
+        return quantity * weight
+
+# -----------------------------------------------------------------------------
+def inv_item_total_volume(row):
+    """
+        Compute the total volume of an inventory item (Field.Method)
+
+        @param row: the Row
+    """
+
+    try:
+        inv_item = getattr(row, "inv_inv_item")
+    except AttributeError:
+        inv_item = row
+    try:
+        quantity = inv_item.quantity
+    except AttributeError:
+        return 0.0
+
+    try:
+        supply_item = getattr(row, "supply_item")
+        volume = supply_item.volume
+    except AttributeError:
+        # Need to reload the supply item
+        itable = current.s3db.inv_inv_item
+        stable = current.s3db.supply_item
+        query = (itable.id == inv_item.id) & \
+                (itable.item_id == stable.id)
+        supply_item = current.db(query).select(stable.volume,
+                                               limitby=(0, 1)).first()
+        if not supply_item:
+            return
+        else:
+            volume = supply_item.volume
+
+    if volume is None:
+        return current.messages["NONE"]
+    else:
+        return quantity * volume
 
 # =============================================================================
 def inv_adj_rheader(r):

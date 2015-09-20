@@ -105,7 +105,6 @@
         <c:country><c:code>BN</c:code><c:name>Brunei Darussalam</c:name></c:country>
         <c:country><c:code>BG</c:code><c:name>Bulgaria</c:name></c:country>
         <c:country><c:code>BF</c:code><c:name>Burkina Faso</c:name></c:country>
-        <c:country><c:code>MM</c:code><c:name>Burma</c:name></c:country>
         <c:country><c:code>BI</c:code><c:name>Burundi</c:name></c:country>
         <c:country><c:code>KH</c:code><c:name>Cambodia</c:name></c:country>
         <c:country><c:code>CM</c:code><c:name>Cameroon</c:name></c:country>
@@ -219,6 +218,7 @@
         <c:country><c:code>MS</c:code><c:name>Montserrat</c:name></c:country>
         <c:country><c:code>MA</c:code><c:name>Morocco</c:name></c:country>
         <c:country><c:code>MZ</c:code><c:name>Mozambique</c:name></c:country>
+        <c:country><c:code>MM</c:code><c:name>Myanmar</c:name></c:country>
         <c:country><c:code>NA</c:code><c:name>Namibia</c:name></c:country>
         <c:country><c:code>NR</c:code><c:name>Nauru</c:name></c:country>
         <c:country><c:code>NP</c:code><c:name>Nepal</c:name></c:country>

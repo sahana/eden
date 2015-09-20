@@ -230,3 +230,62 @@
 .pt-table-contents {
   clear: left;
 }
+
+/* In grouped tables, separate groups visually */
+.gi-table table {
+  border-collapse: separate;
+}
+.gi-table table thead td,
+.gi-table table tfoot td {
+  background-color: #333;
+  color: #fff;
+}
+
+.gi-group-header.gi-level-1 td,
+.gi-group-footer.gi-level-1 td {
+  background-color: #999;
+  color: #fff;
+}
+.gi-group-header.gi-level-1 td a,
+.gi-group-footer.gi-level-1 td a {
+  color: #fff;
+}
+
+.gi-group-header.gi-level-2 td {
+  border-top: 1px solid #999;
+}
+
+.gi-group-footer.gi-level-2 td {
+  border-bottom: 1px solid #999;
+}
+
+.gi-group-header.gi-level-2 td,
+.gi-group-footer.gi-level-2 td {
+  background-color: #eee;
+}
+
+/* Show label for summary in tables */
+.gi-group-footer-inline-label {
+  display: inline-block;
+  font-size: 11px;
+  line-height: 1;
+  position: relative;
+  top: -0.1em;
+  margin: 0 0.25em 0 1em;
+  padding: 0.25em 0.75em;
+  text-transform: uppercase;
+  background-color: #ccc;
+  color: #666;
+}
+
+.gi-export-formats {
+  display: inline;
+}
+.gi-export-formats .gi-export {
+  height: 16px;
+  width: 16px;
+  display: block;
+  padding-bottom: 1.5rem;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}

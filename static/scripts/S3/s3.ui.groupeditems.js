@@ -42,6 +42,9 @@
 
             this.id = groupedItemsID;
             groupedItemsID += 1;
+
+            // Namespace for events
+            this.namespace = '.groupeditems';
         },
 
         /**
@@ -54,6 +57,7 @@
             this.widget_id = el.attr('id');
 
             this.items = el.find('.gi-data').first();
+
             this.refresh();
         },
 
@@ -74,7 +78,7 @@
                 opts = this.options;
 
             // Show throbber
-            el.find('.gi-throbber').hide();
+            el.find('.gi-throbber').show();
 
             this._unbindEvents();
 
@@ -112,7 +116,7 @@
             this._bindEvents();
 
             // Hide throbber
-            el.find('.gi-throbber').hide();
+            el.find('.gi-throbber').css('visibility', 'hidden');;
         },
 
         /**
@@ -185,7 +189,7 @@
                             continue;
                         }
                         if (titleSpan > 1) {
-                            footerLabel = $('<td class="gi-group-footer-label" colspan="' + titleSpan + '">');
+                            footerLabel = $('<td class="gi-column-totals-label" colspan="' + titleSpan + '">');
                             $('<span> ' + opts.totalsLabel + '</span>').appendTo(footerLabel);
                             footerLabel.appendTo(footerRow);
                         }
@@ -304,7 +308,7 @@
                         }
                         if (titleSpan > 1) {
                             footerLabel = $('<td class="gi-group-footer-label" colspan="' + titleSpan + '">').html(value);
-                            $('<span> ' + opts.totalsLabel + '</span>').appendTo(footerLabel);
+                            $('<span class="gi-group-footer-inline-label"> ' + opts.totalsLabel + '</span>').appendTo(footerLabel);
                             footerLabel.appendTo(footerRow);
                         }
                     }
@@ -366,7 +370,7 @@
             var self = this,
                 needs_reload = false;
 
-            $(this.element).find('.gi-throbber').show();
+            $(this.element).find('.gi-throbber').css('visibility', 'visible');
 
             if (options || filters) {
                 needs_reload = this._updateAjaxURL(options, filters);
@@ -404,7 +408,7 @@
          */
         _getFilters: function() {
 
-            var filters = $('#' + this.widget_id + '-filters');
+            var filters = $('#' + this.widget_id + '-filter-form');
             try {
                 if (filters.length) {
                     return S3.search.getCurrentFilters(filters.first());
@@ -567,14 +571,32 @@
          * Bind events to generated elements (after refresh)
          */
         _bindEvents: function() {
-            return true;
+
+            var el = $(this.element),
+                ns = this.namespace,
+                self = this;
+
+            el.delegate('.gi-export', 'click' + ns, function() {
+
+                var url = $(this).data('url'),
+                    queries = self._getFilters();
+
+                if (queries) {
+                    url = S3.search.filterURL(url, queries);
+                }
+                window.location = url;
+            });
         },
 
         /**
          * Unbind events (before refresh)
          */
         _unbindEvents: function() {
-            return true;
+
+            var el = $(this.element),
+                ns = this.namespace;
+
+            el.undelegate(ns);
         }
     });
 })(jQuery);

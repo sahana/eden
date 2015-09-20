@@ -148,20 +148,20 @@ def biDiText(text):
 
         isArabic = False
         isBidi = False
-    
+
         for c in text:
             cat = unicodedata.bidirectional(c)
-    
+
             if cat in ("AL", "AN"):
                 isArabic = True
                 isBidi = True
                 break
             elif cat in ("R", "RLE", "RLO"):
                 isBidi = True
-    
+
         if isArabic:
             text = arabic_reshaper.reshape(text)
-    
+
         if isBidi:
             text = get_display(text)
 
@@ -233,6 +233,8 @@ class S3RL_PDF(S3Codec):
             @keyword pdf_paper_alignment: Portrait (default) or Landscape
             @keyword use_colour:      True to add colour to the cells. default False
 
+            @keyword pdf_html_styles: styles for S3html2pdf (dict)
+
             @ToDo: Add Page Numbers in Footer:
                    http://www.blog.pythonlibrary.org/2013/08/12/reportlab-how-to-add-page-numbers/
         """
@@ -277,6 +279,9 @@ class S3RL_PDF(S3Codec):
                               paper_size = paper_size,
                               paper_alignment = pdf_paper_alignment)
 
+        # HTML styles
+        pdf_html_styles = attr.get("pdf_html_styles")
+
         # Get the header
         header_flowable = None
         header = attr.get("pdf_header")
@@ -284,7 +289,9 @@ class S3RL_PDF(S3Codec):
             header = attr.get("rheader")
         if header:
             header_flowable = self.get_html_flowable(header,
-                                                     doc.printable_width)
+                                                     doc.printable_width,
+                                                     styles = pdf_html_styles,
+                                                     )
             if self.pdf_header_padding:
                 header_flowable.append(Spacer(1, self.pdf_header_padding))
 
@@ -295,7 +302,9 @@ class S3RL_PDF(S3Codec):
             footer = attr.get("rfooter")
         if footer:
             footer_flowable = self.get_html_flowable(footer,
-                                                     doc.printable_width)
+                                                     doc.printable_width,
+                                                     styles = pdf_html_styles,
+                                                     )
             if self.pdf_footer_padding:
                 footer_flowable.append(Spacer(1, self.pdf_footer_padding))
 
@@ -311,7 +320,9 @@ class S3RL_PDF(S3Codec):
         if callback:
             # Get the document body from the callback
             body_flowable = self.get_html_flowable(callback(r),
-                                                   doc.printable_width)
+                                                   doc.printable_width,
+                                                   styles = pdf_html_styles,
+                                                   )
 
         elif pdf_componentname: # and resource.parent is None:
             # Enforce a particular component
@@ -350,29 +361,45 @@ class S3RL_PDF(S3Codec):
         return doc.output.getvalue()
 
     # -------------------------------------------------------------------------
-    def get_html_flowable(self, rules, printable_width):
+    def get_html_flowable(self, rules, printable_width, styles=None):
         """
             Function to convert the rules passed in to a flowable.
             The rules (for example) could be an rHeader callback
+
+            @param rules: the HTML (web2py helper class) or a callback
+                          to produce it. The callback receives the
+                          S3Request as parameter.
+            @param printable_width: the printable width
+            @param styles: styles for HTML=>PDF conversion
         """
 
         if callable(rules):
             # Callback to produce the HTML (e.g. rheader)
             r = self.r
             # Switch to HTML representation
-            representation = r.representation
-            r.representation = "html"
+            if r is not None:
+                representation = r.representation
+                r.representation = "html"
             try:
                 html = rules(r)
             except:
-                html = ""
-            r.representation = representation
+                # Unspecific except => must raise in debug mode
+                if current.response.s3.debug:
+                    raise
+                else:
+                    import sys
+                    current.log.error(sys.exc_info()[1])
+                    html = ""
+            if r is not None:
+                r.representation = representation
         else:
             # Static HTML
             html = rules
 
         parser = S3html2pdf(pageWidth=printable_width,
-                            exclude_class_list=["tabs"])
+                            exclude_class_list=["tabs"],
+                            styles = styles,
+                            )
         result = parser.parse(html)
         return result
 
@@ -1222,34 +1249,49 @@ class S3html2pdf():
 
     def __init__(self,
                  pageWidth,
-                 exclude_class_list = []):
+                 exclude_class_list = [],
+                 styles = None):
         """
-            @param pageWidth:
-            @param exclude_class_list:
+            Constructor
+
+            @param pageWidth: the printable width
+            @param exclude_class_list: list of classes for elements to skip
+            @param styles: the styles dict from the caller
         """
 
         # Fonts
         set_fonts(self)
 
         self.exclude_class_list = exclude_class_list
+
         self.pageWidth = pageWidth
         self.fontsize = 10
+
+        # Standard styles
         styleSheet = getSampleStyleSheet()
+
         self.plainstyle = styleSheet["Normal"]
         self.plainstyle.fontName = self.font_name
         self.plainstyle.fontSize = 9
+
         self.boldstyle = deepcopy(styleSheet["Normal"])
         self.boldstyle.fontName = self.font_name_bold
         self.boldstyle.fontSize = 10
+
         self.titlestyle = deepcopy(styleSheet["Normal"])
         self.titlestyle.fontName = self.font_name_bold
         self.titlestyle.fontSize = 16
+
         self.normalstyle = self.plainstyle
+
         # To add more PDF styles define the style above (just like the titlestyle)
         # Then add the style and the name to the lookup dict below
         # These can then be added to the html in the code as follows:
         # TD("Waybill", _class="pdf_title")
         self.style_lookup = {"pdf_title": self.titlestyle}
+
+        # Additional styles from the caller
+        self.styles = styles
 
     # -------------------------------------------------------------------------
     def parse(self, html):
@@ -1271,7 +1313,7 @@ class S3html2pdf():
             return self.parse_table(html)
         elif isinstance(html, A):
             return self.parse_a(html)
-        elif isinstance(html, P):
+        elif isinstance(html, (P, H1, H2, H3, H4, H5, H6)):
             return self.parse_p(html)
         elif isinstance(html, IMG):
             return S3html2pdf.parse_img(html)
@@ -1378,18 +1420,19 @@ class S3html2pdf():
 
         iwidth = I.drawWidth
         iheight = I.drawHeight
-        # @todo: extract the number from a 60px value
-        #        if "_height" in html.attributes:
-        #            height = int(html.attributes["_height"]) * inch / 80.0
-        #            width = iwidth * (height / iheight)
-        #        elif "_width" in html.attributes:
-        #            width = int(html.attributes["_width"]) * inch / 80.0
-        #            height = iheight * (width / iwidth)
-        #        else:
-        #            height = 1.0 * inch
-        #            width = iwidth * (height / iheight)
-        height = 1.0 * inch
-        width = iwidth * (height / iheight)
+
+        # Assuming 96dpi original resolution
+        resolution = 96
+        if "_height" in html.attributes:
+            height = int(html.attributes["_height"]) * inch / resolution
+            width = iwidth * (height / iheight)
+        elif "_width" in html.attributes:
+            width = int(html.attributes["_width"]) * inch / resolution
+            height = iheight * (width / iwidth)
+        else:
+            height = 1.0 * inch
+            width = iwidth * (height / iheight)
+
         I.drawHeight = height
         I.drawWidth = width
         return [I]
@@ -1403,12 +1446,40 @@ class S3html2pdf():
             @return: a list containing text that ReportLab can use
         """
 
+        font_sizes = {"p": 9,
+                      "h1": 18,
+                      "h2": 16,
+                      "h3": 14,
+                      "h4": 12,
+                      "h5": 10,
+                      "h6": 9,
+                      }
+
+        font_size = None
+        title = False
+        try:
+            tag = html.tag
+        except AttributeError:
+            pass
+        else:
+            font_size = font_sizes.get(tag)
+            title = tag != "p"
+        style = self.boldstyle if title else self.normalstyle
+
+        if font_size:
+            default_font_size = style.fontSize
+            style.fontSize = font_size
+
         content = []
         select_tag = self.select_tag
         for component in html.components:
-            result = select_tag(component)
+            result = select_tag(component, title=title)
             if result != None:
                 content += result
+
+        if font_size:
+            style.fontSize = default_font_size
+
         if content == []:
             return None
         return content
@@ -1427,20 +1498,11 @@ class S3html2pdf():
                  ("FONTNAME", (0, 0), (-1, -1), self.font_name),
                  ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
                  ]
-        content = []
-        cappend = content.append
-        rowCnt = 0
-        result = None
-        exclude_tag = self.exclude_tag
-        parse_tr = self.parse_tr
-        for component in html.components:
-            if exclude_tag(component):
-                continue
-            if isinstance(component, TR):
-                result = parse_tr(component, style, rowCnt)
-                rowCnt += 1
-            if result != None:
-                cappend(result)
+
+        content, row_count = self.parse_table_components(html,
+                                                         style = style,
+                                                         )
+
         if content == []:
             return None
         table = Table(content,
@@ -1452,45 +1514,169 @@ class S3html2pdf():
         return [table]
 
     # -------------------------------------------------------------------------
+    def parse_table_components(self,
+                               table,
+                               content=None,
+                               row_count=None,
+                               style=None):
+        """
+            Parses TABLE components
+
+            @param table: the TABLE instance or a subcomponent of it
+            @param content: the current content array
+            @param row_count: the current number of rows in the content array
+            @param style: the style list
+        """
+
+        if content is None:
+            content = []
+        cappend = content.append
+
+        if row_count is None:
+            row_count = 0
+
+        exclude_tag = self.exclude_tag
+        parse_tr = self.parse_tr
+        parse = self.parse_table_components
+
+        for component in table.components:
+            result = None
+
+            if exclude_tag(component):
+                continue
+
+            if isinstance(component, (THEAD, TBODY, TFOOT)):
+                content, row_count = parse(component,
+                                           content = content,
+                                           row_count = row_count,
+                                           style=style,
+                                           )
+
+            elif isinstance(component, TR):
+                result = parse_tr(component, style, row_count)
+                row_count += 1
+
+            if result != None:
+                cappend(result)
+
+        return content, row_count
+
+    # -------------------------------------------------------------------------
     def parse_tr (self, html, style, rowCnt):
         """
             Parses a TR element and converts it into a format for ReportLab
 
             @param html: the TR element  to convert
+            @param style: the default style
+            @param rowCnt: the row counter
+
             @return: a list containing text that ReportLab can use
         """
+
+        # Identify custom styles
+        row_styles = self._styles(html)
+
+        background = self._color(row_styles.get("background-color"))
+        color = self._color(row_styles.get("color"))
 
         row = []
         rappend = row.append
         sappend = style.append
-        colCnt = 0
-        exclude_tag = self.exclude_tag
+
         select_tag = self.select_tag
         font_name_bold = self.font_name_bold
+
+        exclude_tag = self.exclude_tag
+
+        colCnt = 0
         for component in html.components:
-            if isinstance(component, (TH, TD)):
-                if exclude_tag(component):
-                    continue
-                colspan = component.attributes.get("_colspan", 1)
-                if component.components == []:
-                    rappend("")
+
+            if not isinstance(component, (TH, TD)) or \
+               exclude_tag(component):
+                continue
+
+            if component.components == []:
+                rappend("")
+                continue
+
+            colspan = component.attributes.get("_colspan", 1)
+            for detail in component.components:
+                if color:
+                    self.normalstyle.textColor = color
                 else:
-                    for detail in component.components:
-                        result = select_tag(detail, title=isinstance(component, TH))
-                        if result != None:
-                            rappend(result)
-                            if isinstance(component, TH):
-                                sappend(("BACKGROUND", (colCnt, rowCnt), (colCnt, rowCnt), colors.lightgrey))
-                                sappend(("FONTNAME", (colCnt, rowCnt), (colCnt, rowCnt), font_name_bold))
-                            if colspan > 1:
-                                for i in xrange(1, colspan):
-                                    rappend("")
-                                sappend(("SPAN", (colCnt, rowCnt), (colCnt + colspan - 1, rowCnt)))
-                                colCnt += colspan
-                            else:
-                                colCnt += 1
-        if row == []:
-            return None
-        return row
+                    # Reset to black
+                    self.normalstyle.textColor = colors.black
+
+                # Render cell content
+                result = select_tag(detail, title=isinstance(component, TH))
+                if result is None:
+                    continue
+                rappend(result)
+
+                # Add cell styles
+                cell = (colCnt, rowCnt)
+                if color:
+                    sappend(("TEXTCOLOR", cell, cell, color))
+                if background:
+                    sappend(("BACKGROUND", cell, cell, background))
+                elif isinstance(component, TH):
+                    sappend(("BACKGROUND", cell, cell, colors.lightgrey))
+                    sappend(("FONTNAME", cell, cell, font_name_bold))
+
+                # Column span
+                if colspan > 1:
+                    for i in xrange(1, colspan):
+                        rappend("")
+                    sappend(("SPAN", cell, (colCnt + colspan - 1, rowCnt)))
+                    colCnt += colspan
+                else:
+                    colCnt += 1
+
+        return None if row == [] else row
+
+    # -------------------------------------------------------------------------
+    def _styles(self, element):
+        """
+            Get the custom styles for the given element (match by tag and
+            classes)
+
+            @param element: the HTML element (web2py helper)
+            @param styles: the pdf_html_styles dict
+        """
+
+        styles = self.styles
+        element_styles = {}
+
+        tag = element.tag
+        classes = element["_class"]
+
+        if classes:
+            classes = set(classes.split(" "))
+            for k, v in styles.items():
+                t, c = k.split(".", 1)
+                if t != tag:
+                    continue
+                keys = set(c.split("."))
+                if keys <= classes:
+                    element_styles.update(v)
+        return element_styles
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _color(name):
+        """
+            Get the Color instance from colors for a given name
+
+            @param name: the name
+        """
+
+        if not name:
+            color = None
+        else:
+            try:
+                color = object.__getattribute__(colors, name)
+            except AttributeError:
+                color = None
+        return color
 
 # END =========================================================================

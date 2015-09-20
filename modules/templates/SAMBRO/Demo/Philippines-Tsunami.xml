@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='utf-8'?>
+<cap:alert xmlns:cap = "urn:oasis:names:tc:emergency:cap:1.2">
+    <cap:identifier>PHIVOLS-DOST-2.49.0.0.608.0-20150909-043-alert</cap:identifier>
+    <cap:sender>PHIVOLCS</cap:sender>
+    <cap:sent>2015-09-09T07:57:43+00:00</cap:sent>
+    <cap:status>Exercise</cap:status>
+    <cap:msgType>Alert</cap:msgType>
+    <cap:source>ph.aidiq.com@http://ph.aidiq.com</cap:source>
+    <cap:scope>Public</cap:scope>
+    <cap:addresses>"coast guard/" public "local govt"</cap:addresses>
+    <cap:note>
+This template is intended for CAP on MAP project 'Exercise'. The template is for tsunami alert and warning . simultaneously targeting the Public and first responders. It handles alert 0 to alert 3.
+    </cap:note>
+    <cap:incidents>Earthquake Tsunami</cap:incidents>
+    <cap:info>
+        <cap:category>Geo</cap:category>
+        <cap:event>Tsunami</cap:event>
+        <cap:responseType>Evacuate</cap:responseType>
+        <cap:urgency>Past</cap:urgency>
+        <cap:severity>Minor</cap:severity>
+        <cap:certainty>Observed</cap:certainty>
+        <cap:effective>2015-09-08T05:28:00+00:00</cap:effective>
+        <cap:expires>2015-09-10T05:28:00+00:00</cap:expires>
+        <cap:senderName>
+Philippine Institute of Volcanology and Seismology (PHIVOLCS)
+        </cap:senderName>
+        <cap:headline>Tsunami Warning:Immediate evacuation</cap:headline>
+        <cap:description>
+This template is intended for CAP on MAP project 'Exercise'. The template is for tsunami alert and warning . simultaneously targeting the Public and first responders. It handles alert 0 to alert 3.
+        </cap:description>
+        <cap:instruction>
+an erthquake with tsunami occurred.. immediate evacuation recommended to listed coastal areas below:
+        </cap:instruction>
+        <cap:contact>632] 426 1468 PHIVOLCS -DOST</cap:contact>
+        <cap:parameter>
+            <cap:valueName>event type</cap:valueName>
+            <cap:value>Tsunami</cap:value>
+        </cap:parameter>
+        <cap:parameter>
+            <cap:valueName>warning priority</cap:valueName>
+            <cap:value>Level 1</cap:value>
+        </cap:parameter>
+        <cap:area>
+            <cap:areaDesc>Surigao</cap:areaDesc>
+            <cap:polygon>
+10.59942374346669,125.53912347765392 10.059011843253256,125.56109613389687 9.777636772513864,125.56109613389687 9.431002520837563,125.69293207139945 8.953813607525845,126.00054925889953 8.671541550040452,126.22027582140086 8.062858840042757,126.22027582140086 7.649297551804687,126.26422113389573 7.235334966114062,126.24224847765278 6.864624601526037,126.13238519640211 6.493625260193162,126.06646722764633 7.060919998816636,126.76959222764522 7.779940210416952,126.79156488389714 8.454264417231675,126.7036742588984 9.25755386392855,126.3081664463996 9.777636772513864,126.1104125401502 10.491416055234922,125.86871332139694 10.858486092459886,125.64898675889557 10.59942374346669,125.53912347765392
+            </cap:polygon>
+        </cap:area>
+        <cap:area>
+            <cap:areaDesc>Eastern Samar</cap:areaDesc>
+            <cap:polygon>
+12.587740450423667,124.81368266629404 12.544847852415819,125.03890239285609 12.507310966253515,125.18172465848016 12.40539767384703,125.26961528347891 12.298077435852212,125.29158793973083 12.212189663129934,125.29708110379158 12.228295749277875,125.37947856472958 12.185344009159683,125.46187602566758 12.083305797875258,125.39046489285104 11.889863767665513,125.37398540066883 11.766203629189965,125.38497172879032 11.631727371094396,125.39595805691178 11.448735482303203,125.43990336941563 11.297947269613378,125.57173930691825 11.416430450376984,125.6651230959777 11.637107674174517,125.56075297878779 11.809222187585215,125.55525981472704 11.938237258217425,125.57173930691825 12.104790771015137,125.57723247097898 12.260504976885128,125.5497666506663 12.464404987860219,125.41793071316371 12.603823327631643,125.24214946316624 12.646706062306396,125.00045024441299 12.641346113777722,124.91255961941422 12.587740450423667,124.81368266629404
+            </cap:polygon>
+        </cap:area>
+    </cap:info>
+</cap:alert>

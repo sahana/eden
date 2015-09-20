@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='utf-8'?>
+<cap:alert xmlns:cap = "urn:oasis:names:tc:emergency:cap:1.2">
+    <cap:identifier>MyanmarDMH-2.49.0.0.104.0-20150910-057-alert</cap:identifier>
+    <cap:sender>mm.aidiq.com/10</cap:sender>
+    <cap:sent>2015-09-10T02:21:53+00:00</cap:sent>
+    <cap:status>Exercise</cap:status>
+    <cap:msgType>Alert</cap:msgType>
+    <cap:source>mm.aidiq.com@http://mm.aidiq.com</cap:source>
+    <cap:scope>Public</cap:scope>
+    <cap:addresses/>
+    <cap:incidents>Tsunami</cap:incidents>
+    <cap:info>
+        <cap:language>my</cap:language>
+        <cap:category>Geo</cap:category>
+        <cap:event>Tsunami</cap:event>
+        <cap:responseType>Prepare</cap:responseType>
+        <cap:urgency>Immediate</cap:urgency>
+        <cap:severity>Severe</cap:severity>
+        <cap:certainty>Observed</cap:certainty>
+        <cap:audience>ျပည္သူလူထုနွင့္ ကယ္ဆယ္ေရးေဆာင္ရြက္မည့္သူမ်ားထံ ေပးပို့ပါသည္။</cap:audience>
+        <cap:effective>2015-09-07T09:04:48+00:00</cap:effective>
+        <cap:expires>2015-09-09T09:04:48+00:00</cap:expires>
+        <cap:senderName>ဆူနာမီသတိေပးဗဟိုဌာန</cap:senderName>
+        <cap:headline>ဆူနာမီအသိေပးခ်က္</cap:headline>
+        <cap:description>16 မေလ ျမန္မာစံေတာ္ခ်ိန္ 11:12:13 အခ်ိန္တြင္ အင္အားရစ္တာစေကး 7.8 Richter Scale အဆင့္ရိွ အင္အားျပင္းထန္ေသာ ေျမငလ်င္ၾကီးတစ္ခုသည္ နေပြည်တော် ကို ဗဟိုျပဳ၍ လႈပ္ရွားသြားေၾကာင္း တိုင္းထြာရရိွပါသည္။</cap:description>
+        <cap:instruction>္ကယ္ဆယ္ေရး ေဆာင္ရြက္မည့့္ အဖြဲ့အစည္းမ်ားအေနျဖင့္ ျပည္သူလူထုကို အလ်င္အျမန္ကယ္ဆယ္မႈမ်ား လုပ္ေဆာင္နိုင္ရန္ အသင့္အေနအထားျဖင့္ ျပင္ဆင္ထားသင့္ေၾကာင္း အၾကံျပဳအပ္ပါသည္၊ သခ်ာ္ပံုစံျပဳ တြက္ခ်က္မႈမ်ားအရ ယခုေျမငလ်င္ၾကီးအရိွန္ေၾကာင့္ ဆူနာမီ ေရလိႈင္းမ်ား ျဖစ္ေပၚနိုင္ပါသျဖင့္ မိုးေလ၀သနွင့္ဇလေဗဒညြွန္ၾကားမႈဦးစီးဌာနမွ ထုတ္ျပန္မည့္ သတိေပးခ်က္မ်ားကို အခ်ိန္္နွင့္တစ္ေျပးညီ ထပ္မံထုတ္ျပန္သြားမည္ျဖစ္ပါသည္၊&#13;
+&#13;
+ေအာက္ေဖာ္ျပပါ ေဒသမ်ားသည္ ဆူနာမီ ၀င္ေရာက္နိုင္သည့္ ေဒသမ်ား ျဖစ္ပါသည္၊ &#13;
+နေပြည်တော်&#13;
+ပျဉ်းမနား&#13;
+        </cap:instruction>
+        <cap:web>http://www.dmh.gov.mm/tsunami-warning%20</cap:web>
+        <cap:contact>အမ်ိုုးသားဆူနာမီသတိေပးဗဟိုဌာန ေနျပည္ေတာ္ ဖုန္း ၀၆၇ ၄၁၁၂၆၉</cap:contact>
+        <cap:parameter>
+            <cap:valueName>event type</cap:valueName>
+            <cap:value>Tsunami</cap:value>
+        </cap:parameter>
+        <cap:parameter>
+            <cap:valueName>warning priority</cap:valueName>
+            <cap:value>Watch</cap:value>
+        </cap:parameter>
+        <cap:area>
+            <cap:areaDesc>Thanintharyi Coast</cap:areaDesc>
+            <cap:polygon>17.315859439579224,96.83819543457666 17.357808290284122,97.76104699707689 13.418300947322754,98.5520626220745 11.659593360772346,99.03546105958102 10.192580808928856,98.90362512207844 9.846380669375145,98.72784387208095 9.976248972710756,98.77178918457584 17.315859439579224,96.83819543457666</cap:polygon>
+        </cap:area>
+    </cap:info>
+    <cap:info>
+        <cap:category>Geo</cap:category>
+        <cap:event>Tsunami</cap:event>
+        <cap:responseType>Prepare</cap:responseType>
+        <cap:urgency>Immediate</cap:urgency>
+        <cap:severity>Severe</cap:severity>
+        <cap:certainty>Observed</cap:certainty>
+        <cap:audience>Public and First Responsideer</cap:audience>
+        <cap:effective>2015-09-10T02:21:02+00:00</cap:effective>
+        <cap:expires>2015-09-12T02:21:02+00:00</cap:expires>
+        <cap:senderName>NTCW</cap:senderName>
+        <cap:headline>Tsunami Alert</cap:headline>
+        <cap:description>A very strong earthquake of magnitude 7.8 Richter Scale with its epicenter in Naypyitaw was recorded at 11 hrs 12 min 13 sec M.S.T on 16th May.</cap:description>
+        <cap:instruction>Local Authority and Disaster Management Committee should prepare communities to move to away from the beach and low-lying coastal areas. According to numerical simulation, there is a possibility for this earthquake to generate a tsunami and it may reach Myanmar coast within (_) hours. Department of Meteorology and Hydrology will issue latest tsunami information.&#13;
+&#13;
+Local tsunami alert is in effect for the following places:&#13;
+Naypyitaw&#13;
+Pyinmana&#13;
+        </cap:instruction>
+        <cap:web>http://www.dmh.gov.mm/tsunami-warning%20</cap:web>
+        <cap:contact>NEDC +95 67 411269</cap:contact>
+        <cap:parameter>
+            <cap:valueName>event type</cap:valueName>
+            <cap:value>Tsunami</cap:value>
+        </cap:parameter>
+        <cap:parameter>
+            <cap:valueName>warning priority</cap:valueName>
+            <cap:value>Watch</cap:value>
+        </cap:parameter>
+        <cap:area>
+            <cap:areaDesc>Thanintharyi Coast</cap:areaDesc>
+            <cap:polygon>17.315859439579224,96.83819543457666 17.357808290284122,97.76104699707689 13.418300947322754,98.5520626220745 11.659593360772346,99.03546105958102 10.192580808928856,98.90362512207844 9.846380669375145,98.72784387208095 9.976248972710756,98.77178918457584 17.315859439579224,96.83819543457666</cap:polygon>
+        </cap:area>
+    </cap:info>
+</cap:alert>

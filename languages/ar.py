@@ -316,7 +316,7 @@
 'Combined Method': 'طريقة مركبة',
 'Comments': 'التعليقات',
 'Commit from %s': 'تسليم حسب %',
-'Commit. Status': 'حالة الإلتزام.',
+'Commit Status': 'حالة الإلتزام.',
 'Commiting a changed spreadsheet to the database': 'الإلتزام بجدول التغيرات لقاعدة البيانات',
 'Commitment Details': 'تفاصيل الالتزام',
 'Commitment Item deleted': 'تم حذف الالتزام',

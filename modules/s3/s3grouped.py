@@ -30,6 +30,9 @@
 """
 
 __all__ = ("S3GroupedItemsReport",
+           "S3GroupedItemsTable",
+           "S3GroupedItems",
+           "S3GroupAggregate",
            )
 
 import math
@@ -43,24 +46,23 @@ except ImportError:
     except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
-from gluon import current, INPUT
+from gluon import current, DIV, H2, INPUT, SPAN, TABLE, TBODY, TD, TFOOT, TH, THEAD, TR
 from gluon.storage import Storage
 
 from s3rest import S3Method
-from s3utils import s3_unicode
+from s3utils import s3_strip_markup, s3_unicode
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
+
+DEFAULT = lambda: None
 
 # =============================================================================
 class S3GroupedItemsReport(S3Method):
     """
         REST Method Handler for Grouped Items Reports
 
-        @todo: page method
-        @todo: filter form and ajax method
         @todo: widget method
-        @todo: config and URL options, defaults
     """
 
     # -------------------------------------------------------------------------
@@ -115,9 +117,11 @@ class S3GroupedItemsReport(S3Method):
 
         get_config = resource.get_config
 
+        representation = r.representation
+
         # Apply filter defaults before rendering the data
         show_filter_form = False
-        if r.representation in ("html", "iframe"):
+        if representation in ("html", "iframe"):
             filter_widgets = get_config("filter_widgets", None)
             if filter_widgets and not self.hide_filter:
                 show_filter_form = True
@@ -147,30 +151,39 @@ class S3GroupedItemsReport(S3Method):
 
         gi = S3GroupedItems(items, groupby=groupby, aggregate=aggregate)
 
+        # Report title
+        title = report_config.get("title")
+        if title is None:
+            title = self.crud_string(tablename, "title_report")
+
         # Generate JSON data
         display_cols = report_config.get("display_cols")
         labels = report_config.get("labels")
         represent = report_config.get("groupby_represent")
-        data = gi.json(fields=display_cols,
-                       labels=labels,
-                       represent=represent,
+
+        if representation == "pdf":
+            as_dict = True
+        else:
+            as_dict = False
+
+        data = gi.json(fields = display_cols,
+                       labels = labels,
+                       represent = represent,
+                       as_dict = as_dict,
                        )
+
+        group_headers = report_config.get("group_headers", False)
 
         # Widget ID
         widget_id = "groupeditems"
 
         # Render output
-        if r.representation in ("html", "iframe"):
+        if representation in ("html", "iframe"):
             # Page load
 
 
             output["report_type"] = "groupeditems"
             output["widget_id"] = widget_id
-
-            # Report title
-            title = report_config.get("title")
-            if title is None:
-                title = self.crud_string(tablename, "title_report")
             output["title"] = title
 
             # Filter form
@@ -223,10 +236,24 @@ class S3GroupedItemsReport(S3Method):
 
             options = {"ajaxURL": ajaxurl,
                        "totalsLabel": str(totals_label).upper(),
+                       "renderGroupHeaders": group_headers,
                        }
 
             # Inject script
             self.inject_script(widget_id, options=options)
+
+            # Export formats
+            formats = DIV(DIV(_title = T("Export as PDF"),
+                              _class = "gi-export export_pdf",
+                              data = {"url": r.url(method = "grouped",
+                                                   representation = "pdf",
+                                                   vars = r.get_vars,
+                                                   ),
+                                      },
+                              ),
+                          _class="gi-export-formats",
+                          )
+            output["formats"] = formats
 
             # Detect and store theme-specific inner layout
             self._view(r, "grouped.html")
@@ -235,9 +262,22 @@ class S3GroupedItemsReport(S3Method):
             response = current.response
             response.view = self._view(r, "report.html")
 
-        elif r.representation == "json":
+        elif representation == "json":
             # Ajax reload
             output = data
+
+        elif representation == "pdf":
+            # PDF Export
+            totals_label = report_config.get("totals_label", T("Total"))
+            pdf_header = report_config.get("pdf_header", DEFAULT)
+            gi_table = S3GroupedItemsTable(resource,
+                                           title = title,
+                                           data = data,
+                                           group_headers = group_headers,
+                                           totals_label = totals_label,
+                                           pdf_header = pdf_header,
+                                           )
+            return gi_table.pdf(r)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -321,6 +361,8 @@ class S3GroupedItemsReport(S3Method):
         if aggregate:
             for method, selector in aggregate:
                 selectors.append(selector)
+        else:
+            report_config["group_headers"] = True
 
         # Get selectors for orderby
         orderby = report_config.get("orderby")
@@ -468,6 +510,280 @@ class S3GroupedItemsReport(S3Method):
                      "options": json.dumps(options),
                      }
         s3.jquery_ready.append(script)
+
+# =============================================================================
+class S3GroupedItemsTable(object):
+    """
+        Helper class to render representations of a grouped items report
+    """
+
+    def __init__(self,
+                 resource,
+                 title = None,
+                 data = None,
+                 group_headers = False,
+                 totals_label = None,
+                 pdf_header = DEFAULT):
+        """
+            Constructor
+
+            @param resource: the resource
+            @param title: the report title
+            @param data: the JSON data (as dict)
+        """
+
+        self.resource = resource
+        self.title = title
+        self.data = data
+
+        self.totals_label = totals_label
+        self.group_headers = group_headers
+
+        if pdf_header is DEFAULT:
+            self.pdf_header = self._pdf_header
+        else:
+            self.pdf_header = pdf_header
+
+    # -------------------------------------------------------------------------
+    def html(self):
+        """
+            Produce a HTML representation of the grouped table
+
+            @return: a TABLE instance
+        """
+
+        table = TABLE()
+
+        self.html_render_table_header(table)
+
+        tbody = TBODY()
+        self.html_render_group(tbody, self.data)
+        table.append(tbody)
+
+        self.html_render_table_footer(table)
+
+        return table
+
+    # -------------------------------------------------------------------------
+    def html_render_table_header(self, table):
+        """
+            Render the table header
+
+            @param table: the TABLE instance
+        """
+
+        data = self.data
+
+        columns = data.get("c")
+        labels = data.get("l")
+
+        header_row = TR(_class="gi-column-headers")
+        if columns:
+            for column in columns:
+                label = labels.get(column, column)
+                header_row.append(TH(label))
+        table.append(THEAD(header_row))
+
+    # -------------------------------------------------------------------------
+    def html_render_table_footer(self, table):
+        """
+            Render the table footer
+
+            @param table: the TABLE instance
+        """
+
+        data = self.data
+
+        columns = data.get("c")
+        totals = data.get("t")
+
+        if not totals:
+            return
+
+        footer_row = TR(_class="gi-column-totals")
+        if columns:
+            label = None
+            span = 0
+            for column in columns:
+                has_value = column in totals
+                if label is None:
+                    if not has_value:
+                        span += 1
+                        continue
+                    else:
+                        label = TD(SPAN(self.totals_label),
+                                   _class = "gi-column-totals-label",
+                                   _colspan = span,
+                                   )
+                        footer_row.append(label)
+                value = totals[column] if has_value else ""
+                footer_row.append(TD(value))
+        table.append(TFOOT(footer_row))
+
+    # -------------------------------------------------------------------------
+    def html_render_group(self, tbody, group, level=0):
+        """
+            Render a group of rows
+
+            @param tbody: the TBODY or TABLE to append to
+            @param group: the group dict
+            @param level: the grouping level
+        """
+
+        if self.group_headers and level > 0:
+            self.html_render_group_header(tbody, group, level=level)
+
+        subgroups = group.get("d")
+        items = group.get("i")
+
+        if subgroups:
+            for subgroup in subgroups:
+                self.html_render_group(tbody, subgroup,
+                                       level = level + 1,
+                                       )
+        elif items:
+            for item in items:
+                self.html_render_item(tbody, item, level=level)
+
+        if level > 0:
+            self.html_render_group_footer(tbody, group, level=level)
+
+    # -------------------------------------------------------------------------
+    def html_render_group_header(self, tbody, group, level=0):
+        """
+            Render the group header (=group label)
+
+            @param tbody: the TBODY or TABLE to append to
+            @param group: the group dict
+            @param level: the grouping level
+        """
+
+        columns = data.get("c")
+        value = data.get("v")
+
+        if not value:
+            value = ""
+        header = TD(value,
+                    _colspan = len(columns) if columns else None,
+                    )
+
+        tbody.append(TR(header,
+                        _class="gi-group-header gi-level-%s" % level,
+                        ))
+
+    # -------------------------------------------------------------------------
+    def html_render_group_footer(self, tbody, group, level=0):
+        """
+            Render the group footer (=group totals)
+
+            @param tbody: the TBODY or TABLE to append to
+            @param group: the group dict
+            @param level: the grouping level
+
+            @todo: add group label to footer if no group headers
+            @todo: add totals label
+        """
+
+        data = self.data
+
+        columns = data.get("c")
+        totals = group.get("t")
+        value = group.get("v")
+
+        footer_row = TR(_class="gi-group-footer gi-level-%s" % level)
+        if not totals:
+            if not self.group_headers:
+                footer_row.append(TD(value, _colspan = len(columns)))
+                tbody.append(footer_row)
+            return
+
+        if columns:
+            label = None
+            span = 0
+            for column in columns:
+                has_value = column in totals
+                if label is None:
+                    if not has_value:
+                        span += 1
+                        continue
+                    else:
+                        label = TD("%s %s" % (s3_unicode(s3_strip_markup(value)),
+                                              self.totals_label,
+                                              ),
+                                   _class = "gi-group-footer-label",
+                                   _colspan = span,
+                                   )
+                        footer_row.append(label)
+                value = totals[column] if has_value else ""
+                footer_row.append(TD(value))
+
+        tbody.append(footer_row)
+
+    # -------------------------------------------------------------------------
+    def html_render_item(self, tbody, item, level=0):
+        """
+            Render an item
+
+            @param tbody: the TBODY or TABLE to append to
+            @param item: the item dict
+            @param level: the grouping level
+        """
+
+        data = self.data
+
+        columns = data["c"]
+        cells = []
+
+        for column in columns:
+            cells.append(TD(item.get(column, "")))
+        tbody.append(TR(cells, _class="gi-item gi-level-%s" % level))
+
+    # -------------------------------------------------------------------------
+    def pdf(self, r):
+        """
+            Produce a PDF representation of the grouped table
+
+            @param r: the S3Request
+            @return: the PDF document
+        """
+
+        # Styles for totals and group totals rows
+        styles = {"tr.gi-column-totals": {
+                        "background-color": "black",
+                        "color": "white",
+                        },
+                  "tr.gi-group-footer.gi-level-1": {
+                        "background-color": "lightgrey",
+                        },
+                  }
+
+        title = self.title
+
+        pdf_header = self.pdf_header
+        if pdf_header:
+            pdf_header = lambda r, title=title: self.pdf_header(r, title=title)
+
+        from s3.s3export import S3Exporter
+        exporter = S3Exporter().pdf
+        return exporter(self.resource,
+                        request = r,
+                        pdf_title = title,
+                        pdf_header = pdf_header,
+                        pdf_header_padding = 12,
+                        pdf_callback = lambda r: self.html(),
+                        pdf_table_autogrow = "B",
+                        pdf_paper_alignment = "Landscape",
+                        pdf_html_styles = styles,
+                        )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _pdf_header(r, title=None):
+        """
+            Default PDF header (report title as H2)
+        """
+
+        return H2(title)
 
 # =============================================================================
 class S3GroupedItems(object):
@@ -903,9 +1219,9 @@ class S3GroupAggregate(object):
             @return: the aggregated value
         """
 
-        if values is None:
-            result = None
-        else:
+        result = None
+
+        if values is not None:
             try:
                 values = [v for v in values if v is not None]
             except TypeError:
@@ -913,7 +1229,11 @@ class S3GroupAggregate(object):
             else:
                 if method == "count":
                     result = len(set(values))
-                elif method == "sum":
+                else:
+                    values = [v for v in values
+                              if isinstance(v, (float, int, long))]
+
+                if method == "sum":
                     try:
                         result = math.fsum(values)
                     except (TypeError, ValueError):
@@ -937,8 +1257,6 @@ class S3GroupAggregate(object):
                             result = None
                     else:
                         result = None
-                else:
-                    result = None
         return result
 
     # -------------------------------------------------------------------------

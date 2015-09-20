@@ -393,6 +393,8 @@ class S3OrganisationModel(S3Model):
                        S3SQLInlineLink(
                             "organisation_type",
                             field = "organisation_type_id",
+                            # Default 10 options just triggers which adds unnecessary complexity to a commonly-used form & commonly an early one (crerate Org when registering)
+                            filter = False,
                             label = T("Type"),
                             multiple = multiple_organisation_types,
                             widget = type_widget,
@@ -552,12 +554,15 @@ class S3OrganisationModel(S3Model):
                          ]
         if use_sector:
             report_fields.insert(1, "sector_organisation.sector_id")
+            default_row = "sector_organisation.sector_id"
+        else:
+            default_row = "country"
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
                                  fact = ["count(id)",
                                          "list(name)",
                                          ],
-                                 defaults=Storage(rows = "country",
+                                 defaults=Storage(rows = default_row,
                                                   cols = "organisation_organisation_type.organisation_type_id",
                                                   fact = "count(id)",
                                                   totals = True,

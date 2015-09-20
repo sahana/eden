@@ -316,13 +316,13 @@ class S3GroupAggregateTests(unittest.TestCase):
         aggregate = S3GroupAggregate("sum", "Example", values)
         assertEqual(aggregate.result, 0.0)
 
+        # Non-numeric type (e.g. returned from virtual fields)
+        values = ["1", "other"]
+        aggregate = S3GroupAggregate("sum", "Example", values)
+        assertEqual(aggregate.result, 0.0)
+
         # None gives always None
         values = None
-        aggregate = S3GroupAggregate("sum", "Example", values)
-        assertEqual(aggregate.result, None)
-
-        # Invalid input: non-numeric type
-        values = ["1", "other"]
         aggregate = S3GroupAggregate("sum", "Example", values)
         assertEqual(aggregate.result, None)
 

@@ -981,7 +981,7 @@ class S3AddPersonWidget2(FormWidget):
             if fname not in ("date_of_birth", "gender"):
                 widget["_id"] = id
                 widget["_name"] = fname
-                widget["_value"] = values.get(fname, "")
+                widget["_value"] = s3_unicode(values.get(fname, "")).encode("utf-8")
             #if bootstrap:
             #    # We would like to hide the whole original control-group & append rows, but that can't be done directly within a Widget
             #    # -> Elements moved via JS after page load

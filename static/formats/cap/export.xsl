@@ -241,10 +241,10 @@
                 </parameter>
             </xsl:if>
 
-            <xsl:if test="data[@field='priority']!=''">
+            <xsl:if test="reference[@field='priority']!=''">
             	<parameter>
                 	<valueName>warning priority</valueName>
-                	<value><xsl:value-of select="data[@field='priority']"/></value>
+                	<value><xsl:value-of select="reference[@field='priority']"/></value>
                 </parameter>
             </xsl:if>
 

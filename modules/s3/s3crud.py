@@ -1281,24 +1281,18 @@ class S3CRUD(S3Method):
             start, limit = self._limits(get_vars)
 
             # Render extra "_tooltip" field for each row?
-            if "tooltip" in get_vars:
-                tooltip = get_vars["tooltip"]
-            else:
-                tooltip = None
+            tooltip = get_vars.get("tooltip", None)
 
-            fields = resource.list_fields(id_column=True)
-            rfields = resource.resolve_selectors(fields,
-                                                 extra_fields=False)[0]
-            fields = [rfield.fname for rfield in rfields
-                                   if rfield.tname == tablename]
-            orderby = get_config("orderby", None)
+            # Represent?
+            represent = get_vars.get("represent", False)
+            if represent and represent != "0":
+                represent = True
 
             exporter = S3Exporter().json
             return exporter(resource,
                             start=start,
                             limit=limit,
-                            fields=fields,
-                            orderby=orderby,
+                            represent=represent,
                             tooltip=tooltip)
 
         elif representation == "pdf":

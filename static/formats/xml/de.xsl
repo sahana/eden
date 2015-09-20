@@ -10,9 +10,7 @@
 
          Simple EDXL-DE Envelope Template (supports S3XML.envelope)
 
-         Version 0.1 / 2011-11-20 / Dominic König <dominic[at]aidiq[dot]com>
-
-         Copyright (c) 2010 Sahana Software Foundation
+         Copyright (c) 2010-15 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation

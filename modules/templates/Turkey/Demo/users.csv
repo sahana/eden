@@ -1,4 +1,5 @@
 First Name,Last Name,Email,Password,Role,Organisation
-Org,Admin,org_admin@example.com,testing,ORG_ADMIN,Mahalle Afet Gönüllüleri Vakfı
-HR,Manager,hr_manager@example.com,testing,HR_MANAGER,Mahalle Afet Gönüllüleri Vakfı
-Logs,Manager,log_manager@example.com,testing,LOGS_MANAGER,Mahalle Afet Gönüllüleri Vakfı
+CISST,Admin,cisst_admin@example.com,eden,ORG_ADMIN,Ceza İnfaz Sisteminde Sivil Toplum Derneği
+Org,Admin,org_admin@example.com,eden,ORG_ADMIN,Mahalle Afet Gönüllüleri Vakfı
+HR,Manager,hr_manager@example.com,eden,HR_MANAGER,Mahalle Afet Gönüllüleri Vakfı
+Logs,Manager,log_manager@example.com,eden,LOGS_MANAGER,Mahalle Afet Gönüllüleri Vakfı

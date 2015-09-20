@@ -737,6 +737,8 @@ def config(settings):
     #settings.req.commit_value = True
     # Uncomment to allow Donations to be made without a matching Request
     #settings.req.commit_without_request = True
+    # Uncomment to Commit Named People rather than simply Anonymous Skills
+    #settings.req.commit_people = True
     # Uncomment if the User Account logging the Commitment is NOT normally the Committer
     #settings.req.comittter_is_author = False
     # Should Requests ask whether Security is required?

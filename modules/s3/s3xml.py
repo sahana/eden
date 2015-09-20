@@ -850,6 +850,7 @@ class S3XML(S3Codec):
                 # These have been looked-up in bulk
                 geojson = geojsons[tablename].get(record_id, None)
                 if geojson:
+                    # Always single
                     geometry = etree.SubElement(map_data, "geometry")
                     geometry.set("value", geojson)
 
@@ -863,6 +864,7 @@ class S3XML(S3Codec):
                 # These have been looked-up in bulk
                 LatLon = latlons[tablename].get(record_id, None)
                 if LatLon:
+                    # Always single
                     lat = LatLon[0]
                     lon = LatLon[1]
                     if lat is not None and lon is not None:
@@ -956,6 +958,7 @@ class S3XML(S3Codec):
                 # These have been looked-up in bulk
                 geojson = geojsons[tablename].get(record_id, None)
                 if geojson:
+                    # Always single
                     geometry = etree.SubElement(map_data, "geometry")
                     geometry.set("value", geojson)
                     if tablename in attributes:
@@ -997,13 +1000,15 @@ class S3XML(S3Codec):
                 # These have been looked-up in bulk
                 geojson = geojsons[tablename].get(record_id, None)
                 if geojson:
-                    geometry = etree.SubElement(map_data, "geometry")
-                    geometry.set("value", geojson)
+                    for g in geojson:
+                        geometry = etree.SubElement(map_data, "geometry")
+                        geometry.set("value", g)
 
             elif tablename in latlons:
                 # These have been looked-up in bulk
                 LatLon = latlons[tablename].get(record_id, None)
                 if LatLon:
+                    # @ToDo: Support records with multiple locations
                     lat = LatLon[0]
                     lon = LatLon[1]
                     if lat is not None and lon is not None:
@@ -1071,6 +1076,7 @@ class S3XML(S3Codec):
             # These have been looked-up in bulk
             LatLon = latlons[tablename].get(record_id, None)
             if LatLon:
+                # @ToDo: Support records with multiple locations
                 lat = LatLon[0]
                 lon = LatLon[1]
                 if lat is not None and lon is not None:
