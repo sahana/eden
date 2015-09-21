@@ -41,6 +41,10 @@
          Evaluation..............po_household_followup.evaluation
                                  better|same|worse
          Follow-up Comments......po_household_followup.comments (free text)
+         Referral Agency.........org_organisation.name
+         Referral Date...........po_household_organisation.date
+         Referral Comments.......po_household_organisation.comments
+         Comments................po_household.comments
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -116,6 +120,9 @@
                          col[@field='L4'], '/',
                          col[@field='L5'])"/>
 
+    <!-- Referral Agencies -->
+    <xsl:key name="agencies" match="row" use="col[@field='Referral Agency']"/>
+
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
@@ -123,6 +130,11 @@
             <!-- Areas -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('areas', col[@field='Area'])[1])]">
                 <xsl:call-template name="Area"/>
+            </xsl:for-each>
+
+            <!-- Referral Agencies -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('agencies', col[@field='Referral Agency'])[1])]">
+                <xsl:call-template name="ReferralAgency"/>
             </xsl:for-each>
 
             <!-- L1 -->
@@ -213,6 +225,14 @@
                         <xsl:value-of select="concat('HOUSEHOLD:', $AreaName, '|', $postcode, '|', $address)"/>
                     </xsl:attribute>
                 </reference>
+
+                <!-- Comments -->
+                <xsl:variable name="Comments" select="col[@field='Comments']/text()"/>
+                <xsl:if test="$Comments!=''">
+                    <data field='comments'>
+                        <xsl:value-of select="$Comments"/>
+                    </data>
+                </xsl:if>
 
                 <!-- Follow up -->
                 <xsl:variable name="FollowUp">
@@ -396,6 +416,31 @@
                         <xsl:if test="$FollowupComments!=''">
                             <data field="comments">
                                 <xsl:value-of select="$FollowupComments"/>
+                            </data>
+                        </xsl:if>
+                    </resource>
+                </xsl:if>
+
+                <!-- Referral -->
+                <xsl:variable name="ReferralAgency" select="col[@field='Referral Agency']/text()"/>
+                <xsl:variable name="ReferralDate" select="col[@field='Referral Date']/text()"/>
+                <xsl:variable name="ReferralComments" select="col[@field='Referral Comments']/text()"/>
+
+                <xsl:if test="$ReferralAgency!=''">
+                    <resource name="po_organisation_household">
+                        <reference field="organisation_id" resource="org_organisation">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('ORG:', $ReferralAgency)"/>
+                            </xsl:attribute>
+                        </reference>
+                        <xsl:if test="$ReferralDate!=''">
+                            <data field="date">
+                                <xsl:value-of select="$ReferralDate"/>
+                            </data>
+                        </xsl:if>
+                        <xsl:if test="$ReferralComments!=''">
+                            <data field="comments">
+                                <xsl:value-of select="$ReferralComments"/>
                             </data>
                         </xsl:if>
                     </resource>
@@ -892,6 +937,34 @@
             <data field="lat"><xsl:value-of select="$lat"/></data>
             <data field="lon"><xsl:value-of select="$lon"/></data>
         </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="ReferralAgency">
+
+        <xsl:variable name="OrgName" select="col[@field='Referral Agency']/text()"/>
+
+        <xsl:if test="$OrgName!=''">
+            <xsl:variable name="tuid" select="concat('ORG:', $OrgName)"/>
+
+            <!-- Organisation Record -->
+            <resource name="org_organisation">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$tuid"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$OrgName"/></data>
+                <!-- Context Reference -->
+                <resource name="po_referral_organisation">
+                    <reference field="organisation_id" resource="org_organisation">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="$tuid"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </resource>
+
+        </xsl:if>
 
     </xsl:template>
 

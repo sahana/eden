@@ -742,6 +742,10 @@ class OutreachReferralModel(S3Model):
                      #s3_comments(),
                      *s3_meta_fields())
 
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("organisation_id",)),
+                  )
+
         # ---------------------------------------------------------------------
         # Areas Served by a Referral Agency
         #
@@ -790,6 +794,10 @@ class OutreachReferralModel(S3Model):
 
         # Table Configuration
         configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("household_id",
+                                                       "organisation_id",
+                                                       ),
+                                            ),
                   orderby = "%s.date desc" % tablename,
                   list_fields = ("date",
                                  "organisation_id",
