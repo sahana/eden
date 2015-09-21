@@ -1520,6 +1520,7 @@ class S3OptionsMenu(object):
                     M("Overview", f="index"),
                     M("Households", f="household", m="summary")(
                         M("Create", m="create"),
+                        M("Import", m="import"),
                     ),
                     M(follow_up_label, f="due_followups",
                       translate=False,
