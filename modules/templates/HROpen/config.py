@@ -38,15 +38,13 @@ def config(settings):
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
     # Users can choose the type of their association with the organisation
-    settings.auth.registration_link_user_to = {
-                                               "staff": T("Staff"),
+    settings.auth.registration_link_user_to = {"staff": T("Staff"),
                                                "volunteer": T("Volunteer"),
                                                }
 
     # Users are automatically linked to these roles for their organisation
-    settings.auth.registration_roles = {
-                         "organisation_id": ["ORG_EDITOR"],
-                         }
+    settings.auth.registration_roles = {"organisation_id": ["ORG_EDITOR"],
+                                        }
     # Types of realm entities in the role manager
     settings.auth.realm_entity_types = ("org_organisation",)
 
