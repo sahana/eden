@@ -31,12 +31,24 @@ def config(settings):
     #settings.security.self_registration = False
     # Do new users need to verify their email address?
     settings.auth.registration_requires_verification = True
-    # Do new users need to be approved by an administrator prior to being able to login?
-    #settings.auth.registration_requires_approval = True
+    # Ask for the organisation during registration
     settings.auth.registration_requests_organisation = True
-
+    # New users must be approved
+    settings.auth.registration_requires_approval = True
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
+    # Users can choose the type of their association with the organisation
+    settings.auth.registration_link_user_to = {
+                                               "staff": T("Staff"),
+                                               "volunteer": T("Volunteer"),
+                                               }
+
+    # Users are automatically linked to these roles for their organisation
+    settings.auth.registration_roles = {
+                         "organisation_id": ["ORG_EDITOR"],
+                         }
+    # Types of realm entities in the role manager
+    settings.auth.realm_entity_types = ("org_organisation",)
 
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
