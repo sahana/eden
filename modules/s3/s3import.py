@@ -1880,7 +1880,10 @@ class S3ImportItem(object):
             Detect whether this is an update or a new record
         """
 
-        if self.id:
+        db = current.db
+
+        table = self.table
+        if table is None or self.id:
             return
 
         METHOD = self.METHOD
@@ -1892,11 +1895,15 @@ class S3ImportItem(object):
         xml = current.xml
         UID = xml.UID
 
-        table = self.table
+        data = self.data
+        if self.job.second_pass and UID in table.fields:
+            uid = data.get(UID)
+            if uid and not self.element.get(UID) and not self.original:
+                # Previously identified original does no longer exist
+                del data[UID]
+
         mandatory = self._mandatory_fields()
 
-        if table is None:
-            return
         if self.original is not None:
             original = self.original
         elif self.data:
@@ -1907,7 +1914,6 @@ class S3ImportItem(object):
         else:
             original = None
 
-        data = self.data
         synchronise_uuids = current.response.s3.synchronise_uuids
 
         deleted = data[xml.DELETED]
@@ -2029,7 +2035,8 @@ class S3ImportItem(object):
         MERGE = METHOD.MERGE
 
         # Detect update
-        self.deduplicate()
+        if not self.id:
+            self.deduplicate()
         if self.accepted is False:
             # Item rejected by deduplicator (e.g. due to ambiguity)
             return False
@@ -2959,6 +2966,7 @@ class S3ImportJob():
             if not row:
                 raise SyntaxError("Job record not found")
             self.job_id = row.job_id
+            self.second_pass = True
             if not self.table:
                 tablename = row.tablename
                 try:
@@ -2967,6 +2975,7 @@ class S3ImportJob():
                     pass
         else:
             self.job_id = uuid.uuid4() # unique ID for this job
+            self.second_pass = False
 
     # -------------------------------------------------------------------------
     def add_item(self,

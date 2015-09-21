@@ -144,6 +144,7 @@ class OutreachAreaModel(S3Model):
 
         # Table Configuration
         self.configure(tablename,
+                       deduplicate = S3Duplicate(),
                        filter_widgets = filter_widgets,
                        summary = ({"common": True,
                                    "name": "add",
@@ -423,6 +424,7 @@ class OutreachHouseholdModel(S3Model):
         configure(tablename,
                   create_next = self.household_create_next,
                   crud_form = crud_form,
+                  deduplicate = S3Duplicate(primary=("location_id",)),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.household_onaccept,
@@ -527,6 +529,11 @@ class OutreachHouseholdModel(S3Model):
             title_update = T("Edit Dwelling Data"),
         )
 
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary=("household_id",)),
+                  )
+
         # ---------------------------------------------------------------------
         # Social Information
         #
@@ -553,6 +560,11 @@ class OutreachHouseholdModel(S3Model):
         crud_strings[tablename] = Storage(
             title_update = T("Edit Social Information"),
         )
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary=("household_id",)),
+                  )
 
         # ---------------------------------------------------------------------
         # Follow-up Details
@@ -597,6 +609,7 @@ class OutreachHouseholdModel(S3Model):
         )
 
         configure(tablename,
+                  deduplicate = S3Duplicate(primary=("household_id",)),
                   deletable = False,
                   )
 
