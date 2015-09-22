@@ -464,12 +464,13 @@ class S3GroupedItemsReport(S3Method):
             @param resource: the resource
             @param selectors: the field selectors
 
-            @returns: data dict {colname: value} including raw data (_row)
+            @returns: list of dicts {colname: value} including
+                      raw data (_row)
         """
 
         data = resource.select(selectors,
-                               limit=None,
-                               orderby=orderby,
+                               limit = None,
+                               orderby = orderby,
                                raw_data = True,
                                represent = True,
                                )

@@ -45,6 +45,7 @@ __all__ = ("S3WarehouseModel",
            "inv_InvItemRepresent",
            "inv_item_total_weight",
            "inv_item_total_volume",
+           "inv_stock_movements",
            )
 
 import datetime
@@ -4741,6 +4742,198 @@ def inv_item_total_volume(row):
         return current.messages["NONE"]
     else:
         return quantity * volume
+
+# -----------------------------------------------------------------------------
+def inv_stock_movements(resource, selectors, orderby):
+    """
+        Extraction method for stock movements report
+
+        @param resource: the S3Resource (inv_inv_item)
+        @param selectors: the field selectors
+        @param orderby: orderby expression
+
+        @todo: does currently not support filtering of transactions by date
+        @todo: does not take manual stock adjustments into account
+        @todo: does not represent sites or Waybill/GRN as
+               links (breaks PDF export, but otherwise it's useful)
+    """
+
+    # Extract the stock item data
+    selectors = ["id",
+                 "site_id",
+                 "site_id$name",
+                 "item_id$item_category_id",
+                 "bin",
+                 "item_id$name",
+                 "quantity",
+                 ]
+    data = resource.select(selectors,
+                           limit = None,
+                           orderby = orderby,
+                           raw_data = True,
+                           represent = True,
+                           )
+
+    # Get all stock item IDs
+    inv_item_ids = [row["_row"]["inv_inv_item.id"] for row in data.rows]
+
+    # Earliest and latest date of the report
+    # @todo: get from filter
+    earliest_date = None
+    latest_date = current.request.utcnow
+
+    from s3 import FS
+    s3db = current.s3db
+
+
+    def item_dict():
+        """ Stock movement data per inventory item """
+
+        return {# Quantity in/out between earliest and latest date
+                "quantity_in": 0,
+                "quantity_out": 0,
+                # Quantity in/out after latest date
+                "quantity_in_after": 0,
+                "quantity_out_after": 0,
+                # Origin/destination sites
+                "sites": [],
+                # GRN/Waybill numbers
+                "documents": [],
+                }
+
+    # Dict to collect stock movement data
+    movements = {}
+
+    # Set of site IDs for bulk representation
+    all_sites = set()
+
+    # Incoming shipments
+    query = (FS("track_item.recv_inv_item_id").belongs(inv_item_ids))
+    if earliest_date:
+        query &= (FS("date") >= earliest_date)
+    incoming = s3db.resource("inv_recv", filter=query)
+    transactions = incoming.select(["date",
+                                    "from_site_id",
+                                    "recv_ref",
+                                    "track_item.recv_inv_item_id",
+                                    "track_item.recv_quantity",
+                                    ],
+                                    limit = None,
+                                    raw_data = True,
+                                    represent = True,
+                                    )
+    for transaction in transactions.rows:
+        raw = transaction["_row"]
+        inv_item_id = raw["inv_track_item.recv_inv_item_id"]
+        # Get the movement data dict for this item
+        if inv_item_id in movements:
+            item_data = movements[inv_item_id]
+        else:
+            movements[inv_item_id] = item_data = item_dict()
+        # Incoming quantities
+        quantity_in = raw["inv_track_item.recv_quantity"]
+        if quantity_in:
+            if raw["inv_recv.date"] > latest_date:
+                item_data["quantity_in_after"] += quantity_in
+            else:
+                item_data["quantity_in"] += quantity_in
+        # Origin sites
+        sites = item_data["sites"]
+        from_site = raw["inv_recv.from_site_id"]
+        if from_site and from_site not in sites:
+            all_sites.add(from_site)
+            sites.append(from_site)
+        # GRN numbers
+        if raw["inv_recv.recv_ref"]:
+            documents = item_data["documents"]
+            documents.append(raw["inv_recv.recv_ref"])
+
+    # Outgoing shipments
+    query = (FS("track_item.send_inv_item_id").belongs(inv_item_ids))
+    if earliest_date:
+        query &= (FS("date") >= earliest_date)
+    outgoing = s3db.resource("inv_send", filter=query)
+    transactions = outgoing.select(["date",
+                                    "to_site_id",
+                                    "send_ref",
+                                    "track_item.send_inv_item_id",
+                                    "track_item.quantity",
+                                    ],
+                                    limit = None,
+                                    raw_data = True,
+                                    represent = True,
+                                    )
+    for transaction in transactions.rows:
+        raw = transaction["_row"]
+        inv_item_id = raw["inv_track_item.send_inv_item_id"]
+        # Get the movement data dict for this item
+        if inv_item_id in movements:
+            item_data = movements[inv_item_id]
+        else:
+            movements[inv_item_id] = item_data = item_dict()
+        # Outgoing quantities
+        quantity_in = raw["inv_track_item.quantity"]
+        if quantity_in:
+            if raw["inv_send.date"] > latest_date:
+                item_data["quantity_out_after"] += quantity_in
+            else:
+                item_data["quantity_out"] += quantity_in
+        # Destination sites
+        sites = item_data["sites"]
+        to_site = raw["inv_send.to_site_id"]
+        if to_site and to_site not in sites:
+            all_sites.add(to_site)
+            sites.append(to_site)
+        # Waybill numbers
+        if raw["inv_send.send_ref"]:
+            documents = item_data["documents"]
+            documents.append(raw["inv_send.send_ref"])
+
+    # Bulk-represent sites (stores the representations in represent)
+    represent = s3db.inv_inv_item.site_id.represent
+    represent.bulk(list(all_sites))
+
+    # Extend the original rows in the data dict
+    for row in data.rows:
+        raw = row["_row"]
+
+        inv_item_id = raw["inv_inv_item.id"]
+        if inv_item_id in movements:
+            item_data = movements[inv_item_id]
+        else:
+            item_data = item_dict()
+
+        # Compute original and final quantity
+        total_in = item_data["quantity_in"]
+        total_out = item_data["quantity_out"]
+
+        current_quantity = raw["inv_inv_item.quantity"]
+        final_quantity = current_quantity - \
+                         item_data["quantity_in_after"] + \
+                         item_data["quantity_out_after"]
+        original_quantity = final_quantity - total_in + total_out
+
+        # Write into raw data (for aggregation)
+        raw["inv_inv_item.quantity"] = final_quantity
+        raw["inv_inv_item.quantity_in"] = total_in
+        raw["inv_inv_item.quantity_out"] = total_out
+        raw["inv_inv_item.original_quantity"] = original_quantity
+
+        # Copy into represented data (for rendering)
+        row["inv_inv_item.quantity"] = final_quantity
+        row["inv_inv_item.quantity_in"] = total_in
+        row["inv_inv_item.quantity_out"] = total_out
+        row["inv_inv_item.original_quantity"] = original_quantity
+
+        # Add sites
+        row["inv_inv_item.sites"] = represent.multiple(item_data["sites"],
+                                                        show_link = False,
+                                                        )
+        # Add GRN/Waybill numbers
+        row["inv_inv_item.documents"] = ", ".join(item_data["documents"])
+
+    # Return to S3GroupedItemsReport
+    return data.rows
 
 # =============================================================================
 def inv_adj_rheader(r):

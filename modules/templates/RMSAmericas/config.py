@@ -1130,10 +1130,11 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_inv_inv_item_resource(r, tablename):
 
+        s3db = current.s3db
+
         if r.method == "grouped" and \
            r.get_vars.get("report") == "weight_and_volume":
 
-            s3db = current.s3db
             from gluon import Field
             table = s3db.inv_inv_item
             table.total_weight = Field.Method("total_weight",
@@ -1142,11 +1143,11 @@ def config(settings):
             table.total_volume = Field.Method("total_volume",
                                               s3db.inv_item_total_volume,
                                               )
-            current.s3db.configure("inv_inv_item",
-                                   extra_fields = ["item_id$weight",
-                                                   "item_id$volume",
-                                                   ],
-                                   )
+            s3db.configure("inv_inv_item",
+                           extra_fields = ["item_id$weight",
+                                           "item_id$volume",
+                                           ],
+                           )
 
         # Stock Reports
         stock_reports = {"default": {
@@ -1192,8 +1193,32 @@ def config(settings):
                                           ],
                             "pdf_header": inv_pdf_header,
                             },
-                         # @todo
-                         #"movements": {},
+                         "movements": {
+                            "title": T("Stock Movements Report"),
+                            "fields": [(T("Warehouse"), "site_id$name"),
+                                       "item_id$item_category_id",
+                                       "bin",
+                                       "item_id$name",
+                                       (T("Origin/Destination"), "sites"),
+                                       (T("Documents"), "documents"),
+                                       "original_quantity",
+                                       "quantity_in",
+                                       "quantity_out",
+                                       "quantity",
+                                       ],
+                            "groupby": ["site_id",
+                                        ],
+                            "orderby": ["site_id$name",
+                                        "item_id$name",
+                                        ],
+                            "aggregate": [("sum", "original_quantity"),
+                                          ("sum", "quantity_in"),
+                                          ("sum", "quantity_out"),
+                                          ("sum", "quantity"),
+                                          ],
+                            "extract": s3db.inv_stock_movements,
+                            "pdf_header": inv_pdf_header,
+                            },
                          }
 
         current.s3db.configure("inv_inv_item",
