@@ -4808,15 +4808,15 @@ def inv_stock_movements(resource, selectors, orderby):
     all_sites = set()
 
     # Incoming shipments
-    query = (FS("track_item.recv_inv_item_id").belongs(inv_item_ids))
+    query = (FS("recv_inv_item_id").belongs(inv_item_ids))
     if earliest_date:
-        query &= (FS("date") >= earliest_date)
-    incoming = s3db.resource("inv_recv", filter=query)
-    transactions = incoming.select(["date",
-                                    "from_site_id",
-                                    "recv_ref",
-                                    "track_item.recv_inv_item_id",
-                                    "track_item.recv_quantity",
+        query &= (FS("recv_id$date") >= earliest_date)
+    incoming = s3db.resource("inv_track_item", filter=query)
+    transactions = incoming.select(["recv_id$date",
+                                    "recv_id$from_site_id",
+                                    "recv_id$recv_ref",
+                                    "recv_inv_item_id",
+                                    "recv_quantity",
                                     ],
                                     limit = None,
                                     raw_data = True,
@@ -4849,15 +4849,15 @@ def inv_stock_movements(resource, selectors, orderby):
             documents.append(raw["inv_recv.recv_ref"])
 
     # Outgoing shipments
-    query = (FS("track_item.send_inv_item_id").belongs(inv_item_ids))
+    query = (FS("send_inv_item_id").belongs(inv_item_ids))
     if earliest_date:
-        query &= (FS("date") >= earliest_date)
-    outgoing = s3db.resource("inv_send", filter=query)
-    transactions = outgoing.select(["date",
-                                    "to_site_id",
-                                    "send_ref",
-                                    "track_item.send_inv_item_id",
-                                    "track_item.quantity",
+        query &= (FS("send_id$date") >= earliest_date)
+    outgoing = s3db.resource("inv_track_item", filter=query)
+    transactions = outgoing.select(["send_id$date",
+                                    "send_id$to_site_id",
+                                    "send_id$send_ref",
+                                    "send_inv_item_id",
+                                    "quantity",
                                     ],
                                     limit = None,
                                     raw_data = True,
