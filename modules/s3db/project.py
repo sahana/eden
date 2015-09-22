@@ -250,12 +250,14 @@ class S3ProjectModel(S3Model):
                            writable = False,
                            ),
                      #Field("current_status_by_budget", "float",
+                     #      default = 0.0,
                      #      label = T("Current Budget Status"),
                      #      represent = project_status_represent,
                      #      readable = use_indicators,
                      #      writable = False,
                      #      ),
                      #Field("overall_status_by_budget", "float",
+                     #      default = 0.0,
                      #      label = T("Overall Budget Status"),
                      #      represent = project_status_represent,
                      #      readable = use_indicators,
@@ -3798,12 +3800,14 @@ class S3ProjectPlanningModel(S3Model):
                      #      writable = False,
                      #      ),
                      Field("current_status", "float",
+                           default = 0.0,
                            label = T("Current Status"),
                            represent = project_status_represent,
                            # Calculated onaccept of Indicator Data
                            writable = False,
                            ),
                      Field("overall_status", "float",
+                           default = 0.0,
                            label = T("Overall Status"),
                            represent = project_status_represent,
                            # Calculated onaccept of Indicator Data
@@ -3876,12 +3880,14 @@ class S3ProjectPlanningModel(S3Model):
                            requires = IS_FLOAT_IN_RANGE(0, 1),
                            ),
                      Field("current_status", "float",
+                           default = 0.0,
                            label = T("Current Status"),
                            represent = project_status_represent,
                            # Calculated onaccept of Indicator Data
                            writable = False,
                            ),
                      Field("overall_status", "float",
+                           default = 0.0,
                            label = T("Overall Status"),
                            represent = project_status_represent,
                            # Calculated onaccept of Indicator Data
@@ -3966,12 +3972,14 @@ class S3ProjectPlanningModel(S3Model):
                            requires = IS_FLOAT_IN_RANGE(0, 1),
                            ),
                      Field("current_status", "float",
+                           default = 0.0,
                            label = T("Current Status"),
                            represent = project_status_represent,
                            # Calculated onaccept of Indicator Data
                            writable = False,
                            ),
                      Field("overall_status", "float",
+                           default = 0.0,
                            label = T("Overall Status"),
                            represent = project_status_represent,
                            # Calculated onaccept of Indicator Data
@@ -4067,12 +4075,14 @@ class S3ProjectPlanningModel(S3Model):
                            requires = IS_FLOAT_IN_RANGE(0, 1),
                            ),
                      Field("current_status", "float",
+                           default = 0.0,
                            label = T("Current Status"),
                            represent = project_status_represent,
                            # Calculated onaccept of Indicator Data
                            writable = False,
                            ),
                      Field("overall_status", "float",
+                           default = 0.0,
                            label = T("Overall Status"),
                            represent = project_status_represent,
                            # Calculated onaccept of Indicator Data
@@ -4257,7 +4267,12 @@ class S3ProjectPlanningModel(S3Model):
                                           table.end_date,
                                           orderby = ~table.end_date,
                                           )
-        latest_date = indicator_data.first().end_date
+        latest_record = indicator_data.first()
+        if not latest_record:
+            # No Indicator Data yet recorded
+            # => Nothing we can do
+            return
+        latest_date = latest_record.end_date
         for d in indicator_data:
             target_value = d.target_value
             value = d.value

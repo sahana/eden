@@ -488,7 +488,8 @@ class SyncDataModel(S3Model):
                                  "task_id$repository_id",
                                  "task_id$resource_name",
                                  "tablename",
-                                 "filter_string"],
+                                 "filter_string",
+                                 ],
                   onaccept = onaccept,
                   ondelete = onaccept,
                   )
