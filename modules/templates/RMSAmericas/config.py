@@ -1113,15 +1113,38 @@ def config(settings):
             @param title: the report title
         """
 
+        # Get organisation name and logo
         from layouts import OM
         name, logo = OM().render()
 
-        from gluon.html import DIV, H2, H4, TABLE, TR, TD
-        title = H2(title) if title else ""
+        from gluon.html import DIV, H2, H4, P, TABLE, TR, TD
 
+        # Report title and subtitle
+        title = H2(title) if title else ""
+        subtitle = ""
+
+        get_vars = r.get_vars
+        report = get_vars.get("report")
+        if report == "movements":
+            import datetime
+            from s3 import S3TypeConverter, S3DateTime
+            # Get earliest/latest date from filter
+            convert = S3TypeConverter.convert
+            dtstr = get_vars.get("_transaction.date__ge")
+            earliest = convert(datetime.datetime, dtstr) if dtstr else ""
+            dtstr = get_vars.get("_transaction.date__le")
+            latest = convert(datetime.datetime, dtstr) if dtstr else ""
+            # Convert into local calendar/format
+            if earliest:
+                earliest = S3DateTime.date_represent(earliest, utc=True)
+            if latest:
+                latest = S3DateTime.date_represent(latest, utc=True)
+            # Add as subtitle
+            if earliest or latest:
+                subtitle = P(" - ".join((earliest, latest)))
 
         output = TABLE(TR(TD(DIV(logo, H4(name))),
-                          TD(H2(title)),
+                          TD(DIV(title, subtitle)),
                           ),
                        )
 
@@ -1213,10 +1236,10 @@ def config(settings):
                                        "item_id$name",
                                        (T("Origin/Destination"), "sites"),
                                        (T("Documents"), "documents"),
-                                       "original_quantity",
-                                       "quantity_in",
-                                       "quantity_out",
-                                       "quantity",
+                                       (T("Initial Quantity"), "original_quantity"),
+                                       (T("Incoming"), "quantity_in"),
+                                       (T("Outgoing"), "quantity_out"),
+                                       (T("Final Quantity"), "quantity"),
                                        ],
                             "groupby": ["site_id",
                                         ],

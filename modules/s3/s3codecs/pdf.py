@@ -1469,6 +1469,7 @@ class S3html2pdf():
         if font_size:
             default_font_size = style.fontSize
             style.fontSize = font_size
+            style.spaceAfter = 8
 
         content = []
         select_tag = self.select_tag
