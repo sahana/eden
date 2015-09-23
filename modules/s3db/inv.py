@@ -4841,6 +4841,7 @@ def inv_stock_movements(resource, selectors, orderby):
         if quantity_in:
             if raw["inv_recv.date"] > latest:
                 item_data["quantity_in_after"] += quantity_in
+                continue
             else:
                 item_data["quantity_in"] += quantity_in
         # Origin sites
@@ -4882,6 +4883,7 @@ def inv_stock_movements(resource, selectors, orderby):
         if quantity_in:
             if raw["inv_send.date"] > latest:
                 item_data["quantity_out_after"] += quantity_in
+                continue
             else:
                 item_data["quantity_out"] += quantity_in
         # Destination sites
