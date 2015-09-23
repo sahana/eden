@@ -4752,7 +4752,9 @@ def inv_stock_movements(resource, selectors, orderby):
         @param selectors: the field selectors
         @param orderby: orderby expression
 
-        @todo: does currently not support filtering of transactions by date
+        @note: transactions can be filtered by earliest/latest date
+               using an S3DateFilter with selector="_transaction.date"
+
         @todo: does not take manual stock adjustments into account
         @todo: does not represent sites or Waybill/GRN as
                links (breaks PDF export, but otherwise it's useful)
@@ -4767,6 +4769,7 @@ def inv_stock_movements(resource, selectors, orderby):
                  "item_id$name",
                  "quantity",
                  ]
+
     data = resource.select(selectors,
                            limit = None,
                            orderby = orderby,
@@ -4777,14 +4780,15 @@ def inv_stock_movements(resource, selectors, orderby):
     # Get all stock item IDs
     inv_item_ids = [row["_row"]["inv_inv_item.id"] for row in data.rows]
 
-    # Earliest and latest date of the report
-    # @todo: get from filter
-    earliest_date = None
-    latest_date = current.request.utcnow
+    # Earliest and latest date of the report (read from filter)
+    convert = S3TypeConverter.convert
+    request = current.request
 
-    from s3 import FS
-    s3db = current.s3db
-
+    get_vars = request.get_vars
+    dtstr = get_vars.get("_transaction.date__ge")
+    earliest = convert(datetime.datetime, dtstr) if dtstr else None
+    dtstr = get_vars.get("_transaction.date__le")
+    latest = convert(datetime.datetime, dtstr) if dtstr else request.utcnow
 
     def item_dict():
         """ Stock movement data per inventory item """
@@ -4807,10 +4811,12 @@ def inv_stock_movements(resource, selectors, orderby):
     # Set of site IDs for bulk representation
     all_sites = set()
 
+    s3db = current.s3db
+
     # Incoming shipments
     query = (FS("recv_inv_item_id").belongs(inv_item_ids))
-    if earliest_date:
-        query &= (FS("recv_id$date") >= earliest_date)
+    if earliest:
+        query &= (FS("recv_id$date") >= earliest)
     incoming = s3db.resource("inv_track_item", filter=query)
     transactions = incoming.select(["recv_id$date",
                                     "recv_id$from_site_id",
@@ -4833,7 +4839,7 @@ def inv_stock_movements(resource, selectors, orderby):
         # Incoming quantities
         quantity_in = raw["inv_track_item.recv_quantity"]
         if quantity_in:
-            if raw["inv_recv.date"] > latest_date:
+            if raw["inv_recv.date"] > latest:
                 item_data["quantity_in_after"] += quantity_in
             else:
                 item_data["quantity_in"] += quantity_in
@@ -4850,8 +4856,8 @@ def inv_stock_movements(resource, selectors, orderby):
 
     # Outgoing shipments
     query = (FS("send_inv_item_id").belongs(inv_item_ids))
-    if earliest_date:
-        query &= (FS("send_id$date") >= earliest_date)
+    if earliest:
+        query &= (FS("send_id$date") >= earliest)
     outgoing = s3db.resource("inv_track_item", filter=query)
     transactions = outgoing.select(["send_id$date",
                                     "send_id$to_site_id",
@@ -4874,7 +4880,7 @@ def inv_stock_movements(resource, selectors, orderby):
         # Outgoing quantities
         quantity_in = raw["inv_track_item.quantity"]
         if quantity_in:
-            if raw["inv_send.date"] > latest_date:
+            if raw["inv_send.date"] > latest:
                 item_data["quantity_out_after"] += quantity_in
             else:
                 item_data["quantity_out"] += quantity_in

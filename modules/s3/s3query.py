@@ -2050,7 +2050,8 @@ class S3URLQuery(object):
                 # Stop here
                 continue
 
-            elif not("." in key or key[0] == "(" and ")" in key):
+            elif key[0] == "_" or \
+                 not("." in key or key[0] == "(" and ")" in key):
                 # Not a filter expression
                 continue
 

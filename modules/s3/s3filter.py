@@ -171,21 +171,28 @@ class S3FilterWidget(object):
                      variable names if there are multiple operators)
         """
 
-        label, self.selector = self._selector(resource, self.field)
+        opts = self.opts
 
-        if not self.selector:
+        if "selector" in opts:
+            # Override selector
+            label, selector = None, opts["selector"]
+        else:
+            label, selector = self._selector(resource, self.field)
+        self.selector = selector
+
+        if not selector:
             return None
 
         if self.alternatives and get_vars is not None:
             # Get the actual operator from get_vars
-            operator = self._operator(get_vars, self.selector)
+            operator = self._operator(get_vars, selector)
             if operator:
                 self.operator = operator
 
         if "label" not in self.opts:
             self.opts["label"] = label
 
-        return self._variable(self.selector, self.operator)
+        return self._variable(selector, self.operator)
 
     # -------------------------------------------------------------------------
     def data_element(self, variable):

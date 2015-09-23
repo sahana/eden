@@ -1132,22 +1132,34 @@ def config(settings):
 
         s3db = current.s3db
 
-        if r.method == "grouped" and \
-           r.get_vars.get("report") == "weight_and_volume":
-
-            from gluon import Field
-            table = s3db.inv_inv_item
-            table.total_weight = Field.Method("total_weight",
-                                              s3db.inv_item_total_weight,
-                                              )
-            table.total_volume = Field.Method("total_volume",
-                                              s3db.inv_item_total_volume,
-                                              )
-            s3db.configure("inv_inv_item",
-                           extra_fields = ["item_id$weight",
-                                           "item_id$volume",
-                                           ],
-                           )
+        resource = r.resource
+        if resource.tablename == "inv_inv_item" and r.method == "grouped":
+            report = r.get_vars.get("report")
+            if report == "weight_and_volume":
+                # Add field methods for total weight and volume
+                from gluon import Field
+                table = s3db.inv_inv_item
+                table.total_weight = Field.Method("total_weight",
+                                                  s3db.inv_item_total_weight,
+                                                  )
+                table.total_volume = Field.Method("total_volume",
+                                                  s3db.inv_item_total_volume,
+                                                  )
+                s3db.configure("inv_inv_item",
+                               extra_fields = ["item_id$weight",
+                                               "item_id$volume",
+                                               ],
+                               )
+            elif report == "movements":
+                # Inject a date filter for transactions
+                filter_widgets = resource.get_config("filter_widgets")
+                from s3 import S3DateFilter
+                date_filter = S3DateFilter("transaction_date",
+                                           label = T("Date"),
+                                           fieldtype = "date",
+                                           selector = "_transaction.date",
+                                           )
+                filter_widgets.insert(1, date_filter)
 
         # Stock Reports
         stock_reports = {"default": {
