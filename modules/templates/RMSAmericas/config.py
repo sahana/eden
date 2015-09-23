@@ -1940,7 +1940,6 @@ def config(settings):
         # Special cases for different NS
         root_org = current.auth.root_org_name()
         if root_org == HNRC:
-            HFA = None
             # @ToDo: Use Inter-American Framework instead (when extending to Zone office)
             # @ToDo: Add 'Business Line' (when extending to Zone office)
             settings.project.details_tab = True
@@ -1979,7 +1978,6 @@ def config(settings):
                             (T("Cumulative Status"), "overall_status_by_indicators"),
                             ]
         else:
-            HFA = "drr.hfa"
             objectives = "objectives"
             outputs = S3SQLInlineComponent(
                 "output",
@@ -2059,7 +2057,6 @@ def config(settings):
      'tooltip':'project_theme_help_fields(id,name)'
     })'''
             ),
-            HFA,
             objectives,
             "human_resource_id",
             # Disabled since we need organisation_id filtering to either organisation_type_id == RC or NOT
@@ -2259,7 +2256,7 @@ def config(settings):
 
         table = current.s3db.project_indicator
         table.definition.label = T("Indicator Definition")
-        table.measures.label = T("Indicator Criteria and Sources of Verification")
+        table.measures.label = T("Indicator Criteria")
 
     settings.customise_project_indicator_resource = customise_project_indicator_resource
 

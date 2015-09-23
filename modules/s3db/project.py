@@ -2851,6 +2851,7 @@ class S3ProjectIndicatorModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Project Indicator
+        # - unused alternate model
         #
         tablename = "project_indicator"
         define_table(tablename,
@@ -2888,6 +2889,7 @@ class S3ProjectIndicatorModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Project Indicator Data
+        # - unused alternate model
         #
 
         tablename = "project_indicator_data"
@@ -4065,7 +4067,12 @@ class S3ProjectPlanningModel(S3Model):
                            widget = s3_comments_widget,
                            ),
                      Field("measures", "text",
-                           label = T("Measurement Criteria and Sources of Verification"),
+                           label = T("Measurement Criteria"),
+                           represent = lambda v: v or NONE,
+                           widget = s3_comments_widget,
+                           ),
+                     Field("verification", "text",
+                           label = T("Sources of Verification"),
                            represent = lambda v: v or NONE,
                            widget = s3_comments_widget,
                            ),
@@ -4217,6 +4224,7 @@ class S3ProjectPlanningModel(S3Model):
                                       ],
                        onaccept = self.project_indicator_data_onaccept,
                        ondelete = self.project_indicator_data_ondelete,
+                       orderby = ("project_indicator_data.end_date", "project_indicator_data.indicator_id"),
                        report_options = report_options,
                        )
 
