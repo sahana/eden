@@ -2009,7 +2009,7 @@ def config(settings):
                 s3db.configure("hrm_human_resource",
                                crud_form = S3SQLCustomForm(*crud_fields),
                                )
-                                       
+
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
@@ -2252,7 +2252,7 @@ def config(settings):
                     widget = filter_widgets.pop(0)
                     if widget.field not in ("location_id",
                                             "site_id",
-                                            "group_membership.group_id",
+                                            #"group_membership.group_id",
                                             ):
                         append_widget(widget)
 

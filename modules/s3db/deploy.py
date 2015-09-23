@@ -1262,7 +1262,14 @@ def deploy_member_filter(status=False):
                                hidden=True,
                                ),
                ]
+
     settings = current.deployment_settings
+    if settings.get_hrm_teams():
+        widgets.append(S3OptionsFilter("group_membership.group_id",
+                                       label = T("Teams"),
+                                       hidden = True,
+                                       ))
+
     if settings.get_org_regions():
         if settings.get_org_regions_hierarchical():
             widgets.insert(1, S3HierarchyFilter("organisation_id$region_id",
