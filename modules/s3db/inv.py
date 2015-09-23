@@ -2712,8 +2712,8 @@ $.filterOptionsS3({
             Check that either organisation_id or to_site_id are filled according to the type
         """
 
-        vars = form.vars
-        if not vars.to_site_id and not vars.organisation_id:
+        form_vars = form.vars
+        if not form_vars.to_site_id and not form_vars.organisation_id:
             error = current.T("Please enter a %(site)s OR an Organization") % \
                               dict(site=current.deployment_settings.get_org_site_label())
             errors = form.errors
@@ -2728,12 +2728,13 @@ $.filterOptionsS3({
             @ToDo: lookup the type values from s3cfg.py instead of hardcoding it
         """
 
-        type = form.vars.type and int(form.vars.type)
-        if type == 11 and not form.vars.from_site_id:
+        form_vars = form.vars
+        type = form_vars.type and int(form_vars.type)
+        if type == 11 and not form_vars.from_site_id:
             # Internal Shipment needs from_site_id
             form.errors.from_site_id = current.T("Please enter a %(site)s") % \
                                             dict(site=current.deployment_settings.get_org_site_label())
-        if type >= 32 and not form.vars.organisation_id:
+        if type >= 32 and not form_vars.organisation_id:
             # Internal Shipment needs from_site_id
             form.errors.organisation_id = current.T("Please enter an Organization/Supplier")
 
@@ -2893,8 +2894,8 @@ $.filterOptionsS3({
             ensure that the correct bin is selected and save those details.
         """
 
-        vars = form.vars
-        send_inv_item_id = vars.send_inv_item_id
+        form_vars = form.vars
+        send_inv_item_id = form_vars.send_inv_item_id
 
         if send_inv_item_id:
             # Copy the data from the sent inv_item
@@ -2902,33 +2903,33 @@ $.filterOptionsS3({
             itable = db.inv_inv_item
             query = (itable.id == send_inv_item_id)
             record = db(query).select(limitby=(0, 1)).first()
-            vars.item_id = record.item_id
-            vars.item_source_no = record.item_source_no
-            vars.expiry_date = record.expiry_date
-            vars.bin = record.bin
-            vars.owner_org_id = record.owner_org_id
-            vars.supply_org_id = record.supply_org_id
-            vars.pack_value = record.pack_value
-            vars.currency = record.currency
-            vars.inv_item_status = record.status
+            form_vars.item_id = record.item_id
+            form_vars.item_source_no = record.item_source_no
+            form_vars.expiry_date = record.expiry_date
+            form_vars.bin = record.bin
+            form_vars.owner_org_id = record.owner_org_id
+            form_vars.supply_org_id = record.supply_org_id
+            form_vars.pack_value = record.pack_value
+            form_vars.currency = record.currency
+            form_vars.inv_item_status = record.status
 
             # Save the organisation from where this tracking originates
             stable = current.s3db.org_site
             query = query & (itable.site_id == stable.id)
             record = db(query).select(stable.organisation_id,
                                       limitby=(0, 1)).first()
-            vars.track_org_id = record.organisation_id
+            form_vars.track_org_id = record.organisation_id
 
-        if not vars.recv_quantity:
+        if not form_vars.recv_quantity:
             # If we have no send_id and no recv_quantity then
             # copy the quantity sent directly into the received field
             # This is for when there is no related send record
             # The Quantity received ALWAYS defaults to the quantity sent
             # (Please do not change this unless there is a specific user requirement)
-            #db.inv_track_item.recv_quantity.default = form.vars.quantity
-            vars.recv_quantity = vars.quantity
+            #db.inv_track_item.recv_quantity.default = form_vars.quantity
+            form_vars.recv_quantity = form_vars.quantity
 
-        recv_bin = vars.recv_bin
+        recv_bin = form_vars.recv_bin
         if recv_bin:
             # If there is a receiving bin then select the right one
             if isinstance(recv_bin, list):
@@ -2936,8 +2937,6 @@ $.filterOptionsS3({
                     recv_bin = recv_bin[1]
                 else:
                     recv_bin = recv_bin[0]
-
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod

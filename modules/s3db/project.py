@@ -4138,7 +4138,8 @@ class S3ProjectPlanningModel(S3Model):
                                                                   sort = True,
                                                                  )
                                                         ),
-                                       sortby = "name",
+                                       # Match the Represent
+                                       sortby = ("code", "name"),
                                        #comment = S3AddResourceLink(c="project", f="indicator"),
                                        )
 
