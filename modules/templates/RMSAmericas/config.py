@@ -2382,10 +2382,10 @@ def config(settings):
             pass
 
         # Custom Request Form
-        #s3db.set_method("req", "req",
-        #                method = "form",
-        #                action = PrintableShipmentForm,
-        #                )
+        s3db.set_method("req", "req",
+                       method = "form",
+                       action = PrintableShipmentForm,
+                       )
 
     settings.customise_req_req_resource = customise_req_req_resource
 
@@ -2396,10 +2396,12 @@ class PrintableShipmentForm(S3Method):
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
-            Page-render entry point for REST interface.
+            Entry point for REST interface.
 
             @param r: the S3Request instance
             @param attr: controller attributes
+
+            @note: always returns PDF, disregarding the requested format
         """
 
         output = {}
@@ -2431,7 +2433,138 @@ class PrintableShipmentForm(S3Method):
             @param attr: controller attributes
         """
 
-        r.error(405, current.ERROR.NOT_IMPLEMENTED)
+        T = current.T
+        s3db = current.s3db
+
+        # Master record (=req_req)
+        resource = s3db.resource(r.tablename,
+                                 id = r.id,
+                                 components = ["req_item"],
+                                 )
+
+        # Columns and data for the form header
+        header_fields = ["req_ref",
+                         "date",
+                         "date_required",
+                         (T("Deliver to"), "site_id"),
+                         (T("Reason for Request"), "purpose"),
+                         "requester_id",
+                         "comments",
+                         ]
+
+        header_data = resource.select(header_fields,
+                                      start = 0,
+                                      limit = 1,
+                                      represent = True,
+                                      show_links = False,
+                                      raw_data = True,
+                                      )
+        if not header_data:
+            r.error(404, current.ERROR.BAD_RECORD)
+
+        # Generate PDF header
+        pdf_header = self.request_form_header(header_data)
+
+        # Filename from send_ref
+        header_row = header_data.rows[0]
+        pdf_filename = header_row["_row"]["req_req.req_ref"]
+
+        # Component (=inv_track_item)
+        component = resource.components["req_item"]
+        body_fields = ["item_id",
+                       "item_pack_id",
+                       "quantity",
+                       "comments",
+                       ]
+
+        # Aggregate methods and column names
+        aggregate = [("sum", "req_req_item.quantity"),
+                     ]
+
+        # Generate the JSON data dict
+        json_data = self._json_data(component,
+                                    body_fields,
+                                    aggregate = aggregate,
+                                    )
+
+        # Generate the grouped items table
+        from s3 import S3GroupedItemsTable
+        output = S3GroupedItemsTable(component,
+                                     data = json_data,
+                                     totals_label = T("Total"),
+                                     title = T("Logistics Requisition"),
+                                     pdf_header = pdf_header,
+                                     pdf_footer = self.request_form_footer,
+                                     )
+
+        # ...and export it as PDF
+        return output.pdf(r, filename=pdf_filename)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def request_form_header(cls, data):
+        """
+            Header for Request Forms
+
+            @param data: the S3ResourceData for the req_req
+        """
+
+        row = data.rows[0]
+        labels = dict((rfield.colname, rfield.label) for rfield in data.rfields)
+
+        from gluon import DIV, H2, H4, TABLE, TD, TH, TR, P
+
+        T = current.T
+
+        # Get organisation name and logo
+        from layouts import OM
+        name, logo = OM().render()
+
+        # The title
+        title = H2(T("Logistics Requisition"))
+
+        # Waybill details
+        row_ = lambda left, right, row=row, labels=labels: \
+                      cls._header_row(left, right, row=row, labels=labels)
+        dtable = TABLE(
+                    TR(TD(DIV(logo, H4(name)), _colspan = 2),
+                       TD(DIV(title), _colspan = 2),
+                       ),
+                    row_("req_req.req_ref", None),
+                    row_("req_req.date", "req_req.date_required"),
+                    row_("req_req.site_id", "req_req.purpose"),
+                    # @todo: contact info for requester
+                    row_("req_req.requester_id", None),
+                 )
+
+        # Waybill comments
+        ctable = TABLE(TR(TH(T("Comments"))),
+                       TR(TD(row["req_req.comments"])),
+                       )
+
+        return DIV(dtable, P("&nbsp;"), ctable)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def request_form_footer(r):
+        """
+            Footer for Request Forms
+
+            @param r: the S3Request
+        """
+
+        T = current.T
+        from gluon import TABLE, TD, TH, TR
+
+        return TABLE(TR(TH("&nbsp;"),
+                        TH(T("Name")),
+                        TH(T("Signature")),
+                        TH(T("Date")),
+                        ),
+                     TR(TH(T("Requester"))),
+                     TR(TH(T("Budget Administrator"))),
+                     TR(TH(T("Finance"))),
+                     )
 
     # -------------------------------------------------------------------------
     def waybill(self, r, **attr):
@@ -2487,7 +2620,7 @@ class PrintableShipmentForm(S3Method):
         component = resource.components["track_item"]
         body_fields = ["bin",
                        "item_id",
-                       "item_id$um",
+                       "item_pack_id",
                        "quantity",
                        (T("Total Volume (m3)"), "total_volume"),
                        (T("Total Weight (kg)"), "total_weight"),
@@ -2653,7 +2786,7 @@ class PrintableShipmentForm(S3Method):
         component = resource.components["track_item"]
         body_fields = ["recv_bin",
                        "item_id",
-                       "item_id$um",
+                       "item_pack_id",
                        "recv_quantity",
                        (T("Total Volume (m3)"), "total_recv_volume"),
                        (T("Total Weight (kg)"), "total_recv_weight"),
@@ -2766,6 +2899,16 @@ class PrintableShipmentForm(S3Method):
     # -------------------------------------------------------------------------
     @staticmethod
     def _header_row(left, right, row=None, labels=None):
+        """
+            Helper function to generate a 2-column table row
+            for the PDF header
+
+            @param left: the column name for the left column
+            @param right: the column name for the right column,
+                          or None for an empty column
+            @param row: the S3ResourceData row
+            @param labels: dict of labels {colname: label}
+        """
 
         from gluon import TD, TH, TR
 
