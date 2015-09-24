@@ -60,13 +60,12 @@
   </div>
  </div>
 </div>
+{{if s3.rfooter:}}
 <div class='row'>
- {{if s3.rfooter:}}
  <div id='rfooter' class='small-12 columns'>
   {{=XML(s3.rfooter)}}
  </div>
- {{pass}}
-</div>
+</div>{{pass}}
 {{if ltype == "datalist":}}
 {{include "dataLists.html"}}
 {{else:}}
