@@ -524,13 +524,22 @@ class S3GroupedItemsTable(object):
                  data = None,
                  group_headers = False,
                  totals_label = None,
-                 pdf_header = DEFAULT):
+                 pdf_header = DEFAULT,
+                 pdf_footer = None,
+                 ):
         """
             Constructor
 
             @param resource: the resource
             @param title: the report title
             @param data: the JSON data (as dict)
+            @param group_headers: render group header rows
+            @param totals_label: the label for the aggregated rows
+                                 (default: "Total")
+            @param pdf_header: callable or static HTML to use as
+                               document header, function(r, title=title)
+            @param pdf_footer: callable or static HTML to use as
+                               document footer, function(r)
         """
 
         self.resource = resource
@@ -544,6 +553,8 @@ class S3GroupedItemsTable(object):
             self.pdf_header = self._pdf_header
         else:
             self.pdf_header = pdf_header
+
+        self.pdf_footer = pdf_footer
 
     # -------------------------------------------------------------------------
     def html(self):
@@ -680,9 +691,6 @@ class S3GroupedItemsTable(object):
             @param tbody: the TBODY or TABLE to append to
             @param group: the group dict
             @param level: the grouping level
-
-            @todo: add group label to footer if no group headers
-            @todo: add totals label
         """
 
         data = self.data
@@ -740,7 +748,7 @@ class S3GroupedItemsTable(object):
         tbody.append(TR(cells, _class="gi-item gi-level-%s" % level))
 
     # -------------------------------------------------------------------------
-    def pdf(self, r):
+    def pdf(self, r, filename=None):
         """
             Produce a PDF representation of the grouped table
 
@@ -761,8 +769,10 @@ class S3GroupedItemsTable(object):
         title = self.title
 
         pdf_header = self.pdf_header
-        if pdf_header:
+        if callable(pdf_header):
             pdf_header = lambda r, title=title: self.pdf_header(r, title=title)
+
+        pdf_footer = self.pdf_footer
 
         from s3.s3export import S3Exporter
         exporter = S3Exporter().pdf
@@ -771,10 +781,12 @@ class S3GroupedItemsTable(object):
                         pdf_title = title,
                         pdf_header = pdf_header,
                         pdf_header_padding = 12,
+                        pdf_footer = pdf_footer,
                         pdf_callback = lambda r: self.html(),
                         pdf_table_autogrow = "B",
                         pdf_paper_alignment = "Landscape",
                         pdf_html_styles = styles,
+                        pdf_filename = filename,
                         )
 
     # -------------------------------------------------------------------------
@@ -1046,7 +1058,7 @@ class S3GroupedItems(object):
         """
             Serialize this group as JSON
 
-            @param columns: the columns to include for each item
+            @param fields: the columns to include for each item
             @param labels: columns labels as dict {key: label},
                            including the labels for grouping axes
             @param represent: dict of representation methods for grouping
