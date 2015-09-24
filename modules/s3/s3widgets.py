@@ -1467,8 +1467,8 @@ class S3CalendarWidget(FormWidget):
 
         T = current.T
         options = {"calendar": calendar,
-                   "dateFormat": date_format,
-                   "timeFormat": time_format,
+                   "dateFormat": str(date_format),
+                   "timeFormat": str(time_format),
                    "separator": separator,
                    "firstDOW": firstDOW,
                    "monthSelector": self.month_selector,
