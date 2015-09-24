@@ -90,7 +90,7 @@ def project():
                     sector_ids = [row.sector_id for row in rows]
                     set_theme_requires(sector_ids)
 
-            if not r.component:
+            if not component:
                 if r.method in ("create", "update"):
                     # Context from a Profile page?"
                     location_id = get_vars.get("(location)", None)
@@ -352,8 +352,19 @@ def project():
                                       read_url=read_url,
                                       update_url=update_url)
 
-            elif component_name == "indicator_data" and r.record and \
+            elif component_name == "indicator":
+                # Open should open the profile page
+                read_url = URL(f="indicator",
+                               args=["[id]", "profile"])
+                update_url = URL(f="indicator",
+                                 args=["[id]", "profile"])
+                s3_action_buttons(r,
+                                  read_url=read_url,
+                                  update_url=update_url)
+
+            elif component_name == "indicator_data" and \
                  isinstance(output, dict):
+                # Add a link to the Report
                 report_link = A(current.T("Show Report"),
                                 _href=r.url(method="report"),
                                 _class="action-btn",
@@ -1014,6 +1025,78 @@ def output():
 
 def indicator():
     """ RESTful CRUD controller """
+
+    def prep(r):
+        if r.method == "profile":
+            table = r.table
+            record = r.record
+            code = record.code
+            def dt_row_actions(component):
+                return lambda r, list_id: [
+                    {"label": T("Open"),
+                     "url": r.url(component=component,
+                                  component_id="[id]",
+                                  method="update.popup",
+                                  vars={"refresh": list_id}),
+                     "_class": "action-btn edit s3_modal",
+                     },
+                    {"label": T("Delete"),
+                     "_ajaxurl": r.url(component=component,
+                                       component_id="[id]",
+                                       method="delete.json",
+                                       ),
+                     "_class": "action-btn delete-btn-ajax dt-ajax-delete",
+                     },
+                ]
+
+            data_widget = dict(label = "Data",
+                               label_create = "Add Data",
+                               type = "datatable",
+                               actions = dt_row_actions("indicator_data"),
+                               tablename = "project_indicator_data",
+                               filter = FS("indicator_id") == record.id,
+                               create_controller = "project",
+                               create_function = "indicator",
+                               create_component = "indicator_data",
+                               #icon = "book",
+                               )
+            profile_widgets = [data_widget,
+                               ]
+            s3db.configure("project_indicator",
+                           profile_cols = 1,
+                           profile_header = DIV(H2(code),
+                                                H3(table.name.label),
+                                                P(record.name),
+                                                H3(table.verification.label),
+                                                P(record.verification),
+                                                _class="profile-header",
+                                                ),
+                           profile_title = "%s : %s" % (s3_unicode(s3.crud_strings["project_indicator"].title_display),
+                                                        code),
+                           profile_widgets = profile_widgets,
+                           )
+            s3db.configure("project_indicator_data",
+                           list_fields = ["name",
+                                          "end_date",
+                                          "target_value",
+                                          "value",
+                                          (T("Percentage"), "percentage"),
+                                          "comments",
+                                          ],
+                           )
+            s3.rfooter = A(T("Return to Project"),
+                           _href=URL(f="project",
+                                     args=[record.project_id, "indicator"]),
+                           _class = "action-btn"
+                           )
+
+        elif r.component_name == "indicator_data":
+            field = s3db.project_indicator_data.project_id
+            field.default = r.record.project_id
+            field.readable = field.writable = False
+
+        return True
+    s3.prep = prep                       
 
     return s3_rest_controller()
 

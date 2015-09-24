@@ -614,7 +614,7 @@ $.filterOptionsS3({
                             hidden = True,
                             ),
             S3RangeFilter("quantity",
-                          label=T("Quantity range"),
+                          label=T("Quantity Range"),
                           comment=T("Include only items where quantity is in this range."),
                           ge=10,
                           hidden = True,
