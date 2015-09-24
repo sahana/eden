@@ -1306,10 +1306,10 @@ def config(settings):
         s3db = current.s3db
 
         # Custom GRN
-        #s3db.set_method("inv", "recv",
-        #                method = "form",
-        #                action = PrintableShipmentForm,
-        #                )
+        s3db.set_method("inv", "recv",
+                       method = "form",
+                       action = PrintableShipmentForm,
+                       )
 
     settings.customise_inv_recv_resource = customise_inv_recv_resource
 
@@ -2517,7 +2517,7 @@ class PrintableShipmentForm(S3Method):
         output = S3GroupedItemsTable(component,
                                      data = json_data,
                                      totals_label = T("Total"),
-                                     title = "TEST",
+                                     title = T("Waybill"),
                                      pdf_header = pdf_header,
                                      pdf_footer = self.waybill_footer,
                                      )
@@ -2526,10 +2526,10 @@ class PrintableShipmentForm(S3Method):
         return output.pdf(r, filename=pdf_filename)
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def waybill_header(data):
+    @classmethod
+    def waybill_header(cls, data):
         """
-            Header for waybills
+            Header for Waybills
 
             @param data: the S3ResourceData for the inv_send
         """
@@ -2541,19 +2541,6 @@ class PrintableShipmentForm(S3Method):
 
         T = current.T
 
-        def row_(left, right, row=row, labels=labels):
-            if right:
-                hrow = TR(TH(labels[left]),
-                          TD(row[left]),
-                          TH(labels[right]),
-                          TD(row[right]),
-                          )
-            else:
-                hrow = TR(TH(labels[left]),
-                          TD(row[left], _colspan = 3),
-                          )
-            return hrow
-
         # Get organisation name and logo
         from layouts import OM
         name, logo = OM().render()
@@ -2562,6 +2549,8 @@ class PrintableShipmentForm(S3Method):
         title = H2(T("Waybill"))
 
         # Waybill details
+        row_ = lambda left, right, row=row, labels=labels: \
+                      cls._header_row(left, right, row=row, labels=labels)
         dtable = TABLE(
                     TR(TD(DIV(logo, H4(name)), _colspan = 2),
                        TD(DIV(title), _colspan = 2),
@@ -2586,7 +2575,7 @@ class PrintableShipmentForm(S3Method):
     @staticmethod
     def waybill_footer(r):
         """
-            Footer for waybills
+            Footer for Waybills
 
             @param r: the S3Request
         """
@@ -2622,7 +2611,175 @@ class PrintableShipmentForm(S3Method):
             @param attr: controller attributes
         """
 
-        r.error(405, current.ERROR.NOT_IMPLEMENTED)
+        T = current.T
+        s3db = current.s3db
+
+        # Master record (=inv_recv)
+        resource = s3db.resource(r.tablename,
+                                 id = r.id,
+                                 components = ["track_item"],
+                                 )
+
+        # Columns and data for the form header
+        header_fields = ["eta",
+                         "date",
+                         (T("Origin"), "from_site_id"),
+                         (T("Destination"), "site_id"),
+                         "sender_id",
+                         "recipient_id",
+                         "send_ref",
+                         "recv_ref",
+                         "comments",
+                         ]
+
+        header_data = resource.select(header_fields,
+                                      start = 0,
+                                      limit = 1,
+                                      represent = True,
+                                      show_links = False,
+                                      raw_data = True,
+                                      )
+        if not header_data:
+            r.error(404, current.ERROR.BAD_RECORD)
+
+        # Generate PDF header
+        pdf_header = self.goods_received_note_header(header_data)
+
+        # Filename from send_ref
+        header_row = header_data.rows[0]
+        pdf_filename = header_row["_row"]["inv_recv.recv_ref"]
+
+        # Component (=inv_track_item)
+        component = resource.components["track_item"]
+        body_fields = ["recv_bin",
+                       "item_id",
+                       "item_id$um",
+                       "recv_quantity",
+                       (T("Total Volume (m3)"), "total_recv_volume"),
+                       (T("Total Weight (kg)"), "total_recv_weight"),
+                       "supply_org_id",
+                       "inv_item_status",
+                       ]
+        # Any extra fields needed for virtual fields
+        component.configure(extra_fields = ["item_id$weight",
+                                            "item_id$volume",
+                                            ],
+                            )
+
+        # Aggregate methods and column names
+        aggregate = [("sum", "inv_track_item.recv_quantity"),
+                     ("sum", "inv_track_item.total_recv_volume"),
+                     ("sum", "inv_track_item.total_recv_weight"),
+                     ]
+
+        # Generate the JSON data dict
+        json_data = self._json_data(component,
+                                    body_fields,
+                                    aggregate = aggregate,
+                                    )
+
+        # Generate the grouped items table
+        from s3 import S3GroupedItemsTable
+        output = S3GroupedItemsTable(component,
+                                     data = json_data,
+                                     totals_label = T("Total"),
+                                     title = T("Goods Received Note"),
+                                     pdf_header = pdf_header,
+                                     pdf_footer = self.goods_received_note_footer,
+                                     )
+
+        # ...and export it as PDF
+        return output.pdf(r, filename=pdf_filename)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def goods_received_note_header(cls, data):
+        """
+            Header for Goods Received Notes
+
+            @param data: the S3ResourceData for the inv_recv
+        """
+
+        row = data.rows[0]
+        labels = dict((rfield.colname, rfield.label) for rfield in data.rfields)
+
+        from gluon import DIV, H2, H4, TABLE, TD, TH, TR, P
+
+        T = current.T
+
+        # Get organisation name and logo
+        from layouts import OM
+        name, logo = OM().render()
+
+        # The title
+        title = H2(T("Goods Received Note"))
+
+        # GRN details
+        row_ = lambda left, right, row=row, labels=labels: \
+                      cls._header_row(left, right, row=row, labels=labels)
+        dtable = TABLE(TR(TD(DIV(logo, H4(name)), _colspan = 2),
+                          TD(DIV(title), _colspan = 2),
+                          ),
+                       row_("inv_recv.eta", "inv_recv.date"),
+                       row_("inv_recv.from_site_id", "inv_recv.site_id"),
+                       row_("inv_recv.sender_id", "inv_recv.recipient_id"),
+                       row_("inv_recv.send_ref", "inv_recv.recv_ref"),
+                       )
+
+        # GRN comments
+        ctable = TABLE(TR(TH(T("Comments"))),
+                       TR(TD(row["inv_recv.comments"])),
+                       )
+
+        return DIV(dtable, P("&nbsp;"), ctable)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def goods_received_note_footer(r):
+        """
+            Footer for Goods Received Notes
+
+            @param r: the S3Request
+        """
+
+        T = current.T
+        from gluon import TABLE, TD, TH, TR
+
+        return TABLE(TR(TH(T("Delivered by")),
+                        TH(T("Date")),
+                        TH(T("Function")),
+                        TH(T("Name")),
+                        TH(T("Signature")),
+                        TH(T("Status")),
+                        ),
+                     TR(TD(T("&nbsp;"))),
+                     TR(TH(T("Received by")),
+                        TH(T("Date")),
+                        TH(T("Function")),
+                        TH(T("Name")),
+                        TH(T("Signature")),
+                        TH(T("Status")),
+                        ),
+                     TR(TD("&nbsp;")),
+                     )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def _header_row(left, right, row=None, labels=None):
+
+        from gluon import TD, TH, TR
+
+        if right:
+            header_row = TR(TH(labels[left]),
+                            TD(row[left]),
+                            TH(labels[right]),
+                            TD(row[right]),
+                            )
+        else:
+            header_row = TR(TH(labels[left]),
+                            TD(row[left], _colspan = 3),
+                            )
+        return header_row
 
     # -------------------------------------------------------------------------
     @staticmethod

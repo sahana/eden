@@ -1865,13 +1865,25 @@ $.filterOptionsS3({
                                  writable = False,
                                  ),
                      Field.Method("total_value",
-                                  self.inv_track_item_total_value),
+                                  self.inv_track_item_total_value,
+                                  ),
                      Field.Method("pack_quantity",
-                                  self.supply_item_pack_quantity(tablename=tablename)),
+                                  self.supply_item_pack_quantity(tablename=tablename),
+                                  ),
                      Field.Method("total_volume",
-                                  self.inv_track_item_total_volume),
+                                  self.inv_track_item_total_volume,
+                                  ),
                      Field.Method("total_weight",
-                                  self.inv_track_item_total_weight),
+                                  self.inv_track_item_total_weight,
+                                  ),
+                     Field.Method("total_recv_volume",
+                                  lambda row: \
+                                  self.inv_track_item_total_volume(row, received=True),
+                                  ),
+                     Field.Method("total_recv_weight",
+                                  lambda row: \
+                                  self.inv_track_item_total_weight(row, received=True),
+                                  ),
                      s3_comments(),
                      *s3_meta_fields()
                      )
@@ -1972,7 +1984,7 @@ $.filterOptionsS3({
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_track_item_total_volume(row):
+    def inv_track_item_total_volume(row, received=False):
         """ Total volume of a track item """
 
         if hasattr(row, "inv_track_item"):
@@ -1984,15 +1996,17 @@ $.filterOptionsS3({
                                                               limitby=(0, 1)
                                                               ).first()
             # Return the total volume
-            v = row.quantity * item.volume
-            return v
+            quantity = row.quantity if not received else row.recv_quantity
+            if not quantity:
+                quantity = 0
+            return quantity * item.volume
         except:
             # not available
             return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_track_item_total_weight(row):
+    def inv_track_item_total_weight(row, received=False):
         """ Total weight of a track item """
 
         if hasattr(row, "inv_track_item"):
@@ -2004,8 +2018,10 @@ $.filterOptionsS3({
                                                               limitby=(0, 1)
                                                               ).first()
             # Return the total weight
-            v = row.quantity * item.weight
-            return v
+            quantity = row.quantity if not received else row.recv_quantity
+            if not quantity:
+                quantity = 0
+            return quantity * item.weight
         except:
             # not available
             return current.messages["NONE"]
