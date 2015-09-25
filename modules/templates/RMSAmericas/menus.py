@@ -137,7 +137,7 @@ class S3MainMenu(default.S3MainMenu):
             #    MM("Assessment Templates", c="survey", f="template"),
             #    MM("Disaster Assessments", c="survey", f="series"),
             #),
-            homepage("project")(
+            homepage("project", f="project", m="summary")(
                 MM("Projects", c="project", f="project", m="summary"),
                 #MM("Locations", c="project", f="location"),
                 #MM("Outreach", c="po", f="index", check=outreach),

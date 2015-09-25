@@ -2352,7 +2352,8 @@ class GIS(object):
             return {}
 
         format = current.auth.permission.format
-        if format == "geojson":
+        geojson = format == "geojson"
+        if geojson:
             if count and \
                count > current.deployment_settings.get_gis_max_features():
                 headers = {"Content-Type": "application/json"}
@@ -2472,7 +2473,6 @@ class GIS(object):
         _pkey = table[pkey]
         # Ensure there are no ID represents to confuse things
         _pkey.represent = None
-        geojson = format == "geojson"
         if geojson:
             # Build the Attributes now so that representations can be
             # looked-up in bulk rather than as a separate lookup per record
