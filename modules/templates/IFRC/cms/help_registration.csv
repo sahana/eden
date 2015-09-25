@@ -1,0 +1,75 @@
+Name,Title,Body
+HELPRegistration,"RMS: User Registration","<div class=""online-documentation"">
+
+<h3>Registration Process</h3>
+<p>
+The registration process consists of 3 steps:
+</p>
+<ol>
+ <li>Filling and submitting the registration form</li>
+ <li>Email address verification</li>
+ <li>Approval of the account</li>
+</ol>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/registration_process.png""></img>
+
+<h3>Registration Form</h3>
+<p>
+Click ""Registration"" in the upper right corner:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/service_menu_register.png""></img>
+<p>
+Alternatively, open <a href=""{{c:default,f:user,noargs}}/register"">{{c:default,f:user,noargs}}/register</a>
+in your web browser.
+</p>
+<p>
+Fill in the registration form:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/registration_form.png""></img>
+<p>
+<ul>
+ <li><b>Make sure that you typed in your email address correctly!</b></li>
+ <li>RMS will send all registration emails to this address.</li>
+ <li>You will need this email address to login to RMS</li>
+</ul>
+</p>
+<p>
+Finally, click the ""Register"" button to submit the form.
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/registration_confirmation.png""></img>
+
+<h3>Email Address Verification</h3>
+<p>
+RMS will automatically send a message to the email address you entered:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/verification_email.png""></img>
+<p>
+Click on the link in the email to verify your email address. Alternatively,
+you can copy the web address into the address line of your web browser in
+order to open it.
+</p>
+<p>
+You should see a confirmation screen like this:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/verification_confirmation.png""></img>
+<p>
+If you don't see a confirmation message, then you may have opened the link
+in the verification email before. Opening it a second time has no effect.
+</p>
+
+<h3>Account Approval</h3>
+<p>
+RMS will automatically inform an administrator about your registration, and
+request approval of your account.
+</p>
+<p>
+When your account has been approved, you will receive another email from RMS
+informing you that you can now login at the site.
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/approval_notification.png""></img>
+<p>
+Use the links in the email to navigate to RMS.
+</p>
+<ul>
+ <li><a href=""{{c:default,f:index,noargs}}/docs?name=HELPUserProfile"">Learn how to maintain your user profile and personal information</a></li>
+</ul>
+</div>"
