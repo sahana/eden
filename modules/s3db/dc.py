@@ -37,7 +37,7 @@ __all__ = ("DataCollectionTemplateModel",
 from gluon import *
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3ResourceLink
 
 # =============================================================================
 class DataCollectionTemplateModel(S3Model):
@@ -93,9 +93,9 @@ class DataCollectionTemplateModel(S3Model):
                                                            represent,
                                                            ),
                                       sortby = "name",
-                                      comment = S3AddResourceLink(f="template",
-                                                                  tooltip=T("Add a new data collection template"),
-                                                                  ),
+                                      comment = S3ResourceLink(f="template",
+                                                               tooltip=T("Add a new data collection template"),
+                                                               ),
                                       )
 
         # CRUD strings
@@ -165,9 +165,9 @@ class DataCollectionTemplateModel(S3Model):
                                                            represent,
                                                            ),
                                       sortby = "name",
-                                      comment = S3AddResourceLink(f="question",
-                                                                  tooltip=T("Add a new data collection question"),
-                                                                  ),
+                                      comment = S3ResourceLink(f="question",
+                                                               tooltip=T("Add a new data collection question"),
+                                                               ),
                                       )
 
         # Components
@@ -319,9 +319,9 @@ class DataCollectionModel(S3Model):
                                         requires = IS_ONE_OF(db, "dc_collection.id",
                                                              represent,
                                                              ),
-                                        comment = S3AddResourceLink(f="collection",
-                                                                    tooltip=T("Add a new data collection"),
-                                                                    ),
+                                        comment = S3ResourceLink(f="collection",
+                                                                 tooltip=T("Add a new data collection"),
+                                                                 ),
                                         )
 
         # =====================================================================

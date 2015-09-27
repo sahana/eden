@@ -1138,12 +1138,12 @@ def config(settings):
                                                 represent,
                                                 orderby = "org_site.name")
 
-                from s3layouts import S3AddResourceLink
-                site_field.comment = S3AddResourceLink(c="org", f="office",
-                                                       vars={"child": "site_id"},
-                                                       label=T("Create Office"),
-                                                       title=T("Office"),
-                                                       tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Create Office'."))
+                from s3layouts import S3ResourceLink
+                site_field.comment = S3ResourceLink(c="org", f="office",
+                                                    vars={"child": "site_id"},
+                                                    label=T("Create Office"),
+                                                    title=T("Office"),
+                                                    tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Create Office'."))
 
                 # Best to have no labels when only 1 field in the row
                 s3db.pr_contact.value.label = ""

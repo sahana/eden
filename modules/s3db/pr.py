@@ -105,7 +105,7 @@ from gluon.sqlhtml import RadioWidget
 
 from ..s3 import *
 from s3dal import Row
-from s3layouts import S3AddResourceLink
+from s3layouts import S3ResourceLink
 
 OU = 1 # role type which indicates hierarchy, see role_types
 OTHER_ROLE = 9
@@ -1965,11 +1965,11 @@ class S3GroupModel(S3Model):
         represent = pr_GroupRepresent()
         group_id = S3ReusableField("group_id", "reference %s" % tablename,
                                    sortby = "name",
-                                   comment = S3AddResourceLink(#c="pr",
-                                                               f="group",
-                                                               label=add_label,
-                                                               title=title,
-                                                               tooltip=tooltip),
+                                   comment = S3ResourceLink(#c="pr",
+                                                            f="group",
+                                                            label=add_label,
+                                                            title=title,
+                                                            tooltip=tooltip),
                                    label = label,
                                    ondelete = "RESTRICT",
                                    represent = represent,
@@ -3099,10 +3099,10 @@ class S3PersonEducationModel(S3Model):
 
         represent = S3Represent(lookup=tablename, translate=True)
         level_id = S3ReusableField("level_id", "reference %s" % tablename,
-                                   comment = S3AddResourceLink(c="pr",
-                                                               f="education_level",
-                                                               label=ADD_EDUCATION_LEVEL,
-                                                               ),
+                                   comment = S3ResourceLink(c="pr",
+                                                            f="education_level",
+                                                            label=ADD_EDUCATION_LEVEL,
+                                                            ),
                                    label = T("Level of Award"),
                                    ondelete = "RESTRICT",
                                    represent = represent,
@@ -3618,6 +3618,7 @@ class S3SubscriptionModel(S3Model):
                                             IS_IN_SET(email_format_opts,
                                                       zero=None)),
                                 ),
+                          s3_comments(),
                           *s3_meta_fields())
 
         self.add_components(tablename,
@@ -3749,11 +3750,11 @@ class S3PersonPresence(S3Model):
                                 readable = False,
                                 writable = False),
                           location_id(widget=S3LocationAutocompleteWidget(),
-                                      comment=S3AddResourceLink(c="gis",
-                                                                f="location",
-                                                                label=ADD_LOCATION,
-                                                                title=T("Current Location"),
-                                                                tooltip=T("The Current Location of the Person/Group, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))),
+                                      comment=S3ResourceLink(c="gis",
+                                                             f="location",
+                                                             label=ADD_LOCATION,
+                                                             title=T("Current Location"),
+                                                             tooltip=T("The Current Location of the Person/Group, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))),
                           Field("location_details",
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("Location Details"),
@@ -3779,20 +3780,20 @@ class S3PersonPresence(S3Model):
                           location_id("orig_id",
                                       label=T("Origin"),
                                       widget = S3LocationAutocompleteWidget(),
-                                      comment=S3AddResourceLink(c="gis",
-                                                                f="location",
-                                                                label=ADD_LOCATION,
-                                                                title=T("Origin"),
-                                                                tooltip=T("The Location the Person has come from, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))
+                                      comment=S3ResourceLink(c="gis",
+                                                             f="location",
+                                                             label=ADD_LOCATION,
+                                                             title=T("Origin"),
+                                                             tooltip=T("The Location the Person has come from, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))
                                       ),
                           location_id("dest_id",
                                       label=T("Destination"),
                                       widget = S3LocationAutocompleteWidget(),
-                                      comment=S3AddResourceLink(c="gis",
-                                                                f="location",
-                                                                label=ADD_LOCATION,
-                                                                title=T("Destination"),
-                                                                tooltip=T("The Location the Person is going to, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))
+                                      comment=S3ResourceLink(c="gis",
+                                                             f="location",
+                                                             label=ADD_LOCATION,
+                                                             title=T("Destination"),
+                                                             tooltip=T("The Location the Person is going to, which can be general (for Reporting) or precise (for displaying on a Map). Enter a few characters to search from available locations."))
                                       ),
                           Field("comment"),
                           Field("closed", "boolean",
@@ -5088,10 +5089,9 @@ def pr_person_comment(title=None, comment=None, caller=None, child=None):
     vars = dict(child = child)
     if caller:
         vars["caller"] = caller
-    return S3AddResourceLink(c="pr", f="person",
-                             vars=vars,
-                             title=current.messages.ADD_PERSON,
-                             tooltip="%s|%s" % (title, comment))
+    return S3ResourceLink(c="pr", f="person",
+                          vars=vars,
+                          tooltip="%s|%s" % (title, comment))
 
 # =============================================================================
 def pr_rheader(r, tabs=[]):

@@ -44,7 +44,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3ResourceLink
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -1082,7 +1082,7 @@ class S3IRSResponseModel(S3Model):
                      asset_id(label = T("Vehicle"),
                               # Limit Vehicles to those which are not already assigned to an Incident
                               requires = self.irs_vehicle_requires,
-                              comment = S3AddResourceLink(
+                              comment = S3ResourceLink(
                                  c="vehicle",
                                  f="vehicle",
                                  label=T("Add Vehicle"),
@@ -1132,7 +1132,7 @@ class S3IRSResponseModel(S3Model):
                                                       filterby="type",
                                                       filter_opts=(1,),
                                                       sort=True)),
-                              comment = S3AddResourceLink(
+                              comment = S3ResourceLink(
                               c="vehicle",
                               f="vehicle",
                               label=T("Add Vehicle"),

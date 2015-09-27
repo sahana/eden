@@ -3510,12 +3510,12 @@ def config(settings):
                 site_field.requires = IS_ONE_OF(current.db, "org_site.site_id",
                                                 represent,
                                                 orderby = "org_site.name")
-                from s3layouts import S3AddResourceLink
-                site_field.comment = S3AddResourceLink(c="org", f="office",
-                                                       vars={"child": "site_id"},
-                                                       label=T("Create Office"),
-                                                       title=T("Office"),
-                                                       tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Create Office'."))
+                from s3layouts import S3ResourceLink
+                site_field.comment = S3ResourceLink(c="org", f="office",
+                                                    vars={"child": "site_id"},
+                                                    label=T("Create Office"),
+                                                    title=T("Office"),
+                                                    tooltip=T("If you don't see the Office in the list, you can add a new one by clicking link 'Create Office'."))
 
                 # ImageCrop widget doesn't currently work within an Inline Form
                 image_field = s3db.pr_image.image

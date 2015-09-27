@@ -401,9 +401,9 @@ def location():
                 table.parent.comment = parent_comment
             else:
                 # Include 'Create Location' button
-                table.parent.comment = DIV(S3AddResourceLink(c="gis",
-                                                             f="location",
-                                                             vars=dict(child="parent")),
+                table.parent.comment = DIV(S3ResourceLink(c="gis",
+                                                          f="location",
+                                                          vars=dict(child="parent")),
                                            parent_comment)
 
             table.inherited.comment = DIV(_class="tooltip",

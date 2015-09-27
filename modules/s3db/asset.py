@@ -50,7 +50,6 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
 
 ASSET_TYPE_VEHICLE   = 1   # => Extra Tab(s) for Registration Documents, Fuel Efficiency
 #ASSET_TYPE_RADIO     = 2   # => Extra Tab(s) for Radio Channels/Frequencies

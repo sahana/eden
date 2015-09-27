@@ -2160,6 +2160,19 @@ class S3Config(Storage):
 
         return self.sync.get("mcb_domain_identifiers", {})
 
+    def get_sync_upload_filename(self):
+        """
+            Filename for upload via FTP Sync
+            
+            Available placeholders:
+                $S = System Name (long)
+                $s = System Name (short)
+                $r = Resource Name
+            Use {} to separate the placeholder from immediately following
+            identifier characters (like: ${placeholder}text).
+        """        
+        return self.sync.get("upload_filename", "$s $r")
+    
     # =========================================================================
     # Modules
 

@@ -454,7 +454,7 @@ def award():
 # -----------------------------------------------------------------------------
 def volunteer_award():
     """
-        Used for returning options to the S3AddResourceLink PopUp
+        Used for returning options to the S3ResourceLink PopUp
     """
 
     # We use component form instead
@@ -491,7 +491,7 @@ def cluster_position():
 
 # -----------------------------------------------------------------------------
 def volunteer_cluster():
-    """ ONLY FOR RETURNING options to the S3AddResourceLink PopUp """
+    """ ONLY FOR RETURNING options to the S3ResourceLink PopUp """
 
     return s3_rest_controller()
 

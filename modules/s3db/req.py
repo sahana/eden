@@ -52,7 +52,7 @@ __all__ = ("S3RequestModel",
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3ResourceLink
 
 REQ_STATUS_NONE     = 0
 REQ_STATUS_PARTIAL  = 1
@@ -174,15 +174,15 @@ class S3RequestModel(S3Model):
         # Dropdown or Autocomplete?
         if settings.get_org_site_autocomplete():
             site_widget = S3SiteAutocompleteWidget()
-            site_comment = S3AddResourceLink(c="org", f="facility",
-                                             vars = dict(child="site_id"),
-                                             title=T("Create Facility"),
-                                             tooltip=AUTOCOMPLETE_HELP)
+            site_comment = S3ResourceLink(c="org", f="facility",
+                                          vars = dict(child="site_id"),
+                                          title=T("Create Facility"),
+                                          tooltip=AUTOCOMPLETE_HELP)
         else:
             site_widget = None
-            site_comment = S3AddResourceLink(c="org", f="facility",
-                                             vars = dict(child="site_id"),
-                                             title=T("Create Facility"))
+            site_comment = S3ResourceLink(c="org", f="facility",
+                                          vars = dict(child="site_id"),
+                                          title=T("Create Facility"))
 
         # ---------------------------------------------------------------------
         # Requests
@@ -282,11 +282,11 @@ class S3RequestModel(S3Model):
                                     empty = settings.get_req_requester_optional(),
                                     label = requester_label,
                                     #writable = False,
-                                    comment = S3AddResourceLink(c="pr", f="person",
-                                                                vars = dict(child="requester_id",
-                                                                            parent="req"),
-                                                                title=crud_strings["pr_person"].label_create,
-                                                                tooltip=AUTOCOMPLETE_HELP),
+                                    comment = S3ResourceLink(c="pr", f="person",
+                                                             vars = dict(child="requester_id",
+                                                                         parent="req"),
+                                                             title=crud_strings["pr_person"].label_create,
+                                                             tooltip=AUTOCOMPLETE_HELP),
                                     ),
                           person_id("assigned_to_id", # This field should be in req_commit, but that complicates the UI
                                     label = T("Assigned To"),
@@ -653,10 +653,10 @@ class S3RequestModel(S3Model):
         if settings.get_req_requester_from_site():
             # Filter the list of Contacts to those for the site
             table.requester_id.widget = None
-            table.requester_id.comment = S3AddResourceLink(c="pr", f="person",
-                                                           vars = dict(child="requester_id",
-                                                                       parent="req"),
-                                                           title=s3.crud_strings["pr_person"].label_create)
+            table.requester_id.comment = S3ResourceLink(c="pr", f="person",
+                                                        vars = dict(child="requester_id",
+                                                                    parent="req"),
+                                                        title=s3.crud_strings["pr_person"].label_create)
             s3.jquery_ready.append('''
 $.filterOptionsS3({
  'trigger':'site_id',
@@ -774,10 +774,10 @@ $.filterOptionsS3({
                 if settings.get_req_requester_from_site():
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
-                    table.requester_id.comment = S3AddResourceLink(c="pr", f="person",
-                                                                    vars = dict(child="requester_id",
-                                                                                parent="req"),
-                                                                    title=s3.crud_strings["pr_person"].label_create)
+                    table.requester_id.comment = S3ResourceLink(c="pr", f="person",
+                                                                vars = dict(child="requester_id",
+                                                                            parent="req"),
+                                                                title=s3.crud_strings["pr_person"].label_create)
                     jquery_ready.append('''
 $.filterOptionsS3({
  'trigger':'site_id',
@@ -844,10 +844,10 @@ $.filterOptionsS3({
                 if settings.get_req_requester_from_site():
                     # Filter the list of Contacts to those for the site
                     table.requester_id.widget = None
-                    table.requester_id.comment = S3AddResourceLink(c="pr", f="person",
-                                                                   vars = dict(child="requester_id",
-                                                                               parent="req"),
-                                                                   title=s3.crud_strings["pr_person"].label_create)
+                    table.requester_id.comment = S3ResourceLink(c="pr", f="person",
+                                                                vars = dict(child="requester_id",
+                                                                            parent="req"),
+                                                                title=s3.crud_strings["pr_person"].label_create)
                     s3.jquery_ready.append('''
 $.filterOptionsS3({
  'trigger':'site_id',
@@ -4280,11 +4280,11 @@ function(status){s3_debug(status)})''' % site_id
                                    orderby = "org_site.name",
                                    sort = True,
                                    )
-        field.comment = S3AddResourceLink(c="org", f="facility",
-                                          vars = dict(child="site_id",
-                                                      parent="req"),
-                                          title=T("Add New Site"),
-                                          )
+        field.comment = S3ResourceLink(c="org", f="facility",
+                                       vars = dict(child="site_id",
+                                                   parent="req"),
+                                       title=T("Add New Site"),
+                                       )
 
     db.org_site.location_id.represent = s3db.gis_LocationRepresent(sep=" | ")
 
@@ -4660,9 +4660,9 @@ def req_customise_commit_fields():
 
     field = table.organisation_id
     field.readable = True
-    field.comment = S3AddResourceLink(c="org", f="organisation_id",
-                                      title=T("Create Organization"),
-                                      )
+    field.comment = S3ResourceLink(c="org", f="organisation_id",
+                                   title=T("Create Organization"),
+                                   )
     if settings.get_org_autocomplete():
         # Enable if there are many Orgs
         field.widget = S3OrganisationAutocompleteWidget()

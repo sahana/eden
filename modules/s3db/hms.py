@@ -38,7 +38,7 @@ from gluon.storage import Storage
 
 from ..s3 import *
 from s3dal import Row
-from s3layouts import S3AddResourceLink
+from s3layouts import S3ResourceLink
 
 # =============================================================================
 class HospitalDataModel(S3Model):
@@ -340,11 +340,11 @@ class HospitalDataModel(S3Model):
                   )
 
         # Reusable field
-        hms_hospital_id_comment = S3AddResourceLink(c="hms",
-                                                    f="hospital",
-                                                    label=ADD_HOSPITAL,
-                                                    title=T("Hospital"),
-                                                    tooltip=T("If you don't see the Hospital in the list, you can add a new one by clicking link 'Create Hospital'."))
+        hms_hospital_id_comment = S3ResourceLink(c="hms",
+                                                 f="hospital",
+                                                 label=ADD_HOSPITAL,
+                                                 title=T("Hospital"),
+                                                 tooltip=T("If you don't see the Hospital in the list, you can add a new one by clicking link 'Create Hospital'."))
 
         represent = S3Represent(lookup=tablename)
         hospital_id = S3ReusableField("hospital_id", "reference %s" % tablename,

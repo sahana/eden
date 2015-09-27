@@ -10,6 +10,8 @@ except:
 from gluon import current
 from gluon.storage import Storage
 
+import datetime
+
 def config(settings):
     """
         Template settings for CAP: Common Alerting Protocol
@@ -65,6 +67,14 @@ def config(settings):
     # Template for the subject line in update notifications
     settings.msg.notify_subject = "$S %s" % T("Alert Notification")
 
+    # Filename for FTP
+    # Characters not allowed are [\ / : * ? " < > | % .]
+    # https://en.wikipedia.org/wiki/Filename
+    # http://docs.attachmate.com/reflection/ftp/15.6/guide/en/index.htm?toc.htm?6503.htm
+    settings.sync.upload_filename = "$s-$r-%s" % (datetime.datetime.strftime\
+                                                 (current.request.utcnow,
+                                                  "%Y-%m-%dT%H-%M-%S"))
+    
     # -----------------------------------------------------------------------------
     # L10n (Localization) settings
     languages = OrderedDict([
@@ -204,6 +214,27 @@ def config(settings):
 
     settings.customise_org_organisation_resource = customise_org_organisation_resource
 
+    # -------------------------------------------------------------------------
+    def customise_sync_repository_resource(r, tablename):
+        
+        s3db = current.s3db
+        def onaccept(form):
+            # Normal onaccept
+            s3db.sync_repository_onaccept(form)
+            # Set the owned_by_user for the ftp sync
+            db = current.db
+            table = db.sync_repository
+            query = (table.id == form.vars.id) & \
+                    (table.apitype == "ftp") & \
+                    (table.deleted != True)
+            db(query).update(owned_by_user = current.auth.user.id)
+        
+        s3db.configure(tablename,
+                       create_onaccept = onaccept,
+                       )
+        
+    settings.customise_sync_repository_resource = customise_sync_repository_resource
+    
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # @ToDo: Have the system automatically enable migrate if a module is enabled

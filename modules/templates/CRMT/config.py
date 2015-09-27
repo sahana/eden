@@ -418,7 +418,7 @@ def config(settings):
 
                 if widgets:
                     from s3 import IS_ONE_OF, S3MultiSelectWidget
-                    from s3layouts import S3AddResourceLink
+                    from s3layouts import S3ResourceLink
 
                     htable.organisation_id.widget = S3MultiSelectWidget(multiple=False)
 
@@ -426,11 +426,11 @@ def config(settings):
                     #site_field.requires = IS_ONE_OF(db, "org_site.site_id",
                     #                                represent,
                     #                                orderby = "org_site.name")
-                    #site_field.comment = S3AddResourceLink(c="org", f="office",
-                    #                                       vars={"child": "site_id"},
-                    #                                       label=T("Add New Place"),
-                    #                                       title=T("Place"),
-                    #                                       tooltip=T("If you don't see the Place in the list, you can add a new one by clicking link 'Add New Place'."))
+                    #site_field.comment = S3ResourceLink(c="org", f="office",
+                    #                                    vars={"child": "site_id"},
+                    #                                    label=T("Add New Place"),
+                    #                                    title=T("Place"),
+                    #                                    tooltip=T("If you don't see the Place in the list, you can add a new one by clicking link 'Add New Place'."))
 
                     table = s3db[tablename]
                     table.first_name.widget = S3StringWidget(placeholder=T("Text"))
@@ -1167,11 +1167,11 @@ def config(settings):
                     mtable = s3db.org_group_membership
                     mtable.group_id.default = auth.user.org_group_id
                     mtable.group_id.widget = S3MultiSelectWidget(multiple=False)
-                    #from s3layouts import S3AddResourceLink
-                    #mtable.status_id.comment = S3AddResourceLink(c="org",
-                    #                                             f="group_membership_status",
-                    #                                             vars={"child": "status_id"},
-                    #                                             title=T("Add New Status"))
+                    #from s3layouts import S3ResourceLink
+                    #mtable.status_id.comment = S3ResourceLink(c="org",
+                    #                                          f="group_membership_status",
+                    #                                          vars={"child": "status_id"},
+                    #                                          title=T("Add New Status"))
                     mtable.status_id.comment = T("Status of the Organization in the Coalition")
                     mtable.status_id.widget = S3MultiSelectWidget(multiple=False,
                                                                   create=dict(c="org",

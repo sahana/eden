@@ -72,13 +72,13 @@ def vehicle():
 
     field = table.item_id
     field.label = T("Vehicle Type")
-    field.comment = S3AddResourceLink(f="item",
-                                      # Use this controller for options.json rather than looking for one called 'asset'
-                                      vars=dict(parent="vehicle"),
-                                      label=T("Add Vehicle Type"),
-                                      info=T("Add a new vehicle type"),
-                                      title=T("Vehicle Type"),
-                                      tooltip=T("Only Items whose Category are of type 'Vehicle' will be seen in the dropdown."))
+    field.comment = S3ResourceLink(f="item",
+                                   # Use this controller for options.json rather than looking for one called 'asset'
+                                   vars=dict(parent="vehicle"),
+                                   label=T("Add Vehicle Type"),
+                                   info=T("Add a new vehicle type"),
+                                   title=T("Vehicle Type"),
+                                   tooltip=T("Only Items whose Category are of type 'Vehicle' will be seen in the dropdown."))
 
     # Use this controller for options.json rather than looking for one called 'asset'
     table.organisation_id.comment[0].vars = dict(parent="vehicle")
@@ -144,11 +144,11 @@ def item():
                                )
 
     field.label = T("Vehicle Categories")
-    field.comment = S3AddResourceLink(f="item_category",
-                                      label=T("Add Vehicle Category"),
-                                      info=T("Add a new vehicle category"),
-                                      title=T("Vehicle Category"),
-                                      tooltip=T("Only Categories of type 'Vehicle' will be seen in the dropdown."))
+    field.comment = S3ResourceLink(f="item_category",
+                                   label=T("Add Vehicle Category"),
+                                   info=T("Add a new vehicle category"),
+                                   title=T("Vehicle Category"),
+                                   tooltip=T("Only Categories of type 'Vehicle' will be seen in the dropdown."))
 
     # CRUD strings
     s3.crud_strings["supply_item"] = Storage(

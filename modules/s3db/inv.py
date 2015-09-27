@@ -56,7 +56,7 @@ from gluon.sqlhtml import RadioWidget
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3ResourceLink
 
 SHIP_STATUS_IN_PROCESS = 0
 SHIP_STATUS_RECEIVED   = 1
@@ -176,7 +176,7 @@ class S3WarehouseModel(S3Model):
                                                      sort=True
                                                      )),
                                sortby = "name",
-                               comment = S3AddResourceLink(c="inv",
+                               comment = S3ResourceLink(c="inv",
                                            f="warehouse_type",
                                            label=ADD_WAREHOUSE_TYPE,
                                            title=T("Warehouse Type"),
@@ -1610,7 +1610,7 @@ class S3InventoryTrackingModel(S3Model):
                            readable = True,
                            writable = True,
                            widget = S3SiteAutocompleteWidget(),
-                           comment = S3AddResourceLink(
+                           comment = S3ResourceLink(
                                 c="inv",
                                 f="warehouse",
                                 label=T("Create Warehouse"),
@@ -1626,7 +1626,7 @@ class S3InventoryTrackingModel(S3Model):
                              widget = S3AutocompleteWidget("supply", "item",
                                                            filter="item.kit=1"),
                              # Needs better workflow as no way to add the Kit Items
-                             #comment = S3AddResourceLink(
+                             #comment = S3ResourceLink(
                              #   c="supply",
                              #   f="item",
                              #   label=T("Create Kit"),

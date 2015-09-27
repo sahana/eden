@@ -119,7 +119,7 @@ function s3_popup_refresh_main_form() {
         return;
     }
 
-    // Modal opened from a form (e.g. S3AddResourceLink)?
+    // Modal opened from a form (e.g. S3ResourceLink)?
     // => update the respective form field (=the caller)
 
     var level = $_GET['level'];

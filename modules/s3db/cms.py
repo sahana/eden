@@ -51,7 +51,7 @@ except ImportError:
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3ResourceLink
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -242,9 +242,9 @@ class S3ContentModel(S3Model):
         # Reusable field
         represent = S3Represent(lookup=tablename)
         post_id = S3ReusableField("post_id", "reference %s" % tablename,
-                                  comment = S3AddResourceLink(c="cms", f="post",
-                                                              title=ADD_POST,
-                                                              tooltip=T("A block of rich text which could be embedded into a page, viewed as a complete page or viewed as a list of news items.")),
+                                  comment = S3ResourceLink(c="cms", f="post",
+                                                           title=ADD_POST,
+                                                           tooltip=T("A block of rich text which could be embedded into a page, viewed as a complete page or viewed as a list of news items.")),
                                   label = T("Post"),
                                   ondelete = "CASCADE",
                                   represent = represent,
