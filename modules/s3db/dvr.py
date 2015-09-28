@@ -106,11 +106,12 @@ class S3DVRModel(S3Model):
         #    4: T("Low"),
         #}
 
-        #dvr_status_opts = {
-        #    1: T("Open"),
-        #    2: T("Accepted"),
-        #    3: T("Rejected"),
-        #}
+        dvr_status_opts = {
+            1: T("Open"),
+            2: T("Pending"),
+            3: T("Close"),
+        }
+        
 
         tablename = "dvr_case"
         define_table(tablename,
@@ -137,13 +138,13 @@ class S3DVRModel(S3Model):
                      #      label = T("Insurance"),
                      #      represent = s3_yes_no_represent,
                      #      ),
-                     #Field("status", "integer",
-                     #      default = 1,
-                     #      label = T("Status"),
-                     #      represent = lambda opt: \
-                     #           dvr_status_opts.get(opt, UNKNOWN_OPT),
-                     #      requires = IS_EMPTY_OR(IS_IN_SET(dvr_status_opts)),
-                     #      ),
+                     Field("status", "integer",
+                           default = 1,
+                           label = T("Status"),
+                           represent = lambda opt: \
+                                dvr_status_opts.get(opt, UNKNOWN_OPT),
+                           requires = IS_EMPTY_OR(IS_IN_SET(dvr_status_opts)),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -197,6 +198,7 @@ class S3DVRModel(S3Model):
 
         crud_form = S3SQLCustomForm("reference",
                                     "organisation_id",
+                                    "status",
                                     "person_id",
                                     S3SQLInlineComponent("current_address",
                                                          label = T("Current Address"),
