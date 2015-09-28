@@ -50,7 +50,6 @@ except ImportError:
 from gluon import *
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
 
 # =============================================================================
 class S3DeploymentModel(S3Model):

@@ -38,6 +38,7 @@ from gluon.storage import Storage
 
 from s3dal import Row
 from ..s3 import *
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class SyncDataModel(S3Model):
@@ -45,6 +46,8 @@ class SyncDataModel(S3Model):
     names = ("sync_config",
              "sync_status",
              "sync_repository",
+             "sync_repository_id",
+             "sync_repository_onaccept",
              "sync_task",
              "sync_resource_filter",
              "sync_job",
@@ -139,7 +142,8 @@ class SyncDataModel(S3Model):
             "ccrm": "CiviCRM",
             "wrike": "Wrike",
             "mcb": "Mariner CommandBridge",
-            "adashi": "ADASHI (passive)"
+            "adashi": "ADASHI (passive)",
+            "ftp": "FTP",
         }
         password_widget = S3PasswordWidget()
         tablename = "sync_repository"
@@ -283,13 +287,17 @@ class SyncDataModel(S3Model):
         # Reusable Fields
         sync_repository_represent = S3Represent(lookup=tablename)
         repository_id = S3ReusableField("repository_id", "reference %s" % tablename,
+                                        comment = S3PopupLink(c="sync", f="repository",
+                                                              label=ADD_REPOSITORY,
+                                                              title=ADD_REPOSITORY,
+                                                              tooltip = ADD_REPOSITORY,
+                                                              ),
                                         label = T("Repository"),
                                         represent = sync_repository_represent,
                                         requires = IS_ONE_OF(db,
                                                             "sync_repository.id",
                                                             "%(name)s",
                                                             ),
-                                        #@ToDo: S3AddResourceLink
                                         )
 
         # Components
@@ -349,6 +357,16 @@ class SyncDataModel(S3Model):
                      repository_id(),
                      Field("resource_name",
                            notnull = True,
+                           ),
+                     Field("representation",
+                           writable = False,
+                           readable = False,
+                           ),
+                     # Multiple file per sync?
+                     Field("multiple_file", "boolean",
+                           default = False,
+                           writable = False,
+                           readable = False,
                            ),
                      Field("last_pull", "datetime",
                            label = T("Last pull on"),
@@ -567,7 +585,9 @@ class SyncDataModel(S3Model):
         # ---------------------------------------------------------------------
         # Return global names to s3.*
         #
-        return {}
+        return dict(sync_repository_id = repository_id,
+                    sync_repository_onaccept = self.sync_repository_onaccept,
+                    )
 
     # -------------------------------------------------------------------------
     def defaults(self):

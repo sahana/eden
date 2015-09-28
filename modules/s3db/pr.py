@@ -3618,6 +3618,7 @@ class S3SubscriptionModel(S3Model):
                                             IS_IN_SET(email_format_opts,
                                                       zero=None)),
                                 ),
+                          s3_comments(),
                           *s3_meta_fields())
 
         self.add_components(tablename,
