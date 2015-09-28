@@ -2340,31 +2340,9 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_project_location_resource(r, tablename):
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponentCheckbox
-        crud_form = S3SQLCustomForm(
-            "project_id",
-            "location_id",
-            # @ToDo: Grouped Checkboxes
-            S3SQLInlineComponentCheckbox(
-                "activity_type",
-                label = T("Activity Types"),
-                field = "activity_type_id",
-                cols = 3,
-                # Filter Activity Type by Sector
-                filter = {"linktable": "project_activity_type_sector",
-                          "lkey": "activity_type_id",
-                          "rkey": "sector_id",
-                          "lookuptable": "project_project",
-                          "lookupkey": "project_id",
-                          },
-                translate = True,
-                ),
-            "comments",
-            )
-
-        current.s3db.configure(tablename,
-                               crud_form = crud_form,
-                               )
+        table = current.s3db.project_location
+        table.name.readable = False
+        table.percentage.readable = table.percentage.writable = False
 
     settings.customise_project_location_resource = customise_project_location_resource
 

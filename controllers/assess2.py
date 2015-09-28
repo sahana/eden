@@ -106,9 +106,8 @@ def assess_tables():
                                 ondelete = "RESTRICT")
 
     # CRUD strings
-    ADD_ASSESSMENT = T("Add Assessment")
     crud_strings[tablename] = Storage(
-        label_create = ADD_ASSESSMENT,
+        label_create = T("Add Assessment"),
         title_display = T("Assessment Details"),
         title_list = T("Assessments"),
         title_update = T("Edit Assessment"),
@@ -118,8 +117,7 @@ def assess_tables():
         msg_record_modified = T("Assessment updated"),
         msg_record_deleted = T("Assessment deleted"),
         msg_list_empty = T("No Assessments currently registered"),
-        name_nice = T("Assessment"),
-        name_nice_plural = T("Assessments"))
+        )
 
     # assess_assess as component of org_organisation
     add_components("org_organisation", assess_assess="organisation_id")
@@ -150,8 +148,7 @@ def assess_tables():
         msg_record_modified = T("Baseline Type updated"),
         msg_record_deleted = T("Baseline Type deleted"),
         msg_list_empty = T("No Baseline Types currently registered"),
-        name_nice = T("Baseline Type"),
-        name_nice_plural = T("Baseline Types"))
+        )
 
     def baseline_type_comment():
         # ToDo: Is this membership check required?
@@ -188,9 +185,8 @@ def assess_tables():
                  *s3_meta_fields())
 
     # CRUD strings
-    ADD_BASELINE = T("Add Baseline")
     crud_strings[tablename] = Storage(
-        label_create = ADD_BASELINE,
+        label_create = T("Add Baseline"),
         title_display = T("Baselines Details"),
         title_list = T("Baselines"),
         title_update = T("Edit Baseline"),
@@ -200,8 +196,7 @@ def assess_tables():
         msg_record_modified = T("Baseline updated"),
         msg_record_deleted = T("Baseline deleted"),
         msg_list_empty = T("No Baselines currently registered"),
-        name_nice = T("Baseline"),
-        name_nice_plural = T("Baselines"))
+        )
 
     # Baseline as component of assessments
     add_components("assess_assess", assess_baseline="assess_id")
@@ -225,9 +220,8 @@ def assess_tables():
                  *s3_meta_fields())
 
     # CRUD strings
-    ADD_ASSESS_SUMMARY = T("Add Assessment Summary")
     crud_strings[tablename] = Storage(
-        label_create = ADD_ASSESS_SUMMARY,
+        label_create = T("Add Assessment Summary"),
         title_display = T("Assessment Summary Details"),
         title_list = T("Assessment Summaries"),
         title_update = T("Edit Assessment Summary"),
@@ -237,8 +231,7 @@ def assess_tables():
         msg_record_modified = T("Assessment Summary updated"),
         msg_record_deleted = T("Assessment Summary deleted"),
         msg_list_empty = T("No Assessment Summaries currently registered"),
-        name_nice = T("Assessment"),
-        name_nice_plural = T("Assessments"))
+        )
 
     # Summary as component of assessments
     add_components("assess_assess",
@@ -277,8 +270,7 @@ def rat_tables():
         msg_record_modified = T("Section updated"),
         msg_record_deleted = T("Section deleted"),
         msg_list_empty = T("No Sections currently registered"),
-        name_nice = T("Search"),
-        name_nice_plural = T("Searches"))
+        )
 
     # -------------------------------------------------------------------------
     # Common options
@@ -432,9 +424,8 @@ def rat_tables():
                  *s3_meta_fields())
 
     # CRUD strings
-    ADD_ASSESSMENT = T("Add Rapid Assessment")
     crud_strings[tablename] = Storage(
-        label_create = ADD_ASSESSMENT,
+        label_create = T("Add Rapid Assessment"),
         title_display = T("Rapid Assessment Details"),
         title_list = T("Rapid Assessments"),
         title_update = T("Edit Rapid Assessment"),
@@ -444,8 +435,7 @@ def rat_tables():
         msg_record_modified = T("Rapid Assessment updated"),
         msg_record_deleted = T("Rapid Assessment deleted"),
         msg_list_empty = T("No Rapid Assessments currently registered"),
-        name_nice = T("Rapid Assessment"),
-        name_nice_plural = T("Rapid Assessments"))
+        )
 
     # -------------------------------------------------------------------------
     def rat_assessment_onaccept(form):
@@ -1836,8 +1826,7 @@ crud_strings[tablename] = Storage(
     msg_record_modified = T("Population Statistic updated"),
     msg_record_deleted = T("Population Statistic deleted"),
     msg_list_empty = T("No Population Statistics currently registered"),
-    name_nice = T("Population Statistic"),
-    name_nice_plural = T("Population Statistics"))
+    )
 
 # Impact as component of incident reports
 #add_components("irs_ireport", impact_impact="ireport_id")
@@ -1866,9 +1855,8 @@ def impact_tables():
                     *s3_meta_fields())
 
     # CRUD strings
-    ADD_IMPACT_TYPE = T("Add Impact Type")
     s3.crud_strings[tablename] = Storage(
-        label_create = ADD_IMPACT_TYPE,
+        label_create = T("Add Impact Type"),
         title_display = T("Impact Type Details"),
         title_list = T("Impact Types"),
         title_update = T("Edit Impact Type"),
@@ -1878,8 +1866,7 @@ def impact_tables():
         msg_record_modified = T("Impact Type updated"),
         msg_record_deleted = T("Impact Type deleted"),
         msg_list_empty = T("No Impact Types currently registered"),
-        name_nice = T("Impact"),
-        name_nice_plural = T("Impacts"))
+        )
 
     def impact_type_comment():
         if auth.has_membership(auth.id_group("'Administrator'")):
@@ -1922,9 +1909,8 @@ def impact_tables():
                  *s3_meta_fields())
 
     # CRUD strings
-    ADD_IMPACT = T("Add Impact")
     crud_strings[tablename] = Storage(
-        label_create = ADD_IMPACT,
+        label_create = T("Add Impact"),
         title_display = T("Impact Details"),
         title_list = T("Impacts"),
         title_update = T("Edit Impact"),

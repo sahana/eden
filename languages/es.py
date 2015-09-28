@@ -4090,6 +4090,7 @@
 'No Clusters currently registered': 'Agrupaciones no registradas actualmente',
 'No Commitment Items currently registered': 'Artículos comprometidos no registrados actualmente',
 'No Commitments': 'Sin compromisos',
+'No Communities Found': 'Ninguna comunidades encontrada',
 'No Configs currently defined': 'No hay configuraciones definidas actualmente',
 'No Contacts currently registered': 'No hay contactos registrados actualmente',
 'No Credentials currently set': 'No hay credenciales establecidas actualmente',

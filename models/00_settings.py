@@ -292,9 +292,8 @@ s3.ROWSPERPAGE = 20
 s3.IMAGE_EXTENSIONS = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG"]
 
 # Default CRUD strings
-ADD_RECORD = T("Add Record")
 s3.crud_strings = Storage(
-    label_create = ADD_RECORD,
+    label_create = T("Add Record"),
     title_display = T("Record Details"),
     title_list = T("Records"),
     title_update = T("Edit Record"),
@@ -308,7 +307,6 @@ s3.crud_strings = Storage(
     msg_list_empty = T("No Records currently available"),
     msg_match = T("Matching Records"),
     msg_no_match = T("No Matching Records"),
-    name_nice = T("Record"),
-    name_nice_plural = T("Records"))
+    )
 
 # END =========================================================================
