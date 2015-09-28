@@ -1496,5 +1496,6 @@
 "Current Address":"Suanki Adresi",
 "Normal Address":"Daimi Adresi",
 "Create Case":"Vaka Ekle",
-"This Case Number is already used!":"Bu vaka numarası kullanılmış!"
+"This Case Number is already used!":"Bu vaka numarası kullanılmış!",
+"Create Need":"İhtiyaç Ekle"
 }

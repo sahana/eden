@@ -63,7 +63,7 @@ class S3DVRModel(S3Model):
         tablename = "dvr_need"
         define_table(tablename,
                      Field("name",
-                           label = T("name"),
+                           label = T("Name"),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
