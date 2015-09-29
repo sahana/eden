@@ -791,7 +791,7 @@ class S3OptionsMenu(object):
         return M(c="dvr")(
                     M("Cases", f="case")(
                         M("Create", m="create"),
-                        M("Needs Report", m="report"),
+                        M("Report", m="report"),
                     ),
                     M("Needs", f="need")(
                         M("Create", m="create"),
