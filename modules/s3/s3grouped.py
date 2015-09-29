@@ -850,48 +850,6 @@ class S3GroupedItemsTable(object):
         rows.append(cells)
 
     # -------------------------------------------------------------------------
-    def xls_formula(self, column, rows, method):
-        """
-            Construct an Excel formula for an aggregation
-
-            @param column_index: the column index
-            @param rows: the row indices, either a list of row indices,
-                         or a tuple (start, end)
-            @param method: the aggregation method
-        """
-
-        # Default output
-        output = default = ""
-
-        # Lambda to determine the Excel column name from the column index
-        cn = lambda i: i >= 0 and cn(i / 26 - 1) + chr(65 + i % 26) or ""
-
-        # Supported methods
-        methods = {"sum": "SUM",
-                   "avg": "AVERAGE",
-                   "min": "MIN",
-                   "max": "MAX",
-                   }
-
-        if method and method in methods:
-            expr = None
-            cname = cn(column)
-            if cname:
-                template = "%s%%s" % cname
-                if isinstance(rows, list):
-                    expr = ";".join(template % index for index in rows)
-                elif isinstance(rows, tuple) and len(rows) == 2:
-                    expr = "%(col)s%(start)s:%(col)s%(end)s" % \
-                           {"col": column_name,
-                            "start": rows[0],
-                            "end": rows[1],
-                            }
-            if expr:
-                output = "%s(%s)" % (methods[method], expr)
-
-        return output
-
-    # -------------------------------------------------------------------------
     def html_render_table_header(self, table):
         """
             Render the table header
