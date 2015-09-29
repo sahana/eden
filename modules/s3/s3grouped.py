@@ -25,8 +25,6 @@
     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
     OTHER DEALINGS IN THE SOFTWARE.
-
-    @status: experimental
 """
 
 __all__ = ("S3GroupedItemsReport",
@@ -161,7 +159,7 @@ class S3GroupedItemsReport(S3Method):
         labels = report_config.get("labels")
         represent = report_config.get("groupby_represent")
 
-        if representation == "pdf":
+        if representation in ("pdf", "xls"):
             as_dict = True
         else:
             as_dict = False
@@ -180,8 +178,6 @@ class S3GroupedItemsReport(S3Method):
         # Render output
         if representation in ("html", "iframe"):
             # Page load
-
-
             output["report_type"] = "groupeditems"
             output["widget_id"] = widget_id
             output["title"] = title
@@ -227,6 +223,9 @@ class S3GroupedItemsReport(S3Method):
             # Empty section
             output["empty"] = T("No data available")
 
+            # Export formats
+            output["formats"] = self.export_links(r)
+
             # Script options
             ajaxurl = attr.get("ajaxurl", r.url(method = "grouped",
                                                 representation = "json",
@@ -241,19 +240,6 @@ class S3GroupedItemsReport(S3Method):
 
             # Inject script
             self.inject_script(widget_id, options=options)
-
-            # Export formats
-            formats = DIV(DIV(_title = T("Export as PDF"),
-                              _class = "gi-export export_pdf",
-                              data = {"url": r.url(method = "grouped",
-                                                   representation = "pdf",
-                                                   vars = r.get_vars,
-                                                   ),
-                                      },
-                              ),
-                          _class="gi-export-formats",
-                          )
-            output["formats"] = formats
 
             # Detect and store theme-specific inner layout
             self._view(r, "grouped.html")
@@ -278,6 +264,20 @@ class S3GroupedItemsReport(S3Method):
                                            pdf_header = pdf_header,
                                            )
             return gi_table.pdf(r)
+
+        elif representation == "xls":
+            # XLS Export
+            field_types = report_config.get("ftypes")
+            totals_label = report_config.get("totals_label", T("Total"))
+            gi_table = S3GroupedItemsTable(resource,
+                                           title = title,
+                                           data = data,
+                                           field_types = field_types,
+                                           aggregate = aggregate,
+                                           group_headers = group_headers,
+                                           totals_label = totals_label,
+                                           )
+            return gi_table.xls(r)
 
         else:
             r.error(501, current.ERROR.BAD_FORMAT)
@@ -371,9 +371,11 @@ class S3GroupedItemsReport(S3Method):
                 s, d = ("%s asc" % selector).split(" ")[:2]
             selectors.append(s)
 
-        # Resolve all selectors against the resource
+        # Resolve all selectors against the resource,
+        # collect S3ResourceFields, labels and field types
         rfields = {}
         labels = {}
+        ftypes = {}
         id_field = str(resource._id)
         for f in selectors:
             label, selector = f if type(f) is tuple else (None, f)
@@ -391,9 +393,12 @@ class S3GroupedItemsReport(S3Method):
             rfields[selector] = rfield
             if rfield:
                 labels[rfield.colname] = rfield.label
+                ftypes[rfield.colname] = rfield.ftype
             elif label:
                 labels[selector] = label
+                ftypes[selector] = "virtual"
         report_config["labels"] = labels
+        report_config["ftypes"] = ftypes
 
         # Make sure id field is always included
         if id_field:
@@ -478,6 +483,38 @@ class S3GroupedItemsReport(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def export_links(r):
+        """
+            Render export links for the report
+
+            @param r: the S3Request
+        """
+
+        T = current.T
+
+        formats = DIV(DIV(_title = T("Export as PDF"),
+                          _class = "gi-export export_pdf",
+                          data = {"url": r.url(method = "grouped",
+                                               representation = "pdf",
+                                               vars = r.get_vars,
+                                               ),
+                                  },
+                          ),
+                      DIV(_title = T("Export as XLS"),
+                          _class = "gi-export export_xls",
+                          data = {"url": r.url(method = "grouped",
+                                               representation = "xls",
+                                               vars = r.get_vars,
+                                               ),
+                                  },
+                          ),
+                      _class="gi-export-formats",
+                      )
+
+        return formats
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def inject_script(widget_id, options=None):
         """
             Inject the groupedItems script and bind it to the container
@@ -522,6 +559,8 @@ class S3GroupedItemsTable(object):
                  resource,
                  title = None,
                  data = None,
+                 aggregate = None,
+                 field_types = None,
                  group_headers = False,
                  totals_label = None,
                  pdf_header = DEFAULT,
@@ -533,6 +572,9 @@ class S3GroupedItemsTable(object):
             @param resource: the resource
             @param title: the report title
             @param data: the JSON data (as dict)
+            @param aggregate: the aggregation functions as list of tuples
+                              (method, colname)
+            @param field_types: the field types as dict {colname: type}
             @param group_headers: render group header rows
             @param totals_label: the label for the aggregated rows
                                  (default: "Total")
@@ -545,6 +587,9 @@ class S3GroupedItemsTable(object):
         self.resource = resource
         self.title = title
         self.data = data
+
+        self.aggregate = aggregate
+        self.field_types = field_types
 
         self.totals_label = totals_label
         self.group_headers = group_headers
@@ -575,6 +620,276 @@ class S3GroupedItemsTable(object):
         self.html_render_table_footer(table)
 
         return table
+
+    # -------------------------------------------------------------------------
+    def pdf(self, r, filename=None):
+        """
+            Produce a PDF representation of the grouped table
+
+            @param r: the S3Request
+            @return: the PDF document
+        """
+
+        # Styles for totals and group totals rows
+        styles = {"tr.gi-column-totals": {
+                        "background-color": "black",
+                        "color": "white",
+                        },
+                  "tr.gi-group-footer.gi-level-1": {
+                        "background-color": "lightgrey",
+                        },
+                  }
+
+        title = self.title
+
+        pdf_header = self.pdf_header
+        if callable(pdf_header):
+            pdf_header = lambda r, title=title: self.pdf_header(r, title=title)
+
+        pdf_footer = self.pdf_footer
+
+        from s3.s3export import S3Exporter
+        exporter = S3Exporter().pdf
+        return exporter(self.resource,
+                        request = r,
+                        pdf_title = title,
+                        pdf_header = pdf_header,
+                        pdf_header_padding = 12,
+                        pdf_footer = pdf_footer,
+                        pdf_callback = lambda r: self.html(),
+                        pdf_table_autogrow = "B",
+                        pdf_paper_alignment = "Landscape",
+                        pdf_html_styles = styles,
+                        pdf_filename = filename,
+                        )
+
+    # -------------------------------------------------------------------------
+    def xls(self, r, filename=None):
+        """
+            Produce an XLS sheet of the grouped table
+
+            @param r: the S3Request
+            @return: the XLS document
+        """
+
+        # Prepare the XLS data array
+        data = self.data
+        field_types = self.field_types
+
+        columns = data.get("c")
+        labels = data.get("l")
+
+        aggregate = self.aggregate
+        if aggregate:
+            functions = dict((c, m) for m, c in aggregate)
+        else:
+            functions = {}
+
+        # Get column headers and field types
+        types = {}
+        for column in columns:
+
+            # For virtual fields with numeric aggregation, designate
+            # the field type as "double":
+            field_type = field_types.get(column, "virtual")
+            if field_type == "virtual":
+                method = functions.get(column)
+                if method and method != "count":
+                    field_type = "double"
+            types[column] = field_type
+
+        # Append the rows
+        rows = []
+        self.xls_group_data(rows, data)
+
+        # Footer row
+        self.xls_table_footer(rows)
+
+        xlsdata = {"columns": columns,
+                   "headers": labels,
+                   "types": types,
+                   "rows": rows,
+                   }
+
+        # Export as XLS
+        from s3.s3export import S3Exporter
+        exporter = S3Exporter().xls
+        return exporter(xlsdata,
+                        title = self.title,
+                        use_colour = True,
+                        evenodd = False,
+                        )
+
+    # -------------------------------------------------------------------------
+    def xls_group_data(self, rows, group, level=0):
+        """
+            Append a group to the XLS data
+
+            @param rows: the XLS rows array to append to
+            @param group: the group dict
+            @param level: the grouping level
+        """
+
+        subgroups = group.get("d")
+        items = group.get("i")
+
+        if subgroups:
+            for subgroup in subgroups:
+                self.xls_group_data(rows, subgroup, level = level + 1)
+        elif items:
+            for item in items:
+                self.xls_item_data(rows, item, level = level)
+
+        if level > 0:
+            self.xls_group_footer(rows, group, level=level)
+
+    # -------------------------------------------------------------------------
+    def xls_group_footer(self, rows, group, level=0):
+        """
+            Append a group footer to the XLS data
+
+            @param rows: the XLS rows array to append to
+            @param group: the group dict
+            @param level: the grouping level
+        """
+
+        data = self.data
+
+        columns = data.get("c")
+        totals = group.get("t")
+        value = group.get("v")
+
+        row = {}
+        footer = {}
+
+        span = 0
+        has_totals = False
+
+        if not totals:
+            if self.group_headers:
+                return
+            label = value
+        elif columns:
+            label = None
+            for column in columns:
+                has_value = column in totals
+                if label is None:
+                    if not has_value:
+                        span += 1
+                        continue
+                    else:
+                        label = "%s %s" % (s3_unicode(s3_strip_markup(value)),
+                                           self.totals_label,
+                                           )
+                has_totals = True
+                row[column] = totals[column] if has_value else ""
+
+        footer = {"label": label,
+                  "span": span,
+                  "totals": has_totals,
+                  }
+        row["_group"] = footer
+        row["_style"] = "subtotals"
+        rows.append(row)
+
+    # -------------------------------------------------------------------------
+    def xls_table_footer(self, rows):
+        """
+            Render the table footer
+
+            @param table: the TABLE instance
+        """
+
+        data = self.data
+
+        columns = data.get("c")
+        totals = data.get("t")
+
+        if not totals:
+            return
+
+        row = {}
+        if columns:
+            label = None
+            span = 0
+            for column in columns:
+                has_value = column in totals
+                if label is None:
+                    if not has_value:
+                        span += 1
+                        continue
+                    else:
+                        label = self.totals_label
+                row[column] = totals[column] if has_value else ""
+        footer = {"label": label,
+                  "span": span,
+                  "totals": True,
+                  }
+        row["_group"] = footer
+        row["_style"] = "totals"
+        rows.append(row)
+
+    # -------------------------------------------------------------------------
+    def xls_item_data(self, rows, item, level=0):
+        """
+            Append an item to the XLS data
+
+            @param rows: the XLS rows array to append to
+            @param item: the item dict
+            @param level: the grouping level
+        """
+
+        data = self.data
+
+        columns = data["c"]
+        cells = {}
+
+        for column in columns:
+            cells[column] = item.get(column)
+
+        rows.append(cells)
+
+    # -------------------------------------------------------------------------
+    def xls_formula(self, column, rows, method):
+        """
+            Construct an Excel formula for an aggregation
+
+            @param column_index: the column index
+            @param rows: the row indices, either a list of row indices,
+                         or a tuple (start, end)
+            @param method: the aggregation method
+        """
+
+        # Default output
+        output = default = ""
+
+        # Lambda to determine the Excel column name from the column index
+        cn = lambda i: i >= 0 and cn(i / 26 - 1) + chr(65 + i % 26) or ""
+
+        # Supported methods
+        methods = {"sum": "SUM",
+                   "avg": "AVERAGE",
+                   "min": "MIN",
+                   "max": "MAX",
+                   }
+
+        if method and method in methods:
+            expr = None
+            cname = cn(column)
+            if cname:
+                template = "%s%%s" % cname
+                if isinstance(rows, list):
+                    expr = ";".join(template % index for index in rows)
+                elif isinstance(rows, tuple) and len(rows) == 2:
+                    expr = "%(col)s%(start)s:%(col)s%(end)s" % \
+                           {"col": column_name,
+                            "start": rows[0],
+                            "end": rows[1],
+                            }
+            if expr:
+                output = "%s(%s)" % (methods[method], expr)
+
+        return output
 
     # -------------------------------------------------------------------------
     def html_render_table_header(self, table):
@@ -746,48 +1061,6 @@ class S3GroupedItemsTable(object):
         for column in columns:
             cells.append(TD(item.get(column, "")))
         tbody.append(TR(cells, _class="gi-item gi-level-%s" % level))
-
-    # -------------------------------------------------------------------------
-    def pdf(self, r, filename=None):
-        """
-            Produce a PDF representation of the grouped table
-
-            @param r: the S3Request
-            @return: the PDF document
-        """
-
-        # Styles for totals and group totals rows
-        styles = {"tr.gi-column-totals": {
-                        "background-color": "black",
-                        "color": "white",
-                        },
-                  "tr.gi-group-footer.gi-level-1": {
-                        "background-color": "lightgrey",
-                        },
-                  }
-
-        title = self.title
-
-        pdf_header = self.pdf_header
-        if callable(pdf_header):
-            pdf_header = lambda r, title=title: self.pdf_header(r, title=title)
-
-        pdf_footer = self.pdf_footer
-
-        from s3.s3export import S3Exporter
-        exporter = S3Exporter().pdf
-        return exporter(self.resource,
-                        request = r,
-                        pdf_title = title,
-                        pdf_header = pdf_header,
-                        pdf_header_padding = 12,
-                        pdf_footer = pdf_footer,
-                        pdf_callback = lambda r: self.html(),
-                        pdf_table_autogrow = "B",
-                        pdf_paper_alignment = "Landscape",
-                        pdf_html_styles = styles,
-                        pdf_filename = filename,
-                        )
 
     # -------------------------------------------------------------------------
     @staticmethod

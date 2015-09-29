@@ -584,7 +584,7 @@
                 if (queries) {
                     url = S3.search.filterURL(url, queries);
                 }
-                window.location = url;
+                window.open(url);
             });
         },
 
