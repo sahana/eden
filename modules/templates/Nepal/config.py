@@ -8,7 +8,10 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import current
+from gluon.html import *
 from gluon.storage import Storage
+from s3 import S3CustomController
+from templates.Nepal.layouts import IndexMenuLayout
 
 def config(settings):
     """
@@ -23,7 +26,7 @@ def config(settings):
     T = current.T
 
     settings.base.system_name = T("Nepal Sahana Disaster Management Platform")
-    #settings.base.system_name_short = T("Sahana")
+    settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
     settings.base.prepopulate = ("Nepal", "default/users")
@@ -39,6 +42,7 @@ def config(settings):
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
     settings.auth.registration_requests_organisation = True
+    settings.auth.registration_requests_site = True
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
@@ -101,13 +105,20 @@ def config(settings):
     #settings.L10n.translate_gis_location = True
     # Uncomment this to Translate Organisation Names/Acronyms
     #settings.L10n.translate_org_organisation = True
+
     # Finance settings
-    #settings.fin.currencies = {
-    #    "EUR" : T("Euros"),
-    #    "GBP" : T("Great British Pounds"),
-    #    "USD" : T("United States Dollars"),
-    #}
-    #settings.fin.currency_default = "USD"
+    settings.fin.currencies = {
+        "NPR" : T("Nepalese Rupee"),
+        "AUD" : T("Australian Dollar"),
+        "EUR" : T("Euro"),
+        "GBP" : T("British Pound"),
+        "INR" : T("Indian Rupee"),
+        "KRW" : T("South-Korean Won"),
+        "JPY" : T("Japanese Yen"),
+        "NZD" : T("New Zealand Dollar"),
+        "USD" : T("United States Dollars"),
+    }
+    settings.fin.currency_default = "NPR"
 
     # Security Policy
     # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -122,11 +133,117 @@ def config(settings):
     #
     settings.security.policy = 6 # Organisation-ACLs
 
+    # User Interface
+    settings.ui.icons = "font-awesome4"
+    settings.ui.custom_icons = {
+        "ambulance": "fa fa-ambulance",
+        "create":"fa fa-plus",
+        "hospital":"fa fa-hospital-o",
+        "receive": "fa fa-sign-in",
+        "recv_shipments": "fa fa-indent",
+        "resource": "fa fa-cube",
+        "send": "fa fa-sign-out",
+        "sent_shipments": "fa fa-outdent",
+        "shelter": "fa fa-home",
+        "site-current": "fa fa-square",
+        "sites-all": "fa fa-th",
+        "stock": "fa fa-cubes",
+        "user": "fa fa-user",
+        "volunteer": "fa fa-user",
+        "volunteers": "fa fa-users",
+    }
     # -------------------------------------------------------------------------
+    # Module Settings
+    settings.org.sector = True
+    settings.ui.cluster = True
+
     # Simple Requests
     settings.req.req_type = ("Other",)
     # Uncomment to disable the Commit step in the workflow & simply move direct to Ship
     settings.req.use_commit = False
+
+    # Doesn't appear to work... Need inline field and/or component tab?
+    settings.hrm.multi_job_titles = True
+
+    # =========================================================================
+    def customise_inv_index():
+        """ Custom Inventory Index Page"""
+        response = current.response
+        response.title = T("Sahana : Warehouse Management")
+        s3 = response.s3
+        s3db = current.s3db
+        s3.stylesheets.append("../themes/Nepal/index.css")
+        s3.stylesheets.append("../styles/font-awesome.css")
+        S3CustomController._view("Nepal","inv_index.html")
+
+        site_id = current.auth.user.site_id
+        if site_id:
+            current_site = DIV(XML(T("You are currently managing stock for: %(site)s") % \
+                                {"site":s3db.org_site_represent(site_id,
+                                                                show_link = True)}),
+                                _title = T("Contact Administrator to change your default facility."),
+                                )
+        else:
+            current_site = ""
+        is_current_site = lambda i: site_id
+        
+        IM = IndexMenuLayout
+        index_menu = IM()(IM("Receive", c="inv", f="recv", args="create", 
+                             vars={"recv.status":2},
+                             icon="receive",
+                             description=T("Receive a New shipment or an Existing shipment at your site."),
+                             )(IM("Existing", args="summary", icon="list",vars={"recv.status":2}),
+                               IM("New",args="create",icon="create")),
+                          IM("Send", c="inv", f="send",
+                             description=T("Send a shipment from your site."),
+                             )(IM("Create",args="create",icon="create")),
+                          IM("Stock", c="inv", f="inv_item",
+                             icon="stock",
+                             description=T("List of stock at sites."),
+                             )(IM("Your Site",icon="your-site", check = is_current_site),
+                               IM("All Sites",icon="all-sites")),
+                          IM("Recvd. Shipments", c="inv", f="recv", args="summary",
+                             vars={"recv.status__ne":2},
+                             icon="recv_shipments",
+                             description=T("List of received shipments."),
+                             )(IM("Your Site",icon="your-site", check = is_current_site),
+                               IM("All Sites",icon="all-sites")),
+                          IM("Sent Shipments", c="inv", f="sent", args="summary",
+                             icon="sent_shipments",
+                             description=T("List of sent shipments."),
+                             )(IM("Your Site",icon="your-site", check = is_current_site),
+                               IM("All Sites",icon="all-sites")),
+                          IM("Warehouse", c="inv", f="warehouse", args="summary",
+                             icon="warehouse",
+                             description=T("List of Warehouses."),
+                             )(IM("View",args="summary",icon="list"),
+                               IM("Create",args="create",icon="create"))
+                          )
+
+        return dict(current_site = current_site,
+                    index_menu = index_menu)
+    settings.customise_inv_home = customise_inv_index
+    # -------------------------------------------------------------------------
+    def customise_inv_recv_controller(**attr):
+        s3 = current.response.s3
+        # Custom PreP
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+                if not result:
+                    return False
+
+            # Customise titles 
+            if r.vars.get("recv.status") == "2":
+                s3.crud_strings.inv_recv.title_list = T("Existing Shipments to Received")
+            if r.vars.get("recv.status__ne") == "2":
+                s3.crud_strings.inv_recv.title_list = T("Received Shipments")
+            return True
+        s3.prep = custom_prep
+        return attr
+    settings.customise_inv_recv_controller = customise_inv_recv_controller
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -185,7 +302,7 @@ def config(settings):
             #description = "Central point to record details on People",
             restricted = True,
             access = "|1|",     # Only Administrators can see this module in the default menu (access to controller is possible to all still)
-            module_type = 10
+            module_type = None
         )),
         ("org", Storage(
             name_nice = T("Organizations"),
@@ -197,7 +314,7 @@ def config(settings):
             name_nice = T("Staff"),
             #description = "Human Resources Management",
             restricted = True,
-            module_type = 2,
+            module_type = 10,
         )),
         ("vol", Storage(
             name_nice = T("Volunteers"),
@@ -209,7 +326,7 @@ def config(settings):
           name_nice = T("Content Management"),
           #description = "Content Management System",
           restricted = True,
-          module_type = 10,
+          module_type = None,
         )),
         #("doc", Storage(
         #    name_nice = T("Documents"),
@@ -231,12 +348,12 @@ def config(settings):
             restricted = True,
             module_type = None, # Not displayed
         )),
-        #("inv", Storage(
-        #    name_nice = T("Warehouses"),
-        #    #description = "Receiving and Sending Items",
-        #    restricted = True,
-        #    module_type = 4
-        #)),
+        ("inv", Storage(
+            name_nice = T("Warehouses"),
+            #description = "Receiving and Sending Items",
+            restricted = True,
+            module_type = 4
+        )),
         #("asset", Storage(
         #    name_nice = T("Assets"),
         #    #description = "Recording and Assigning Assets",
@@ -256,12 +373,12 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        #("project", Storage(
-        #    name_nice = T("Projects"),
-        #    #description = "Tracking of Projects, Activities and Tasks",
-        #    restricted = True,
-        #    module_type = 2
-        #)),
+        ("project", Storage(
+            name_nice = T("Projects"),
+            #description = "Tracking of Projects, Activities and Tasks",
+            restricted = True,
+            module_type = 10
+        )),
         ("cr", Storage(
             name_nice = T("Shelters"),
             #description = "Tracks the location, capacity and breakdown of victims in Shelters",
@@ -272,10 +389,10 @@ def config(settings):
             name_nice = T("Hospitals"),
             #description = "Helps to monitor status of hospitals",
             restricted = True,
-            module_type = 10
+            module_type = 3
         )),
         ("patient", Storage(
-            name_nice = T("Patient Tracking"),
+            name_nice = T("Patients"),
             #description = "Tracking of Patients",
             restricted = True,
             module_type = 10
@@ -286,12 +403,12 @@ def config(settings):
         #   restricted = True,
         #   module_type = 10,
         #)),
-        #("event", Storage(
-        #    name_nice = T("Events"),
-        #    #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
+        ("event", Storage(
+            name_nice = T("Events"),
+            #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+            restricted = True,
+            module_type = 10,
+        )),
         #("transport", Storage(
         #   name_nice = T("Transport"),
         #   restricted = True,

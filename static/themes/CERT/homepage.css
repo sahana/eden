@@ -2,14 +2,34 @@
 
 /* Home page specific */
 
-#home h1,
-#home h2 {
+div#menu-page h1 {
+    margin-top: 10px;
+    font-size: 2.75rem;
+}
+
+.home-page h1 {
     text-align: center;
 }
 
-#home .row,
-#home .panel {
+div#menu-page h2 {
+    font-size: 2rem;
+    text-align: center;
+}
+
+div#menu-page h1,
+div#menu-page h2 {
+    font-weight: inherit;
+    background: None;
+    padding: 0;
+}
+
+.home-page .row,
+.home-page .panel {
     margin: 0 auto;
+}
+
+#menu-page .row,
+#menu-page .panel {
     max-width: 980px;
 }
 

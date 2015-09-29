@@ -2,6 +2,7 @@
 
 from gluon import *
 from s3 import S3CustomController
+from templates.Nepal.layouts import IndexMenuLayout
 
 THEME = "Nepal"
 
@@ -16,7 +17,9 @@ class index(S3CustomController):
         T = current.T
         response = current.response
         s3 = response.s3
-        s3.stylesheets.append("../themes/CERT/homepage.css")
+        s3.stylesheets.append("../themes/Nepal/index.css")
+        s3.stylesheets.append("../styles/font-awesome.css")
+        self._view(THEME, "index.html")
         settings = current.deployment_settings
         output["title"] = response.title = settings.get_system_name()
 
@@ -64,96 +67,46 @@ class index(S3CustomController):
             item = ""
         output["item"] = item
 
-        menus = [{"title": T("Volunteers"),
-                  "icon": "user",
-                  "description": T("Manage people who have volunteered for your organization, their contact details, certicates and trainings."),
-                  "module": "vol",
-                  "function": "volunteer",
-                  "buttons": [{"args": "summary",
-                               "icon": "list",
-                               "label": T("View"),
-                               },
-                              {"args": "create",
-                               "icon": "plus-sign",
-                               "label": T("Create"),
-                               }]
-                  },
-                 {"title": T("Shelters"),
-                  "icon": "home",
-                  "description": T("List of Shelters."),
-                  "module": "cr",
-                  "function": "shelter",
-                  "buttons": [{"args": "summary",
-                               "icon": "list",
-                               "label": T("View"),
-                               },
-                              {"args": "create",
-                               "icon": "plus-sign",
-                               "label": T("Create"),
-                               }]
-                  },
-                 {"title": T("Hospitals"),
-                  "icon": "h-sign",
-                  "description": T("List of Hospitals."),
-                  "module": "hms",
-                  "function": "hospital",
-                  "buttons": [{"args": "summary",
-                               "icon": "list",
-                               "label": T("View"),
-                               },
-                              {"args": "create",
-                               "icon": "plus-sign",
-                               "label": T("Create"),
-                               }]
-                  },
-                 {"title": T("Patients"),
-                  "icon": "ambulance",
-                  "description": T("List of Patients."),
-                  "module": "patient",
-                  "function": "patient",
-                  "buttons": [{"args": "summary",
-                               "icon": "list",
-                               "label": T("View"),
-                               },
-                              {"args": "create",
-                               "icon": "plus-sign",
-                               "label": T("Create"),
-                               }]
-                  },
-                 {"title": T("Requests"),
-                  "icon": "truck",
-                  "description": T("Requests for goods or services."),
-                  "module": "req",
-                  "function": "req",
-                  "args": None,
-                  "buttons": [{"args": "summary",
-                               "icon": "list",
-                               "label": T("View"),
-                               },
-                              {"args": "create",
-                               "icon": "plus-sign",
-                               "label": T("Create"),
-                               }]
-                  },
-                 {"title": T("Resources"),
-                  "icon": "wrench",
-                  "description": T("Resources that organizations have that are useful for response."),
-                  "module": "org",
-                  "function": "resource",
-                  "args": None,
-                  "buttons": [{"args": "summary",
-                               "icon": "list",
-                               "label": T("View"),
-                               },
-                              {"args": "create",
-                               "icon": "plus-sign",
-                               "label": T("Create"),
-                               }]
-                  },
-                 ]
-        output["menus"] = menus
-
-        self._view(THEME, "index.html")
+        IM = IndexMenuLayout
+        index_menu = IM()(IM("Organizations", c="org", f="organisation", args="summary",
+                             icon="organisation",
+                             description=T("List of Organizations responding with contact details and their activities to provide 3W (Who's Doing What Where)."),
+                             )(IM("View", args="summary", icon="list"),
+                               IM("Create", args="create", icon="create")),
+                          IM("Volunteers", c="vol", f="volunteer", args="summary",
+                               icon="volunteers",
+                               description=T("Manage people volunteering for your organization, their contact details, certificates and trainings."),
+                               )(IM("View", args="summary", icon="list"),
+                                 IM("Create", args="create", icon="create")),
+                          IM("Hospitals", c="hms", f="hospital", args="summary",
+                               description=T("List of Hospitals and other Health Facilities."),
+                               )(IM("View", args="summary", icon="list"),
+                                 IM("Create", args="create", icon="create")),
+                          IM("Warehouses", c="inv", f="index", args="summary",
+                               description=T("Manage Warehouses, their stock and shipments."),
+                               icon="warehouse",
+                               )(IM("View", f="warehouse", args="summary", icon="list"),
+                                 IM("Create", f="warehouse", args="create", icon="create")),
+                          IM("Resources", c="org", f="resource", args="summary",
+                               description=T("Resources that organizations have that are useful for response."),
+                               )(IM("View", args="summary", icon="list"),
+                                 IM("Create", args="create", icon="create")),
+                          IM("Shelters", c="cr", f="shelter", args="summary",
+                               description=T("List of Shelters for displaced people."),
+                               )(IM("View", args="summary", icon="list"),
+                                 IM("Create", args="create", icon="create")),
+                          IM("Patients", c="patient", f="patient", args="summary",
+                               icon="ambulance",
+                               description=T("Register and track Patients."),
+                               )(IM("View", args="summary", icon="list"),
+                                 IM("Create", args="create", icon="create")),
+                          IM("Requests", c="req", f="req", args="summary",
+                               icon="truck",
+                               description=T("Requests for resources or services."),
+                               )(IM("View", args="summary", icon="list"),
+                                 IM("Create", args="create", icon="create")),
+                        )
+        output["index_menu"] = index_menu
         return output
 
 # END =========================================================================

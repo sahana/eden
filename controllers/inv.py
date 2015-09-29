@@ -1379,7 +1379,7 @@ def track_item():
                                       #"send_id",
                                       #"req_item_id",
                                       (T("Date Released"), "send_id$date"),
-                                      (T("Beneficiary"), "send_id$site_id"),
+                                      (T("Beneficiary"), "send_id$to_site_id"),
                                       (settings.get_inv_send_shortname(), "send_id$send_ref"),
                                       (settings.get_req_shortname(), "send_id$req_ref"),
                                       (T("Items/Description"), "item_id"),
@@ -1461,6 +1461,33 @@ def track_item():
                                       ]
                        )
         s3.filter = (FS("expiry_date") != None)
+    elif report == "dist":
+        # Summary of Releases
+        s3.crud_strings["inv_track_item"] = Storage(title_list = T("Distribution Report"))
+
+        level_fields = ["send_id$to_site_id$location_id$%s" % level for
+                        level in current.gis.get_relevant_hierarchy_levels()]
+        
+        s3db.configure("inv_track_item",
+                       list_fields = ["id",
+                                      #"send_id",
+                                      #"req_item_id",
+                                      (T("Date Sent"), "send_id$date"),
+                                     (s3db.inv_send.to_site_id.label, "send_id$to_site_id")] +
+                                      level_fields +
+                                     [(settings.get_inv_send_shortname(), "send_id$send_ref"),
+                                      (settings.get_req_shortname(), "send_id$req_ref"),
+                                      (T("Items"), "item_id"),
+                                      (T("Source"), "supply_org_id"),
+                                      (T("Unit"), "item_pack_id"),
+                                      (T("Quantity"), "quantity"),
+                                      (T("Unit Cost"), "pack_value"),
+                                      (T("Total Cost"), "total_value"),
+                                     ],
+                       orderby = "inv_send.date dsc",
+                       sort = True
+                      )
+        s3.filter = (FS("send_id$type") == 21)
 
     output = s3_rest_controller(rheader = s3db.inv_rheader)
     return output

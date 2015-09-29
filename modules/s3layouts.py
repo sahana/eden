@@ -254,8 +254,7 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
                             _class = "active"
 
                         section = [LI(A(item.label,
-                                        **attr
-                                        ),
+                                        **attr),
                                       _class="heading %s" % _class,
                                       ),
                                    ]
@@ -273,8 +272,7 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
                             _class = ""
 
                         return LI(A(item.label,
-                                    **attr
-                                    ),
+                                    **attr),
                                   _class=_class,
                                   )
             else:
