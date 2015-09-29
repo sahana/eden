@@ -2603,6 +2603,7 @@ class S3ProjectHazardModel(S3Model):
 
     names = ("project_hazard",
              "project_hazard_project",
+             "project_hazard_id", # Exported for translation
              )
 
     def model(self):
@@ -2686,7 +2687,8 @@ class S3ProjectHazardModel(S3Model):
                        )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return dict(project_hazard_id = hazard_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -5492,7 +5494,7 @@ class S3ProjectThemeModel(S3Model):
     """
 
     names = ("project_theme",
-             "project_theme_id",
+             "project_theme_id",    # Exported for translation
              "project_theme_sector",
              "project_theme_project",
              "project_theme_activity",
@@ -5729,7 +5731,8 @@ class S3ProjectThemeModel(S3Model):
         )
 
         # Pass names back to global scope (s3.*)
-        return {}
+        return dict(project_theme_id = theme_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
