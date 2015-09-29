@@ -111,7 +111,7 @@ class S3DVRModel(S3Model):
             2: T("Pending"),
             3: T("Close"),
         }
-        
+
 
         tablename = "dvr_case"
         define_table(tablename,
@@ -223,9 +223,31 @@ class S3DVRModel(S3Model):
                                                     ),
                                     "comments",
                                     )
-        
+
+        axes = ["organisation_id",
+                "case_need.need_id",
+                ]
+        levels = current.gis.get_relevant_hierarchy_levels()
+        for level in levels:
+            axes.append("current_address.location_id$%s" % level)
+        highest_lx = "current_address.location_id$%s" % levels[0]
+
+        facts = [(T("Number of Cases"), "count(id)"),
+                 ]
+
+        report_options = {"rows": axes,
+                          "cols": axes,
+                          "fact": facts,
+                          "defaults": {"rows": "case_need.need_id",
+                                       "cols": highest_lx,
+                                       "fact": facts[0],
+                                       "totals": True,
+                                       },
+                          }
+
         self.configure(tablename,
                        crud_form = crud_form,
+                       report_options = report_options,
                        )
 
         # ---------------------------------------------------------------------
