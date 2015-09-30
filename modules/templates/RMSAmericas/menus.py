@@ -668,6 +668,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
         #    else:
         #        return False
 
+        system_roles = current.session.s3.system_roles
+        ORG_ADMIN = system_roles.ORG_ADMIN
+
         menu = M(c="project")(
              M("Programs", f="programme")(
                 M("Create", m="create"),
@@ -694,7 +697,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 #  ),
                 M("Funding", f="organisation", m="report"),
              ),
-             M("Import", f="project", m="import", p="create")(
+             M("Import", f="project", m="import", p="create", restrict=[ORG_ADMIN])(
                 M("Import Projects", m="import", p="create"),
                 M("Import Project Organizations", f="organisation",
                   m="import", p="create"),

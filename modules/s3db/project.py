@@ -5241,9 +5241,9 @@ def project_status_represent(value):
         @ToDo: Configurable thresholds
     """
 
-    if value >= 86:
+    if value >= 80:
         colour = "00ff00" # Green
-    elif value  >= 66:
+    elif value  >= 60:
         colour = "ffff00" # Yellow
     else:
         colour = "ff0000" # Red
@@ -5313,7 +5313,9 @@ class S3ProjectProgrammeModel(S3Model):
                             requires = IS_EMPTY_OR(
                                             IS_ONE_OF(db, "project_programme.id",
                                                       represent,
-                                                      updateable = True,
+                                                      # We want to allow creation of Projects linked to Programmes
+                                                      # without giving update access to the Programme
+                                                      #updateable = True,
                                                       )),
                             sortby = "name",
                             comment = S3AddResourceLink(c="project",
