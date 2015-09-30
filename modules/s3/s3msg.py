@@ -661,7 +661,7 @@ class S3Msg(object):
                      ptable.on((ptable.id == ttable.person_id) & \
                                (ptable.deleted != True)),
                      ]
-            
+
             atable = s3db.table("deploy_alert")
             if atable:
                 ltable = db.deploy_alert_recipient
@@ -2061,7 +2061,7 @@ class S3Msg(object):
             Function  to call to fetch tweets into msg_twitter table
             - called via Scheduler or twitter_inbox controller
 
-            http://tweepy.readthedocs.org/en/v3.3.0/api.html  
+            http://tweepy.readthedocs.org/en/v3.3.0/api.html
         """
 
         try:

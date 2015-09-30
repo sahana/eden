@@ -3646,7 +3646,7 @@ class S3ProjectOrganisationModel(S3Model):
         #    # Check that total budget isn't exceeded
         #    # - either needs knowledge of exchange rates or forcing that org contribnutions are in same currency as total_budget which doesn't match real world
         #    btable = current.s3db.budget_budget
-        #    total_budget = 
+        #    total_budget =
         #    form.errors.amount = \
         #            current.T("Amount contributed cannot be greater than the total budget.")
 

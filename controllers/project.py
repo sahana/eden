@@ -230,7 +230,7 @@ def project():
                                                          filter_opts=[r.id],
                                                          )
                 # @ToDo: end_date cannot be before Project Start
-                #ctable.end_date.requires = 
+                #ctable.end_date.requires =
 
                 # Have a filter for indicator in indicator data report
                 #if r.method == "report":
@@ -1101,7 +1101,7 @@ def indicator():
             field.readable = field.writable = False
 
         return True
-    s3.prep = prep                       
+    s3.prep = prep
 
     return s3_rest_controller()
 

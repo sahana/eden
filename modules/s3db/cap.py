@@ -390,7 +390,7 @@ class S3CAPModel(S3Model):
                                  writable = False,
                                  ),
                      *s3_meta_fields())
-        
+
         list_fields = [(T("Sent"), "sent"),
                        "scope",
                        "info.priority",
@@ -482,7 +482,7 @@ class S3CAPModel(S3Model):
         self.set_method("cap", "alert",
                         method = "import_feed",
                         action = CAPImportFeed())
-        
+
         self.set_method("cap", "alert",
                         method = "assign",
                         action = self.cap_AssignArea())
@@ -560,7 +560,7 @@ class S3CAPModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Warning Priorities for CAP
-        
+
         tablename = "cap_warning_priority"
         define_table(tablename,
                      Field("priority_rank", "integer",
@@ -592,9 +592,9 @@ class S3CAPModel(S3Model):
                            label = T("Color Code"),
                            ),
                      *s3_meta_fields())
-        
+
         priority_represent = S3Represent(lookup=tablename)
-        
+
         crud_strings[tablename] = Storage(
             label_create = T("Create Warning Priority"),
             title_display = T("Warning Priority Details"),
@@ -608,11 +608,11 @@ class S3CAPModel(S3Model):
             msg_record_deleted = T("Warning Priority removed"),
             msg_list_empty = T("No Warning Priorities currently registered")
             )
-        
+
         configure(tablename,
                   deduplicate = S3Duplicate(primary=("event_type", "name")),
                   )
-                
+
         # ---------------------------------------------------------------------
         # CAP info priority
         # @ToDo: i18n: Need label=T("")
@@ -665,7 +665,7 @@ class S3CAPModel(S3Model):
                              'trigger':'event_type_id',
                              'target':'priority',
                              'lookupURL':S3.Ap.concat('/cap/priority_get/'),
-                             'lookupResource':'event_type'                       
+                             'lookupResource':'event_type'
                              })'''
                      ),
                      Field("response_type", "list:string", # 0 or more allowed
@@ -694,14 +694,14 @@ class S3CAPModel(S3Model):
                      Field("severity",
                            represent = lambda opt: \
                             cap_info_severity_opts.get(opt, UNKNOWN_OPT),
-                           # Empty For Template, checked onvalidation hook 
+                           # Empty For Template, checked onvalidation hook
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(cap_info_severity_opts)),
                            ),
                      Field("certainty",
                            represent = lambda opt: \
                             cap_info_certainty_opts.get(opt, UNKNOWN_OPT),
-                           # Empty For Template, checked onvalidation hook 
+                           # Empty For Template, checked onvalidation hook
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(cap_info_certainty_opts)),
                            ),
@@ -859,7 +859,7 @@ class S3CAPModel(S3Model):
                                                                  ],
                                                          ),
                                     )
-        configure(tablename,                  
+        configure(tablename,
                   # Shouldn't be required if all UI actions go through alert controller & XSLT configured appropriately
                   create_onaccept = update_alert_id(tablename),
                   crud_form = crud_form,
@@ -923,17 +923,17 @@ class S3CAPModel(S3Model):
                            ),
                      Field("altitude", "integer", # Feet above Sea-level in WGS84 (Specific or Minimum is using a range)
                            label = T("Altitude"),
-                           ), 
+                           ),
                      Field("ceiling", "integer", # Feet above Sea-level in WGS84 (Maximum)
                            label = T("Ceiling"),
-                           ), 
+                           ),
                      # Only used for Templates
                      self.event_type_id(script = '''
                             $.filterOptionsS3({
                              'trigger':'event_type_id',
                              'target':'priority',
                              'lookupURL':S3.Ap.concat('/cap/priority_get/'),
-                             'lookupResource':'event_type'                         
+                             'lookupResource':'event_type'
                              })'''
                      ),
                      # Only used for Templates
@@ -1158,27 +1158,27 @@ class S3CAPModel(S3Model):
             return ""
 
         return "%s/%d" % (current.xml.domain, user_id)
-    
+
     # -------------------------------------------------------------------------
     @staticmethod
     def generate_source():
         """
             Generate a source for CAP alert
         """
-        return "%s@%s" % (current.xml.domain, 
+        return "%s@%s" % (current.xml.domain,
                           current.deployment_settings.get_base_public_url())
 
     # -------------------------------------------------------------------------
-    @staticmethod    
+    @staticmethod
     def get_expirydate():
         """
             Default Expiry date based on the expire offset
         """
-        
+
         return current.request.utcnow + \
                datetime.timedelta(days = current.deployment_settings.\
                                   get_cap_expire_offset())
-               
+
     # -------------------------------------------------------------------------
     @staticmethod
     def cap_template_represent(id, row=None):
@@ -1302,20 +1302,20 @@ class S3CAPModel(S3Model):
                     current.T("'Severity' field is mandatory")
             if not form_vars.get("certainty"):
                 form.errors["certainty"] = \
-                    current.T("'Certainty' field is mandatory")                
-    
+                    current.T("'Certainty' field is mandatory")
+
     # -------------------------------------------------------------------------
     @staticmethod
     def cap_alert_approve(record=None):
         """
             Update the approved_on field when alert gets approved
         """
-        
+
         if not record:
             return
-        
-        alert_id = record["id"]        
-        
+
+        alert_id = record["id"]
+
         # Update approved_on at the time the alert is approved
         if alert_id:
             db = current.db
@@ -1328,15 +1328,15 @@ class S3CAPAreaNameModel(S3Model):
         CAP Name Model:
             -local names for CAP Area
     """
-    
+
     names = ("cap_area_name",
              )
-    
+
     def model(self):
-        
+
         T = current.T
         l10n_languages = current.deployment_settings.get_L10n_languages()
-        
+
         # ---------------------------------------------------------------------
         # Local Names
         #
@@ -1356,11 +1356,11 @@ class S3CAPAreaNameModel(S3Model):
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
-        
+
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary=("area_id", "language")),
                        )
-        
+
         # Pass names back to global scope (s3.*)
         return {}
 
@@ -1462,7 +1462,7 @@ def cap_rheader(r):
                                        _target="_blank",
                                        )
 
-                        # Display 'Submit for Approval' based on permission  
+                        # Display 'Submit for Approval' based on permission
                         # and deployment settings
                         if not current.request.get_vars.get("_next") and \
                            not r.record.approved_by and \
@@ -1478,13 +1478,13 @@ def cap_rheader(r):
                                 group_members = current.auth.s3_group_members
                                 user_pe_id = current.auth.s3_user_pe_id
                                 for group_row in group_rows:
-                                    group_id = group_row.id                            
+                                    group_id = group_row.id
                                     user_ids = group_members(group_id) # List of user_ids
                                     pe_ids = [] # List of pe_ids
                                     pe_append = pe_ids.append
                                     for user_id in user_ids:
                                         pe_append(user_pe_id(int(user_id)))
-                                        
+
                                 submit_btn = A(T("Submit for Approval"),
                                                _href = URL(f = "compose",
                                                            vars = {"cap_alert.id": record.id,
@@ -1513,12 +1513,12 @@ def cap_rheader(r):
                         artable = s3db.cap_area
                         query = (artable.is_template == True) & \
                                 (artable.deleted == False)
-                                                        
+
                         template_area_rows = current.db(query)._select(artable.id,
                                                                        limitby=(0, 1))
                         if template_area_rows:
                             tabs.insert(2, (T("Predefined Areas"), "assign"))
-                            
+
                         # Display "Copy" Button to copy record from the opened info
                         if r.component_name == "info" and \
                            r.component_id:
@@ -1534,7 +1534,7 @@ def cap_rheader(r):
                             copy_btn = None
                     else:
                         copy_btn = None
-                                                        
+
                     rheader_tabs = s3_rheader_tabs(r, tabs)
 
                     rheader = DIV(TABLE(TR(TH("%s: " % T("Alert")),
@@ -1549,7 +1549,7 @@ def cap_rheader(r):
                                   )
                     if copy_btn:
                         rheader.insert(1, TR(TD(copy_btn)))
-                        
+
                     if submit_btn:
                         rheader.insert(1, TR(TD(submit_btn)))
 
@@ -1557,10 +1557,10 @@ def cap_rheader(r):
                 # Used only for Area Templates
                 tabs = [(T("Area"), None),
                         ]
-                
+
                 if current.deployment_settings.get_L10n_translate_cap_area():
                     tabs.insert(1, (T("Local Names"), "name"))
-                    
+
                 rheader_tabs = s3_rheader_tabs(r, tabs)
                 rheader = DIV(TABLE(TR(TH("%s: " % T("Alert")),
                                        TD(A(s3db.cap_alert_represent(record.alert_id),
@@ -2010,7 +2010,7 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
         _href = URL(c="cap", f="alert", args=[record_id, "profile"])
     else:
         _href = URL(c="cap", f="public", args=[record_id, "profile"])
-        
+
     headline = A(headline,
                  _href = _href,
                  _target = "_blank",
@@ -2067,7 +2067,7 @@ def add_area_from_template(area_id, alert_id):
     """
         Add an area from a Template along with its components Location and Tag
     """
-    
+
     afieldnames = ("name",
                    "altitude",
                    "ceiling",
@@ -2078,32 +2078,32 @@ def add_area_from_template(area_id, alert_id):
                    "value",
                    "comments",
                    )
-    
+
     db = current.db
     s3db = current.s3db
     atable = s3db.cap_area
     itable = s3db.cap_info
     ltable = s3db.cap_area_location
     ttable = s3db.cap_area_tag
-    
+
     # Create Area Record from Template
     atemplate = db(atable.id == area_id).select(*afieldnames,
                                                 limitby=(0, 1)).first()
     rows = db(itable.alert_id == alert_id).select(itable.id)
-    
+
     if len(rows) == 1:
         info_id = rows.first().id
     else:
         info_id = ""
-        
+
     adata = {"is_template": False,
              "alert_id": alert_id,
              "info_id": info_id,
              }
     for field in afieldnames:
         adata[field] = atemplate[field]
-    aid = atable.insert(**adata) 
-    
+    aid = atable.insert(**adata)
+
     # Add Area Location Components of Template
     ltemplate = db(ltable.area_id == area_id).select(*lfieldnames)
     for rows in ltemplate:
@@ -2113,9 +2113,9 @@ def add_area_from_template(area_id, alert_id):
         for field in lfieldnames:
             ldata[field] = rows[field]
         lid = ltable.insert(**ldata)
-        
+
     # Add Area Tag Components of Template
-    ttemplate = db(ttable.area_id == area_id).select(*tfieldnames)      
+    ttemplate = db(ttable.area_id == area_id).select(*tfieldnames)
     for row in ttemplate:
         tdata = {"area_id": aid,
                  "alert_id": alert_id,
@@ -2123,7 +2123,7 @@ def add_area_from_template(area_id, alert_id):
         for field in tfieldnames:
             tdata[field] = row[field]
         tid = ttable.insert(**tdata)
-        
+
     return aid
 
 # =============================================================================
@@ -2251,20 +2251,20 @@ class cap_AssignArea(S3Method):
 
         # The record ID of the alert the method is called for
         alert_id = r.id
-        
+
         # Requires permission to update this alert
-        authorised = current.auth.s3_has_permission("update", "cap_alert", 
+        authorised = current.auth.s3_has_permission("update", "cap_alert",
                                                     record_id=alert_id)
         if not authorised:
-            r.unauthorised()            
-        
-        T = current.T        
+            r.unauthorised()
+
+        T = current.T
         s3db = current.s3db
         response = current.response
-        
+
         # Filter to limit the selection of areas
         area_filter = (FS("is_template") == True)
-                      
+
         if r.http == "POST":
             # Template areas have been selected
 
@@ -2288,7 +2288,7 @@ class cap_AssignArea(S3Method):
                     else:
                         filters = None
 
-                    query = area_filter & (~(FS("id").belongs(selected)))                    
+                    query = area_filter & (~(FS("id").belongs(selected)))
                     aresource = s3db.resource("cap_area",
                                               filter = query,
                                               vars = filters)
@@ -2458,11 +2458,11 @@ class cap_AssignArea(S3Method):
 # -----------------------------------------------------------------------------
 class cap_AreaRepresent(S3Represent):
     """ Representation of CAP Area """
-    
+
     def __init__(self,
                  show_link=False,
                  multiple=False):
-        
+
         settings = current.deployment_settings
         # Translation using cap_area_name & not T()
         translate = settings.get_L10n_translate_cap_area()
@@ -2470,28 +2470,28 @@ class cap_AreaRepresent(S3Represent):
             language = current.session.s3.language
             if language == settings.get_L10n_default_language():
                 translate = False
-                
+
         super(cap_AreaRepresent,
               self).__init__(lookup="cap_area",
                              show_link=show_link,
                              translate=translate,
                              multiple=multiple
                              )
-    
+
     # -------------------------------------------------------------------------
     def lookup_rows(self, key, values, fields=None):
         """
             Custom lookup method for Area(CAP) rows.Parameters
             key and fields are not used, but are kept for API
             compatibility reasons.
-            
+
             @param values: the cap_area IDs
         """
-        
+
         db = current.db
         s3db = current.s3db
         artable = s3db.cap_area
-        
+
         count = len(values)
         if count == 1:
             query = (artable.id == values[0])
@@ -2509,7 +2509,7 @@ class cap_AreaRepresent(S3Represent):
             left = [ltable.on((ltable.area_id == artable.id) & \
                               (ltable.language == current.session.s3.language)),
                         ]
-            
+
         else:
             left = None
 
@@ -2522,18 +2522,18 @@ class cap_AreaRepresent(S3Represent):
     def represent_row(self, row):
         """
             Represent a single Row
-            
+
             @param row: the cap_area Row
         """
-        
+
         if self.translate:
             name = row["cap_area_name.name_l10n"] or row["cap_area.name"]
         else:
             name = row["cap_area.name"]
-        
+
         if not name:
             return self.default
-        
+
         return s3_unicode(name)
-    
+
 # END =========================================================================

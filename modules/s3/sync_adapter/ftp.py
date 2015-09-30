@@ -41,7 +41,7 @@ try:
     from cStringIO import StringIO    # Faster, where available
 except:
     from StringIO import StringIO
-    
+
 # =============================================================================
 class S3SyncAdapter(S3SyncBaseAdapter):
     """
@@ -49,7 +49,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
          currently used by CAP
     """
-    
+
     # -------------------------------------------------------------------------
     def register(self):
         """
@@ -60,7 +60,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
         # No registration required
         return True
-    
+
     # -------------------------------------------------------------------------
     def login(self):
         """
@@ -68,15 +68,15 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
             @return: None if successful, otherwise the error
         """
-        
+
         repository = self.repository
         url = repository.url
         error = None
-        
+
         if not url:
             error = "Remote URL required for FTP Push"
-        else:        
-            import ftplib                        
+        else:
+            import ftplib
             try:
                 ftp_connection = ftplib.FTP(url)
             except ftplib.all_errors:
@@ -86,13 +86,13 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                     ftp_connection.login(repository.username, repository.password)
                 except ftplib.error_perm:
                     error = sys.exc_info()[1]
-                    
+
             self.ftp_connection = ftp_connection
-        
+
         if error:
             current.log.debug(error)
         return error
-    
+
     # -------------------------------------------------------------------------
     def pull(self, task, onconflict=None):
         """
@@ -137,28 +137,28 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         log = repository.log
         remote = False
         output = None
-        
+
         current.log.debug("S3SyncRepository.push(%s, %s)" % (repository.url,
                                                              resource_name))
-        
+
         # Define the resource
         resource = current.s3db.resource(resource_name,
                                          # FTP remote deletion is not supported yet
                                          #include_deleted=True,
                                          )
-        
+
         # Apply sync filters for this task
         filters = current.sync.get_filters(task.id)
         table = resource.table
         tablename = resource.tablename
-        
+
         if filters:
             queries = S3URLQuery.parse(resource, filters[tablename])
             [resource.add_filter(q) for a in queries for q in queries[a]]
 
         # Filter to records after last push
         msince = task.last_push
-        
+
         if msince:
             strategy = task.strategy
             created = "create" in strategy
@@ -172,19 +172,19 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                                (table.modified_on > msince)
             else:
                 mtime_filter = None
-                
+
             if mtime_filter:
                 resource.add_filter(mtime_filter)
-        
-        mtime = resource.muntil    
+
+        mtime = resource.muntil
         # Get the ID of the resource after filter and msince
         resource_ids = resource.get_id()
-        
+
         # No Changes since last push?
         if resource_ids is None:
             message = "No Changes since last push"
             result = log.WARNING
-        else:                              
+        else:
             # Filename
             settings = current.deployment_settings
             # Placeholders for filename
@@ -193,32 +193,32 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                             "resource": resource_name,
                             "public_url": settings.get_base_public_url(),
                             }
-            
+
             from string import Template
             filename = resource.get_config("upload_filename")
             if not filename:
                 filename = settings.get_sync_upload_filename()
             filename = Template(filename).safe_substitute(s="%(systemname_short)s",
                                                           r="%(resource)s")
-            filename = filename % placeholders                
+            filename = filename % placeholders
             # Get Representation
             representation = task.representation
             filename = ("%s.%s") % (filename, representation)
-            
+
             # FTP Transfer
             remote = True
             import ftplib
-            ftp_connection = self.ftp_connection          
+            ftp_connection = self.ftp_connection
             if task.multiple_file:
                 if type(resource_ids) is not list:
-                    resource_ids = [resource_ids]                    
-                  
+                    resource_ids = [resource_ids]
+
                 for resource_id in resource_ids:
                     resource.clear_query()
                     resource.add_filter(FS("id") == resource_id)
                     data = self._get_data(resource, representation)
-                                            
-                    try:                    
+
+                    try:
                         ftp_connection.storbinary("STOR %s" % filename,
                                                   StringIO(data))
                     except ftplib.error_perm:
@@ -228,12 +228,12 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                     else:
                         message = "FTP Transfer Successful"
                         result = log.SUCCESS
-                    
+
                     current.log.debug(message)
             else:
                 data = self._get_data(resource, representation)
-                
-                try:                    
+
+                try:
                     ftp_connection.storbinary("STOR %s" % filename,
                                               StringIO(data))
                 except ftplib.error_perm:
@@ -243,12 +243,12 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 else:
                     message = "FTP Transfer Successful"
                     result = log.SUCCESS
-                    
+
                 current.log.debug(message)
-                
+
             # Quit the connection here
             ftp_connection.quit()
-        
+
         # Log the operation
         log.write(repository_id = repository.id,
                   resource_name = resource_name,
@@ -263,39 +263,39 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         if output is not None:
             mtime = None
         return output, mtime
-    
+
     # -------------------------------------------------------------------------
     # Internal methods:
     # -------------------------------------------------------------------------
     def _get_data(self, resource, representation):
         """ Returns the representation data for the resource """
-        
+
         request = S3Request(prefix = resource.prefix,
                             name = resource.name,
                             extension = representation,
                             )
-        
+
         if request.transformable():
             return resource.export_xml(stylesheet = request.stylesheet(),
                                        pretty_print = True,
                                        )
-        
-        else:            
+
+        else:
             if representation == "csv":
                 exporter = S3Exporter().csv
-                
-            # @ToDo use CRUD    
+
+            # @ToDo use CRUD
             #elif representation == "html":
-                                
+
             elif representation == "pdf":
                 exporter = S3Exporter().pdf
-                                                            
+
             elif representation == "xls":
                 exporter = S3Exporter().xls
-                                
+
             elif representation == "json":
                 exporter = S3Exporter().json
-            
+
             return exporter(resource)
-    
+
 # End =========================================================================

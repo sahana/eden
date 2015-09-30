@@ -4684,7 +4684,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 @param parent: gis_location id of parent
             """
 
-            # No need to filter out deleted since the parent FK is None for these records 
+            # No need to filter out deleted since the parent FK is None for these records
             query = (table.parent == parent) & \
                     (table.inherited == True)
             rows = db(query).select(*fields)

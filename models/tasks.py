@@ -43,24 +43,24 @@ tasks["maintenance"] = maintenance
 
 # -----------------------------------------------------------------------------
 if settings.has_module("cap"):
-    
+
     # -----------------------------------------------------------------------------
     def cap_ftp_sync(user_id=None):
         """ Get all the ftp repository and synchronize them """
-        
+
         if user_id:
             # Authenticate
             auth.s3_impersonate(user_id)
-            
+
         rows = db(s3db.sync_repository.apitype == "ftp").select()
-        
+
         if rows:
             sync = current.sync
             for row in rows:
                 sync.synchronize(row)
-    
+
     tasks["cap_ftp_sync"] = cap_ftp_sync
-    
+
 # -----------------------------------------------------------------------------
 if settings.has_module("doc"):
 

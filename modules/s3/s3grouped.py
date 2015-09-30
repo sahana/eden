@@ -1364,6 +1364,14 @@ class S3GroupedItems(object):
         if key:
             output["k"] = key
 
+            representations = None
+            renderer = represent.get(key) if represent else None
+
+            # Bulk represent?
+            if renderer and hasattr(renderer, "bulk"):
+                values = [group[key] for group in self.groups]
+                representations = renderer.bulk(values)
+
             data = []
             add_group = data.append
             for group in self.groups:
@@ -1376,12 +1384,11 @@ class S3GroupedItems(object):
 
                 # Add subgroup attribute value
                 value = group[key]
-                renderer = represent.get(key) if represent else None
-                if renderer is None:
-                    value = s3_unicode(value).encode("utf-8")
-                else:
-                    # @todo: call bulk-represent if available
-                    value = s3_unicode(renderer(value)).encode("utf-8")
+                if representations is not None:
+                    value = representations.get(value)
+                elif renderer is not None:
+                    value = renderer(value)
+                value = s3_unicode(value).encode("utf-8")
                 gdict["v"] = value
                 add_group(gdict)
 

@@ -872,7 +872,7 @@ class TranslateReadFiles:
                         reusable_field = s3db.get(fieldname)
                         # Excludes lambdas which are in defaults()
                         # i.e. reusable fields in disabled modules
-                        if reusable_field and isinstance(reusable_field, S3ReusableField): 
+                        if reusable_field and isinstance(reusable_field, S3ReusableField):
                             represent = reusable_field.attr.represent
                             if hasattr(represent, "translate"):
                                 translate = represent.translate

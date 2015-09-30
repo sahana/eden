@@ -318,7 +318,7 @@ def req_controller(template = False):
             else:
                 if r.id:
                     table.is_template.readable = table.is_template.writable = False
-                    
+
                 method = r.method
                 if method in (None, "create"):
                     # Hide fields which don't make sense in a Create form
@@ -644,7 +644,7 @@ $.filterOptionsS3({
                         # Create form
                         # @ToDo: DRY
                         if not settings.get_req_inline_forms():
-                            form_vars = output["form"].vars 
+                            form_vars = output["form"].vars
                             type = form_vars.type
                             if type == "1":
                                 # Stock: Open Tab for Items
@@ -786,7 +786,7 @@ $.filterOptionsS3({
                 # Create form
                 # @ToDo: DRY
                 if not settings.get_req_inline_forms():
-                    form_vars = output["form"].vars 
+                    form_vars = output["form"].vars
                     req_type = form_vars.type
                     if req_type == "1":
                         # Stock: Open Tab for Items

@@ -525,7 +525,7 @@ class S3StatsDemographicModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return dict(
-            stats_demographic_id = demographic_id, 
+            stats_demographic_id = demographic_id,
             stats_demographic_rebuild_all_aggregates = self.stats_demographic_rebuild_all_aggregates,
             stats_demographic_update_aggregates = self.stats_demographic_update_aggregates,
             stats_demographic_update_location_aggregate = self.stats_demographic_update_location_aggregate,
