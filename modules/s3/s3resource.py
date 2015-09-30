@@ -337,7 +337,8 @@ class S3Resource(object):
             @param hook: the hook
         """
 
-        if alias is not None and hook.filterby is not None:
+        filterby = hook.filterby
+        if alias is not None and filterby is not None:
             table_alias = "%s_%s_%s" % (hook.prefix,
                                         hook.alias,
                                         hook.name)
@@ -373,7 +374,12 @@ class S3Resource(object):
         component.multiple = hook.multiple
         component.defaults = hook.defaults
 
-        if hook.filterby is not None:
+        if not filterby:
+            # Can use filterby=False to enforce table aliasing yet
+            # suppress component filtering (useful e.g. with two
+            # foreign key links from the same table)
+            component.filter = None
+        else:
             filterfor = hook.filterfor
             is_list = isinstance(filterfor, (tuple, list))
             if is_list and len(filterfor) == 1:
@@ -385,8 +391,6 @@ class S3Resource(object):
                 component.filter = (hook.table[hook.filterby].belongs(filterfor))
             else:
                 component.filter = None
-        else:
-            component.filter = None
 
         # Copy properties to the link
         if component.link is not None:
