@@ -635,10 +635,16 @@ class S3SQLDefaultForm(S3SQLForm):
                         keepvalues=False,
                         hideerror=False):
 
+            # Undelete?
+            if vars.get("_undelete"):
+                undelete = form.vars.get("deleted") is False
+            else:
+                undelete = False
+
             # Audit
             prefix = self.prefix
             name = self.name
-            if record_id is None:
+            if record_id is None or undelete:
                 current.audit("create", prefix, name, form=form,
                               representation=format)
             else:
@@ -657,9 +663,8 @@ class S3SQLDefaultForm(S3SQLForm):
                 master = link.master
                 resource.update_link(master, form_vars)
 
-
             if form_vars.id:
-                if record_id is None:
+                if record_id is None or undelete:
                     # Create hierarchy link
                     if hierarchy:
                         from s3hierarchy import S3Hierarchy
@@ -1003,16 +1008,29 @@ class S3SQLCustomForm(S3SQLForm):
 
         # Process the form
         formname = "%s/%s" % (tablename, record_id)
-        if form.accepts(request.post_vars,
+        post_vars = request.post_vars
+        if form.accepts(post_vars,
                         current.session,
-                        onvalidation=self.validate,
-                        formname=formname,
-                        keepvalues=False,
-                        hideerror=False):
+                        onvalidation = self.validate,
+                        formname = formname,
+                        keepvalues = False,
+                        hideerror = False,
+                        ):
+
+            # Undelete?
+            if post_vars.get("_undelete"):
+                undelete = post_vars.get("deleted") is False
+            else:
+                undelete = False
 
             link = options.get("link")
             hierarchy = options.get("hierarchy")
-            self.accept(form, format=format, link=link, hierarchy=hierarchy)
+            self.accept(form, 
+                        format = format, 
+                        link = link, 
+                        hierarchy = hierarchy,
+                        undelete = undelete,
+                        )
             # Post-process the form submission after all records have
             # been accepted and linked together (self.accept() has
             # already updated the form data with any new keys here):
@@ -1103,7 +1121,12 @@ class S3SQLCustomForm(S3SQLForm):
         return
 
     # -------------------------------------------------------------------------
-    def accept(self, form, format=None, link=None, hierarchy=None):
+    def accept(self, 
+               form, 
+               format=None, 
+               link=None, 
+               hierarchy=None,
+               undelete=False):
         """
             Create/update all records from the form.
 
@@ -1111,6 +1134,7 @@ class S3SQLCustomForm(S3SQLForm):
             @param format: data format extension (for audit)
             @param link: resource.link for linktable components
             @param hierarchy: the data for the hierarchy link to create
+            @param undelete: reinstate a previously deleted record
         """
 
         db = current.db
@@ -1120,9 +1144,10 @@ class S3SQLCustomForm(S3SQLForm):
         main_data = self._extract(form)
         master_id, master_form_vars = self._accept(self.record_id,
                                                    main_data,
-                                                   format=format,
-                                                   link=link,
-                                                   hierarchy=hierarchy,
+                                                   format = format,
+                                                   link = link,
+                                                   hierarchy = hierarchy,
+                                                   undelete = undelete,
                                                    )
         if not master_id:
             return
@@ -1221,7 +1246,8 @@ class S3SQLCustomForm(S3SQLForm):
                 alias=None,
                 format=None,
                 hierarchy=None,
-                link=None):
+                link=None,
+                undelete=False):
         """
             Create or update a record
 
@@ -1231,6 +1257,7 @@ class S3SQLCustomForm(S3SQLForm):
             @param format: the request format (for audit)
             @param hierarchy: the data for the hierarchy link to create
             @param link: resource.link for linktable components
+            @param undelete: reinstate a previously deleted record
         """
 
         if not data:
@@ -1267,6 +1294,15 @@ class S3SQLCustomForm(S3SQLForm):
                 # Get oldrecord to save in form
                 oldrecord = db(table._id == record_id).select(limitby=(0, 1)
                                                               ).first()
+            if undelete:
+                # Re-instating a previously deleted record
+                table_fields = table.fields
+                if "deleted" in table_fields:
+                    data["deleted"] = False
+                if "created_by" in table_fields and current.auth.user:
+                    data["created_by"] = current.auth.user.id
+                if "created_on" in table_fields:
+                    data["created_on"] = current.request.utcnow
             db(table._id == record_id).update(**data)
         else:
             # Insert new record
@@ -1282,7 +1318,7 @@ class S3SQLCustomForm(S3SQLForm):
         form = Storage(vars=form_vars, record=oldrecord)
 
         # Audit
-        if record_id is None:
+        if record_id is None or undelete:
             current.audit("create", prefix, name, form=form,
                           representation=format)
         else:
@@ -1299,7 +1335,7 @@ class S3SQLCustomForm(S3SQLForm):
             resource.update_link(master, form_vars)
 
         if accept_id:
-            if record_id is None:
+            if record_id is None or undelete:
                 # Create hierarchy link
                 if hierarchy:
                     from s3hierarchy import S3Hierarchy
