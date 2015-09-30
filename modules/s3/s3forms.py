@@ -1025,9 +1025,9 @@ class S3SQLCustomForm(S3SQLForm):
 
             link = options.get("link")
             hierarchy = options.get("hierarchy")
-            self.accept(form, 
-                        format = format, 
-                        link = link, 
+            self.accept(form,
+                        format = format,
+                        link = link,
                         hierarchy = hierarchy,
                         undelete = undelete,
                         )
@@ -1121,10 +1121,10 @@ class S3SQLCustomForm(S3SQLForm):
         return
 
     # -------------------------------------------------------------------------
-    def accept(self, 
-               form, 
-               format=None, 
-               link=None, 
+    def accept(self,
+               form,
+               format=None,
+               link=None,
                hierarchy=None,
                undelete=False):
         """
