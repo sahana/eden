@@ -28,7 +28,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3XLS",)
+__all__ = ("S3XLS",
+           )
 
 try:
     from cStringIO import StringIO    # Faster, where available
@@ -63,7 +64,7 @@ class S3XLS(S3Codec):
     )
 
     # -------------------------------------------------------------------------
-    def extractResource(self, resource, list_fields):
+    def extract(self, resource, list_fields):
         """
             Extract the rows from the resource
 
@@ -73,25 +74,28 @@ class S3XLS(S3Codec):
 
         title = self.crud_string(resource.tablename, "title_list")
 
-        vars = Storage(current.request.vars)
-        vars["iColumns"] = len(list_fields)
-        filter, orderby, left = resource.datatable_filter(list_fields, vars)
-        resource.add_filter(filter)
+        get_vars = dict(current.request.vars)
+        get_vars["iColumns"] = len(list_fields)
+        query, orderby, left = resource.datatable_filter(list_fields,
+                                                         get_vars,
+                                                         )
+        resource.add_filter(query)
 
         if orderby is None:
-            orderby = resource.get_config("orderby", None)
+            orderby = resource.get_config("orderby")
 
-        result = resource.select(list_fields,
-                                 left=left,
-                                 limit=None,
-                                 count=True,
-                                 getids=True,
-                                 orderby=orderby,
-                                 represent=True,
-                                 show_links=False)
+        data = resource.select(list_fields,
+                               left = left,
+                               limit = None,
+                               count = True,
+                               getids = True,
+                               orderby = orderby,
+                               represent = True,
+                               show_links = False,
+                               )
 
-        rfields = result["rfields"]
-        rows = result["rows"]
+        rfields = data.rfields
+        rows = data.rows
 
         types = []
         lfields = []
@@ -156,11 +160,8 @@ class S3XLS(S3Codec):
 
         import datetime
 
-        request = current.request
-
         # The xlwt library supports a maximum of 182 characters in a single cell
-        max_cell_size = 182
-
+        MAX_CELL_SIZE = 182
         COL_WIDTH_MULTIPLIER = self.COL_WIDTH_MULTIPLIER
 
         # Get the attributes
@@ -185,9 +186,12 @@ class S3XLS(S3Codec):
         else:
             if not list_fields:
                 list_fields = data_source.list_fields()
-            (title, types, lfields, headers, rows) = self.extractResource(data_source,
-                                                                          list_fields)
-        report_groupby = lfields[group] if group else None
+            (title, types, lfields, headers, rows) = self.extract(data_source,
+                                                                  list_fields,
+                                                                  )
+
+        # Verify columns in items
+        request = current.request
         if len(rows) > 0 and len(lfields) > len(rows[0]):
             msg = """modules/s3/codecs/xls: There is an error in the list items, a field doesn't exist
 requesting url %s
@@ -196,6 +200,8 @@ Headers     %s
 List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             current.log.error(msg)
 
+        # Grouping
+        report_groupby = lfields[group] if group else None
         groupby_label = headers[report_groupby] if report_groupby else None
 
         # Date/Time formats from L10N deployment settings
@@ -217,55 +223,57 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         # Create the workbook
         book = xlwt.Workbook(encoding="utf-8")
 
-        # Add a sheet
+        # Add sheets
+        sheets = []
+        # XLS exports are limited to 65536 rows per sheet, we bypass
+        # this by creating multiple sheets
+        row_limit = 65536
+        sheetnum = len(rows) / row_limit
         # Can't have a / in the sheet_name, so replace any with a space
         sheet_name = str(title.replace("/", " "))
-        # sheet_name cannot be over 31 chars
         if len(sheet_name) > 31:
-            sheet_name = sheet_name[:31]
-        sheets = []
-        rowLimit = 65536 #.xls exports are limited to 65536 rows per sheet, we bypass this by creating multiple sheets
-        sheetnum = len(rows) / rowLimit
+            # Sheet name cannot be over 31 chars
+            # (take sheet number suffix into account)
+            sheet_name = sheet_name[:31] if sheetnum == 1 else sheet_name[:28]
         count = 1
         while len(sheets) <= sheetnum:
             sheets.append(book.add_sheet('%s-%s' % (sheet_name, count)))
             count += 1
 
+        # Add header row to all sheets, determine columns widths
         header_style = styles["header"]
         for sheet in sheets:
-            # Header row
-            colCnt = 0
             # Move this down if a title row will be added
             if settings.get_xls_title_row():
-                headerRow = sheet.row(2)
+                header_row = sheet.row(2)
             else:
-                headerRow = sheet.row(0)
-            fieldWidths = []
-            id = False
+                header_row = sheet.row(0)
+            column_widths = []
+            has_id = False
+            col_index = 0
             for selector in lfields:
                 if selector == report_groupby:
                     continue
                 label = headers[selector]
                 if label == "Id":
-                    # Indicate to adjust colCnt when writing out
-                    id = True
-                    fieldWidths.append(0)
-                    colCnt += 1
+                    # Indicate to adjust col_index when writing out
+                    has_id = True
+                    column_widths.append(0)
+                    col_index += 1
                     continue
                 if label == "Sort":
                     continue
-                if id:
+                if has_id:
                     # Adjust for the skipped column
-                    writeCol = colCnt - 1
-
+                    write_col_index = col_index - 1
                 else:
-                        writeCol = colCnt
-                headerRow.write(writeCol, str(label), header_style)
+                    write_col_index = col_index
+                header_row.write(write_col_index, str(label), header_style)
                 width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
                 width = min(width, 65535) # USHRT_MAX
-                fieldWidths.append(width)
-                sheet.col(writeCol).width = width
-                colCnt += 1
+                column_widths.append(width)
+                sheet.col(write_col_index).width = width
+                col_index += 1
 
         # Title row (optional, deployment setting)
         if settings.get_xls_title_row():
@@ -273,28 +281,29 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             notes_style = style["notes"]
             for sheet in sheets:
                 # First row => Title (standard = "title_list" CRUD string)
-                currentRow = sheet.row(0)
-                if colCnt > 0:
-                    sheet.write_merge(0, 0, 0, colCnt, str(title),
+                current_row = sheet.row(0)
+                if col_index > 0:
+                    sheet.write_merge(0, 0, 0, col_index, str(title),
                                       large_header_style,
                                       )
-                currentRow.height = 500
+                current_row.height = 500
                 # Second row => Export date/time
-                currentRow = sheet.row(1)
-                currentRow.write(0, str(current.T("Date Exported:")), notes_style)
-                currentRow.write(1, request.now, notes_style)
+                current_row = sheet.row(1)
+                current_row.write(0, str(current.T("Date Exported:")), notes_style)
+                current_row.write(1, request.now, notes_style)
                 # Fix the size of the last column to display the date
                 if 16 * COL_WIDTH_MULTIPLIER > width:
-                    sheet.col(colCnt).width = 16 * COL_WIDTH_MULTIPLIER
+                    sheet.col(col_index).width = 16 * COL_WIDTH_MULTIPLIER
 
         # Initialize counters
-        totalCols = colCnt
+        totalCols = col_index
         # Move the rows down if a title row is included
         if settings.get_xls_title_row():
-            rowCnt = 2
+            row_index = 2
         else:
-            rowCnt = 0
+            row_index = 0
 
+        # Helper function to get the current row
         def get_current_row(row_count, row_limit):
 
             sheet_count = int(row_count / row_limit)
@@ -303,16 +312,16 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                 row_number += 1
             return sheets[sheet_count], sheets[sheet_count].row(row_number)
 
+        # Write the table contents
         subheading = None
         odd_style = styles["odd"]
         even_style = styles["even"]
         subheader_style = styles["subheader"]
         for row in rows:
-
-            # Row to write to
-            rowCnt += 1
-            currentSheet, currentRow = get_current_row(rowCnt, rowLimit)
-            style = even_style if rowCnt % 2 == 0 else odd_style
+            # Current row
+            row_index += 1
+            current_sheet, current_row = get_current_row(row_index, row_limit)
+            style = even_style if row_index % 2 == 0 else odd_style
 
             # Group headers
             if report_groupby:
@@ -320,16 +329,16 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                 if subheading != represent:
                     # Start of new group - write group header
                     subheading = represent
-                    currentSheet.write_merge(rowCnt, rowCnt, 0, totalCols,
+                    current_sheet.write_merge(row_index, row_index, 0, totalCols,
                                              subheading,
                                              subheader_style,
                                              )
-                    # Next row
-                    rowCnt += 1
-                    currentSheet, currentRow = get_current_row(rowCnt, rowLimit)
-                    style = even_style if rowCnt % 2 == 0 else odd_style
+                    # Move on to next row
+                    row_index += 1
+                    current_sheet, current_row = get_current_row(row_index, row_limit)
+                    style = even_style if row_index % 2 == 0 else odd_style
 
-            colCnt = 0
+            col_index = 0
             remaining_fields = lfields
 
             # Custom row style?
@@ -349,20 +358,27 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                     style = row_style or subheader_style
                     span = group_info.get("span")
                     if span == 0:
-                        currentSheet.write_merge(rowCnt, rowCnt, 0, totalCols - 1,
-                                                 label,
-                                                 style,
-                                                 )
+                        current_sheet.write_merge(row_index,
+                                                  row_index,
+                                                  0,
+                                                  totalCols - 1,
+                                                  label,
+                                                  style,
+                                                  )
                         if totals:
                             # Write totals into the next row
-                            rowCnt += 1
-                            currentSheet, currentRow = get_current_row(rowCnt, rowLimit)
+                            row_index += 1
+                            current_sheet, current_row = \
+                                get_current_row(row_index, row_limit)
                     else:
-                        currentSheet.write_merge(rowCnt, rowCnt, 0, span - 1,
-                                                 label,
-                                                 style,
-                                                 )
-                        colCnt = span
+                        current_sheet.write_merge(row_index,
+                                                  row_index,
+                                                  0,
+                                                  span - 1,
+                                                  label,
+                                                  style,
+                                                  )
+                        col_index = span
                         remaining_fields = lfields[span:]
                 if not totals:
                     continue
@@ -373,7 +389,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                     continue
                 if label == "Id":
                     # Skip the ID column from XLS exports
-                    colCnt += 1
+                    col_index += 1
                     continue
 
                 if field not in row:
@@ -381,11 +397,11 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                 else:
                     represent = s3_strip_markup(s3_unicode(row[field]))
 
-                coltype = types[colCnt]
+                coltype = types[col_index]
                 if coltype == "sort":
                     continue
-                if len(represent) > max_cell_size:
-                    represent = represent[:max_cell_size]
+                if len(represent) > MAX_CELL_SIZE:
+                    represent = represent[:MAX_CELL_SIZE]
                 value = represent
                 if coltype == "date":
                     try:
@@ -435,24 +451,28 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                         style.num_format_str = "0.00"
                     except:
                         pass
-                if id:
+                if has_id:
                     # Adjust for the skipped column
-                    writeCol = colCnt - 1
+                    write_col_index = col_index - 1
                 else:
-                    writeCol = colCnt
+                    write_col_index = col_index
 
-                currentRow.write(writeCol, value, style)
+                current_row.write(write_col_index, value, style)
                 width = len(represent) * COL_WIDTH_MULTIPLIER
-                if width > fieldWidths[colCnt]:
-                    fieldWidths[colCnt] = width
-                    currentSheet.col(writeCol).width = width
-                colCnt += 1
+                if width > column_widths[col_index]:
+                    column_widths[col_index] = width
+                    current_sheet.col(write_col_index).width = width
+                col_index += 1
+
+        # Additional sheet settings
         for sheet in sheets:
             sheet.panes_frozen = True
             sheet.horz_split_pos = 1
 
+        # Write output
         output = StringIO()
         book.save(output)
+        output.seek(0)
 
         # Response headers
         filename = "%s_%s.xls" % (request.env.server_name, str(title))
@@ -461,7 +481,6 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         response.headers["Content-Type"] = contenttype(".xls")
         response.headers["Content-disposition"] = disposition
 
-        output.seek(0)
         return output.read()
 
     # -------------------------------------------------------------------------
@@ -585,29 +604,29 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                 }
 
 # =============================================================================
-class S3HTML2XLS():
-    """
-        Class that takes HTML in the form of web2py helper objects
-        and converts it to XLS
-
-        @ToDo: Complete this (e.g. start with a copy of S3html2pdf)
-        See https://gist.github.com/JustOnce/2be3e4d951a66c22c5e0
-        & http://pydoc.net/Python/Kiowa/0.2w.rc9/kiowa.utils.xls.html2xls/
-
-        Places  to use this:
-            org_CapacityReport()
-    """
-
-    def __init__(self):
-
-        pass
-
-    # -------------------------------------------------------------------------
-    def parse(self, html):
-        """
-            Entry point for class
-        """
-
-        return None
-
+#class S3HTML2XLS():
+#    """
+#        Class that takes HTML in the form of web2py helper objects
+#        and converts it to XLS
+#
+#        @ToDo: Complete this (e.g. start with a copy of S3html2pdf)
+#        See https://gist.github.com/JustOnce/2be3e4d951a66c22c5e0
+#        & http://pydoc.net/Python/Kiowa/0.2w.rc9/kiowa.utils.xls.html2xls/
+#
+#        Places  to use this:
+#            org_CapacityReport()
+#    """
+#
+#    def __init__(self):
+#
+#        pass
+#
+#    # -------------------------------------------------------------------------
+#    def parse(self, html):
+#        """
+#            Entry point for class
+#        """
+#
+#        return None
+#
 # END =========================================================================

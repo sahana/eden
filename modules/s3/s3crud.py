@@ -345,6 +345,7 @@ class S3CRUD(S3Method):
                         post_vars["created_by"] = current.auth.user.id
                     else:
                         post_vars["created_by"] = None
+                post_vars["_undelete"] = True
                 post_vars["_formname"] = formname
                 post_vars["id"] = original
                 request.vars.update(**post_vars)
@@ -374,7 +375,8 @@ class S3CRUD(S3Method):
                                           hierarchy=hierarchy,
                                           message=message,
                                           subheadings=subheadings,
-                                          format=representation)
+                                          format=representation,
+                                          )
 
             # Navigate-away confirmation
             if self.settings.navigate_away_confirm:
@@ -1927,7 +1929,7 @@ class S3CRUD(S3Method):
                                     _name="reject-btn",
                                     _id="reject-btn",
                                     _class="action-btn"))
-                
+
                 edit = A(T("Edit"),
                          _href=r.url(id=r.id, method="update",
                                      vars={"_next": r.url(id=r.id, method="review")}),
