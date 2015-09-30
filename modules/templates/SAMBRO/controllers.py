@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from datetime import datetime, timedelta
 try:
     import json # try stdlib (Python 2.6)
 except ImportError:
@@ -201,9 +202,6 @@ class subscriptions(S3CustomController):
         """ Main entry point, configuration """
 
         T = current.T
-        s3db = current.s3db
-        settings = current.deployment_settings
-        gis = current.gis
 
         # Must be logged in
         auth = current.auth
@@ -242,7 +240,7 @@ class subscriptions(S3CustomController):
                                     ),
                    S3OptionsFilter("language",
                                    label = T("Language"),
-                                   options = settings.get_cap_languages(),
+                                   options = current.deployment_settings.get_cap_languages(),
                                    represent = "%(name)s",
                                    resource = "cap_info",
                                    _name = "language-filter",
@@ -302,19 +300,24 @@ class subscriptions(S3CustomController):
             @param filters: filter widgets
         """
 
-        from gluon.sqlhtml import SQLFORM
+        # Uses Default Eden formstyle
+        from s3theme import formstyle_foundation as formstyle
         from gluon.validators import IS_IN_SET
-        from s3.s3widgets import S3GroupedOptionsWidget
+        from s3.s3widgets import S3GroupedOptionsWidget, S3MultiSelectWidget
+        from s3layouts import S3PopupLink
 
         # L10n
         T = current.T
+        db = current.db
+        s3db = current.s3db
+        response = current.response
         labels = Storage(
-            RESOURCES = T("Subscribe To"),
-            NOTIFY_ON = T("Notify On"),
-            FREQUENCY = T("Frequency"),
+            #RESOURCES = T("Subscribe To"),
+            #NOTIFY_ON = T("Notify On"),
+            #FREQUENCY = T("Frequency"),
             NOTIFY_BY = T("Notify By"),
-            MORE = T("More Options"),
-            LESS = T("Less Options"),
+            #MORE = T("More Options"),
+            #LESS = T("Less Options"),
         )
         messages = Storage(
             ERROR = T("Error: could not update notification settings"),
@@ -323,9 +326,6 @@ class subscriptions(S3CustomController):
 
         # Get current subscription settings resp. form defaults
         subscription = self._get_subscription()
-
-        # Formstyle bootstrap
-        formstyle = SQLFORM.formstyles.bootstrap
 
         # Initialize form
         form = FORM(_id="subscription-form",
@@ -340,26 +340,29 @@ class subscriptions(S3CustomController):
 
         # Notification options
         rows = []
-        stable = current.s3db.pr_subscription
+        stable = s3db.pr_subscription
 
         selector = S3GroupedOptionsWidget(cols=1)
-        rows.append(("trigger_selector__row",
-                     "%s:" % labels.NOTIFY_ON,
-                     selector(stable.notify_on,
-                              subscription["notify_on"],
-                              _id="trigger_selector"),
-                     ""))
+        # Deactivated trigger selector
+        #rows.append(("trigger_selector__row",
+        #             "%s:" % labels.NOTIFY_ON,
+        #             selector(stable.notify_on,
+        #                      subscription["notify_on"],
+        #                      _id="trigger_selector"),
+        #             ""))
 
-        switch = S3GroupedOptionsWidget(cols=1, multiple=False, sort=False)
-        rows.append(("frequency_selector__row",
-                     "%s:" % labels.FREQUENCY,
-                     switch(stable.frequency,
-                            subscription["frequency"],
-                            _id="frequency_selector"),
-                     ""))
+        #switch = S3GroupedOptionsWidget(cols=1, multiple=False, sort=False)
+        # Deactivated: frequency selector
+        #rows.append(("frequency_selector__row",
+        #             "%s:" % labels.FREQUENCY,
+        #             switch(stable.frequency,
+        #                    subscription["frequency"],
+        #                    _id="frequency_selector"),
+        #             ""))
 
         methods = [("EMAIL", T("Email")),
-                   ("SMS", T("SMS"))
+                   ("SMS", T("SMS")),
+                   ("Sync", T("FTP")),
                    ]
                         
         method_options = Storage(name = "method", requires = IS_IN_SET(methods))
@@ -370,30 +373,111 @@ class subscriptions(S3CustomController):
                               subscription["method"],
                               _id="method_selector"),
                      ""))
-
-        fieldset = formstyle(form, rows)
-        fieldset.insert(0,
-                        DIV(SPAN([I(_class="icon-reorder"), labels.MORE],
-                                 _class="toggle-text",
-                                 _style="display:none"),
-                            SPAN([I(_class="icon-reorder"), labels.LESS],
-                                 _class="toggle-text"),
-                            _id="notification-options",
-                            _class="control-group"))
-        form.append(fieldset)
+        
+        # Sync Row
+        properties = subscription["comments"]
+        if properties:
+            properties = json.loads(properties)
+        
+        synctable = s3db.sync_repository
+        query = (synctable.apitype == "ftp") & \
+                (synctable.deleted != True) & \
+                (synctable.owned_by_user == current.auth.user.id)
+                                       
+        ftp_rows = db(query).select(synctable.id,
+                                    synctable.name,
+                                    orderby = synctable.id)
+        
+        multiselect = S3MultiSelectWidget(header = False,
+                                          multiple = False,
+                                          create = {"c": "sync",
+                                                    "f": "repository",
+                                                    "label": "Create Repository",
+                                                    },
+                                          )
+        if ftp_rows:
+            if properties:            
+                user_repository_id = properties["repository_id"]            
+            else:
+                user_repository_id = ftp_rows.first().id
+            
+            if current.auth.s3_has_permission("update", "sync_repository", 
+                                              record_id = user_repository_id):
+                repository_comment = S3PopupLink(c="sync", f="repository",
+                                                 m="update",
+                                                 args=[user_repository_id],
+                                                 title=T("Update Repository"),
+                                                 tooltip= \
+                                    T("You can edit your FTP repository here"),
+                                                 )
+            field = s3db.sync_task.repository_id
+            ftp_ids = [(r.id, T(r.name)) for r in ftp_rows]
+            field.requires = IS_IN_SET(ftp_ids)
+                       
+            rows.append(("sync_task_repository_id__row",
+                         "",
+                         multiselect(field,
+                                     user_repository_id,
+                                     _id="sync_task_repository_id"),
+                         repository_comment))
+        else:
+            if current.auth.s3_has_permission("create", "sync_repository"):
+                repository_comment = S3PopupLink(c="sync", f="repository",
+                                                 title=T("Create Repository"),
+                                                 tooltip= \
+                    T("Click on the link to begin creating your FTP repository"),
+                                                 )
+            
+            rows.append(("sync_task_repository_id__row",
+                         "",
+                         "",
+                         repository_comment))
+            
+        parent = FIELDSET()
+        
+        for row in rows:
+            parent.append(formstyle(form, [row]))
+            
+        # Deactivated Toggle
+        #parent.insert(0,
+        #              DIV(SPAN([I(_class="icon-reorder"), labels.MORE],
+        #                       _class="toggle-text",
+        #                       _style="display:none"),
+        #                  SPAN([I(_class="icon-reorder"), labels.LESS],
+        #                       _class="toggle-text"),
+        #                  _id="notification-options",
+        #                  _class="control-group"))
+        form.append(parent)
 
         # Submit button
-        row = ("submit__row", "",
-               INPUT(_type="submit", _value="Update Settings"), "")
-
-        fieldset = formstyle(form, [row])
-        form.append(fieldset)
+        submit_fieldset = FIELDSET(DIV("",
+                                       INPUT(_type="submit", _value="Update Settings"), 
+                                       _id = "submit__row"))
+        
+        form.append(submit_fieldset)
 
         # Script (to extract filters on submit and toggle options visibility)
         script = URL(c="static", f="scripts", args=["S3", "s3.subscriptions.js"])
-        response = current.response
         response.s3.scripts.append(script)
 
+        # Script to show/hide the ftp repo row for FTP checkbox on/off 
+        repository_script = '''
+if($('#method_selector option[value=Sync]').is(':selected')){
+    $('#sync_task_repository_id__row').show();
+} else {
+    $('#sync_task_repository_id__row').hide();
+}
+
+$('#method_selector').change(function(){
+    if($(this).val().indexOf('Sync') != -1){
+        $('#sync_task_repository_id__row').show();
+    } else {
+        $('#sync_task_repository_id__row').hide();
+    }
+})
+'''   
+        response.s3.jquery_ready.append(repository_script)
+        
         # Accept form
         if form.accepts(current.request.post_vars,
                         current.session,
@@ -415,14 +499,30 @@ class subscriptions(S3CustomController):
 
             subscription["filters"] = form.request_vars \
                                       .get("subscription-filters", None)
-
-            subscription["notify_on"] = listify(formvars.notify_on)
-            subscription["frequency"] = formvars.frequency
+                        
+            # Fixed method
             subscription["method"] = formvars.method
-
-            success = self._update_subscription(subscription)
-
-            if success:
+            # Fixed Notify On and Frequency
+            subscription["notify_on"] = ["new"]
+            subscription["frequency"] = "immediately"
+            # Alternatively, with notify and frequency selector
+            #subscription["notify_on"] = listify(formvars.notify_on
+            #subscription["frequency"] = formvars.frequency
+            
+            success_subscription = self._update_subscription(subscription)
+            
+            if "Sync" in subscription["method"] and formvars.repository_id:
+                properties = self._update_sync(subscription["subscribe"][0]['resource'],
+                                               subscription.get("filters"),
+                                               int(formvars.repository_id),
+                                               properties)
+                properties = json.dumps(properties)
+                db(stable.pe_id == current.auth.user.pe_id).update(comments=properties)
+            else:
+                self._remove_sync(properties)
+                db(stable.pe_id == current.auth.user.pe_id).update(comments=None)
+                
+            if success_subscription:
                 response.confirmation = messages.SUCCESS
             else:
                 response.error = messages.ERROR
@@ -444,9 +544,12 @@ class subscriptions(S3CustomController):
                 (stable.deleted != True)
         left = ftable.on(ftable.id == stable.filter_id)
         row = db(query).select(stable.id,
-                               stable.notify_on,
-                               stable.frequency,
+                               #stable.notify_on,
+                               #stable.frequency,
                                stable.method,
+                               #stable.repository_id,
+                               #stable.representation,
+                               stable.comments,
                                ftable.id,
                                ftable.query,
                                left=left,
@@ -486,9 +589,10 @@ class subscriptions(S3CustomController):
                            "filter_id": f.id,
                            "get_vars" : get_vars,
                            "resources": rows,
-                           "notify_on": s.notify_on,
-                           "frequency": s.frequency,
-                           "method": s.method
+                           "notify_on": ["new"],#s.notify_on
+                           "frequency": "immediately",#s.frequency
+                           "method": s.method,
+                           "comments": s.comments,
                            })
 
         else:
@@ -497,9 +601,10 @@ class subscriptions(S3CustomController):
                            "filter_id": None,
                            "get_vars" : get_vars,
                            "resources": None,
-                           "notify_on": stable.notify_on.default,
-                           "frequency": stable.frequency.default,
-                           "method": stable.method.default
+                           "notify_on": ["new"],#stable.notify_on.default,
+                           "frequency": "immediately",#stable.frequency.default,
+                           "method": stable.method.default,
+                           "comments": None,
                            })
 
         return output
@@ -552,7 +657,6 @@ class subscriptions(S3CustomController):
         rtable = s3db.pr_subscription_resource
         subscribe = subscription.get("subscribe")
         if subscribe:
-            from datetime import datetime, timedelta
             now = datetime.utcnow()
             resources = subscription["resources"]
             print "Get resources", resources
@@ -616,4 +720,120 @@ class subscriptions(S3CustomController):
         subscription["filter_id"] = filter_id
         return subscription
 
+    # -------------------------------------------------------------------------
+    def _update_sync(self, resource, filters, selected_repository_id, properties):
+        """ 
+            Update synchronization settings 
+            
+            @param resource: available resources config
+            @param filters: filter applied on the resource
+            @param selected_repository_id: repository that is under current selection
+            @param properties: comment field of the pr_subscription; used to 
+                               store the ids of FTP Sync
+            
+        """
+        
+        db = current.db
+        s3db = current.s3db
+        auth = current.auth
+        user_id = auth.user.id
+        utcnow = current.request.utcnow
+        
+        if properties:
+            old_repository_id = properties["repository_id"]
+            if old_repository_id != selected_repository_id:
+                # Update
+                properties["repository_id"] = selected_repository_id
+        else:
+            # First Run
+            properties = {"repository_id": selected_repository_id}
+            old_repository_id = selected_repository_id    
+                   
+        # Sync Task
+        sync_task_table = s3db.sync_task
+        
+        # Check if task already exists
+        query = (sync_task_table.deleted != True) & \
+                (sync_task_table.owned_by_user == user_id) & \
+                (sync_task_table.repository_id == old_repository_id)
+                
+        row = db(query).select(sync_task_table.id,
+                               sync_task_table.repository_id,
+                               limitby=(0, 1)).first()
+        if row:
+            old_sync_id = properties["sync_task_id"]
+            # Check if update?
+            if row.repository_id != selected_repository_id:
+                # Update
+                db(sync_task_table.repository_id == old_repository_id).\
+                                update(repository_id = selected_repository_id)
+            sync_task_id = properties["sync_task_id"] = row.id       
+        else:
+            # First Run
+            sync_task_data = {"repository_id": selected_repository_id,
+                              "resource_name": resource,
+                              "mode": 2, #Push
+                              "strategy": ["create"], # Alert updates are done
+                                                      # as extra info elements
+                              "representation": "cap",
+                              "multiple_file": True,
+                              "last_push": utcnow, # since used for notifications,
+                                                   # so don't send old alerts
+                              }
+            sync_task_id = sync_task_table.insert(**sync_task_data)       
+            auth.s3_set_record_owner(sync_task_table, sync_task_id)
+            old_sync_id = properties["sync_task_id"] = sync_task_id
+        
+        # Sync Resource Filter
+        
+        # Remove Old Filter and create new
+        query = (FS("task_id") == old_sync_id)
+        s3db.resource("sync_resource_filter", filter=query).delete()
+        
+        # Normally a filter looks like this
+        # [["priority__belongs","24,3"],[u'location_id$L0__belongs', u'Nepal'],
+        # [u'location_id$L1__belongs', u'Central']]
+        # Get only those that have value and ignore null one
+        filters = json.loads(filters)
+        filters = [filter_ for filter_ in filters if filter_[1] is not None]
+        
+        sync_resource_filter_table = s3db.sync_resource_filter
+        if len(filters) > 0:                
+            for filter_ in filters:
+                # Get the prefix
+                prefix = str(filter_[0]).strip("[]")
+                # Get the value for prefix
+                values = str(filter_[1])
+                # Set the Components
+                if prefix in ["event_type_id__belongs",
+                              "priority__belongs",
+                              "language__belongs"]:
+                    component = "info"
+                else:
+                    component = "area_location"
+                
+                filter_string = "%s.%s=%s" % (component, prefix, values)
+                resource_filter_data = {"task_id": sync_task_id,
+                                        "tablename": resource,
+                                        "filter_string": filter_string,
+                                        "modified_on": utcnow,
+                                        }
+                resource_filter_id = sync_resource_filter_table. \
+                                        insert(**resource_filter_data)
+                row = db(sync_resource_filter_table.id == resource_filter_id).\
+                                                select(limitby=(0, 1)).first()
+                auth.s3_set_record_owner(sync_resource_filter_table,
+                                         resource_filter_id)
+                s3db.onaccept(sync_resource_filter_table, row)
+        
+        return properties
+    
+    # -------------------------------------------------------------------------
+    def _remove_sync(self, properties):
+        """ Remove synchronization settings """
+        
+        if properties:
+            current.s3db.resource("sync_repository",
+                                  id=properties["repository_id"]).delete()
+        
 # END =========================================================================

@@ -38,7 +38,7 @@ def asset():
     """ RESTful CRUD controller """
 
     # Use the item() controller in this module to set options correctly
-    s3db.asset_asset.item_id.comment = S3AddResourceLink(f="item",
+    s3db.asset_asset.item_id.comment = S3PopupLink(f="item",
         label=T("Create Item"),
         title=T("Item"),
         tooltip=T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog."))
@@ -82,10 +82,10 @@ def item():
                                    sort = True,
                                    )
 
-        field.comment = S3AddResourceLink(f="item_category",
-                                          label=T("Create Item Category"),
-                                          title=T("Item Category"),
-                                          tooltip=T("Only Categories of type 'Asset' will be seen in the dropdown."))
+        field.comment = S3PopupLink(f="item_category",
+                                    label=T("Create Item Category"),
+                                    title=T("Item Category"),
+                                    tooltip=T("Only Categories of type 'Asset' will be seen in the dropdown."))
 
     # Defined in the Model for use from Multiple Controllers for unified menus
     return s3db.supply_item_controller()
@@ -175,13 +175,13 @@ def telephone():
 
     field = table.item_id
     field.label = T("Telephone Type")
-    field.comment = S3AddResourceLink(f="item",
-                                      # Use this controller for options.json rather than looking for one called 'asset'
-                                      vars=dict(parent="telephone"),
-                                      label=T("Add Telephone Type"),
-                                      info=T("Add a new telephone type"),
-                                      title=T("Telephone Type"),
-                                      tooltip=T("Only Items whose Category are of type 'Telephone' will be seen in the dropdown."))
+    field.comment = S3PopupLink(f="item",
+                                # Use this controller for options.json rather than looking for one called 'asset'
+                                vars=dict(parent="telephone"),
+                                label=T("Add Telephone Type"),
+                                info=T("Add a new telephone type"),
+                                title=T("Telephone Type"),
+                                tooltip=T("Only Items whose Category are of type 'Telephone' will be seen in the dropdown."))
 
     # Only select from telephones
     field.widget = None # We want a simple dropdown
