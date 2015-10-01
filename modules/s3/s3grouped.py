@@ -638,6 +638,9 @@ class S3GroupedItemsTable(object):
                   "tr.gi-group-footer.gi-level-1": {
                         "background-color": "lightgrey",
                         },
+                  "tr.gi-group-header.gi-level-1": {
+                        "background-color": "lightgrey",
+                        },
                   }
 
         title = self.title
@@ -673,9 +676,9 @@ class S3GroupedItemsTable(object):
         """
 
         # Prepare the XLS data array
-        data = self.data
         field_types = self.field_types
 
+        data = self.data
         columns = data.get("c")
         labels = data.get("l")
 
@@ -733,6 +736,9 @@ class S3GroupedItemsTable(object):
         subgroups = group.get("d")
         items = group.get("i")
 
+        if self.group_headers and level > 0:
+            self.xls_group_header(rows, group, level=level)
+
         if subgroups:
             for subgroup in subgroups:
                 self.xls_group_data(rows, subgroup, level = level + 1)
@@ -744,6 +750,29 @@ class S3GroupedItemsTable(object):
             self.xls_group_footer(rows, group, level=level)
 
     # -------------------------------------------------------------------------
+    def xls_group_header(self, rows, group, level=0):
+        """
+            Render the group header (=group label)
+
+            @param row: the XLS rows array to append to
+            @param group: the group dict
+            @param level: the grouping level
+        """
+
+        columns = self.data.get("c")
+        value = group.get("v")
+
+        if not value:
+            value = ""
+        row = {"_group": {"label": s3_unicode(s3_strip_markup(value)),
+                          "span": len(columns),
+                          "totals": False,
+                          },
+               "_style": "subheader",
+               }
+        rows.append(row)
+
+    # -------------------------------------------------------------------------
     def xls_group_footer(self, rows, group, level=0):
         """
             Append a group footer to the XLS data
@@ -753,12 +782,16 @@ class S3GroupedItemsTable(object):
             @param level: the grouping level
         """
 
-        data = self.data
-
-        columns = data.get("c")
+        columns = self.data.get("c")
         totals = group.get("t")
-        value = group.get("v")
 
+        if self.group_headers:
+            value = self.totals_label
+        else:
+            v = group.get("v")
+            value = "%s %s" % (s3_unicode(s3_strip_markup(v)),
+                               self.totals_label,
+                               )
         row = {}
         footer = {}
 
@@ -778,17 +811,14 @@ class S3GroupedItemsTable(object):
                         span += 1
                         continue
                     else:
-                        label = "%s %s" % (s3_unicode(s3_strip_markup(value)),
-                                           self.totals_label,
-                                           )
+                        label = value
                 has_totals = True
                 row[column] = totals[column] if has_value else ""
 
-        footer = {"label": label,
-                  "span": span,
-                  "totals": has_totals,
-                  }
-        row["_group"] = footer
+        row["_group"] = {"label": label,
+                         "span": span,
+                         "totals": has_totals,
+                         }
         row["_style"] = "subtotals"
         rows.append(row)
 
@@ -801,7 +831,6 @@ class S3GroupedItemsTable(object):
         """
 
         data = self.data
-
         columns = data.get("c")
         totals = data.get("t")
 
@@ -821,11 +850,11 @@ class S3GroupedItemsTable(object):
                     else:
                         label = self.totals_label
                 row[column] = totals[column] if has_value else ""
-        footer = {"label": label,
-                  "span": span,
-                  "totals": True,
-                  }
-        row["_group"] = footer
+
+        row["_group"] = {"label": label,
+                         "span": span,
+                         "totals": True,
+                         }
         row["_style"] = "totals"
         rows.append(row)
 
@@ -839,9 +868,7 @@ class S3GroupedItemsTable(object):
             @param level: the grouping level
         """
 
-        data = self.data
-
-        columns = data["c"]
+        columns = self.data["c"]
         cells = {}
 
         for column in columns:
@@ -943,12 +970,14 @@ class S3GroupedItemsTable(object):
             @param level: the grouping level
         """
 
+        data = self.data
+
         columns = data.get("c")
-        value = data.get("v")
+        value = group.get("v")
 
         if not value:
             value = ""
-        header = TD(value,
+        header = TD(s3_unicode(s3_strip_markup(value)),
                     _colspan = len(columns) if columns else None,
                     )
 
@@ -966,11 +995,16 @@ class S3GroupedItemsTable(object):
             @param level: the grouping level
         """
 
-        data = self.data
-
-        columns = data.get("c")
+        columns = self.data.get("c")
         totals = group.get("t")
-        value = group.get("v")
+
+        if self.group_headers:
+            value = self.totals_label
+        else:
+            v = group.get("v")
+            value = "%s %s" % (s3_unicode(s3_strip_markup(v)),
+                               self.totals_label,
+                               )
 
         footer_row = TR(_class="gi-group-footer gi-level-%s" % level)
         if not totals:
@@ -989,15 +1023,13 @@ class S3GroupedItemsTable(object):
                         span += 1
                         continue
                     else:
-                        label = TD("%s %s" % (s3_unicode(s3_strip_markup(value)),
-                                              self.totals_label,
-                                              ),
+                        label = TD(value,
                                    _class = "gi-group-footer-label",
                                    _colspan = span,
                                    )
                         footer_row.append(label)
-                value = totals[column] if has_value else ""
-                footer_row.append(TD(value))
+                total = totals[column] if has_value else ""
+                footer_row.append(TD(total))
 
         tbody.append(footer_row)
 
@@ -1011,9 +1043,7 @@ class S3GroupedItemsTable(object):
             @param level: the grouping level
         """
 
-        data = self.data
-
-        columns = data["c"]
+        columns = self.data["c"]
         cells = []
 
         for column in columns:

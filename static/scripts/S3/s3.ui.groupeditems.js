@@ -307,7 +307,10 @@
                             continue;
                         }
                         if (titleSpan > 1) {
-                            footerLabel = $('<td class="gi-group-footer-label" colspan="' + titleSpan + '">').html(value);
+                            footerLabel = $('<td class="gi-group-footer-label" colspan="' + titleSpan + '">');
+                            if (!opts.renderGroupHeaders) {
+                                footerLabel.html(value);
+                            }
                             $('<span class="gi-group-footer-inline-label"> ' + opts.totalsLabel + '</span>').appendTo(footerLabel);
                             footerLabel.appendTo(footerRow);
                         }
