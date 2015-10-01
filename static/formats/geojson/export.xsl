@@ -280,7 +280,7 @@
                 </properties>
             </features>
         </xsl:for-each>
-        
+
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -395,6 +395,9 @@
                         <xsl:call-template name="Properties">
                             <xsl:with-param name="attributes">
                                 <xsl:value-of select="$attributes"/>
+                            </xsl:with-param>
+                            <xsl:with-param name="id">
+                                <xsl:value-of select="$id"/>
                             </xsl:with-param>
                             <xsl:with-param name="style">
                                 <xsl:value-of select="$style"/>
@@ -526,7 +529,7 @@
                 </xsl:call-template>
             </xsl:otherwise>
         </xsl:choose>
-        
+
     </xsl:template>
 
     <!-- ****************************************************************** -->
