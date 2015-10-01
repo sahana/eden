@@ -105,7 +105,36 @@ def alert():
     tablename = "cap_alert"
 
     def prep(r):
-
+        from s3.s3filter import S3OptionsFilter
+        itable = s3db.cap_info
+        rows = db(itable.expires < request.utcnow).select(itable.id,
+                                                          orderby=itable.id)
+        if rows:
+            expired_ids = ",".join([str(row.id) for row in rows])
+        else:
+            expired_ids = "*"            
+        rows = db(itable.expires >= request.utcnow).select(itable.id,
+                                                           orderby=itable.id)
+        if rows:
+            unexpired_ids = ",".join([str(row.id) for row in rows])
+        else:
+            unexpired_ids = "*"
+        
+        filter_widgets = s3db.get_config(tablename, "filter_widgets")
+        filter_widgets.insert(0, S3OptionsFilter("info.id",
+                                                 label = T("Expiration"),
+                                                 options = OrderedDict(
+                                                        [(expired_ids, T("Expired")),
+                                                         (unexpired_ids, T("Unexpired")),
+                                                         ("*", T("All")),
+                                                         ]),
+                                                 cols = 3,
+                                                 multiple = False,
+                                                 ))
+        s3db.configure(tablename,
+                       filter_widgets = filter_widgets,
+                       )
+        
         if r.representation == "dl":
             # DataList: match list_layout
             list_fields = ["info.headline",
