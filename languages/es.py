@@ -3796,6 +3796,7 @@
 'Map Viewing Client': 'Cliente de visión de mapas',
 'Map Width': 'Ancho de Mapa',
 'Map Zoom': 'Acercamiento del Mapa',
+'Map of Communitiess': 'Mapa de las Comunidades',
 'Map of Hospitals': 'Mapa de Hospitales',
 'Map': 'Mapa',
 'Mapping': 'Cartografía',

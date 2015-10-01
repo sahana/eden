@@ -4163,9 +4163,6 @@ class S3ProjectPlanningModel(S3Model):
                                              )
                         ),
                      indicator_id(),
-                     Field("name",
-                           label = T("Evaluation"),
-                           ),
                      # Populated Automatically
                      # Used for Timeplot &, in future, to ease changing the monitoring frequency
                      s3_date("start_date",

@@ -1959,6 +1959,32 @@ def config(settings):
         s3db = current.s3db
         table = s3db[tablename]
 
+        # Disable Map Tab on Summary View
+        # - until we can support multiple Points per Record
+        settings.ui.summary = ({"common": True,
+                                "name": "add",
+                                "widgets": [{"method": "create"}],
+                                },
+                               #{"common": True,
+                               # "name": "cms",
+                               # "widgets": [{"method": "cms"}]
+                               # },
+                               {"name": "table",
+                                "label": "Table",
+                                "widgets": [{"method": "datatable"}]
+                                },
+                               {"name": "charts",
+                                "label": "Report",
+                                "widgets": [{"method": "report",
+                                             "ajax_init": True}]
+                                },
+                               #{"name": "map",
+                               # "label": "Map",
+                               # "widgets": [{"method": "map",
+                               #              "ajax_init": True}],
+                               # },
+                               )
+
         # @ToDo: S3SQLInlineComponent for Project orgs
         # Get IDs for PartnerNS/Partner-Donor
         # db = current.db
