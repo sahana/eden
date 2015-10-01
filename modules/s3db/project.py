@@ -5238,6 +5238,9 @@ def project_status_represent(value):
         @ToDo: Configurable thresholds
     """
 
+    if current.auth.permission.format == "geojson":
+        return value
+
     if value >= 80:
         colour = "00ff00" # Green
     elif value  >= 60:

@@ -88,7 +88,7 @@
                 <xsl:when test="$resource='gis_layer_shapefile'">
                     <xsl:apply-templates select="./resource[@name='gis_layer_shapefile']"/>
                 </xsl:when>
-                <xsl:when test="count(./resource[@name=$resource])=1 and count(./resource[@name=$resource]/map[1]/geometry)=1">
+                <xsl:when test="count(./resource[@name=$resource])=1 and (count(./resource[@name=$resource]/map[1]/geometry)=1 or count(./resource[@name=$resource]/map[1]/geometry)=0)">
                     <!-- A single Feature not a Collection -->
                     <xsl:apply-templates select="./resource[@name=$resource]"/>
                 </xsl:when>
@@ -329,8 +329,8 @@
         <xsl:choose>
             <xsl:when test="$geometry!='null'">
                 <!-- Use pre-prepared GeoJSON -->
-                <xsl:for-each select="./map[1]/geometry">
-                    <features>
+                <xsl:choose>
+                    <xsl:when test="count(//resource)=1 and count(//resource/map[1]/geometry)=1">
                         <type>Feature</type>
                         <geometry>
                             <xsl:attribute name="value">
@@ -362,8 +362,45 @@
                                 </xsl:with-param>
                             </xsl:call-template>
                         </properties>
-                    </features>
-                </xsl:for-each>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:for-each select="./map[1]/geometry">
+                            <features>
+                                <type>Feature</type>
+                                <geometry>
+                                    <xsl:attribute name="value">
+                                        <xsl:value-of select="./@value"/>
+                                    </xsl:attribute>
+                                </geometry>
+                                <properties>
+                                    <xsl:call-template name="Properties">
+                                        <xsl:with-param name="attributes">
+                                            <xsl:value-of select="$attributes"/>
+                                        </xsl:with-param>
+                                        <xsl:with-param name="id">
+                                            <xsl:value-of select="$id"/>
+                                        </xsl:with-param>
+                                        <xsl:with-param name="marker">
+                                            <xsl:value-of select="$marker"/>
+                                        </xsl:with-param>
+                                        <xsl:with-param name="marker_url">
+                                            <xsl:value-of select="$marker_url"/>
+                                        </xsl:with-param>
+                                        <xsl:with-param name="marker_height">
+                                            <xsl:value-of select="$marker_height"/>
+                                        </xsl:with-param>
+                                        <xsl:with-param name="marker_width">
+                                            <xsl:value-of select="$marker_width"/>
+                                        </xsl:with-param>
+                                        <xsl:with-param name="style">
+                                            <xsl:value-of select="$style"/>
+                                        </xsl:with-param>
+                                    </xsl:call-template>
+                                </properties>
+                            </features>
+                        </xsl:for-each>
+                    </xsl:otherwise>
+                </xsl:choose>
             </xsl:when>
             <!--
             <xsl:when test="./map[1]/@wkt!='null'">
@@ -378,33 +415,64 @@
             </xsl:when> -->
             <xsl:when test="./map[1]/@lon!='null'">
                 <!-- @ToDo: Support records with multiple locations -->
-                <features>
-                    <type>Feature</type>
-                    <geometry>
-                        <type>
-                            <xsl:text>Point</xsl:text>
-                        </type>
-                        <coordinates>
-                            <xsl:value-of select="./map[1]/@lon"/>
-                        </coordinates>
-                        <coordinates>
-                            <xsl:value-of select="./map[1]/@lat"/>
-                        </coordinates>
-                    </geometry>
-                    <properties>
-                        <xsl:call-template name="Properties">
-                            <xsl:with-param name="attributes">
-                                <xsl:value-of select="$attributes"/>
-                            </xsl:with-param>
-                            <xsl:with-param name="id">
-                                <xsl:value-of select="$id"/>
-                            </xsl:with-param>
-                            <xsl:with-param name="style">
-                                <xsl:value-of select="$style"/>
-                            </xsl:with-param>
-                        </xsl:call-template>
-                    </properties>
-                </features>
+                <xsl:choose>
+                    <xsl:when test="count(//resource)=1">
+                        <type>Feature</type>
+                        <geometry>
+                            <type>
+                                <xsl:text>Point</xsl:text>
+                            </type>
+                            <coordinates>
+                                <xsl:value-of select="./map[1]/@lon"/>
+                            </coordinates>
+                            <coordinates>
+                                <xsl:value-of select="./map[1]/@lat"/>
+                            </coordinates>
+                        </geometry>
+                        <properties>
+                            <xsl:call-template name="Properties">
+                                <xsl:with-param name="attributes">
+                                    <xsl:value-of select="$attributes"/>
+                                </xsl:with-param>
+                                <xsl:with-param name="id">
+                                    <xsl:value-of select="$id"/>
+                                </xsl:with-param>
+                                <xsl:with-param name="style">
+                                    <xsl:value-of select="$style"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                        </properties>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <features>
+                            <type>Feature</type>
+                            <geometry>
+                                <type>
+                                    <xsl:text>Point</xsl:text>
+                                </type>
+                                <coordinates>
+                                    <xsl:value-of select="./map[1]/@lon"/>
+                                </coordinates>
+                                <coordinates>
+                                    <xsl:value-of select="./map[1]/@lat"/>
+                                </coordinates>
+                            </geometry>
+                            <properties>
+                                <xsl:call-template name="Properties">
+                                    <xsl:with-param name="attributes">
+                                        <xsl:value-of select="$attributes"/>
+                                    </xsl:with-param>
+                                    <xsl:with-param name="id">
+                                        <xsl:value-of select="$id"/>
+                                    </xsl:with-param>
+                                    <xsl:with-param name="style">
+                                        <xsl:value-of select="$style"/>
+                                    </xsl:with-param>
+                                </xsl:call-template>
+                            </properties>
+                        </features>
+                    </xsl:otherwise>
+                </xsl:choose>
             </xsl:when>
             <!-- xsl:otherwise skip -->
         </xsl:choose>
