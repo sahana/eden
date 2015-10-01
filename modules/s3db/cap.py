@@ -425,7 +425,6 @@ class S3CAPModel(S3Model):
                          ]
 
         filter_widgets = [
-            # @ToDo: Radio Button to choose between alert expired, unexpired and all
             S3TextFilter(["identifier",
                           "sender",
                           "incidents",
