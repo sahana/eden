@@ -5751,16 +5751,19 @@ class S3Permission(object):
             Set the default approver for new records in table
 
             @param table: the table
-            @param force: whether to force approval for tables which require manual approval
+            @param force: whether to force approval for tables which
+                          require manual approval
         """
+
+        settings = current.deployment_settings
 
         APPROVER = "approved_by"
 
-        if APPROVER in table and (force or table._tablename not in \
-            current.deployment_settings.get_auth_record_approval_manual()):
+        if APPROVER in table and (force or \
+           table._tablename not in settings.get_auth_record_approval_manual()):
             auth = current.auth
             approver = table[APPROVER]
-            if auth.override:
+            if auth.override or not settings.record_approval():
                 approver.default = 0
             elif auth.s3_logged_in() and \
                  auth.s3_has_permission("approve", table):

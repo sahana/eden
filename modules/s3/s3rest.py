@@ -220,7 +220,8 @@ class S3Request(object):
             approved, unapproved = True, True
         elif self.method == "review":
             approved, unapproved = False, True
-        elif auth.s3_has_permission("review", tablename, self.id):
+        elif current.deployment_settings.get_auth_record_approval() and \
+             auth.s3_has_permission("review", tablename, self.id):
             # Approvers should be able to edit records during review
             # @ToDo: deployment_setting to allow Filtering out from
             #        multi-record methods even for those with Review permission
