@@ -788,7 +788,7 @@ class S3RepresentLazy(object):
         value = self.value
         renderer = self.renderer
         if renderer.lazy:
-            labels = renderer.bulk(renderer.lazy)
+            labels = renderer.bulk(renderer.lazy, show_link=False)
             renderer.lazy = []
         else:
             labels = renderer.theset

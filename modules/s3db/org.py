@@ -5178,7 +5178,7 @@ class org_SiteRepresent(S3Represent):
             try:
                 instance_type = row["org_site.instance_type"]
                 id = row[instance_type].id
-            except AttributeError:
+            except (AttributeError, KeyError):
                 return v
             else:
                 c, f = instance_type.split("_", 1)
