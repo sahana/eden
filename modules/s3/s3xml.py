@@ -1009,6 +1009,7 @@ class S3XML(S3Codec):
                 LatLon = latlons[tablename].get(record_id, None)
                 if LatLon:
                     # @ToDo: Support records with multiple locations
+                    #        via making these also use the map element
                     lat = LatLon[0]
                     lon = LatLon[1]
                     if lat is not None and lon is not None:

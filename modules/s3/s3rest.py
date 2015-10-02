@@ -215,7 +215,10 @@ class S3Request(object):
 
         tablename = "%s_%s" % (self.prefix, self.name)
 
-        if self.method == "review":
+        if not current.deployment_settings.get_auth_record_approval():
+            # Record Approval is off
+            approved, unapproved = True, True
+        elif self.method == "review":
             approved, unapproved = False, True
         elif auth.s3_has_permission("review", tablename, self.id):
             # Approvers should be able to edit records during review

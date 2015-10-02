@@ -70,7 +70,7 @@ def config(settings):
                                                #"member": T("Member")
                                                }
 
-    settings.auth.record_approval = True
+    #settings.auth.record_approval = True
 
     # @ToDo: Should we fallback to organisation_id if site_id is None?
     settings.auth.registration_roles = {"site_id": ["reader",
@@ -1749,42 +1749,6 @@ def config(settings):
 
     settings.customise_survey_series_controller = customise_survey_series_controller
 
-    # -----------------------------------------------------------------------------
-    # Projects
-    # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
-    settings.project.mode_3w = True
-    # Uncomment this to use DRR (Disaster Risk Reduction) extensions
-    settings.project.mode_drr = True
-    # Uncomment this to use Activity Types for Activities & Projects
-    settings.project.activity_types = True
-    # Uncomment this to use Codes for projects
-    settings.project.codes = True
-    # Uncomment this to call project locations 'Communities'
-    settings.project.community = True
-    # Uncomment this to enable Hazards in 3W projects
-    settings.project.hazards = True
-    # Uncomment this to enable Indicators in projects
-    # Just HNRC
-    #settings.project.indicators = True
-    # Uncomment this to use multiple Budgets per project
-    settings.project.multiple_budgets = True
-    # Uncomment this to use multiple Organisations per project
-    settings.project.multiple_organisations = True
-    # Uncomment this to enable Programmes in projects
-    settings.project.programmes = True
-    # Uncomment this to enable Themes in 3W projects
-    settings.project.themes = True
-    # Uncomment this to customise
-    # Links to Filtered Components for Donors & Partners
-    settings.project.organisation_roles = {
-        1: T("Host National Society"),
-        2: T("Partner"),
-        3: T("Donor"),
-        #4: T("Customer"), # T("Beneficiary")?
-        #5: T("Supplier"),
-        9: T("Partner National Society"),
-    }
-
     # -------------------------------------------------------------------------
     def household_inject_form_script(r, record):
         """
@@ -2015,7 +1979,7 @@ def config(settings):
             # @ToDo: Use Inter-American Framework instead (when extending to Zone office)
             # @ToDo: Add 'Business Line' (when extending to Zone office)
             settings.project.details_tab = True
-            settings.project.community_volunteers = True
+            #settings.project.community_volunteers = True
             # Done in a more structured way instead
             objectives = None
             outputs = None
@@ -2366,9 +2330,15 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_project_location_resource(r, tablename):
 
-        table = current.s3db.project_location
+        s3db = current.s3db
+        table = s3db.project_location
         table.name.readable = False
         table.percentage.readable = table.percentage.writable = False
+        list_fields = s3db.get_config(tablename, "list_fields")
+        try:
+            list_fields.remove((T("Activity Types"), "activity_type.name"))
+        except:
+            pass
 
     settings.customise_project_location_resource = customise_project_location_resource
 

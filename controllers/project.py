@@ -104,6 +104,28 @@ def project():
                         field.default = organisation_id
                         field.readable = field.writable = False
 
+                elif r.method == "details":
+                    # Until we can automate this inside s3profile
+                    # - remove the fkey from the list_fields
+                    configure = s3db.configure
+                    get_config = s3db.get_config
+                    define_resource = s3db.resource
+                    for tablename in ("project_organisation",
+                                      "project_location",
+                                      "project_beneficiary",
+                                      "project_human_resource_project",
+                                      ):
+                        s3db.table(tablename)
+                        list_fields = get_config(tablename, "list_fields")
+                        if not list_fields:
+                            list_fields = define_resource(tablename).list_fields()
+                        try:
+                            list_fields.remove("project_id")
+                        except:
+                            # Already removed
+                            pass
+                        configure(tablename, list_fields=list_fields)
+
                 if r.id:
                     r.table.human_resource_id.represent = \
                         s3db.hrm_HumanResourceRepresent(show_link=True)
@@ -292,7 +314,7 @@ def project():
                                           )
                                 )
 
-            elif component_name == "human_resource":
+            elif component_name in ("human_resource", "human_resource_project"):
 
                 htable = s3db.hrm_human_resource
                 htable.person_id.represent = \
@@ -324,6 +346,37 @@ def project():
                                   orderby="hrm_human_resource.person_id",
                                   sort=True
                         )
+
+                # @ToDo:
+                #if settings.has_module("budget"):
+                #    from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                #    field = s3db.budget_allocation.budget_entity_id
+                #    field.readable = field.writable = True
+                #    field.requires = S3Represent(lookup="budget_budget", key="budget_entity_id")
+                #    field.requires = IS_ONE_OF()
+                #    
+                #    crud_form = S3SQLCustomForm("project_id",
+                #                                "human_resource_id",
+                #                                "status",
+                #                                S3SQLInlineComponent("allocation",
+                #                                                     label = T("Budget"),
+                #                                                     fields = ["budget_entity_id",
+                #                                                               "start_date",
+                #                                                               "end_date",
+                #                                                               "daily_cost",
+                #                                                               ],
+                #                                                     ),
+                #                                )
+                #    s3db.configure("project_human_resoruce_project",
+                #                   crud_form = crud_form,
+                #                   list_fields = [#"project_id", # Not being dropped in component view
+                #                                  "human_resource_id",
+                #                                  "status",
+                #                                  "allocation.budget_entity_id",
+                #                                  "allocation.start_date",
+                #                                  "allocation.end_date",
+                #                                  "allocation.daily_cost",
+                #                                  ],
 
             elif component_name == "document":
                 # Hide unnecessary fields

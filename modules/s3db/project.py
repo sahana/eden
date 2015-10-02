@@ -2750,6 +2750,7 @@ class S3ProjectHRModel(S3Model):
                                                      ),
                           Field("status", "integer",
                                 default = 1,
+                                label = T("Status"),
                                 represent = lambda opt: \
                                        status_opts.get(opt, current.messages.UNKNOWN_OPT),
                                 requires = IS_IN_SET(status_opts),
@@ -2769,32 +2770,7 @@ class S3ProjectHRModel(S3Model):
             msg_record_deleted = T("Human Resource unassigned"),
             msg_list_empty = T("No Human Resources currently assigned to this project"))
 
-        if settings.has_module("budget"):
-            crud_form = S3SQLCustomForm("project_id",
-                                        "human_resource_id",
-                                        "status",
-                                        S3SQLInlineComponent("allocation",
-                                                             label = T("Budget"),
-                                                             fields = ["budget_id",
-                                                                       "start_date",
-                                                                       "end_date",
-                                                                       "daily_cost",
-                                                                       ],
-                                                             ),
-                                        )
-        else:
-            crud_form = None
-
         self.configure(tablename,
-                       crud_form = crud_form,
-                       list_fields = [#"project_id", # Not being dropped in component view
-                                      "human_resource_id",
-                                      "status",
-                                      "allocation.budget_id",
-                                      "allocation.start_date",
-                                      "allocation.end_date",
-                                      "allocation.daily_cost",
-                                      ],
                        onvalidation = self.project_human_resource_onvalidation,
                        super_entity = "budget_cost_item",
                        )
@@ -2806,16 +2782,17 @@ class S3ProjectHRModel(S3Model):
     @staticmethod
     def project_human_resource_onvalidation(form):
         """
-            Prevent the same hrm_human_resource record being added more than
-            once.
+            Prevent the same human_resource record being added more than once
         """
 
-        # The project human resource table
         hr = current.s3db.project_human_resource_project
 
         # Fetch the first row that has the same project and human resource ids
-        query = (hr.human_resource_id == form.vars.human_resource_id) & \
-                (hr.project_id == form.request_vars.project_id)
+        # (which isn't this record!)
+        form_vars = form.request_vars
+        query = (hr.human_resource_id == form_vars.human_resource_id) & \
+                (hr.project_id == form_vars.project_id) & \
+                (hr.id != form_vars.id)
         row = current.db(query).select(hr.id,
                                        limitby=(0, 1)).first()
 
@@ -9093,12 +9070,12 @@ class project_Details(S3Method):
                                  # NB T() here to prevent requiring an extra translation of 'Add <translation of Staff>'
                                  label_create = T("Add %(staff)s") % dict(staff=STAFF),
                                  type = "datatable",
-                                 actions = dt_row_actions("human_resource"),
-                                 tablename = "hrm_human_resource",
+                                 actions = dt_row_actions("human_resource_project"),
+                                 tablename = "project_human_resource_project",
                                  context = "project",
                                  create_controller = "project",
                                  create_function = "project",
-                                 create_component = "human_resource",
+                                 create_component = "human_resource_project",
                                  pagesize = None, # all records
                                  )
                 profile_widgets.append(hr_widget)

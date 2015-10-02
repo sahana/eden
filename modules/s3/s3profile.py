@@ -551,15 +551,12 @@ class S3Profile(S3CRUD):
         tablename = widget.get("tablename")
         resource, context = self._resolve_context(r, tablename, context)
 
-        # Define target resource
-        table = resource.table
-        get_config = resource.get_config
-
         # List fields
-        list_fields = widget.get("list_fields",
-                                 get_config("list_fields", None))
+        list_fields = widget.get("list_fields")
         if not list_fields:
-            list_fields = [f for f in table.fields if table[f].readable]
+            # @ToDo: Set the parent so that the fkey gets removed from the list_fields
+            #resource.parent = s3db.resource("")
+            list_fields = resource.list_fields()
 
         # Widget filter option
         widget_filter = widget.get("filter")
@@ -621,7 +618,7 @@ class S3Profile(S3CRUD):
             # ORDERBY fallbacks: widget->resource->default
             orderby = widget.get("orderby")
             if not orderby:
-                orderby = get_config("orderby")
+                orderby = resource.get_config("orderby")
             if not orderby:
                 orderby = default_orderby()
 
@@ -716,7 +713,7 @@ class S3Profile(S3CRUD):
             if not orderby:
                 orderby = widget.get("orderby")
             if not orderby:
-                orderby = get_config("orderby")
+                orderby = resource.get_config("orderby")
             if not orderby:
                 orderby = default_orderby()
 

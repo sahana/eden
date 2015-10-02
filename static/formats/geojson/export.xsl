@@ -414,7 +414,9 @@
                 </xsl:call-template>
             </xsl:when> -->
             <xsl:when test="./map[1]/@lon!='null'">
-                <!-- @ToDo: Support records with multiple locations -->
+                <!-- @ToDo: Support records with multiple locations
+                            via making these also use the map element
+                -->
                 <xsl:choose>
                     <xsl:when test="count(//resource)=1">
                         <type>Feature</type>
