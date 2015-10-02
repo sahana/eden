@@ -217,7 +217,7 @@ class S3Request(object):
 
         if not current.deployment_settings.get_auth_record_approval():
             # Record Approval is off
-            approved, unapproved = True, True
+            approved, unapproved = True, False
         elif self.method == "review":
             approved, unapproved = False, True
         elif auth.s3_has_permission("review", tablename, self.id):
