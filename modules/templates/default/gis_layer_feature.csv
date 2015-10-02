@@ -12,7 +12,7 @@ Projects,,project,location,project,,{name} (T('Project'))<br />{location_id}<br 
 Requests,All Open Requests,req,req,request,"Navaid, Red",{req_ref} (T('Request'))<br />{site_id},"req_ref,site_id",~.fulfil_status__ne=2,True,,,,,,False,,,
 Seaports,All Active Seaports,transport,seaport,port,Marina,{name} (T('Seaport')),name,~.obsolete=False,,True,,,,,False,,,
 Shelters,All Active Shelters,cr,shelter,shelter,Campground,{name} (T('Shelter'))<br />T('Population') {population}<br />T('Capacity') {capacity_day},"name,population,capacity_day",~.status__ne=1,,True,,,,,False,,,
-Staff,All Active Staff,hrm,staff,staff,"Contact, Dreadlocks",{person_id} (T('Volunteer'))<br />{job_title_id}<br />{organisation_id},"person_id,job_title_id,organisation_id",~.status=1,,True,True,,,,False,,,
+Staff,All Active Staff,hrm,staff,staff,"Contact, Dreadlocks",{person_id} (T('Staff'))<br />{job_title_id}<br />{organisation_id},"person_id,job_title_id,organisation_id",~.status=1,,True,True,,,,False,,,
 Stock Items,Used for Search Results,inv,inv_item,,,{item_id} (T('Stock Item'))<br />{site_id}<br />{quantity} {item_pack_id}<br />T('Expires') {expiry_date},"item_id,site_id,quantity,item_pack_id,expiry_date",,,,,,,,False,False,,
 Training Events,Used for Search Results,hrm,training_event,,,{course_id} (T('Training Event'))<br />{site_id}<br />{start_date},"course_id,site_id,start_date",,,True,,,,,False,False,,
 Tweets,All Tweets,msg,twitter_result,twitter,,{body},body,,,True,,,,,False,,,
