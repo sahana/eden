@@ -5755,15 +5755,23 @@ class S3Permission(object):
                           require manual approval
         """
 
-        settings = current.deployment_settings
-
         APPROVER = "approved_by"
-
-        if APPROVER in table and (force or \
-           table._tablename not in settings.get_auth_record_approval_manual()):
-            auth = current.auth
+        if APPROVER in table:
             approver = table[APPROVER]
-            if auth.override or not settings.record_approval():
+        else:
+            return
+
+        settings = current.deployment_settings
+        auth = current.auth
+
+        if not settings.get_auth_record_approval():
+            if auth.s3_logged_in() and auth.user:
+                approver.default = auth.user.id
+            else:
+                approver.default = 0
+        elif force or \
+             table._tablename not in settings.get_auth_record_approval_manual():
+            if auth.override:
                 approver.default = 0
             elif auth.s3_logged_in() and \
                  auth.s3_has_permission("approve", table):
