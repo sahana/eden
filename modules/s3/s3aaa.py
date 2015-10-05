@@ -5763,7 +5763,7 @@ class S3Permission(object):
            table._tablename not in settings.get_auth_record_approval_manual()):
             auth = current.auth
             approver = table[APPROVER]
-            if auth.override or not settings.record_approval():
+            if auth.override or not settings.get_auth_record_approval():
                 approver.default = 0
             elif auth.s3_logged_in() and \
                  auth.s3_has_permission("approve", table):
