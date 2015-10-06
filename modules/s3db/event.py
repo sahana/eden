@@ -58,7 +58,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class S3EventModel(S3Model):
@@ -374,11 +374,12 @@ class S3EventModel(S3Model):
                         widget = S3LocationAutocompleteWidget(),
                         requires = IS_LOCATION(),
                         represent = self.gis_LocationRepresent(sep=", "),
-                        comment = S3AddResourceLink(c="gis",
-                                                    f="location",
-                                                    label = T("Create Location"),
-                                                    title=T("Location"),
-                                                    tooltip=AUTOCOMPLETE_HELP),
+                        comment = S3PopupLink(c = "gis",
+                                              f = "location",
+                                              label = T("Create Location"),
+                                              title = T("Location"),
+                                              tooltip = AUTOCOMPLETE_HELP,
+                                              ),
                         ),
                      *s3_meta_fields())
 
@@ -1136,10 +1137,11 @@ class S3EventResourceModel(S3Model):
                                                              translate=True),
                                      readable = True,
                                      writable = True,
-                                     comment = S3AddResourceLink(c="org",
-                                                                 f="resource_type",
-                                                                 vars = dict(child = "parameter_id"),
-                                                                 title=T("Create Resource Type")),
+                                     comment = S3PopupLink(c = "org",
+                                                           f = "resource_type",
+                                                           vars = {"child": "parameter_id"},
+                                                           title = T("Create Resource Type"),
+                                                           ),
                                      ),
                           Field("status", "integer",
                                 label = T("Status"),

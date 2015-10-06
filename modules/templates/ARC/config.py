@@ -698,15 +698,16 @@ def config(settings):
         # Comment
         if (Admin or s3_has_role("ORG_ADMIN")):
             # Need to do import after setting Theme
-            from s3layouts import S3AddResourceLink
+            from s3layouts import S3PopupLink
             from s3 import S3ScriptItem
-            add_link = S3AddResourceLink(c="org", f="organisation",
-                                         vars={"organisation_type.name":"Red Cross / Red Crescent"},
-                                         label=T("Create ARC Branch"),
-                                         title=T("ARC Branch"),
-                                         )
+            add_link = S3PopupLink(c = "org",
+                                   f = "organisation",
+                                   vars = {"organisation_type.name":"Red Cross / Red Crescent"},
+                                   label = T("Create ARC Branch"),
+                                   title = T("ARC Branch"),
+                                   )
             comment = f.comment
-            if not comment or isinstance(comment, S3AddResourceLink):
+            if not comment or isinstance(comment, S3PopupLink):
                 f.comment = add_link
             elif isinstance(comment[1], S3ScriptItem):
                 # Don't overwrite scripts

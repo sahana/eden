@@ -83,7 +83,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -191,9 +191,10 @@ class S3HRModel(S3Model):
                                   filter_opts=filter_opts,
                                   )),
             sortby = "name",
-            comment = S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
-                                        f="department",
-                                        label=label_create),
+            comment = S3PopupLink(c = "vol" if group == "volunteer" else "hrm",
+                                  f = "department",
+                                  label = label_create,
+                                  ),
             )
 
         configure("hrm_department",
@@ -319,11 +320,12 @@ class S3HRModel(S3Model):
             represent = represent,
             requires = requires,
             sortby = "name",
-            comment = S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
-                                        f="job_title",
-                                        label=label_create,
-                                        title=label,
-                                        tooltip=tooltip),
+            comment = S3PopupLink(c = "vol" if group == "volunteer" else "hrm",
+                                  f = "job_title",
+                                  label = label_create,
+                                  title = label,
+                                  tooltip = tooltip,
+                                  ),
             )
 
         configure("hrm_job_title",
@@ -573,13 +575,14 @@ class S3HRModel(S3Model):
         tooltip = DIV(_class="tooltip",
                       _title="%s|%s" % (T("Human Resource"),
                                         AUTOCOMPLETE_HELP))
-        comment = S3AddResourceLink(c = "vol" if group == "volunteer" else "hrm",
-                                    f = group or "staff",
-                                    vars = dict(child="human_resource_id"),
-                                    label=crud_strings["hrm_%s" % group].label_create if group else \
-                                          crud_strings[tablename].label_create,
-                                    title=label,
-                                    tooltip=tooltip)
+        comment = S3PopupLink(c = "vol" if group == "volunteer" else "hrm",
+                              f = group or "staff",
+                              vars = {"child": "human_resource_id"},
+                              label = crud_strings["hrm_%s" % group].label_create if group else \
+                                      crud_strings[tablename].label_create,
+                              title = label,
+                              tooltip = tooltip,
+                              )
 
         human_resource_id = S3ReusableField("human_resource_id", "reference %s" % tablename,
                                             label = label,
@@ -1534,8 +1537,9 @@ class S3HRSalaryModel(S3Model):
                                                   "hrm_staff_level.id",
                                                   staff_level_represent,
                                                   )),
-                           comment = S3AddResourceLink(f = "staff_level",
-                                                       label = ADD_STAFF_LEVEL),
+                           comment = S3PopupLink(f = "staff_level",
+                                                 label = ADD_STAFF_LEVEL,
+                                                 ),
                            ),
                      Field("salary_grade_id", "reference hrm_salary_grade",
                            label = T("Salary Grade"),
@@ -1545,8 +1549,9 @@ class S3HRSalaryModel(S3Model):
                                                   "hrm_salary_grade.id",
                                                   salary_grade_represent,
                                                   )),
-                           comment = S3AddResourceLink(f = "salary_grade",
-                                                       label = ADD_SALARY_GRADE),
+                           comment = S3PopupLink(f = "salary_grade",
+                                                 label = ADD_SALARY_GRADE,
+                                                 ),
                            ),
                      s3_date("start_date",
                              default = "now",
@@ -2142,10 +2147,11 @@ class S3HRSkillModel(S3Model):
                                   represent
                                   )),
             sortby = "name",
-            comment=S3AddResourceLink(f="skill_type",
-                                      label=label_create,
-                                      title=label_create,
-                                      tooltip=T("Add a new skill type to the catalog.")),
+            comment=S3PopupLink(f = "skill_type",
+                                label = label_create,
+                                title = label_create,
+                                tooltip = T("Add a new skill type to the catalog."),
+                                ),
             )
 
         configure(tablename,
@@ -2189,9 +2195,10 @@ class S3HRSkillModel(S3Model):
             widget = None
             tooltip = None
 
-        skill_help = S3AddResourceLink(f="skill",
-                                       label=label_create,
-                                       tooltip=tooltip)
+        skill_help = S3PopupLink(f = "skill",
+                                 label = label_create,
+                                 tooltip = tooltip,
+                                 )
 
         represent = S3Represent(lookup=tablename)
         skill_id = S3ReusableField("skill_id", "reference %s" % tablename,
@@ -2541,9 +2548,10 @@ class S3HRSkillModel(S3Model):
 
         if is_admin:
             label_create = crud_strings[tablename].label_create
-            course_help = S3AddResourceLink(c="vol" if group == "volunteer" else "hrm",
-                                            f="course",
-                                            label=label_create)
+            course_help = S3PopupLink(c = "vol" if group == "volunteer" else "hrm",
+                                      f = "course",
+                                      label = label_create,
+                                      )
         else:
             course_help = DIV(_class="tooltip",
                               _title="%s|%s" % (T("Course"),
@@ -2694,8 +2702,9 @@ class S3HRSkillModel(S3Model):
                                                                   #filter_opts=filter_opts,
                                                                   )),
                                             sortby = "course_id",
-                                            comment = S3AddResourceLink(f="training_event",
-                                                                        label=ADD_TRAINING_EVENT),
+                                            comment = S3PopupLink(f = "training_event",
+                                                                  label = ADD_TRAINING_EVENT,
+                                                                  ),
                                             # Comment this to use a Dropdown & not an Autocomplete
                                             #widget = S3AutocompleteWidget("hrm", "training_event")
                                             )
@@ -2943,10 +2952,11 @@ class S3HRSkillModel(S3Model):
                                       filter_opts=filter_opts
                                       )),
              sortby = "name",
-             comment = S3AddResourceLink(f="certificate",
-                                         label=label_create,
-                                         title=label_create,
-                                         tooltip=T("Add a new certificate to the catalog.")),
+             comment = S3PopupLink(f = "certificate",
+                                   label = label_create,
+                                   title = label_create,
+                                   tooltip = T("Add a new certificate to the catalog."),
+                                   ),
              )
 
         if settings.get_hrm_use_skills():
@@ -3192,11 +3202,12 @@ class S3HRSkillModel(S3Model):
             controller = "hrm"
         if current.auth.s3_has_role(current.session.s3.system_roles.ADMIN):
             label_create = s3.crud_strings["hrm_competency_rating"].label_create
-            comment = S3AddResourceLink(c=controller,
-                                        f="competency_rating",
-                                        vars={"child":"competency_id"},
-                                        label=label_create,
-                                        tooltip=T("Add a new competency rating to the catalog."))
+            comment = S3PopupLink(c = controller,
+                                  f = "competency_rating",
+                                  vars = {"child":"competency_id"},
+                                  label = label_create,
+                                  tooltip = T("Add a new competency rating to the catalog."),
+                                  )
         else:
             comment = DIV(_class="tooltip",
                           _title="%s|%s" % (T("Competency Rating"),
@@ -4156,8 +4167,9 @@ class S3HRAwardModel(S3Model):
                                                 "hrm_award_type.id",
                                                 award_type_represent,
                                                 ),
-                           comment = S3AddResourceLink(f = "award_type",
-                                                       label = ADD_AWARD_TYPE),
+                           comment = S3PopupLink(f = "award_type",
+                                                 label = ADD_AWARD_TYPE,
+                                                 ),
                            ),
                      *s3_meta_fields())
 
@@ -4247,9 +4259,9 @@ class S3HRDisciplinaryActionModel(S3Model):
                                                 "hrm_disciplinary_type.id",
                                                 disciplinary_type_represent,
                                                 ),
-                           comment = S3AddResourceLink(f = "disciplinary_type",
-                                                       label = ADD_DISCIPLINARY_TYPE,
-                                                       ),
+                           comment = S3PopupLink(f = "disciplinary_type",
+                                                 label = ADD_DISCIPLINARY_TYPE,
+                                                 ),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -4364,10 +4376,11 @@ class S3HRProgrammeModel(S3Model):
                                   filterby="organisation_id",
                                   filter_opts=filter_opts)),
             sortby = "name",
-            comment = S3AddResourceLink(f="programme",
-                                        label=label_create,
-                                        title=label_create,
-                                        tooltip=T("Add a new program to the catalog.")),
+            comment = S3PopupLink(f = "programme",
+                                  label = label_create,
+                                  title = label_create,
+                                  tooltip = T("Add a new program to the catalog."),
+                                  ),
             )
 
         configure(tablename,

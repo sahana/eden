@@ -213,7 +213,7 @@ class S3XFormsWidget(object):
         comment = field.comment
         if comment and isinstance(comment, basestring):
             # @todo: support LazyT, and extract hints from
-            #        S3AddResourceLinks or other tooltip DIVs
+            #        S3PopupLinks or other tooltip DIVs
             self.setstr("hint", comment)
 
         return self.widget(field, attr), self._strings

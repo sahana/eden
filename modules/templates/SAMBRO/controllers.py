@@ -265,7 +265,7 @@ class subscriptions(S3CustomController):
             Lookup the full set of options for a Filter Widget
             - for Subscriptions we don't want to see just the options available in current data
         """
-        
+
         if fieldname == "event_type_id":
             T = current.T
             etable = current.s3db.event_event_type
@@ -288,7 +288,7 @@ class subscriptions(S3CustomController):
             # IDs converted inside widget's _options() function
             rows = current.db(query).select(ltable.id)
             options = [row.id for row in rows]
-            
+
         return options
 
     # -------------------------------------------------------------------------
@@ -364,30 +364,30 @@ class subscriptions(S3CustomController):
                    ("SMS", T("SMS")),
                    ("Sync", T("FTP")),
                    ]
-                        
+
         method_options = Storage(name = "method", requires = IS_IN_SET(methods))
-        
+
         rows.append(("method_selector__row",
                      "%s:" % labels.NOTIFY_BY,
                      selector(method_options,
                               subscription["method"],
                               _id="method_selector"),
                      ""))
-        
+
         # Sync Row
         properties = subscription["comments"]
         if properties:
             properties = json.loads(properties)
-        
+
         synctable = s3db.sync_repository
         query = (synctable.apitype == "ftp") & \
                 (synctable.deleted != True) & \
                 (synctable.owned_by_user == current.auth.user.id)
-                                       
+
         ftp_rows = db(query).select(synctable.id,
                                     synctable.name,
                                     orderby = synctable.id)
-        
+
         multiselect = S3MultiSelectWidget(header = False,
                                           multiple = False,
                                           create = {"c": "sync",
@@ -396,24 +396,24 @@ class subscriptions(S3CustomController):
                                                     },
                                           )
         if ftp_rows:
-            if properties:            
-                user_repository_id = properties["repository_id"]            
+            if properties:
+                user_repository_id = properties["repository_id"]
             else:
                 user_repository_id = ftp_rows.first().id
-            
-            if current.auth.s3_has_permission("update", "sync_repository", 
+
+            if current.auth.s3_has_permission("update", "sync_repository",
                                               record_id = user_repository_id):
-                repository_comment = S3PopupLink(c="sync", f="repository",
-                                                 m="update",
-                                                 args=[user_repository_id],
-                                                 title=T("Update Repository"),
-                                                 tooltip= \
-                                    T("You can edit your FTP repository here"),
+                repository_comment = S3PopupLink(c = "sync",
+                                                 f = "repository",
+                                                 m = "update",
+                                                 args = [user_repository_id],
+                                                 title = T("Update Repository"),
+                                                 tooltip = T("You can edit your FTP repository here"),
                                                  )
             field = s3db.sync_task.repository_id
             ftp_ids = [(r.id, T(r.name)) for r in ftp_rows]
             field.requires = IS_IN_SET(ftp_ids)
-                       
+
             rows.append(("sync_task_repository_id__row",
                          "",
                          multiselect(field,
@@ -422,22 +422,22 @@ class subscriptions(S3CustomController):
                          repository_comment))
         else:
             if current.auth.s3_has_permission("create", "sync_repository"):
-                repository_comment = S3PopupLink(c="sync", f="repository",
-                                                 title=T("Create Repository"),
-                                                 tooltip= \
-                    T("Click on the link to begin creating your FTP repository"),
+                repository_comment = S3PopupLink(c = "sync",
+                                                 f = "repository",
+                                                 title = T("Create Repository"),
+                                                 tooltip = T("Click on the link to begin creating your FTP repository"),
                                                  )
-            
+
             rows.append(("sync_task_repository_id__row",
                          "",
                          "",
                          repository_comment))
-            
+
         parent = FIELDSET()
-        
+
         for row in rows:
             parent.append(formstyle(form, [row]))
-            
+
         # Deactivated Toggle
         #parent.insert(0,
         #              DIV(SPAN([I(_class="icon-reorder"), labels.MORE],
@@ -451,16 +451,16 @@ class subscriptions(S3CustomController):
 
         # Submit button
         submit_fieldset = FIELDSET(DIV("",
-                                       INPUT(_type="submit", _value="Update Settings"), 
+                                       INPUT(_type="submit", _value="Update Settings"),
                                        _id = "submit__row"))
-        
+
         form.append(submit_fieldset)
 
         # Script (to extract filters on submit and toggle options visibility)
         script = URL(c="static", f="scripts", args=["S3", "s3.subscriptions.js"])
         response.s3.scripts.append(script)
 
-        # Script to show/hide the ftp repo row for FTP checkbox on/off 
+        # Script to show/hide the ftp repo row for FTP checkbox on/off
         repository_script = '''
 if($('#method_selector option[value=Sync]').is(':selected')){
     $('#sync_task_repository_id__row').show();
@@ -475,9 +475,9 @@ $('#method_selector').change(function(){
         $('#sync_task_repository_id__row').hide();
     }
 })
-'''   
+'''
         response.s3.jquery_ready.append(repository_script)
-        
+
         # Accept form
         if form.accepts(current.request.post_vars,
                         current.session,
@@ -499,7 +499,7 @@ $('#method_selector').change(function(){
 
             subscription["filters"] = form.request_vars \
                                       .get("subscription-filters", None)
-                        
+
             # Fixed method
             subscription["method"] = formvars.method
             # Fixed Notify On and Frequency
@@ -508,9 +508,9 @@ $('#method_selector').change(function(){
             # Alternatively, with notify and frequency selector
             #subscription["notify_on"] = listify(formvars.notify_on
             #subscription["frequency"] = formvars.frequency
-            
+
             success_subscription = self._update_subscription(subscription)
-            
+
             if "Sync" in subscription["method"] and formvars.repository_id:
                 properties = self._update_sync(subscription["subscribe"][0]['resource'],
                                                subscription.get("filters"),
@@ -521,7 +521,7 @@ $('#method_selector').change(function(){
             else:
                 self._remove_sync(properties)
                 db(stable.pe_id == current.auth.user.pe_id).update(comments=None)
-                
+
             if success_subscription:
                 response.confirmation = messages.SUCCESS
             else:
@@ -722,23 +722,23 @@ $('#method_selector').change(function(){
 
     # -------------------------------------------------------------------------
     def _update_sync(self, resource, filters, selected_repository_id, properties):
-        """ 
-            Update synchronization settings 
-            
+        """
+            Update synchronization settings
+
             @param resource: available resources config
             @param filters: filter applied on the resource
             @param selected_repository_id: repository that is under current selection
-            @param properties: comment field of the pr_subscription; used to 
+            @param properties: comment field of the pr_subscription; used to
                                store the ids of FTP Sync
-            
+
         """
-        
+
         db = current.db
         s3db = current.s3db
         auth = current.auth
         user_id = auth.user.id
         utcnow = current.request.utcnow
-        
+
         if properties:
             old_repository_id = properties["repository_id"]
             if old_repository_id != selected_repository_id:
@@ -747,16 +747,16 @@ $('#method_selector').change(function(){
         else:
             # First Run
             properties = {"repository_id": selected_repository_id}
-            old_repository_id = selected_repository_id    
-                   
+            old_repository_id = selected_repository_id
+
         # Sync Task
         sync_task_table = s3db.sync_task
-        
+
         # Check if task already exists
         query = (sync_task_table.deleted != True) & \
                 (sync_task_table.owned_by_user == user_id) & \
                 (sync_task_table.repository_id == old_repository_id)
-                
+
         row = db(query).select(sync_task_table.id,
                                sync_task_table.repository_id,
                                limitby=(0, 1)).first()
@@ -767,7 +767,7 @@ $('#method_selector').change(function(){
                 # Update
                 db(sync_task_table.repository_id == old_repository_id).\
                                 update(repository_id = selected_repository_id)
-            sync_task_id = properties["sync_task_id"] = row.id       
+            sync_task_id = properties["sync_task_id"] = row.id
         else:
             # First Run
             sync_task_data = {"repository_id": selected_repository_id,
@@ -780,25 +780,25 @@ $('#method_selector').change(function(){
                               "last_push": utcnow, # since used for notifications,
                                                    # so don't send old alerts
                               }
-            sync_task_id = sync_task_table.insert(**sync_task_data)       
+            sync_task_id = sync_task_table.insert(**sync_task_data)
             auth.s3_set_record_owner(sync_task_table, sync_task_id)
             old_sync_id = properties["sync_task_id"] = sync_task_id
-        
+
         # Sync Resource Filter
-        
+
         # Remove Old Filter and create new
         query = (FS("task_id") == old_sync_id)
         s3db.resource("sync_resource_filter", filter=query).delete()
-        
+
         # Normally a filter looks like this
         # [["priority__belongs","24,3"],[u'location_id$L0__belongs', u'Nepal'],
         # [u'location_id$L1__belongs', u'Central']]
         # Get only those that have value and ignore null one
         filters = json.loads(filters)
         filters = [filter_ for filter_ in filters if filter_[1] is not None]
-        
+
         sync_resource_filter_table = s3db.sync_resource_filter
-        if len(filters) > 0:                
+        if len(filters) > 0:
             for filter_ in filters:
                 # Get the prefix
                 prefix = str(filter_[0]).strip("[]")
@@ -811,7 +811,7 @@ $('#method_selector').change(function(){
                     component = "info"
                 else:
                     component = "area_location"
-                
+
                 filter_string = "%s.%s=%s" % (component, prefix, values)
                 resource_filter_data = {"task_id": sync_task_id,
                                         "tablename": resource,
@@ -825,15 +825,15 @@ $('#method_selector').change(function(){
                 auth.s3_set_record_owner(sync_resource_filter_table,
                                          resource_filter_id)
                 s3db.onaccept(sync_resource_filter_table, row)
-        
+
         return properties
-    
+
     # -------------------------------------------------------------------------
     def _remove_sync(self, properties):
         """ Remove synchronization settings """
-        
+
         if properties:
             current.s3db.resource("sync_repository",
                                   id=properties["repository_id"]).delete()
-        
+
 # END =========================================================================

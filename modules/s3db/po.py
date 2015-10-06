@@ -36,7 +36,7 @@ __all__ = ("OutreachAreaModel",
            )
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class OutreachAreaModel(S3Model):
@@ -118,9 +118,9 @@ class OutreachAreaModel(S3Model):
                                                        represent,
                                                        ),
                                   sortby = "name",
-                                  comment = S3AddResourceLink(f="area",
-                                                              tooltip=T("Create a new area"),
-                                                              ),
+                                  comment = S3PopupLink(f = "area",
+                                                        tooltip = T("Create a new area"),
+                                                        ),
                                   )
 
         # Components
@@ -340,9 +340,9 @@ class OutreachHouseholdModel(S3Model):
                                                             represent,
                                                             ),
                                        sortby = "name",
-                                       comment = S3AddResourceLink(f="household",
-                                                                   tooltip=T("Create a new household"),
-                                                                   ),
+                                       comment = S3PopupLink(f = "household",
+                                                             tooltip = T("Create a new household"),
+                                                             ),
                                        )
 
         # Filter Widgets
@@ -725,11 +725,12 @@ class OutreachReferralModel(S3Model):
         # Organisation AddResourceLink should go to po/organisation
         ADD_ORGANISATION = T("Create Agency")
         tooltip = T("If you don't see the Agency in the list, you can add a new one by clicking link 'Create Agency'.")
-        org_comment = S3AddResourceLink(c="po", f="organisation",
-                                        label=ADD_ORGANISATION,
-                                        title=ADD_ORGANISATION,
-                                        tooltip=tooltip,
-                                        )
+        org_comment = S3PopupLink(c = "po",
+                                  f = "organisation",
+                                  label = ADD_ORGANISATION,
+                                  title = ADD_ORGANISATION,
+                                  tooltip = tooltip,
+                                  )
 
         # ---------------------------------------------------------------------
         # Referral Agency (context link table), currently not visible

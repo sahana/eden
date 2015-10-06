@@ -44,7 +44,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
@@ -1082,11 +1082,11 @@ class S3IRSResponseModel(S3Model):
                      asset_id(label = T("Vehicle"),
                               # Limit Vehicles to those which are not already assigned to an Incident
                               requires = self.irs_vehicle_requires,
-                              comment = S3AddResourceLink(
-                                 c="vehicle",
-                                 f="vehicle",
-                                 label=T("Add Vehicle"),
-                                 tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
+                              comment = S3PopupLink(c = "vehicle",
+                                                    f = "vehicle",
+                                                    label = T("Add Vehicle"),
+                                                    tooltip = T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'."),
+                                                    ),
                               ),
                      s3_datetime("datetime",
                                  default = "now",
@@ -1132,11 +1132,11 @@ class S3IRSResponseModel(S3Model):
                                                       filterby="type",
                                                       filter_opts=(1,),
                                                       sort=True)),
-                              comment = S3AddResourceLink(
-                              c="vehicle",
-                              f="vehicle",
-                              label=T("Add Vehicle"),
-                              tooltip=T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'.")),
+                              comment = S3PopupLink(c = "vehicle",
+                                                    f = "vehicle",
+                                                    label = T("Add Vehicle"),
+                                                    tooltip = T("If you don't see the vehicle in the list, you can add a new one by clicking link 'Add Vehicle'."),
+                                                    ),
                               ),
                      Field("closed",
                            # @ToDo: Close all assignments when Incident closed

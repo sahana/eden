@@ -33,7 +33,7 @@ from gluon import *
 from gluon.storage import Storage
 from gluon.tools import callback
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class S3DVRModel(S3Model):
@@ -245,9 +245,10 @@ class S3DVRModel(S3Model):
                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "dvr_need.id",
                                                           represent)),
-                                  comment=S3AddResourceLink(c="dvr",
-                                                            f="need",
-                                                            label=ADD_NEED),
+                                  comment=S3PopupLink(c = "dvr",
+                                                      f = "need",
+                                                      label = ADD_NEED,
+                                                      ),
                                   )
 
         configure(tablename,

@@ -57,7 +57,7 @@ from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class S3StatsModel(S3Model):
@@ -308,11 +308,11 @@ class S3StatsDemographicModel(S3Model):
                                     readable = True,
                                     writable = True,
                                     empty = False,
-                                    comment = S3AddResourceLink(c="stats",
-                                                                f="demographic",
-                                                                vars = dict(child = "parameter_id"),
-                                                                title=ADD_DEMOGRAPHIC,
-                                                                ),
+                                    comment = S3PopupLink(c = "stats",
+                                                          f = "demographic",
+                                                          vars = {"child": "parameter_id"},
+                                                          title = ADD_DEMOGRAPHIC,
+                                                          ),
                                     )
 
         # ---------------------------------------------------------------------
@@ -1295,10 +1295,11 @@ class S3StatsImpactModel(S3Model):
                                 readable = True,
                                 writable = True,
                                 empty = False,
-                                comment = S3AddResourceLink(c="stats",
-                                                            f="impact_type",
-                                                            vars = dict(child = "parameter_id"),
-                                                            title=ADD_IMPACT_TYPE),
+                                comment = S3PopupLink(c = "stats",
+                                                      f = "impact_type",
+                                                      vars = {"child": "parameter_id"},
+                                                      title = ADD_IMPACT_TYPE,
+                                                      ),
                                 ),
                      Field("value", "double",
                            label = T("Value"),
@@ -1446,10 +1447,11 @@ class S3StatsPeopleModel(S3Model):
                                 readable = True,
                                 writable = True,
                                 empty = False,
-                                comment = S3AddResourceLink(c="stats",
-                                                            f="people_type",
-                                                            vars = dict(child = "parameter_id"),
-                                                            title=ADD_PEOPLE_TYPE),
+                                comment = S3PopupLink(c = "stats",
+                                                      f = "people_type",
+                                                      vars = {"child": "parameter_id"},
+                                                      title = ADD_PEOPLE_TYPE,
+                                                      ),
                                 ),
                      Field("value", "integer",
                            label = T("Number of People"),

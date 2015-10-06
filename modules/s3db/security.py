@@ -32,7 +32,7 @@ __all__ = ("S3SecurityModel",)
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class S3SecurityModel(S3Model):
@@ -179,10 +179,11 @@ class S3SecurityModel(S3Model):
                                         IS_ONE_OF(db, "security_zone_type.id",
                                                   zone_type_represent,
                                                   sort=True)),
-                           comment = S3AddResourceLink(c="security",
-                                                       f="zone_type",
-                                                       label=ADD_ZONE_TYPE,
-                                                       tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
+                           comment = S3PopupLink(c = "security",
+                                                 f = "zone_type",
+                                                 label = ADD_ZONE_TYPE,
+                                                 tooltip = T("Select a Zone Type from the list or click 'Add Zone Type'"),
+                                                 ),
                            ),
                      location_id(
                         widget = S3LocationSelector(catalog_layers = True,
@@ -251,10 +252,11 @@ class S3SecurityModel(S3Model):
                                                   staff_type_represent,
                                                   sort=True,
                                                   multiple=True)),
-                           comment = S3AddResourceLink(c="security",
-                                                       f="staff_type",
-                                                       label=ADD_STAFF,
-                                                       tooltip=T("Select a Staff Type from the list or click 'Add Staff Type'")),
+                           comment = S3PopupLink(c = "security",
+                                                 f = "staff_type",
+                                                 label = ADD_STAFF,
+                                                 tooltip = T("Select a Staff Type from the list or click 'Add Staff Type'"),
+                                                 ),
                            ),
                      Field("zone_id", db.security_zone,
                            label = T("Zone"),
@@ -263,10 +265,11 @@ class S3SecurityModel(S3Model):
                                         IS_ONE_OF(db, "security_zone.id",
                                                   zone_represent,
                                                   sort=True)),
-                           comment = S3AddResourceLink(c="security",
-                                                       f="zone",
-                                                       label=ADD_ZONE,
-                                                       tooltip=T("For wardens, select a Zone from the list or click 'Add Zone'")),
+                           comment = S3PopupLink(c = "security",
+                                                 f = "zone",
+                                                 label = ADD_ZONE,
+                                                 tooltip = T("For wardens, select a Zone from the list or click 'Add Zone'"),
+                                                 ),
                            ),
                      self.super_link("site_id", "org_site",
                                      label = T("Facility"),

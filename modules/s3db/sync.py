@@ -296,9 +296,10 @@ class SyncDataModel(S3Model):
         # Reusable Fields
         sync_repository_represent = S3Represent(lookup=tablename)
         repository_id = S3ReusableField("repository_id", "reference %s" % tablename,
-                                        comment = S3PopupLink(c="sync", f="repository",
-                                                              label=ADD_REPOSITORY,
-                                                              title=ADD_REPOSITORY,
+                                        comment = S3PopupLink(c = "sync",
+                                                              f = "repository",
+                                                              label = ADD_REPOSITORY,
+                                                              title = ADD_REPOSITORY,
                                                               tooltip = ADD_REPOSITORY,
                                                               ),
                                         label = T("Repository"),

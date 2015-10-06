@@ -51,7 +51,7 @@ except ImportError:
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 NIGHT = 1
 DAY_AND_NIGHT = 2
@@ -138,9 +138,10 @@ class S3ShelterModel(S3Model):
                                           requires = IS_EMPTY_OR(
                                                         IS_ONE_OF(db, "cr_shelter_type.id",
                                                                   represent)),
-                                          comment=S3AddResourceLink(c="cr",
-                                                                    f="shelter_type",
-                                                                    label=ADD_SHELTER_TYPE),
+                                          comment=S3PopupLink(c = "cr",
+                                                              f = "shelter_type",
+                                                              label = ADD_SHELTER_TYPE,
+                                                              ),
                                           )
 
         # -------------------------------------------------------------------------
@@ -199,9 +200,10 @@ class S3ShelterModel(S3Model):
                                                                       service_represent,
                                                                       multiple=True)),
                                              sortby = "name",
-                                             comment = S3AddResourceLink(c="cr",
-                                                                         f="shelter_service",
-                                                                         label=ADD_SHELTER_SERVICE),
+                                             comment = S3PopupLink(c = "cr",
+                                                                   f = "shelter_service",
+                                                                   label = ADD_SHELTER_SERVICE,
+                                                                   ),
                                              widget = S3MultiSelectWidget(header=False,
                                                                           )
                                              )
@@ -550,12 +552,14 @@ class S3ShelterModel(S3Model):
                                                     IS_ONE_OF(db, "cr_shelter.id",
                                                               represent,
                                                               sort=True)),
-                                     comment = S3AddResourceLink(c="cr",
-                                                                 f="shelter",
-                                                                 label=ADD_SHELTER,
-                                                                 title=SHELTER_LABEL,
-                                                                 tooltip="%s (%s)." % (SHELTER_HELP,
-                                                                                       T("optional"))),
+                                     comment = S3PopupLink(c = "cr",
+                                                           f = "shelter",
+                                                           label = ADD_SHELTER,
+                                                           title = SHELTER_LABEL,
+                                                           tooltip = "%s (%s)." % (SHELTER_HELP,
+                                                                                   T("optional"),
+                                                                                   ),
+                                                           ),
                                      widget = S3AutocompleteWidget("cr", "shelter")
                                      )
 

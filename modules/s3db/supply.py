@@ -50,7 +50,7 @@ from gluon.storage import Storage
 
 from ..s3 import *
 from s3dal import Row
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # @ToDo: Put the most common patterns at the top to optimise
 um_patterns = ["\sper\s?(.*)$",                         # CHOCOLATE, per 100g
@@ -154,10 +154,12 @@ class S3SupplyModel(S3Model):
                                   sort=True)
                         ),
             sortby = "name",
-            comment = S3AddResourceLink(c="supply", f="brand",
-                                        label=ADD_BRAND,
-                                        title=T("Brand"),
-                                        tooltip=T("The list of Brands are maintained by the Administrators.")),
+            comment = S3PopupLink(c = "supply",
+                                  f = "brand",
+                                  label = ADD_BRAND,
+                                  title = T("Brand"),
+                                  tooltip = T("The list of Brands are maintained by the Administrators."),
+                                  ),
             )
 
         # =====================================================================
@@ -201,11 +203,12 @@ class S3SupplyModel(S3Model):
                                   updateable=True,
                                   )),
             sortby = "name",
-            comment=S3AddResourceLink(c="supply",
-                                      f="catalog",
-                                      label=ADD_CATALOG,
-                                      title=T("Catalog"),
-                                      tooltip=T("The list of Catalogs are maintained by the Administrators.")),
+            comment=S3PopupLink(c = "supply",
+                                f = "catalog",
+                                label = ADD_CATALOG,
+                                title = T("Catalog"),
+                                tooltip = T("The list of Catalogs are maintained by the Administrators."),
+                                ),
             )
 
         # Components
@@ -294,12 +297,12 @@ class S3SupplyModel(S3Model):
                                               sort=True)
                                     )
 
-        item_category_comment = S3AddResourceLink(c="supply",
-                                                  f="item_category",
-                                                  label=ADD_ITEM_CATEGORY,
-                                                  title=T("Item Category"),
-                                                  tooltip=ADD_ITEM_CATEGORY
-                                                  )
+        item_category_comment = S3PopupLink(c = "supply",
+                                            f = "item_category",
+                                            label = ADD_ITEM_CATEGORY,
+                                            title = T("Item Category"),
+                                            tooltip = ADD_ITEM_CATEGORY,
+                                            )
 
         # @todo: make lazy_table
         table = db[tablename]
@@ -435,11 +438,12 @@ $.filterOptionsS3({
                                  sort=True),
             sortby = "name",
             widget = S3AutocompleteWidget("supply", "item"),
-            comment=S3AddResourceLink(c="supply",
-                                      f="item",
-                                      label=ADD_ITEM,
-                                      title=T("Item"),
-                                      tooltip=T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog.")),
+            comment=S3PopupLink(c = "supply",
+                                f = "item",
+                                label = ADD_ITEM,
+                                title = T("Item"),
+                                tooltip = T("Type the name of an existing catalog item OR Click 'Create Item' to add an item which is not in the catalog."),
+                                ),
             )
 
         # ---------------------------------------------------------------------
@@ -676,11 +680,12 @@ $.filterOptionsS3({
  'fncRepresent':S3.supply.fncRepresentItem
 })''',
                     sortby = "name",
-                    #comment=S3AddResourceLink(c="supply",
-                    #                          f="item_pack",
-                    #                          label=ADD_ITEM_PACK,
-                    #                          title=T("Item Packs"),
-                    #                          tooltip=T("The way in which an item is normally distributed")),
+                    #comment=S3PopupLink(c = "supply",
+                    #                    f = "item_pack",
+                    #                    label = ADD_ITEM_PACK,
+                    #                    title = T("Item Packs"),
+                    #                    tooltip = T("The way in which an item is normally distributed"),
+                    #                    ),
                     )
 
         configure(tablename,
@@ -1223,10 +1228,11 @@ class S3SupplyDistributionModel(S3Model):
                                 readable = True,
                                 writable = True,
                                 empty = False,
-                                comment = S3AddResourceLink(c="supply",
-                                                            f="distribution_item",
-                                                            vars = dict(child = "parameter_id"),
-                                                            title=ADD_ITEM),
+                                comment = S3PopupLink(c = "supply",
+                                                      f = "distribution_item",
+                                                      vars = {"child": "parameter_id"},
+                                                      title=ADD_ITEM,
+                                                      ),
                                 ),
                      self.gis_location_id(),
                      Field("value", "integer",

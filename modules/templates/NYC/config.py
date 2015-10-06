@@ -1222,16 +1222,16 @@ def config(settings):
                     # Site ID uses drop-down not autocomplete
                     site_id = htable.site_id
                     site_id.widget = None
-                    from s3layouts import S3AddResourceLink
-                    site_id.comment = S3AddResourceLink(T("Create Facility"),
-                                                        c="org",
-                                                        f="facility",
-                                                        t="org_facility",
-                                                        vars={"prefix": "hrm",
-                                                              "parent": "human_resource",
-                                                              "child": "site_id",
-                                                              },
-                                                        )
+                    from s3layouts import S3PopupLink
+                    site_id.comment = S3PopupLink(T("Create Facility"),
+                                                  c = "org",
+                                                  f = "facility",
+                                                  t = "org_facility",
+                                                  vars = {"prefix": "hrm",
+                                                          "parent": "human_resource",
+                                                          "child": "site_id",
+                                                          },
+                                                  )
 
                     # Fields for embedded HR record
                     hr_fields = ["organisation_id",
@@ -1536,11 +1536,13 @@ $.filterOptionsS3({
 
             s3db.pr_group_membership.group_head.label = T("Group Chairperson")
             if r.component_name == "group_membership":
-                from s3layouts import S3AddResourceLink
+                from s3layouts import S3PopupLink
                 s3db.pr_group_membership.person_id.comment = \
-                    S3AddResourceLink(c="pr", f="person",
-                                      title=T("Create Person"),
-                                      tooltip=current.messages.AUTOCOMPLETE_HELP)
+                    S3PopupLink(c = "pr",
+                                f = "person",
+                                title = T("Create Person"),
+                                tooltip = current.messages.AUTOCOMPLETE_HELP,
+                                )
             #else:
             #    # RHeader wants a simplified version, but don't want inconsistent across tabs
             #    s3db.pr_group_membership.group_head.label = T("Chairperson")
@@ -2092,12 +2094,14 @@ $.filterOptionsS3({
     # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):
 
-        from s3layouts import S3AddResourceLink
+        from s3layouts import S3PopupLink
         current.s3db.req_req.site_id.comment = \
-            S3AddResourceLink(c="org", f="facility",
-                              vars = dict(child="site_id"),
-                              title=T("Create Facility"),
-                              tooltip=current.messages.AUTOCOMPLETE_HELP)
+            S3PopupLink(c = "org",
+                        f = "facility",
+                        vars = {"child": "site_id"},
+                        title = T("Create Facility"),
+                        tooltip = current.messages.AUTOCOMPLETE_HELP,
+                        )
 
         current.response.s3.req_req_postprocess = req_req_postprocess
 

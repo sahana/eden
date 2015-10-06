@@ -42,7 +42,7 @@ from gluon.storage import Storage
 
 from ..s3 import *
 from s3dal import Row
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class S3BudgetModel(S3Model):
@@ -193,7 +193,7 @@ class S3BudgetModel(S3Model):
         #    requires = IS_ONE_OF(db, "budget_budget.id",
         #                         budget_budget_represent,
         #                         ),
-        #    comment = S3AddResourceLink(
+        #    comment = S3PopupLink(
         #        c = "budget",
         #        f = "budget",
         #        label = ADD_BUDGET,
@@ -296,7 +296,7 @@ class S3BudgetModel(S3Model):
             requires = IS_ONE_OF(db, "budget_location.id",
                                  budget_location_represent,
                                  ),
-            comment = S3AddResourceLink(
+            comment = S3PopupLink(
                 c = "budget",
                 f = "location",
                 label = ADD_LOCATION,
@@ -373,7 +373,7 @@ class S3BudgetModel(S3Model):
             requires = IS_ONE_OF(db, "budget_staff.id",
                                  budget_staff_represent,
                                  ),
-            comment = S3AddResourceLink(
+            comment = S3PopupLink(
                 c = "budget",
                 f = "staff",
                 label = ADD_STAFF_TYPE,
@@ -621,7 +621,7 @@ class S3BudgetKitModel(S3Model):
             requires = IS_ONE_OF(db, "budget_kit.id",
                                  budget_kit_represent,
                                  ),
-            comment = S3AddResourceLink(
+            comment = S3PopupLink(
                 c = "budget",
                 f = "kit",
                 label = ADD_KIT,
@@ -747,7 +747,7 @@ class S3BudgetKitModel(S3Model):
             requires = IS_ONE_OF(db, "budget_item.id",
                                  budget_item_represent,
                                  ),
-            comment = S3AddResourceLink(
+            comment = S3PopupLink(
                 c = "budget",
                 f = "item",
                 label = ADD_ITEM,
@@ -1001,7 +1001,7 @@ class S3BudgetBundleModel(S3Model):
             requires = IS_ONE_OF(db, "budget_bundle.id",
                                  budget_bundle_represent,
                                  ),
-            comment = S3AddResourceLink(
+            comment = S3PopupLink(
                 c = "budget",
                 f = "bundle",
                 label = ADD_BUNDLE,

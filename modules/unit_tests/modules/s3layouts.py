@@ -8,7 +8,7 @@
 import unittest
 
 from gluon import current
-from s3.s3layouts import homepage, S3AddResourceLink
+from s3.s3layouts import homepage, S3PopupLink
 
 # =============================================================================
 class LayoutTests(unittest.TestCase):
@@ -30,13 +30,13 @@ class LayoutTests(unittest.TestCase):
         self.assertEqual(rendered_hp, "")
 
     # -------------------------------------------------------------------------
-    def testAddResourceLink(self):
-        """ Test AddResourceLink """
+    def testPopupLink(self):
+        """ Test S3PopupLink """
 
         auth = current.auth
         deployment_settings = current.deployment_settings
 
-        comment = S3AddResourceLink(c="pr", f="person")
+        comment = S3PopupLink(c="pr", f="person")
 
         # If the module is active, the comment should always be active
         self.assertEqual(comment.check_active(),
@@ -49,7 +49,7 @@ class LayoutTests(unittest.TestCase):
         self.assertEqual(comment.label, crud_string)
 
         if "inv" in deployment_settings.modules:
-            comment = S3AddResourceLink(c="inv", f="inv_item")
+            comment = S3PopupLink(c="inv", f="inv_item")
             # Deactivate module
             inv = deployment_settings.modules["inv"]
             del deployment_settings.modules["inv"]

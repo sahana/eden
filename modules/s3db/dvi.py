@@ -32,7 +32,7 @@ __all__ = ("S3DVIModel",)
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class S3DVIModel(S3Model):
@@ -462,12 +462,13 @@ class S3DVIModel(S3Model):
         c_comment = T("Type the first few characters of one of the Person's names.")
 
         ADD_PERSON = T("Add Person")
-        return S3AddResourceLink(c="pr",
-                                 f="person",
-                                 vars=dict(child=fieldname),
-                                 label=ADD_PERSON,
-                                 title=c_title,
-                                 tooltip=c_comment)
+        return S3PopupLink(c = "pr",
+                           f = "person",
+                           vars = {"child": fieldname},
+                           label = ADD_PERSON,
+                           title = c_title,
+                           tooltip = c_comment,
+                           )
 
     # -------------------------------------------------------------------------
     @staticmethod

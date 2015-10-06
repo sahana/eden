@@ -1329,12 +1329,14 @@ def config(settings):
                                         represent,
                                         orderby = "org_site.name")
 
-        from s3layouts import S3AddResourceLink
-        site_field.comment = S3AddResourceLink(c="org", f="facility",
-                                               vars={"child": "site_id"},
-                                               label=T("Create Facility"),
-                                               title=T("Facility"),
-                                               tooltip=T("If you don't see the Facility in the list, you can add a new one by clicking link 'Create Facility'."))
+        from s3layouts import S3PopupLink
+        site_field.comment = S3PopupLink(c = "org",
+                                         f = "facility",
+                                         vars = {"child": "site_id"},
+                                         label = T("Create Facility"),
+                                         title = T("Facility"),
+                                         tooltip = T("If you don't see the Facility in the list, you can add a new one by clicking link 'Create Facility'."),
+                                         )
 
         # ImageCrop widget doesn't currently work within an Inline Form
         image_field = s3db.pr_image.image

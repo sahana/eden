@@ -56,7 +56,7 @@ from gluon.sqlhtml import RadioWidget
 from gluon.storage import Storage
 
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 SHIP_STATUS_IN_PROCESS = 0
 SHIP_STATUS_RECEIVED   = 1
@@ -176,11 +176,12 @@ class S3WarehouseModel(S3Model):
                                                      sort=True
                                                      )),
                                sortby = "name",
-                               comment = S3AddResourceLink(c="inv",
-                                           f="warehouse_type",
-                                           label=ADD_WAREHOUSE_TYPE,
-                                           title=T("Warehouse Type"),
-                                           tooltip=T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Warehouse Type'.")),
+                               comment = S3PopupLink(c = "inv",
+                                                     f = "warehouse_type",
+                                                     label = ADD_WAREHOUSE_TYPE,
+                                                     title = T("Warehouse Type"),
+                                                     tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Warehouse Type'."),
+                                                     ),
                                )
 
         configure(tablename,
@@ -1610,12 +1611,12 @@ class S3InventoryTrackingModel(S3Model):
                            readable = True,
                            writable = True,
                            widget = S3SiteAutocompleteWidget(),
-                           comment = S3AddResourceLink(
-                                c="inv",
-                                f="warehouse",
-                                label=T("Create Warehouse"),
-                                title=T("Warehouse"),
-                                tooltip=T("Type the name of an existing site OR Click 'Create Warehouse' to add a new warehouse.")),
+                           comment = S3PopupLink(c = "inv",
+                                                 f = "warehouse",
+                                                 label = T("Create Warehouse"),
+                                                 title = T("Warehouse"),
+                                                 tooltip = T("Type the name of an existing site OR Click 'Create Warehouse' to add a new warehouse."),
+                                                 ),
                            ),
                      item_id(label = T("Kit"),
                              requires = IS_ONE_OF(db, "supply_item.id",
@@ -1626,12 +1627,12 @@ class S3InventoryTrackingModel(S3Model):
                              widget = S3AutocompleteWidget("supply", "item",
                                                            filter="item.kit=1"),
                              # Needs better workflow as no way to add the Kit Items
-                             #comment = S3AddResourceLink(
-                             #   c="supply",
-                             #   f="item",
-                             #   label=T("Create Kit"),
-                             #   title=T("Kit"),
-                             #   tooltip=T("Type the name of an existing catalog kit OR Click 'Create Kit' to add a kit which is not in the catalog.")),
+                             #comment = S3PopupLink(c = "supply",
+                             #                      f = "item",
+                             #                      label = T("Create Kit"),
+                             #                      title = T("Kit"),
+                             #                      tooltip = T("Type the name of an existing catalog kit OR Click 'Create Kit' to add a kit which is not in the catalog."),
+                             #                      ),
                              comment = DIV(_class="tooltip",
                                            _title="%s|%s" % (T("Kit"),
                                                              T("Type the name of an existing catalog kit"))),

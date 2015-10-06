@@ -32,7 +32,7 @@ __all__ = ("S3WaterModel",)
 from gluon import *
 from gluon.storage import Storage
 from ..s3 import *
-from s3layouts import S3AddResourceLink
+from s3layouts import S3PopupLink
 
 # =============================================================================
 class S3WaterModel(S3Model):
@@ -105,10 +105,11 @@ class S3WaterModel(S3Model):
                                        IS_ONE_OF(db, "water_zone_type.id",
                                                  zone_type_represent,
                                                  sort=True)),
-                           comment = S3AddResourceLink(c="water",
-                                                       f="zone_type",
-                                                       label=ADD_ZONE_TYPE,
-                                                       tooltip=T("Select a Zone Type from the list or click 'Add Zone Type'")),
+                           comment = S3PopupLink(c = "water",
+                                                 f = "zone_type",
+                                                 label = ADD_ZONE_TYPE,
+                                                 tooltip = T("Select a Zone Type from the list or click 'Add Zone Type'"),
+                                                 ),
                            ),
                      location_id(
                         widget = S3LocationSelector(catalog_layers = True,
@@ -171,9 +172,10 @@ class S3WaterModel(S3Model):
         #                           ondelete = "RESTRICT",
         #                           represent = represent,
         #                           requires = IS_EMPTY_OR(IS_ONE_OF(db, "water_river.id", represent)),
-        #                           comment = S3AddResourceLink(c="water",
-        #                                                       f="river",
-        #                                                       title=ADD_RIVER),
+        #                           comment = S3PopupLink(c = "water",
+        #                                                 f = "river",
+        #                                                 title = ADD_RIVER,
+        #                                                 ),
         #                           )
 
         # -----------------------------------------------------------------------------
