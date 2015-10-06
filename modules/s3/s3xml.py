@@ -236,7 +236,9 @@ class S3XML(S3Codec):
             except:
                 pass
         try:
-            parser = etree.XMLParser(no_network=False)
+            parser = etree.XMLParser(no_network = False,
+                                     remove_blank_text = True,
+                                     )
             result = etree.parse(source, parser)
             return result
         except:

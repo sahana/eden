@@ -775,6 +775,7 @@ class S3SyncRepository(object):
         self.proxy = repository.proxy
 
         self.apitype = repository.apitype
+        self.keep_source = repository.keep_source
 
         import sync_adapter
         api = sync_adapter.__dict__.get(self.apitype)

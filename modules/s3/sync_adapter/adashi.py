@@ -238,6 +238,10 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                     "response": xml.json_message(False, 400, msg),
                     }
 
+        # Store source data?
+        if self.repository.keep_source:
+            self.keep_source(tree, category)
+
         # Import transformation stylesheet
         stylesheet = os.path.join(current.request.folder,
                                   "static",
@@ -363,5 +367,46 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             inactive = set(row.id for row in rows)
             current.db(ltable.id.belongs(inactive)).update(status=4)
 
+    # -------------------------------------------------------------------------
+    def keep_source(self, tree, category):
+        """
+            Helper method to store source data in file system
+
+            @param tree: the XML element tree of the source
+            @param category: the feed category
+        """
+
+        repository = self.repository
+
+        # Log the operation
+        log = repository.log
+        log.write(repository_id = repository.id,
+                  resource_name = None,
+                  transmission = log.IN,
+                  mode = log.PUSH,
+                  action = "receive",
+                  remote = False,
+                  result = log.WARNING,
+                  message = "'Keep Source Data' active for this repository!",
+                  )
+
+        request = current.request
+        folder = os.path.join(request.folder, "uploads", "adashi")
+        dt = request.utcnow.replace(microsecond=0).isoformat()
+        dt = dt.replace(":", "").replace("-", "")
+        filename = os.path.join(folder,
+                                "%s_%s.xml" % (category, dt),
+                                )
+        if not os.path.exists(folder):
+            try:
+                os.mkdir(folder)
+            except OSError:
+                return
+        if filename:
+            try:
+                with open(filename, "w") as f:
+                    tree.write(f, pretty_print=True)
+            except IOError:
+                return
 
 # End =========================================================================
