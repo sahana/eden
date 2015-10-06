@@ -589,6 +589,7 @@ class S3CAPModel(S3Model):
                            ),
                      Field("color_code",
                            label = T("Color Code"),
+                           widget = S3ColorPickerWidget(),
                            ),
                      *s3_meta_fields())
 
