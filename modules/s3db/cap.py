@@ -2090,40 +2090,40 @@ def add_area_from_template(area_id, alert_id):
                                                 limitby=(0, 1)).first()
     rows = db(itable.alert_id == alert_id).select(itable.id)
 
-    if len(rows) == 1:
-        info_id = rows.first().id
-    else:
-        info_id = ""
-
-    adata = {"is_template": False,
-             "alert_id": alert_id,
-             "info_id": info_id,
-             }
-    for field in afieldnames:
-        adata[field] = atemplate[field]
-    aid = atable.insert(**adata)
-
-    # Add Area Location Components of Template
-    ltemplate = db(ltable.area_id == area_id).select(*lfieldnames)
-    for rows in ltemplate:
-        ldata = {"area_id": aid,
+    area_ids = []
+    for row in rows:
+        adata = {"is_template": False,
                  "alert_id": alert_id,
+                 "info_id": row.id,
                  }
-        for field in lfieldnames:
-            ldata[field] = rows[field]
-        lid = ltable.insert(**ldata)
+        for field in afieldnames:
+            adata[field] = atemplate[field]
+            
+        aid = atable.insert(**adata)
 
-    # Add Area Tag Components of Template
-    ttemplate = db(ttable.area_id == area_id).select(*tfieldnames)
-    for row in ttemplate:
-        tdata = {"area_id": aid,
-                 "alert_id": alert_id,
-                 }
-        for field in tfieldnames:
-            tdata[field] = row[field]
-        tid = ttable.insert(**tdata)
+        # Add Area Location Components of Template
+        ltemplate = db(ltable.area_id == area_id).select(*lfieldnames)
+        for rows in ltemplate:
+            ldata = {"area_id": aid,
+                     "alert_id": alert_id,
+                     }
+            for field in lfieldnames:
+                ldata[field] = rows[field]
+            lid = ltable.insert(**ldata)
+    
+        # Add Area Tag Components of Template
+        ttemplate = db(ttable.area_id == area_id).select(*tfieldnames)
+        for row in ttemplate:
+            tdata = {"area_id": aid,
+                     "alert_id": alert_id,
+                     }
+            for field in tfieldnames:
+                tdata[field] = row[field]
+            tid = ttable.insert(**tdata)
 
-    return aid
+        area_ids.append(aid)
+        
+    return area_ids
 
 # =============================================================================
 class CAPImportFeed(S3Method):

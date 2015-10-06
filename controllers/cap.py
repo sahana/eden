@@ -105,7 +105,7 @@ def alert():
     tablename = "cap_alert"
 
     def prep(r):
-        from s3.s3filter import S3OptionsFilter
+        from s3 import S3OptionsFilter
         itable = s3db.cap_info
         rows = db(itable.expires < request.utcnow).select(itable.id,
                                                           orderby=itable.id)
