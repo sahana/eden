@@ -82,21 +82,77 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
 
         repository = self.repository
-
-        # Log the operation
         log = repository.log
-        log.write(repository_id = repository.id,
-                  resource_name = task.resource_name,
-                  transmission = log.OUT,
-                  mode = log.PUSH,
-                  action = None,
-                  remote = False,
-                  result = log.FATAL,
-                  message = "Pull from ADASHI currently not supported",
-                  )
 
-        output = current.xml.json_message(False, 400, message)
-        return(output, None)
+        # Import path
+        PATH = os.path.join(current.request.folder, "uploads", "adashi_feeds")
+
+        # Read names from path
+        try:
+            files_list = os.listdir(PATH)
+        except os.error:
+            message = "Upload path does not exist or can not be accessed"
+            log.write(repository_id = repository.id,
+                      resource_name = "mixed",
+                      transmission = log.IN,
+                      mode = log.PUSH,
+                      action = "read files from %s" % PATH,
+                      remote = False,
+                      result = log.FATAL,
+                      message = message,
+                      )
+            return message, None
+
+        # Add path to file names, filter for regular files, sort by mtime
+        files = [os.path.join(PATH, f) for f in files]
+        files = filter(os.path.isfile, files)
+        files.sort(key=os.path.getmtime)
+
+        # Strategy and Policies
+        from ..s3import import S3ImportItem
+        default_update_policy = S3ImportItem.POLICY.NEWER
+        default_conflict_policy = S3ImportItem.POLICY.MASTER
+        strategy = task.strategy
+        update_policy = task.update_policy or default_update_policy
+        conflict_policy = task.conflict_policy or default_conflict_policy
+        if update_policy not in ("THIS", "OTHER"):
+            last_sync = task.last_pull
+
+        # Import files
+        for f in files:
+            current.log.debug("ADASHI Sync: importing %s" % f)
+            try:
+                with open(f, "r") as source:
+                    result = self.receive([source],
+                                          None,
+                                          strategy=strategy,
+                                          update_policy=update_policy,
+                                          conflict_policy=conflict_policy,
+                                          onconflict=onconflict,
+                                          last_sync=last_sync,
+                                          mixed=True,
+                                          )
+            except IOError:
+                continue
+
+            # Log the operation
+            log.write(repository_id = repository.id,
+                      resource_name = "mixed",
+                      transmission = log.IN,
+                      mode = log.PUSH,
+                      action = "import %s" % f,
+                      remote = result["remote"],
+                      result = result["status"],
+                      message = result["message"],
+                      )
+
+            # Remove the file
+            try:
+                os.remove(f)
+            except os.error:
+                current.log.error("ADASHI Sync: can not delete %s" % f)
+
+        return None, current.request.utcnow
 
     # -------------------------------------------------------------------------
     def push(self, task):
@@ -121,7 +177,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                   )
 
         output = current.xml.json_message(False, 400, message)
-        return(output, None)
+        return output, None
 
     # -------------------------------------------------------------------------
     def send(self,
@@ -239,7 +295,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                     }
 
         # Store source data?
-        if self.repository.keep_source:
+        repository = self.repository
+        if repository.keep_source:
             self.keep_source(tree, category)
 
         # Import transformation stylesheet
