@@ -1546,13 +1546,13 @@ def twitter_result():
 
     filter_widgets = [
         S3DateFilter("date",
-                     label=T("Tweeted On"),
+                     label=T("Tweeted on"),
                      hide_time=True,
                      _class="date-filter-class",
                      comment=T("Filter Tweets by the date they were tweeted on"),
                      ),
         S3TextFilter("from_address",
-                     label=T("Tweeted By"),
+                     label=T("Tweeted by"),
                      _class="tweeter-filter-class",
                      comment=T("Filter Tweets by who tweeted them"),
                      )
