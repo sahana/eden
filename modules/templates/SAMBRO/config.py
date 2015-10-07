@@ -262,6 +262,41 @@ def config(settings):
     settings.customise_sync_repository_controller = customise_sync_repository_controller
     
     # -------------------------------------------------------------------------
+    def customise_cap_warning_priority_resource(r, tablename):
+        
+        s3db = current.s3db
+        def onaccept(form):
+            # Normal onaccept if any
+            
+            if form.vars.color_code:
+                db = current.db
+                stable = s3db.gis_style
+                etable = s3db.gis_layer_entity
+                rows_ = db(etable.instance_type == "gis_layer_feature"). \
+                                                            select(etable.id)
+                query = (stable.layer_id.belongs([row_.id for row_ in rows_]))
+                rows = db(query).select(stable.id,
+                                        stable.style,
+                                        orderby=stable.id)
+                if rows:
+                    for row in rows:
+                        if row.style:
+                            sdata = OrderedDict(prop = "priority",
+                                                fill = form.vars.color_code,
+                                                fillOpacity = 0.4,
+                                                cat = form.vars.name
+                                                )                        
+                            if sdata not in row.style:
+                                row.style.append(sdata)
+                                db(stable.id == row.id).update(style = row.style)
+        
+        s3db.configure(tablename,
+                       create_onaccept = onaccept,
+                       )
+        
+    settings.customise_cap_warning_priority_resource = customise_cap_warning_priority_resource        
+        
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # @ToDo: Have the system automatically enable migrate if a module is enabled
     # Modules menu is defined in modules/eden/menu.py

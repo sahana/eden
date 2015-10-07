@@ -90,7 +90,7 @@
                     $form.find('[name=urgency]').val(p[i][1]);
                     $form.find('[name=severity]').val(p[i][2]);
                     $form.find('[name=certainty]').val(p[i][3]);
-                    $(this).css('border', '2px solid ' + p[i][4]);
+                    $(this).css('border', '2px solid #' + p[i][4]);
                 }
             }
         });
@@ -105,7 +105,7 @@
                         $('#cap_info_priority option').each(function() {
                             if($(this).text() == p[i][0]) {
                                 $(this).attr('selected', 'selected');
-                                $form.find('[name=priority]').css('border', '2px solid ' + p[i][4]);
+                                $form.find('[name=priority]').css('border', '2px solid #' + p[i][4]);
                             }                        
                         });
                     return;
