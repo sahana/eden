@@ -103,8 +103,9 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                       )
             return message, None
 
-        # Add path to file names, filter for regular files, sort by mtime
-        files = [os.path.join(PATH, f) for f in files]
+        # Add path to file names, filter for .xml files, sort by mtime
+        files = [os.path.join(PATH, f)
+                 for f in files_list if f[-4:] == ".xml"]
         files = filter(os.path.isfile, files)
         files.sort(key=os.path.getmtime)
 
