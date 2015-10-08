@@ -685,7 +685,13 @@ def alert():
                         del row_clone["info_id"]
                     rtable.insert(**row_clone)
 
-            r.next = URL(c="cap", f="alert", args=[lastid, "info"])
+            itable = s3db.cap_info
+            row = db(itable.alert_id == lastid).select(itable.id,
+                                                       limitby=(0, 1)).first()
+            if row:
+                r.next = URL(c="cap", f="alert", args=[lastid, "info"])
+            else:
+                r.next = URL(c="cap", f="alert", args=[lastid, "info", "create"])
 
         if r.interactive:
             if get_vars.get("_next"):
@@ -812,24 +818,27 @@ def template():
             field.requires = None
         atable.template_title.requires = IS_NOT_EMPTY()
         atable.status.readable = atable.status.writable = False
-        itable = db.cap_info
-        for f in ("event",
-                  "urgency",
-                  "certainty",
-                  "priority",
-                  "severity",
-                  "effective",
-                  "onset",
-                  "expires",
-                  ):
-            field = itable[f]
-            field.writable = False
-            field.readable = False
-            field.required = False
 
-        itable.category.required = False
+        if r.component_name == "info":
+            info_fields_comments()
+            itable = db.cap_info
+            for f in ("event",
+                      "urgency",
+                      "certainty",
+                      "priority",
+                      "severity",
+                      "effective",
+                      "onset",
+                      "expires",
+                      ):
+                field = itable[f]
+                field.writable = False
+                field.readable = False
+                field.required = False
 
-        if r.component_name == "resource":
+            itable.category.required = False
+
+        elif r.component_name == "resource":
             rtable = r.component.table
             # Limit to those for this Alert
             rtable.info_id.requires = IS_EMPTY_OR(
@@ -876,7 +885,20 @@ def template():
     s3.prep = prep
 
     def postp(r,output):
+        lastid = r.resource.lastid
+        if lastid:
+            itable = s3db.cap_info
+            row = db(itable.alert_id == lastid).select(itable.id,
+                                                       limitby=(0, 1)).first()
+            if row:
+                r.next = URL(c="cap", f="template", args=[lastid, "info"])
+            else:
+                r.next = URL(c="cap", f="template", args=[lastid, "info", "create"])
+
         if r.interactive and "form" in output:
+            if get_vars.get("_next"):
+                r.next = get_vars.get("_next")
+
             s3.js_global.append('''i18n.cap_locked="%s"''' % T("Locked"))
             tablename = r.tablename
             if tablename == tablename:
@@ -1012,6 +1034,12 @@ def alert_fields_comments():
     """
 
     table = db.cap_alert
+    table.template_title.comment = DIV(
+          _class="tooltip",
+          _title="%s|%s" % (
+              T("Template Title"),
+              T("Title for the template, to indicate to which event this template is related to")))
+
     table.identifier.comment = DIV(
           _class="tooltip",
           _title="%s|%s" % (

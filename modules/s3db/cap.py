@@ -302,10 +302,17 @@ class S3CAPModel(S3Model):
                      Field("identifier", unique=True, length=128,
                            default = self.generate_identifier,
                            label = T("Identifier"),
+                           requires = IS_MATCH('^[^,<&\s]+$',
+                                               error_message=current.T("Cannot be empty and Must not include spaces, commas, or restricted characters (< and &).")),
+                           # Dont Allow to change the identifier
+                           readable = True,
+                           writable = False,
                            ),
                      Field("sender",
                            label = T("Sender"),
                            default = self.generate_sender,
+                           requires = IS_MATCH('^[^,<&\s]+$',
+                                               error_message=current.T("Cannot be empty and Must not include spaces, commas, or restricted characters (< and &).")),
                            # @todo: can not be empty in alerts (validator!)
                            ),
                      s3_datetime("sent",
@@ -321,6 +328,7 @@ class S3CAPModel(S3Model):
                            ),
                      Field("msg_type",
                            label = T("Message Type"),
+                           default = "Alert",
                            represent = lambda opt: \
                             cap_alert_msgType_code_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_EMPTY_OR(
@@ -764,6 +772,7 @@ class S3CAPModel(S3Model):
                      Field("instruction", "text"),
                      Field("contact", "text"),
                      Field("web",
+                           default = self.generate_web_url,
                            requires = IS_EMPTY_OR(IS_URL()),
                            ),
                      Field("parameter", "text",
@@ -1217,6 +1226,19 @@ class S3CAPModel(S3Model):
         return current.request.utcnow + \
                datetime.timedelta(days = current.deployment_settings.\
                                   get_cap_expire_offset())
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def generate_web_url():
+        """
+            Default info.web field
+        """
+
+        alert_id = current.request.args(0)
+        # Check if running from prepopulate
+        if alert_id:
+            return "%s%s" % (current.deployment_settings.get_base_public_url(),
+                             URL(c="cap", f="alert", args=alert_id))
 
     # -------------------------------------------------------------------------
     @staticmethod
