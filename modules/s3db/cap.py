@@ -565,31 +565,70 @@ class S3CAPModel(S3Model):
                      Field("priority_rank", "integer",
                            label = T("Priority Rank"),
                            length = 2,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Priority Rank"),
+                                                           T("The Priority Rank is basically to give it a ranking 1, 2, ..., n. That way we know 1 is the most important of the chain and n is lowest element. For eg. (1, Signal 1), (2, Signal 2)..., (5, Signal 5) to enumerate the priority for cyclone."))),
                            ),
                      Field("event_code",
                            label = T("Event Code"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Event Code"),
+                                                           T("Code (key) for the event like for eg. (2001, Typhoon), (2002, Flood)"))),
                            ),
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Name"),
+                                                           T("The actual name for the warning priority, for eg. Typhoons in Philippines have five priority name (PSWS# 1, PSWS# 2, PSWS# 3, PSWS# 4 and PSWS# 5)"))),
                            ),
                      Field("event_type",
                            label = T("Event Type"),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Event Type"),
+                                                           T("The Event to which this priority is targeted for. The 'Event Type' is the name of the standard Eden Event Type . These are available at /eden/event/event_type (The 'Event Type' should be exactly same as in /eden/event/event_type - case sensitive). For those events which are not in /eden/event/event_type but having the warning priority, you can create the event type using /eden/event/event_type/create and they will appear in this list."))),
                            ),
                      Field("urgency",
                            label = T("Urgency"),
                            requires = IS_IN_SET(cap_info_urgency_opts),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Denotes the urgency of the subject event of the alert message"),
+                                                           T("The urgency, severity, and certainty of the information collectively distinguish less emphatic from more emphatic messages." +
+                                                             "'Immediate' - Responsive action should be taken immediately" +
+                                                             "'Expected' - Responsive action should be taken soon (within next hour)" +
+                                                             "'Future' - Responsive action should be taken in the near future" +
+                                                             "'Past' - Responsive action is no longer required" +
+                                                             "'Unknown' - Urgency not known"))),
                            ),
                      Field("severity",
                            label = T("Severity"),
                            requires = IS_IN_SET(cap_info_severity_opts),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Denotes the severity of the subject event of the alert message"),
+                                                           T("The urgency, severity, and certainty elements collectively distinguish less emphatic from more emphatic messages." +
+                                                             "'Extreme' - Extraordinary threat to life or property" +
+                                                             "'Severe' - Significant threat to life or property" +
+                                                             "'Moderate' - Possible threat to life or property" +
+                                                             "'Minor' - Minimal to no known threat to life or property" +
+                                                             "'Unknown' - Severity unknown"))),
                            ),
                      Field("certainty",
                            label = T("Certainty"),
                            requires = IS_IN_SET(cap_info_certainty_opts),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Denotes the certainty of the subject event of the alert message"),
+                                                           T("The urgency, severity, and certainty elements collectively distinguish less emphatic from more emphatic messages." +
+                                                             "'Observed' - Determined to have occurred or to be ongoing" +
+                                                             "'Likely' - Likely (p > ~50%)" +
+                                                             "'Possible' - Possible but not likely (p <= ~50%)" +
+                                                             "'Unlikely' - Not expected to occur (p ~ 0)" +
+                                                             "'Unknown' - Certainty unknown"))),
                            ),
                      Field("color_code",
                            label = T("Color Code"),
                            widget = S3ColorPickerWidget(),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("The color code for this priority"),
+                                                           T("Pick from the color widget the color that is associated to this priority of the event. The color code is in hex format"))),
                            ),
                      *s3_meta_fields())
 
