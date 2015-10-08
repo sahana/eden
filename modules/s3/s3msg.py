@@ -2076,7 +2076,7 @@ class S3Msg(object):
         # Initialize Twitter API
         twitter_settings = S3Msg.get_twitter_api(channel_id)
         if twitter_settings:
-            # This is can account with login info, so pull DMs
+            # This is an account with login info, so pull DMs
             dm = True
         else:
             # This is can account without login info, so pull public tweets
