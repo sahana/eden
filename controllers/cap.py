@@ -112,14 +112,14 @@ def alert():
         if rows:
             expired_ids = ",".join([str(row.id) for row in rows])
         else:
-            expired_ids = "*"            
+            expired_ids = "*"
         rows = db(itable.expires >= request.utcnow).select(itable.id,
                                                            orderby=itable.id)
         if rows:
             unexpired_ids = ",".join([str(row.id) for row in rows])
         else:
             unexpired_ids = "*"
-        
+
         filter_widgets = s3db.get_config(tablename, "filter_widgets")
         filter_widgets.insert(0, S3OptionsFilter("info.id",
                                                  label = T("Expiration"),
@@ -134,7 +134,7 @@ def alert():
         s3db.configure(tablename,
                        filter_widgets = filter_widgets,
                        )
-        
+
         if r.representation == "dl":
             # DataList: match list_layout
             list_fields = ["info.headline",

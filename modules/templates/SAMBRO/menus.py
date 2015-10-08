@@ -44,7 +44,7 @@ class S3MainMenu(default.S3MainMenu):
         """ Compose Menu """
 
         main_menu = MM()(
-                         
+
             cls.menu_modules(),
             cls.menu_lang(right=True),
             cls.menu_auth(),
@@ -70,23 +70,23 @@ class S3MainMenu(default.S3MainMenu):
                 menus_ = [homepage(),
                           homepage("cap"),
                           ]
-                
+
                 if auth.s3_has_role("MAP_ADMIN"):
                     menus_.append(homepage("gis"),)
-                    
-                return menus_ 
+
+                return menus_
 
         # Public or CUG reader sees minimal options
         return [homepage(),
                 ]
-        
+
     # -------------------------------------------------------------------------
     @classmethod
     def menu_auth(cls, **attr):
         """ Auth Menu """
 
         auth = current.auth
-        
+
         if not auth.is_logged_in():
             menu_auth = MM("Login", link=False, right=True)(
                            MM("Login", c="default", f="user", m="login",
@@ -106,13 +106,13 @@ class S3MainMenu(default.S3MainMenu):
                               m="change_password"),
                            MM("Logout", c="default", f="user", m="logout"),
                         )
-                                         
+
         return menu_auth
 
     # -------------------------------------------------------------------------
     @classmethod
     def menu_admin(cls, **attr):
-        """ Administrator Menu """        
+        """ Administrator Menu """
 
         if current.auth.s3_has_role("ADMIN"):
             name_nice = current.deployment_settings.modules["admin"].name_nice

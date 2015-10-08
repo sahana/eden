@@ -59,7 +59,7 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations    
     settings.security.policy = 4 # Controller-Function ACLs
-    
+
     # Record Approval
     settings.auth.record_approval = True
     # cap_alert record requires approval before sending
@@ -71,7 +71,7 @@ def config(settings):
     # Module Settings
     # -----------------------------------------------------------------------------
     # Notifications
-    
+
     # Template for the subject line in update notifications
     settings.msg.notify_subject = "$S %s" % T("Alert Notification")
 
@@ -82,7 +82,7 @@ def config(settings):
     settings.sync.upload_filename = "$s-$r-%s" % (datetime.strftime\
                                                  (current.request.utcnow,
                                                   "%Y-%m-%dT%H-%M-%S"))
-    
+
     # -----------------------------------------------------------------------------
     # L10n (Localization) settings
     languages = OrderedDict([
@@ -107,7 +107,7 @@ def config(settings):
     settings.cap.languages = languages
     # Translate the cap_area name
     settings.L10n.translate_cap_area = True
-    
+
     # -------------------------------------------------------------------------
     # Messaging
     # Parser
@@ -224,26 +224,26 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def customise_cap_alert_resource(r, tablename):
-        
+
         s3db = current.s3db
         def onapprove(record):
             # Normal onapprove
             s3db.cap_alert_approve(record)
-            
+
             # Sync FTP Repository
             current.s3task.async("cap_ftp_sync")
-            
+
         s3db.configure(tablename,
                        onapprove = onapprove,
-                       ) 
-    
+                       )
+
     settings.customise_cap_alert_resource = customise_cap_alert_resource
-    
+
     # -------------------------------------------------------------------------
     def customise_sync_repository_controller(**attr):
-        
+
         s3 = current.response.s3
-        
+
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
@@ -252,7 +252,7 @@ def config(settings):
                 result = standard_prep(r)
             else:
                 result = True
-            
+
             if r.representation == "popup":
                 table = r.table
                 table.apitype.default = "ftp"
@@ -261,17 +261,17 @@ def config(settings):
                 table.synchronise_uuids.readable = \
                                         table.synchronise_uuids.writable = False
                 table.uuid.readable = table.uuid.writable = False
-            
+
             return result
         s3.prep = custom_prep
-        
+
         return attr
-        
+
     settings.customise_sync_repository_controller = customise_sync_repository_controller
-    
+
     # -------------------------------------------------------------------------
     def customise_cap_warning_priority_resource(r, tablename):
-        
+
         s3db = current.s3db
         def onaccept(form):
             # Normal onaccept if any
@@ -279,7 +279,6 @@ def config(settings):
             color_code = form_vars.color_code
             if color_code:
                 db = current.db
-                name = form_vars.name
                 stable = s3db.gis_style
                 etable = s3db.gis_layer_entity
                 rows = db(etable.instance_type == "gis_layer_feature"). \
@@ -288,8 +287,8 @@ def config(settings):
                 rows = db(query).select(stable.id, stable.style)
                 if rows:
                     from s3 import IS_JSONS3
+                    name = form_vars.name
                     for row in rows:
-                        # Start with JSON string (for x-database consistency)
                         style = row.style
                         if style:
                             if isinstance(style, basestring):
@@ -298,18 +297,18 @@ def config(settings):
                                          fill = color_code,
                                          fillOpacity = 0.4,
                                          cat = name,
-                                         )       
-                            if sdata not in style:                                
+                                         )
+                            if sdata not in style:
                                 style.append(sdata)
                                 style = IS_JSONS3()(json.dumps(style))[0]
                                 db(stable.id == row.id).update(style = style)
-        
+
         s3db.configure(tablename,
                        create_onaccept = onaccept,
                        )
-        
-    settings.customise_cap_warning_priority_resource = customise_cap_warning_priority_resource        
-        
+
+    settings.customise_cap_warning_priority_resource = customise_cap_warning_priority_resource
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # @ToDo: Have the system automatically enable migrate if a module is enabled
