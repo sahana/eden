@@ -3476,6 +3476,7 @@ def req_rheader(r, check_page=False):
             if record:
 
                 T = current.T
+                db = current.db
                 s3db = current.s3db
                 s3 = current.response.s3
                 settings = current.deployment_settings
@@ -3483,30 +3484,62 @@ def req_rheader(r, check_page=False):
                 use_commit = settings.get_req_use_commit()
                 is_template = record.is_template
 
+                rtype = record.type
+                if rtype == 1 and settings.has_module("inv"):
+                    items = True
+                    people = False
+                elif rtype == 3 and settings.has_module("hrm"):
+                    items = False
+                    people = True
+                else:
+                    items = False
+                    people = False
+
                 tabs = [(T("Edit Details"), None)]
-                type = record.type
-                if type == 1 and settings.has_module("inv"):
+                if items:
                     if settings.get_req_multiple_req_items():
                         req_item_tab_label = T("Items")
                     else:
                         req_item_tab_label = T("Item")
                     tabs.append((req_item_tab_label, "req_item"))
-                elif type == 3 and settings.has_module("hrm"):
+                elif people:
                     tabs.append((T("Skills"), "req_skill"))
                 tabs.append((T("Documents"), "document"))
                 if is_template:
                     tabs.append((T("Schedule"), "job"))
-                elif use_commit:
-                    tabs.append((T("Commitments"), "commit"))
+                else:
+                    # Hide these if no Items/Skills on one of these requests yet
+                    if items:
+                        user = current.auth.user
+                        site_id = user.site_id if user else None
+                        ritable = s3db.req_req_item
+                        probably_complete = db(ritable.req_id == record.id).select(ritable.id,
+                                                                                   limitby=(0, 1)
+                                                                                   )
+                    elif people:
+                        user = current.auth.user
+                        organisation_id = user.organisation_id if user else None
+                        rstable = s3db.req_req_skill
+                        probably_complete = db(rstable.req_id == record.id).select(rstable.id,
+                                                                                   limitby=(0, 1)
+                                                                                   )
+                    else:
+                        probably_complete = True
+                    if probably_complete:
+                        if use_commit:
+                            tabs.append((T("Commitments"), "commit"))
+                        if (items and site_id) or \
+                           (people and organisation_id and settings.get_req_commit_people()):
+                            tabs.append((T("Check"), "check"))
 
                 if not check_page:
                     rheader_tabs = s3_rheader_tabs(r, tabs)
                 else:
                     rheader_tabs = DIV()
 
-                if type == 1 and r.component and \
-                                 r.component_name == "commit" and \
-                                 r.component_id:
+                if items and r.component and \
+                             r.component_name == "commit" and \
+                             r.component_id:
                     prepare_btn = A(T("Prepare Shipment"),
                                     _href = URL(f = "send_commit",
                                                 args = [r.component_id]
@@ -3518,7 +3551,6 @@ def req_rheader(r, check_page=False):
 
                 site_id = record.site_id
                 if site_id:
-                    db = current.db
                     stable = s3db.org_site
                 if settings.get_req_show_quantity_transit() and not is_template:
                     transit_status = s3db.req_status_opts.get(record.transit_status,
@@ -3762,41 +3794,10 @@ class req_CheckMethod(S3Method):
         response = current.response
         s3 = response.s3
 
-        NONE = current.messages["NONE"]
-
-        output = {}
-        output["title"] = T("Check Request")
-        output["rheader"] = req_rheader(r, check_page=True)
-
-        site_id = r.get_vars.get("site_id") or current.auth.user.site_id
-        site_name = s3db.org_site_represent(site_id, show_link=False)
-
-        stable = s3db.org_site
-        ltable = s3db.gis_location
-        query = (stable.id == site_id) & \
-                (stable.location_id == ltable.id)
-        location_r = db(query).select(ltable.lat,
-                                      ltable.lon,
-                                      limitby=(0, 1)).first()
-        query = (stable.id == r.record.site_id ) & \
-                (stable.location_id == ltable.id)
-        req_location_r = db(query).select(ltable.lat,
-                                          ltable.lon,
-                                          limitby=(0, 1)).first()
-
-        try:
-            distance = current.gis.greatCircleDistance(location_r.lat,
-                                                       location_r.lon,
-                                                       req_location_r.lat,
-                                                       req_location_r.lon)
-            output["rheader"][0].append(TR(TH(s3_unicode(T("Distance from %s:")) % site_name,
-                                              ),
-                                           TD(T("%.1f km") % distance)
-                                           ))
-        except:
-            pass
-
-        output["subtitle"] = T("Requested Items")
+        output = dict(title = T("Check Request"),
+                      rheader = req_rheader(r, check_page=True),
+                      subtitle = T("Requested Items"),
+                      )
 
         # Read req_items
         table = s3db.req_req_item
@@ -3812,25 +3813,13 @@ class req_CheckMethod(S3Method):
                                      )
 
         if len(req_items):
-            # Get inv_items from this site which haven't expired and are in good condition
-            iitable = s3db.inv_inv_item
-            query = (iitable.site_id == site_id) & \
-                    (iitable.deleted == False) & \
-                    ((iitable.expiry_date >= r.now) | ((iitable.expiry_date == None))) & \
-                    (iitable.status == 0)
-            inv_items_dict = {}
-            inv_items = db(query).select(iitable.item_id,
-                                         iitable.quantity,
-                                         iitable.item_pack_id,
-                                         # VF
-                                         #iitable.pack_quantity,
-                                         )
-            for item in inv_items:
-                item_id = item.item_id
-                if item_id in inv_items_dict:
-                    inv_items_dict[item_id] += item.quantity * item.pack_quantity()
-                else:
-                    inv_items_dict[item_id] = item.quantity * item.pack_quantity()
+            site_id = r.get_vars.get("site_id") or current.auth.user.site_id
+
+            if site_id:
+                site_name = s3db.org_site_represent(site_id, show_link=False)
+                qty_in_label = s3_unicode(T("Quantity in %s")) % site_name
+            else:
+                qty_in_label = T("Quantity Available")
 
             # Build the Output Representation
             row = TR(TH(table.item_id.label),
@@ -3839,7 +3828,7 @@ class req_CheckMethod(S3Method):
                      #TH(table.quantity_transit.label),
                      #TH(table.quantity_fulfil.label),
                      TH(T("Quantity Oustanding")),
-                     TH(s3_unicode(T("Quantity in %s")) % site_name),
+                     TH(qty_in_label),
                      TH(T("Match?"))
                      )
             #use_commit = current.deployment_settings.get_req_use_commit()
@@ -3849,70 +3838,121 @@ class req_CheckMethod(S3Method):
                           _id="list",
                           _class="dataTable display",
                           )
+            if site_id:
+                stable = s3db.org_site
+                ltable = s3db.gis_location
+                query = (stable.id == site_id) & \
+                        (stable.location_id == ltable.id)
+                location_r = db(query).select(ltable.lat,
+                                              ltable.lon,
+                                              limitby=(0, 1)).first()
+                query = (stable.id == r.record.site_id ) & \
+                        (stable.location_id == ltable.id)
+                req_location_r = db(query).select(ltable.lat,
+                                                  ltable.lon,
+                                                  limitby=(0, 1)).first()
 
-            supply_item_represent = table.item_id.represent
-            item_pack_represent = table.item_pack_id.represent
-            no_match = True
-            for req_item in req_items:
-                req_quantity = req_item.quantity
-                # Do we have any outstanding quantity?
-                quantity_outstanding = req_quantity - max(req_item.quantity_fulfil, req_item.quantity_transit)
-                if quantity_outstanding:
-                    # Convert Packs inv item quantity to req item quantity
-                    item_id = req_item.item_id
-                    if item_id in inv_items_dict:
-                        inv_quantity = inv_items_dict[item_id] / req_item.pack_quantity()
-                    else:
-                        inv_quantity = 0
+                try:
+                    distance = current.gis.greatCircleDistance(location_r.lat,
+                                                               location_r.lon,
+                                                               req_location_r.lat,
+                                                               req_location_r.lon)
+                    output["rheader"][0].append(TR(TH(s3_unicode(T("Distance from %s:")) % site_name,
+                                                      ),
+                                                   TD(T("%.1f km") % distance)
+                                                   ))
+                except:
+                    pass
 
-                    if inv_quantity != 0:
-                        no_match = False
-                        if inv_quantity < req_quantity:
-                            status = SPAN(T("Partial"), _class="req_status_partial")
+                if len(req_items):
+                    # Get inv_items from this site which haven't expired and are in good condition
+                    iitable = s3db.inv_inv_item
+                    query = (iitable.site_id == site_id) & \
+                            (iitable.deleted == False) & \
+                            ((iitable.expiry_date >= r.now) | ((iitable.expiry_date == None))) & \
+                            (iitable.status == 0)
+                    inv_items_dict = {}
+                    inv_items = db(query).select(iitable.item_id,
+                                                 iitable.quantity,
+                                                 iitable.item_pack_id,
+                                                 # VF
+                                                 #iitable.pack_quantity,
+                                                 )
+                    for item in inv_items:
+                        item_id = item.item_id
+                        if item_id in inv_items_dict:
+                            inv_items_dict[item_id] += item.quantity * item.pack_quantity()
                         else:
-                            status = SPAN(T("YES"), _class="req_status_complete")
-                    else:
-                        status = SPAN(T("NO"), _class="req_status_none"),
-                else:
-                    inv_quantity = T("N/A")
-                    status = SPAN(T("N/A"), _class="req_status_none"),
+                            inv_items_dict[item_id] = item.quantity * item.pack_quantity()
 
-                items.append(TR(#A(req_item.id),
-                                supply_item_represent(req_item.item_id),
-                                req_quantity,
-                                item_pack_represent(req_item.item_pack_id),
-                                # This requires an action btn to get the req_id
-                                #req_item.quantity_commit, # if use_commit
-                                #req_item.quantity_transit,
-                                #req_item.quantity_fulfil,
-                                #req_quantity_represent(req_item.quantity_commit, "commit"), # if use_commit
-                                #req_quantity_represent(req_item.quantity_fulfil, "fulfil"),
-                                #req_quantity_represent(req_item.quantity_transit, "transit"),
-                                quantity_outstanding,
-                                inv_quantity,
-                                status,
-                                )
-                             )
+                    supply_item_represent = table.item_id.represent
+                    item_pack_represent = table.item_pack_id.represent
+                    no_match = True
+                    for req_item in req_items:
+                        req_quantity = req_item.quantity
+                        # Do we have any outstanding quantity?
+                        quantity_outstanding = req_quantity - max(req_item.quantity_fulfil, req_item.quantity_transit)
+                        if quantity_outstanding:
+                            # Convert Packs inv item quantity to req item quantity
+                            item_id = req_item.item_id
+                            if item_id in inv_items_dict:
+                                inv_quantity = inv_items_dict[item_id] / req_item.pack_quantity()
+                            else:
+                                inv_quantity = 0
+
+                            if inv_quantity != 0:
+                                no_match = False
+                                if inv_quantity < req_quantity:
+                                    status = SPAN(T("Partial"), _class="req_status_partial")
+                                else:
+                                    status = SPAN(T("YES"), _class="req_status_complete")
+                            else:
+                                status = SPAN(T("NO"), _class="req_status_none"),
+                        else:
+                            inv_quantity = T("N/A")
+                            status = SPAN(T("N/A"), _class="req_status_none"),
+
+                        items.append(TR(#A(req_item.id),
+                                        supply_item_represent(req_item.item_id),
+                                        req_quantity,
+                                        item_pack_represent(req_item.item_pack_id),
+                                        # This requires an action btn to get the req_id
+                                        #req_item.quantity_commit, # if use_commit
+                                        #req_item.quantity_transit,
+                                        #req_item.quantity_fulfil,
+                                        #req_quantity_represent(req_item.quantity_commit, "commit"), # if use_commit
+                                        #req_quantity_represent(req_item.quantity_fulfil, "fulfil"),
+                                        #req_quantity_represent(req_item.quantity_transit, "transit"),
+                                        quantity_outstanding,
+                                        inv_quantity,
+                                        status,
+                                        )
+                                     )
+
+                    #s3.actions = [req_item_inv_item_btn]
+                    if no_match:
+                        response.warning = \
+                            s3_unicode(T("%(site_name)s has no items exactly matching this request. Use Alternative Items if wishing to use other items to fulfill this request!")) % \
+                                dict(site_name=site_name)
+                    else:
+                        commit_btn = A(s3_unicode(T("Send from %s")) % site_name,
+                                       _href = URL(#c = "inv", or "req"
+                                                   #c = "req",
+                                                   f = "send_req",
+                                                   args = [r.id],
+                                                   vars = dict(site_id = site_id)
+                                                   ),
+                                       _class = "action-btn"
+                                       )
+                        s3.rfooter = TAG[""](commit_btn)
+
+            else:
+                response.error = T("User has no Site to check against!")
+
             output["items"] = items
-            #s3.actions = [req_item_inv_item_btn]
             s3.no_sspag = True # pag won't work
             s3.no_formats = True
 
-            if no_match:
-                response.warning = \
-                    s3_unicode(T("%(site_name)s has no items exactly matching this request. Use Alternative Items if wishing to use other items to fulfill this request!")) % \
-                        dict(site_name=site_name)
-            else:
-                commit_btn = A(s3_unicode(T("Send from %s")) % site_name,
-                               _href = URL(#c = "inv", or "req"
-                                           #c = "req",
-                                           f = "send_req",
-                                           args = [r.id],
-                                           vars = dict(site_id = site_id)
-                                           ),
-                               _class = "action-btn"
-                               )
-                s3.rfooter = TAG[""](commit_btn)
         else:
             output["items"] = s3.crud_strings.req_req_item.msg_list_empty
 
@@ -3940,16 +3980,10 @@ class req_CheckMethod(S3Method):
         response = current.response
         s3 = response.s3
 
-        NONE = current.messages["NONE"]
-
-        output = {}
-        output["title"] = T("Check Request")
-        output["rheader"] = req_rheader(r, check_page=True)
-
-        output["subtitle"] = T("Requested Skills")
-
-        organisation_id = r.get_vars.get("organisation_id") or current.auth.user.organisation_id
-        org_name = s3db.org_organisation_represent(organisation_id, show_link=False)
+        output = dict(title = T("Check Request"),
+                      rheader = req_rheader(r, check_page=True),
+                      subtitle = T("Requested Skills"),
+                      )
 
         # Read req_skills
         table = s3db.req_req_skill
@@ -3964,41 +3998,23 @@ class req_CheckMethod(S3Method):
                                             )
 
         if len(req_skills_multi):
-            req_skills = []
-            for row in req_skills_multi:
-                skills_multi = row.skill_id
-                for skill_id in skills_multi:
-                    if skill_id not in req_skills:
-                        req_skills.append(skill_id)
+            organisation_id = r.get_vars.get("organisation_id") or \
+                              current.auth.user.organisation_id
 
-            # Get the People from this Org with at least one of the Requested Skills
-            # NB This isn't exact yet since we may need people to have multiple skills
-            htable = s3db.hrm_human_resource
-            #ptable = s3db.pr_person
-            ctable = s3db.hrm_competency
-            query = (htable.organisation_id == organisation_id) & \
-                    (htable.deleted == False) & \
-                    (htable.person_id == ctable.person_id) & \
-                    (ctable.deleted == False) & \
-                    (ctable.skill_id.belongs(req_skills))
-            skills = db(query).select(htable.id,
-                                      ctable.skill_id,
-                                      )
-            people = {}
-            for s in skills:
-                hr_id = s[htable.id]
-                if hr_id in people:
-                    people[hr_id].append(s[ctable.skill_id])
-                else:
-                    people[hr_id] = [s[ctable.skill_id]]
-
+            if organisation_id:
+                org_name = s3db.org_organisation_represent(organisation_id,
+                                                           show_link=False)
+                qty_in_label = s3_unicode(T("Quantity in %s")) % org_name
+            else:
+                qty_in_label = T("Quantity Available")
+            
             # Build the Output Representation
             row = TR(TH(table.skill_id.label),
                      TH(table.quantity.label),
                      #TH(table.quantity_transit.label),
                      #TH(table.quantity_fulfil.label),
                      TH(T("Quantity Oustanding")),
-                     TH(s3_unicode(T("Quantity in %s")) % org_name),
+                     TH(qty_in_label),
                      TH(T("Match?"))
                      )
             #use_commit = current.deployment_settings.get_req_use_commit()
@@ -4009,64 +4025,98 @@ class req_CheckMethod(S3Method):
                           _class="dataTable display",
                           )
 
-            multi_skill_represent = table.skill_id.represent
-            no_match = True
-            for req_skill in req_skills_multi:
-                skills = req_skill.skill_id
-                req_quantity = req_skill.quantity
-                # Do we have any outstanding quantity?
-                quantity_outstanding = req_quantity - max(req_skill.quantity_fulfil, req_skill.quantity_transit)
-                if quantity_outstanding:
-                    len_skills = len(skills)
-                    matches = []
-                    for p in people:
-                        smatches = 0
-                        for s in skills:
-                            if s in people[p]:
-                                smatches += 1
-                        if smatches == len_skills:
-                            matches.append(p)
-                    org_quantity = len(matches)
-                    if org_quantity != 0:
-                        no_match = False
-                        if org_quantity < req_quantity:
-                            status = SPAN(T("Partial"), _class="req_status_partial")
-                        else:
-                            status = SPAN(T("YES"), _class="req_status_complete")
-                    else:
-                        status = SPAN(T("NO"), _class="req_status_none"),
-                else:
-                    org_quantity = T("N/A")
-                    status = SPAN(T("N/A"), _class="req_status_none"),
+            if organisation_id:
 
-                items.append(TR(#A(req_item.id),
-                                multi_skill_represent(skills),
-                                req_quantity,
-                                # This requires an action btn to get the req_id
-                                #req_skill.quantity_commit, # if use_commit
-                                #req_skill.quantity_transit,
-                                #req_skill.quantity_fulfil,
-                                #req_quantity_represent(req_skill.quantity_commit, "commit"), # if use_commit
-                                #req_quantity_represent(req_skill.quantity_fulfil, "fulfil"),
-                                #req_quantity_represent(req_skill.quantity_transit, "transit"),
-                                quantity_outstanding,
-                                org_quantity,
-                                status,
-                                )
-                             )
+                req_skills = []
+                for row in req_skills_multi:
+                    skills_multi = row.skill_id
+                    for skill_id in skills_multi:
+                        if skill_id not in req_skills:
+                            req_skills.append(skill_id)
+
+                # Get the People from this Org with at least one of the Requested Skills
+                # NB This isn't exact yet since we may need people to have multiple skills
+                htable = s3db.hrm_human_resource
+                #ptable = s3db.pr_person
+                ctable = s3db.hrm_competency
+                query = (htable.organisation_id == organisation_id) & \
+                        (htable.deleted == False) & \
+                        (htable.person_id == ctable.person_id) & \
+                        (ctable.deleted == False) & \
+                        (ctable.skill_id.belongs(req_skills))
+                skills = db(query).select(htable.id,
+                                          ctable.skill_id,
+                                          )
+                people = {}
+                for s in skills:
+                    hr_id = s[htable.id]
+                    if hr_id in people:
+                        people[hr_id].append(s[ctable.skill_id])
+                    else:
+                        people[hr_id] = [s[ctable.skill_id]]
+
+                multi_skill_represent = table.skill_id.represent
+                no_match = True
+                for req_skill in req_skills_multi:
+                    skills = req_skill.skill_id
+                    req_quantity = req_skill.quantity
+                    # Do we have any outstanding quantity?
+                    quantity_outstanding = req_quantity - max(req_skill.quantity_fulfil, req_skill.quantity_transit)
+                    if quantity_outstanding:
+                        len_skills = len(skills)
+                        matches = []
+                        for p in people:
+                            smatches = 0
+                            for s in skills:
+                                if s in people[p]:
+                                    smatches += 1
+                            if smatches == len_skills:
+                                matches.append(p)
+                        org_quantity = len(matches)
+                        if org_quantity != 0:
+                            no_match = False
+                            if org_quantity < req_quantity:
+                                status = SPAN(T("Partial"), _class="req_status_partial")
+                            else:
+                                status = SPAN(T("YES"), _class="req_status_complete")
+                        else:
+                            status = SPAN(T("NO"), _class="req_status_none"),
+                    else:
+                        org_quantity = T("N/A")
+                        status = SPAN(T("N/A"), _class="req_status_none"),
+
+                    items.append(TR(#A(req_item.id),
+                                    multi_skill_represent(skills),
+                                    req_quantity,
+                                    # This requires an action btn to get the req_id
+                                    #req_skill.quantity_commit, # if use_commit
+                                    #req_skill.quantity_transit,
+                                    #req_skill.quantity_fulfil,
+                                    #req_quantity_represent(req_skill.quantity_commit, "commit"), # if use_commit
+                                    #req_quantity_represent(req_skill.quantity_fulfil, "fulfil"),
+                                    #req_quantity_represent(req_skill.quantity_transit, "transit"),
+                                    quantity_outstanding,
+                                    org_quantity,
+                                    status,
+                                    )
+                                 )
+
+                if not no_match:
+                    commit_btn = A(T("Assign People to this Request"),
+                                   _href = URL(c = "req",
+                                               f = "req",
+                                               args = [r.id, "commit_all", "assign"],
+                                               ),
+                                   _class = "action-btn"
+                                   )
+                    s3.rfooter = TAG[""](commit_btn)
+            else:
+                response.error = T("User has no Organization to check against!")
+                
             output["items"] = items
             s3.no_sspag = True # pag won't work
             s3.no_formats = True
 
-            if not no_match:
-                commit_btn = A(T("Assign People to this Request"),
-                               _href = URL(c = "req",
-                                           f = "req",
-                                           args = [r.id, "commit_all", "assign"],
-                                           ),
-                               _class = "action-btn"
-                               )
-                s3.rfooter = TAG[""](commit_btn)
         else:
             output["items"] = s3.crud_strings.req_req_skill.msg_list_empty
 

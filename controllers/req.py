@@ -370,28 +370,41 @@ def req_controller(template = False):
 
         if r.component:
             if r.component.name == "req_item":
-                # Prevent Adding/Deleting Items from Requests which are complete, closed or cancelled
-                # @ToDo: deployment_setting to determine which exact rule to apply?
                 record = r.record
-                if record.fulfil_status == REQ_STATUS_COMPLETE or \
-                   record.transit_status == REQ_STATUS_COMPLETE or \
-                   record.req_status == REQ_STATUS_COMPLETE or \
-                   record.fulfil_status == REQ_STATUS_PARTIAL or \
-                   record.transit_status == REQ_STATUS_PARTIAL or \
-                   record.req_status == REQ_STATUS_PARTIAL or \
-                   record.closed or \
-                   record.cancel:
-                    s3db.configure("req_req_item",
-                                   deletable = False,
-                                   insertable = False,
-                                   )
+                if record: # Check as options.s3json checks the component without a record
+                    # Prevent Adding/Deleting Items from Requests which are complete, closed or cancelled
+                    # @ToDo: deployment_setting to determine which exact rule to apply?
+                    if record.fulfil_status == REQ_STATUS_COMPLETE or \
+                       record.transit_status == REQ_STATUS_COMPLETE or \
+                       record.req_status == REQ_STATUS_COMPLETE or \
+                       record.fulfil_status == REQ_STATUS_PARTIAL or \
+                       record.transit_status == REQ_STATUS_PARTIAL or \
+                       record.req_status == REQ_STATUS_PARTIAL or \
+                       record.closed or \
+                       record.cancel:
+                        s3db.configure("req_req_item",
+                                       deletable = False,
+                                       insertable = False,
+                                       )
 
             elif r.component.name == "commit":
                 table = r.component.table
                 record = r.record
                 record_id = record.id
                 stable = s3db.org_site
-                commit_status = record.commit_status
+                rtype = record.type
+
+                if (rtype == 3) and settings.get_req_commit_people():
+                    # Don't allow people commits to happen in this view
+                    insertable = False
+                else:
+                    commit_status = record.commit_status
+                    if (commit_status == 2) and settings.get_req_restrict_on_complete():
+                        # Restrict from committing to completed requests
+                        insertable = False
+                    else:
+                        # Allow commitments to be added when doing so as a component
+                        insertable = True
 
                 # Commits belonging to this request
                 rsites = []
@@ -409,19 +422,12 @@ def req_controller(template = False):
                 for site in commit_sites:
                     if (site.id not in site_opts) and (site.id not in rsites):
                         site_opts[site.id] = site.code
-
                 table.site_id.requires = IS_IN_SET(site_opts)
-                if (commit_status == 2) and settings.get_req_restrict_on_complete():
-                    # Restrict from committing to completed requests
-                    listadd = False
-                else:
-                    # Allow commitments to be added when doing so as a component
-                    listadd = True
 
                 s3db.configure(table,
                                # Don't want filter_widgets in the component view
                                filter_widgets = None,
-                               listadd = listadd,
+                               insertable = insertable,
                                )
 
                 if req_type == 1: # Items
