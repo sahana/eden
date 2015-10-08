@@ -7,6 +7,14 @@ except:
     # Python 2.6
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
+
 from gluon import current
 from gluon.storage import Storage
 
@@ -261,6 +269,47 @@ def config(settings):
         
     settings.customise_sync_repository_controller = customise_sync_repository_controller
     
+    # -------------------------------------------------------------------------
+    def customise_cap_warning_priority_resource(r, tablename):
+        
+        s3db = current.s3db
+        def onaccept(form):
+            # Normal onaccept if any
+            form_vars = form.vars
+            color_code = form_vars.color_code
+            if color_code:
+                db = current.db
+                name = form_vars.name
+                stable = s3db.gis_style
+                etable = s3db.gis_layer_entity
+                rows = db(etable.instance_type == "gis_layer_feature"). \
+                                                        select(etable.layer_id)
+                query = (stable.layer_id.belongs([row.layer_id for row in rows]))
+                rows = db(query).select(stable.id, stable.style)
+                if rows:
+                    from s3 import IS_JSONS3
+                    for row in rows:
+                        # Start with JSON string (for x-database consistency)
+                        style = row.style
+                        if style:
+                            if isinstance(style, basestring):
+                                style = json.loads(style)
+                            sdata = dict(prop = "priority",
+                                         fill = color_code,
+                                         fillOpacity = 0.4,
+                                         cat = name,
+                                         )       
+                            if sdata not in style:                                
+                                style.append(sdata)
+                                style = IS_JSONS3()(json.dumps(style))[0]
+                                db(stable.id == row.id).update(style = style)
+        
+        s3db.configure(tablename,
+                       create_onaccept = onaccept,
+                       )
+        
+    settings.customise_cap_warning_priority_resource = customise_cap_warning_priority_resource        
+        
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # @ToDo: Have the system automatically enable migrate if a module is enabled

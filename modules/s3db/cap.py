@@ -589,6 +589,7 @@ class S3CAPModel(S3Model):
                            ),
                      Field("color_code",
                            label = T("Color Code"),
+                           widget = S3ColorPickerWidget(),
                            ),
                      *s3_meta_fields())
 
@@ -2092,6 +2093,8 @@ def add_area_from_template(area_id, alert_id):
 
     area_ids = []
     for row in rows:
+        # @ToDo set_record_owner, update_super and/or onaccept
+        # Currently not required by SAMBRO template
         adata = {"is_template": False,
                  "alert_id": alert_id,
                  "info_id": row.id,
