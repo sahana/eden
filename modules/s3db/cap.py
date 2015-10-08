@@ -2011,10 +2011,25 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
     else:
         _href = URL(c="cap", f="public", args=[record_id, "profile"])
 
-    headline = A(headline,
-                 _href = _href,
-                 _target = "_blank",
-                 )
+    headline_ = A(headline,
+                  _href = _href,
+                  _target = "_blank",
+                  )
+
+    if priority and priority != "-":
+        # Give the priority color to headline
+        db = current.db
+        wptable = db.cap_warning_priority
+        row = db(wptable.name == priority).select(wptable.color_code,
+                                                  limitby=(0, 1)).first()
+        if row:
+            headline_ = A(headline,
+                          _href = _href,
+                          _target = "_blank",
+                          _style = "color: #%s" % (row.color_code),
+                          )
+
+    headline = headline_
 
     if list_id == "map_popup":
         itable = current.s3db.cap_info
@@ -2101,7 +2116,7 @@ def add_area_from_template(area_id, alert_id):
                  }
         for field in afieldnames:
             adata[field] = atemplate[field]
-            
+
         aid = atable.insert(**adata)
 
         # Add Area Location Components of Template
@@ -2113,7 +2128,7 @@ def add_area_from_template(area_id, alert_id):
             for field in lfieldnames:
                 ldata[field] = rows[field]
             lid = ltable.insert(**ldata)
-    
+
         # Add Area Tag Components of Template
         ttemplate = db(ttable.area_id == area_id).select(*tfieldnames)
         for row in ttemplate:
@@ -2125,7 +2140,7 @@ def add_area_from_template(area_id, alert_id):
             tid = ttable.insert(**tdata)
 
         area_ids.append(aid)
-        
+
     return area_ids
 
 # =============================================================================
