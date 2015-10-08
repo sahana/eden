@@ -898,6 +898,7 @@ def area():
     """
 
     def prep(r):
+        area_fields_comments()
         artable = s3db.cap_area
         for f in ("alert_id", "info_id"):
             field = artable[f]
@@ -1090,6 +1091,12 @@ def area_fields_comments():
     """
 
     table = db.cap_area
+    table.info_id.comment = DIV(
+          _class="tooltip",
+          _title="%s|%s" % (
+              T("Information segment for this Area segment"),
+              T("To which Information segment is this Area segment related. Note an Information segment can have multiple Area segments.")))
+
     table.name.comment = DIV(
           _class="tooltip",
           _title="%s|%s" % (
@@ -1120,6 +1127,18 @@ def area_fields_comments():
               T("The maximum altitude of the affected area"),
               T("must not be used except in combination with the 'altitude' element. The ceiling measure is in feet above mean sea level.")))
 
+    table.event_type_id.comment = DIV(
+          _class="tooltip",
+          _title="%s|%s" % (
+              T("Event Type of this predefined alert area"),
+              T("Event Type relating to this predefined area.")))
+
+    table.priority.comment = DIV(
+          _class="tooltip",
+          _title="%s|%s" % (
+              T("Priority of the Event Type"),
+              T("Defines the priority of the Event Type for this predefined area.")))
+
 # -----------------------------------------------------------------------------
 def info_fields_comments():
     """
@@ -1144,6 +1163,18 @@ def info_fields_comments():
           _title="%s|%s" % (
               T("The text denoting the type of the subject event of the alert message"),
               T("If not specified, will the same as the Event Type.")))
+
+    table.event_type_id.comment = DIV(
+          _class="tooltip",
+          _title="%s|%s" % (
+              T("Event Type of the alert message"),
+              T("Event field above is more general. And this Event Type is classification of event. For eg. Event can be 'Terrorist Attack' and Event Type can be either 'Terrorist Bomb Explosion' or 'Terrorist Chemical Waefare Attack'. If not specified, will the same as the Event Type.")))
+
+    table.priority.comment = DIV(
+          _class="tooltip",
+          _title="%s|%s" % (
+              T("Priority of the alert message"),
+              T("Defines the priority of the alert message. Selection of the priority automatically sets the value for 'Urgency', 'Severity' and 'Certainty'")))
 
     table.response_type.comment = DIV(
           _class="tooltip",
