@@ -66,13 +66,19 @@ class S3MainMenu(default.S3MainMenu):
                 return super(S3MainMenu, cls).menu_modules()
             else:
                 # Publisher sees minimal options
-                # @ToDo: Add role check here once role defined
                 menus_ = [homepage(),
-                          homepage("cap"),
                           ]
 
                 if auth.s3_has_role("MAP_ADMIN"):
-                    menus_.append(homepage("gis"),)
+                    menus_.extend([homepage("cap"),
+                                  homepage("gis"),
+                                  ])
+                elif auth.s3_has_role("ALERT_EDITOR") or \
+                     auth.s3_has_role("ALERT_APPROVER"):
+                    menus_.append(homepage("cap"),
+                                  )
+                else:
+                    menus_ = menus_
 
                 return menus_
 
@@ -90,7 +96,7 @@ class S3MainMenu(default.S3MainMenu):
         if not auth.is_logged_in():
             menu_auth = MM("Login", link=False, right=True)(
                            MM("Login", c="default", f="user", m="login",
-                              vars={"_next": URL(c="cap", f="alert")}),
+                              vars={"_next": URL(c="default", f="index")}),
                            MM("Lost Password", c="default", f="user",
                               m="retrieve_password")
                         )
@@ -127,5 +133,66 @@ class S3MainMenu(default.S3MainMenu):
             menu_admin = None
 
         return menu_admin
+
+# =============================================================================
+class S3OptionsMenu(default.S3OptionsMenu):
+    """
+        Custom Controller Menus
+
+        The options menu (left-hand options menu) is individual for each
+        controller, so each controller has its own options menu function
+        in this class.
+
+        Each of these option menu functions can be customised separately,
+        by simply overriding (re-defining) the default function. The
+        options menu function must return an instance of the item layout.
+
+        The standard menu uses the M item layout class, but you can of
+        course also use any other layout class which you define in
+        layouts.py (can also be mixed).
+
+        Make sure additional helper functions in this class don't match
+        any current or future controller prefix (e.g. by using an
+        underscore prefix).
+    """
+
+    @staticmethod
+    def cap():
+        """ CAP menu """
+
+        s3_has_role = current.auth.s3_has_role
+        cap_editors = lambda i: s3_has_role("ALERT_EDITOR") or \
+                                s3_has_role("ALERT_APPROVER")
+
+        return M(c="cap")(
+                    M("Alerts", f="alert",
+                      check=cap_editors)(
+                        M("Create", m="create"),
+                        M("Import from Feed URL", m="import_feed", p="create",
+                          check=s3_has_role("ADMIN")),
+                    ),
+                    M("Templates", f="template")(
+                        M("Create", m="create",
+                          check=s3_has_role("ADMIN")),
+                    ),
+                    M("Warning Priorities", f="warning_priority",
+                      check=s3_has_role("ADMIN"))(
+                        M("Create", m="create"),
+                        M("Import from CSV", m="import", p="create"),
+                    ),
+                    M("Predefined Alert Area", f="area",
+                      check=s3_has_role("ADMIN"))(
+                        M("Create", m="create"),
+                        M("Import from CSV", m="import", p="create"),
+                    ),
+                    M("RSS Channels", c="msg", f="rss_channel",
+                      check=s3_has_role("ADMIN"))(
+                        M("Create", m="create"),
+                    ),
+                    M("Twitter Channels", c="msg", f="twitter_channel",
+                      check=s3_has_role("ADMIN"))(
+                        M("Create", m="create"),
+                    ),
+                )
 
 # END =========================================================================

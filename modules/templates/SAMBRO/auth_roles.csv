@@ -16,9 +16,7 @@ ALERT_EDITOR,Alert Editor,,cap,template,,READ,,,,,Use template to create actual 
 ALERT_EDITOR,Alert Editor,,cap,area,,READ,,,,,For predefined area 
 ALERT_EDITOR,Alert Editor,,cap,compose,,READ,,,,,To send message to Alert Approver
 ALERT_EDITOR,Alert Editor,,cap,priority_get,,READ,,,,,Priority based on event
-ALERT_EDITOR,Alert Editor,,msg,,,READ,,,,,
 ALERT_APPROVER,Alert Approver,"Besides Authorizing Message to disseminate, they can also act as CAP Editor",cap,alert,,READ|CREATE|UPDATE|REVIEW|APPROVE|PUBLISH,,,,,
 ALERT_APPROVER,Alert Approver,,cap,template,,READ,,,,,
 ALERT_APPROVER,Alert Approver,,cap,area,,READ,,,,,
 ALERT_APPROVER,Alert Approver,,cap,priority_get,,READ,,,,,
-ALERT_APPROVER,Alert Approver,,msg,,,READ,,,,,
