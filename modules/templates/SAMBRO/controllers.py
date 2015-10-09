@@ -82,14 +82,19 @@ class index(S3CustomController):
         # Only show Alerts which haven't expired
         #resource.add_filter(FS("info.expires") >= request.utcnow)
         list_id = "cap_alert_datalist"
-        list_fields = ["info.headline",
+        list_fields = ["msg_type",
+                       "info.headline",
                        "area.name",
                        #"info.description",
-                       #"info.sender_name",
+                       "info.sender_name",
                        "info.priority",
                        "status",
                        "scope",
                        "info.event_type_id",
+                       "info.severity",
+                       "info.certainty",
+                       "info.urgency",
+                       "sent",
                        ]
         # Order with most recent Alert first
         orderby = "cap_info.expires desc"

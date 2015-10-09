@@ -34,6 +34,11 @@ def info_prep(r):
         if r.component:
             if r.component_name == "info":
                 info_fields_comments()
+                alert_id = request.args(0)
+                # Check for prepopulate
+                if alert_id:
+                    table.web.default = current.deployment_settings.get_base_public_url()+\
+                                        URL(c="cap", f="alert", args=alert_id)
             elif r.component_name == "area":
                 area_fields_comments()
             elif r.component_name == "resource":
@@ -137,12 +142,18 @@ def alert():
 
         if r.representation == "dl":
             # DataList: match list_layout
-            list_fields = ["info.headline",
+            list_fields = ["msg_type",
+                           "info.headline",
                            "area.name",
                            "info.priority",
                            "status",
                            "scope",
                            "info.event_type_id",
+                           "info.certainty",
+                           "info.severity",
+                           "info.urgency",
+                           "info.sender_name",
+                           "sent",
                            ]
 
             s3db.configure(tablename,
@@ -837,6 +848,12 @@ def template():
                 field.required = False
 
             itable.category.required = False
+            
+            alert_id = request.args(0)
+            # Check for prepopulate
+            if alert_id:
+                itable.web.default = current.deployment_settings.get_base_public_url()+\
+                                     URL(c="cap", f="alert", args=alert_id)
 
         elif r.component_name == "resource":
             rtable = r.component.table
