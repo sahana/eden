@@ -169,28 +169,28 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=cap_editors)(
                         M("Create", m="create"),
                         M("Import from Feed URL", m="import_feed", p="create",
-                          check=s3_has_role("ADMIN")),
+                          restrict=["ADMIN"]),
                     ),
                     M("Templates", f="template")(
                         M("Create", m="create",
-                          check=s3_has_role("ADMIN")),
+                          restrict=["ADMIN"]),
                     ),
                     M("Warning Priorities", f="warning_priority",
-                      check=s3_has_role("ADMIN"))(
+                      restrict=["ADMIN"])(
                         M("Create", m="create"),
                         M("Import from CSV", m="import", p="create"),
                     ),
                     M("Predefined Alert Area", f="area",
-                      check=s3_has_role("ADMIN"))(
+                      restrict=["ADMIN"])(
                         M("Create", m="create"),
                         M("Import from CSV", m="import", p="create"),
                     ),
                     M("RSS Channels", c="msg", f="rss_channel",
-                      check=s3_has_role("ADMIN"))(
+                      restrict=["ADMIN"])(
                         M("Create", m="create"),
                     ),
                     M("Twitter Channels", c="msg", f="twitter_channel",
-                      check=s3_has_role("ADMIN"))(
+                      restrict=["ADMIN"])(
                         M("Create", m="create"),
                     ),
                 )

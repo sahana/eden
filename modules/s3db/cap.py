@@ -772,7 +772,6 @@ class S3CAPModel(S3Model):
                      Field("instruction", "text"),
                      Field("contact", "text"),
                      Field("web",
-                           default = self.generate_web_url,
                            requires = IS_EMPTY_OR(IS_URL()),
                            ),
                      Field("parameter", "text",
@@ -1226,19 +1225,6 @@ class S3CAPModel(S3Model):
         return current.request.utcnow + \
                datetime.timedelta(days = current.deployment_settings.\
                                   get_cap_expire_offset())
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def generate_web_url():
-        """
-            Default info.web field
-        """
-
-        alert_id = current.request.args(0)
-        # Check if running from prepopulate
-        if alert_id:
-            return "%s%s" % (current.deployment_settings.get_base_public_url(),
-                             URL(c="cap", f="alert", args=alert_id))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2072,25 +2058,18 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
     else:
         _href = URL(c="cap", f="public", args=[record_id, "profile"])
 
-    headline_ = A(headline,
-                  _href = _href,
-                  _target = "_blank",
-                  )
-
+    priority_row = None
     if priority and priority != "-":
         # Give the priority color to headline
         db = current.db
         wptable = db.cap_warning_priority
-        row = db(wptable.name == priority).select(wptable.color_code,
-                                                  limitby=(0, 1)).first()
-        if row:
-            headline_ = A(headline,
-                          _href = _href,
-                          _target = "_blank",
-                          _style = "color: #%s" % (row.color_code),
-                          )
+        priority_row = db(wptable.name == priority).select(wptable.color_code,
+                                                           limitby=(0, 1)).first()
 
-    headline = headline_
+    more = A(T("Full Alert"),
+             _href = _href,
+             _target = "_blank",
+             )
 
     if list_id == "map_popup":
         itable = current.s3db.cap_info
@@ -2111,30 +2090,71 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
                        sender,
                        BR(),
                        )
+        
+        details = "%s %s %s" % (priority, status, scope)
+        
+        headline_ = A(headline,
+                      _href = _href,
+                      _target = "_blank",
+                      )
+        
+        if priority_row:
+            headline_["_style"] = "color: #%s" % (row.color_code)
+        
+        item = DIV(headline_,
+                   BR(),
+                   location,
+                   BR(),
+                   details,
+                   BR(),
+                   event,
+                   last,
+                   more,
+                   _class=item_class,
+                   _id=item_id,
+                   )
     else:
         if priority == current.messages["NONE"]:
             priority = T("Unknown")
-        last = BR()
+        certainty = record["cap_info.certainty"]
+        severity = record["cap_info.severity"]
+        urgency = record["cap_info.urgency"]
+        msg_type = record["cap_alert.msg_type"]
+        sender_name = record["cap_info.sender_name"]
+        sent = record["cap_alert.sent"]
+        
+        headline = "%s; %s, %s" % (msg_type, headline, location)
+        
+        sub_heading = "%s %s" % (priority, event)
+        
+        sub_headline = A(sub_heading,
+                         _href = _href,
+                         _target = "_blank",
+                         )
+             
+        if priority_row:
+            sub_headline_["_style"] = "color: #%s" % (row.color_code)
 
-    details = "%s %s %s" % (priority, status, scope)
-
-    more = A(T("Full Alert"),
-             _href = _href,
-             _target = "_blank",
-             )
-
-    item = DIV(headline,
-               BR(),
-               location,
-               BR(),
-               details,
-               BR(),
-               event,
-               last,
-               more,
-               _class=item_class,
-               _id=item_id,
-               )
+        para = T("It is %(certainty)s and %(urgency)s with %(severity)s threat to life and property.") \
+                % dict(certainty=certainty, urgency=urgency, severity=severity)
+        
+        issuer = "%s: %s" % (T("Issued by"), sender_name)
+        issue_date = "%s: %s" % (T("Issued on"), sent)
+    
+        item = DIV(headline,
+                   BR(),
+                   sub_headline,
+                   BR(),
+                   para,
+                   BR(),
+                   issuer,
+                   BR(),
+                   issue_date,
+                   BR(),
+                   more,
+                   _class=item_class,
+                   _id=item_id,
+                   )
 
     return item
 
