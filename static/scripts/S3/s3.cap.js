@@ -77,22 +77,27 @@
         });
 
         $('#cap_info_priority').change(function() {
-            var p = S3.cap_priorities,
-                len = p.length;
-            if ($(this).find('option:selected').text() == 'Undefined') {
-                $(this).css('border', '2px solid gray');
-                $form.find('[name=urgency]').val('');
-                $form.find('[name=severity]').val('');
-                $form.find('[name=certainty]').val('');
-            }
-            for (var i=0; i< len; i++) {
-                if (p[i][0] == $(this).find('option:selected').text()) {
-                    $form.find('[name=urgency]').val(p[i][1]);
-                    $form.find('[name=severity]').val(p[i][2]);
-                    $form.find('[name=certainty]').val(p[i][3]);
-                    $(this).css('border', '2px solid #' + p[i][4]);
-                }
-            }
+        	if (!$(this).val()) {
+        		$(this).css('border', '1px solid gray');
+        	}
+        	else {
+	            var p = S3.cap_priorities,
+	                len = p.length;
+	            if ($(this).find('option:selected').text() == 'Undefined') {
+	                $(this).css('border', '2px solid gray');
+	                $form.find('[name=urgency]').val('');
+	                $form.find('[name=severity]').val('');
+	                $form.find('[name=certainty]').val('');
+	            }
+	            for (var i=0; i< len; i++) {
+	                if (p[i][0] == $(this).find('option:selected').text()) {
+	                    $form.find('[name=urgency]').val(p[i][1]);
+	                    $form.find('[name=severity]').val(p[i][2]);
+	                    $form.find('[name=certainty]').val(p[i][3]);
+	                    $(this).css('border', '2px solid #' + p[i][4]);
+	                }
+	            }
+	        }
         });
 
         $form.find('[name=urgency],[name=severity],[name=certainty]').change(function() {
@@ -104,12 +109,18 @@
                     $form.find('[name=certainty]').val() == p[i][3]) {
                         $('#cap_info_priority option').each(function() {
                             if($(this).text() == p[i][0]) {
-                                $(this).attr('selected', 'selected');
+                                $(this).prop('selected', 'selected');
                                 $form.find('[name=priority]').css('border', '2px solid #' + p[i][4]);
-                            }                        
+                            } else {
+                            	$form.find('[name=priority]').val('');
+                            	$form.find('[name=priority]').css('border', '2px solid gray');
+                              }                      
                         });
                     return;
-                    }
+                } else {
+                	$form.find('[name=priority]').val('');
+                    $form.find('[name=priority]').css('border', '2px solid gray');
+                  }
             }
 
             $form.find('[name=priority]').val('Undefined')
@@ -134,7 +145,9 @@
                 $('.cap_alert_form').addClass('template_loaded');
             } else if (tablename == 'cap_info') {
                 values = (data['$_cap_info'] && data['$_cap_info'][0]) || {};
-                settings = $.parseJSON(values.template_settings) || {};
+                //settings = $.parseJSON(values.template_settings) || {};
+                // Note there is not template_settings in cap_info; kept this just to make API compatible and remove jQuery warning
+                settings = {}
             }
 
             $.each(fields, function (i, f) {
@@ -178,7 +191,7 @@
                         if (f == 'incidents') {
                             if (overwrite || locked) {
                                 $f.val(values[f]['@value'] || '');
-                                //refresh multiselect wizard for display
+                                //refresh multiselect widget for display
                                 $('select#cap_alert_incidents').multiselect('refresh');
                             }                                                
                         } else {

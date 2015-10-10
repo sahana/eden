@@ -304,7 +304,7 @@
             <xsl:if test="cap:parameter!=''">
                 <data field="parameter">
                     <xsl:attribute name="value">
-                        <xsl:text>&quot;[</xsl:text>
+                        <xsl:text>[</xsl:text>
                             <xsl:for-each select="cap:parameter">
                                 <xsl:text>{&quot;key&quot;: &quot;</xsl:text>
                                 <xsl:value-of select="cap:valueName"/>
@@ -315,7 +315,7 @@
                                     <xsl:text>, </xsl:text>
                                 </xsl:if>
                             </xsl:for-each>
-                        <xsl:text>]&quot;</xsl:text>
+                        <xsl:text>]</xsl:text>
                     </xsl:attribute>
                 </data>
             </xsl:if>
