@@ -6,3 +6,6 @@
 legend button {
     margin: 0;
 }
+#cap_alert_datalist {
+    overflow-x: auto;
+}

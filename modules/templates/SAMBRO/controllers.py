@@ -80,7 +80,7 @@ class index(S3CustomController):
             # Only show Public Alerts
             resource.add_filter(FS("scope") == "Public")
         # Only show Alerts which haven't expired
-        #resource.add_filter(FS("info.expires") >= request.utcnow)
+        resource.add_filter(FS("info.expires") >= request.utcnow)
         list_id = "cap_alert_datalist"
         list_fields = ["msg_type",
                        "info.headline",
@@ -100,14 +100,14 @@ class index(S3CustomController):
         orderby = "cap_info.expires desc"
         datalist, numrows, ids = resource.datalist(fields = list_fields,
                                                    #start = None,
-                                                   limit = 5,
+                                                   limit = None,
                                                    list_id = list_id,
                                                    orderby = orderby,
                                                    layout = s3db.cap_alert_list_layout
                                                    )
         ajax_url = URL(c="cap", f=fn, args="datalist.dl", vars={"list_id": list_id})
         output[list_id] = datalist.html(ajaxurl = ajax_url,
-                                        pagesize = 5
+                                        pagesize = None,
                                         )
 
         # @ToDo: Options are currently built from the full-set rather than the filtered set
