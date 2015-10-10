@@ -250,7 +250,7 @@
         }
 
         // Set as template
-        $form.find('[name=is_template]').attr('checked', 'checked');
+        $form.find('[name=is_template]').prop('checked', 'checked');
 
         function inheritable_flag(field, $e) {
             var name = 'can_edit-' + field,
@@ -267,7 +267,7 @@
 
             var settings = get_settings();
             if (settings.locked && settings.locked[field]) {
-                $checkbox.attr('checked', 'checked');
+                $checkbox.prop('checked', 'checked');
             }
 
             $e.append($label);
