@@ -136,6 +136,7 @@ class S3DVRModel(S3Model):
                      #      label = T("Insurance"),
                      #      represent = s3_yes_no_represent,
                      #      ),
+<<<<<<< HEAD
                      #Field("status", "integer",
                      #      default = 1,
                      #      label = T("Status"),
@@ -143,6 +144,14 @@ class S3DVRModel(S3Model):
                      #           dvr_status_opts.get(opt, UNKNOWN_OPT),
                      #      requires = IS_EMPTY_OR(IS_IN_SET(dvr_status_opts)),
                      #      ),
+=======
+                     Field("status", "integer",
+                           default = 1,
+                           label = T("Status"),
+                           represent = S3Represent(options=dvr_status_opts),
+                           requires = IS_EMPTY_OR(IS_IN_SET(dvr_status_opts)),
+                           ),
+>>>>>>> a28f56b... change represent
                      s3_comments(),
                      *s3_meta_fields())
 
