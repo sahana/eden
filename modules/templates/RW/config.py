@@ -43,7 +43,7 @@ def config(settings):
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
     # e.g. Activities filtered to those of parent Project
-    settings.gis.countries = ("DE",)
+    #settings.gis.countries = ("DE",)
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
     # Uncomment to Disable the Postcode selector in the LocationSelector
@@ -68,7 +68,7 @@ def config(settings):
        ("tr", "Türkçe"),
     ])
     # Default language for Language Toolbar (& GIS Locations in future)
-    settings.L10n.default_language = "de"
+    #settings.L10n.default_language = "de"
     # Uncomment to Hide the language toolbar
     #settings.L10n.display_toolbar = False
     # Default timezone for users

@@ -455,6 +455,11 @@
         <xsl:variable name="Value" select="text()"/>
 
         <xsl:if test="$Value!=''">
+            <!-- @ToDo
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list" select="$Value"/>
+                <xsl:with-param name="arg">tag</xsl:with-param>
+            </xsl:call-template> -->
             <resource name="org_organisation_tag">
                 <data field="tag"><xsl:value-of select="$Key"/></data>
                 <data field="value"><xsl:value-of select="$Value"/></data>
@@ -586,7 +591,7 @@
 
         <xsl:choose>
             <!-- Org Groups -->
-            <xsl:when test="$arg='grop'">
+            <xsl:when test="$arg='group'">
                 <resource name="org_group_membership">
                     <reference field="group_id" resource="org_group">
                         <resource name="org_group">
