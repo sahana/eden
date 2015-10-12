@@ -220,15 +220,15 @@
                     <xsl:value-of select="data[@field='popup_url']"/>
                 </url>
                 <xsl:choose>
-                    <xsl:when test="data[@field='marker_url']">
+                    <xsl:when test="data[@field='marker_url']/text()!=''">
                         <marker_url>
-                            <xsl:value-of select="data[@field='marker_url']"/>
+                            <xsl:value-of select="data[@field='marker_url']/text()"/>
                         </marker_url>
                         <marker_height>
-                            <xsl:value-of select="data[@field='marker_height']"/>
+                            <xsl:value-of select="data[@field='marker_height']/text()"/>
                         </marker_height>
                         <marker_width>
-                            <xsl:value-of select="data[@field='marker_width']"/>
+                            <xsl:value-of select="data[@field='marker_width']/text()"/>
                         </marker_width>
                     </xsl:when>
                     <xsl:otherwise>
@@ -496,7 +496,7 @@
             </marker>
         </xsl:if>
 
-        <xsl:if test="$marker_url">
+        <xsl:if test="$marker_url!=''">
             <!-- Per-feature Marker -->
             <marker_url>
                 <xsl:value-of select="$marker_url"/>
