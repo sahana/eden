@@ -116,6 +116,7 @@ class S3DeployModel(S3Model):
                            custom_retrieve = retrieve_file,
                            custom_store = store_file,
                            label = T("Private Key"),
+                           length = current.MAX_FILENAME_LENGTH,
                            required = True,
                            ),
                      Field("webserver_type", "integer",

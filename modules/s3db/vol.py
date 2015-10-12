@@ -210,6 +210,7 @@ class S3VolunteerAwardModel(S3Model):
                      Field("file", "upload",
                            autodelete = True,
                            label = T("Attachment"),
+                           length = current.MAX_FILENAME_LENGTH,
                            represent = self.vol_award_file_represent,
                            # Enable in templates as-required
                            readable = False,

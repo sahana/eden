@@ -9432,6 +9432,7 @@ class S3ImportPOI(S3Method):
                             default = T("Can read PoIs either from an OpenStreetMap file (.osm) or mirror."),
                             writable = False),
                       Field("file", "upload",
+                            length = current.MAX_FILENAME_LENGTH,
                             uploadfolder = uploadpath,
                             label = T("File")),
                       Field("text2", # Dummy Field to add text inside the Form

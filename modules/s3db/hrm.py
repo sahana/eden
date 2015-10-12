@@ -2998,6 +2998,7 @@ class S3HRSkillModel(S3Model):
                      Field("image", "upload",
                            autodelete = True,
                            label = T("Scanned Copy"),
+                           length = current.MAX_FILENAME_LENGTH,
                            # upload folder needs to be visible to the download() function as well as the upload
                            uploadfolder = os.path.join(request.folder,
                                                        "uploads"),

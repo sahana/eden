@@ -353,7 +353,9 @@ Thank you"""
                      Field("user_id", utable),
                      Field("home"),
                      Field("mobile"),
-                     Field("image", "upload"),
+                     Field("image", "upload",
+                           length = current.MAX_FILENAME_LENGTH,
+                           ),
                      *(s3_uid()+s3_timestamp()))
 
         # Group table (roles)

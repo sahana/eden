@@ -125,6 +125,7 @@ class S3DocumentLibrary(S3Model):
                      super_link("site_id", "org_site"),
                      Field("file", "upload",
                            autodelete = True,
+                           length = current.MAX_FILENAME_LENGTH,
                            represent = self.doc_file_represent,
                            # upload folder needs to be visible to the download() function as well as the upload
                            uploadfolder = os.path.join(folder,
@@ -249,6 +250,7 @@ class S3DocumentLibrary(S3Model):
                      super_link("site_id", "org_site"), # @ToDo: Remove since Site Instances are doc entities?
                      Field("file", "upload",
                            autodelete = True,
+                           length = current.MAX_FILENAME_LENGTH,
                            represent = doc_image_represent,
                            requires = IS_EMPTY_OR(
                                         IS_IMAGE(extensions=(s3.IMAGE_EXTENSIONS)),

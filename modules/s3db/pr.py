@@ -2651,7 +2651,9 @@ class S3PersonImageModel(S3Model):
                                 default = False,
                                 label = T("Profile Picture?")
                                 ),
-                          Field("image", "upload", autodelete=True,
+                          Field("image", "upload",
+                                autodelete = True,
+                                length = current.MAX_FILENAME_LENGTH,
                                 represent = self.pr_image_represent,
                                 widget = S3ImageCropWidget((600, 600)),
                                 comment =  DIV(_class="tooltip",
@@ -2862,6 +2864,7 @@ class S3ImageLibraryModel(S3Model):
                           Field("original_name"),
                           # New image file name
                           Field("new_name", "upload",
+                                length = current.MAX_FILENAME_LENGTH,
                                 autodelete=True,
                                 ),
                           # New file format name
