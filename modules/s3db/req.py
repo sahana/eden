@@ -47,6 +47,7 @@ __all__ = ("S3RequestModel",
            "req_req_list_layout",
            "req_customise_commit_fields",
            "req_commit_list_layout",
+           "req_CommitRepresent"
            )
 
 from gluon import *
@@ -2349,14 +2350,16 @@ class S3CommitModel(S3Model):
             msg_record_deleted = T("Commitment Canceled"),
             msg_list_empty = T("No Commitments"))
 
+        commit_represent = req_CommitRepresent()
+
         # Reusable Field
         commit_id = S3ReusableField("commit_id", "reference %s" % tablename,
                                     label = T("Commitment"),
                                     ondelete = "CASCADE",
-                                    represent = self.commit_represent,
+                                    represent = commit_represent,
                                     requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(db, "req_commit.id",
-                                                              self.commit_represent,
+                                                              commit_represent,
                                                               orderby="req_commit.date",
                                                               sort=True)),
                                     sortby = "date",
@@ -2422,35 +2425,6 @@ class S3CommitModel(S3Model):
         #
         return dict(req_commit_id = commit_id,
                     )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def commit_represent(id, row=None):
-        """
-            Represent a Commit
-
-            @ToDo: Migrate to S3Represent
-        """
-
-        if row:
-            table = current.db.req_commit
-        elif not id:
-            return current.messages["NONE"]
-        else:
-            db = current.db
-            table = db.req_commit
-            row = db(table.id == id).select(table.type,
-                                            table.date,
-                                            table.organisation_id,
-                                            table.site_id,
-                                            limitby=(0, 1)).first()
-        if row.type == 1:
-            # Items
-            return "%s - %s" % (table.site_id.represent(row.site_id),
-                                table.date.represent(row.date))
-        else:
-            return "%s - %s" % (table.organisation_id.represent(row.organisation_id),
-                                table.date.represent(row.date))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2763,6 +2737,66 @@ class S3CommitModel(S3Model):
                 # Assume Complete not partial
                 # @ToDo: Provide a way for the committer to specify this
                 db(rtable.id == req_id).update(commit_status=REQ_STATUS_NONE)
+
+# -----------------------------------------------------------------------------
+class req_CommitRepresent(S3Represent):
+    """Representation of Commit"""
+
+    def __init__(self):
+        """
+            Constructor
+        """
+
+        table = current.s3db.req_commit
+        super(req_CommitRepresent, self).__init__()
+
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom lookup method
+            @param key: the key Field
+            @param values: the values
+            @param fields: the fields to retrieve
+        """
+        
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+
+        rows = current.db(query).select(self.table.type,
+                                        self.table.date,
+                                        self.table.organisation_id,
+                                        self.table.site_id,
+                                        limitby=(0, len(values)))
+
+        commit_dates = [row[str(self.table.date)] for row in rows]
+        if commit_dates:
+            self.table.date.represent.bulk(commit_dates)
+
+        organisation_ids = [row[str(self.table.organisation_id)] for row in rows]
+        if organisation_ids:
+            self.table.organisation_id.represent.bulk(organisation_ids)
+
+        site_ids = [row[str(self.table.site_id)] for row in rows]
+        if site_ids:
+            self.table.site_id.represent.bulk(site_ids)
+
+        return rows
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a single Row
+
+            @param row: the Row
+        """
+
+        if row.type == 1:
+            return "%s - %s" % (self.table.site_id.represent(row.site_id),
+                                self.table.date.represent(row.date))
+        else:
+            return "%s - %s" % (self.table.organisation_id.represent(row.organisation_id),
+                                self.table.date.represent(row.date))
 
 # =============================================================================
 class S3CommitItemModel(S3Model):
