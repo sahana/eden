@@ -241,7 +241,7 @@
             <xsl:if test="cap:eventCode!=''">
                 <data field="event_code">
                     <xsl:attribute name="value">
-                        <xsl:text>&quot;[</xsl:text>
+                        <xsl:text>[</xsl:text>
                             <xsl:for-each select="cap:eventCode">
                                 <xsl:text>{&quot;key&quot;: &quot;</xsl:text>
                                 <xsl:value-of select="cap:valueName"/>
@@ -252,7 +252,7 @@
                                     <xsl:text>, </xsl:text>
                                 </xsl:if>
                             </xsl:for-each>
-                        <xsl:text>]&quot;</xsl:text>
+                        <xsl:text>]</xsl:text>
                     </xsl:attribute>
                 </data>
             </xsl:if>

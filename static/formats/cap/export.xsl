@@ -563,10 +563,20 @@
 
             <xsl:when test="starts-with($arg, '`')">
                 <xsl:variable name="valueName">
-                    <xsl:value-of select="substring-before(substring-after($item, 'key:'), ',')"/>
+                    <xsl:if test="contains(substring-before($item, ','), 'key:')">
+                        <xsl:value-of select="normalize-space(substring-after(substring-before($item, ','), 'key:'))"/>
+                    </xsl:if>
+                    <xsl:if test="contains(substring-after($item, ','), 'key:')">
+                        <xsl:value-of select="normalize-space(substring-after(substring-after($item, ','), 'key:'))"/>
+                    </xsl:if>
                 </xsl:variable>
                 <xsl:variable name="value">
-                    <xsl:value-of select="substring-after($item, 'value:')"/>
+                    <xsl:if test="contains(substring-before($item, ','), 'value:')">
+                        <xsl:value-of select="normalize-space(substring-after(substring-before($item, ','), 'value:'))"/>
+                    </xsl:if>
+                    <xsl:if test="contains(substring-after($item, ','), 'value:')">
+                        <xsl:value-of select="normalize-space(substring-after(substring-after($item, ','), 'value:'))"/>
+                    </xsl:if>
                 </xsl:variable>
                 <xsl:element name="{substring-after($arg, '`')}">
                     <valueName><xsl:value-of select="$valueName"/></valueName>

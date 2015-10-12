@@ -694,11 +694,6 @@ def alert():
             if isinstance(output, dict) and "form" in output:
                 if not r.component and \
                    r.method not in ("import", "import_feed", "profile"):
-                    fields = s3db.cap_info_labels()
-                    jsobj = []
-                    for f in fields:
-                        jsobj.append("'%s': '%s'" % (f, fields[f].replace("'", "\\'")))
-                    s3.js_global.append('''i18n.cap_info_labels={%s}''' % ", ".join(jsobj))
                     form = output["form"]
                     form.update(_class="cap_alert_form")
                 set_priority_js()
