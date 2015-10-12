@@ -16,6 +16,7 @@ RDRT,"RDRT Online Manual","<div class=""online-documentation"">
 <h3>Deployments</h3>
 <ul>
   <li><a href=""{{name:RDRTDeployMember}}"">Deploying a Member</a></li>
+  <li><a href=""{{name:RDRTUploadAppraisal}}"">Uploading Appraisals</a></li>
 </ul>
 <h3>Roster</h3>
 <ul>

@@ -1,0 +1,34 @@
+Name,Title,Body
+RDRTUploadAppraisal,"Uploading Appraisals","<div class=""online-documentation"">
+<p>
+To upload an appraisal, <a href=""{{name:RDRTMissionsSummary}}"">open the Mission Profile</a>,
+and click ""Upload Appraisal"" on the respective Deployment Card:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/mission_profile_upload_appraisal.png""></img>
+<p>
+This will open the Appraisal Dialog.
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/appraisal_dialog.png""></img>
+<p>
+Fill in the fields accordingly - choose a date.
+</p>
+<p>
+To set a rating, click on the slider bar to activate it, then pull
+the handle left/right to set a rating value:
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/appraisal_rating_slider.png""></img>
+<p>
+To upload an appraisal document, click the ""Browse..."" button to select
+a file. You can upload multiple files for the appraisal.
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/appraisal_attach_files.png""></img>
+<p>
+Finally, press ""Save"" to save the appraisal.
+</p>
+<p>
+Once an appraisal has been uploaded, the link will change into ""Open Appraisal"".
+Use this link to update the appraisal and/or to upload more files.
+</p>
+<img src=""{{c:static,f:themes,noargs}}/IFRC/img/cms/mission_profile_open_appraisal.png""></img>
+<p><a href=""{{name:RDRT}}"">Back to table of contents</a></p>
+</div>"
