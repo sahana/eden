@@ -29,7 +29,6 @@
 
 __all__ = ("S3CAPModel",
            "S3CAPAreaNameModel",
-           "cap_info_labels",
            "cap_alert_is_template",
            "cap_rheader",
            "cap_alert_list_layout",
@@ -728,6 +727,7 @@ class S3CAPModel(S3Model):
                            ),
                      Field("language",
                            default = "en-US",
+                           label = T("Language"),
                            represent = lambda opt: languages.get(opt,
                                                                  UNKNOWN_OPT),
                            requires = IS_EMPTY_OR(
@@ -738,6 +738,7 @@ class S3CAPModel(S3Model):
                                                            T("Code Values: Natural language identifier per [RFC 3066]. If not present, an implicit default value of 'en-US' will be assumed. Edit settings.cap.languages in 000_config.py to add more languages. See <a href=\"%s\">here</a> for a full list.") % "http://www.i18nguy.com/unicode/language-identifiers.html")),
                            ),
                      Field("category", "list:string", # 1 or more allowed
+                           label = T("Category"),
                            represent = S3Represent(options = cap_info_category_opts,
                                                    multiple = True,
                                                    ),
@@ -756,6 +757,7 @@ class S3CAPModel(S3Model):
                                                            T("If not specified, will the same as the Event Type."))),
                            ),
                      self.event_type_id(empty = False,
+                                        label = T("Event Type"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Event Type of the alert message"),
                                                                         T("Event field above is more general. And this Event Type is classification of event. For eg. Event can be 'Terrorist Attack' and Event Type can be either 'Terrorist Bomb Explosion' or 'Terrorist Chemical Waefare Attack'. If not specified, will the same as the Event Type."))),
@@ -768,6 +770,7 @@ class S3CAPModel(S3Model):
                              })'''
                      ),
                      Field("response_type", "list:string", # 0 or more allowed
+                           label = T("Response Type"),
                            represent = S3Represent(options = cap_info_responseType_opts,
                                                    multiple = True,
                                                    ),
@@ -779,6 +782,7 @@ class S3CAPModel(S3Model):
                                                            T("Multiple response types can be selected by holding down control and then selecting the items"))),
                            ),
                      Field("priority", "reference cap_warning_priority",
+                           label = T("Priority"),
                            represent = priority_represent,
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "cap_warning_priority.id",
@@ -790,6 +794,7 @@ class S3CAPModel(S3Model):
                                                            T("Defines the priority of the alert message. Selection of the priority automatically sets the value for 'Urgency', 'Severity' and 'Certainty'"))),
                            ),
                      Field("urgency",
+                           label = T("Urgency"),
                            represent = lambda opt: \
                             cap_info_urgency_opts.get(opt, UNKNOWN_OPT),
                            # Empty For Template, checked onvalidation hook
@@ -805,6 +810,7 @@ class S3CAPModel(S3Model):
                                                              "'Unknown' - Urgency not known"))),
                            ),
                      Field("severity",
+                           label = T("Severity"),
                            represent = lambda opt: \
                             cap_info_severity_opts.get(opt, UNKNOWN_OPT),
                            # Empty For Template, checked onvalidation hook
@@ -820,6 +826,7 @@ class S3CAPModel(S3Model):
                                                              "'Unknown' - Severity unknown"))),
                            ),
                      Field("certainty",
+                           label = T("Certainty"),
                            represent = lambda opt: \
                             cap_info_certainty_opts.get(opt, UNKNOWN_OPT),
                            # Empty For Template, checked onvalidation hook
@@ -835,11 +842,13 @@ class S3CAPModel(S3Model):
                                                              "'Unknown' - Certainty unknown"))),
                            ),
                      Field("audience", "text",
+                           label = T("Audience"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Audience"),
                                                            T("The intended audience of the alert message"))),
                            ),
                      Field("event_code", "text",
+                           label = T("Event Code"),
                            default = settings.get_cap_event_codes(),
                            represent = S3KeyValueWidget.represent,
                            widget = S3KeyValueWidget(),
@@ -848,17 +857,20 @@ class S3CAPModel(S3Model):
                                                            T("Any system-specific code for events, in the form of key-value pairs. (e.g., SAME, FIPS, ZIP)."))),
                            ),
                      s3_datetime("effective",
+                                 label = T("Effective"),
                                  default = "now",
                                  comment = DIV(_class="tooltip",
                                                _title="%s|%s" % (T("The effective time of the information of the alert message"),
                                                                  T("If not specified, the effective time shall be assumed to be the same the time the alert was sent."))),
                                  ),
                      s3_datetime("onset",
+                                 label = T("Onset"),
                                  comment = DIV(_class="tooltip",
                                                _title="%s|%s" % (T("Onset"),
                                                                  T("The expected time of the beginning of the subject event of the alert message"))),
                                  ),
                      s3_datetime("expires",
+                                 label = T("Expires at"),
                                  past = 0,
                                  default = self.get_expirydate,
                                  comment = DIV(_class="tooltip",
@@ -866,31 +878,37 @@ class S3CAPModel(S3Model):
                                                                  T("If this item is not provided, each recipient is free to enforce its own policy as to when the message is no longer in effect."))),
                                  ),
                      Field("sender_name",
+                           label = T("Sender's name"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The text naming the originator of the alert message"),
                                                            T("The human-readable name of the agency or authority issuing this alert."))),
                            ),
                      Field("headline",
+                           label = T("Headline"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The text headline of the alert message"),
                                                            T("A brief human-readable headline.  Note that some displays (for example, short messaging service devices) may only present this headline; it should be made as direct and actionable as possible while remaining short.  160 characters may be a useful target limit for headline length."))),
                            ),
                      Field("description", "text",
+                           label = T("Description"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The subject event of the alert message"),
                                                            T("An extended human readable description of the hazard or event that occasioned this message."))),
                            ),
                      Field("instruction", "text",
+                           label = T("Instruction"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The recommended action to be taken by recipients of the alert message"),
                                                            T("An extended human readable instruction to targeted recipients.  If different instructions are intended for different recipients, they should be represented by use of multiple information blocks. You can use a different information block also to specify this information in a different language."))),
                            ),
                      Field("contact", "text",
+                           label = T("Contact information"),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Contact"),
                                                            T("The contact for follow-up and confirmation of the alert message"))),
                            ),
                      Field("web",
+                           label = T("URL"),
                            requires = IS_EMPTY_OR(IS_URL()),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("A URL associating additional information with the alert message"),
@@ -906,10 +924,6 @@ class S3CAPModel(S3Model):
                                                            T("Any system-specific datum, in the form of key-value pairs."))),
                            ),
                      *s3_meta_fields())
-
-        info_labels = cap_info_labels()
-        for field in info_labels:
-            db.cap_info[field].label = info_labels[field]
 
         if crud_strings["cap_template_info"]:
             crud_strings[tablename] = crud_strings["cap_template_info"]
@@ -1491,6 +1505,8 @@ class S3CAPModel(S3Model):
         info = db(itable.id == info_id).select(itable.alert_id,
                                                itable.event,
                                                itable.event_type_id,
+                                               itable.event_code,
+                                               itable.parameter,
                                                limitby=(0, 1)).first()
         if info:
             alert_id = info.alert_id
@@ -1500,6 +1516,15 @@ class S3CAPModel(S3Model):
             if not info.event:
                 set_.update(event = current.db.cap_info.event_type_id.\
                             represent(info.event_type_id))
+            event_code = info.event_code
+            parameter = info.parameter
+            # For prepopulating
+            if event_code and ("|{" in event_code or "||" in event_code):
+                fstring = json_formatter(event_code)
+                set_.update(event_code = fstring)
+            if parameter and ("|{" in parameter or "||" in parameter):
+                fstring = json_formatter(parameter)
+                set_.update(parameter = fstring)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1595,32 +1620,24 @@ class S3CAPAreaNameModel(S3Model):
         return {}
 
 # =============================================================================
-def cap_info_labels():
+def json_formatter(fstring):
     """
-        Labels for CAP info segments
+        Properly format the Key-Value import string to json
     """
-
-    T = current.T
-    return dict(language=T("Language"),
-                category=T("Category"),
-                event=T("Event"),
-                response_type=T("Response type"),
-                urgency=T("Urgency"),
-                severity=T("Severity"),
-                certainty=T("Certainty"),
-                audience=T("Audience"),
-                event_code=T("Event code"),
-                effective=T("Effective"),
-                onset=T("Onset"),
-                expires=T("Expires at"),
-                sender_name=T("Sender's name"),
-                headline=T("Headline"),
-                description=T("Description"),
-                instruction=T("Instruction"),
-                web=T("URL"),
-                contact=T("Contact information"),
-                parameter=T("Parameters")
-                )
+    
+    if fstring == "||":
+        fstring = "[]"
+    else:
+        fstring = fstring.replace(" ", "") # Remove space
+        fstring = fstring.replace("|", "")
+        fstring = fstring.replace("}{", "},{")
+        fstring = fstring.replace("{u'", "{'")
+        fstring = fstring.replace(":u'", ":'")
+        fstring = fstring.replace(",u'", ",'")
+        fstring = fstring.replace("'", '"')
+        fstring = "[%s]" % fstring
+    
+    return fstring
 
 # =============================================================================
 def cap_alert_is_template(alert_id):

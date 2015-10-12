@@ -101,19 +101,28 @@
             <xsl:variable name="EventCode-string">
                 <xsl:value-of select="translate($EventCode, '[{}]', '')"/>
             </xsl:variable>
-            <xsl:if test="$EventCode-string!=''">
-                <data field="event_code">
-                    <xsl:attribute name="value">
-                        <xsl:text>"[</xsl:text>
-                        <xsl:call-template name="key-value-String">
-                            <xsl:with-param name="key-value">
-                                <xsl:value-of select="$EventCode-string"/>
-                            </xsl:with-param>
-                        </xsl:call-template>
-                        <xsl:text>]"</xsl:text>
-                    </xsl:attribute>
-                </data>
-            </xsl:if>
+            <xsl:choose>
+                <xsl:when test="$EventCode-string!=''">
+                    <data field="event_code">
+                        <xsl:attribute name="value">
+                            <xsl:text>[</xsl:text>
+                            <xsl:call-template name="key-value-String">
+                                <xsl:with-param name="key-value">
+                                    <xsl:value-of select="$EventCode-string"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                            <xsl:text>]</xsl:text>
+                        </xsl:attribute>
+                    </data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <data field="event_code">
+                        <xsl:attribute name="value">
+                            <xsl:text>[]</xsl:text>
+                        </xsl:attribute>
+                    </data>
+                </xsl:otherwise>
+            </xsl:choose>
             <!-- Sender Name -->
             <xsl:variable name="SenderName" select="col[@field='Sender Name']/text()"/>
             <xsl:if test="$SenderName!=''">
@@ -154,19 +163,28 @@
             <xsl:variable name="Parameter-string">
                 <xsl:value-of select="translate($Parameter, '[{}]', '')"/>
             </xsl:variable>
-            <xsl:if test="$Parameter-string!=''">
-                <data field="parameter">
-                    <xsl:attribute name="value">
-                        <xsl:text>"[</xsl:text>
-                        <xsl:call-template name="key-value-String">
-                            <xsl:with-param name="key-value">
-                                <xsl:value-of select="$Parameter-string"/>
-                            </xsl:with-param>
-                        </xsl:call-template>
-                        <xsl:text>]"</xsl:text>
-                    </xsl:attribute>
-                </data>
-            </xsl:if>
+            <xsl:choose>
+                <xsl:when test="$Parameter-string!=''">
+                    <data field="parameter">
+                        <xsl:attribute name="value">
+                            <xsl:text>[</xsl:text>
+                            <xsl:call-template name="key-value-String">
+                                <xsl:with-param name="key-value">
+                                    <xsl:value-of select="$Parameter-string"/>
+                                </xsl:with-param>
+                            </xsl:call-template>
+                            <xsl:text>]</xsl:text>
+                        </xsl:attribute>
+                    </data> 
+                </xsl:when>
+                <xsl:otherwise>
+                    <data field="parameter">
+                        <xsl:attribute name="value">
+                            <xsl:text>[]</xsl:text>
+                        </xsl:attribute>
+                    </data>
+                </xsl:otherwise>
+            </xsl:choose>
             <!-- Event Type -->
             <xsl:variable name="EventTypeName" select="col[@field='Event Type']"/>
             <xsl:if test="$EventTypeName!=''">
