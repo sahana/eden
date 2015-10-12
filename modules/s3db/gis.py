@@ -1708,10 +1708,12 @@ class S3GISConfigModel(S3Model):
                            ),
                      # If-needed, then Symbology should be here
                      #symbology_id(),
-                     Field("image", "upload", autodelete=False,
+                     Field("image", "upload",
+                           autodelete = False,
                            custom_retrieve = gis_marker_retrieve,
                            custom_retrieve_file_properties = gis_marker_retrieve_file_properties,
                            label = T("Image"),
+                           length = current.MAX_FILENAME_LENGTH,
                            represent = lambda filename: \
                                (filename and [DIV(IMG(_src=URL(c="static",
                                                                f="img",
@@ -1977,10 +1979,12 @@ class S3GISConfigModel(S3Model):
                            writable = False,
                            ),
 
-                     Field("image", "upload", autodelete=False,
+                     Field("image", "upload",
+                           autodelete = False,
                            custom_retrieve = gis_marker_retrieve,
                            custom_retrieve_file_properties = gis_marker_retrieve_file_properties,
                            label = T("Image"),
+                           length = 255,
                            represent = lambda filename: \
                                (filename and [DIV(IMG(_src=URL(c="static",
                                                                f="cache",
@@ -3416,11 +3420,13 @@ class S3MapModel(S3Model):
                             url and A(url, _href=url) or NONE,
                            requires = IS_EMPTY_OR(IS_URL()),
                            ),
-                     Field("file", "upload", autodelete=False,
+                     Field("file", "upload",
+                           autodelete = False,
                            #custom_retrieve = gis_marker_retrieve,
                            #custom_retrieve_file_properties = gis_marker_retrieve_file_properties,
                            #custom_store?
                            label = T("File"),
+                           length = current.MAX_FILENAME_LENGTH,
                            represent = self.gis_layer_geojson_file_represent,
                            requires = IS_EMPTY_OR(
                                         IS_UPLOAD_FILENAME(extension="geojson"),
@@ -3519,8 +3525,10 @@ class S3MapModel(S3Model):
                      layer_id,
                      name_field()(),
                      desc_field()(),
-                     Field("track", "upload", autodelete=True,
+                     Field("track", "upload",
+                           autodelete=True,
                            label = T("GPS Track File"),
+                           length = current.MAX_FILENAME_LENGTH,
                            requires = IS_UPLOAD_FILENAME(extension="gpx"),
                            # upload folder needs to be visible to the download() function as well as the upload
                            uploadfolder = os.path.join(request.folder,
@@ -3721,8 +3729,10 @@ class S3MapModel(S3Model):
                      desc_field()(),
                      source_name_field()(),
                      source_url_field()(),
-                     Field("shape", "upload", autodelete=True,
+                     Field("shape", "upload",
+                           autodelete = True,
                            label = T("ESRI Shape File"),
+                           length = current.MAX_FILENAME_LENGTH,
                            requires = IS_UPLOAD_FILENAME(extension="zip"),
                            # upload folder needs to be visible to the download() function as well as the upload
                            uploadfolder = os.path.join(request.folder,
@@ -4101,9 +4111,11 @@ class S3MapModel(S3Model):
         tablename = "gis_cache2"
         define_table(tablename,
                      Field("name", length=128, notnull=True, unique=True),
-                     Field("file", "upload", autodelete = True,
+                     Field("file", "upload",
+                           autodelete = True,
                            custom_retrieve = self.gis_cache2_retrieve,
                            # upload folder needs to be visible to the download() function as well as the upload
+                           length = current.MAX_FILENAME_LENGTH,
                            uploadfolder = os.path.join(request.folder,
                                                        "uploads",
                                                        "gis_cache"),

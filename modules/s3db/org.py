@@ -372,6 +372,7 @@ class S3OrganisationModel(S3Model):
                            ),
                      Field("logo", "upload",
                            label = T("Logo"),
+                           length = current.MAX_FILENAME_LENGTH,
                            represent = self.doc_image_represent,
                            requires = [IS_EMPTY_OR(IS_IMAGE(maxsize=(400, 400),
                                                             error_message=T("Upload an image file (png or jpeg), max. 400x400 pixels!"))),

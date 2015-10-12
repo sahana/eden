@@ -1660,6 +1660,7 @@ class S3Importer(S3Method):
                                   readable=False,
                                   writable=False),
                             Field("file", "upload",
+                                  length = current.MAX_FILENAME_LENGTH,
                                   uploadfolder=os.path.join(current.request.folder,
                                                             "uploads", "imports"),
                                   autodelete=True),

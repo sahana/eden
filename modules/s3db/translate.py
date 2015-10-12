@@ -61,6 +61,7 @@ class S3TranslateModel(S3Model):
                            ),
                      Field("file", "upload", notnull=True,
                            label = T("Translated File"),
+                           length = current.MAX_FILENAME_LENGTH,
                            requires = IS_UPLOAD_FILENAME(
                                           extension = "csv",
                                           error_message = T("CSV file required")),

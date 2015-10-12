@@ -3285,7 +3285,9 @@ class S3SurveyTranslateModel(S3Model):
                                                                 CODE_HELP))
                                 ),
                           Field("file", "upload",
-                                autodelete=True),
+                                autodelete = True,
+                                length = current.MAX_FILENAME_LENGTH,
+                                ),
                           Field("filename",
                                 readable = False,
                                 writable = False,
