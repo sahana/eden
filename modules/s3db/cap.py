@@ -296,7 +296,6 @@ class S3CAPModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Template Title"),
                                                            T("Title for the template, to indicate to which event this template is related to"))),
-                           
                            ),
                      Field("template_settings", "text",
                            default = "{}",
@@ -313,7 +312,6 @@ class S3CAPModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("A unique identifier of the alert message"),
                                                            T("A number or string uniquely identifying this message, assigned by the sender. Must notnclude spaces, commas or restricted characters (< and &)."))),
-
                            ),
                      Field("sender",
                            label = T("Sender"),
@@ -1563,15 +1561,29 @@ class S3CAPModel(S3Model):
         if alert_id:
             db = current.db
             approved_on = record["approved_on"]
-            db(db.cap_alert.id == alert_id).update(approved_on = current.request.utcnow)
-    
+            table = db.cap_alert
+            query = table.id == alert_id
+            settings = current.deployment_settings
+            db(query).update(approved_on = current.request.utcnow)
+
+            # Notify the owner of the record about approval
+            row = db(query).select(table.owned_by_user,
+                                   limitby=(0, 1)).first()
+            if row.owned_by_user:
+                pe_id = current.auth.s3_user_pe_id(int(row.owned_by_user))
+                subject = "%s: Alert Approved" % settings.get_system_name_short()
+                url = "%s%s" % (settings.get_base_public_url(),
+                                URL(c="cap", f="alert", args=[alert_id]))
+                message = "This alert that you requested to review has been approved:\n%s" % url
+                current.msg.send_by_pe_id(pe_id, subject, message)
+
     # -------------------------------------------------------------------------
     @staticmethod
     def cap_area_onvalidation(form):
         """
             Custom Form Validation
         """
-        
+
         form_vars = form.vars
         if form_vars.get("ceiling") and not form_vars.get("altitude"):
             form.errors["altitude"] = \
@@ -1624,7 +1636,7 @@ def json_formatter(fstring):
     """
         Properly format the Key-Value import string to json
     """
-    
+
     if fstring == "||":
         fstring = "[]"
     else:
@@ -1636,7 +1648,7 @@ def json_formatter(fstring):
         fstring = fstring.replace(",u'", ",'")
         fstring = fstring.replace("'", '"')
         fstring = "[%s]" % fstring
-    
+
     return fstring
 
 # =============================================================================
@@ -1712,7 +1724,7 @@ def cap_rheader(r):
                         # Display 'Submit for Approval' based on permission
                         # and deployment settings
                         if not current.request.get_vars.get("_next") and \
-                           not r.record.approved_by and \
+                           not record.approved_by and \
                            current.deployment_settings.get_cap_authorisation() and \
                            current.auth.s3_has_permission("update", "cap_alert",
                                                           record_id=alert_id):
@@ -1746,6 +1758,19 @@ def cap_rheader(r):
                                 submit_btn = None
                         else:
                             submit_btn = None
+
+                        # Display 'Publish Alert' for those having publish permission
+                        if not record.approved_by and \
+                           current.auth.s3_has_permission("publish", "cap_alert"):
+                            submit_btn = A(T("Publish Alert"),
+                                           _href = URL(f="publish",
+                                                       vars = {"cap_alert.id": record.id,
+                                                               },
+                                                       ),
+                                           _class = "action-btn publish-btn",
+                                           )
+                            current.response.s3.jquery_ready.append(
+'''S3.confirmClick('.publish-btn','%s')''' % T("Do you really want to publish the alert? Once done, cannot be undone!"))
 
                     tabs = [(T("Alert Details"), None),
                             (T("Information"), "info"),
@@ -2290,17 +2315,17 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
                        sender,
                        BR(),
                        )
-        
+
         details = "%s %s %s" % (priority, status, scope)
-        
+
         headline_ = A(headline,
                       _href = _href,
                       _target = "_blank",
                       )
-        
+
         if priority_row:
             headline_["_style"] = "color: #%s" % (priority_row.color_code)
-        
+
         item = DIV(headline_,
                    BR(),
                    location,
@@ -2322,25 +2347,25 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
         msg_type = record["cap_alert.msg_type"]
         sender_name = record["cap_info.sender_name"]
         sent = record["cap_alert.sent"]
-        
+
         headline = "%s; %s, %s" % (msg_type, headline, location)
-        
+
         sub_heading = "%s %s" % (priority, event)
-        
+
         sub_headline = A(sub_heading,
                          _href = _href,
                          _target = "_blank",
                          )
-             
+
         if priority_row:
             sub_headline["_style"] = "color: #%s" % (priority_row.color_code)
 
         para = T("It is %(certainty)s and %(urgency)s with %(severity)s threat to life and property.") \
                 % dict(certainty=certainty, urgency=urgency, severity=severity)
-        
+
         issuer = "%s: %s" % (T("Issued by"), sender_name)
         issue_date = "%s: %s" % (T("Issued on"), sent)
-    
+
         item = DIV(headline,
                    BR(),
                    sub_headline,
