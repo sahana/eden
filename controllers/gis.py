@@ -549,18 +549,26 @@ def location():
             # Hide unnecessary rows
             table.addr_street.readable = table.addr_street.writable = False
             table.addr_postcode.readable = table.addr_postcode.writable = False
+            table.start_date.readable = table.start_date.writable = False
+            table.end_date.readable = table.end_date.writable = False
         elif "project_location_location_id" in caller:
             # Hide unnecessary rows
             table.addr_street.readable = table.addr_street.writable = False
             table.addr_postcode.readable = table.addr_postcode.writable = False
+            table.start_date.readable = table.start_date.writable = False
+            table.end_date.readable = table.end_date.writable = False
             # Show the options for the currently-active gis_config
             levels = gis.get_relevant_hierarchy_levels(as_dict=True)
             level_keys = levels.keys()
-            # Don't add Countries
-            levels.popitem(last=False)
+            if "L0" in level_keys:
+                # Don't add Countries
+                levels.popitem(last=False)
+            else:
+                # Parent can be a Country
+                level_keys.insert(0, "L0")
             table.level.requires = IS_IN_SET(levels)
             # Parent is Required & must be above lowest level
-            # @ToDo: Dynamicf filtering based on selected level (taking into account strict or not)
+            # @ToDo: Dynamic filtering based on selected level (taking into account strict or not)
             level_keys.pop()
             table.parent.requires = IS_ONE_OF(db, "gis_location.id",
                                               s3db.gis_location_represent,

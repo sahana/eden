@@ -1994,16 +1994,15 @@ def config(settings):
             # Require start/end dates
             table.start_date.requires = table.start_date.requires.other
             table.end_date.requires = table.end_date.requires.other
-            budget = S3SQLInlineComponent(
-                "budget",
-                label = T("Budget"),
-                #link = False,
-                multiple = False,
-                fields = ["total_budget",
-                          "currency",
-                          #"monitoring_frequency",
-                          ],
-            )
+            budget = S3SQLInlineComponent("budget",
+                                          label = T("Budget"),
+                                          #link = False,
+                                          multiple = False,
+                                          fields = ["total_budget",
+                                                    "currency",
+                                                    #"monitoring_frequency",
+                                                    ],
+                                          )
             btable = s3db.budget_budget
             # Need to provide a name
             import random, string
@@ -2366,8 +2365,11 @@ def config(settings):
                                "status_id",
                                "start_date",
                                "end_date",
-                               # @ToDo: Budget
-                               # @ToDo: Risk, Sector, Theme
+                               "budget.total_budget",
+                               "budget.currency",
+                               "hazard_project.hazard_id",
+                               "sector_project.sector_id",
+                               "theme_project.theme_id",
                                # Contact
                                "human_resource_id",
                                "overall_status_by_indicators",
@@ -2378,22 +2380,35 @@ def config(settings):
                 #output["details_btn"] = default
                 from gluon import TABLE, TR, TD, B
                 output["item"] = TABLE(TR(TD(B("%s:" % table.name.label)),
-                                          TD(record["project_project.name"])
+                                          TD(record["project_project.name"]),
                                           ),
                                        TR(TD(B("%s:" % table.status_id.label)),
-                                          TD(record["project_project.status_id"])
+                                          TD(record["project_project.status_id"]),
                                           ),
                                        TR(TD(B("%s:" % table.start_date.label)),
-                                          TD(record["project_project.start_date"])
+                                          TD(record["project_project.start_date"]),
                                           ),
                                        TR(TD(B("%s:" % table.end_date.label)),
-                                          TD(record["project_project.end_date"])
+                                          TD(record["project_project.end_date"]),
+                                          ),
+                                       TR(TD(B("%s:" % T("Budget"))),
+                                          TD("%s %s" % (record["budget_budget.currency"],
+                                                        record["budget_budget.total_budget"])),
+                                          ),
+                                       TR(TD(B("%s:" % s3db.project_hazard_project.hazard_id.label)),
+                                          TD(record["project_hazard_project.hazard_id"]),
+                                          ),
+                                       TR(TD(B("%s:" % s3db.project_sector_project.sector_id.label)),
+                                          TD(record["project_sector_project.sector_id"]),
+                                          ),
+                                       TR(TD(B("%s:" % s3db.project_theme_project.theme_id.label)),
+                                          TD(record["project_theme_project.theme_id"]),
                                           ),
                                        TR(TD(B("%s:" % table.human_resource_id.label)),
-                                          TD(record["project_project.human_resource_id"])
+                                          TD(record["project_project.human_resource_id"]),
                                           ),
-                                       TR(TD(B("%s:" % table.overall_status_by_indicators.label)),
-                                          TD(record["project_project.overall_status_by_indicators"])
+                                       TR(TD(B("%s:" % T("Cumulative Status"))),
+                                          TD(record["project_project.overall_status_by_indicators"]),
                                           ),
                                        )
 
