@@ -160,6 +160,7 @@
 'Add Kit': '추가 kit',
 'Add Level 1 Assessment': '레벨 1 평가 추가',
 'Add Level 2 Assessment': '레벨 2 평가 추가',
+'Add Location': '위치 추가',
 'Add Log Entry': '로그 항목 추가',
 'Add Member': '회원 추가',
 'Add Membership': '멤버십 추가',

@@ -116,6 +116,7 @@
 'Add Key': 'Adicionar Chave',
 'Add Kit': 'Adicionar Kit',
 'Add Level 2 Assessment': 'Adicionar Avaliação Nível 2',
+'Add Location': 'Adicionar Localização',
 'Add Log Entry': 'Adicionar Entrada de Diário/Log',
 'Add Member': 'Adicionar Membro/Sócio',
 'Add Membership': 'Adicionar Sociedade',

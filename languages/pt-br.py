@@ -169,6 +169,7 @@
 'Add Kit': 'Adicionar Kit',
 'Add Level 1 Assessment': 'Incluir nível de Avaliação 1',
 'Add Level 2 Assessment': 'Incluir nível de Avaliação 2',
+'Add Location': 'Adicionar Local',
 'Add Log Entry': 'Incluir Entrada de Log',
 'Add Member': 'Incluir Membro',
 'Add Membership': 'Incluir Associação',

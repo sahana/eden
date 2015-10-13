@@ -161,6 +161,7 @@
 'Add Kit': '添加套件',
 'Add Level 1 Assessment': '添加一级评估',
 'Add Level 2 Assessment': '添加二级评估',
+'Add Location': '添加位置',
 'Add Log Entry': '添加日志条目',
 'Add Member': '添加成员',
 'Add Membership': '添加成员',

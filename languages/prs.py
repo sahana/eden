@@ -115,6 +115,7 @@
 'Add Layer from Catalog': 'لایه را از فهرست اضافه نمایید',
 'Add Layer to this Profile': 'لایه را درین پروفایل اضافه نمایید',
 'Add Line': 'سطر را اضافه نمایید',
+'Add Location': 'موقعیت را اضافه نمایید',
 'Add Location to Organization': 'موقعیت را به موسسه اضافه نمایید',
 'Add Log Entry': 'ورودی را اضافه نمایید',
 'Add Member': 'عضو را اضافه نمایید',

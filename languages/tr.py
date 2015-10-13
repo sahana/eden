@@ -53,6 +53,7 @@
 "Add Experience": "Deneyim Ekle",
 "Add Hours": "Saat Ekle",
 "Add Line": "Çizgi Ekle",
+"Add Location": "Konum Ekle",
 "Add Membership": "Üyelik Ekle",
 "Add Organization": "Kuruluş Ekle",
 "Add Participant": "Katılımcı Ekle",

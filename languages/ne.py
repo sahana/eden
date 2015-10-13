@@ -118,6 +118,7 @@
 'Add Layer from Catalog': 'तालिकाबाट सतह राख्नुहोस् ',
 'Add Layer to this Profile': 'यो प्रोफाइलमा सतह राख्नुहोस् ',
 'Add Line': 'धर्का राख्नुहोस् ',
+'Add Location': 'स्थान राख्नुहोस् ',
 'Add Location to Organization': 'संस्थामा स्थान राख्नुहोस् ',
 'Add Log Entry': 'तालिका प्रवेश राख्नुहोस् ',
 'Add Member': 'सदस्य राख्नुहोस् ',

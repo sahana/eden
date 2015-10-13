@@ -201,6 +201,7 @@
 'Add Level 1 Assessment': 'Aggiungi Valutazione di livello 1',
 'Add Level 2 Assessment': 'Aggiungi Valutazione di livello 2',
 'Add Line': 'Aggiungi linea',
+'Add Location': 'Aggiungi Ubicazione',
 'Add Log Entry': 'Aggiungi Voce Registro',
 'Add Member': 'Aggiungi Membro',
 'Add Membership': 'Aggiungi appartenenza',

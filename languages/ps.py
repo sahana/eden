@@ -114,6 +114,7 @@
 'Add Layer from Catalog': 'اضافه کړی پاڼی د کتالوګ ( Catalog )',
 'Add Layer to this Profile': 'اضافه کړی پاڼی دی نمایه ته',
 'Add Line': 'اضافه کړی خط (line)',
+'Add Location': 'اضافه کړی ځای',
 'Add Location to Organization': 'اضافه کړی ځای موسسی ته',
 'Add Log Entry': 'اضافه کړی د داخلیدو د ثبت',
 'Add Member': 'اضافه کړی کسان',

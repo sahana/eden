@@ -386,6 +386,7 @@ class S3ProjectModel(S3Model):
                                             fields=["code", "name"])
         else:
             project_represent = S3Represent(lookup=tablename)
+
         project_id = S3ReusableField("project_id", "reference %s" % tablename,
             label = T("Project"),
             ondelete = "CASCADE",
@@ -3162,7 +3163,7 @@ class S3ProjectLocationModel(S3Model):
         if community:
             LOCATION = T("Community")
             LOCATION_TOOLTIP = T("If you don't see the community in the list, you can add a new one by clicking link 'Create Community'.")
-            ADD_LOCATION = T("Create Community")
+            ADD_LOCATION = T("Add Community")
             crud_strings[tablename] = Storage(
                     label_create = ADD_LOCATION,
                     title_display = T("Community Details"),
@@ -3180,7 +3181,7 @@ class S3ProjectLocationModel(S3Model):
         else:
             LOCATION = T("Location")
             LOCATION_TOOLTIP = T("If you don't see the location in the list, you can add a new one by clicking link 'Create Location'.")
-            ADD_LOCATION = T("Create Location")
+            ADD_LOCATION = T("Add Location")
             crud_strings[tablename] = Storage(
                     label_create = ADD_LOCATION,
                     title_display = T("Location Details"),
@@ -6021,9 +6022,9 @@ class S3ProjectDRRPPModel(S3Model):
         """
 
         db = current.db
-        vars = form.vars
-        id = vars.id
-        project_id = vars.project_id
+        form_vars = form.vars
+        id = form_vars.id
+        project_id = form_vars.project_id
 
         dtable = db.project_drrpp
 
@@ -7056,51 +7057,52 @@ class S3ProjectTaskModel(S3Model):
         s3db = current.s3db
         session = current.session
 
-        id = form.vars.id
+        task_id = form.vars.id
 
         if session.s3.incident:
             # Create a link between this Task & the active Incident
             etable = s3db.event_task
-            etable.insert(incident_id=session.s3.incident,
-                          task_id=id)
+            etable.insert(incident_id = session.s3.incident,
+                          task_id = task_id)
 
         ltp = db.project_task_project
 
-        vars = current.request.post_vars
-        project_id = vars.get("project_id", None)
+        post_vars = current.request.post_vars
+        project_id = post_vars.get("project_id")
         if project_id:
             # Create Link to Project
-            link_id = ltp.insert(task_id = id,
+            link_id = ltp.insert(task_id = task_id,
                                  project_id = project_id)
 
-        activity_id = vars.get("activity_id", None)
+        activity_id = post_vars.get("activity_id")
         if activity_id:
             # Create Link to Activity
             lta = db.project_task_activity
-            link_id = lta.insert(task_id = id,
+            link_id = lta.insert(task_id = task_id,
                                  activity_id = activity_id)
 
-        milestone_id = vars.get("milestone_id", None)
+        milestone_id = post_vars.get("milestone_id")
         if milestone_id:
             # Create Link to Milestone
             ltable = db.project_task_milestone
-            link_id = ltable.insert(task_id = id,
+            link_id = ltable.insert(task_id = task_id,
                                     milestone_id = milestone_id)
 
         # Make sure the task is also linked to the project
         # when created under an activity
-        row = db(ltp.task_id == id).select(ltp.project_id,
-                                           limitby=(0, 1)).first()
+        row = db(ltp.task_id == task_id).select(ltp.project_id,
+                                                limitby=(0, 1)
+                                                ).first()
         if not row:
             lta = db.project_task_activity
             ta = db.project_activity
-            query = (lta.task_id == id) & \
+            query = (lta.task_id == task_id) & \
                     (lta.activity_id == ta.id)
             row = db(query).select(ta.project_id,
                                    limitby=(0, 1)).first()
             if row and row.project_id:
-                ltp.insert(task_id=id,
-                           project_id=row.project_id)
+                ltp.insert(task_id = task_id,
+                           project_id = row.project_id)
 
         # Notify Assignee
         task_notify(form)
@@ -7117,7 +7119,7 @@ class S3ProjectTaskModel(S3Model):
         db = current.db
         s3db = current.s3db
 
-        vars = form.vars
+        form_vars = form.vars
         id = vars.id
         record = form.record
 
@@ -7125,8 +7127,8 @@ class S3ProjectTaskModel(S3Model):
 
         changed = {}
         if record: # Not True for a record merger
-            for var in vars:
-                vvar = vars[var]
+            for var in form_vars:
+                vvar = form_vars[var]
                 rvar = record[var]
                 if vvar != rvar:
                     type = table[var].type
@@ -7154,11 +7156,11 @@ class S3ProjectTaskModel(S3Model):
             table.insert(task_id=id,
                          body=text)
 
-        vars = current.request.post_vars
-        if "project_id" in vars:
+        post_vars = current.request.post_vars
+        if "project_id" in post_vars:
             ltable = db.project_task_project
             filter = (ltable.task_id == id)
-            project = vars.project_id
+            project = post_vars.project_id
             if project:
                 # Create the link to the Project
                 #ptable = db.project_project
@@ -7180,11 +7182,11 @@ class S3ProjectTaskModel(S3Model):
             links = s3db.resource("project_task_project", filter=filter)
             links.delete()
 
-        if "activity_id" in vars:
+        if "activity_id" in post_vars:
             ltable = db.project_task_activity
             filter = (ltable.task_id == id)
-            activity = vars.activity_id
-            if vars.activity_id:
+            activity = post_vars.activity_id
+            if post_vars.activity_id:
                 # Create the link to the Activity
                 #atable = db.project_activity
                 #master = s3db.resource("project_task", id=id)
@@ -7205,10 +7207,10 @@ class S3ProjectTaskModel(S3Model):
             links = s3db.resource("project_task_activity", filter=filter)
             links.delete()
 
-        if "milestone_id" in vars:
+        if "milestone_id" in post_vars:
             ltable = db.project_task_milestone
             filter = (ltable.task_id == id)
-            milestone = vars.milestone_id
+            milestone = post_vars.milestone_id
             if milestone:
                 # Create the link to the Milestone
                 #mtable = db.project_milestone

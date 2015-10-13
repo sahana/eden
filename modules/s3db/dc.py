@@ -131,9 +131,9 @@ class DataCollectionTemplateModel(S3Model):
                            requires = IS_NOT_EMPTY(),
                            ),
                      Field("model", "json",
-                           requires=IS_EMPTY_OR(IS_JSON(native_json=True)),
+                           requires = IS_EMPTY_OR(IS_JSON(native_json=True)),
                            # @todo: representation?
-                           widget=S3QuestionWidget(),
+                           widget = S3QuestionWidget(),
                            ),
                      *s3_meta_fields())
 

@@ -2339,9 +2339,70 @@ def config(settings):
         try:
             list_fields.remove((T("Activity Types"), "activity_type.name"))
         except:
+            # Already removed
             pass
 
     settings.customise_project_location_resource = customise_project_location_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_project_location_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.representation == "plain":
+                # Map Popup
+                s3db = current.s3db
+                table = s3db.project_project
+                resource = s3db.resource("project_project",
+                                         id=r.record.project_id)
+                list_fields = ("name",
+                               "status_id",
+                               "start_date",
+                               "end_date",
+                               # @ToDo: Budget
+                               # @ToDo: Risk, Sector, Theme
+                               # Contact
+                               "human_resource_id",
+                               "overall_status_by_indicators",
+                               )
+                data = resource.select(list_fields, represent=True)
+                record = data.rows[0]
+                #output["title"] = record["project_project.name"]
+                #output["details_btn"] = default
+                from gluon import TABLE, TR, TD, B
+                output["item"] = TABLE(TR(TD(B("%s:" % table.name.label)),
+                                          TD(record["project_project.name"])
+                                          ),
+                                       TR(TD(B("%s:" % table.status_id.label)),
+                                          TD(record["project_project.status_id"])
+                                          ),
+                                       TR(TD(B("%s:" % table.start_date.label)),
+                                          TD(record["project_project.start_date"])
+                                          ),
+                                       TR(TD(B("%s:" % table.end_date.label)),
+                                          TD(record["project_project.end_date"])
+                                          ),
+                                       TR(TD(B("%s:" % table.human_resource_id.label)),
+                                          TD(record["project_project.human_resource_id"])
+                                          ),
+                                       TR(TD(B("%s:" % table.overall_status_by_indicators.label)),
+                                          TD(record["project_project.overall_status_by_indicators"])
+                                          ),
+                                       )
+
+            return output
+
+        s3.postp = custom_postp
+        return attr
+
+    settings.customise_project_location_controller = customise_project_location_controller
 
     # -----------------------------------------------------------------------------
     def customise_req_commit_controller(**attr):

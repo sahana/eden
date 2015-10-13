@@ -174,6 +174,7 @@
 'Add Layer from Catalog': 'បន្ថែមស្រទាប់​ពីកាតាឡុក',
 'Add Layer to this Profile': 'បន្ថែម​ស្រទាប់​ទៅ​ទម្រង់​នេះ',
 'Add Line': 'បន្ថែម​បន្ទាត់',
+'Add Location': 'បន្ថែម​ទីតាំង',
 'Add Location to Organization': 'បន្ថែម​ទីតាំង​ទៅ​អង្គការ',
 'Add Log Entry': 'បន្ថែម​ធាតុ​កំណត់ហេតុ',
 'Add Member': 'បន្ថែមសមាជិកៃ',

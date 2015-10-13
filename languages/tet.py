@@ -30,6 +30,7 @@
 'Add Contact Information': 'Aumenta informasaun kontaktu',
 'Add Document': 'Aumenta dukomentu',
 'Add Documents': 'Aumenta dokumentus',
+'Add Location': 'Aumenta fatin/lokasi',
 'Add New Disaster': 'Aumenta dezastre foun',
 'Add New Document': 'Aumenta dokumentu foun',
 'Add New Information': 'Aumenta Informasaun Foun',

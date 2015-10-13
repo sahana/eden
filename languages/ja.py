@@ -203,6 +203,7 @@
 'Add Level 1 Assessment': 'レベル1アセスメントを追加',
 'Add Level 2 Assessment': 'レベル2アセスメントを追加',
 'Add Line': '行を追加',
+'Add Location': 'ロケーションを追加',
 'Add Location Group': 'ロケーショングループを追加',
 'Add Locations': 'ロケーションを追加',
 'Add Log Entry': 'ログエントリを追加',

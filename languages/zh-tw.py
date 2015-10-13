@@ -225,6 +225,7 @@
 'Add Level 1 Assessment': '新增層次一評量',
 'Add Level 2 Assessment': '新增層次二評量',
 'Add Line': '新增一行',
+'Add Location': '新增位置',
 'Add Locations': '新增位置',
 'Add Log Entry': '新增日誌項目',
 'Add Member': '新增成員',

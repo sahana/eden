@@ -171,6 +171,7 @@
 'Add Layer to this Profile': 'Kartenebene zu diesem Profil hinzufügen',
 'Add Level 1 Assessment': 'Stufe 1 Beurteilung hinzufügen',
 'Add Level 2 Assessment': 'Stufe 2 Beurteilung hinzufügen',
+'Add Location': 'Standort hinzufügen',
 'Add Log Entry': 'Protokolleintrag hinzufügen',
 'Add Member': 'Mitglied hinzufügen',
 'Add Membership': 'Mitgliedschaft hinzufügen',

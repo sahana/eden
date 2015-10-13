@@ -162,6 +162,7 @@
 'Add Kit': 'Добавить Kit',
 'Add Level 1 Assessment': 'Добавить уровень 1 Оценки',
 'Add Level 2 Assessment': 'Добавить уровень 2 Оценки',
+'Add Location': 'Создать размещение',
 'Add Log Entry': 'Добавить запись журнала',
 'Add Member': 'Добавить элемент',
 'Add Membership': 'Добавить членство',
