@@ -180,7 +180,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Import from CSV", m="import", p="create"),
                     ),
-                    M("Predefined Alert Area", f="area",
+                    M("Predefined Alert Area", f="area", vars={"~.is_template": True},
                       restrict=["ADMIN"])(
                         M("Create", m="create"),
                         M("Import from CSV", m="import", p="create"),

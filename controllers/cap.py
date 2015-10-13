@@ -537,8 +537,8 @@ def alert():
                 if alert_id:
                     itable.web.default = current.deployment_settings.get_base_public_url()+\
                                          URL(c="cap", f="alert", args=alert_id)
-            
-            
+
+
             elif r.component_name == "area":
                 atable = r.component.table
                 # Limit to those for this Alert
@@ -818,7 +818,7 @@ def template():
                 field.required = False
 
             itable.category.required = False
-            
+
             alert_id = request.args(0)
             # Check for prepopulate
             if alert_id:
@@ -972,7 +972,6 @@ def priority_get():
                                         wptable.name,
                                         orderby = wptable.id)
                 result = rows.json()
-                #set_priority_js(event_type_name)
                 # Uses "others" event_type
                 # Use this according to deployment
                 #from gluon.serializers import json as jsons
@@ -1010,6 +1009,24 @@ def compose():
         msg.send_by_pe_id(pe_ids, subject, message, contact_method = "SMS")
         session.confirmation = T("Alert Approval Notified")
 
+    redirect(URL(c="cap", f="alert"))
+
+# -----------------------------------------------------------------------------
+def alert_approve():
+    """
+        Approve a record
+    """
+    
+    # For SAMBRO, permission is checked by the Authentication Roles but the permission
+    # should be checked if CAP module is enabled
+    alert_id = request.args[0]
+    if alert_id:
+        resource = s3db.resource("cap_alert", id=alert_id, unapproved=True)
+        resource.approve()
+        session.confirmation = T("Alert has been published!")
+    else:
+        session.error = T("Record not found!")
+    
     redirect(URL(c="cap", f="alert"))
 
 # -----------------------------------------------------------------------------
