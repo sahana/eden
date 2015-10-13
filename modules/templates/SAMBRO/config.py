@@ -18,8 +18,6 @@ except ImportError:
 from gluon import current
 from gluon.storage import Storage
 
-from datetime import datetime
-
 def config(settings):
     """
         Template settings for CAP: Common Alerting Protocol
@@ -79,9 +77,7 @@ def config(settings):
     # Characters not allowed are [\ / : * ? " < > | % .]
     # https://en.wikipedia.org/wiki/Filename
     # http://docs.attachmate.com/reflection/ftp/15.6/guide/en/index.htm?toc.htm?6503.htm
-    settings.sync.upload_filename = "$s-$r-%s" % (datetime.strftime\
-                                                 (current.request.utcnow,
-                                                  "%Y-%m-%dT%H-%M-%S"))
+    settings.sync.upload_filename = "$s-%s" % ("recent_alert")
 
     # -----------------------------------------------------------------------------
     # L10n (Localization) settings

@@ -537,8 +537,8 @@ def alert():
                 if alert_id:
                     itable.web.default = current.deployment_settings.get_base_public_url()+\
                                          URL(c="cap", f="alert", args=alert_id)
-            
-            
+
+
             elif r.component_name == "area":
                 atable = r.component.table
                 # Limit to those for this Alert
@@ -818,7 +818,7 @@ def template():
                 field.required = False
 
             itable.category.required = False
-            
+
             alert_id = request.args(0)
             # Check for prepopulate
             if alert_id:
@@ -972,7 +972,6 @@ def priority_get():
                                         wptable.name,
                                         orderby = wptable.id)
                 result = rows.json()
-                #set_priority_js(event_type_name)
                 # Uses "others" event_type
                 # Use this according to deployment
                 #from gluon.serializers import json as jsons
