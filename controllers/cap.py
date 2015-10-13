@@ -537,8 +537,8 @@ def alert():
                 if alert_id:
                     itable.web.default = current.deployment_settings.get_base_public_url()+\
                                          URL(c="cap", f="alert", args=alert_id)
-            
-            
+
+
             elif r.component_name == "area":
                 atable = r.component.table
                 # Limit to those for this Alert
@@ -818,7 +818,7 @@ def template():
                 field.required = False
 
             itable.category.required = False
-            
+
             alert_id = request.args(0)
             # Check for prepopulate
             if alert_id:
@@ -972,7 +972,6 @@ def priority_get():
                                         wptable.name,
                                         orderby = wptable.id)
                 result = rows.json()
-                #set_priority_js(event_type_name)
                 # Uses "others" event_type
                 # Use this according to deployment
                 #from gluon.serializers import json as jsons
@@ -989,28 +988,6 @@ def priority_get():
     finally:
         response.headers["Content-Type"] = "application/json"
         return result
-
-# -----------------------------------------------------------------------------
-def compose():
-    """
-        Send message to the people with role of Alert Approval
-    """
-
-    # For SAMBRO, permission is checked by the Authentication Roles but the permission
-    # should be checked if CAP module is enabled
-    if settings.has_module("msg"):
-        # Notify People with the role of Alert Approval via email and SMS
-        pe_ids = get_vars.get("pe_ids")
-        alert_id = get_vars.get("cap_alert.id")
-        subject = "%s: Alert Approval Required" % settings.get_system_name_short()
-        url = "%s%s" % (settings.get_base_public_url(),
-                        URL(c="cap", f="alert", args=[alert_id, "review"]))
-        message = "You are requested to take action on this alert:\n\n%s" % url
-        msg.send_by_pe_id(pe_ids, subject, message)
-        msg.send_by_pe_id(pe_ids, subject, message, contact_method = "SMS")
-        session.confirmation = T("Alert Approval Notified")
-
-    redirect(URL(c="cap", f="alert"))
 
 # -----------------------------------------------------------------------------
 def set_priority_js():
@@ -1036,5 +1013,46 @@ def set_priority_js():
         js_global.append(priority_conf)
 
     return
+
+# -----------------------------------------------------------------------------
+def compose():
+    """
+        Send message to the people with role of Alert Approval
+    """
+
+    # For SAMBRO, permission is checked by the Authentication Roles but the permission
+    # should be checked if CAP module is enabled
+    if settings.has_module("msg"):
+        # Notify People with the role of Alert Approval via email and SMS
+        pe_ids = get_vars.get("pe_ids")
+        alert_id = get_vars.get("cap_alert.id")
+        subject = "%s: Alert Approval Required" % settings.get_system_name_short()
+        url = "%s%s" % (settings.get_base_public_url(),
+                        URL(c="cap", f="alert", args=[alert_id, "review"]))
+        message = "You are requested to take action on this alert:\n\n%s" % url
+        msg.send_by_pe_id(pe_ids, subject, message)
+        msg.send_by_pe_id(pe_ids, subject, message, contact_method = "SMS")
+        session.confirmation = T("Alert Approval Notified")
+
+    redirect(URL(c="cap", f="alert"))
+
+# -----------------------------------------------------------------------------
+def publish():
+    """
+        Publish the cap alert
+            - used by those having the permission to publish
+    """
+
+    # For SAMBRO, permission is checked by the Authentication Roles but the permission
+    # should be checked if CAP module is enabled
+    alert_id = get_vars.get("cap_alert.id")
+    if alert_id and \
+       auth.s3_has_permission("publish", "cap_alert"):
+        if s3db.resource("cap_alert", id=alert_id, unapproved=True).approve():
+            session.confirmation = T("Alert Published!")
+        else:
+            session.error = T("Something went wrong! Unable to publish alert!")
+
+    redirect(URL(c="cap", f="alert"))
 
 # END =========================================================================
