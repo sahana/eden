@@ -1122,6 +1122,18 @@ class S3CAPModel(S3Model):
                                            _title="%s|%s" % (T("Information segment for this Area segment"),
                                                              T("To which Information segment is this Area segment related. Note an Information segment can have multiple Area segments."))),
                              ),
+                     # From which tempalte area is the area assigned from
+                     # Used for internationalisation
+                     Field("template_area_id", "reference cap_area",
+                           ondelete = "RESTRICT",
+                           readable = False,
+                           requires = IS_EMPTY_OR(
+                                        IS_ONE_OF(db, "cap_area.id",
+                                                  filterby="is_template",
+                                                  filter_opts=(True,)
+                                                  )),
+                           widget = S3HiddenWidget(),
+                           ),
                      Field("is_template", "boolean",
                            default = False,
                            readable = False,
@@ -1765,13 +1777,25 @@ def cap_rheader(r):
 
                             # For Alert Approver
                             if has_permission("approve", "cap_alert"):
-                                action_btn = A(T("Review Alert"),
-                                               _href = URL(args = [record.id,
-                                                                   "review"
-                                                                   ],
-                                                           ),
-                                               _class = "action-btn",
-                                               )
+                                if record.created_by == auth.user.id:
+                                    # Right now both if and else condition are 
+                                    # doing same thing, only label is different
+                                    # @ToDo: Approve alert directly
+                                    action_btn = A(T("Approve Alert"),
+                                                   _href = URL(args = [record.id,
+                                                                       "review"
+                                                                       ],
+                                                               ),
+                                                   _class = "action-btn",
+                                                   )
+                                else:
+                                    action_btn = A(T("Review Alert"),
+                                                   _href = URL(args = [record.id,
+                                                                       "review"
+                                                                       ],
+                                                               ),
+                                                   _class = "action-btn",
+                                                   )
                         else:
                             action_btn = None
 
@@ -2422,6 +2446,7 @@ def add_area_from_template(area_id, alert_id):
         adata = {"is_template": False,
                  "alert_id": alert_id,
                  "info_id": row.id,
+                 "template_area_id": area_id,
                  }
         for field in afieldnames:
             adata[field] = atemplate[field]
