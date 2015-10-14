@@ -9,3 +9,11 @@ legend button {
 #cap_alert_datalist {
     overflow-x: auto;
 }
+.subscribe-button {
+    float: right;
+    margin-top: -3rem;
+    margin-right: 0.8rem;
+}
+.tiny.button {
+    font-size: 1rem;
+}
