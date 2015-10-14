@@ -138,12 +138,13 @@ class SyncDataModel(S3Model):
         # Repository
         # -------------------------------------------------------------------------
         sync_repository_types = {
-            "eden": "Sahana Eden",
-            "ccrm": "CiviCRM",
-            "wrike": "Wrike",
-            "mcb": "Mariner CommandBridge",
             "adashi": "ADASHI (passive)",
+            "ccrm": "CiviCRM",
+            "eden": "Sahana Eden",
+            #"filesync": "Local Filesystem",
             "ftp": "FTP",
+            "mcb": "Mariner CommandBridge",
+            "wrike": "Wrike",
         }
         password_widget = S3PasswordWidget()
         tablename = "sync_repository"

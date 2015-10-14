@@ -99,6 +99,11 @@ def repository():
                                 f="repository",
                                 args=[str(r.id), r.component.alias],
                                 )
+
+            elif not r.component:
+                script = "/%s/static/scripts/S3/s3.sync.js" % r.application
+                if script not in s3.scripts:
+                    s3.scripts.append(script)
         return True
     s3.prep = prep
 
