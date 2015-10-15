@@ -1204,7 +1204,7 @@
 'Create Organization': 'Créer Organisation',
 'Create Personal Effects': 'Créer Effets Personnels',
 'Create Photo': 'Créer Photo',
-'Create Project': 'Créer un projet',
+'Create Project': 'Créer un Projet',
 'Create Projection': 'Créer projection',
 'Create Rapid Assessment': 'Créer un évaluation rapide',
 'Create Report': 'Créer un rapport',
