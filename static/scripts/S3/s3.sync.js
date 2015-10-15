@@ -10,7 +10,9 @@
     var setAPIFields = function() {
 
         var apiType = $('#sync_repository_apitype').val(),
-            fields = {"url": true,
+            fields = {"backend": false,
+                      "url": true,
+                      "path": false,
                       "username": true,
                       "password": true,
                       "client_id": false,
@@ -19,9 +21,9 @@
                       "proxy": true,
                       "accept_push": true,
                       "synchronise_uuids": true,
-                      "keep_source": false,
+                      "keep_source": false
             };
-            
+
         switch(apiType) {
             case "adashi":
                 fields.username = false;
@@ -34,6 +36,9 @@
                 fields.site_key = true;
                 break;
             case "filesync":
+                fields.backend = true;
+                fields.url = false;
+                fields.path = true;
                 fields.username = false;
                 fields.password = false;
                 fields.proxy = false;
@@ -63,7 +68,7 @@
             }
         }
     };
-    
+
     $(document).ready(function() {
         setAPIFields();
         $('#sync_repository_apitype').unbind('.sync').bind('change.sync', function() {
