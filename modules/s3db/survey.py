@@ -3555,7 +3555,7 @@ class survey_ExportResponses(S3Method):
                     sheets[sheet_name] = book.add_sheet(sheet_name)
                     cols[sheet_name] = 0
         else:
-            sheet = book.add_sheet(T("Responses", lazy = False))
+            sheet = book.add_sheet(s3_unicode(T("Responses")))
         for qstn in question_list:
             if section_break:
                 sheet_name = qstn["section"].split(" ")[0]

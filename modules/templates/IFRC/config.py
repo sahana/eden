@@ -270,7 +270,7 @@ def config(settings):
         ("ar", "العربية"),
         ("en-gb", "English"),
         ("es", "Español"),
-        #("fr", "Français"),
+        ("fr", "Français"),
         ("km", "ភាសាខ្មែរ"),        # Khmer
         ("mn", "Монгол хэл"),  # Mongolian
         ("my", "မြန်မာစာ"),        # Burmese
