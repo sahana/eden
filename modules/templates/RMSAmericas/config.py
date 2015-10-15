@@ -439,11 +439,13 @@ def config(settings):
     # Uncomment this to use DRR (Disaster Risk Reduction) extensions
     settings.project.mode_drr = True
     # Uncomment this to use Activity Types for Activities & Projects
-    settings.project.activity_types = True
+    #settings.project.activity_types = True
     # Uncomment this to use Codes for projects
     settings.project.codes = True
     # Uncomment this to call project locations 'Communities'
     #settings.project.community = True
+    # Uncomment this to enable Demographics in 3W projects
+    #settings.project.demographics = True
     # Uncomment this to enable Hazards in 3W projects
     settings.project.hazards = True
     # Uncomment this to enable Indicators in projects
@@ -2202,64 +2204,64 @@ def config(settings):
                 # Unknown!
                 return
 
-            #db = current.db
-            #s3db = current.s3db
+            db = current.db
+            s3db = current.s3db
 
             # Filter Activity Type by Sector
-            #ltable = s3db.project_sector_project
-            #rows = db(ltable.project_id == project_id).select(ltable.sector_id)
-            #sectors = [row.sector_id for row in rows]
-            #ltable = s3db.project_activity_type_sector
-            #rows = db(ltable.sector_id.belongs(sectors)).select(ltable.activity_type_id)
-            #filteropts = [row.activity_type_id for row in rows]
+            ltable = s3db.project_sector_project
+            rows = db(ltable.project_id == project_id).select(ltable.sector_id)
+            sectors = [row.sector_id for row in rows]
+            ltable = s3db.project_activity_type_sector
+            rows = db(ltable.sector_id.belongs(sectors)).select(ltable.activity_type_id)
+            filteropts = [row.activity_type_id for row in rows]
 
-            #def postprocess(form):
-            #    # Update project_location.activity_type
-            #    beneficiary_id = form.vars.get("id", None)
-            #    table = db.project_beneficiary
-            #    row = db(table.id == beneficiary_id).select(table.project_location_id,
-            #                                                limitby = (0, 1)
-            #                                                ).first()
-            #    if not row:
-            #        return
-            #    project_location_id = row.project_location_id
-            #    if not project_location_id:
-            #        return
-            #    ltable = db.project_beneficiary_activity_type
-            #    row = db(ltable.beneficiary_id == beneficiary_id).select(ltable.activity_type_id,
-            #                                                             limitby = (0, 1)
-            #                                                             ).first()
-            #    if not row:
-            #        return
-            #    activity_type_id = row.activity_type_id
-            #    ltable = s3db.project_activity_type_location
-            #    query = (ltable.project_location_id == project_location_id) & \
-            #            (ltable.activity_type_id == activity_type_id)
-            #    exists = db(query).select(ltable.id,
-            #                              limitby = (0, 1)
-            #                              ).first()
-            #    if not exists:
-            #        ltable.insert(project_location_id = project_location_id,
-            #                      activity_type_id = activity_type_id,
-            #                      )
+            def postprocess(form):
+                # Update project_location.activity_type
+                beneficiary_id = form.vars.get("id", None)
+                table = db.project_beneficiary
+                row = db(table.id == beneficiary_id).select(table.project_location_id,
+                                                            limitby = (0, 1)
+                                                            ).first()
+                if not row:
+                    return
+                project_location_id = row.project_location_id
+                if not project_location_id:
+                    return
+                ltable = db.project_beneficiary_activity_type
+                row = db(ltable.beneficiary_id == beneficiary_id).select(ltable.activity_type_id,
+                                                                         limitby = (0, 1)
+                                                                         ).first()
+                if not row:
+                    return
+                activity_type_id = row.activity_type_id
+                ltable = s3db.project_activity_type_location
+                query = (ltable.project_location_id == project_location_id) & \
+                        (ltable.activity_type_id == activity_type_id)
+                exists = db(query).select(ltable.id,
+                                          limitby = (0, 1)
+                                          ).first()
+                if not exists:
+                    ltable.insert(project_location_id = project_location_id,
+                                  activity_type_id = activity_type_id,
+                                  )
 
-            from s3 import S3SQLCustomForm#, S3SQLInlineLink
+            from s3 import S3SQLCustomForm, S3SQLInlineLink
             crud_form = S3SQLCustomForm(#"project_id",
                                         "project_location_id",
-                                        #S3SQLInlineLink("activity_type",
-                                        #                field = "activity_type_id",
-                                        #                filterby = "id",
-                                        #                options = filteropts,
-                                        #                label = T("Activity Type"),
-                                        #                multiple = False,
-                                        #                ),
+                                        S3SQLInlineLink("activity_type",
+                                                        field = "activity_type_id",
+                                                        filterby = "id",
+                                                        options = filteropts,
+                                                        label = T("Activity Type"),
+                                                        multiple = False,
+                                                        ),
                                         "parameter_id",
                                         "value",
                                         "target_value",
                                         "date",
                                         "end_date",
                                         "comments",
-                                        #postprocess = postprocess,
+                                        postprocess = postprocess,
                                         )
 
             s3db.configure(tablename,
@@ -2284,8 +2286,8 @@ def config(settings):
                                report_options = report_options,
                                )
 
-
-    settings.customise_project_beneficiary_resource = customise_project_beneficiary_resource
+    # Only used for activity_types which aren't used by HNRC
+    #settings.customise_project_beneficiary_resource = customise_project_beneficiary_resource
 
     # -----------------------------------------------------------------------------
     def customise_project_indicator_resource(r, tablename):
@@ -2334,12 +2336,12 @@ def config(settings):
         table = s3db.project_location
         table.name.readable = False
         table.percentage.readable = table.percentage.writable = False
-        list_fields = s3db.get_config(tablename, "list_fields")
-        try:
-            list_fields.remove((T("Activity Types"), "activity_type.name"))
-        except:
-            # Already removed
-            pass
+        #ist_fields = s3db.get_config(tablename, "list_fields")
+        #try:
+        #    list_fields.remove((T("Activity Types"), "activity_type.name"))
+        #except:
+        #    # Already removed
+        #    pass
 
     settings.customise_project_location_resource = customise_project_location_resource
 

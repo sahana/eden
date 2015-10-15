@@ -522,6 +522,19 @@ def alert():
                                    )
 
                     response.s3.stylesheets.append("../themes/default/cap.css")
+                    
+                elif r.method == "assign":
+                    translate = settings.get_L10n_translate_cap_area()
+                    if translate:
+                        if session.s3.language == settings.get_L10n_default_language():
+                            translate = False
+                        if translate:
+                            # Represent each row with local name if available
+                            from s3 import S3Represent
+                            atable = s3db.cap_area
+                            cap_area_options = cap_AreaRowOptionsBuilder(r.id,
+                                                                         caller=r.method)
+                            atable.name.represent = S3Represent(options=cap_area_options)
 
                 elif r.method != "import" and not get_vars.get("_next"):
                     s3.crud.submit_style = "hide"
@@ -552,6 +565,16 @@ def alert():
                     # Do not show for the actual area
                     field = atable[f]
                     field.writable = field.readable = False
+
+                translate = settings.get_L10n_translate_cap_area()
+                if translate:
+                    if session.s3.language == settings.get_L10n_default_language():
+                        translate = False
+                    if translate:
+                        # Represent each row with local name if available
+                        from s3 import S3Represent
+                        cap_area_options = cap_AreaRowOptionsBuilder(r.id)
+                        atable.name.represent = S3Represent(options=cap_area_options)
 
                 # Auto assign the info_id to area if only one info segment
                 itable = s3db.cap_info
@@ -1035,5 +1058,61 @@ def set_priority_js():
         js_global.append(priority_conf)
 
     return
+
+# -----------------------------------------------------------------------------
+def cap_AreaRowOptionsBuilder(alert_id, caller=None):
+    """ 
+        Build the options for the cap_area associated with alert_id
+        with the translated name (if available)
+        @param caller: currently used by assign method
+    """
+          
+    atable = s3db.cap_area
+    
+    if caller:
+        assign = caller == "assign"
+    else:
+        assign = None        
+    if assign:
+        query = (atable.is_template == True) & (atable.deleted != True)
+    else:
+        query = (atable.alert_id == alert_id) & (atable.deleted != True)
+
+    rows = db(query).select(atable.id,
+                            atable.template_area_id,
+                            atable.name,
+                            orderby=atable.id)
+    values = [row.id for row in rows]
+    count = len(values)
+    if count:
+        if count == 1:
+            query_ = (atable.id == values[0])
+        else:
+            query_ = (atable.id.belongs(values))
+                                
+        ltable = s3db.cap_area_name
+        if assign:
+            left = [ltable.on((ltable.area_id == atable.id) & \
+                              (ltable.language == session.s3.language)),
+                    ]
+        else:
+            left = [ltable.on((ltable.area_id == atable.template_area_id) & \
+                              (ltable.language == session.s3.language)),
+                    ]
+            
+        fields = [atable.name,
+                  ltable.name_l10n,
+                  ]                
+        rows_ = db(query_).select(left=left,
+                                  limitby=(0, count),
+                                  *fields)
+        
+        cap_area_options = {}
+        for row_ in rows_:
+                cap_area_options[row_["cap_area.name"]] = \
+                            s3_unicode(row_["cap_area_name.name_l10n"] or \
+                                       row_["cap_area.name"])
+                            
+        return cap_area_options
 
 # END =========================================================================

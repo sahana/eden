@@ -3223,7 +3223,7 @@ class S3ProjectLocationModel(S3Model):
         lappend("project_id")
         if settings.get_project_theme_percentages():
             lappend((T("Themes"), "project_id$theme_project.theme_id"))
-        else:
+        elif settings.get_project_activity_types():
             lappend((T("Activity Types"), "activity_type.name"))
         lappend("comments")
 
@@ -3246,43 +3246,51 @@ class S3ProjectLocationModel(S3Model):
                              comment = T("Search for a Project by name, code, location, or description."),
                              )
                 ]
+        fappend = filter_widgets.append
 
         if settings.get_project_sectors():
-            filter_widgets.append(S3OptionsFilter("project_id$sector.name",
-                                                  label = T("Sector"),
-                                                  hidden = True,
-                                                  ))
+            fappend(S3OptionsFilter("project_id$sector.name",
+                                    label = T("Sector"),
+                                    hidden = True,
+                                    ))
 
         if settings.get_project_programmes():
             programme_id = "project_id$programme_project.programme_id"
-            filter_widgets.append(S3OptionsFilter(programme_id,
-                                                  hidden=True,
-                                                  ))
+            fappend(S3OptionsFilter(programme_id,
+                                    hidden=True,
+                                    ))
             rappend((T("Program"), programme_id))
 
-        filter_widgets.extend((
-            # This is only suitable for deployments with a few projects
-            S3OptionsFilter("project_id",
-                            label = T("Project"),
-                            hidden = True,
-                            ),
-            S3OptionsFilter("project_id$theme_project.theme_id",
-                            label = T("Theme"),
-                            options = lambda: \
-                                get_s3_filter_opts("project_theme",
-                                                   translate=True),
-                            hidden = True,
-                            ),
-            S3LocationFilter("location_id",
-                             levels = levels,
-                             hidden = True,
-                             ),
-            ))
+        # @ToDo: This is only suitable for deployments with a few projects
+        #        - read the number here?
+        fappend(S3OptionsFilter("project_id",
+                                label = T("Project"),
+                                hidden = True,
+                                ))
+
+        if settings.get_project_themes():
+            fappend(S3OptionsFilter("project_id$theme_project.theme_id",
+                                    label = T("Theme"),
+                                    options = lambda: \
+                                        get_s3_filter_opts("project_theme",
+                                                           translate=True),
+                                    hidden = True,
+                                    ))
+
+        fappend(S3LocationFilter("location_id",
+                                 levels = levels,
+                                 hidden = True,
+                                 ))
 
         report_fields.extend(((messages.ORGANISATION, "project_id$organisation_id"),
                               (T("Project"), "project_id"),
-                              (T("Activity Types"), "activity_type.activity_type_id"),
                               ))
+        if settings.get_project_activity_types():
+            rappend((T("Activity Types"), "activity_type.activity_type_id"))
+            default_fact = "list(activity_type.activity_type_id)"
+        else:
+            # Not ideal, but what else?
+            default_fact = "list(project_id$organisation_id)"
 
         # Report options and default
         report_options = Storage(rows=report_fields,
@@ -3290,7 +3298,7 @@ class S3ProjectLocationModel(S3Model):
                                  fact=report_fields,
                                  defaults=Storage(rows="location_id$%s" % levels[0], # Highest-level of Hierarchy
                                                   cols="project_id",
-                                                  fact="list(activity_type.activity_type_id)",
+                                                  fact=default_fact,
                                                   totals=True,
                                                   ),
                                  )
@@ -8365,9 +8373,10 @@ def project_rheader(r):
     elif resourcename in ("location", "demographic_data"):
         tabs = [(T("Details"), None),
                 (T("Beneficiaries"), "beneficiary"),
-                (T("Demographics"), "demographic_data/"),
-                (T("Contact People"), "contact"),
                 ]
+        if settings.get_project_demographics():
+            tabs.append((T("Demographics"), "demographic_data/"))
+        tabs.append((T("Contact People"), "contact"))
         rheader_fields = []
         if record.project_id is not None:
             rheader_fields.append(["project_id"])

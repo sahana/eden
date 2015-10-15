@@ -823,10 +823,10 @@ def location():
         return output
     s3.postp = postp
 
-    return s3_rest_controller(interactive_report=True,
-                              rheader=s3db.project_rheader,
-                              hide_filter=False,
-                              csv_template="location",
+    return s3_rest_controller(interactive_report = True,
+                              rheader = s3db.project_rheader,
+                              hide_filter = False,
+                              csv_template = "location",
                               )
 
 # -----------------------------------------------------------------------------

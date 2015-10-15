@@ -1,5 +1,12 @@
 {{extend "layout.html"}}
 <h1>{{=title}}</h1>
+<div class='subscribe-button'>
+ {{if current.auth.s3_logged_in():}}
+  <a class='button alert tiny' href='/{{=appname}}/cap/alert.rss' target='_blank'>{{=T("RSS Feeds")}}</a>
+ {{else:}}
+  <a class='button alert tiny' href='/{{=appname}}/cap/public.rss' target='_blank'>{{=T("RSS Feeds")}}</a>
+ {{pass}}
+</div>
 <div class='large-3 columns'>
 <fieldset>
  <legend>
