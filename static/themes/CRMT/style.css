@@ -61,7 +61,6 @@ input.password {
     /* Match email. Not responsive */
     width: 500px;
 }
-
 table.embeddedComponent,
 form table.embeddedComponent td {
     border: none;
@@ -73,6 +72,11 @@ button.ui-multiselect {
 
 #gis_poi_organisation_id__row {
     margin-bottom: 16px;
+}
+
+.add_person_edit_bar {
+    float: right;
+    padding-top: 0.5rem;
 }
 
 .ui-tabs .ui-tabs-nav li {

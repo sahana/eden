@@ -238,7 +238,7 @@ textarea {
 /* Help Popup */
 .inline-tooltip {
   display: inline-block;
-  vertical-align: top;
+  vertical-align: middle;
   padding-left: 0.75rem;
 }
 .inline-tooltip .tooltip,

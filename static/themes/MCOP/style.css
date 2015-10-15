@@ -188,11 +188,11 @@ div.link {
 
 /* Customise Datalist Cards */
 #cms_post_datalist .card-title,
-.card-header > .icon, 
+.card-header > .icon,
 .homepage .card-header > .icon,
 #profile-list-project_project-3 .card-header > .icon,
 #profile-list-org_resource-2 img,
-#profile-list-project_project-3 img, 
+#profile-list-project_project-3 img,
 #profile-list-project_task-0 .task_project_title {
     display: none;
 }
@@ -307,6 +307,10 @@ h2 {
 .card-holder {
     display: block;
     width: auto;
+}
+
+.add_person_edit_bar {
+    float: right;
 }
 
 .s3_add_resource_link,

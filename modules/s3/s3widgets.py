@@ -7990,6 +7990,7 @@ class S3PasswordWidget(FormWidget):
                             )
         return DIV(password_input,
                    password_unmask,
+                   _class = "s3-password-widget",
                    )
 
 # =============================================================================
