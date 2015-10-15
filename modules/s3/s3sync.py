@@ -397,7 +397,14 @@ class S3Sync(S3Method):
 
         log = self.log
 
-        if not repository.url:
+        error = None
+        if repository.apitype == "filesync":
+            if not repository.path:
+                error = "No path set for repository"
+        else:
+            if not repository.url:
+                error = "No URL set for repository"
+        if error:
             log.write(repository_id = repository.id,
                       resource_name = None,
                       transmission = None,
@@ -405,7 +412,7 @@ class S3Sync(S3Method):
                       action = "connect",
                       remote = False,
                       result = self.log.FATAL,
-                      message = "No URL set for repository",
+                      message = error,
                       )
             return False
 
@@ -755,28 +762,39 @@ class S3SyncRepository(object):
             @param repository: the repository record (Row)
         """
 
+        # Logger and Config
         self.log = S3SyncLog
         self._config = None
 
+        # Identifier and name
         self.id = repository.id
         self.name = repository.name
 
-        self.accept_push = repository.accept_push
-        self.synchronise_uuids = repository.synchronise_uuids
+        # API type and import/export backend
+        self.apitype = repository.apitype
+        self.backend = repository.backend
 
+        # URL / Path
         self.url = repository.url
+        self.path = repository.path
+
+        # Authentication
         self.username = repository.username
         self.password = repository.password
-
         self.client_id = repository.client_id
         self.client_secret = repository.client_secret
         self.site_key = repository.site_key
         self.refresh_token = repository.refresh_token
+
+        # Network
         self.proxy = repository.proxy
 
-        self.apitype = repository.apitype
+        # Processing Options
+        self.accept_push = repository.accept_push
+        self.synchronise_uuids = repository.synchronise_uuids
         self.keep_source = repository.keep_source
 
+        # Instantiate Adapter
         import sync_adapter
         api = sync_adapter.__dict__.get(self.apitype)
         if api:

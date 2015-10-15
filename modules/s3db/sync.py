@@ -394,15 +394,33 @@ class SyncDataModel(S3Model):
                      Field("resource_name",
                            notnull = True,
                            ),
-                     Field("representation",
-                           writable = False,
+                     Field("infile_pattern",
+                           label = T("Input File Name"),
                            readable = False,
+                           writable = False,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Input File Name"),
+                                                T("Unix shell-style pattern for the input file name, e.g. 'example*.xml'"))),
+                           ),
+                     Field("outfile_pattern",
+                           label = T("Output File Name"),
+                           readable = False,
+                           writable = False,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Output File Name"),
+                                                T("The output file name. You can use place holders like 'example${minute}.xml'. Supported placeholders are: year, month, day, hour, minute, second"))),
+                           ),
+                     Field("representation",
+                           readable = False,
+                           writable = False,
                            ),
                      # Multiple file per sync?
                      Field("multiple_file", "boolean",
                            default = False,
-                           writable = False,
                            readable = False,
+                           writable = False,
                            ),
                      Field("last_pull", "datetime",
                            label = T("Last pull on"),
@@ -845,7 +863,8 @@ def sync_rheader(r, tabs=[]):
             else:
                 purge_log = ""
             if repository:
-                if repository.url:
+                if repository.url or \
+                   repository.apitype == "filesync" and repository.path:
                     tabs.append((T("Manual Synchronization"), "now"))
                 rheader_tabs = s3_rheader_tabs(r, tabs)
                 rheader = DIV(TABLE(
