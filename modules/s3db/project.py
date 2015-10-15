@@ -421,6 +421,10 @@ class S3ProjectModel(S3Model):
                    method = "timeline",
                    action = self.project_timeline)
 
+        set_method("project", "project",
+                   method = "indicator_summary_report",
+                   action = project_indicator_summary_report)
+
         # Components
         add_components(tablename,
                        # Sites
@@ -5218,6 +5222,195 @@ class S3ProjectPlanningModel(S3Model):
         # Ignored
         return current.messages["NONE"]
 
+# =============================================================================
+def project_indicator_summary_report(r, **attr):
+    """
+        Display the a Summary of the Indicator Statuses for the Project
+    """
+
+    if r.representation == "html" and r.name == "project":
+
+        T = current.T
+
+        # Extract Data
+        resource = current.s3db.resource("project_indicator_data")
+        resource.add_filter(FS("project_id") == r.id)
+        list_fields = ("indicator_id",
+                       "indicator_id$output_id",
+                       "indicator_id$outcome_id",
+                       "indicator_id$goal_id",
+                       "end_date",
+                       "target_value",
+                       "value",
+                       )
+        data = resource.select(list_fields, orderby="end_date", represent=True)
+
+        # Build the Data Structure
+        dates = []
+        dappend = dates.append
+        goals = {}
+        for row in data.rows:
+            date = row["project_indicator_data.end_date"]
+            goal = row["project_indicator.goal_id"]
+            outcome = row["project_indicator.outcome_id"]
+            output = row["project_indicator.output_id"]
+            indicator = row["project_indicator_data.indicator_id"]
+            target = row["project_indicator_data.target_value"]
+            if target is None:
+                target = 0
+            else:
+                target = int(target)
+            actual = int(row["project_indicator_data.value"])
+            if actual is None:
+                actual = 0
+            else:
+                actual = int(actual)
+
+            if date not in dates:
+                dappend(date)
+
+            if goal not in goals:
+                goals[goal] = dict(dates = {},
+                                   outcomes = {},
+                                   target = 0,
+                                   actual = 0,
+                                   )
+            goal = goals[goal]
+            goal["target"] += target
+            goal["actual"] += actual
+            if date in goal["dates"]:
+                goal["dates"][date]["target"] += target
+                goal["dates"][date]["actual"] += actual
+            else:
+                goal["dates"][date] = dict(target = target,
+                                           actual = actual,
+                                           )
+
+            if outcome not in goal["outcomes"]:
+                goal["outcomes"][outcome] = dict(dates={},
+                                                 outputs={},
+                                                 target = 0,
+                                                 actual = 0,
+                                                 )
+            outcome = goal["outcomes"][outcome]
+            if date in outcome["dates"]:
+                outcome["dates"][date]["target"] += target
+                outcome["dates"][date]["actual"] += actual
+            else:
+                outcome["dates"][date] = dict(target = target,
+                                              actual = actual,
+                                              )
+
+            if output not in outcome["outputs"]:
+                outcome["outputs"][output] = dict(dates={},
+                                                  indicators={},
+                                                  target = 0,
+                                                  actual = 0,
+                                                  )
+            output = outcome["outputs"][output]
+            if date in output["dates"]:
+                output["dates"][date]["target"] += target
+                output["dates"][date]["actual"] += actual
+            else:
+                output["dates"][date] = dict(target = target,
+                                             actual = actual,
+                                             )
+
+            if indicator not in output["indicators"]:
+                output["indicators"][indicator] = dict(dates={},
+                                                       target = 0,
+                                                       actual = 0,
+                                                       )
+
+            indicator = output["indicators"][indicator]
+            if date in indicator["dates"]:
+                indicator["dates"][date]["target"] += target
+                indicator["dates"][date]["actual"] += actual
+            else:
+                indicator["dates"][date] = dict(target = target,
+                                                actual = actual,
+                                                )
+
+        # Sort
+        #goals = OrderedDict(sorted(goals.items(), key=lambda item: item[1]['depth']))
+        goals = OrderedDict(sorted(goals.items()))
+        # @ToDo: Sort outcomes, outputs & indicators too
+
+        # Calculate Totals
+        
+
+        # Format Data
+        header_row = TR(TD(T("Indicators"),
+                           _rowspan=2,
+                           ),
+                        TD(T("Total Target"),
+                           _rowspan=2,
+                           ),
+                        )
+        happend = header_row.append
+        for d in dates:
+            happend(TD(T(d), # @ToDo: Format
+                       _colspan=2,
+                       ))
+        happend(TD(T("Actual Total"),
+                   _rowspan=2,
+                   ))
+        happend(TD(T("% Achieved"),
+                   _rowspan=2,
+                   ))
+        item = TABLE(header_row)
+        iappend = item.append
+        row_2 = TR()
+        rappend = row_2.append
+        for d in dates:
+            rappend(TD(T("Target")))
+            rappend(TD(T("Actual")))
+        iappend(row_2)
+
+        # @ToDo: Styling of rows to differentiate
+        for g in goals:
+            row = TR(TD(g))
+            rappend = row.append
+            goal = goals[g]
+            target = goal["target"]
+            actual = goal["actual"]
+            rappend(TD(target))
+            for d in goal["dates"]:
+                date = goal["dates"][d]
+                rappend(TD(date["target"]))
+                rappend(TD(date["actual"]))
+            rappend(TD(actual))
+            percentage_completion = (actual / target) * 100
+            rappend(TD(percentage_completion))
+            iappend(row)
+            #for o in goal[]:
+            #    iappend(TR(TD(o)))
+            #    outcome = goal[o]
+            #    for p in outcome:
+            #        iappend(TR(TD(p)))
+            #        output = outcome[p]
+            #        for i in output:
+            #            iappend(TR(TD(i)))
+
+        # Output
+        output = dict(item=item)
+
+        output["title"] = T("Summary of Progress Indicators for Outcomes and Indicators")
+        output["subtitle"] = "%s: %s" % (T("Project"), r.record.name)
+        # @ToDo: Add "On Date"
+
+        # Maintain RHeader for consistency
+        if "rheader" in attr:
+            rheader = attr["rheader"](r)
+            if rheader:
+                output["rheader"] = rheader
+
+        current.response.view = "simple.html"
+        return output
+
+    else:
+        raise HTTP(501, current.ERROR.BAD_METHOD)
+    
 # =============================================================================
 def project_status_represent(value):
     """

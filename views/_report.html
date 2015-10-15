@@ -11,13 +11,7 @@
 <div id='component' class='row'>
 {{except:}}
  </div>
-</div>
-{{pass}}
-{{try:}}{{report_type}}{{except:}}{{report_type="pivottable"}}{{pass}}
-{{if report_type == "pivottable":}}
-{{include response.s3.views.get("pivottable.html", "_pivottable.html")}}
-{{elif report_type == "groupeditems":}}
-{{include response.s3.views.get("grouped.html", "_grouped.html")}}
-{{elif report_type == "timeplot":}}
-{{include response.s3.views.get("timeplot.html", "_timeplot.html")}}
-{{pass}}
+</div>{{pass}}{{try:}}{{report_type}}{{except:}}{{report_type="pivottable"}}{{pass}}
+{{if report_type == "pivottable":}}{{include response.s3.views.get("pivottable.html", "_pivottable.html")}}
+{{elif report_type == "groupeditems":}}{{include response.s3.views.get("grouped.html", "_grouped.html")}}
+{{elif report_type == "timeplot":}}{{include response.s3.views.get("timeplot.html", "_timeplot.html")}}{{pass}}

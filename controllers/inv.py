@@ -435,7 +435,7 @@ def supplier():
 
     get_vars["organisation_type.name"] = "Supplier"
 
-    # Load model
+    # Load model (including normal CRUD strings)
     table = s3db.org_organisation
 
     # Modify CRUD Strings
@@ -1099,7 +1099,7 @@ def recv():
 # -----------------------------------------------------------------------------
 def req_items_for_inv(site_id, quantity_type):
     """
-        used by recv_process & send_process
+        Used by recv_process & send_process
         returns a dict of unique req items (with min  db.req_req.date_required | db.req_req.date)
         key = item_id
         @param site_id: The inventory to find the req_items from
