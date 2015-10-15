@@ -72,20 +72,25 @@ def repository():
                     # Configure custom CRUD form
                     apitype = r.record.apitype
                     if apitype == "filesync":
-                        table = r.component.table
-                        field = table.infile_pattern
-                        field.readable = field.writable = True
-                        field = table.outfile_pattern
-                        field.readable = field.writable = True
+                        component_table = r.component.table
+                        for fname in ("infile_pattern",
+                                      "outfile_pattern",
+                                      "delete_input_files",
+                                      ):
+                            field = component_table[fname]
+                            field.readable = field.writable = True
                         infile_pattern = "infile_pattern"
                         outfile_pattern = "outfile_pattern"
+                        delete_input_files = "delete_input_files"
                     else:
                         infile_pattern = None
                         outfile_pattern = None
+                        delete_input_files = None
 
                     crud_form = s3base.S3SQLCustomForm(
                                     "resource_name",
                                     infile_pattern,
+                                    delete_input_files,
                                     outfile_pattern,
                                     "last_pull",
                                     "last_push",

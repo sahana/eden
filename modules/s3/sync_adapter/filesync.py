@@ -188,15 +188,16 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
             if status in (log.ERROR, log.FATAL):
                 error = "Error while importing %s" % f
+                current.log.error(error)
                 mtime = None
 
-            else:
-                # @todo: remove the file if configured to do so
-                #try:
-                #    os.remove(f)
-                #except os.error:
-                #   current.log.warning("FileSync: can not delete %s" % f)
-                pass
+            elif task.delete_input_files:
+                try:
+                    os.remove(f)
+                except os.error:
+                    current.log.warning("FileSync: can not delete %s" % f)
+                else:
+                    current.log.debug("FileSync: %s deleted" % f)
 
         return error, mtime
 
