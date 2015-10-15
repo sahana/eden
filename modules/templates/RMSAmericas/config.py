@@ -2349,18 +2349,19 @@ def config(settings):
         s3 = current.response.s3
 
         # Custom postp
-        standard_postp = s3.postp
+        #standard_postp = s3.postp
         def custom_postp(r, output):
-            # Call standard postp
-            if callable(standard_postp):
-                output = standard_postp(r, output)
+            # Call standard postp (just does same thing but different)
+            #if callable(standard_postp):
+            #    output = standard_postp(r, output)
 
             if r.representation == "plain":
                 # Map Popup
+                from gluon import A, TABLE, TR, TD, B, URL
                 s3db = current.s3db
                 table = s3db.project_project
-                resource = s3db.resource("project_project",
-                                         id=r.record.project_id)
+                project_id = r.record.project_id
+                resource = s3db.resource("project_project", id=project_id)
                 list_fields = ("name",
                                "status_id",
                                "start_date",
@@ -2376,10 +2377,7 @@ def config(settings):
                                )
                 data = resource.select(list_fields, represent=True)
                 record = data.rows[0]
-                #output["title"] = record["project_project.name"]
-                #output["details_btn"] = default
-                from gluon import TABLE, TR, TD, B
-                output["item"] = TABLE(TR(TD(B("%s:" % table.name.label)),
+                item = TABLE(TR(TD(B("%s:" % table.name.label)),
                                           TD(record["project_project.name"]),
                                           ),
                                        TR(TD(B("%s:" % table.status_id.label)),
@@ -2411,6 +2409,18 @@ def config(settings):
                                           TD(record["project_project.overall_status_by_indicators"]),
                                           ),
                                        )
+                title = s3.crud_strings["project_project"].title_display
+                # Assume authorised to see details
+                popup_url = URL(f="project", args=[project_id])
+                details_btn = A(T("Open"),
+                                _href=popup_url,
+                                _class="btn",
+                                _id="details-btn",
+                                _target="_blank")
+                output = dict(item = item,
+                              title = title,
+                              details_btn = details_btn,
+                              )
 
             return output
 
