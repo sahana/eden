@@ -422,7 +422,8 @@ def project():
                  isinstance(output, dict):
                 # Add a link to the Report
                 report_link = A(current.T("Show Report"),
-                                _href=r.url(method="report"),
+                                #_href=r.url(method="report"),
+                                _href=URL(args=[r.id, "indicator_summary_report"]),
                                 _class="action-btn",
                                 )
                 showadd_btn = output.get("showadd_btn", "")
