@@ -1578,6 +1578,7 @@ class S3OptionsMenu(object):
         else:
             IMPORT = "Import Project Locations"
         community_volunteers = lambda i: settings.get_project_community_volunteers()
+        demographics = lambda i: settings.get_project_demographics()
         hazards = lambda i: settings.get_project_hazards()
         #indicators = lambda i: settings.get_project_indicators()
         programmes = lambda i: settings.get_project_programmes()
@@ -1651,7 +1652,7 @@ class S3OptionsMenu(object):
                     M("Create", m="create"),
                  ),
                  M("Demographics", f="demographic",
-                   check=stats)(
+                   check=demographics)(
                     M("Create", m="create"),
                  ),
                  M("Hazards", f="hazard",

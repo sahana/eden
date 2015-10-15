@@ -3386,6 +3386,12 @@ class S3Config(Storage):
         """
         return self.project.get("community_volunteers", False)
 
+    def get_project_demographics(self):
+        """
+            Use Demographics in Projects
+        """
+        return self.project.get("demographics", False)
+
     def get_project_details_tab(self):
         """
             Group Tabs on Projects into a single 'Details' page

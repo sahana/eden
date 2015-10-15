@@ -811,6 +811,8 @@ def config(settings):
     #settings.project.codes = True
     # Uncomment this to call project locations 'Communities'
     #settings.project.community = True
+    # Uncomment this to enable Demographics in 3W projects
+    #settings.project.demographics = True
     # Uncomment this to enable Hazards in 3W projects
     #settings.project.hazards = True
     # Uncomment this to enable Indicators in projects
