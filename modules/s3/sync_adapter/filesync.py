@@ -27,8 +27,10 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import datetime
+import glob
+import os
 import sys
-import urllib2
 
 try:
     from lxml import etree
@@ -82,21 +84,121 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
 
         repository = self.repository
-
-        # Log the operation
-        msg = "Pull not supported for this repository type"
         log = repository.log
-        log.write(repository_id = repository.id,
-                  resource_name = task.resource_name,
-                  transmission = log.OUT,
-                  mode = log.PULL,
-                  action = None,
-                  remote = False,
-                  result = log.FATAL,
-                  message = msg,
-                  )
 
-        return (msg, None)
+        error = None
+        result = None
+
+        # Instantiate the target resource
+        tablename = task.resource_name
+        if tablename == "mixed":
+            resource = None
+            mixed = True
+        else:
+            try:
+                resource = current.s3db.resource(tablename)
+            except SyntaxError:
+                result = log.FATAL
+                error = msg = sys.exc_info()[1]
+            mixed = False
+
+        # Get input files
+        if not result:
+            input_files = self._input_files(task)
+            if not input_files:
+                result = log.SUCCESS
+                msg = "No files to import"
+
+        # Instantiate back-end
+        if not result:
+            adapter = None
+            backend = repository.backend
+            if not backend:
+                backend = "eden"
+            backend = "s3.sync_adapter.%s" % backend
+            try:
+                name = "S3SyncAdapter"
+                api = getattr(__import__(backend, fromlist=[name]), name)
+            except ImportError:
+                result = log.FATAL
+                error = msg = "Unsupported back-end: %s" % backend
+            else:
+                adapter = api(repository)
+
+        # If any of the previous actions has produced a non-default result:
+        if result:
+            # Log the operation and return
+            log.write(repository_id = repository.id,
+                      resource_name = tablename,
+                      transmission = log.OUT,
+                      mode = log.PULL,
+                      action = None,
+                      remote = False,
+                      result = result,
+                      message = msg,
+                      )
+            return (error, None)
+
+        # Set strategy and policies
+        from ..s3import import S3ImportItem
+        strategy = task.strategy
+        update_policy = task.update_policy
+        if not update_policy:
+            update_policy = S3ImportItem.POLICY.NEWER
+        conflict_policy = task.conflict_policy
+        if not conflict_policy:
+            conflict_policy = S3ImportItem.POLICY.MASTER
+        if update_policy not in ("THIS", "OTHER"):
+            last_sync = task.last_pull
+
+        # Import the files
+        error = None
+        mtime = current.request.utcnow
+
+        for f in input_files:
+            current.log.debug("FileSync: importing %s" % f)
+            try:
+                with open(f, "r") as source:
+                    result = adapter.receive([source],
+                                             resource,
+                                             strategy = strategy,
+                                             update_policy = update_policy,
+                                             conflict_policy = conflict_policy,
+                                             onconflict = onconflict,
+                                             last_sync = last_sync,
+                                             mixed = mixed,
+                                             )
+            except IOError:
+                msg = sys.exc_info()[1]
+                current.log.warning(msg)
+                continue
+
+            status = result["status"]
+
+            # Log the operation
+            log.write(repository_id = repository.id,
+                      resource_name = tablename,
+                      transmission = log.OUT,
+                      mode = log.PULL,
+                      action = "import %s" % f,
+                      remote = result["remote"],
+                      result = status,
+                      message = result["message"],
+                      )
+
+            if status in (log.ERROR, log.FATAL):
+                error = "Error while importing %s" % f
+                mtime = None
+
+            else:
+                # @todo: remove the file if configured to do so
+                #try:
+                #    os.remove(f)
+                #except os.error:
+                #   current.log.warning("FileSync: can not delete %s" % f)
+                pass
+
+        return error, mtime
 
     # -------------------------------------------------------------------------
     def push(self, task):
@@ -197,5 +299,44 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 "message": msg,
                 "response": None,
                 }
+
+    # -------------------------------------------------------------------------
+    def _input_files(self, task):
+        """
+            Helper function to get all relevant input files from the
+            repository path, excluding files which have not been modified
+            since the last pull of the task
+
+            @param task: the synchronization task
+            @return: a list of file paths, ordered by their time
+                     stamp (oldest first)
+        """
+
+        repository = self.repository
+
+        path = repository.path
+        infile_pattern = task.infile_pattern
+
+        if path and infile_pattern:
+            pattern = os.path.join(path, infile_pattern)
+        else:
+            return []
+
+        all_files = glob.glob(pattern)
+
+        infiles = []
+        append = infiles.append
+        msince = task.last_pull
+        for f in filter(os.path.isfile, all_files):
+            mtime = datetime.datetime.utcfromtimestamp(os.path.getmtime(f))
+            # Disregard files which have not been modified since the last pull
+            if msince and mtime <= msince:
+                continue
+            append((mtime, f))
+
+        # Sort by mtime
+        infiles.sort(key=lambda item: item[0])
+
+        return [item[1] for item in infiles]
 
 # End =========================================================================

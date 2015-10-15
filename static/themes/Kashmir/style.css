@@ -779,6 +779,11 @@ input.date.hasDatepicker {
   font-size: 0.8rem;
 }
 
+/* Checkboxes Widget */
+.controls .checkboxes-widget-s3 {
+  display: inline-flex;
+}
+
 /* Data Lists (including profile) */
 .dl .dl-header {
   float: none;

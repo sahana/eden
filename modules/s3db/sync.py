@@ -138,14 +138,22 @@ class SyncDataModel(S3Model):
         # Repository
         # -------------------------------------------------------------------------
         sync_repository_types = {
-            "adashi": "ADASHI (passive)",
+            "adashi": "ADASHI",
             "ccrm": "CiviCRM",
             "eden": "Sahana Eden",
-            #"filesync": "Local Filesystem",
+            "filesync": "Local Filesystem",
             "ftp": "FTP",
             "mcb": "Mariner CommandBridge",
             "wrike": "Wrike",
         }
+
+        # Back-ends implementing passive methods (=send and/or receive)
+        # so that they can be used for indirect, file-based synchronization
+        sync_backend_types = {
+            "adashi": "ADASHI",
+            "eden": "Sahana Eden",
+        }
+
         password_widget = S3PasswordWidget()
         tablename = "sync_repository"
         define_table(tablename,
@@ -158,10 +166,18 @@ class SyncDataModel(S3Model):
                      Field("apitype",
                            default = "eden",
                            label = T("Repository Type"),
-                           represent = lambda opt: \
-                                       NONE if not opt else \
-                                       sync_repository_types.get(opt, NONE),
+                           represent = S3Represent(options = sync_repository_types),
                            requires = IS_IN_SET(sync_repository_types),
+                           ),
+                     Field("backend",
+                           default = "eden",
+                           label = T("Data Format"),
+                           represent = S3Represent(options = sync_backend_types),
+                           requires = IS_IN_SET(sync_backend_types),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Data Format"),
+                                                T("The data format to use for data import/export"))),
                            ),
                      Field("url",
                            label = "URL",
@@ -169,8 +185,17 @@ class SyncDataModel(S3Model):
                                       IS_NOT_IN_DB(db, "sync_repository.url")),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (
-                                                T("Repository Base URL"),
-                                                T("Base URL of the remote Sahana Eden instance including application path, e.g. http://www.example.org/eden"))),
+                                                T("Repository URL"),
+                                                T("URL of the repository including application path, e.g. http://www.example.com/eden"))),
+                           ),
+                     Field("path",
+                           label = T("Path"),
+                           requires = IS_EMPTY_OR(
+                                      IS_NOT_IN_DB(db, "sync_repository.path")),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Repository Path"),
+                                                T("File system location of the repository, e.g. /var/local/example"))),
                            ),
                      Field("username",
                            comment = DIV(_class="tooltip",
@@ -369,15 +394,33 @@ class SyncDataModel(S3Model):
                      Field("resource_name",
                            notnull = True,
                            ),
-                     Field("representation",
-                           writable = False,
+                     Field("infile_pattern",
+                           label = T("Input File Name"),
                            readable = False,
+                           writable = False,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Input File Name"),
+                                                T("Unix shell-style pattern for the input file name, e.g. 'example*.xml'"))),
+                           ),
+                     Field("outfile_pattern",
+                           label = T("Output File Name"),
+                           readable = False,
+                           writable = False,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Output File Name"),
+                                                T("The output file name. You can use place holders like 'example${minute}.xml'. Supported placeholders are: year, month, day, hour, minute, second"))),
+                           ),
+                     Field("representation",
+                           readable = False,
+                           writable = False,
                            ),
                      # Multiple file per sync?
                      Field("multiple_file", "boolean",
                            default = False,
-                           writable = False,
                            readable = False,
+                           writable = False,
                            ),
                      Field("last_pull", "datetime",
                            label = T("Last pull on"),
@@ -820,7 +863,8 @@ def sync_rheader(r, tabs=[]):
             else:
                 purge_log = ""
             if repository:
-                if repository.url:
+                if repository.url or \
+                   repository.apitype == "filesync" and repository.path:
                     tabs.append((T("Manual Synchronization"), "now"))
                 rheader_tabs = s3_rheader_tabs(r, tabs)
                 rheader = DIV(TABLE(
