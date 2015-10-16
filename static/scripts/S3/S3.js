@@ -900,7 +900,7 @@ S3.openPopup = function(url, center) {
 
         var options = data.options,
             newValue = data.defaultValue,
-            hasCurrentValue = false;
+            selectedValues = [];
 
         // Get the current value of the target field
         if (!empty) {
@@ -919,13 +919,19 @@ S3.openPopup = function(url, center) {
                     // Options list not populated yet?
                     currentValue = widget.prop('value');
                 }
-                if (currentValue && $(options).filter('option[value=' + currentValue + ']').length) {
-                    hasCurrentValue = true;
+                if (!$.isArray(currentValue)) {
+                    currentValue = [currentValue];
+                }
+                for (var i = 0, len = currentValue.length, val; i < len; i++) {
+                    val = currentValue[i];
+                    if (val && $(options).filter('option[value=' + val + ']').length) {
+                        selectedValues.push(val);
+                    }
                 }
             }
-            if (hasCurrentValue) {
+            if (selectedValues.length) {
                 // Retain selected value
-                newValue = currentValue;
+                newValue = selectedValues;
             }
         }
 
@@ -942,16 +948,23 @@ S3.openPopup = function(url, center) {
         }
 
         // Update the target field options
+        var disable = options === '';
         widget.html(options)
               .val(newValue)
               .change()
-              .prop('disabled', options === '');
+              .prop('disabled', disable);
 
         // Refresh groupedopts or multiselect
         if (widget.hasClass('groupedopts-widget')) {
             widget.groupedopts('refresh');
         } else if (widget.hasClass('multiselect-widget')) {
             widget.multiselect('refresh');
+            // Disabled-attribute not reflected by refresh (?)
+            if (!disable) {
+                widget.multiselect('enable');
+            } else {
+                widget.multiselect('disable');
+            }
         }
         return widget;
     };
@@ -1058,8 +1071,12 @@ S3.openPopup = function(url, center) {
         }
 
         // Disable the target field if no value selected in trigger field
-        if (value === '' || value === undefined) {
-            target.prop('disabled', true);
+        if (value === '' || value === null || value === undefined) {
+            target.val('').prop('disabled', true);
+            if (target.multiselect('instance')) {
+                target.multiselect('refresh')
+                      .multiselect('disable');
+            }
             return;
         }
 
