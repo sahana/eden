@@ -418,17 +418,6 @@ def project():
                                   read_url=read_url,
                                   update_url=update_url)
 
-            elif component_name == "indicator_data" and \
-                 isinstance(output, dict):
-                # Add a link to the Report
-                report_link = A(current.T("Show Report"),
-                                #_href=r.url(method="report"),
-                                _href=URL(args=[r.id, "indicator_summary_report"]),
-                                _class="action-btn",
-                                )
-                showadd_btn = output.get("showadd_btn", "")
-                output["showadd_btn"] = TAG[""](showadd_btn, report_link)
-
             elif component_name == "task" and r.component_id:
                 # Put Comments in rfooter
                 s3db.project_ckeditor()

@@ -425,6 +425,18 @@ class S3ProjectModel(S3Model):
                    method = "indicator_summary_report",
                    action = project_indicator_summary_report)
 
+        set_method("project", "project",
+                   method = "project_progress_report",
+                   action = project_progress_report)
+
+        #set_method("project", "project",
+        #           method = "budget_progress_report",
+        #           action = project_budget_progress_report)
+
+        #set_method("project", "project",
+        #           method = "indicator_progress_report",
+        #           action = project_indicator_progress_report)
+
         # Components
         add_components(tablename,
                        # Sites
@@ -5399,13 +5411,13 @@ def project_indicator_summary_report(r, **attr):
         dates = set(dates)
 
         # Sort
-        goals = OrderedDict(sorted(goals.items()))
+        goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))
         for goal in goals:
-            outcomes = OrderedDict(sorted(goals[goal]["outcomes"].items()))
+            outcomes = OrderedDict(sorted(goals[goal]["outcomes"].items(), key=lambda x: x[1]["code"]))
             for outcome in outcomes:
-                outputs = OrderedDict(sorted(outcomes[outcome]["outputs"].items()))
+                outputs = OrderedDict(sorted(outcomes[outcome]["outputs"].items(), key=lambda x: x[1]["code"]))
                 for output in outputs:
-                    indicators = OrderedDict(sorted(outputs[output]["indicators"].items()))
+                    indicators = OrderedDict(sorted(outputs[output]["indicators"].items(), key=lambda x: x[1]["code"]))
                     outputs[output]["indicators"] = indicators
                 outcomes[outcome]["outputs"] = outputs
             goals[goal]["outcomes"] = outcomes
@@ -5544,162 +5556,233 @@ def project_progress_report(r, **attr):
     if r.representation == "html" and r.name == "project":
 
         T = current.T
+        db = current.db
+        s3db = current.s3db
+
+        NONE = current.messages["NONE"]
+
+        project_id = r.id
 
         # Extract Data
-
-        # Project
-        #r.record.overall_status_by_indicators
+        #@ToDo: DRY with project_indicator_summary_report?
 
         # Goals
-        resource = current.s3db.resource("project_goal")
-        # For this Project
-        resource.add_filter(FS("project_id") == r.id)
-        list_fields = ("id",
-                       "code",
-                       "name",
-                       "overall_status",
-                       )
-        goals = resource.select(list_fields)
+        goals = {}
+        table = s3db.project_goal
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.code,
+                                table.name,
+                                table.overall_status,
+                                )
+        for row in rows:
+            goals[row.id] = dict(code = row.code,
+                                 name = row.name,
+                                 outcomes = {},
+                                 status = row.overall_status,
+                                 )
 
         # Outcomes
-        resource = current.s3db.resource("project_outcome")
-        # For this Project
-        resource.add_filter(FS("project_id") == r.id)
-        list_fields = ("id",
-                       "goal_id",
-                       "code",
-                       "name",
-                       "overall_status",
-                       )
-        outcomes = resource.select(list_fields)
+        table = s3db.project_outcome
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.goal_id,
+                                table.code,
+                                table.name,
+                                table.overall_status,
+                                )
+        for row in rows:
+            goals[row.goal_id]["outcomes"][row.id] = dict(code = row.code,
+                                                          name = row.name,
+                                                          outputs = {},
+                                                          status = row.overall_status,
+                                                          )
 
         # Outputs
-        resource = current.s3db.resource("project_output")
-        # For this Project
-        resource.add_filter(FS("project_id") == r.id)
-        list_fields = ("id",
-                       "outcome_id",
-                       "code",
-                       "name",
-                       "overall_status",
-                       )
-        outputs = resource.select(list_fields)
+        table = s3db.project_output
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.goal_id,
+                                table.outcome_id,
+                                table.code,
+                                table.name,
+                                table.overall_status,
+                                )
+        number_of_outputs = 0
+        for row in rows:
+            number_of_outputs += 1
+            goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = \
+                dict(code = row.code,
+                     name = row.name,
+                     indicators = {},
+                     status = row.overall_status,
+                     )
 
         # Indicators
-        resource = current.s3db.resource("project_indicator")
-        # For this Project
-        resource.add_filter(FS("project_id") == r.id)
-        list_fields = ("id",
-                       "output_id",
-                       "code",
-                       "name",
-                       "overall_status",
-                       )
-        indicators = resource.select(list_fields)
-
-        # Build the Data Structure
-        goals = {}
-        for row in data.rows:
-            date = row["project_indicator_data.end_date"]
-            goal = row["project_indicator.goal_id"]
-            outcome = row["project_indicator.outcome_id"]
-            output = row["project_indicator.output_id"]
-            indicator = row["project_indicator_data.indicator_id"]
-            target = row["project_indicator_data.target_value"]
-            if target:
-                target = int(target)
-            else:
-                target = 0
-            actual = row["project_indicator_data.value"]
-            if actual:
-                actual = int(actual)
-            else:
-                actual = 0
-
-            if date not in dates:
-                dappend(date)
-
-            if goal not in goals:
-                goals[goal] = dict(dates = {},
-                                   outcomes = {},
-                                   target = 0,
-                                   actual = 0,
-                                   )
-            goal = goals[goal]
-            goal["target"] += target
-            goal["actual"] += actual
-            if date in goal["dates"]:
-                goal["dates"][date]["target"] += target
-                goal["dates"][date]["actual"] += actual
-            else:
-                goal["dates"][date] = dict(target = target,
-                                           actual = actual,
-                                           )
-
-            if outcome not in goal["outcomes"]:
-                goal["outcomes"][outcome] = dict(dates={},
-                                                 outputs={},
-                                                 target = 0,
-                                                 actual = 0,
-                                                 )
-            outcome = goal["outcomes"][outcome]
-            outcome["target"] += target
-            outcome["actual"] += actual
-            if date in outcome["dates"]:
-                outcome["dates"][date]["target"] += target
-                outcome["dates"][date]["actual"] += actual
-            else:
-                outcome["dates"][date] = dict(target = target,
-                                              actual = actual,
-                                              )
-
-            if output not in outcome["outputs"]:
-                outcome["outputs"][output] = dict(dates={},
-                                                  indicators={},
-                                                  target = 0,
-                                                  actual = 0,
-                                                  )
-            output = outcome["outputs"][output]
-            output["target"] += target
-            output["actual"] += actual
-            if date in output["dates"]:
-                output["dates"][date]["target"] += target
-                output["dates"][date]["actual"] += actual
-            else:
-                output["dates"][date] = dict(target = target,
-                                             actual = actual,
-                                             )
-
-            if indicator not in output["indicators"]:
-                output["indicators"][indicator] = dict(dates={},
-                                                       target = 0,
-                                                       actual = 0,
-                                                       )
-
-            indicator = output["indicators"][indicator]
-            indicator["target"] += target
-            indicator["actual"] += actual
-            if date in indicator["dates"]:
-                indicator["dates"][date]["target"] += target
-                indicator["dates"][date]["actual"] += actual
-            else:
-                indicator["dates"][date] = dict(target = target,
-                                                actual = actual,
-                                                )
+        table = s3db.project_indicator
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.goal_id,
+                                table.outcome_id,
+                                table.output_id,
+                                table.code,
+                                table.name,
+                                table.overall_status,
+                                )
+        number_of_indicators = 0
+        for row in rows:
+            number_of_indicators += 1
+            indicator_id = row.id
+            goal_id = row.goal_id
+            outcome_id = row.outcome_id
+            output_id = row.output_id
+            goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
+                dict(code = row.code,
+                     name = row.name,
+                     dates = {},
+                     status = row.overall_status,
+                     target = 0,
+                     actual = 0,
+                     )
 
         # Sort
-        goals = OrderedDict(sorted(goals.items()))
+        goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))
         for goal in goals:
-            outcomes = OrderedDict(sorted(goals[goal]["outcomes"].items()))
+            outcomes = OrderedDict(sorted(goals[goal]["outcomes"].items(), key=lambda x: x[1]["code"]))
             for outcome in outcomes:
-                outputs = OrderedDict(sorted(outcomes[outcome]["outputs"].items()))
+                outputs = OrderedDict(sorted(outcomes[outcome]["outputs"].items(), key=lambda x: x[1]["code"]))
                 for output in outputs:
-                    indicators = OrderedDict(sorted(outputs[output]["indicators"].items()))
+                    indicators = OrderedDict(sorted(outputs[output]["indicators"].items(), key=lambda x: x[1]["code"]))
                     outputs[output]["indicators"] = indicators
                 outcomes[outcome]["outputs"] = outputs
             goals[goal]["outcomes"] = outcomes
 
         # Format Data
+        number_of_rows = number_of_indicators + (number_of_outputs - 1)
+        item = TABLE(_class="project_progress_report")
+        rows = []
+        row = TR(TD(T("Project"),
+                    _rowspan=number_of_rows,
+                    ),
+                 TD(project_status_represent(r.record.overall_status_by_indicators),
+                    _rowspan=number_of_rows,
+                    ),
+                 )
+        rows.append(row)
+
+        first_goal = True
+        output_number = 0
+        for g in goals:
+            goal = goals[g]
+            rowspan = -1
+            outcomes = goal["outcomes"]
+            for o in outcomes:
+                outcome = outcomes[o]
+                outputs = outcome["outputs"] 
+                for p in outputs:
+                    rowspan += 1
+                    output = outputs[p]
+                    for i in output["indicators"]:
+                        rowspan += 1
+
+            if first_goal:
+                row.append(TD("%s: %s" % (T("Goal"), goal["code"]),
+                              _rowspan=rowspan,
+                              ))
+                row.append(TD(project_status_represent(goal["status"]),
+                              _rowspan=rowspan,
+                              ))
+                first_goal = False
+            else:
+                row = TR(TD("%s: %s" % (T("Goal"), goal["code"]),
+                            _rowspan=rowspan,
+                            ),
+                         TD(project_status_represent(goal["status"]),
+                            _rowspan=rowspan,
+                            ))
+                rows.append(row)
+
+            first_outcome = True
+            for o in outcomes:
+                outcome = outcomes[o]
+                rowspan = -1
+                outputs = outcome["outputs"]
+                for p in outputs:
+                    rowspan += 1
+                    output = outputs[p]
+                    for i in output["indicators"]:
+                        rowspan += 1
+
+                if first_outcome:
+                    row.append(TD("%s: %s" % (T("Outcome"), outcome["code"]),
+                                  _rowspan=rowspan,
+                                  ))
+                    row.append(TD(project_status_represent(outcome["status"]),
+                                  _rowspan=rowspan,
+                                  ))
+                    first_outcome = False
+                else:
+                    row = TR(TD("%s: %s" % (T("Outcome"), outcome["code"]),
+                                _rowspan=rowspan,
+                                ),
+                             TD(project_status_represent(outcome["status"]),
+                                _rowspan=rowspan,
+                                ))
+                    rows.append(row)
+
+                first_output = True
+                for p in outputs:
+                    output_number += 1
+                    output = outputs[p]
+                    rowspan = 0
+                    for i in output["indicators"]:
+                        rowspan += 1
+
+                    if first_output:
+                        row.append(TD("%s: %s" % (T("Output"), output["code"]),
+                                      _rowspan=rowspan,
+                                      ))
+                        row.append(TD(project_status_represent(output["status"]),
+                                      _rowspan=rowspan,
+                                      ))
+                        first_output = False
+                    else:
+                        row = TR(TD("%s: %s" % (T("Output"), output["code"]),
+                                    _rowspan=rowspan,
+                                    ),
+                                 TD(project_status_represent(output["status"]),
+                                    _rowspan=rowspan,
+                                    ))
+                        rows.append(row)
+
+                    first_indicator = True
+                    indicators = output["indicators"]
+                    for i in indicators:
+                        indicator = indicators[i]
+
+                        if first_indicator:
+                            row.append(TD("%s: %s" % (T("Indicator"), indicator["code"]),
+                                          ))
+                            row.append(TD(project_status_represent(indicator["status"]),
+                                          ))
+                            first_indicator = False
+                        else:
+                            row = TR(TD("%s: %s" % (T("Indicator"), indicator["code"]),
+                                        ),
+                                     TD(project_status_represent(indicator["status"]),
+                                        ))
+                            rows.append(row)
+
+                    if output_number < number_of_outputs:
+                        rows.append(TR(TD(_colspan=11),
+                                       _class="spacer"))
+
+        for row in rows:
+            item.append(row)
 
         output = dict(item=item)
         output["title"] = T("Total Project Progress")
@@ -8642,6 +8725,26 @@ def project_rheader(r):
         #if settings.get_project_budget_monitoring():
         #    rheader_fields.append(["budget.total_budget"])
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
+
+        if indicators:
+            rfooter = DIV(A(T("Summary of Progress by Indicator"),
+                            _href=URL(args=[r.id, "indicator_summary_report"]),
+                            _class="action-btn",
+                            ),
+                          A(T("Total Project Progress"),
+                            _href=URL(args=[r.id, "project_progress_report"]),
+                            _class="action-btn",
+                            ),
+                          #A(T("Total Budget Progress"),
+                          #  _href=URL(args=[r.id, "budget_progress_report"]),
+                          #  _class="action-btn",
+                          #  ),
+                          #A(T("Monthly Progress by Indicator"),
+                          #  _href=URL(args=[r.id, "indicator_progress_report"]),
+                          #  _class="action-btn",
+                          #  ),
+                          )
+            current.response.s3.rfooter = rfooter
 
     elif resourcename in ("location", "demographic_data"):
         tabs = [(T("Details"), None),
