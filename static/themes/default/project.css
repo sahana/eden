@@ -20,7 +20,10 @@ table.indicator_summary_report td.tar {
     text-align: right;
 }
 
-tr.project_goal,
+tr.project_goal {
+    background: #44aaff !important;
+}
+
 tr.project_outcome {
     background: #ccc1da !important;
 }
