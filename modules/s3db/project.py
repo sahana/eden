@@ -425,6 +425,18 @@ class S3ProjectModel(S3Model):
                    method = "indicator_summary_report",
                    action = project_indicator_summary_report)
 
+        set_method("project", "project",
+                   method = "project_progress_report",
+                   action = project_progress_report)
+
+        #set_method("project", "project",
+        #           method = "budget_progress_report",
+        #           action = project_budget_progress_report)
+
+        #set_method("project", "project",
+        #           method = "indicator_progress_report",
+        #           action = project_indicator_progress_report)
+
         # Components
         add_components(tablename,
                        # Sites
@@ -5547,159 +5559,8 @@ def project_progress_report(r, **attr):
 
         # Extract Data
 
-        # Project
-        #r.record.overall_status_by_indicators
-
-        # Goals
-        resource = current.s3db.resource("project_goal")
-        # For this Project
-        resource.add_filter(FS("project_id") == r.id)
-        list_fields = ("id",
-                       "code",
-                       "name",
-                       "overall_status",
-                       )
-        goals = resource.select(list_fields)
-
-        # Outcomes
-        resource = current.s3db.resource("project_outcome")
-        # For this Project
-        resource.add_filter(FS("project_id") == r.id)
-        list_fields = ("id",
-                       "goal_id",
-                       "code",
-                       "name",
-                       "overall_status",
-                       )
-        outcomes = resource.select(list_fields)
-
-        # Outputs
-        resource = current.s3db.resource("project_output")
-        # For this Project
-        resource.add_filter(FS("project_id") == r.id)
-        list_fields = ("id",
-                       "outcome_id",
-                       "code",
-                       "name",
-                       "overall_status",
-                       )
-        outputs = resource.select(list_fields)
-
-        # Indicators
-        resource = current.s3db.resource("project_indicator")
-        # For this Project
-        resource.add_filter(FS("project_id") == r.id)
-        list_fields = ("id",
-                       "output_id",
-                       "code",
-                       "name",
-                       "overall_status",
-                       )
-        indicators = resource.select(list_fields)
-
-        # Build the Data Structure
-        goals = {}
-        for row in data.rows:
-            date = row["project_indicator_data.end_date"]
-            goal = row["project_indicator.goal_id"]
-            outcome = row["project_indicator.outcome_id"]
-            output = row["project_indicator.output_id"]
-            indicator = row["project_indicator_data.indicator_id"]
-            target = row["project_indicator_data.target_value"]
-            if target:
-                target = int(target)
-            else:
-                target = 0
-            actual = row["project_indicator_data.value"]
-            if actual:
-                actual = int(actual)
-            else:
-                actual = 0
-
-            if date not in dates:
-                dappend(date)
-
-            if goal not in goals:
-                goals[goal] = dict(dates = {},
-                                   outcomes = {},
-                                   target = 0,
-                                   actual = 0,
-                                   )
-            goal = goals[goal]
-            goal["target"] += target
-            goal["actual"] += actual
-            if date in goal["dates"]:
-                goal["dates"][date]["target"] += target
-                goal["dates"][date]["actual"] += actual
-            else:
-                goal["dates"][date] = dict(target = target,
-                                           actual = actual,
-                                           )
-
-            if outcome not in goal["outcomes"]:
-                goal["outcomes"][outcome] = dict(dates={},
-                                                 outputs={},
-                                                 target = 0,
-                                                 actual = 0,
-                                                 )
-            outcome = goal["outcomes"][outcome]
-            outcome["target"] += target
-            outcome["actual"] += actual
-            if date in outcome["dates"]:
-                outcome["dates"][date]["target"] += target
-                outcome["dates"][date]["actual"] += actual
-            else:
-                outcome["dates"][date] = dict(target = target,
-                                              actual = actual,
-                                              )
-
-            if output not in outcome["outputs"]:
-                outcome["outputs"][output] = dict(dates={},
-                                                  indicators={},
-                                                  target = 0,
-                                                  actual = 0,
-                                                  )
-            output = outcome["outputs"][output]
-            output["target"] += target
-            output["actual"] += actual
-            if date in output["dates"]:
-                output["dates"][date]["target"] += target
-                output["dates"][date]["actual"] += actual
-            else:
-                output["dates"][date] = dict(target = target,
-                                             actual = actual,
-                                             )
-
-            if indicator not in output["indicators"]:
-                output["indicators"][indicator] = dict(dates={},
-                                                       target = 0,
-                                                       actual = 0,
-                                                       )
-
-            indicator = output["indicators"][indicator]
-            indicator["target"] += target
-            indicator["actual"] += actual
-            if date in indicator["dates"]:
-                indicator["dates"][date]["target"] += target
-                indicator["dates"][date]["actual"] += actual
-            else:
-                indicator["dates"][date] = dict(target = target,
-                                                actual = actual,
-                                                )
-
-        # Sort
-        goals = OrderedDict(sorted(goals.items()))
-        for goal in goals:
-            outcomes = OrderedDict(sorted(goals[goal]["outcomes"].items()))
-            for outcome in outcomes:
-                outputs = OrderedDict(sorted(outcomes[outcome]["outputs"].items()))
-                for output in outputs:
-                    indicators = OrderedDict(sorted(outputs[output]["indicators"].items()))
-                    outputs[output]["indicators"] = indicators
-                outcomes[outcome]["outputs"] = outputs
-            goals[goal]["outcomes"] = outcomes
-
         # Format Data
+        item = TABLE("Coming Soon...")
 
         output = dict(item=item)
         output["title"] = T("Total Project Progress")
@@ -8642,6 +8503,26 @@ def project_rheader(r):
         #if settings.get_project_budget_monitoring():
         #    rheader_fields.append(["budget.total_budget"])
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
+
+        if indicators:
+            rfooter = DIV(A(T("Summary of Progress by Indicator"),
+                            _href=URL(args=[r.id, "indicator_summary_report"]),
+                            _class="action-btn",
+                            ),
+                          A(T("Total Project Progress"),
+                            _href=URL(args=[r.id, "project_progress_report"]),
+                            _class="action-btn",
+                            ),
+                          #A(T("Total Budget Progress"),
+                          #  _href=URL(args=[r.id, "budget_progress_report"]),
+                          #  _class="action-btn",
+                          #  ),
+                          #A(T("Monthly Progress by Indicator"),
+                          #  _href=URL(args=[r.id, "indicator_progress_report"]),
+                          #  _class="action-btn",
+                          #  ),
+                          )
+            current.response.s3.rfooter = rfooter
 
     elif resourcename in ("location", "demographic_data"):
         tabs = [(T("Details"), None),

@@ -108,6 +108,7 @@ hn_user,Honduras User,,,,pr_person,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 hn_user,Honduras User,,req,,,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 hn_user,Honduras User,,,,req_req,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 monitoring_evaluation,M&E,,budget,,,,READ|CREATE|UPDATE|DELETE,,,,,
+monitoring_evaluation,M&E,,gis,location,,,READ|CREATE,,,,,
 monitoring_evaluation,M&E,,project,,,any,READ,,,,,# Need to have access to unfiltered Orgs lists
 monitoring_evaluation,M&E,,project,,,,READ|CREATE|UPDATE|DELETE,,,,,
 monitoring_evaluation,M&E,,,,org_sector,,READ,,,,,
@@ -156,6 +157,7 @@ monitoring_evaluation,M&E,,,,pr_person,,READ|CREATE|UPDATE,,,,,Community Contact
 monitoring_evaluation,M&E,,,,pr_physical_description,,READ,,,,,
 monitoring_evaluation,M&E,,,,vol_details,,READ,,,,,
 project_manager,Project Manager,,budget,,,,READ|CREATE,,,,,
+project_manager,Project Manager,,gis,location,,,READ|CREATE,,,,,
 project_manager,Project Manager,,project,,,any,READ,,,,,# Need to have access to unfiltered Orgs lists
 project_manager,Project Manager,,project,,,,READ|CREATE|UPDATE|DELETE,,,,,
 project_manager,Project Manager,,,,org_sector,,READ,,,,,

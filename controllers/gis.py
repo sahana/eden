@@ -568,6 +568,7 @@ def location():
                 level_keys.insert(0, "L0")
             table.level.requires = IS_IN_SET(levels)
             # Parent is Required & must be above lowest level
+            # @ToDo: Don't allow users to add locked Lx levels unless they are MAP_ADMIN
             # @ToDo: Dynamic filtering based on selected level (taking into account strict or not)
             level_keys.pop()
             table.parent.requires = IS_ONE_OF(db, "gis_location.id",
