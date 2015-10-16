@@ -164,6 +164,8 @@ def project():
                 set_activity_type_requires("project_activity_activity_type", sector_ids)
 
             elif component_name == "goal":
+                # Not working for embedded create form
+                #if r.method == "create":
                 if r.method != "update":
                     ctable = r.component.table
                     field = ctable.weighting
@@ -179,7 +181,6 @@ def project():
                     ctable.current_status.readable = False
                     ctable.overall_status.readable = False
                 if settings.get_project_goals():
-                    #ctable =
                     # Filter to just those for this Project & make mandatory
                     r.component.table.goal_id.requires = IS_ONE_OF(db, "project_goal.id",
                                                                    s3db.project_goal_represent,
@@ -187,12 +188,6 @@ def project():
                                                                    filterby="project_id",
                                                                    filter_opts=[r.id],
                                                                    )
-                    # Not working for embedded create form
-                    #if r.method == "create":
-                    field = r.component.table.weighting
-                    field.readable = field.writable = False
-                    r.component.table.current_status.readable = False
-                    r.component.table.overall_status.readable = False
 
             elif component_name == "output":
                 if r.method != "update":
@@ -209,6 +204,14 @@ def project():
                                                                       filterby="project_id",
                                                                       filter_opts=[r.id],
                                                                       )
+                elif settings.get_project_goals():
+                    # Filter to just those for this Project & make mandatory
+                    r.component.table.goal_id.requires = IS_ONE_OF(db, "project_goal.id",
+                                                                   s3db.project_goal_represent,
+                                                                   sort=True,
+                                                                   filterby="project_id",
+                                                                   filter_opts=[r.id],
+                                                                   )
 
             elif component_name == "indicator":
                 if r.method != "update":
@@ -419,7 +422,8 @@ def project():
                  isinstance(output, dict):
                 # Add a link to the Report
                 report_link = A(current.T("Show Report"),
-                                _href=r.url(method="report"),
+                                #_href=r.url(method="report"),
+                                _href=URL(args=[r.id, "indicator_summary_report"]),
                                 _class="action-btn",
                                 )
                 showadd_btn = output.get("showadd_btn", "")
