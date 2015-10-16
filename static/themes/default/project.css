@@ -31,3 +31,8 @@ tr.project_outcome {
 tr.project_output {
     background: #c2d69b !important;
 }
+
+table.project_progress_report tr.spacer {
+    background: #ccc !important;
+    height: 0.875rem;
+}

@@ -5411,13 +5411,13 @@ def project_indicator_summary_report(r, **attr):
         dates = set(dates)
 
         # Sort
-        goals = OrderedDict(sorted(goals.items()))
+        goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))
         for goal in goals:
-            outcomes = OrderedDict(sorted(goals[goal]["outcomes"].items()))
+            outcomes = OrderedDict(sorted(goals[goal]["outcomes"].items(), key=lambda x: x[1]["code"]))
             for outcome in outcomes:
-                outputs = OrderedDict(sorted(outcomes[outcome]["outputs"].items()))
+                outputs = OrderedDict(sorted(outcomes[outcome]["outputs"].items(), key=lambda x: x[1]["code"]))
                 for output in outputs:
-                    indicators = OrderedDict(sorted(outputs[output]["indicators"].items()))
+                    indicators = OrderedDict(sorted(outputs[output]["indicators"].items(), key=lambda x: x[1]["code"]))
                     outputs[output]["indicators"] = indicators
                 outcomes[outcome]["outputs"] = outputs
             goals[goal]["outcomes"] = outcomes
@@ -5556,11 +5556,233 @@ def project_progress_report(r, **attr):
     if r.representation == "html" and r.name == "project":
 
         T = current.T
+        db = current.db
+        s3db = current.s3db
+
+        NONE = current.messages["NONE"]
+
+        project_id = r.id
 
         # Extract Data
+        #@ToDo: DRY with project_indicator_summary_report?
+
+        # Goals
+        goals = {}
+        table = s3db.project_goal
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.code,
+                                table.name,
+                                table.overall_status,
+                                )
+        for row in rows:
+            goals[row.id] = dict(code = row.code,
+                                 name = row.name,
+                                 outcomes = {},
+                                 status = row.overall_status,
+                                 )
+
+        # Outcomes
+        table = s3db.project_outcome
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.goal_id,
+                                table.code,
+                                table.name,
+                                table.overall_status,
+                                )
+        for row in rows:
+            goals[row.goal_id]["outcomes"][row.id] = dict(code = row.code,
+                                                          name = row.name,
+                                                          outputs = {},
+                                                          status = row.overall_status,
+                                                          )
+
+        # Outputs
+        table = s3db.project_output
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.goal_id,
+                                table.outcome_id,
+                                table.code,
+                                table.name,
+                                table.overall_status,
+                                )
+        number_of_outputs = 0
+        for row in rows:
+            number_of_outputs += 1
+            goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = \
+                dict(code = row.code,
+                     name = row.name,
+                     indicators = {},
+                     status = row.overall_status,
+                     )
+
+        # Indicators
+        table = s3db.project_indicator
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.goal_id,
+                                table.outcome_id,
+                                table.output_id,
+                                table.code,
+                                table.name,
+                                table.overall_status,
+                                )
+        number_of_indicators = 0
+        for row in rows:
+            number_of_indicators += 1
+            indicator_id = row.id
+            goal_id = row.goal_id
+            outcome_id = row.outcome_id
+            output_id = row.output_id
+            goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
+                dict(code = row.code,
+                     name = row.name,
+                     dates = {},
+                     status = row.overall_status,
+                     target = 0,
+                     actual = 0,
+                     )
+
+        # Sort
+        goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))
+        for goal in goals:
+            outcomes = OrderedDict(sorted(goals[goal]["outcomes"].items(), key=lambda x: x[1]["code"]))
+            for outcome in outcomes:
+                outputs = OrderedDict(sorted(outcomes[outcome]["outputs"].items(), key=lambda x: x[1]["code"]))
+                for output in outputs:
+                    indicators = OrderedDict(sorted(outputs[output]["indicators"].items(), key=lambda x: x[1]["code"]))
+                    outputs[output]["indicators"] = indicators
+                outcomes[outcome]["outputs"] = outputs
+            goals[goal]["outcomes"] = outcomes
 
         # Format Data
-        item = TABLE("Coming Soon...")
+        number_of_rows = number_of_indicators + (number_of_outputs - 1)
+        item = TABLE(_class="project_progress_report")
+        rows = []
+        row = TR(TD(T("Project"),
+                    _rowspan=number_of_rows,
+                    ),
+                 TD(project_status_represent(r.record.overall_status_by_indicators),
+                    _rowspan=number_of_rows,
+                    ),
+                 )
+        rows.append(row)
+
+        first_goal = True
+        output_number = 0
+        for g in goals:
+            goal = goals[g]
+            rowspan = -1
+            outcomes = goal["outcomes"]
+            for o in outcomes:
+                outcome = outcomes[o]
+                outputs = outcome["outputs"] 
+                for p in outputs:
+                    rowspan += 1
+                    output = outputs[p]
+                    for i in output["indicators"]:
+                        rowspan += 1
+
+            if first_goal:
+                row.append(TD("%s: %s" % (T("Goal"), goal["code"]),
+                              _rowspan=rowspan,
+                              ))
+                row.append(TD(project_status_represent(goal["status"]),
+                              _rowspan=rowspan,
+                              ))
+                first_goal = False
+            else:
+                row = TR(TD("%s: %s" % (T("Goal"), goal["code"]),
+                            _rowspan=rowspan,
+                            ),
+                         TD(project_status_represent(goal["status"]),
+                            _rowspan=rowspan,
+                            ))
+                rows.append(row)
+
+            first_outcome = True
+            for o in outcomes:
+                outcome = outcomes[o]
+                rowspan = -1
+                outputs = outcome["outputs"]
+                for p in outputs:
+                    rowspan += 1
+                    output = outputs[p]
+                    for i in output["indicators"]:
+                        rowspan += 1
+
+                if first_outcome:
+                    row.append(TD("%s: %s" % (T("Outcome"), outcome["code"]),
+                                  _rowspan=rowspan,
+                                  ))
+                    row.append(TD(project_status_represent(outcome["status"]),
+                                  _rowspan=rowspan,
+                                  ))
+                    first_outcome = False
+                else:
+                    row = TR(TD("%s: %s" % (T("Outcome"), outcome["code"]),
+                                _rowspan=rowspan,
+                                ),
+                             TD(project_status_represent(outcome["status"]),
+                                _rowspan=rowspan,
+                                ))
+                    rows.append(row)
+
+                first_output = True
+                for p in outputs:
+                    output_number += 1
+                    output = outputs[p]
+                    rowspan = 0
+                    for i in output["indicators"]:
+                        rowspan += 1
+
+                    if first_output:
+                        row.append(TD("%s: %s" % (T("Output"), output["code"]),
+                                      _rowspan=rowspan,
+                                      ))
+                        row.append(TD(project_status_represent(output["status"]),
+                                      _rowspan=rowspan,
+                                      ))
+                        first_output = False
+                    else:
+                        row = TR(TD("%s: %s" % (T("Output"), output["code"]),
+                                    _rowspan=rowspan,
+                                    ),
+                                 TD(project_status_represent(output["status"]),
+                                    _rowspan=rowspan,
+                                    ))
+                        rows.append(row)
+
+                    first_indicator = True
+                    indicators = output["indicators"]
+                    for i in indicators:
+                        indicator = indicators[i]
+
+                        if first_indicator:
+                            row.append(TD("%s: %s" % (T("Indicator"), indicator["code"]),
+                                          ))
+                            row.append(TD(project_status_represent(indicator["status"]),
+                                          ))
+                            first_indicator = False
+                        else:
+                            row = TR(TD("%s: %s" % (T("Indicator"), indicator["code"]),
+                                        ),
+                                     TD(project_status_represent(indicator["status"]),
+                                        ))
+                            rows.append(row)
+
+                    if output_number < number_of_outputs:
+                        rows.append(TR(TD(_colspan=11),
+                                       _class="spacer"))
+
+        for row in rows:
+            item.append(row)
 
         output = dict(item=item)
         output["title"] = T("Total Project Progress")
