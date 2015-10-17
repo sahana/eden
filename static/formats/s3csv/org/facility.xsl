@@ -9,6 +9,7 @@
          CSV fields:
          Code....................org_facility.code
          Name....................org_facility.name
+         Name L10n:XX............org_site_name.name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
          Type....................org_facility.facility_type_id (can be comma-sep list) or org_facility_type.parent
          SubType.................org_facility.facility_type_id (can be comma-sep list. Use ; between different parents) or org_facility_type.parent
          SubSubType..............org_facility.facility_type_id
@@ -206,6 +207,16 @@
                 <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
             </xsl:if>
 
+            <!-- L10n -->
+            <xsl:for-each select="col[starts-with(@field, 'Name L10n')]">
+                <xsl:variable name="Lang" select="normalize-space(substring-after(@field, ':'))"/>
+                <xsl:call-template name="L10n">
+                    <xsl:with-param name="Lang">
+                        <xsl:value-of select="$Lang"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
+
             <!-- Arbitrary Tags -->
             <xsl:for-each select="col[starts-with(@field, 'KV')]">
                 <xsl:call-template name="KeyValue"/>
@@ -364,6 +375,19 @@
             <resource name="org_site_tag">
                 <data field="tag"><xsl:value-of select="$Key"/></data>
                 <data field="value"><xsl:value-of select="$Value"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="L10n">
+        <xsl:param name="Lang"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <resource name="org_site_name">
+                <data field="language"><xsl:value-of select="$Lang"/></data>
+                <data field="name_l10n"><xsl:value-of select="$Value"/></data>
             </resource>
         </xsl:if>
     </xsl:template>
