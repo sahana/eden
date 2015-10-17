@@ -640,11 +640,11 @@ def config(settings):
            restricted = True,
            module_type = 10,
         )),
-        #("transport", Storage(
-        #   name_nice = T("Transport"),
-        #   restricted = True,
-        #   module_type = 10,
-        #)),
+        ("transport", Storage(
+           name_nice = T("Transport"),
+           restricted = True,
+           module_type = 10,
+        )),
         ("stats", Storage(
            name_nice = T("Statistics"),
            #description = "Manages statistics",

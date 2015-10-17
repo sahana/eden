@@ -5800,7 +5800,7 @@ def project_progress_report(r, **attr):
         raise HTTP(501, current.ERROR.BAD_METHOD)
     
 # =============================================================================
-def budget_progress_report(r, **attr):
+def project_budget_progress_report(r, **attr):
     """
         Display the Progress of a Project's Budget
     """
