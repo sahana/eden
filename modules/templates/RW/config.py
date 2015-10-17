@@ -137,6 +137,10 @@ def config(settings):
     settings.cms.show_titles = True
 
     # -------------------------------------------------------------------------
+    # Organisations
+    settings.org.tags = True
+
+    # -------------------------------------------------------------------------
     # Project Module
     settings.project.projects = True
     settings.project.mode_3w = True
@@ -159,6 +163,10 @@ def config(settings):
     settings.req.use_commit = False
     settings.req.ask_transport = True
     settings.req.req_type = ("Stock",)
+
+    # -------------------------------------------------------------------------
+    # Shelters
+    settings.cr.tags = True
 
     # -------------------------------------------------------------------------
     def customise_cms_post_controller(**attr):
@@ -610,12 +618,12 @@ def config(settings):
            restricted = True,
            module_type = 2
         )),
-        #("cr", Storage(
-        #    name_nice = T("Shelters"),
-        #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
-        #    restricted = True,
-        #    module_type = 10
-        #)),
+        ("cr", Storage(
+            name_nice = T("Shelters"),
+            #description = "Tracks the location, capacity and breakdown of victims in Shelters",
+            restricted = True,
+            module_type = 10
+        )),
         #("hms", Storage(
         #    name_nice = T("Hospitals"),
         #    #description = "Helps to monitor status of hospitals",

@@ -35,6 +35,7 @@
          Urgently Needed.........req_site_needs.urgently_needed
          Needed..................req_site_needs.needed
          Not Needed..............req_site_needs.not_needed
+         KV:XX...................Key,Value (Key = XX in column name, value = cell in row)
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -204,6 +205,12 @@
             <xsl:if test="col[@field='Comments']!=''">
                 <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
             </xsl:if>
+
+            <!-- Arbitrary Tags -->
+            <xsl:for-each select="col[starts-with(@field, 'KV')]">
+                <xsl:call-template name="KeyValue"/>
+            </xsl:for-each>
+
         </resource>
 
         <xsl:call-template name="Locations"/>
@@ -346,6 +353,19 @@
             </xsl:otherwise>
         </xsl:choose>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="KeyValue">
+        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <resource name="org_site_tag">
+                <data field="tag"><xsl:value-of select="$Key"/></data>
+                <data field="value"><xsl:value-of select="$Value"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

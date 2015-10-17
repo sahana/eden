@@ -2434,6 +2434,12 @@ class S3Config(Storage):
         """
         return self.cr.get("shelter_housing_unit_management", False)
 
+    def get_cr_tags(self):
+        """
+            Whether Shelters should show a Tags tab
+        """
+        return self.cr.get("tags", False)
+
     # -------------------------------------------------------------------------
     # Deployments
     #
@@ -3189,6 +3195,12 @@ class S3Config(Storage):
             Whether Facility code is unique
         """
         return self.org.get("facility_code_unique", False)
+
+    def get_org_tags(self):
+        """
+            Whether Organidations, Office & Facilities should show a Tags tab
+        """
+        return self.org.get("tags", False)
 
     # -------------------------------------------------------------------------
     # Persons

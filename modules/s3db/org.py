@@ -44,6 +44,7 @@ __all__ = ("S3OrganisationModel",
            "S3OrganisationTypeTagModel",
            "S3SiteModel",
            "S3SiteDetailsModel",
+           "S3SiteTagModel",
            "S3FacilityModel",
            "org_facility_rheader",
            "S3RoomModel",
@@ -2985,7 +2986,13 @@ class S3SiteModel(S3Model):
                                           "joinby": "site_id",
                                           "multiple": False,
                                           },
-                       # Coalitions
+
+                       # Tags
+                       org_site_tag = {"name": "tag",
+                                       "joinby": "site_id",
+                                       },
+
+                       # Groups: Coalitions/Networks
                        org_group = {"link": "org_site_org_group",
                                     "joinby": "site_id",
                                     "key": "group_id",
@@ -3349,8 +3356,46 @@ class S3SiteDetailsModel(S3Model):
         define_table(tablename,
                      # Component not instance
                      super_link("site_id", "org_site"),
-                     self.org_group_id(empty=False),
+                     self.org_group_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
                      *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3SiteTagModel(S3Model):
+    """
+        Site Tags
+    """
+
+    names = ("org_site_tag",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Site Tags
+        # - Key-Value extensions
+        # - can be used to provide conversions to external systems, such as:
+        #   * HXL
+        # - can be a Triple Store for Semantic Web support
+        #
+        tablename = "org_site_tag"
+        self.define_table(tablename,
+                          # Component not instance
+                          self.super_link("site_id", "org_site"),
+                          # key is a reserved word in MySQL
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return {}
@@ -5384,6 +5429,8 @@ def org_rheader(r, tabs=[]):
                         (T("User Roles"), "roles"),
                         #(T("Tasks"), "task"),
                         ]
+                if setting.get_org_tags():
+                    append_tab((T("Tags"), "tag"))
                 if settings.get_org_resources_tab():
                     tabs.insert(-1, (T("Resources"), "resource"))
 
@@ -5455,6 +5502,8 @@ def org_rheader(r, tabs=[]):
                 ]
         append_tab = tabs.append
 
+        if setting.get_org_tags():
+            append_tab((T("Tags"), "tag"))
         if settings.has_module("hrm") and \
            (r.controller != "inv" or settings.get_inv_facility_manage_staff()):
             STAFF = settings.get_hrm_staff_label()

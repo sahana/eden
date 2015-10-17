@@ -473,6 +473,8 @@ def config(settings):
     #settings.cr.shelter_population_dynamic = True
     # Uncomment to disable people registration in shelters
     #settings.cr.people_registration = False
+    # Uncomment to use Tags for Shelters
+    #settings.cr.tags = True
 
     # -------------------------------------------------------------------------
     # Events
@@ -577,6 +579,8 @@ def config(settings):
     #settings.org.office_code_unique = True
     # Uncomment to make Facility codes unique
     #settings.org.facility_code_unique = True
+    # Uncomment to use Tags for Organisations, Offices & Facilities
+    #settings.org.tags = True
 
     # -------------------------------------------------------------------------
     # Human Resource Management
