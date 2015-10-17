@@ -1497,6 +1497,12 @@ class S3Config(Storage):
         """
         return self.L10n.get("translate_org_organisation", False)
 
+    def get_L10n_translate_org_site(self):
+        """
+            Whether to translate Site names
+        """
+        return self.L10n.get("translate_org_site", False)
+
     def get_L10n_translate_cap_area(self):
         """
             Whether to translate CAP Area names

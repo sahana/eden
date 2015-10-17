@@ -193,6 +193,8 @@ def config(settings):
     #settings.L10n.name_alt_gis_location = True
     # Uncomment this to Translate Organisation Names/Acronyms
     #settings.L10n.translate_org_organisation = True
+    # Uncomment this to Translate Site Names
+    #settings.L10n.translate_org_site = True
 
     # Finance settings
     #settings.fin.currencies = {

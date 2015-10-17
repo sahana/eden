@@ -5422,10 +5422,10 @@ class gis_LocationRepresent(S3Represent):
 
             @param values: the gis_location IDs
         """
+
         db = current.db
         s3db = current.s3db
         ltable = s3db.gis_location
-        table = s3db.gis_location_name
         count = len(values)
         sep = self.sep
         translate = self.translate
@@ -5478,6 +5478,7 @@ class gis_LocationRepresent(S3Represent):
             location_ids = set(location_ids)
 
         if translate:
+            table = s3db.gis_location_name
             query = (table.deleted == False) & \
                     (table.language == current.session.s3.language)
             count = len(location_ids)
@@ -5498,6 +5499,7 @@ class gis_LocationRepresent(S3Represent):
             - Lookup L10n, path
             - then call represent_row
         """
+
         sep = self.sep
         translate = self.translate
         self.paths = {}
