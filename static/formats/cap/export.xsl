@@ -113,6 +113,12 @@
                 <note><xsl:value-of select="data[@field='note']"/></note>
             </xsl:if>
 
+            <xsl:if test="data[@field='reference']!=''">
+            	<reference>
+            		<xsl:value-of select="data[@field='reference']"/>
+            	</reference>
+            </xsl:if>
+
             <xsl:if test="data[@field='incidents']!=''">
                 <incidents>
                     <xsl:call-template name="make-space-delimited">

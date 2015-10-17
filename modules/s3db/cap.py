@@ -398,13 +398,15 @@ class S3CAPModel(S3Model):
                                          _title="%s|%s" % (T("The text describing the purpose or significance of the alert message"),
                                                            T("The message note is primarily intended for use with status 'Exercise' and message type 'Error'"))),
                            ),
-                     Field("reference", "list:reference cap_alert",
+                     Field("reference", #"list:reference cap_alert",
                            label = T("Reference"),
-                           represent = S3Represent(lookup = tablename,
-                                                   fields = ["msg_type", "sent", "sender"],
-                                                   field_sep = " - ",
-                                                   multiple = True,
-                                                   ),
+                           writable = False,
+                           readable = False,
+                           #represent = S3Represent(lookup = tablename,
+                           #                        fields = ["msg_type", "sent", "sender"],
+                           #                        field_sep = " - ",
+                           #                        multiple = True,
+                           #                        ),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The group listing identifying earlier message(s) referenced by the alert message"),
                                                            T("The extended message identifier(s) (in the form sender,identifier,sent) of an earlier CAP message or messages referenced by this one."))),
@@ -1728,7 +1730,14 @@ def cap_rheader(r):
                                     _class="error")
                         export_btn = ""
                         action_btn = None
+                        msg_update_btn = None
+                        msg_cancel_btn = None
+                        msg_error_btn = None
                     else:
+                        action_btn = None
+                        msg_update_btn = None
+                        msg_cancel_btn = None
+                        msg_error_btn = None
                         error = ""
                         export_btn = A(DIV(_class="export_cap_large"),
                                        _href=URL(c="cap", f="alert", args=["%s.cap" % alert_id]),
@@ -1772,10 +1781,6 @@ def cap_rheader(r):
                                                    )
                                     current.response.s3.jquery_ready.append(
 '''S3.confirmClick('.confirm-btn','%s')''' % T("Do you want to submit the alert for approval?"))
-                                else:
-                                    action_btn = None
-                            else:
-                                action_btn = None
 
                             # For Alert Approver
                             if has_permission("approve", "cap_alert"):
@@ -1786,8 +1791,37 @@ def cap_rheader(r):
                                                            ),
                                                _class = "action-btn",
                                                )
-                        else:
-                            action_btn = None
+
+                        if record.approved_by is not None:                            
+                            if current.auth.s3_has_permission("update", "cap_alert",
+                                                              record_id=alert_id):
+                                msg_update_btn = A(T("Update Alert"),
+                                                   _href = URL(f = "clone_alert",
+                                                               args = [record.id,
+                                                                      ],
+                                                               vars = {"caller": "Update",
+                                                                       },
+                                                               ),
+                                                   _class = "action-btn",
+                                                   )
+                                msg_cancel_btn = A(T("Cancel Alert"),
+                                                   _href = URL(f = "clone_alert",
+                                                               args = [record.id,
+                                                                      ],
+                                                               vars = {"caller": "Cancel",
+                                                                       },
+                                                               ),
+                                                   _class = "action-btn",
+                                                   )
+                                msg_error_btn = A(T("Clear Alert"),
+                                                  _href = URL(f = "clone_alert",
+                                                              args = [record.id,
+                                                                      ],
+                                                              vars = {"caller": "Error",
+                                                                       },
+                                                              ),
+                                                  _class = "action-btn",
+                                                  )
 
                     tabs = [(T("Alert Details"), None),
                             (T("Information"), "info"),
@@ -1841,6 +1875,12 @@ def cap_rheader(r):
 
                     if action_btn:
                         rheader.insert(1, TR(TD(action_btn)))
+
+                    if msg_error_btn:
+                        # if check on one since either all or none
+                        rheader.insert(1, TR(TD(msg_error_btn)))
+                        rheader.insert(1, TR(TD(msg_cancel_btn)))
+                        rheader.insert(1, TR(TD(msg_update_btn)))
 
             elif tablename == "cap_area":
                 # Used only for Area Templates

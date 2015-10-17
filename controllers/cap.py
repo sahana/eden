@@ -155,6 +155,31 @@ def alert():
                 redirect(URL(c="cap", f="template",
                              args = request.args,
                              vars = request.vars))
+            if r.record.approved_by is not None:
+                # Once approved, don't allow to edit
+                # Don't allow to delete
+                s3db.configure(tablename,
+                               editable=False,
+                               deletable=False,
+                               )
+            # Uncomment or add to this according to country CAP profile
+            #if r.record.msg_type in ("Update", "Cancel", "Error"):
+                # Use case for change in msg_type
+            #    atable = r.table
+            #    for f in ("template_id",
+            #              "sender",
+            #              "status",
+            #              "msg_type",
+            #              "source",
+            #              "scope",
+            #              "restriction",
+            #              "addresses",
+            #              "codes",
+            #              "note",
+            #              "reference",
+            #              "incidents",
+            #              ):
+            #        atable[f].writable = False
         else:
             r.resource.add_filter(r.table.is_template == False)
             s3.formats["cap"] = r.url() # .have added by JS
@@ -551,6 +576,26 @@ def alert():
                     itable.web.default = current.deployment_settings.get_base_public_url()+\
                                          URL(c="cap", f="alert", args=alert_id)
 
+                if r.record.approved_by is not None:
+                    # Once approved, don't allow info segment to edit
+                    # Don't allow to delete
+                    s3db.configure("cap_info",
+                                   editable = False,
+                                   deletable = False,
+                                   )
+                # Uncomment or add to this according to country CAP profile 
+                #if r.record.msg_type in ("Update", "Cancel", "Error"):
+                    # Use case for change in msg_type
+                #    for f in ("language",
+                #              "category",
+                #              "event",
+                #              "event_type_id",
+                #              "audience",
+                #              "event_code",
+                #              "sender_name",
+                #              "parameter",
+                #              ):
+                #        itable[f].writable = False
 
             elif r.component_name == "area":
                 atable = r.component.table
@@ -584,6 +629,14 @@ def alert():
                     field.default = rows.first().id
                     field.writable = field.readable = False
 
+                if r.record.approved_by is not None:
+                    # Once approved, don't allow area segment to edit
+                    # Don't allow to delete
+                    s3db.configure("cap_area",
+                                   editable = False,
+                                   deletable = False,
+                                   )
+
             elif r.component_name == "resource":
                 atable = r.component.table
                 # Limit to those for this Alert
@@ -601,6 +654,14 @@ def alert():
                     field = atable.info_id
                     field.default = rows.first().id
                     field.writable = field.readable = False
+
+                if r.record.approved_by is not None:
+                    # Once approved, don't allow resource segment to edit
+                    # Don't allow to delete
+                    s3db.configure("cap_resource",
+                                   editable = False,
+                                   deletable = False,
+                                   )
 
             # @ToDo: Move inside correct component context (None?)
             post_vars = request.post_vars
@@ -666,20 +727,7 @@ def alert():
                 rows = db(itable.alert_id == lastid).select(itable.id)
 
                 rtable = s3db.cap_resource
-                r_unwanted_fields = set(("deleted_rb",
-                                         "owned_by_user",
-                                         "approved_by",
-                                         "mci",
-                                         "deleted",
-                                         "modified_on",
-                                         "realm_entity",
-                                         "uuid",
-                                         "created_on",
-                                         "deleted_fk",
-                                         "created_by",
-                                         "modified_by",
-                                         "owned_by_group",
-                                         ))
+                r_unwanted_fields = s3base.s3_all_meta_field_names()
                 rfields = [rtable[f] for f in rtable.fields
                                      if f not in r_unwanted_fields]
                 rows_ = db(rtable.alert_id == alert.template_id).select(*rfields)
@@ -1068,5 +1116,121 @@ def cap_AreaRowOptionsBuilder(alert_id, caller=None):
                                        row_["cap_area.name"])
                             
         return cap_area_options
+
+# -----------------------------------------------------------------------------
+def clone_alert():
+    """
+        Function to clone the cap_alert along with its components
+            Used for the change the message status
+    """
+    
+    from s3 import s3_utc
+    caller = get_vars.get("caller")
+    alert_id = request.args(0)
+    
+    alert_table = s3db.cap_alert
+    info_table = s3db.cap_info
+    area_table = s3db.cap_area
+    location_table = s3db.cap_area_location
+    tag_table = s3db.cap_area_tag
+    resource_table = s3db.cap_resource
+    unwanted_fields = s3base.s3_all_meta_field_names()
+    
+    # Copy the alert segment
+    alert_fields = [alert_table[f] for f in alert_table.fields
+                    if f not in unwanted_fields]
+    alert_row = db(alert_table.id == alert_id).select(*alert_fields,
+                                                      limitby=(0, 1)).first()    
+    alert_row_clone = alert_row.as_dict()
+    del alert_row_clone["id"]
+    del alert_row_clone["identifier"]
+    alert_row_clone["msg_type"] = caller
+    alert_row_clone["reference"] = ("%s,%s,%s") % (alert_row.sender,
+                                                   alert_row.identifier,
+                                  str(s3_utc(alert_row.sent)).replace(" ", "T"),
+                                                   )
+    new_alert_id = alert_table.insert(**alert_row_clone)
+    auth.s3_set_record_owner(alert_table, new_alert_id)
+    s3db.onaccept(alert_table, {"alert_id": new_alert_id})
+    
+    # Copy the info segment
+    info_fields = [info_table[f] for f in info_table.fields
+                   if f not in unwanted_fields]
+    info_rows = db(info_table.alert_id == alert_id).select(*info_fields)
+    if info_rows:
+        for info_row in info_rows:
+            info_id = info_row.id
+            info_row_clone = info_row.as_dict()
+            del info_row_clone["id"]
+            info_row_clone["alert_id"] = new_alert_id
+            new_info_id = info_table.insert(**info_row_clone)
+            auth.s3_set_record_owner(info_table, new_info_id)
+            s3db.onaccept(info_table, {"info_id": new_info_id})
+            
+            # Copy the area segment
+            query = (area_table.info_id == info_id) &\
+                    (area_table.alert_id == alert_id)
+            area_fields = [area_table[f] for f in area_table.fields
+                           if f not in unwanted_fields]        
+            area_rows = db(query).select(*area_fields)
+            if area_rows:   
+                for area_row in area_rows:
+                    area_id = area_row.id
+                    area_row_clone = area_row.as_dict()
+                    del area_row_clone["id"]
+                    area_row_clone["alert_id"] = new_alert_id
+                    area_row_clone["info_id"] = new_info_id
+                    new_area_id = area_table.insert(**area_row_clone)
+                    auth.s3_set_record_owner(area_table, new_area_id)
+                    s3db.onaccept(area_table, {"area_id": new_area_id})
+                    
+                    # Copy the area_location
+                    location_fields = [location_table[f] for f in location_table.fields
+                                       if f not in unwanted_fields]
+                    location_rows = db(location_table.area_id == area_id).\
+                                                    select(*location_fields)
+                    if location_rows:
+                        for location_row in location_rows:
+                            location_row_clone = location_row.as_dict()
+                            del location_row_clone["id"]
+                            location_row_clone["alert_id"] = new_alert_id
+                            location_row_clone["area_id"] = new_area_id
+                            new_location_id = location_table.insert(**location_row_clone)
+                            auth.s3_set_record_owner(location_table, new_location_id)
+                            s3db.onaccept(location_table,
+                                          {"location_id": new_location_id})
+                            
+                    # Copy the area_tag
+                    tag_fields = [tag_table[f] for f in tag_table.fields
+                                  if f not in unwanted_fields]
+                    tag_rows = db(tag_table.area_id == area_id).\
+                                                        select(*tag_fields)
+                    if tag_rows:
+                        for tag_row in tag_rows:
+                            tag_row_clone = tag_row.as_dict()
+                            del tag_row_clone["id"]
+                            tag_row_clone["alert_id"] = new_alert_id
+                            tag_row_clone["area_id"] = new_area_id
+                            new_tag_id = tag_table.insert(**tag_row_clone)
+                            auth.s3_set_record_owner(tag_table, new_tag_id)
+                            s3db.onaccept(tag_table, {"tag_id": new_tag_id})
+                
+                # Copy the resource segment
+                query = (resource_table.info_id == info_id) &\
+                        (resource_table.alert_id == alert_id)
+                resource_fields = [resource_table[f] for f in resource_table.fields
+                                   if f not in unwanted_fields]                
+                resource_rows = db(query).select(*resource_fields)
+                if resource_rows:
+                    for resource_row in resource_rows:
+                        resource_row_clone = resource_row.as_dict()
+                        del resource_row_clone["id"]
+                        resource_row_clone["info_id"] = new_info_id
+                        resource_row_clone["alert_id"] = new_alert_id
+                        rid = resource_table.insert(**resource_row_clone)
+                        auth.s3_set_record_owner(resource_table, rid)
+                        s3db.onaccept(resource_table, {"resource_id": rid})
+                    
+        redirect(URL(c="cap", f="alert", args=[new_alert_id]))
 
 # END =========================================================================
