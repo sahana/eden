@@ -1743,7 +1743,7 @@ def cap_rheader(r):
                             db = current.db
                             auth = current.auth
                             has_permission = auth.s3_has_permission
-                            
+
                             # For Alert Editor
                             if has_permission("update", "cap_alert",
                                               record_id=alert_id):
@@ -1761,7 +1761,7 @@ def cap_rheader(r):
                                         pe_append = pe_ids.append
                                         for user_id in user_ids:
                                             pe_append(user_pe_id(int(user_id)))
-    
+
                                     action_btn = A(T("Submit for Approval"),
                                                    _href = URL(f = "compose",
                                                                vars = {"cap_alert.id": record.id,
@@ -2571,7 +2571,7 @@ class CAPImportFeed(S3Method):
             return output
 
         else:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(405, current.ERROR.BAD_METHOD)
 
 # -----------------------------------------------------------------------------
 class cap_AssignArea(S3Method):
@@ -2792,7 +2792,7 @@ class cap_AssignArea(S3Method):
                 return items
 
             else:
-                r.error(501, current.ERROR.BAD_FORMAT)
+                r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 

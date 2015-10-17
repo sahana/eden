@@ -1463,7 +1463,7 @@ class deploy_Inbox(S3Method):
                         dt_bulk_actions = dt_bulk_actions)
 
         else:
-            r.error(405, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
 # =============================================================================
 def deploy_apply(r, **attr):
@@ -1676,7 +1676,7 @@ def deploy_apply(r, **attr):
             return items
 
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
     else:
         r.error(405, current.ERROR.BAD_METHOD)
 
@@ -1895,7 +1895,7 @@ def deploy_alert_select_recipients(r, **attr):
         return items
 
     else:
-        r.error(501, current.ERROR.BAD_FORMAT)
+        r.error(415, current.ERROR.BAD_FORMAT)
 
 # =============================================================================
 def deploy_response_select_mission(r, **attr):
@@ -2168,7 +2168,7 @@ def deploy_response_select_mission(r, **attr):
         return items
 
     else:
-        r.error(501, current.ERROR.BAD_FORMAT)
+        r.error(415, current.ERROR.BAD_FORMAT)
 
 # =============================================================================
 class deploy_MissionProfileLayout(S3DataListLayout):

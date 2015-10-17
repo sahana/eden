@@ -69,7 +69,7 @@ class S3HierarchyCRUD(S3Method):
             elif r.representation == "xls":
                 output = self.export_xls(r, **attr)
             else:
-                r.error(501, current.ERROR.BAD_FORMAT)
+                r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 

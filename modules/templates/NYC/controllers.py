@@ -230,7 +230,7 @@ class network():
                             draw)
         else:
             from gluon.http import HTTP
-            raise HTTP(501, ERROR.BAD_FORMAT)
+            raise HTTP(415, ERROR.BAD_FORMAT)
         return items
 
 # =============================================================================
@@ -705,7 +705,7 @@ class PersonalDashboard(S3Method):
                 current.response.title = T("Personal Dashboard")
             return output
         else:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod

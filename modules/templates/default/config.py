@@ -1216,7 +1216,7 @@ def config(settings):
         #)),
         #("work", Storage(
         #   name_nice = T("Jobs"),
-        #   #description = "Simple Volunteer Job List",
+        #   #description = "Simple Volunteer Jobs Management",
         #   restricted = False,
         #   module_type = None,
         #)),

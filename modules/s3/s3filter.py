@@ -2613,7 +2613,7 @@ class S3Filter(S3Method):
             return self._form(r, **attr)
 
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     def _form(self, r, **attr):

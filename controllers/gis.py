@@ -822,7 +822,7 @@ def s3_gis_location_parents(r, **attr):
             raise HTTP(404, ERROR.BAD_RECORD)
 
     else:
-        raise HTTP(501, ERROR.BAD_FORMAT)
+        raise HTTP(415, ERROR.BAD_FORMAT)
 
 # -----------------------------------------------------------------------------
 def l0():

@@ -1906,20 +1906,21 @@ class S3OptionsMenu(object):
     # -------------------------------------------------------------------------
     @staticmethod
     def work():
-        """ WORK: Work Items Mangement """
+        """ WORK: Simple Volunteer Jobs Management """
 
         return M(c="work")(
                     # @todo: my jobs
+                    M("Joblist", f="job", m="datalist"),
                     M("Jobs", f="job")(
-                        M("List", m="datalist"),
                         M("Create", m="create"),
                     ),
                     M("Assignments", f="assignment")(
                         M("Create", m="create"),
                     ),
-                    M("Contexts", f="context")(
-                        M("Create", m="create"),
-                    ),
+                    # Hide until implemented:
+                    #M("Contexts", f="context")(
+                    #    M("Create", m="create"),
+                    #),
                     M("Job Types", f="job_type")(
                         M("Create", m="create"),
                     ),

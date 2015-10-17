@@ -2443,7 +2443,7 @@ class S3Compose(S3CRUD):
         if self.method == "compose":
             output = dict(form=form)
         else:
-            r.error(501, current.ERROR.BAD_METHOD)
+            r.error(405, current.ERROR.BAD_METHOD)
 
         # Complete the page
         if r.representation == "html":

@@ -685,7 +685,7 @@ class S3ContentModel(S3Model):
 
         post_id = r.id
         if not post_id or len(r.args) < 3:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(405, current.ERROR.BAD_METHOD)
 
         tag = r.args[2]
         db = current.db
@@ -743,7 +743,7 @@ class S3ContentModel(S3Model):
 
         post_id = r.id
         if not post_id or len(r.args) < 3:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(405, current.ERROR.BAD_METHOD)
 
         tag = r.args[2]
         db = current.db
@@ -782,7 +782,7 @@ class S3ContentModel(S3Model):
         user = current.auth.user
         user_id = user and user.id
         if not post_id or not user_id:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(405, current.ERROR.BAD_METHOD)
 
         db = current.db
         ltable = db.cms_post_user
@@ -824,7 +824,7 @@ class S3ContentModel(S3Model):
         user = current.auth.user
         user_id = user and user.id
         if not post_id or not user_id:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(405, current.ERROR.BAD_METHOD)
 
         db = current.db
         ltable = db.cms_post_user

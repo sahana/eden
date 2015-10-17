@@ -4751,7 +4751,7 @@ class S3OfficeTypeTagModel(S3Model):
                           s3_comments(),
                           *s3_meta_fields())
 
-        
+
 
         self.configure(tablename,
                        deduplicate = self.org_office_type_tag_deduplicate,
@@ -7090,7 +7090,7 @@ class org_AssignMethod(S3Method):
                 return items
 
             else:
-                r.error(501, current.ERROR.BAD_FORMAT)
+                r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 
@@ -7180,7 +7180,7 @@ class org_CapacityReport(S3Method):
                 return self._xls(data)
 
             else:
-                r.error(501, current.ERROR.BAD_FORMAT)
+                r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 

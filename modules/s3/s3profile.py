@@ -759,7 +759,7 @@ class S3Profile(S3CRUD):
 
         else:
             # Really raise an exception here?
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     def _form(self, r, widget, **attr):

@@ -369,7 +369,7 @@ class S3Merge(S3Method):
             current.response.view = self._view(r, "list.html")
 
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
         return output
 

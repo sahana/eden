@@ -222,7 +222,7 @@ class S3Report(S3Method):
             output = json.dumps(pivotdata, separators=SEPARATORS)
 
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
         return output
 
@@ -513,7 +513,7 @@ class S3Report(S3Method):
             output = XML(current.response.render(view, output))
 
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
         return output
 

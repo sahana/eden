@@ -93,7 +93,7 @@ class S3GroupedItemsReport(S3Method):
 
         output = {}
         if r.http == "GET":
-            r.error(405, current.ERROR.NOT_IMPLEMENTED)
+            r.error(501, current.ERROR.NOT_IMPLEMENTED)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
         return output
@@ -280,7 +280,7 @@ class S3GroupedItemsReport(S3Method):
             return gi_table.xls(r)
 
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
         return output
 

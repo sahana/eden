@@ -9087,7 +9087,7 @@ class S3Map(S3Method):
             return output
 
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
     # -------------------------------------------------------------------------
     def widget(self,
@@ -9575,6 +9575,6 @@ class S3ImportPOI(S3Method):
             return output
 
         else:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(405, current.ERROR.BAD_METHOD)
 
 # END =========================================================================

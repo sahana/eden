@@ -684,7 +684,7 @@ class S3SyncLog(S3Method):
                 output = r(subtitle=None,
                            rheader=self.rheader)
             else:
-                r.error(501, current.ERROR.BAD_FORMAT)
+                r.error(415, current.ERROR.BAD_FORMAT)
 
         return output
 

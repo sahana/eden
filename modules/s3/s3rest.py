@@ -1098,7 +1098,7 @@ class S3Request(object):
                                               as_json=True)
             content_type = "application/json"
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
         response = current.response
         response.headers["Content-Type"] = content_type
         return output
@@ -1152,7 +1152,7 @@ class S3Request(object):
             as_json = True
             content_type = "application/json"
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
         component = r.component_name
         output = r.resource.export_options(component=component,

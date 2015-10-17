@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Sahana Eden Simplified Work Items Management
+""" Sahana Eden Simple Volunteer Jobs Management
 
     @copyright: 2015 (c) Sahana Software Foundation
     @license: MIT
@@ -160,11 +160,6 @@ class WorkJobModel(S3Model):
                            label = T("Title"),
                            requires = IS_NOT_EMPTY(),
                            ),
-                     Field("summary", "text",
-                           label = T("Summary"),
-                           represent = s3_text_represent,
-                           widget = s3_comments_widget,
-                           ),
                      Field("details", "text",
                            label = T("Details"),
                            represent = s3_text_represent,
@@ -207,6 +202,7 @@ class WorkJobModel(S3Model):
                            requires = IS_INT_IN_RANGE(0, None),
                            writable = False,
                            ),
+                     s3_comments(),
                      *s3_meta_fields())
 
         # CRUD strings
@@ -224,7 +220,7 @@ class WorkJobModel(S3Model):
 
         # Filter widgets
         filter_widgets = [S3TextFilter(["name",
-                                        "summary",
+                                        "details",
                                         "job_type_id$name",
                                         "site_id$name",
                                         ],
@@ -477,13 +473,16 @@ class work_SignUp(S3Method):
 
         output = {}
         if r.http == "POST": # @todo: must become .json
-            method = r.method
-            if method == "signup":
-                return self.signup(r, **attr)
-            elif method == "cancel":
-                return self.cancel(r, **attr)
+            if r.representation == "json":
+                method = r.method
+                if method == "signup":
+                    return self.signup(r, **attr)
+                elif method == "cancel":
+                    return self.cancel(r, **attr)
+                else:
+                    r.error(405, current.ERROR.BAD_METHOD)
             else:
-                r.error(405, current.ERROR.BAD_METHOD)
+                r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
         return output
@@ -498,7 +497,7 @@ class work_SignUp(S3Method):
         """
 
         s3db = current.s3db
-        
+
         # Get the job ID
         job_id = self.record_id
         if not job_id:
@@ -524,7 +523,7 @@ class work_SignUp(S3Method):
             if assignment_id:
                 assignment["id"] = assignment_id
                 s3db.onaccept(atable, assignment)
-                
+
         output = current.xml.json_message(True)
         return output
 
@@ -538,7 +537,7 @@ class work_SignUp(S3Method):
         """
 
         s3db = current.s3db
-        
+
         # Get the job ID
         job_id = self.record_id
         if not job_id:
@@ -549,13 +548,13 @@ class work_SignUp(S3Method):
         person_id = auth.s3_logged_in_person()
         if not person_id:
             auth.permission.fail()
-            
+
         query = (FS("job_id") == job_id) & \
                 (FS("person_id") == person_id)
-                
+
         assignments = s3db.resource("work_assignment", filter=query)
         assignments.delete()
-                
+
         output = current.xml.json_message(True)
         return output
 
@@ -566,7 +565,7 @@ class work_JobListLayout(S3DataListLayout):
     list_fields = ["priority",
                    "job_type_id",
                    "name",
-                   "summary",
+                   "details",
                    "site_id",
                    "start_date",
                    "duration",
@@ -662,7 +661,7 @@ class work_JobListLayout(S3DataListLayout):
 
         # Title and Description
         title = record["work_job.name"]
-        description = record["work_job.summary"]
+        details = record["work_job.details"]
 
         # Priority, Job Type and Last Update
         status = record["work_job.status"]
@@ -701,7 +700,7 @@ class work_JobListLayout(S3DataListLayout):
         body = DIV(DIV(title,
                        _class="card-subtitle"
                        ),
-                   description,
+                   details,
                    date_line,
                    footer,
                    _class="media-body",

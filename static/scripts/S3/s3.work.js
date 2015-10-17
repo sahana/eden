@@ -4,6 +4,9 @@
 
 (function($, undefined) {
 
+    /**
+     * Bind button event handlers for sign-up and cancellation
+     */
     var bindSignUpActions = function() {
         $('.job-signup').unbind('.work').bind('click.work', function() {
             signup(this, true);
@@ -12,24 +15,30 @@
             signup(this, false);
         });
     };
-    
+
+    /**
+     * Sign-up / Cancel Assignment (Ajax)
+     *
+     * @param {jQuery} button - the action button
+     * @param {bool} assign - whether to assign (true) or cancel (false)
+     */
     var signup = function(button, assign) {
 
         var $button = $(button),
-            action = assign ? '/signup.json' : '/cancel.json',
+            item = $button.closest('.dl-item'),
+            dl = $button.closest('.dl'),
+            action = assign ? 'signup' : 'cancel',
             throbber = $('<div class="inline-throbber">').css({'display': 'inline-block'});
-            
-        var item = $button.closest('.dl-item'),
-            dl = $button.closest('.dl');
+
         if (!item.length || !dl.length) {
             return;
         }
+
         var recordID = $(item).attr('id').split('-').pop();
-        
         if (recordID) {
             $button.after(throbber);
             $.ajax({
-                'url': S3.Ap.concat('/work/job/') + recordID + action,
+                'url': S3.Ap.concat('/work/job/') + recordID + '/' + action + '.json',
                 'success': function(data) {
                     throbber.remove();
                     dl.datalist('ajaxReloadItem', recordID);
@@ -49,7 +58,10 @@
             });
         }
     };
-    
+
+    /**
+     * Document-ready functions for work/job datalist
+     */
     $(document).ready(function() {
         // Re-bind signup-actions after every datalist update
         $('.job-signup, .job-cancel').closest('.dl').unbind('.work').bind('listUpdate.work', function() {

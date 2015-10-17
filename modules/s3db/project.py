@@ -787,7 +787,7 @@ class S3ProjectModel(S3Model):
             response.view = "map.html"
             return output
         else:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -912,7 +912,7 @@ class S3ProjectModel(S3Model):
             return output
 
         else:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 class S3ProjectActivityModel(S3Model):
@@ -5545,8 +5545,8 @@ def project_indicator_summary_report(r, **attr):
         return output
 
     else:
-        raise HTTP(501, current.ERROR.BAD_METHOD)
-    
+        raise HTTP(405, current.ERROR.BAD_METHOD)
+
 # =============================================================================
 def project_progress_report(r, **attr):
     """
@@ -5680,7 +5680,7 @@ def project_progress_report(r, **attr):
             outcomes = goal["outcomes"]
             for o in outcomes:
                 outcome = outcomes[o]
-                outputs = outcome["outputs"] 
+                outputs = outcome["outputs"]
                 for p in outputs:
                     rowspan += 1
                     output = outputs[p]
@@ -5797,8 +5797,8 @@ def project_progress_report(r, **attr):
         return output
 
     else:
-        raise HTTP(501, current.ERROR.BAD_METHOD)
-    
+        raise HTTP(405, current.ERROR.BAD_METHOD)
+
 # =============================================================================
 def project_budget_progress_report(r, **attr):
     """
@@ -5833,8 +5833,8 @@ def project_budget_progress_report(r, **attr):
         return output
 
     else:
-        raise HTTP(501, current.ERROR.BAD_METHOD)
-    
+        raise HTTP(405, current.ERROR.BAD_METHOD)
+
 # =============================================================================
 def project_indicator_progress_report(r, **attr):
     """
@@ -5869,8 +5869,8 @@ def project_indicator_progress_report(r, **attr):
         return output
 
     else:
-        raise HTTP(501, current.ERROR.BAD_METHOD)
-    
+        raise HTTP(405, current.ERROR.BAD_METHOD)
+
 # =============================================================================
 class S3ProjectProgrammeModel(S3Model):
     """
@@ -7910,7 +7910,7 @@ class S3ProjectTaskModel(S3Model):
             return output
 
         else:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(405, current.ERROR.BAD_METHOD)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -9769,7 +9769,7 @@ class project_Details(S3Method):
             return output
 
         else:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(405, current.ERROR.BAD_METHOD)
 
 # END =========================================================================
 

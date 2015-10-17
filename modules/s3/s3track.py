@@ -829,7 +829,7 @@ class S3CheckInMethod(S3Method):
 
         # @ToDo: JSON representation for check-in from mobile devices
         else:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(415, current.ERROR.BAD_FORMAT)
 
 # =============================================================================
 class S3CheckOutMethod(S3Method):
@@ -908,6 +908,6 @@ class S3CheckOutMethod(S3Method):
 
         # @ToDo: JSON representation for check-out from mobile devices
         else:
-            raise HTTP(501, current.ERROR.BAD_METHOD)
+            raise HTTP(415, current.ERROR.BAD_FORMAT)
 
 # END =========================================================================

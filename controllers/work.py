@@ -13,9 +13,8 @@ if not settings.has_module(module):
 def index():
     """ Module's Home Page """
 
-    output = {}
-
-    return output
+    # Redirect to job list
+    s3_redirect_default(URL(f="job", args=["datalist"]))
 
 # -----------------------------------------------------------------------------
 def context():

@@ -3411,7 +3411,7 @@ class survey_TranslateDownload(S3Method):
         """
 
         if r.representation != "xls":
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
         template_id = r.id
         template = r.record
@@ -3515,7 +3515,7 @@ class survey_ExportResponses(S3Method):
         """
 
         if r.representation != "xls":
-            r.error(501, current.error.BAD_FORMAT)
+            r.error(415, current.error.BAD_FORMAT)
 
         series_id = self.record_id
         if series_id is None:

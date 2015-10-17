@@ -496,7 +496,7 @@ class evr_AddGroupMembers(S3Method):
                r.representation == "aadata":
                 return self.add_members(r, **attr)
             else:
-                r.error(501, current.ERROR.BAD_FORMAT)
+                r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
 

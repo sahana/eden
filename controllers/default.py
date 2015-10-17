@@ -416,7 +416,7 @@ def organisation():
                         draw)
     else:
         from gluon.http import HTTP
-        raise HTTP(501, ERROR.BAD_FORMAT)
+        raise HTTP(415, ERROR.BAD_FORMAT)
     return items
 
 # -----------------------------------------------------------------------------

@@ -7269,7 +7269,7 @@ class S3RoleManager(S3Method):
             r.error(501, current.ERROR.BAD_FORMAT)
 
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
         return output
 
@@ -7709,7 +7709,7 @@ class S3RoleManager(S3Method):
             current.response.view = "admin/role_edit.html"
 
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
         return output
 
@@ -7766,7 +7766,7 @@ class S3RoleManager(S3Method):
             else:
                 session.error = T("No role to delete")
         else:
-            r.error(501, current.ERROR.BAD_FORMAT)
+            r.error(415, current.ERROR.BAD_FORMAT)
 
         redirect(URL(c="admin", f="role", vars=request.get_vars))
 
@@ -8009,7 +8009,7 @@ class S3RoleManager(S3Method):
 
                 current.response.view = "admin/membership_manage.html"
             else:
-                r.error(501, current.ERROR.BAD_FORMAT)
+                r.error(415, current.ERROR.BAD_FORMAT)
 
         else:
             r.error(404, current.ERROR.BAD_RECORD)
@@ -8273,7 +8273,7 @@ class S3RoleManager(S3Method):
                               add_btn=add_btn)
                 current.response.view = "admin/membership_manage.html"
             else:
-                r.error(501, current.ERROR.BAD_FORMAT)
+                r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(404, current.ERROR.BAD_RECORD)
 
