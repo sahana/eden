@@ -35,6 +35,7 @@ __all__ = ("S3CAPModel",
            "add_area_from_template",
            "cap_AssignArea",
            "cap_AreaRepresent",
+           "cap_CloneAlert",
            #"cap_gis_location_xml_post_parse",
            #"cap_gis_location_xml_post_render",
            )
@@ -398,13 +399,15 @@ class S3CAPModel(S3Model):
                                          _title="%s|%s" % (T("The text describing the purpose or significance of the alert message"),
                                                            T("The message note is primarily intended for use with status 'Exercise' and message type 'Error'"))),
                            ),
-                     Field("reference", "list:reference cap_alert",
+                     Field("reference", #"list:reference cap_alert",
                            label = T("Reference"),
-                           represent = S3Represent(lookup = tablename,
-                                                   fields = ["msg_type", "sent", "sender"],
-                                                   field_sep = " - ",
-                                                   multiple = True,
-                                                   ),
+                           writable = False,
+                           readable = False,
+                           #represent = S3Represent(lookup = tablename,
+                           #                        fields = ["msg_type", "sent", "sender"],
+                           #                        field_sep = " - ",
+                           #                        multiple = True,
+                           #                        ),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The group listing identifying earlier message(s) referenced by the alert message"),
                                                            T("The extended message identifier(s) (in the form sender,identifier,sent) of an earlier CAP message or messages referenced by this one."))),
@@ -530,6 +533,10 @@ class S3CAPModel(S3Model):
         self.set_method("cap", "alert",
                         method = "assign",
                         action = self.cap_AssignArea())
+        
+        self.set_method("cap", "alert",
+                        method = "clone",
+                        action = self.cap_CloneAlert())
 
         if crud_strings["cap_template"]:
             crud_strings[tablename] = crud_strings["cap_template"]
@@ -1728,7 +1735,10 @@ def cap_rheader(r):
                                     _class="error")
                         export_btn = ""
                         action_btn = None
+                        msg_type_btn = False
                     else:
+                        msg_type_btn = False
+                        action_btn = None
                         error = ""
                         export_btn = A(DIV(_class="export_cap_large"),
                                        _href=URL(c="cap", f="alert", args=["%s.cap" % alert_id]),
@@ -1772,10 +1782,6 @@ def cap_rheader(r):
                                                    )
                                     current.response.s3.jquery_ready.append(
 '''S3.confirmClick('.confirm-btn','%s')''' % T("Do you want to submit the alert for approval?"))
-                                else:
-                                    action_btn = None
-                            else:
-                                action_btn = None
 
                             # For Alert Approver
                             if has_permission("approve", "cap_alert"):
@@ -1786,8 +1792,25 @@ def cap_rheader(r):
                                                            ),
                                                _class = "action-btn",
                                                )
-                        else:
-                            action_btn = None
+
+                        if record.approved_by is not None:                            
+                            if current.auth.s3_has_permission("create", "cap_alert"):
+                                msg_type_btn = True
+                                msg_update_btn = A(T("Update Alert"),
+                                                   _id = record.id,
+                                                   _data = "Update",
+                                                   _class = "action-btn cap-clone-update",
+                                                   )
+                                msg_cancel_btn = A(T("Cancel Alert"),
+                                                   _id = record.id,
+                                                   _data = "Cancel",
+                                                   _class = "action-btn cap-clone-update",
+                                                   )
+                                msg_error_btn = A(T("Error Alert"),
+                                                   _id = record.id,
+                                                   _data = "Error",
+                                                   _class = "action-btn cap-clone-update",
+                                                  )
 
                     tabs = [(T("Alert Details"), None),
                             (T("Information"), "info"),
@@ -1841,6 +1864,11 @@ def cap_rheader(r):
 
                     if action_btn:
                         rheader.insert(1, TR(TD(action_btn)))
+
+                    if msg_type_btn:
+                        rheader.insert(1, TR(TD(msg_error_btn)))
+                        rheader.insert(1, TR(TD(msg_cancel_btn)))
+                        rheader.insert(1, TR(TD(msg_update_btn)))
 
             elif tablename == "cap_area":
                 # Used only for Area Templates
@@ -2795,6 +2823,225 @@ class cap_AssignArea(S3Method):
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
+
+# -----------------------------------------------------------------------------
+class cap_CloneAlert(S3Method):
+    """
+        Clone the cap_alert
+    """
+    
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Apply method
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+        
+        output = {}
+        if r.http == "POST":
+            if r.method == "clone":
+                output = self.clone(r, **attr)
+            else:
+                r.error(405, current.ERROR.BAD_METHOD)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+        return output
+    
+    # -------------------------------------------------------------------------
+    def clone(self, r, **attr):
+        """
+            Clone the cap_alert
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+        
+        s3db = current.s3db
+        
+        # Get the alert ID
+        alert_id = self.record_id
+        if not alert_id:
+            # Must be called for a particular alert
+            r.error(404, current.ERROR.BAD_RECORD)
+
+        alert_table = s3db.cap_alert
+        # Get the person ID
+        auth = current.auth
+        person_id = auth.s3_logged_in_person()
+        if not person_id or not auth.s3_has_permission("create", alert_table):
+            auth.permission.fail()
+        
+        msg_type_options = ["Update", "Cancel", "Error"]
+        msg_type = current.request._get_vars["msg_type"]
+        
+        if msg_type is None or msg_type not in msg_type_options:
+            r.error(400, current.ERROR.BAD_REQUEST)
+        
+        # Start of clone
+        db = current.db
+        info_table = s3db.cap_info
+        area_table = s3db.cap_area
+        location_table = s3db.cap_area_location
+        tag_table = s3db.cap_area_tag
+        resource_table = s3db.cap_resource
+        unwanted_fields = s3fields.s3_all_meta_field_names()
+        unwanted_fields.extend(["id", "doc_id"])
+        unwanted_fields = set(unwanted_fields)
+        accessible_query = auth.s3_accessible_query
+        has_permission = auth.s3_has_permission
+        audit = current.audit
+        set_record_owner = auth.s3_set_record_owner
+        onaccept = s3db.onaccept
+        
+        # Copy the alert segment
+        alert_fields = [alert_table[f] for f in alert_table.fields
+                        if f not in unwanted_fields]
+        alert_query = (alert_table.id == alert_id) & \
+                      accessible_query("read", alert_table)
+        alert_row = db(alert_query).select(*alert_fields, limitby=(0, 1)).first()  
+        alert_row_clone = alert_row.as_dict()
+        del alert_row_clone["identifier"]
+        alert_row_clone["msg_type"] = msg_type
+        alert_row_clone["reference"] = ("%s,%s,%s") % (alert_row.sender,
+                                                       alert_row.identifier,
+                                str(s3_utc(alert_row.sent)).replace(" ", "T"),
+                                                       )
+
+        new_alert_id = alert_table.insert(**alert_row_clone)
+        # Post-process create
+        alert_row_clone["id"] = new_alert_id
+        audit("create", "cap", "alert", record=new_alert_id)
+        set_record_owner(alert_table, new_alert_id)
+        onaccept(alert_table, alert_row_clone)
+        
+        if has_permission("create", info_table):
+            # Copy the info segment
+            unwanted_fields_ = list(unwanted_fields)
+            unwanted_fields_.remove("id")
+            info_fields = [info_table[f] for f in info_table.fields
+                           if f not in unwanted_fields_]
+            info_query = (info_table.alert_id == alert_id) &\
+                         accessible_query("read", info_table)
+            info_rows = db(info_query).select(*info_fields)
+            if info_rows:
+                has_area_permission = has_permission("create", area_table)
+                has_location_permission = has_permission("create", location_table)
+                has_tag_permission = has_permission("create", tag_table)
+                has_resource_permission = has_permission("create", resource_table)
+                area_fields = [area_table[f] for f in area_table.fields
+                               if f not in unwanted_fields_]
+                location_fields = [location_table[f] for f in location_table.fields
+                                   if f not in unwanted_fields]
+                tag_fields = [tag_table[f] for f in tag_table.fields
+                              if f not in unwanted_fields]
+                resource_fields = [resource_table[f] for f in resource_table.fields
+                                   if f not in unwanted_fields]
+                area_accessible = accessible_query("read", area_table)
+                location_accessible = accessible_query("read", location_table)
+                tag_accessible = accessible_query("read", tag_table)
+                resource_accessible = accessible_query("read", resource_table)
+                
+                for info_row in info_rows:
+                    info_id = info_row.id
+                    info_row_clone = info_row.as_dict()
+                    del info_row_clone["id"]
+                    info_row_clone["alert_id"] = new_alert_id
+                    new_info_id = info_table.insert(**info_row_clone)
+                    # Post-process create
+                    info_row_clone["id"] = new_info_id
+                    audit("create", "cap", "info", record=new_info_id)
+                    set_record_owner(info_table, new_info_id)
+                    onaccept(info_table, info_row_clone)
+                    
+                    if has_area_permission:
+                        # Copy the area segment
+                        area_query = (area_table.info_id == info_id) &\
+                                     (area_table.alert_id == alert_id) & \
+                                     area_accessible
+                        area_rows = db(area_query).select(*area_fields)
+                        if area_rows:   
+                            for area_row in area_rows:
+                                area_id = area_row.id
+                                area_row_clone = area_row.as_dict()
+                                del area_row_clone["id"]
+                                area_row_clone["alert_id"] = new_alert_id
+                                area_row_clone["info_id"] = new_info_id
+                                
+                                new_area_id = area_table.insert(**area_row_clone)
+                                # Post-process create
+                                area_row_clone["id"] = new_area_id
+                                audit("create", "cap", "area", record=new_area_id)
+                                set_record_owner(area_table, new_area_id)
+                                onaccept(area_table, area_row_clone)
+                                
+                                if has_location_permission:
+                                    # Copy the area_location
+                                    location_query = (location_table.area_id == area_id) &\
+                                                     location_accessible
+                                    location_rows = db(location_query).\
+                                                        select(*location_fields)
+                                    if location_rows:
+                                        for location_row in location_rows:
+                                            location_row_clone = location_row.as_dict()
+                                            location_row_clone["alert_id"] = new_alert_id
+                                            location_row_clone["area_id"] = new_area_id
+                                            s3db.onvalidation(s3db.gis_location,
+                                                              location_row_clone)
+                                            new_location_id = location_table.\
+                                                            insert(**location_row_clone)
+                                            # Post-process create
+                                            location_row_clone["id"] = new_location_id
+                                            audit("create", "cap", "area_location",
+                                                  record=new_location_id)
+                                            set_record_owner(location_table,
+                                                             new_location_id)
+                                            onaccept(location_table,
+                                                     location_row_clone)
+                                
+                                if has_tag_permission:        
+                                    # Copy the area_tag
+                                    tag_query = (tag_table.area_id == area_id) &\
+                                                tag_accessible
+                                    tag_rows = db(tag_query).select(*tag_fields)
+                                    if tag_rows:
+                                        for tag_row in tag_rows:
+                                            tag_row_clone = tag_row.as_dict()
+                                            tag_row_clone["alert_id"] = new_alert_id
+                                            tag_row_clone["area_id"] = new_area_id
+                                            
+                                            new_tag_id = tag_table.insert(**tag_row_clone)
+                                            # Post-process create
+                                            tag_row_clone["id"] = new_tag_id
+                                            audit("create", "cap", "area_tag",
+                                                  record=new_tag_id)
+                                            set_record_owner(tag_table, new_tag_id)
+                                            onaccept(tag_table, tag_row_clone)
+                        
+                        if has_resource_permission:
+                            # Copy the resource segment
+                            resource_query = (resource_table.info_id == info_id) &\
+                                        (resource_table.alert_id == alert_id) &\
+                                        resource_accessible    
+                            resource_rows = db(resource_query).\
+                                                        select(*resource_fields)
+                            if resource_rows:
+                                for resource_row in resource_rows:
+                                    resource_row_clone = resource_row.as_dict()
+                                    resource_row_clone["info_id"] = new_info_id
+                                    resource_row_clone["alert_id"] = new_alert_id
+                                    rid = resource_table.insert(**resource_row_clone)
+                                    resource_row_clone["id"] = rid
+                                    # Post-process create
+                                    audit("create", "cap", "resource", record=rid)
+                                    s3db.update_super(resource_table,
+                                                      resource_row_clone)
+                                    set_record_owner(resource_table, rid)
+                                    onaccept(resource_table, resource_row_clone)
+
+        output = current.xml.json_message(message=new_alert_id)
+        current.response.headers["Content-Type"] = "application/json"      
+        return output
 
 # -----------------------------------------------------------------------------
 class cap_AreaRepresent(S3Represent):

@@ -155,6 +155,31 @@ def alert():
                 redirect(URL(c="cap", f="template",
                              args = request.args,
                              vars = request.vars))
+            if r.record.approved_by is not None:
+                # Once approved, don't allow to edit
+                # Don't allow to delete
+                s3db.configure(tablename,
+                               editable=False,
+                               deletable=False,
+                               )
+            # Uncomment or add to this according to country CAP profile
+            #if r.record.msg_type in ("Update", "Cancel", "Error"):
+                # Use case for change in msg_type
+            #    atable = r.table
+            #    for f in ("template_id",
+            #              "sender",
+            #              "status",
+            #              "msg_type",
+            #              "source",
+            #              "scope",
+            #              "restriction",
+            #              "addresses",
+            #              "codes",
+            #              "note",
+            #              "reference",
+            #              "incidents",
+            #              ):
+            #        atable[f].writable = False
         else:
             r.resource.add_filter(r.table.is_template == False)
             s3.formats["cap"] = r.url() # .have added by JS
@@ -551,6 +576,26 @@ def alert():
                     itable.web.default = current.deployment_settings.get_base_public_url()+\
                                          URL(c="cap", f="alert", args=alert_id)
 
+                if r.record.approved_by is not None:
+                    # Once approved, don't allow info segment to edit
+                    # Don't allow to delete
+                    s3db.configure("cap_info",
+                                   editable = False,
+                                   deletable = False,
+                                   )
+                # Uncomment or add to this according to country CAP profile 
+                #if r.record.msg_type in ("Update", "Cancel", "Error"):
+                    # Use case for change in msg_type
+                #    for f in ("language",
+                #              "category",
+                #              "event",
+                #              "event_type_id",
+                #              "audience",
+                #              "event_code",
+                #              "sender_name",
+                #              "parameter",
+                #              ):
+                #        itable[f].writable = False
 
             elif r.component_name == "area":
                 atable = r.component.table
@@ -584,6 +629,14 @@ def alert():
                     field.default = rows.first().id
                     field.writable = field.readable = False
 
+                if r.record.approved_by is not None:
+                    # Once approved, don't allow area segment to edit
+                    # Don't allow to delete
+                    s3db.configure("cap_area",
+                                   editable = False,
+                                   deletable = False,
+                                   )
+
             elif r.component_name == "resource":
                 atable = r.component.table
                 # Limit to those for this Alert
@@ -601,6 +654,14 @@ def alert():
                     field = atable.info_id
                     field.default = rows.first().id
                     field.writable = field.readable = False
+
+                if r.record.approved_by is not None:
+                    # Once approved, don't allow resource segment to edit
+                    # Don't allow to delete
+                    s3db.configure("cap_resource",
+                                   editable = False,
+                                   deletable = False,
+                                   )
 
             # @ToDo: Move inside correct component context (None?)
             post_vars = request.post_vars
@@ -666,20 +727,7 @@ def alert():
                 rows = db(itable.alert_id == lastid).select(itable.id)
 
                 rtable = s3db.cap_resource
-                r_unwanted_fields = set(("deleted_rb",
-                                         "owned_by_user",
-                                         "approved_by",
-                                         "mci",
-                                         "deleted",
-                                         "modified_on",
-                                         "realm_entity",
-                                         "uuid",
-                                         "created_on",
-                                         "deleted_fk",
-                                         "created_by",
-                                         "modified_by",
-                                         "owned_by_group",
-                                         ))
+                r_unwanted_fields = set(s3base.s3_all_meta_field_names())
                 rfields = [rtable[f] for f in rtable.fields
                                      if f not in r_unwanted_fields]
                 rows_ = db(rtable.alert_id == alert.template_id).select(*rfields)
