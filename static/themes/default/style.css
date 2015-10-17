@@ -842,6 +842,11 @@ h4.profile-sub-header {
   background: none repeat scroll 0 0 #f5f5f5;
 }
 
+/* Text representation */
+.text-body {
+  white-space: pre-wrap;
+}
+
 /* Iframe Map (Location Represent links) */
 #close-iframe-map {
   padding: 7px;

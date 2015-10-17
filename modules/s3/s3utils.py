@@ -631,6 +631,33 @@ $(document).on('click','.s3-truncate-less',function(event){
     return
 
 # =============================================================================
+def s3_text_represent(text, truncate=True, lines=5, _class=None):
+    """
+        Representation function for text fields with intelligent
+        truncation and preserving whitespace.
+
+        @param text: the text
+        @param truncate: whether to truncate or not
+        @param lines: maximum number of lines to show
+        @param _class: CSS class to use for truncation (otherwise usign
+                       the text-body class itself)
+    """
+
+    if not text:
+        text = ""
+    if _class is None:
+        selector = ".text-body"
+        _class = "text-body"
+    else:
+        selector = ".%s" % _class
+        _class = "text-body %s" % _class
+
+    if truncate:
+        s3_trunk8(selector = selector, lines = lines)
+
+    return DIV(text, _class="text-body")
+
+# =============================================================================
 def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
     """
         Formats the full name of a person

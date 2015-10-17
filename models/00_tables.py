@@ -63,6 +63,7 @@ import s3db.vehicle
 import s3db.vol
 import s3db.vulnerability
 import s3db.water
+import s3db.work
 
 current.s3db = s3db = S3Model()
 

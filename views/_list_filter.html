@@ -48,7 +48,7 @@
    {{try:}}{{ltype = list_type}}{{except:}}{{ltype = "datatable"}}{{pass}}
    {{try:}}{{items = items}}
    {{if ltype == "datalist":}}
-    <div id='dl-container' class='small-12 columns'>
+    <div id='dl-container' class='card-holder-home small-12 columns'>
      {{=items}}
     </div>
    {{else:}}

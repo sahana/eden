@@ -1,0 +1,796 @@
+# -*- coding: utf-8 -*-
+
+""" Sahana Eden Simplified Work Items Management
+
+    @copyright: 2015 (c) Sahana Software Foundation
+    @license: MIT
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use,
+    copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following
+    conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
+"""
+
+__all__ = ("WorkContextModel",
+           "WorkJobModel",
+           "work_rheader",
+           )
+
+from gluon import *
+from ..s3 import *
+from s3layouts import S3PopupLink
+
+# =============================================================================
+class WorkContextModel(S3Model):
+    """ @todo: implement """
+
+    names = ("work_context",
+             )
+
+    def model(self):
+
+        db = current.db
+        T = current.T
+
+        settings = current.deployment_settings
+
+        # ---------------------------------------------------------------------
+        # Work Context
+        #
+        tablename = "work_context"
+        self.define_table(tablename,
+                          Field("name"),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+
+        return {}
+
+# =============================================================================
+class WorkJobModel(S3Model):
+    """ Model for Jobs """
+
+    names = ("work_job_type",
+             "work_job",
+             "work_assignment",
+             )
+
+    def model(self):
+
+        db = current.db
+        T = current.T
+        s3 = current.response.s3
+
+        settings = current.deployment_settings
+
+        crud_strings = s3.crud_strings
+
+        define_table = self.define_table
+        configure = self.configure
+        add_components = self.add_components
+        set_method = self.set_method
+
+        # ---------------------------------------------------------------------
+        tablename = "work_job_type"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Title"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Job Type"),
+            title_display = T("Job Type Details"),
+            title_list = T("Job Types"),
+            title_update = T("Edit Job Type"),
+            label_list_button = T("List Job Types"),
+            msg_record_created = T("Job Type added"),
+            msg_record_modified = T("Job Type updated"),
+            msg_record_deleted = T("Job Type deleted"),
+            msg_list_empty = T("No Job Types currently registered")
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename)
+        job_type_id = S3ReusableField("job_type_id", "reference %s" % tablename,
+                                      label = T("Job Type"),
+                                      represent = represent,
+                                      requires = IS_EMPTY_OR(IS_ONE_OF(
+                                                        db, "work_job_type.id",
+                                                        represent,
+                                                        )),
+                                      sortby = "name",
+                                      comment = S3PopupLink(c="work",
+                                                            f="job_type",
+                                                            tooltip=T("Create a new job type"),
+                                                            ),
+                                      )
+
+        # ---------------------------------------------------------------------
+        # Job Priorities
+        #
+        job_priority = {1: T("Urgent"),
+                        2: T("High"),
+                        3: T("Normal"),
+                        4: T("Low"),
+                        }
+
+        # ---------------------------------------------------------------------
+        # Job Statuses
+        #
+        job_status = (("NEW", T("New")),
+                      ("STARTED", T("Started")),
+                      ("ONHOLD", T("On Hold")),
+                      ("COMPLETED", T("Completed")),
+                      ("CANCELLED", T("Cancelled")),
+                      )
+
+        # ---------------------------------------------------------------------
+        # Job
+        #
+        tablename = "work_job"
+        define_table(tablename,
+                     job_type_id(),
+                     Field("name",
+                           label = T("Title"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("summary", "text",
+                           label = T("Summary"),
+                           represent = s3_text_represent,
+                           widget = s3_comments_widget,
+                           ),
+                     Field("details", "text",
+                           label = T("Details"),
+                           represent = s3_text_represent,
+                           ),
+                     Field("priority", "integer",
+                           default = 3, # normal priority
+                           requires = IS_IN_SET(job_priority, zero=None),
+                           represent = S3Represent(options=job_priority),
+                           ),
+                     Field("status",
+                           default = "NEW",
+                           requires = IS_IN_SET(job_status, zero=None, sort=False),
+                           represent = S3Represent(options=dict(job_status)),
+                           ),
+                     self.super_link("site_id", "org_site",
+                                     label = T("Place"),
+                                     orderby = "org_site.name",
+                                     readable = True,
+                                     writable = True,
+                                     represent = self.org_site_represent,
+                                     ),
+                     s3_datetime("start_date"),
+                     Field("duration", "double",
+                           label = T("Hours Planned"),
+                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0, None)),
+                           ),
+                     Field("workers_min", "integer",
+                           default = 1,
+                           label = T("Workers needed"),
+                           requires = IS_INT_IN_RANGE(1, None),
+                           ),
+                     # @todo: onvalidation to check max>=min
+                     Field("workers_max", "integer",
+                           label = T("Workers needed (max)"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, None)),
+                           ),
+                     Field("workers_assigned", "integer",
+                           default = 0,
+                           label = T("Workers assigned"),
+                           requires = IS_INT_IN_RANGE(0, None),
+                           writable = False,
+                           ),
+                     *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Job"),
+            title_display = T("Job Details"),
+            title_list = T("Jobs"),
+            title_update = T("Edit Job"),
+            label_list_button = T("List Jobs"),
+            msg_record_created = T("Job added"),
+            msg_record_modified = T("Job updated"),
+            msg_record_deleted = T("Job deleted"),
+            msg_list_empty = T("No Jobs currently registered")
+        )
+
+        # Filter widgets
+        filter_widgets = [S3TextFilter(["name",
+                                        "summary",
+                                        "job_type_id$name",
+                                        "site_id$name",
+                                        ],
+                                        label = T("Search"),
+                                       ),
+                          S3OptionsFilter("job_type_id"),
+                          S3OptionsFilter("status"),
+                          S3OptionsFilter("site_id",
+                                          hidden = True,
+                                          ),
+                          S3DateFilter("start_date",
+                                       hidden = True,
+                                       ),
+                          ]
+
+        # List fields
+        list_fields = ["priority",
+                       "job_type_id",
+                       "name",
+                       "site_id",
+                       "start_date",
+                       "duration",
+                       "status",
+                       "workers_min",
+                       "workers_assigned",
+                       ]
+
+        configure(tablename,
+                  filter_widgets = filter_widgets,
+                  list_fields = list_fields,
+                  list_layout = work_JobListLayout(),
+                  )
+
+        # Custom Methods
+        set_method("work", "job",
+                   method = "signup",
+                   action = work_SignUp,
+                   )
+        set_method("work", "job",
+                   method = "cancel",
+                   action = work_SignUp,
+                   )
+
+        # Components
+        add_components(tablename,
+                       work_assignment = "job_id",
+                       )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, show_link=True)
+        job_id = S3ReusableField("job_id", "reference %s" % tablename,
+                                 label = T("Job"),
+                                 represent = represent,
+                                 requires = IS_ONE_OF(db, "work_job.id",
+                                                      represent,
+                                                      ),
+                                 sortby = "name",
+                                 comment = S3PopupLink(c="work",
+                                                       f="job",
+                                                       tooltip=T("Create a new job"),
+                                                       ),
+                                 )
+
+        # ---------------------------------------------------------------------
+        # Linktable person<=>job
+        #
+        auth = current.auth
+        tablename = "work_assignment"
+        define_table(tablename,
+                     job_id(),
+                     # @todo: move default into job controller
+                     self.pr_person_id(default = auth.s3_logged_in_person()),
+                     *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Assignment"),
+            title_display = T("Assignment Details"),
+            title_list = T("Assignments"),
+            title_update = T("Edit Assignment"),
+            label_list_button = T("List Assignments"),
+            msg_record_created = T("Assignment added"),
+            msg_record_modified = T("Assignment updated"),
+            msg_record_deleted = T("Assignment deleted"),
+            msg_list_empty = T("No Assignments currently registered")
+        )
+
+        # Table configuration
+        # @todo: add onvalidation to check that the same person has not
+        #        yet been assigned to the same job
+        configure(tablename,
+                  onaccept = self.assignment_onaccept,
+                  ondelete = self.assignment_ondelete,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        return {"work_job_id": job_id,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"work_job_id": lambda **attr: dummy("job_id"),
+                }
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def assignment_onaccept(cls, form):
+        """
+            Onaccept callback for work assignments
+
+            @param form: the FORM
+        """
+
+        try:
+            formvars = form.vars
+        except AttributeError:
+            return
+
+        db = current.db
+        atable = current.s3db.work_assignment
+
+        if "job_id" not in formvars:
+            if "id" not in formvars:
+                return
+            record_id = formvars.id
+            row = db(atable.id == record_id).select(atable.job_id,
+                                                    limitby = (0, 1)).first()
+            if not row:
+                return
+            job_id = row.job_id
+        else:
+            job_id = formvars.job_id
+
+        if job_id:
+            cls.update_workers_assigned(job_id)
+
+        return
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def assignment_ondelete(cls, row):
+        """
+            Ondelete callback for work assignments
+
+            @param row: the Row
+        """
+
+        try:
+            record_id = row.id
+        except AttributeError:
+            return
+
+        db = current.db
+        atable = current.s3db.work_assignment
+
+        row = db(atable.id == record_id).select(atable.deleted_fk,
+                                                limitby = (0, 1)).first()
+
+        if row and row.deleted_fk:
+            data = json.loads(row.deleted_fk)
+            job_id = data.get("job_id")
+            if job_id:
+                cls.update_workers_assigned(job_id)
+
+        return
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def update_workers_assigned(job_id):
+        """
+            Update the number of workers assigned to a job
+
+            @param job_id: the job record id
+        """
+
+        if not job_id:
+            return
+
+        db = current.db
+        s3db = current.s3db
+        jtable = s3db.work_job
+        atable = s3db.work_assignment
+
+        query = (atable.job_id == job_id) & \
+                (atable.deleted != True)
+        count = atable.id.count()
+        row = db(query).select(count, limitby=(0, 1)).first()
+        if not row:
+            workers_assigned = 0
+        else:
+            workers_assigned = row[count]
+
+        db(jtable.id == job_id).update(workers_assigned=workers_assigned)
+
+        return
+
+# =============================================================================
+def work_rheader(r, tabs=[]):
+    """ Work module resource headers """
+
+    if r.representation != "html":
+        # RHeaders only used in interactive views
+        return None
+
+    tablename = r.tablename
+    record = r.record
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "work_job":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), ""),
+                        (T("Assignments"), "assignment"),
+                        ]
+
+            rheader_fields = [["name", "start_date"],
+                              ["status", "duration"],
+                              ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
+
+    return rheader
+
+# =============================================================================
+class work_SignUp(S3Method):
+    """ Signup logic for job list """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Page-render entry point for REST interface.
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        output = {}
+        if r.http == "POST": # @todo: must become .json
+            method = r.method
+            if method == "signup":
+                return self.signup(r, **attr)
+            elif method == "cancel":
+                return self.cancel(r, **attr)
+            else:
+                r.error(405, current.ERROR.BAD_METHOD)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
+        return output
+
+    # -------------------------------------------------------------------------
+    def signup(self, r, **attr):
+        """
+            Sign up the current user for this a job
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        s3db = current.s3db
+        
+        # Get the job ID
+        job_id = self.record_id
+        if not job_id:
+            r.error(404, current.ERROR.BAD_RECORD)
+
+        # Get the person ID
+        auth = current.auth
+        person_id = auth.s3_logged_in_person()
+        if not person_id:
+            auth.permission.fail()
+
+        # Add assignment if not assigned yet
+        atable = s3db.work_assignment
+        query = (atable.job_id == job_id) & \
+                (atable.person_id == person_id) & \
+                (atable.deleted != True)
+        row = current.db(query).select(atable.id, limitby=(0, 1)).first()
+        if not row:
+            assignment = {"job_id": job_id,
+                          "person_id": person_id,
+                          }
+            assignment_id = atable.insert(**assignment)
+            if assignment_id:
+                assignment["id"] = assignment_id
+                s3db.onaccept(atable, assignment)
+                
+        output = current.xml.json_message(True)
+        return output
+
+    # -------------------------------------------------------------------------
+    def cancel(self, r, **attr):
+        """
+            Cancel a job assignment of the current user
+
+            @param r: the S3Request instance
+            @param attr: controller attributes
+        """
+
+        s3db = current.s3db
+        
+        # Get the job ID
+        job_id = self.record_id
+        if not job_id:
+            r.error(404, current.ERROR.BAD_RECORD)
+
+        # Get the person ID
+        auth = current.auth
+        person_id = auth.s3_logged_in_person()
+        if not person_id:
+            auth.permission.fail()
+            
+        query = (FS("job_id") == job_id) & \
+                (FS("person_id") == person_id)
+                
+        assignments = s3db.resource("work_assignment", filter=query)
+        assignments.delete()
+                
+        output = current.xml.json_message(True)
+        return output
+
+# =============================================================================
+class work_JobListLayout(S3DataListLayout):
+    """ Data List Layout for Job Lists """
+
+    list_fields = ["priority",
+                   "job_type_id",
+                   "name",
+                   "summary",
+                   "site_id",
+                   "start_date",
+                   "duration",
+                   "status",
+                   "workers_min",
+                   "workers_max",
+                   "workers_assigned",
+                   "modified_on",
+                   ]
+
+    # ---------------------------------------------------------------------
+    def __init__(self, profile="work_job"):
+        """ Constructor """
+
+        super(work_JobListLayout, self).__init__(profile=profile)
+
+        self.current_assignments = set()
+
+    # ---------------------------------------------------------------------
+    def prep(self, resource, records):
+
+        logged_in_person = current.auth.s3_logged_in_person()
+        if not logged_in_person:
+            return
+
+        db = current.db
+        atable = current.s3db.work_assignment
+
+        # Get all jobs the current user is assigned to
+        record_ids = [record["_row"]["work_job.id"] for record in records]
+        query = (atable.job_id.belongs(record_ids)) & \
+                (atable.person_id == logged_in_person) & \
+                (atable.deleted != True)
+        rows = db(query).select(atable.job_id)
+        self.current_assignments = set(row.job_id for row in rows)
+
+    # ---------------------------------------------------------------------
+    def render_header(self, list_id, item_id, resource, rfields, record):
+        """
+            Render the card header
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
+
+        T = current.T
+
+        toolbox = self.render_toolbox(list_id,
+                                      resource,
+                                      record,
+                                      )
+        if not toolbox:
+            toolbox = ""
+
+        place = record["work_job.site_id"]
+        date = record["work_job.start_date"]
+        hours_planned = record["work_job.duration"]
+        job_type = record["work_job.job_type_id"]
+
+        header = DIV(SPAN(place,
+                          _class="location-title",
+                          ),
+                     SPAN(date,
+                          _class="date-title",
+                          ),
+                     SPAN("%s %s" % (hours_planned, T("Hours")),
+                          _class="date-title",
+                          ),
+                     SPAN(job_type,
+                          _class="date-title",
+                          ),
+                     toolbox,
+                     _class="card-header",
+                     )
+        return header
+
+    # ---------------------------------------------------------------------
+    def render_body(self, list_id, item_id, resource, rfields, record):
+        """
+            Render the card body
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
+        """
+
+        T = current.T
+
+        # Title and Description
+        title = record["work_job.name"]
+        description = record["work_job.summary"]
+
+        # Priority, Job Type and Last Update
+        status = record["work_job.status"]
+        priority = record["work_job.priority"]
+        last_modified = record["work_job.modified_on"]
+
+        date_line = DIV(LABEL(T("Status"),
+                              _class="dl-inline-label",
+                              ),
+                        SPAN(status,
+                             _class="dl-inline-value",
+                             ),
+                        LABEL(T("Priority"),
+                              _class="dl-inline-label",
+                              ),
+                        SPAN(priority,
+                             _class="dl-inline-value",
+                             ),
+                        LABEL(T("Last Updated"),
+                              _class="dl-inline-label",
+                              ),
+                        SPAN(last_modified,
+                             _class="dl-inline-value",
+                             ),
+                        _class="dl-inline-data",
+                        )
+
+        footer = self.render_footer(list_id,
+                                    item_id,
+                                    resource,
+                                    rfields,
+                                    record,
+                                    )
+
+        # Compose card body
+        body = DIV(DIV(title,
+                       _class="card-subtitle"
+                       ),
+                   description,
+                   date_line,
+                   footer,
+                   _class="media-body",
+                   )
+
+        return DIV(body, _class="media")
+
+    # ---------------------------------------------------------------------
+    def render_footer(self, list_id, item_id, resource, rfields, record):
+        """
+            @todo: docstring
+        """
+
+        T = current.T
+
+        raw = record["_row"]
+
+        # Get the record ID
+        record_id = raw["work_job.id"]
+        if record_id in self.current_assignments:
+            button = A("Cancel my assignment",
+                       _class="delete-btn-ajax job-cancel",
+                       )
+        else:
+            # @todo: also check job status and start_date (should be future)
+            workers_needed = raw["work_job.workers_max"]
+            if not workers_needed:
+                workers_needed = raw["work_job.workers_min"]
+
+            workers_assigned = raw["work_job.workers_assigned"]
+
+            if workers_assigned < workers_needed:
+                button = A(T("Sign me up"),
+                           _class="action-btn job-signup",
+                           )
+            else:
+                button = A("No more workers needed",
+                           _class="action-btn",
+                           _disabled="disabled",
+                           )
+
+        return DIV(button,
+                   _class="card-footer",
+                   )
+
+    # ---------------------------------------------------------------------
+    def render_toolbox(self, list_id, resource, record):
+        """
+            Render the toolbox
+
+            @param list_id: the HTML ID of the list
+            @param resource: the S3Resource to render
+            @param record: the record as dict
+        """
+
+        T = current.T
+
+        # Get the record ID
+        record_id = record["_row"]["work_job.id"]
+
+        has_permission = current.auth.s3_has_permission
+        table = current.db.work_job
+
+        # Edit button (popup)
+        if has_permission("update", table, record_id=record_id):
+            edit_btn = A(ICON("edit"),
+                         _href=URL(c="work", f="job",
+                               args=[record_id, "update.popup"],
+                               vars={"refresh": list_id,
+                                     "record": record_id,
+                                     }
+                               ),
+                         _class="s3_modal",
+                         _title=T("Edit Job"),
+                         )
+        else:
+            edit_btn = ""
+
+        # Delete button (Ajax)
+        if has_permission("delete", table, record_id=record_id):
+            delete_btn = A(ICON("delete"),
+                           _class="dl-item-delete",
+                           )
+        else:
+            delete_btn = ""
+
+        return DIV(edit_btn,
+                   delete_btn,
+                   _class="edit-bar fright",
+                   )
+
+# END =========================================================================

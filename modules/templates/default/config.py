@@ -1214,6 +1214,12 @@ def config(settings):
         #   restricted = False,
         #   module_type = None,
         #)),
+        #("work", Storage(
+        #   name_nice = T("Jobs"),
+        #   #description = "Simple Volunteer Job List",
+        #   restricted = False,
+        #   module_type = None,
+        #)),
     ])
 
 # END =========================================================================

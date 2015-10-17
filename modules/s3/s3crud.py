@@ -1550,7 +1550,10 @@ class S3CRUD(S3Method):
                                attr.get("list_id", "datalist"))
 
         # List fields
-        list_fields = resource.list_fields()
+        if hasattr(layout, "list_fields"):
+            list_fields = layout.list_fields
+        else:
+            list_fields = resource.list_fields()
 
         # Default orderby
         orderby = get_config("list_orderby",

@@ -71,6 +71,10 @@
     margin-top: 0.5rem;
 }
 
+.side-filter {
+    margin-top: 10px;
+}
+
 /* Filter form */
 .side-filter .form-row {
     margin-left: 0.375rem;
@@ -79,6 +83,10 @@
 }
 .side-filter input[type="text"] {
   width: 100% !important;
+}
+
+.dl-header {
+    font-size: 0.7rem;
 }
 
 /* List items */
@@ -121,6 +129,15 @@
     color: #7f7f7f;
 }
 
+.card-footer {
+    margin-top: 0.2rem;
+    padding: 0;
+}
+.card-footer a.action-btn:first-child,
+.card-footer a.delete-btn:first-child {
+    margin-left: 0;
+}
+
 /* Card body */
 .dl-item .pull-right {
     float: right;
@@ -140,6 +157,28 @@
 .dl-item .date-title,
 .dl-item .card-person {
     font-size: 0.7rem;
+}
+
+/* Inline contents */
+.dl-inline-data {
+    margin-top: 0.5rem;
+}
+.dl-inline-label,
+.dl-inline-value {
+    color: #999;
+    font-size: 0.7rem;
+    display: inline-block;
+}
+.dl-inline-label {
+    font-weight: normal;
+    padding-right: 0.2rem;
+}
+.dl-inline-label::after {
+    content: ":";
+}
+.dl-inline-value {
+    font-weight: bold;
+    padding-right: 0.8rem;
 }
 
 /* Tag-it */

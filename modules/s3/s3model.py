@@ -449,7 +449,7 @@ class S3Model(object):
         onaccept = cls.get_config(tablename, "%s_onaccept" % method,
                    cls.get_config(tablename, "onaccept"))
         if "vars" not in record:
-            record = Storage(vars=record, errors=Storage())
+            record = Storage(vars=Storage(record), errors=Storage())
         if onaccept:
             callback(onaccept, record, tablename=tablename)
         return
@@ -473,7 +473,7 @@ class S3Model(object):
         onvalidation = cls.get_config(tablename, "%s_onvalidation" % method,
                        cls.get_config(tablename, "onvalidation"))
         if "vars" not in record:
-            record = Storage(vars=record, errors=Storage())
+            record = Storage(vars=Storage(record), errors=Storage())
         if onvalidation:
             callback(onvalidation, record, tablename=tablename)
         return record.errors
