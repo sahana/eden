@@ -2490,6 +2490,7 @@ class GIS(object):
 
                 data = resource.select(fields,
                                        limit = None,
+                                       raw_data = True,
                                        represent = True,
                                        show_links = False)
 
@@ -2529,26 +2530,13 @@ class GIS(object):
                                         represent = s3_unicode(represent)
                                     else:
                                         # Attributes should be numbers not strings
+                                        # (@ToDo: Add a JS i18n formatter for the tooltips)
                                         # NB This also relies on decoding within geojson/export.xsl and S3XML.__element2json()
-                                        try:
-                                            represent = int(represent.replace(",", ""))
-                                        except:
-                                            # @ToDo: Don't assume this i18n formatting...better to have no represent & then bypass the s3_unicode in select too
-                                            #        (although we *do* want the represent in the tooltips!)
-                                            pass
+                                        represent = row["_row"][fieldname]
                                 elif ftype in ("double", "float"):
                                     # Attributes should be numbers not strings
-                                    try:
-                                        float_represent = float(represent.replace(",", ""))
-                                        int_represent = int(float_represent)
-                                        if int_represent == float_represent:
-                                            represent = int_represent
-                                        else:
-                                            represent = float_represent
-                                    except:
-                                        # @ToDo: Don't assume this i18n formatting...better to have no represent & then bypass the s3_unicode in select too
-                                        #        (although we *do* want the represent in the tooltips!)
-                                        pass
+                                    # (@ToDo: Add a JS i18n formatter for the tooltips)
+                                    represent = row["_row"][fieldname]
                                 else:
                                     represent = s3_unicode(represent)
                                 attribute[_attr[1]] = represent
