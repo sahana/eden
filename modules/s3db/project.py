@@ -429,13 +429,13 @@ class S3ProjectModel(S3Model):
                    method = "project_progress_report",
                    action = project_progress_report)
 
-        #set_method("project", "project",
-        #           method = "budget_progress_report",
-        #           action = project_budget_progress_report)
+        set_method("project", "project",
+                   method = "budget_progress_report",
+                   action = project_budget_progress_report)
 
-        #set_method("project", "project",
-        #           method = "indicator_progress_report",
-        #           action = project_indicator_progress_report)
+        set_method("project", "project",
+                   method = "indicator_progress_report",
+                   action = project_indicator_progress_report)
 
         # Components
         add_components(tablename,
@@ -5559,8 +5559,6 @@ def project_progress_report(r, **attr):
         db = current.db
         s3db = current.s3db
 
-        NONE = current.messages["NONE"]
-
         project_id = r.id
 
         # Extract Data
@@ -5786,6 +5784,78 @@ def project_progress_report(r, **attr):
 
         output = dict(item=item)
         output["title"] = T("Total Project Progress")
+        output["subtitle"] = "%s: %s" % (T("Project"), r.record.name)
+        # @ToDo: Add "On Date"
+
+        # Maintain RHeader for consistency
+        if "rheader" in attr:
+            rheader = attr["rheader"](r)
+            if rheader:
+                output["rheader"] = rheader
+
+        current.response.view = "simple.html"
+        return output
+
+    else:
+        raise HTTP(501, current.ERROR.BAD_METHOD)
+    
+# =============================================================================
+def budget_progress_report(r, **attr):
+    """
+        Display the Progress of a Project's Budget
+    """
+
+    if r.representation == "html" and r.name == "project":
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+
+        project_id = r.id
+
+        # Extract Data
+
+        # Format Data
+        item = TABLE(_class="budget_progress_report")
+
+        output = dict(item=item)
+        output["title"] = T("Total Budget Progress")
+        output["subtitle"] = "%s: %s" % (T("Project"), r.record.name)
+        # @ToDo: Add "On Date"
+
+        # Maintain RHeader for consistency
+        if "rheader" in attr:
+            rheader = attr["rheader"](r)
+            if rheader:
+                output["rheader"] = rheader
+
+        current.response.view = "simple.html"
+        return output
+
+    else:
+        raise HTTP(501, current.ERROR.BAD_METHOD)
+    
+# =============================================================================
+def project_indicator_progress_report(r, **attr):
+    """
+        Display the Progress of a Project
+    """
+
+    if r.representation == "html" and r.name == "project":
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+
+        project_id = r.id
+
+        # Extract Data
+
+        # Format Data
+        item = TABLE(_class="project_indicator_progress_report")
+
+        output = dict(item=item)
+        output["title"] = T("Monthly Progress by Indicator")
         output["subtitle"] = "%s: %s" % (T("Project"), r.record.name)
         # @ToDo: Add "On Date"
 

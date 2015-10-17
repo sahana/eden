@@ -1235,7 +1235,7 @@ class S3CAPModel(S3Model):
 
         configure(tablename,
                   #create_next = URL(f="area", args=["[id]", "location"]),
-                  # Old: Shouldn't be required if all UI actions go through alert controller & XSLT configured appropriately
+                  create_onaccept = update_alert_id(tablename),
                   onvalidation = self.cap_area_onvalidation,
                   crud_form = crud_form,
                   )
