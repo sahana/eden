@@ -967,52 +967,6 @@ def warning_priority():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def priority_get():
-
-    try:
-        event_type_id = request.args[0]
-    except:
-        result = current.xml.json_message(False, 400, "No Event Type provided!")
-    else:
-        try:
-            event_type_id = int(event_type_id)
-        except:
-            result = current.xml.json_message(False, 400, "Invalid Event Type!")
-        else:
-            # Get Event Name for Event ID
-            etable = s3db.event_event_type
-            item = db(etable.id == event_type_id).select(etable.name,
-                                                         limitby=(0, 1)).first()
-            try:
-                event_type_name = item.name
-            except:
-                result = current.xml.json_message(False, 400, "Event Type Not Found!")
-            else:
-                wptable = s3db.cap_warning_priority
-                query = (wptable.event_type == event_type_name)
-
-                rows = db(query).select(wptable.id,
-                                        wptable.name,
-                                        orderby = wptable.id)
-                result = rows.json()
-                # Uses "others" event_type
-                # Use this according to deployment
-                #from gluon.serializers import json as jsons
-                #if rows:
-                #    row_dict = [{"id": r.id, "name": T(r.name)} for r in rows]
-                #    result = jsons(row_dict)
-                #else:
-                #    rows = db(wptable.event_type == "others").select(wptable.id,
-                #                                                     wptable.name,
-                #                                                     orderby = wptable.id)
-
-                #    row_dict = [{"id": r.id, "name": T(r.name)} for r in rows]
-                #    result = jsons(row_dict)
-    finally:
-        response.headers["Content-Type"] = "application/json"
-        return result
-
-# -----------------------------------------------------------------------------
 def compose():
     """
         Send message to the people with role of Alert Approval
