@@ -252,6 +252,16 @@ class subscriptions(S3CustomController):
                                    ),
                    ]
 
+        filter_script = '''$.filterOptionsS3({
+                             'trigger':'event-filter',
+                             'target':'priority-filter',
+                             'lookupPrefix': 'cap',
+                             'lookupResource': 'warning_priority',
+                             'lookupKey': 'event_type_id',
+                             'showEmptyField': 'false'
+                             })'''
+        current.response.s3.jquery_ready.append(filter_script)
+        
         # Title and view
         title = T("Subscriptions")
         self._view(THEME, "subscriptions.html")

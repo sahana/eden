@@ -10,10 +10,21 @@ legend button {
     overflow-x: auto;
 }
 .subscribe-button {
-    float: right;
-    margin-top: -3rem;
-    margin-right: 0.8rem;
+    margin-top: -3.5rem;
+    margin-left: 1rem;
 }
 .tiny.button {
     font-size: 1rem;
+}
+#home h1 {
+    text-align: center;
+}
+#newsfeed {
+    margin-top: 1.7rem;
+}
+.large-6.columns {
+    margin-top: 2.5rem;
+}
+.icon-rss {
+    font-size: xx-large !important;
 }
