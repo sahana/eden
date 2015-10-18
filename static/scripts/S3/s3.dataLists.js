@@ -90,11 +90,11 @@
 
             // Read pagination data
             var dlData = JSON.parse($(pagination[0]).val());
-            var startIndex = dlData['startindex'],
-                maxItems = dlData['maxitems'],
-                totalItems = dlData['totalitems'],
-                pageSize = dlData['pagesize'],
-                ajaxURL = dlData['ajaxurl'];
+            var startIndex = dlData.startindex,
+                maxItems = dlData.maxitems,
+                totalItems = dlData.totalitems,
+                pageSize = dlData.pagesize,
+                ajaxURL = dlData.ajaxurl;
 
             if (!pagination.hasClass('dl-scroll')) {
                 // No infiniteScroll
@@ -199,7 +199,7 @@
 
             // Do we have an Ajax-URL?
             var dlData = JSON.parse($(pagination[0]).val()),
-                ajaxURL = dlData['ajaxurl'];
+                ajaxURL = dlData.ajaxurl;
             if (ajaxURL === null) {
                 return;
             }
@@ -219,6 +219,9 @@
                     var itemData = $(data.slice(data.indexOf('<'))).find(itemID);
                     if (itemData.length) {
                         item.replaceWith(itemData);
+                    } else {
+                        // Updated item does not match the filter anymore
+                        dl._removeItem(item, dlData);
                     }
                     // Bind item events
                     dl._bindItemEvents();
@@ -256,10 +259,10 @@
             // Read dlData
             var $pagination0 = $(pagination[0]);
             var dlData = JSON.parse($pagination0.val());
-            var startIndex = dlData['startindex'],
-                pageSize = dlData['pagesize'],
-                totalItems = dlData['totalitems'],
-                ajaxURL = dlData['ajaxurl'];
+            var startIndex = dlData.startindex,
+                pageSize = dlData.pagesize,
+                totalItems = dlData.totalitems,
+                ajaxURL = dlData.ajaxurl;
 
             if (pageSize === null) {
                 // No pagination
@@ -289,7 +292,7 @@
                 // Update the Ajax URL
                 try {
                     ajaxURL = S3.search.filterURL(ajaxURL, filters);
-                    dlData['ajaxurl'] = ajaxURL;
+                    dlData.ajaxurl = ajaxURL;
                     $pagination0.val(JSON.stringify(dlData));
                 } catch(e) {}
             }
@@ -385,7 +388,6 @@
             if (!item.length) {
                 return;
             }
-            var $item = $(item);
 
             var pagination = $datalist.find('input.dl-pagination').first();
             if (!pagination.length) {
@@ -395,129 +397,20 @@
             var dlData = JSON.parse($(pagination).val());
 
             // Do we have an Ajax-URL?
-            var ajaxURL = dlData['ajaxurl'];
+            var ajaxURL = dlData.ajaxurl;
             if (ajaxURL === null) {
                 return;
             }
 
-            // Get pagination and item data
-            var pagesize = dlData['pagesize'],
-                rowsize = dlData['rowsize'],
-                idTokens = $item.attr('id').split('-'),
-                recordID = idTokens.pop();
+            var recordID = item.attr('id').split('-').pop();
 
             // Ajax-delete the item
             var dl = this;
             $.ajax({
                 'url': this._urlAppend(ajaxURL, 'delete=' + recordID),
                 'success': function(data) {
-
-                    var row_index = $item.index(),
-                        row = $item.closest('.dl-row'),
-                        i, prev, next;
-
-                    // 1. Remove the item
-                    $item.remove();
-
-                    // 2. Move all following items in the row 1 position to the left
-                    var $row = $(row);
-                    if (row_index < rowsize - 1) {
-                        for (i=row_index + 1; i < rowsize; i++) {
-                            prev = 'dl-col-' + (i-1);
-                            next = 'dl-col-' + i;
-                            $row.find('.' + next).removeClass(next).addClass(prev);
-                        }
-                    }
-
-                    // 3. Move all first items of all following rows to the end of the previous row
-                    var prevRow = row;
-                    $row.nextAll('.dl-row').each(function() {
-                        $(this).find('.dl-col-0').first()
-                            .appendTo(prevRow)
-                            .removeClass('dl-col-0')
-                            .addClass('dl-col-' + (rowsize - 1));
-                        if (rowsize > 1) {
-                            for (i=1; i < rowsize; i++) {
-                                prev = 'dl-col-' + (i-1);
-                                next = 'dl-col-' + i;
-                                $(this).find('.' + next).removeClass(next).addClass(prev);
-                            }
-                        }
-                        prevRow = this;
-                    });
-
-                    // 4. Load 1 more item to fill up the last row
-                    var lastRow = $row.closest('.dl').find('.dl-row').last(),
-                        numitems = $row.closest('.dl').find('.dl-item').length;
-
-                    $.ajax({
-                        'url': dl._urlAppend(ajaxURL, 'start=' + numitems + '&limit=1'),
-                        'success': function(data) {
-                            // @todo: reduce counters (total items, max items)
-                            // and update header accordingly
-                            $(data.slice(data.indexOf('<')))
-                                .find('.dl-item')
-                                .first()
-                                .removeClass('dl-col-0')
-                                .addClass('dl-col-' + (rowsize - 1))
-                                .appendTo(lastRow);
-                            dl._bindItemEvents();
-                        },
-                        'error': function(request, status, error) {
-                            if (error == 'UNAUTHORIZED') {
-                                msg = i18n.gis_requires_login;
-                            } else {
-                                msg = request.responseText;
-                            }
-                            console.log(msg);
-                        },
-                        'dataType': 'html'
-                    });
-
-                    // 5. Update dl-data totalitems/maxitems
-                    dlData['totalitems']--;
-                    if (dlData['maxitems'] > dlData['totalitems']) {
-                        dlData['maxitems'] = dlData['totalitems'];
-                    }
-                    $(pagination).val(JSON.stringify(dlData));
-
-                    // 6. Show the empty-section if there are no more records
-                    if (dlData['totalitems'] == 0) {
-                        $datalist.find('.dl-empty').css({display: 'block'});
-                    }
-
-                    // 7. Also update the layer on the Map (if any)
-                    // @ToDo: Which Map?
-                    if (typeof map != 'undefined') {
-                        var layers = map.layers;
-                        var needle = idTokens.join('_');
-                        Ext.iterate(layers, function(key, val, obj) {
-                            if (key.s3_layer_id == needle) {
-                                var layer = layers[val];
-                                var found = false;
-                                var uuid = data['uuid']; // The Record UUID
-                                Ext.iterate(layer.feaures, function(key, val, obj) {
-                                    if (key.properties.id == uuid) {
-                                        // Remove the feature
-                                        layer.removeFeatures([key]);
-                                        found = true;
-                                    }
-                                });
-                                if (!found) {
-                                    // Feature was in a Cluster: refresh the layer
-                                    Ext.iterate(layer.strategies, function(key, val, obj) {
-                                        if (key.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
-                                            // Reload the layer
-                                            layer.strategies[val].refresh();
-                                        }
-                                    });
-                                }
-                            }
-                        });
-                    }
-
-                    // 8. Fire update event
-                    $datalist.trigger('listUpdate');
+                    // Remove the card
+                    dl._removeItem(item, dlData);
                 },
                 'error': function(request, status, error) {
                     var msg;
@@ -532,12 +425,136 @@
                 'dataType': 'json'
             });
 
+            // Trigger auto-retrieve
             $datalist.find('.dl-item:last:in-viewport').each(function() {
                 $(this).addClass('autoretrieve');
                 dl._autoRetrieve(this);
             });
-            return;
+        },
 
+        /**
+         * Remove an item from the list
+         *
+         * @param {jQuery} item - the list item (card)
+         * @param {object} dlData - the pagination data
+         */
+        _removeItem: function(item, dlData) {
+
+            var $datalist = $(this.element),
+                pagination = $datalist.find('input.dl-pagination').first(),
+                rowSize = dlData.rowsize,
+                ajaxURL = dlData.ajaxurl;
+
+            var rowIndex = item.index(),
+                row = item.closest('.dl-row'),
+                idTokens = item.attr('id').split('-'),
+                i,
+                prev,
+                next;
+
+            // 1. Remove the item
+            item.remove();
+
+            // 2. Move all following items in the row 1 position to the left
+            var $row = $(row);
+            if (rowIndex < rowSize - 1) {
+                for (i = rowIndex + 1; i < rowSize; i++) {
+                    prev = 'dl-col-' + (i - 1);
+                    next = 'dl-col-' + i;
+                    $row.find('.' + next).removeClass(next).addClass(prev);
+                }
+            }
+
+            // 3. Move all first items of all following rows to the end of the previous row
+            var prevRow = row;
+            $row.nextAll('.dl-row').each(function() {
+                $(this).find('.dl-col-0').first()
+                    .appendTo(prevRow)
+                    .removeClass('dl-col-0')
+                    .addClass('dl-col-' + (rowSize - 1));
+                if (rowSize > 1) {
+                    for (i = 1; i < rowSize; i++) {
+                        prev = 'dl-col-' + (i - 1);
+                        next = 'dl-col-' + i;
+                        $(this).find('.' + next).removeClass(next).addClass(prev);
+                    }
+                }
+                prevRow = this;
+            });
+
+            // 4. Load 1 more item to fill up the last row
+            var lastRow = $row.closest('.dl').find('.dl-row').last(),
+                numItems = $row.closest('.dl').find('.dl-item').length;
+
+            var dl = this;
+            $.ajax({
+                'url': dl._urlAppend(ajaxURL, 'start=' + numItems + '&limit=1'),
+                'success': function(data) {
+                    // @todo: reduce counters (total items, max items)
+                    // and update header accordingly
+                    $(data.slice(data.indexOf('<')))
+                        .find('.dl-item')
+                        .first()
+                        .removeClass('dl-col-0')
+                        .addClass('dl-col-' + (rowSize - 1))
+                        .appendTo(lastRow);
+                    dl._bindItemEvents();
+                },
+                'error': function(request, status, error) {
+                    if (error == 'UNAUTHORIZED') {
+                        msg = i18n.gis_requires_login;
+                    } else {
+                        msg = request.responseText;
+                    }
+                    console.log(msg);
+                },
+                'dataType': 'html'
+            });
+
+            // 5. Update dl-data totalitems/maxitems
+            dlData.totalitems--;
+            if (dlData.maxitems > dlData.totalitems) {
+                dlData.maxitems = dlData.totalitems;
+            }
+            $(pagination).val(JSON.stringify(dlData));
+
+            // 6. Show the empty-section if there are no more records
+            if (dlData.totalitems === 0) {
+                $datalist.find('.dl-empty').css({display: 'block'});
+            }
+
+            // 7. Also update the layer on the Map (if any)
+            // @ToDo: Which Map?
+            if (typeof map != 'undefined') {
+                var layers = map.layers,
+                    needle = idTokens.join('_');
+                Ext.iterate(layers, function(key, val, obj) {
+                    if (key.s3_layer_id == needle) {
+                        var layer = layers[val],
+                            found = false,
+                            uuid = data['uuid']; // The Record UUID
+                        Ext.iterate(layer.feaures, function(key, val, obj) {
+                            if (key.properties.id == uuid) {
+                                // Remove the feature
+                                layer.removeFeatures([key]);
+                                found = true;
+                            }
+                        });
+                        if (!found) {
+                            // Feature was in a Cluster: refresh the layer
+                            Ext.iterate(layer.strategies, function(key, val, obj) {
+                                if (key.CLASS_NAME == 'OpenLayers.Strategy.Refresh') {
+                                    // Reload the layer
+                                    layer.strategies[val].refresh();
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+            // 8. Fire update event
+            $datalist.trigger('listUpdate');
         },
 
         /**
