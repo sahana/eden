@@ -617,8 +617,10 @@ class S3Resource(object):
         """
 
         s3db = current.s3db
+
         # Reset error
         self.error = None
+        permission_error = False
 
         table = self.table
         get_config = self.get_config
@@ -710,6 +712,7 @@ class S3Resource(object):
 
                 # Check permission to delete this record
                 if not has_permission("delete", table, record_id=record_id):
+                    permission_error = True
                     continue
 
                 error = self.error
@@ -854,6 +857,7 @@ class S3Resource(object):
                 record_id = row[pkey]
                 # Check permission to delete this row
                 if not has_permission("delete", table, record_id=record_id):
+                    permission_error = True
                     continue
 
                 # @ToDo: ondelete_cascade?
@@ -888,9 +892,13 @@ class S3Resource(object):
                     if not cascade:
                         db.commit()
 
-        if numrows == 0 and not deletable:
-            # No deletable rows found
-            self.error = INTEGRITY_ERROR
+        if numrows == 0:
+            if not deletable:
+                # No deletable rows found
+                self.error = INTEGRITY_ERROR
+            elif permission_error:
+                # Deletion failed due to insufficient permissions
+                self.error = current.ERROR.NOT_PERMITTED
 
         return numrows
 

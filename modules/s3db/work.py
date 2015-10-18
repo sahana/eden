@@ -507,14 +507,15 @@ class work_SignUp(S3Method):
         if not job_id:
             r.error(404, current.ERROR.BAD_RECORD)
 
+        atable = s3db.work_assignment
+
         # Get the person ID
         auth = current.auth
         person_id = auth.s3_logged_in_person()
-        if not person_id:
+        if not person_id or not auth.s3_has_permission("create", atable):
             auth.permission.fail()
 
         # Add assignment if not assigned yet
-        atable = s3db.work_assignment
         query = (atable.job_id == job_id) & \
                 (atable.person_id == person_id) & \
                 (atable.deleted != True)
@@ -526,6 +527,10 @@ class work_SignUp(S3Method):
             assignment_id = atable.insert(**assignment)
             if assignment_id:
                 assignment["id"] = assignment_id
+                # Post-process create
+                s3db.update_super(atable, assignment)
+                auth.s3_set_record_owner(atable, assignment_id)
+                auth.s3_make_session_owner(atable, assignment_id)
                 s3db.onaccept(atable, assignment)
 
         output = current.xml.json_message(True)
@@ -547,19 +552,25 @@ class work_SignUp(S3Method):
         if not job_id:
             r.error(404, current.ERROR.BAD_RECORD)
 
+        atable = s3db.work_assignment
+
         # Get the person ID
         auth = current.auth
         person_id = auth.s3_logged_in_person()
-        if not person_id:
+        if not person_id or not auth.s3_has_permission("delete", atable):
             auth.permission.fail()
 
         query = (FS("job_id") == job_id) & \
                 (FS("person_id") == person_id)
 
         assignments = s3db.resource("work_assignment", filter=query)
-        assignments.delete()
+        success = assignments.delete()
+        if not success:
+            error = assignments.error or current.ERROR.NOT_PERMITTED
+            r.error(403, error)
 
         output = current.xml.json_message(True)
+
         return output
 
 # =============================================================================
