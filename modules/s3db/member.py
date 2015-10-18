@@ -445,7 +445,7 @@ class S3MembersModel(S3Model):
         db = current.db
         s3db = current.s3db
         auth = current.auth
-        setting = current.deployment_settings
+        settings = current.deployment_settings
 
         utable = current.auth.settings.table_user
         ptable = s3db.pr_person
@@ -473,7 +473,7 @@ class S3MembersModel(S3Model):
         # realm_entity for the pr_person record
         person_id = record.person_id
         person = Storage(id = person_id)
-        if setting.get_auth_person_realm_member_org():
+        if settings.get_auth_person_realm_member_org():
             # Set pr_person.realm_entity to the human_resource's organisation pe_id
             organisation_id = record.organisation_id
             entity = s3db.pr_get_pe_id("org_organisation", organisation_id)

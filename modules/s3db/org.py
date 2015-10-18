@@ -5597,7 +5597,7 @@ def org_rheader(r, tabs=[]):
                         (T("User Roles"), "roles"),
                         #(T("Tasks"), "task"),
                         ]
-                if setting.get_org_tags():
+                if settings.get_org_tags():
                     append_tab((T("Tags"), "tag"))
                 if settings.get_org_resources_tab():
                     tabs.insert(-1, (T("Resources"), "resource"))
@@ -5672,7 +5672,7 @@ def org_rheader(r, tabs=[]):
 
         if settings.get_L10n_translate_org_site():
             append_tab(T("Local Names"), "name")
-        if setting.get_org_tags():
+        if settings.get_org_tags():
             append_tab((T("Tags"), "tag"))
         if settings.has_module("hrm") and \
            (r.controller != "inv" or settings.get_inv_facility_manage_staff()):
