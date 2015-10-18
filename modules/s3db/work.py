@@ -143,7 +143,7 @@ class WorkJobModel(S3Model):
         # ---------------------------------------------------------------------
         # Job Statuses
         #
-        job_status = (("NEW", T("New")),
+        job_status = (("OPEN", T("Open")),
                       ("STARTED", T("Started")),
                       ("ONHOLD", T("On Hold")),
                       ("COMPLETED", T("Completed")),
@@ -170,7 +170,7 @@ class WorkJobModel(S3Model):
                            represent = S3Represent(options=job_priority),
                            ),
                      Field("status",
-                           default = "NEW",
+                           default = "OPEN",
                            requires = IS_IN_SET(job_status, zero=None, sort=False),
                            represent = S3Represent(options=dict(job_status)),
                            ),
@@ -422,8 +422,12 @@ class WorkJobModel(S3Model):
         else:
             workers_assigned = row[count]
 
-        db(jtable.id == job_id).update(workers_assigned=workers_assigned)
-
+        db(jtable.id == job_id).update(workers_assigned=workers_assigned,
+                                       # Prevent update of modified_on and
+                                       # modified_by (not a workflow action):
+                                       modified_by = jtable.modified_by,
+                                       modified_on = jtable.modified_on,
+                                       )
         return
 
 # =============================================================================
@@ -718,33 +722,50 @@ class work_JobListLayout(S3DataListLayout):
 
         raw = record["_row"]
 
-        # Get the record ID
-        record_id = raw["work_job.id"]
-        if record_id in self.current_assignments:
-            button = A("Cancel my assignment",
-                       _class="delete-btn-ajax job-cancel",
-                       )
+        button = ""
+        actionable = False
+
+        # Check job status
+        status = raw["work_job.status"]
+        if status == "STARTED":
+            button_text = T("Job has started")
+        elif status == "COMPLETED":
+            button_text = T("Job has been completed")
+        elif status == "CANCELLED":
+            button_text = T("Job has been cancelled")
         else:
-            # @todo: also check job status and start_date (should be future)
-            workers_needed = raw["work_job.workers_max"]
-            if not workers_needed:
-                workers_needed = raw["work_job.workers_min"]
+            button_text = ""
+            actionable = True
 
-            workers_assigned = raw["work_job.workers_assigned"]
-
-            if workers_assigned < workers_needed:
-                button = A(T("Sign me up"),
-                           _class="action-btn job-signup",
+        if actionable:
+            record_id = raw["work_job.id"]
+            if record_id in self.current_assignments:
+                button = A("Cancel my assignment",
+                           _class="delete-btn-ajax job-cancel",
                            )
+            elif status != "ONHOLD":
+                workers_needed = raw["work_job.workers_max"]
+                if not workers_needed:
+                    workers_needed = raw["work_job.workers_min"]
+                workers_assigned = raw["work_job.workers_assigned"]
+                if workers_assigned < workers_needed:
+                    button = A(T("Sign me up"),
+                               _class="action-btn job-signup",
+                               )
+                else:
+                    actionable = False
+                    button_text = T("No more workers needed")
             else:
-                button = A("No more workers needed",
-                           _class="action-btn",
-                           _disabled="disabled",
-                           )
+                actionable = False
+                button_text = T("Job is on hold")
 
-        return DIV(button,
-                   _class="card-footer",
-                   )
+        if not actionable:
+            button = A(button_text,
+                       _class = "action-btn",
+                       _disabled = "disabled",
+                       )
+
+        return DIV(button, _class="card-footer")
 
     # ---------------------------------------------------------------------
     def render_toolbox(self, list_id, resource, record):
