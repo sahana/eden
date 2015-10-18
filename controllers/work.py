@@ -39,18 +39,19 @@ def job():
         # @todo: for assigments, set default to current user if
         #        not assigned to this job yet
 
-        if r.representation == "html" and r.method == "datalist":
+        if r.method == "datalist":
             # Filter to open jobs by default
             from s3 import s3_set_default_filter
             s3_set_default_filter("~.status", "OPEN",
                                   tablename = "work_job",
                                   )
-            # Set default formstyle for side filter form
-            # (=labels above fields)
-            filter_formstyle = settings.get_ui_formstyle()
-            s3db.configure("work_job",
-                           filter_formstyle = filter_formstyle,
-                           )
+            if r.representation == "html":
+                # Set default formstyle for side filter form
+                # (=labels above fields)
+                filter_formstyle = settings.get_ui_formstyle()
+                s3db.configure("work_job",
+                               filter_formstyle = filter_formstyle,
+                               )
 
         if not r.component:
             r.resource.configure(create_next = r.url(method=""),

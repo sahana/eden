@@ -1673,8 +1673,10 @@ class S3CRUD(S3Method):
             # Render the list (even if empty => Ajax-section is required
             # in any case to be able to Ajax-refresh e.g. after adding
             # new records or changing the filter)
+            if representation == "dl" or not limit:
+                limit = numrows
             dl = datalist.html(start = start if start else 0,
-                               limit = limit if limit else numrows,
+                               limit = limit,
                                pagesize = pagelength,
                                rowsize = rowsize,
                                ajaxurl = ajax_url)

@@ -1,53 +1,66 @@
 /**
- * Used by data lists (views/datalist.html)
- * This script is in Static to allow caching
- * Dynamic constants (e.g. Internationalised strings) are set in server-generated script
+ * jQuery UI DataList Widget for "lists of data cards"
+ *
+ * @copyright 2013-15 (c) Sahana Software Foundation
+ * @license MIT
+ *
+ * requires jQuery 1.9.1+
+ * requires jQuery UI 1.10 widget factory
+ *
  */
 
 (function($, undefined) {
 
+    "use strict";
     var datalistID = 0;
 
+    /**
+     * DataList widget, pagination and Ajax-Refresh for data lists
+     */
     $.widget('s3.datalist', {
 
-        // Default options
+        /**
+         * Default options
+         */
         options: {
 
         },
 
+        /**
+         * Create the widget
+         */
         _create: function() {
-            // Create the widget
 
             this.id = datalistID;
             datalistID += 1;
-
-            return;
         },
 
+        /**
+         * Update widget options
+         */
         _init: function() {
-            // Update widget options
-            var el = this.element;
 
             this.hasInfiniteScroll = false;
 
             // Render all initial contents
             this.refresh();
-
-            return;
         },
 
+        /**
+         * Remove generated elements & reset other changes
+         */
         _destroy: function() {
-            // Remove generated elements & reset other changes
 
-            // @todo: implement
-            return;
+            $.Widget.prototype.destroy.call(this);
         },
 
+        /**
+         * Re-draw contents
+         */
         refresh: function() {
-            // Rre-draw contents
 
             // Unbind global events
-            this._unbindEvents();
+            //this._unbindEvents();
 
             // Initialize infinite scroll
             this._infiniteScroll();
@@ -56,16 +69,16 @@
             this._bindItemEvents();
 
             // Bind global events
-            this._bindEvents();
+            //this._bindEvents();
 
             // Fire initial update event
-            $datalist.trigger('listUpdate');
-            
-            return;
+            $(this.element).trigger('listUpdate');
         },
 
+        /**
+         * Initialize infinite scroll for this data list
+         */
         _infiniteScroll: function() {
-            // Initialize infinite scroll for this data list
 
             var $datalist = $(this.element);
 
@@ -75,41 +88,41 @@
                 return;
             }
 
-            // Read dl_data
-            var dl_data = JSON.parse($(pagination[0]).val());
-            var startindex = dl_data['startindex'],
-                maxitems = dl_data['maxitems'],
-                totalitems = dl_data['totalitems'],
-                pagesize = dl_data['pagesize'],
-                ajaxurl = dl_data['ajaxurl'];
+            // Read pagination data
+            var dlData = JSON.parse($(pagination[0]).val());
+            var startIndex = dlData['startindex'],
+                maxItems = dlData['maxitems'],
+                totalItems = dlData['totalitems'],
+                pageSize = dlData['pagesize'],
+                ajaxURL = dlData['ajaxurl'];
 
             if (!pagination.hasClass('dl-scroll')) {
                 // No infiniteScroll
-                if (pagesize > totalitems) {
+                if (pageSize > totalItems) {
                     // Hide the 'more' button if we can see all items
                     pagination.closest('.dl-navigation').css({display: 'none'});
                 }
                 return;
             }
 
-            if (pagesize === null) {
+            if (pageSize === null) {
                 // No pagination
                 pagination.closest('.dl-navigation').css({display: 'none'});
                 return;
             }
 
             // Cannot retrieve more items than there are totally available
-            maxitems = Math.min(maxitems, totalitems - startindex);
+            maxItems = Math.min(maxItems, totalItems - startIndex);
 
             // Compute bounds
-            var maxindex = startindex + maxitems,
-                initialitems = $datalist.find('.dl-item').length;
+            var maxIndex = startIndex + maxItems,
+                initialItems = $datalist.find('.dl-item').length;
 
-            // Compute maxpage
-            var maxpage = 1,
-                ajaxitems = (maxitems - initialitems);
-            if (ajaxitems > 0) {
-                maxpage += Math.ceil(ajaxitems / pagesize);
+            // Compute maxPage
+            var maxPage = 1,
+                ajaxItems = (maxItems - initialItems);
+            if (ajaxItems > 0) {
+                maxPage += Math.ceil(ajaxItems / pageSize);
             } else {
                 if (pagination.length) {
                     pagination.closest('.dl-navigation').css({display: 'none'});
@@ -133,13 +146,13 @@
                     itemSelector: 'div.dl-row',
                     path: function(page) {
                         // Compute start+limit
-                        var start = initialitems + (page - 2) * pagesize;
-                        var limit = Math.min(pagesize, maxindex - start);
+                        var start = initialItems + (page - 2) * pageSize;
+                        var limit = Math.min(pageSize, maxIndex - start);
                         // Construct Ajax URL
-                        var url = dl._urlAppend(ajaxurl, 'start=' + start + '&limit=' + limit);
+                        var url = dl._urlAppend(ajaxURL, 'start=' + start + '&limit=' + limit);
                         return url;
                     },
-                    maxPage: maxpage
+                    maxPage: maxPage
 
                 },
                 // Function to be called after Ajax-loading new data
@@ -167,12 +180,16 @@
             return;
         },
 
-        ajaxReloadItem: function(record_id) {
-            // Reload a single item (e.g. when updated in a modal)
+        /**
+         * Reload a single item (e.g. when updated in a modal)
+         *
+         * @param {integer} recordID - the record ID
+         */
+        ajaxReloadItem: function(recordID) {
 
             var $datalist = $(this.element);
 
-            var list_id = $datalist.attr('id'),
+            var listID = $datalist.attr('id'),
                 pagination = $datalist.find('input.dl-pagination');
 
             if (!pagination.length) {
@@ -181,15 +198,15 @@
             }
 
             // Do we have an Ajax-URL?
-            var dl_data = JSON.parse($(pagination[0]).val());
-            var ajaxurl = dl_data['ajaxurl'];
-            if (ajaxurl === null) {
+            var dlData = JSON.parse($(pagination[0]).val()),
+                ajaxURL = dlData['ajaxurl'];
+            if (ajaxURL === null) {
                 return;
             }
 
             // Is the item currently loaded?
-            var item_id = '#' + list_id + '-' + record_id;
-            var item = $(item_id);
+            var itemID = '#' + listID + '-' + recordID,
+                item = $(itemID);
             if (!item.length) {
                 return;
             }
@@ -197,15 +214,15 @@
             // Ajax-load the item
             var dl = this;
             $.ajax({
-                'url': dl._urlAppend(ajaxurl, 'record=' + record_id),
+                'url': dl._urlAppend(ajaxURL, 'record=' + recordID),
                 'success': function(data) {
-                    var item_data = $(data.slice(data.indexOf('<'))).find(item_id);
-                    if (item_data.length) {
-                        item.replaceWith(item_data);
+                    var itemData = $(data.slice(data.indexOf('<'))).find(itemID);
+                    if (itemData.length) {
+                        item.replaceWith(itemData);
                     }
                     // Bind item events
                     dl._bindItemEvents();
-                    
+
                     // Fire update event
                     $datalist.trigger('listUpdate');
                 },
@@ -219,11 +236,14 @@
                 },
                 'dataType': 'html'
             });
-            return;
         },
 
+        /**
+         * Ajax-reload this datalist
+         *
+         * @param {Array} filters - the current filters
+         */
         ajaxReload: function(filters) {
-            // Ajax-reload this datalist
 
             var $datalist = $(this.element);
 
@@ -233,60 +253,83 @@
                 return;
             }
 
-            // Read dl_data
+            // Read dlData
             var $pagination0 = $(pagination[0]);
-            var dl_data = JSON.parse($pagination0.val());
-            var startindex = dl_data['startindex'],
-                pagesize = dl_data['pagesize'],
-                maxitems = dl_data['maxitems'],
-                totalitems = dl_data['totalitems'],
-                ajaxurl = dl_data['ajaxurl'];
+            var dlData = JSON.parse($pagination0.val());
+            var startIndex = dlData['startindex'],
+                pageSize = dlData['pagesize'],
+                totalItems = dlData['totalitems'],
+                ajaxURL = dlData['ajaxurl'];
 
-            if (pagesize === null) {
+            if (pageSize === null) {
                 // No pagination
                 return;
             }
 
+            // Handle filters
+            if (typeof filters == 'undefined') {
+                // Find a filter form that has the current datalist as target
+                var listID = $datalist.attr('id'),
+                    filterTargets = $('form.filter-form input.filter-submit-target'),
+                    len = filterTargets.length,
+                    targets,
+                    targetList;
+                if (listID && len) {
+                    for (var i = 0; i < len; i++) {
+                        targets = $(filterTargets[i]);
+                        targetList = targets.val().split(' ');
+                        if ($.inArray(listID, targetList) != -1) {
+                            filters = S3.search.getCurrentFilters(targets.closest('form.filter-form'));
+                            break;
+                        }
+                    }
+                }
+            }
             if (filters) {
+                // Update the Ajax URL
                 try {
-                    ajaxurl = S3.search.filterURL(ajaxurl, filters);
-                    dl_data['ajaxurl'] = ajaxurl;
-                    $pagination0.val(JSON.stringify(dl_data));
+                    ajaxURL = S3.search.filterURL(ajaxURL, filters);
+                    dlData['ajaxurl'] = ajaxURL;
+                    $pagination0.val(JSON.stringify(dlData));
                 } catch(e) {}
             }
 
-            var start = startindex;
-            var limit = pagesize;
+            var start = startIndex,
+                limit = pageSize;
 
             // Ajax-load the list
             var dl = this;
             $.ajax({
-                'url': dl._urlAppend(ajaxurl, 'start=' + startindex + '&limit=' + pagesize),
+                'url': dl._urlAppend(ajaxURL, 'start=' + startIndex + '&limit=' + pageSize),
                 'success': function(data) {
                     // Update the list
 
                     // Remove the infinite scroll
                     $datalist.infinitescroll('destroy');
                     $datalist.data('infinitescroll', null);
-                    
+
                     var newlist = $(data.slice(data.indexOf('<'))).find('.dl');
                     if (newlist.length) {
                         // Insert new items, update status
-                        var pagination_new = $(newlist).find('input.dl-pagination');
-                        if (pagination_new.length) {
-                            var dl_data_new = JSON.parse($(pagination_new[0]).val());
-                            dl_data['totalitems'] = dl_data_new['totalitems'];
-                            $pagination0.val(JSON.stringify(dl_data));
+                        var paginationNew = $(newlist).find('input.dl-pagination');
+                        if (paginationNew.length) {
+                            var dlDataNew = JSON.parse($(paginationNew[0]).val());
+                            dlData.totalitems = dlDataNew.totalitems;
+                            dlData.maxitems = dlDataNew.maxitems;
+                            $pagination0.val(JSON.stringify(dlData));
                         }
-                        var modal_more = $datalist.find('a.s3_modal');
-                        if (modal_more.length) {
+                        var modalMore = $datalist.find('div.dl-navigation a.dl-more'),
+                            modalMoreLength = modalMore.length,
+                            popup_url,
+                            popup_title;
+                        if (modalMoreLength) {
                             // Read attributes
-                            var popup_url = $(modal_more[0]).attr('href');
-                            var popup_title = $(modal_more[0]).attr('title');
+                            popup_url = $(modalMore[0]).attr('href');
+                            popup_title = $(modalMore[0]).attr('title');
                         }
                         $datalist.empty().html(newlist.html());
                         $datalist.find('input.dl-pagination').replaceWith(pagination);
-                        if (modal_more.length) {
+                        if (modalMoreLength) {
                             // Restore attributes
                             if (filters) {
                                 popup_url = S3.search.filterURL(popup_url, filters);
@@ -329,8 +372,12 @@
             return;
         },
 
+        /**
+         * Ajax-delete an item from this list
+         *
+         * @param {jQuery} anchor - the card element that triggered the action
+         */
         _ajaxDeleteItem: function(anchor) {
-            // Ajax-delete an item from this list
 
             var $datalist = $(this.element);
 
@@ -345,24 +392,24 @@
                 // No such datalist or no pagination data
                 return;
             }
-            var dl_data = JSON.parse($(pagination).val());
+            var dlData = JSON.parse($(pagination).val());
 
             // Do we have an Ajax-URL?
-            var ajaxurl = dl_data['ajaxurl'];
-            if (ajaxurl === null) {
+            var ajaxURL = dlData['ajaxurl'];
+            if (ajaxURL === null) {
                 return;
             }
-            var pagesize = dl_data['pagesize'],
-                rowsize = dl_data['rowsize'];
 
-            var item_id = $item.attr('id');
-            var item_list = item_id.split('-');
-            var record_id = item_list.pop();
+            // Get pagination and item data
+            var pagesize = dlData['pagesize'],
+                rowsize = dlData['rowsize'],
+                idTokens = $item.attr('id').split('-'),
+                recordID = idTokens.pop();
 
             // Ajax-delete the item
             var dl = this;
             $.ajax({
-                'url': this._urlAppend(ajaxurl, 'delete=' + record_id),
+                'url': this._urlAppend(ajaxURL, 'delete=' + recordID),
                 'success': function(data) {
 
                     var row_index = $item.index(),
@@ -383,10 +430,10 @@
                     }
 
                     // 3. Move all first items of all following rows to the end of the previous row
-                    var prev_row = row;
+                    var prevRow = row;
                     $row.nextAll('.dl-row').each(function() {
                         $(this).find('.dl-col-0').first()
-                            .appendTo(prev_row)
+                            .appendTo(prevRow)
                             .removeClass('dl-col-0')
                             .addClass('dl-col-' + (rowsize - 1));
                         if (rowsize > 1) {
@@ -396,22 +443,24 @@
                                 $(this).find('.' + next).removeClass(next).addClass(prev);
                             }
                         }
-                        prev_row = this;
+                        prevRow = this;
                     });
 
                     // 4. Load 1 more item to fill up the last row
-                    last_row = $row.closest('.dl').find('.dl-row').last();
-                    var numitems = $row.closest('.dl').find('.dl-item').length;
+                    var lastRow = $row.closest('.dl').find('.dl-row').last(),
+                        numitems = $row.closest('.dl').find('.dl-item').length;
 
                     $.ajax({
-                        'url': dl._urlAppend(ajaxurl, 'start=' + numitems + '&limit=1'),
+                        'url': dl._urlAppend(ajaxURL, 'start=' + numitems + '&limit=1'),
                         'success': function(data) {
+                            // @todo: reduce counters (total items, max items)
+                            // and update header accordingly
                             $(data.slice(data.indexOf('<')))
                                 .find('.dl-item')
                                 .first()
                                 .removeClass('dl-col-0')
                                 .addClass('dl-col-' + (rowsize - 1))
-                                .appendTo(last_row);
+                                .appendTo(lastRow);
                             dl._bindItemEvents();
                         },
                         'error': function(request, status, error) {
@@ -426,14 +475,14 @@
                     });
 
                     // 5. Update dl-data totalitems/maxitems
-                    dl_data['totalitems']--;
-                    if (dl_data['maxitems'] > dl_data['totalitems']) {
-                        dl_data['maxitems'] = dl_data['totalitems'];
+                    dlData['totalitems']--;
+                    if (dlData['maxitems'] > dlData['totalitems']) {
+                        dlData['maxitems'] = dlData['totalitems'];
                     }
-                    $(pagination).val(JSON.stringify(dl_data));
+                    $(pagination).val(JSON.stringify(dlData));
 
                     // 6. Show the empty-section if there are no more records
-                    if (dl_data['totalitems'] == 0) {
+                    if (dlData['totalitems'] == 0) {
                         $datalist.find('.dl-empty').css({display: 'block'});
                     }
 
@@ -441,7 +490,7 @@
                     // @ToDo: Which Map?
                     if (typeof map != 'undefined') {
                         var layers = map.layers;
-                        var needle = item_list.join('_');
+                        var needle = idTokens.join('_');
                         Ext.iterate(layers, function(key, val, obj) {
                             if (key.s3_layer_id == needle) {
                                 var layer = layers[val];
@@ -491,18 +540,27 @@
 
         },
 
+        /**
+         * Force page retrieval
+         */
         _autoRetrieve: function() {
-            // Force page retrieval
+
             if (this.hasInfiniteScroll) {
                 $(this.element).infinitescroll('retrieve');
             }
-            return;
         },
 
+        /**
+         * Append extra query elements to a URL
+         *
+         * @param {string} url - the URL
+         * @param {string} query - the additional query
+         */
         _urlAppend: function(url, query) {
-            // Append extra query elements to a URL
+
             var parts = url.split('?'),
                 q = '';
+
             var newurl = parts[0];
             if (parts.length > 1) {
                 if (query) {
@@ -517,22 +575,29 @@
             }
         },
 
+        /**
+         * Get the total number of items (from the data dict)
+         */
         getTotalItems: function() {
-            
-            var $datalist = $(this.element);
-            var pagination = $datalist.find('input.dl-pagination');
+
+            var pagination = $(this.element).find('input.dl-pagination');
             if (!pagination.length) {
+                // No pagination = all items in the list, so just count them
                 return $datalist.find('.dl-item').length;
             }
-            var $pagination0 = $(pagination[0]);
-            var dl_data = JSON.parse($pagination0.val());
-            return dl_data['totalitems'];
+
+            return JSON.parse($(pagination[0]).val())['totalitems'];
         },
-        
+
+        /**
+         * Bind events in list items
+         *
+         * @todo: call from _bindEvents?
+         */
         _bindItemEvents: function() {
             // Bind events in list items
 
-            $datalist = $(this.element);
+            var $datalist = $(this.element);
 
             // Click-event for dl-item-delete
             var dl = this;
@@ -557,30 +622,34 @@
             return;
         },
 
-        _bindEvents: function(data) {
-            // Bind events to generated elements (after refresh)
+        /**
+         * Bind events to generated elements (after refresh)
+         */
+        _bindEvents: function() {
 
-            return;
+            return true;
         },
 
+        /**
+         * Unbind events (before refresh)
+         */
         _unbindEvents: function() {
-            // Unbind events (before refresh)
 
-            return;
+            return true;
         }
     });
-})(jQuery);
 
-/*
- * DataLists document-ready script - attach to all .dl
- */
-$(document).ready(function() {
+    /**
+     * DataLists document-ready script - attach to all .dl
+     */
+    $(document).ready(function() {
 
-    // Initialize infinite scroll
-    $('.dl').each(function() {
-        $(this).datalist();
+        // Initialize infinite scroll
+        $('.dl').each(function() {
+            $(this).datalist();
+        });
     });
 
-});
+})(jQuery);
 
 // END ========================================================================
