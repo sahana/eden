@@ -195,7 +195,7 @@ def sync():
         # repository ID, msince and sync filters
         for k, v in get_vars.items():
             if k in ("repository", "msince") or \
-                k[0] == "[" and "]" in k:
+               k[0] == "[" and "]" in k:
                 get_vars_new[k] = v
 
         # Request
