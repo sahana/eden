@@ -106,6 +106,115 @@ class FieldSelectorResolutionTests(unittest.TestCase):
         self.assertTrue(distinct)
 
 # =============================================================================
+class FieldCategoryFlagsTests(unittest.TestCase):
+    """ Test S3ResourceField type category properties """
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        string_categories = {"A": "TestA",
+                             "B": "TestB",
+                             }
+        int_categories = {1: "Example1",
+                          2: "Example2",
+                          3: "Example3",
+                          }
+
+        db = current.db
+        db.define_table("test_ftypes",
+                        Field("name"),
+                        Field("category1",
+                              requires = IS_IN_SET(string_categories),
+                              ),
+                        Field("category2", "integer",
+                              requires = IS_EMPTY_OR(IS_IN_SET(int_categories)),
+                              ),
+                        Field("discrete", "integer",
+                              requires = IS_IN_SET((1, 2, 3, 4)),
+                              ),
+                        Field("value", "double"),
+                        )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        current.db.test_ftypes.drop()
+
+    # -------------------------------------------------------------------------
+    def testNumeric(self):
+        """ Verify detection of numeric types """
+
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
+        resource = current.s3db.resource("test_ftypes")
+
+        rfield = S3ResourceField(resource, "name")
+        assertFalse(rfield.is_numeric)
+
+        rfield = S3ResourceField(resource, "category1")
+        assertFalse(rfield.is_numeric)
+
+        rfield = S3ResourceField(resource, "category2")
+        assertFalse(rfield.is_numeric)
+
+        rfield = S3ResourceField(resource, "discrete")
+        assertTrue(rfield.is_numeric)
+
+        rfield = S3ResourceField(resource, "value")
+        assertTrue(rfield.is_numeric)
+
+    # -------------------------------------------------------------------------
+    def testString(self):
+        """ Verify detection of string types """
+
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
+        resource = current.s3db.resource("test_ftypes")
+
+        rfield = S3ResourceField(resource, "name")
+        assertTrue(rfield.is_string)
+
+        rfield = S3ResourceField(resource, "category1")
+        assertTrue(rfield.is_string)
+
+        rfield = S3ResourceField(resource, "category2")
+        assertFalse(rfield.is_string)
+
+        rfield = S3ResourceField(resource, "discrete")
+        assertFalse(rfield.is_string)
+
+        rfield = S3ResourceField(resource, "value")
+        assertFalse(rfield.is_string)
+
+    # -------------------------------------------------------------------------
+    def testLookup(self):
+        """ Verify detection of fixed set lookup fields """
+
+        assertTrue = self.assertTrue
+        assertFalse = self.assertFalse
+
+        resource = current.s3db.resource("test_ftypes")
+
+        rfield = S3ResourceField(resource, "name")
+        assertFalse(rfield.is_lookup)
+
+        rfield = S3ResourceField(resource, "category1")
+        assertTrue(rfield.is_lookup)
+
+        rfield = S3ResourceField(resource, "category2")
+        assertTrue(rfield.is_lookup)
+
+        rfield = S3ResourceField(resource, "discrete")
+        assertFalse(rfield.is_lookup)
+
+        rfield = S3ResourceField(resource, "value")
+        assertFalse(rfield.is_lookup)
+
+# =============================================================================
 class ResourceFilterJoinTests(unittest.TestCase):
     """ Test query construction from S3ResourceQueries """
 
@@ -2630,6 +2739,7 @@ if __name__ == "__main__":
 
     run_suite(
         FieldSelectorResolutionTests,
+        FieldCategoryFlagsTests,
 
         ResourceFilterJoinTests,
         ResourceFilterQueryTests,
