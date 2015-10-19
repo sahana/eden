@@ -105,6 +105,7 @@ class S3DVRModel(S3Model):
                            represent = S3Represent(options=dvr_status_opts),
                            requires = IS_EMPTY_OR(IS_IN_SET(dvr_status_opts)),
                            ),
+                     s3_date("followup_date", label=T("Followup Date")),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -161,6 +162,7 @@ class S3DVRModel(S3Model):
         crud_form = S3SQLCustomForm("reference",
                                     "organisation_id",
                                     "status",
+                                    "followup_date",
                                     "person_id",
                                     S3SQLInlineComponent("current_address",
                                                          label = T("Current Address"),
