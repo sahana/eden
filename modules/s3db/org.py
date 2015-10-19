@@ -3383,7 +3383,7 @@ class S3SiteNameModel(S3Model):
     def model(self):
 
         T = current.T
-        l10n_languages = current.deployment_settings.get_L10n_languages()
+        LANGUAGE_CODE = IS_ISO639_2_LANGUAGE_CODE
 
         # ---------------------------------------------------------------------
         # Local Names
@@ -3394,9 +3394,8 @@ class S3SiteNameModel(S3Model):
                           self.super_link("site_id", "org_site"),
                           Field("language",
                                 label = T("Language"),
-                                represent = lambda opt: l10n_languages.get(opt,
-                                                current.messages.UNKNOWN_OPT),
-                                requires = IS_ISO639_2_LANGUAGE_CODE(),
+                                represent = LANGUAGE_CODE.represent,
+                                requires = LANGUAGE_CODE(),
                                 ),
                           Field("name_l10n",
                                 label = T("Local Name"),
@@ -3405,35 +3404,13 @@ class S3SiteNameModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = self.org_site_name_deduplicate,
+                       deduplicate = S3Duplicate(primary = ("language",
+                                                            "site_id",
+                                                            )),
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_site_name_deduplicate(item):
-        """
-           If the record is a duplicate then it will set the item method to update
-        """
-
-        data = item.data
-        language = data.get("language", None)
-        site_id = data.get("site_id", None)
-
-        if not language or not site_id:
-            return
-
-        table = item.table
-        query = (table.language == language) & \
-                (table.site_id == site_id)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3SiteTagModel(S3Model):
@@ -5671,7 +5648,7 @@ def org_rheader(r, tabs=[]):
         append_tab = tabs.append
 
         if settings.get_L10n_translate_org_site():
-            append_tab(T("Local Names"), "name")
+            append_tab((T("Local Names"), "name"))
         if settings.get_org_tags():
             append_tab((T("Tags"), "tag"))
         if settings.has_module("hrm") and \
