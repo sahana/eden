@@ -40,7 +40,7 @@ import datetime
 import re
 import sys
 
-from gluon import current
+from gluon import current, IS_EMPTY_OR, IS_IN_SET
 from gluon.storage import Storage
 
 from s3dal import Field, Row
@@ -696,6 +696,14 @@ class S3ResourceField(object):
         self.label = label
         self.show = True
 
+        # Field type category flags
+        self._is_numeric = None
+        self._is_lookup = None
+        self._is_string = None
+        self._is_datetime = None
+        self._is_reference = None
+        self._is_list = None
+
     # -------------------------------------------------------------------------
     def __repr__(self):
         """ String representation of this instance """
@@ -794,6 +802,123 @@ class S3ResourceField(object):
                 return s3_unicode(value)
         else:
             return value
+
+    # -------------------------------------------------------------------------
+    @property
+    def is_lookup(self):
+        """
+            Check whether the field type is a fixed set lookup (IS_IN_SET)
+
+            @return: True if field type is a fixed set lookup, else False
+        """
+
+        is_lookup = self._is_lookup
+        if is_lookup is None:
+
+            is_lookup = False
+
+            ftype = self.ftype
+            field = self.field
+
+            if field:
+                requires = field.requires
+                if requires:
+                    if not isinstance(requires, (list, tuple)):
+                        requires = [requires]
+                    requires = requires[0]
+                    if isinstance(requires, IS_EMPTY_OR):
+                        requires = requires.other
+                    if isinstance(requires, IS_IN_SET):
+                        is_lookup = True
+                if is_lookup and requires and self.ftype == "integer":
+                    # Discrete numeric values?
+                    options = requires.options(zero=False)
+                    if all(k == v for k, v in options):
+                        is_lookup = False
+            self._is_lookup = is_lookup
+        return is_lookup
+
+    # -------------------------------------------------------------------------
+    @property
+    def is_numeric(self):
+        """
+            Check whether the field type is numeric (lazy property)
+
+            @return: True if field type is integer or double, else False
+        """
+
+        is_numeric = self._is_numeric
+        if is_numeric is None:
+
+            ftype = self.ftype
+            field = self.field
+
+            if ftype == "integer" and self.is_lookup:
+                is_numeric = False
+            else:
+                is_numeric = ftype in ("integer", "double")
+            self._is_numeric = is_numeric
+        return is_numeric
+
+    # -------------------------------------------------------------------------
+    @property
+    def is_string(self):
+        """
+            Check whether the field type is a string type (lazy property)
+
+            @return: True if field type is string or text, else False
+        """
+
+        is_string = self._is_string
+        if is_string is None:
+            is_string = self.ftype in ("string", "text")
+            self._is_string = is_string
+        return is_string
+
+    # -------------------------------------------------------------------------
+    @property
+    def is_datetime(self):
+        """
+            Check whether the field type is date/time (lazy property)
+
+            @return: True if field type is datetime, date or time, else False
+        """
+
+        is_datetime = self._is_datetime
+        if is_datetime is None:
+            is_datetime = self.ftype in ("datetime", "date", "time")
+            self._is_datetime = is_datetime
+        return is_datetime
+
+    # -------------------------------------------------------------------------
+    @property
+    def is_reference(self):
+        """
+            Check whether the field type is a reference (lazy property)
+
+            @return: True if field type is a reference, else False
+        """
+
+        is_reference = self._is_reference
+        if is_reference is None:
+            is_reference = self.ftype[:9] == "reference"
+            self._is_reference = is_reference
+        return is_reference
+
+    # -------------------------------------------------------------------------
+    @property
+    def is_list(self):
+        """
+            Check whether the field type is a list (lazy property)
+
+            @return: True if field type is a list, else False
+        """
+
+        is_list = self._is_list
+        if is_list is None:
+            is_list = self.ftype[:5] == "list:"
+            self._is_list = is_list
+        return is_list
 
 # =============================================================================
 class S3Joins(object):
