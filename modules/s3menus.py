@@ -1831,6 +1831,7 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                         M("Map", m="map"),
                         M("Import", m="import", restrict=[ADMIN]),
+                        M("Control Points", f="border_control_point"),
                     ),
                     M("Heliports", f="heliport")(
                         M("Create", m="create"),

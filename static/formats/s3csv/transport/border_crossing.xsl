@@ -6,15 +6,18 @@
 
          CSV column..................Format.............Content
 
-         Name........................string.............Name
-         Comments....................string.............Comments
+         Name........................string.............transport_border_crossing.name
+         Comments....................string.............transport_border_crossing.comments
+         Status......................string.............transport_border_crossing.status
+                                                        OPEN|RESTRICTED|CLOSED
          Lat.........................optional...........gis_location.lat
          Lon.........................optional...........gis_location.lon
-         Countries...................optional...........gis_location.L0 (Comma-separated List of ISO2 codes)
+         Countries...................optional...........transport_border_crossing_country
+                                                        (Comma-separated List of ISO2 codes)
 
-    *********************************************************************** -->  
+    *********************************************************************** -->
     <xsl:output method="xml"/>
-    
+
     <xsl:include href="../../xml/commons.xsl"/>
     <xsl:include href="../../xml/countries.xsl"/>
 
@@ -27,35 +30,60 @@
 
     <!-- ****************************************************************** -->
     <xsl:template match="row">
-    
+
         <resource name="transport_border_crossing">
+
+            <!-- Name -->
             <data field="name">
                 <xsl:attribute name="value">
                     <xsl:value-of select="col[@field='Name']"/>
                 </xsl:attribute>
             </data>
 
-            <data field="comments">
-                <xsl:attribute name="value">
-                    <xsl:value-of select="col[@field='Comments']"/>
-                </xsl:attribute>
-            </data>
-
             <!-- Location -->
-            <xsl:if test="col[@field='Lat']!=''">
+            <xsl:if test="col[@field='Lat']/text()!=''">
+                <reference field="location_id" resource="gis_location">
+                    <xsl:call-template name="Location"/>
+                </reference>
                 <xsl:call-template name="Location"/>
             </xsl:if>
 
             <!-- Countries -->
-            <xsl:if test="col[@field='Countries']!=''">
+            <xsl:variable name="Countries" select="col[@field='Countries']/text()"/>
+            <xsl:if test="$Countries!=''">
                 <xsl:call-template name="splitList">
-                    <xsl:with-param name="list" select="col[@field='Countries']"/>
+                    <xsl:with-param name="list" select="$Countries"/>
                     <xsl:with-param name="arg">country</xsl:with-param>
                 </xsl:call-template>
             </xsl:if>
 
+            <!-- Status -->
+            <xsl:variable name="Status" select="col[@field='Status']/text()"/>
+            <xsl:if test="$Status!=''">
+                <xsl:variable name="StatusCode">
+                    <xsl:call-template name="uppercase">
+                        <xsl:with-param name="string">
+                            <xsl:value-of select="$Status"/>
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:variable>
+                <data field="status">
+                    <xsl:value-of select="$StatusCode"/>
+                </data>
+            </xsl:if>
+
+            <!-- Comments -->
+            <xsl:variable name="Comments" select="col[@field='Comments']/text()"/>
+            <xsl:if test="$Comments!=''">
+                <data field="comments">
+                    <xsl:attribute name="value">
+                        <xsl:value-of select="col[@field='Comments']"/>
+                    </xsl:attribute>
+                </data>
+            </xsl:if>
+
         </resource>
-        
+
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -64,38 +92,36 @@
         <xsl:param name="arg"/>
 
         <xsl:choose>
-            <!-- Services -->
+
+            <!-- Countries (component of border crossings) -->
             <xsl:when test="$arg='country'">
 
                 <!-- Country Code = UUID of the L0 Location -->
                 <xsl:variable name="countrycode">
                     <xsl:choose>
-                        <xsl:when test="string-length($l0)!=2">
+                        <xsl:when test="string-length($item)!=2">
                             <xsl:call-template name="countryname2iso">
                                 <xsl:with-param name="country">
-                                    <xsl:value-of select="$arg"/>
+                                    <xsl:value-of select="$item"/>
                                 </xsl:with-param>
                             </xsl:call-template>
                         </xsl:when>
                         <xsl:otherwise>
                             <xsl:call-template name="uppercase">
                                 <xsl:with-param name="string">
-                                   <xsl:value-of select="$arg"/>
+                                   <xsl:value-of select="$item"/>
                                 </xsl:with-param>
                             </xsl:call-template>
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>
 
-                <xsl:variable name="country" select="concat('urn:iso:std:iso:3166:-1:code:', $countrycode)"/>
-
-                <resource name="transport_border_crossing_location">
-                    <reference field="location_id" resource="gis_location">
-                        <xsl:attribute name="uuid">
-                            <xsl:value-of select="$country"/>
-                        </xsl:attribute>
-                    </reference>
+                <resource name="transport_border_crossing_country">
+                    <data field="country">
+                        <xsl:value-of select="$countrycode"/>
+                    </data>
                 </resource>
+
             </xsl:when>
         </xsl:choose>
 

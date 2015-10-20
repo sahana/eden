@@ -27,12 +27,15 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3TransportModel",)
+__all__ = ("S3TransportModel",
+           "transport_rheader",
+           )
 
 from gluon import *
 from gluon.storage import Storage
 
 from ..s3 import *
+from ..s3layouts import S3PopupLink
 
 # =============================================================================
 class S3TransportModel(S3Model):
@@ -44,8 +47,8 @@ class S3TransportModel(S3Model):
              "transport_heliport",
              "transport_seaport",
              "transport_border_crossing",
-             "transport_border_crossing_location",
-             #"transport_border_control_point",
+             "transport_border_crossing_country",
+             "transport_border_control_point",
              )
 
     def model(self):
@@ -63,6 +66,10 @@ class S3TransportModel(S3Model):
 
         location_id = self.gis_location_id
         organisation_id = self.org_organisation_id
+
+        obsolete_options = {True: T("Closed"),
+                            False: T("Operational"),
+                            }
 
         # ---------------------------------------------------------------------
         # Airports
@@ -283,8 +290,7 @@ class S3TransportModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = lambda bool: \
-                             (bool and [T("Obsolete")] or [current.messages["NONE"]])[0],
+                           represent = S3Represent(options=obsolete_options),
                            readable = False,
                            writable = False,
                            ),
@@ -354,8 +360,7 @@ class S3TransportModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = lambda opt: \
-                                     (opt and [T("Obsolete")] or [current.messages["NONE"]])[0],
+                           represent = S3Represent(options=obsolete_options),
                            readable = False,
                            writable = False,
                            ),
@@ -548,8 +553,7 @@ class S3TransportModel(S3Model):
                      Field("obsolete", "boolean",
                            default = False,
                            label = T("Obsolete"),
-                           represent = lambda opt: \
-                                     (opt and [T("Closed")] or [T("Operational")])[0],
+                           represent = S3Represent(options=obsolete_options),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -577,15 +581,41 @@ class S3TransportModel(S3Model):
         # ---------------------------------------------------------------------
         # Border Crossings
         #
+        border_crossing_status = (("OPEN", T("Open")),
+                                  ("RESTRICTED", T("Restricted")),
+                                  ("CLOSED", T("Closed")),
+                                  )
+
         tablename = "transport_border_crossing"
         define_table(tablename,
                      Field("name", notnull=True,
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
                            ),
-                     # @todo: status
+                     location_id(
+                        widget = S3LocationSelector(levels = [],
+                                                    show_address = False,
+                                                    show_postcode = False,
+                                                    show_latlon = True,
+                                                    show_map = True,
+                                                    ),
+                     ),
+                     Field("status",
+                           default = "OPEN",
+                           represent = S3Represent(options = dict(border_crossing_status)),
+                           requires = IS_IN_SET(border_crossing_status,
+                                                zero = None,
+                                                sort = False,
+                                                ),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
+
+        # Components
+        self.add_components(tablename,
+                            transport_border_crossing_country = "border_crossing_id",
+                            transport_border_control_point = "border_crossing_id",
+                            )
 
         # CRUD strings
         crud_strings[tablename] = Storage(
@@ -601,75 +631,116 @@ class S3TransportModel(S3Model):
             msg_record_deleted=T("Border Crossing deleted"),
             msg_list_empty=T("No Border Crossings currently registered"))
 
+        # CRUD Form
         crud_form = S3SQLCustomForm("name",
-                                    S3SQLInlineComponent("border_crossing_location",
-                                                         name = "location",
-                                                         label = "",
-                                                         fields = [("", "location_id")],
+                                    "location_id",
+                                    S3SQLInlineComponent("border_crossing_country",
+                                                         label = T("Countries"),
+                                                         fields = [("", "country")],
                                                          ),
+                                    "status",
                                     "comments",
                                     )
 
-        # Components
-        self.add_components(tablename,
-                            transport_border_crossing_location = "border_crossing_id",
-                            )
+        # List Fields
+        list_fields = ["name",
+                       (T("Countries"), "border_crossing_country.country"),
+                       "location_id",
+                       "status",
+                       "comments",
+                       ]
 
+        # Filter Widgets
+        filter_widgets = [S3TextFilter(["name",
+                                        "comments",
+                                        ],
+                                       label = T("Search"),
+                                       ),
+                          S3OptionsFilter("border_crossing_country.country",
+                                          label = T("Country"),
+                                          )
+                          ]
+
+        # Table Configuration
         configure(tablename,
                   crud_form = crud_form,
-                  context = {"location": "border_crossing_location.location_id"},
-                  #onaccept = self.transport_border_crossing_onaccept,
+                  deduplicate = S3Duplicate(primary=("name",)),
+                  filter_widgets = filter_widgets,
+                  list_fields = list_fields,
                   )
 
+        # Reusable field
+        represent = transport_BorderCrossingRepresent(show_link=True)
+        border_crossing_id = S3ReusableField("border_crossing_id", "reference %s" % tablename,
+                                             label = T("Border Crossing"),
+                                             represent = represent,
+                                             requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                                  represent,
+                                                                  ),
+                                             sortby = "name",
+                                             comment = S3PopupLink(c="transport",
+                                                                   f="border_crossing",
+                                                                   tooltip=T("Create a new border crossing"),
+                                                                   ),
+                                             )
+
         # ---------------------------------------------------------------------
-        # Link table border crossing <=> location
+        # Countries involved in a border crossing
         #
-        # => every border crossing has at least two locations, i.e. on either
-        #    side of the border, hence using a link table
-        #
-        tablename = "transport_border_crossing_location"
+        current_countries = lambda: current.gis.get_countries(key_type="code")
+
+        tablename = "transport_border_crossing_country"
         define_table(tablename,
-                     Field("border_crossing_id", "reference transport_border_crossing"),
-                     location_id(),
+                     border_crossing_id(),
+                     Field("country", length=2,
+                           label = T("Country"),
+                           represent = self.gis_country_code_represent,
+                           requires = IS_EMPTY_OR(IS_IN_SET_LAZY(
+                                        current_countries,
+                                        zero=messages.SELECT_LOCATION,
+                                        )),
+                           ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Border Control Points
         #
-
-        #tablename = "transport_border_control_point"
-        #define_table(tablename,
-        #             #super_link("doc_id", "doc_entity"),
-        #             #super_link("pe_id", "pr_pentity"),
-        #             super_link("site_id", "org_site"),
-        #             Field("name", notnull=True,
-        #                   length = 64, # Mayon Compatibility
-        #                   label = T("Name"),
-        #                   ),
-        #             organisation_id(),
-        #             location_id(),
-        #             s3_comments(),
-        #             *s3_meta_fields())
+        tablename = "transport_border_control_point"
+        define_table(tablename,
+                     super_link("doc_id", "doc_entity"),
+                     super_link("site_id", "org_site"),
+                     #super_link("pe_id", "pr_pentity"),
+                     Field("name", notnull=True,
+                           length = 64, # Mayon Compatibility
+                           label = T("Name"),
+                           ),
+                     border_crossing_id(),
+                     organisation_id(),
+                     location_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # CRUD strings
-        #crud_strings[tablename] = Storage(
-        #    label_create=T("Create Border Control Point"),
-        #    title_display=T("Border Control Points"),
-        #    title_list=T("Border Control Points"),
-        #    title_update=T("Edit Border Control Point"),
-        #    title_upload=T("Import Border Control Points"),
-        #    label_list_button=T("List Border Control Points"),
-        #    label_delete_button=T("Delete Border Control Point"),
-        #    msg_record_created=T("Border Control Point added"),
-        #    msg_record_modified=T("Border Control Point updated"),
-        #    msg_record_deleted=T("Border Control Point deleted"),
-        #    msg_list_empty=T("No Border Control Points currently registered"))
+        crud_strings[tablename] = Storage(
+           label_create=T("Create Border Control Point"),
+           title_display=T("Border Control Points"),
+           title_list=T("Border Control Points"),
+           title_update=T("Edit Border Control Point"),
+           title_upload=T("Import Border Control Points"),
+           label_list_button=T("List Border Control Points"),
+           label_delete_button=T("Delete Border Control Point"),
+           msg_record_created=T("Border Control Point added"),
+           msg_record_modified=T("Border Control Point updated"),
+           msg_record_deleted=T("Border Control Point deleted"),
+           msg_list_empty=T("No Border Control Points currently registered"),
+           )
 
-        #configure(tablename,
-        #          #onaccept = self.transport_border_control_point_onaccept,
-        #          #super_entity = ("doc_entity", "pr_pentity", "org_site"),
-        #          super_entity = "org_site",
-        #          )
+        configure(tablename,
+                  super_entity = ("doc_entity",
+                                  "org_site",
+                                  #"pr_pentity",
+                                  ),
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -708,5 +779,142 @@ class S3TransportModel(S3Model):
         # If made into a pe_id:
         #current.s3db.org_update_affiliations("transport_seaport", form.vars)
         return
+
+# =============================================================================
+class transport_BorderCrossingRepresent(S3Represent):
+    """ Representations for border_crossing_id """
+
+    def __init__(self, show_link=False):
+        """
+            Constructor
+
+            @param show_link: render as link to the border crossing
+        """
+
+        super(transport_BorderCrossingRepresent, self).__init__(
+                                    lookup = "transport_border_crossing",
+                                    show_link = show_link,
+                                    )
+
+    # -------------------------------------------------------------------------
+    def represent_row(self, row):
+        """
+            Represent a row
+
+            @param row: the Row
+        """
+
+        if hasattr(row, "transport_border_crossing"):
+            row = row.transport_border_crossing
+        representation = row.name
+
+        if hasattr(row, "countries"):
+            representation = "%s (%s)" % (representation,
+                                          ", ".join(row.countries),
+                                          )
+
+        return representation
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=[]):
+        """
+            Custom rows lookup
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: unused (retained for API compatibility)
+        """
+
+        s3db = current.s3db
+
+        btable = self.table
+        ctable = s3db.transport_border_crossing_country
+        left = ctable.on((ctable.border_crossing_id == btable.id) & \
+                         (ctable.deleted != True))
+
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(btable.id,
+                                        btable.name,
+                                        ctable.country,
+                                        left = left)
+        self.queries += 1
+
+        output = {}
+        country_represent = s3db.gis_country_code_represent
+        for row in rows:
+
+            country = country_represent(row[ctable.country])
+
+            crossing = row["transport_border_crossing"]
+            crossing_id = crossing.id
+
+            output_row = output.get(crossing_id)
+            if output_row:
+                countries = output_row.countries
+                countries.append(country)
+            else:
+                crossing.countries = [country]
+                output[crossing_id] = crossing
+
+        return output.values()
+
+# =============================================================================
+def transport_rheader(r, tabs=[]):
+    """ Transport module resource headers """
+
+    if r.representation != "html":
+        # RHeaders only used in interactive views
+        return None
+
+    settings = current.deployment_settings
+    s3db = current.s3db
+
+    tablename, record = s3_rheader_resource(r)
+    table = s3db.table(tablename)
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+
+        T = current.T
+
+        if tablename == "transport_border_crossing":
+
+            if not tabs:
+                tabs = [(T("Details"), None),
+                        (T("Control Points"), "border_control_point"),
+                        ]
+
+            rheader_fields = [["name"],
+                              ["location_id"],
+                              ]
+
+        else:
+            # All other entities
+            # - Airports
+            # - Seaports
+            # - Heliports
+            # - Border Control Points
+            if not tabs:
+                tabs = [(T("Details"), None),
+                        ]
+
+            rheader_fields = [["name"],
+                              ["location_id"],
+                              ]
+            if settings.has_module("req"):
+                tabs.extend(s3db.req_tabs(r))
+            if settings.has_module("inv"):
+                tabs.extend(s3db.inv_tabs(r))
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                         table=table,
+                                                         record=record,
+                                                         )
+    return rheader
 
 # END =========================================================================
