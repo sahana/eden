@@ -25,7 +25,7 @@ def config(settings):
     settings.base.prepopulate = ("RW", "default/users")
 
     # Theme (folder to use for views/layout.html)
-    settings.base.theme = "RW"
+    #settings.base.theme = "RW"
 
     # Authentication settings
     # Should users be allowed to register themselves?
