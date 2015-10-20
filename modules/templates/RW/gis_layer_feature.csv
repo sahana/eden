@@ -1,2 +1,3 @@
 Name,Description,Controller,Function,Marker,GPS Marker,Popup Format,Attributes,Filter,Site,Points,Trackable,Style,Opacity,Folder,Visible,Enabled,Cluster Threshold,Refresh
 Facilities,,org,facility,office,Building,{name} (T('Facility'))<br />{organisation_id},"name,organisation_id",~.obsolete=False,,True,,,,,False,,,0
+Border Crossings,,transport,border_crossing,marker_amber,,{name} (T('Border Crossing')),name,,,True,,,,,False,,,0

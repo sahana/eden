@@ -577,14 +577,13 @@ class S3TransportModel(S3Model):
         # ---------------------------------------------------------------------
         # Border Crossings
         #
-
         tablename = "transport_border_crossing"
         define_table(tablename,
                      Field("name", notnull=True,
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
                            ),
-                     location_id(),
+                     # @todo: status
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -603,7 +602,7 @@ class S3TransportModel(S3Model):
             msg_list_empty=T("No Border Crossings currently registered"))
 
         crud_form = S3SQLCustomForm("name",
-                                    S3SQLInlineComponent("location",
+                                    S3SQLInlineComponent("border_crossing_location",
                                                          name = "location",
                                                          label = "",
                                                          fields = [("", "location_id")],
@@ -613,24 +612,24 @@ class S3TransportModel(S3Model):
 
         # Components
         self.add_components(tablename,
-                            gis_location = {"link": "transport_border_cossing_location",
-                                            "joinby": "border_cossing_id",
-                                            "key": "location_id",
-                                            "actuate": "hide",
-                                            },
-                            # Format for filter_widget
-                            transport_border_cossing_location = "border_cossing_id",
+                            transport_border_crossing_location = "border_crossing_id",
                             )
 
         configure(tablename,
                   crud_form = crud_form,
+                  context = {"location": "border_crossing_location.location_id"},
                   #onaccept = self.transport_border_crossing_onaccept,
                   )
 
         # ---------------------------------------------------------------------
+        # Link table border crossing <=> location
+        #
+        # => every border crossing has at least two locations, i.e. on either
+        #    side of the border, hence using a link table
+        #
         tablename = "transport_border_crossing_location"
         define_table(tablename,
-                     Field("border_cossing_id", "reference transport_border_crossing"),
+                     Field("border_crossing_id", "reference transport_border_crossing"),
                      location_id(),
                      *s3_meta_fields())
 
