@@ -704,6 +704,7 @@ class S3TransportModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Border Control Points
+        # - the Facilities at either side of the Border
         #
         tablename = "transport_border_control_point"
         define_table(tablename,
