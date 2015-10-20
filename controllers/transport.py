@@ -71,9 +71,9 @@ def border_control_point():
                                    editable = False,
                                    listadd = False,
                                    )
-            elif r.method == "update":
-                field = r.table.obsolete
-                field.readable = field.writable = True
+            #elif r.method == "update":
+            #    field = r.table.obsolete
+            #    field.readable = field.writable = True
         return True
     s3.prep = prep
 
