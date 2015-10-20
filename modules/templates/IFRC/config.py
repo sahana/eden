@@ -272,6 +272,7 @@ def config(settings):
         ("es", "Español"),
         ("fr", "Français"),
         ("km", "ភាសាខ្មែរ"),        # Khmer
+        ("mg", "Мalagasy"),
         ("mn", "Монгол хэл"),  # Mongolian
         ("my", "မြန်မာစာ"),        # Burmese
         ("ne", "नेपाली"),          # Nepali
