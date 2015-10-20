@@ -614,6 +614,10 @@ table.dataTable .selected-action {
   margin: 5px 0 5px;
 }
 
+.dt-wrapper {
+  margin-bottom: 1.5rem;
+}
+
 .dataTables_processing {
   padding: 14px 0 28px;
 }
