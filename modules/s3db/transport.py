@@ -583,6 +583,8 @@ class S3TransportModel(S3Model):
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
                            ),
+                     # The exact location of the border
+                     location_id(),
                      # @todo: status
                      s3_comments(),
                      *s3_meta_fields())
@@ -617,15 +619,14 @@ class S3TransportModel(S3Model):
 
         configure(tablename,
                   crud_form = crud_form,
-                  context = {"location": "border_crossing_location.location_id"},
+                  #context = {"location": "border_crossing_location.location_id"},
                   #onaccept = self.transport_border_crossing_onaccept,
                   )
 
         # ---------------------------------------------------------------------
-        # Link table border crossing <=> location
+        # Border crossing <> Location
         #
-        # => every border crossing has at least two locations, i.e. on either
-        #    side of the border, hence using a link table
+        # The locations either side of the border - typically just the Countries
         #
         tablename = "transport_border_crossing_location"
         define_table(tablename,
@@ -635,6 +636,7 @@ class S3TransportModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Border Control Points
+        # - the Facilities at either side of the Border
         #
 
         #tablename = "transport_border_control_point"
