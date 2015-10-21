@@ -436,6 +436,17 @@ def config(settings):
     settings.gis.postcode_selector = postcode_selector
 
     # -----------------------------------------------------------------------------
+    def label_fullname(default):
+        """ NS-specific selection of label for the AddPersonWidget2's Name field """
+
+        if current.session.s3.language == "mg":
+            # Allow for better localisation
+            default = "Full Name"
+        return default
+
+    settings.pr.label_fullname = label_fullname
+
+    # -----------------------------------------------------------------------------
     # Enable this for a UN-style deployment
     #settings.ui.cluster = True
     # Enable this to use the label 'Camp' instead of 'Shelter'

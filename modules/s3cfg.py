@@ -3245,6 +3245,12 @@ class S3Config(Storage):
         """
         return self.pr.get("import_update_requires_email", True)
 
+    def get_pr_label_fullname(self):
+        """
+            Label for the AddPersonWidget2's 'Name' field
+        """
+        return self.__lazy("pr", "label_fullname", default="Name")
+
     def get_pr_lookup_duplicates(self):
         """
             Whether the AddPersonWidget2 does a fuzzy search for duplicates

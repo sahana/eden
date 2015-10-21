@@ -2049,16 +2049,31 @@ class S3GroupModel(S3Model):
                 msg_record_deleted = T("Person removed from Group"),
                 msg_list_empty = T("This Group has no Members yet"))
 
+        text_fields = ["group_id$name",
+                       "person_id$first_name",
+                       "person_id$middle_name",
+                       "person_id$last_name",
+                       ]
+
+        # Which levels of Hierarchy are we using?
+        levels = current.gis.get_relevant_hierarchy_levels()
+        for level in levels:
+            lfield = "location_id$%s" % level
+            # @ToDo:
+            #report_fields.append(lfield)
+            text_fields.append(lfield)
+
         filter_widgets = [
-            S3TextFilter(["group_id$name",
-                          "person_id$first_name",
-                          "person_id$middle_name",
-                          "person_id$last_name",
-                          ],
-                          label = T("Name"),
+            S3TextFilter("text_fields",
+                          label = T("Search"),
                           comment = T("To search for a member, enter any portion of the name of the person or group. You may use % as wildcard. Press 'Search' without input to list all members."),
                           _class="filter-search",
                           ),
+            S3OptionsFilter("group_id",
+                            ),
+            S3LocationFilter("person_id$location_id",
+                             levels = levels,
+                             ),
             ]
 
         configure(tablename,

@@ -1472,7 +1472,6 @@
 'Describe the condition of the roads to your hospital.': 'Décrivez la condition des routes à votre hôpital.',
 'Describe the procedure which this record relates to (e.g. "medical examination")': 'Décrivez la procédure qui est liée à cet enregistrement (par exemple, "examen médical")',
 "Describe the procedure which this record relates to (e.g. 'medical examination')": 'Décrivez la procédure qui est liée à cet enregistrement (par exemple, "examen médical")',
-'Description': 'description',
 'Description of Bin Type': 'Description de type Bin',
 'Description of Contacts': 'Description des contacts',
 'Description of defecation area': 'Description de la zone de latrines',
