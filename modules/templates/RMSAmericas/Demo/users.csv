@@ -1,5 +1,5 @@
 First Name,Last Name,Email,Password,Role,Organisation,Facility Type,Office,Language
-Honduras,Org Admin,hn_orgadmin@example.com,eden,ORG_ADMIN,Honduran Red Cross,,,es
+Honduras,Org Admin,hn_orgadmin@example.com,eden,"ORG_ADMIN,hn_user",Honduran Red Cross,,,es
 Honduras,"M&E",hn_me@example.com,eden,"monitoring_evaluation,hn_user",Honduran Red Cross,,,es
 Honduras,Project Manager,hn_project_manager@example.com,eden,"project_manager,hn_user",Honduran Red Cross,,,es
 Honduras,Project Reader,hn_project_reader@example.com,eden,"project_reader,hn_user",Honduran Red Cross,,,es

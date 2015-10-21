@@ -53,6 +53,7 @@ ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all recor
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,org,,,,ALL,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,pr,,,,ALL,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,project,,,,ALL,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,project,,,any,READ,,,,,# Need to have access to unfiltered Orgs lists
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,req,,,,ALL,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,supply,,,,ALL,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,supply,,,any,READ,,,,,
@@ -100,9 +101,6 @@ hn_user,Honduras User,,inv,,,,READ,,,,,# Need to have access to unfiltered Orgs 
 hn_user,Honduras User,,inv,facility,,,READ,,,,,
 hn_user,Honduras User,,inv,req_match,,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 hn_user,Honduras User,,inv,supplier,,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
-hn_user,Honduras User,,org,,,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
-hn_user,Honduras User,,,,org_facility,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
-hn_user,Honduras User,,,,org_organisation,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 hn_user,Honduras User,,pr,,,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 hn_user,Honduras User,,,,pr_person,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 hn_user,Honduras User,,req,,,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
@@ -262,7 +260,6 @@ wh_manager,Warehouse Manager,,,,inv_warehouse,,READ,,,,,
 wh_manager,Warehouse Manager,,req,,,,READ|CREATE|UPDATE|DELETE,,,,,
 wh_manager,Warehouse Manager,,,,req_req,,READ|CREATE|UPDATE|DELETE,,,,,
 wh_manager,Warehouse Manager,,org,,,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields
-wh_manager,Warehouse Manager,,org,,,,READ|CREATE|UPDATE,,,,,
 wh_manager,Warehouse Manager,,,,org_facility,,READ|UPDATE,,,,,
 wh_manager,Warehouse Manager,,,,org_facility_type,,READ,,,,,
 wh_manager,Warehouse Manager,,,,org_organisation,,READ|CREATE|UPDATE,,,,,Used to filter organisation fields

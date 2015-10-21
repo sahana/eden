@@ -1083,7 +1083,7 @@ def config(settings):
         """ Whether to use Skills """
 
         root_org = current.auth.root_org_name()
-        if root_org in (ARCS, IRCS, PMI, VNRC):
+        if root_org in (ARCS, CRMADA, IRCS, PMI, VNRC):
             return True
         return False
 
@@ -1117,9 +1117,14 @@ def config(settings):
 
         root_org = current.auth.root_org_name()
         if root_org in (ARCS, IRCS):
-            return True # Simple Checkbox
+            # Simple checkbox
+            return True
         elif root_org in (CVTL, PMI, PRC):
-            return vol_active # Use formula
+            # Use formula based on hrm_programme
+            return vol_programme_active
+        elif root_org in (CRMADA, ):
+            # Use formula based on vol_activity
+            return vol_activity_active
         return False
 
     settings.hrm.vol_active = hrm_vol_active
@@ -3025,7 +3030,7 @@ def config(settings):
     settings.customise_pr_group_controller = customise_pr_group_controller
 
     # =============================================================================
-    def vol_active(person_id):
+    def vol_programme_active(person_id):
         """
             Whether a Volunteer counts as 'Active' based on the number of hours
             they've done (both Trainings & Programmes) per month, averaged over
@@ -3074,10 +3079,39 @@ def config(settings):
             # Active?
             if average >= 8:
                 return True
-            else:
-                return False
-        else:
-            return False
+
+        return False
+
+    # =============================================================================
+    def vol_activity_active(person_id):
+        """
+            Whether a Volunteer counts as 'Active' based on the number of hours
+            they've done on Volunteer Activities (inc Trainings, but not Project Activities)
+            in the last month.
+        """
+
+        from dateutil.relativedelta import relativedelta
+        now = current.request.utcnow
+
+        # Time spent on Volunteer Activities in the last month
+        htable = current.s3db.vol_activity_hours
+        query = (htable.deleted == False) & \
+                (htable.person_id == person_id) & \
+                (htable.date >= (now - relativedelta(months=1)))
+        activities = current.db(query).select(htable.hours,
+                                              )
+        if activities:
+            # Total hours between start and end
+            hours = 0
+            for activity in activities:
+                if activity.hours:
+                    hours += activity.hours
+
+            # Active?
+            if hours >= 4:
+                return True
+
+        return False
 
     # -----------------------------------------------------------------------------
     def vnrc_cv_form(r):
@@ -3130,7 +3164,14 @@ def config(settings):
         arcs = False
         vnrc = False
         root_org = current.auth.root_org_name()
-        if root_org == IRCS:
+        if root_org == CRMADA:
+            table = s3db.pr_person
+            table.initials.readable = table.initials.writable = False
+            table.local_name.readable = table.local_name.writable = False
+            table.preferred_name.readable = table.preferred_name.writable = False
+            field = s3db.pr_person_details.religion
+            field.readable = field.writable = False
+        elif root_org == IRCS:
             settings.hrm.activity_types = None
             settings.hrm.use_id = False
             table = s3db.pr_person

@@ -705,7 +705,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                   m="import", p="create"),
              ),
              M("Partner Organizations",  f="partners")(
-                M("Create", m="create"),
+                M("Create", m="create", restrict=[ORG_ADMIN]),
                 M("Import", m="import", p="create"),
              ),
              #M("Activity Types", f="activity_type")(

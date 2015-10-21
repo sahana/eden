@@ -2793,6 +2793,8 @@ class S3ProjectHRModel(S3Model):
             msg_list_empty = T("No Human Resources currently assigned to this project"))
 
         self.configure(tablename,
+                       context = {"project": "project_id",
+                             },
                        onvalidation = self.project_human_resource_onvalidation,
                        super_entity = "budget_cost_item",
                        )

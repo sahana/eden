@@ -2326,6 +2326,8 @@ def config(settings):
                     table[f].writable = False
                 # Except add a Real value
                 table.value.writable = True
+                # Or Amend the Comments
+                table.comments.writable = True
 
     settings.customise_project_indicator_data_resource = customise_project_indicator_data_resource
 

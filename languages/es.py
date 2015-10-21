@@ -4543,6 +4543,7 @@
 'Partner Details': 'Detalles de Socio',
 'Partner National Society': 'Sociedad Nacional Participante',
 'Partner Organizations': 'Organizaciones Socias',
+'Partner Organization added': 'Socio añadido',
 'Partner added': 'Socio añadido',
 'Partner deleted': 'Socio eliminado',
 'Partner updated': 'Socio actualizado',

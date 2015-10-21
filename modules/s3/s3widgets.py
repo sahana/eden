@@ -937,7 +937,7 @@ class S3AddPersonWidget2(FormWidget):
         # - can search for an existing person
         # - can create a new person
         # - multiple names get assigned to first, middle, last
-        fappend(("full_name", T("Name"), INPUT(data=data), True))
+        fappend(("full_name", T("Name"), INPUT(data=data, _size=40), True))
 
         if father_name:
             fappend(("father_name", father_name.label, INPUT(), False))

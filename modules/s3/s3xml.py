@@ -1635,7 +1635,7 @@ class S3XML(S3Codec):
 
                 child.set(VALUE, s3_unicode(v))
                 if error:
-                    child.set(ERROR, "%s: %s" % (f, error))
+                    child.set(ERROR, s3_unicode("%s: %s" % (f, error)))
                     valid = False
                     continue
 
