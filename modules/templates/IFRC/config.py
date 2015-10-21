@@ -494,10 +494,10 @@ def config(settings):
          "pr_person_details.mother_name"             : (BRCS, ),
          "pr_person_details.father_name"             : (ARCS, BRCS, IRCS),
          "pr_person_details.grandfather_name"        : (ARCS, IRCS),
-         "pr_person_details.year_of_birth"           : (ARCS, ),
+         "pr_person_details.year_of_birth"           : (ARCS, CRMADA),
          "pr_person_details.affiliations"            : (PRC, ),
          "pr_person_details.company"                 : (PRC, ),
-         "vol_details.availability"                  : (VNRC, ),
+         "vol_details.availability"                  : (CRMADA, VNRC),
          "vol_details.card"                          : (ARCS, ),
          "vol_volunteer_cluster.vol_cluster_type_id"     : (PRC, ),
          "vol_volunteer_cluster.vol_cluster_id"          : (PRC, ),
@@ -1048,7 +1048,7 @@ def config(settings):
         """ Whether the Last Name is Mandatory """
 
         root_org = current.auth.root_org_name()
-        if root_org in (ARCS, IRCS):
+        if root_org in (ARCS, IRCS, CRMADA):
             return False
         return True
 
@@ -1160,6 +1160,8 @@ def config(settings):
         root_org = current.auth.root_org_name()
         if root_org == VNRC:
             return "%(last_name)s %(middle_name)s %(first_name)s"
+        #elif root_org == CRMADA:
+        #    return "%(last_name)s %(first_name)s %(middle_name)s"
         return default
 
     settings.pr.name_format = pr_name_format
@@ -1855,6 +1857,19 @@ def config(settings):
         if phone_number:
             items.append(": %s" % phone_number)
         return "".join(items)
+
+    # -----------------------------------------------------------------------------
+    def customise_vol_activity_controller(**attr):
+
+        # Organisation needs to be an NS/Branch
+        ns_only("vol_activity",
+                required = False,
+                branches = True,
+                )
+
+        return attr
+
+    settings.customise_vol_activity_controller = customise_vol_activity_controller
 
     # -----------------------------------------------------------------------------
     def customise_vol_volunteer_award_resource(r, tablename):
@@ -3226,7 +3241,7 @@ def config(settings):
             elif component_name == "physical_description":
                 from gluon import DIV
                 ctable = r.component.table
-                if root_org == IRCS:
+                if root_org in (CRMADA, IRCS):
                     ctable.ethnicity.readable = ctable.ethnicity.writable = False
                 ctable.medical_conditions.comment = DIV(_class="tooltip",
                                                         _title="%s|%s" % (T("Medical Conditions"),
@@ -3774,6 +3789,76 @@ def config(settings):
         return attr
 
     settings.customise_po_area_controller = customise_po_area_controller
+
+    # -------------------------------------------------------------------------
+    def project_project_postprocess(form):
+        """
+            When using Budget Monitoring (i.e. CRMADA) then create the entries
+        """
+
+        db = current.db
+        s3db = current.s3db
+        project_id = form.vars.id
+        # Read Budget Entity ID, Start Date and End Date
+        ptable = s3db.project_project
+        project = db(ptable.id == project_id).select(ptable.budget_entity_id,
+                                                     ptable.name,
+                                                     ptable.start_date,
+                                                     ptable.end_date,
+                                                     limitby=(0, 1)
+                                                     ).first()
+        if not project:
+            return
+
+        # Copy Project Name to Budget Name
+        budget_entity_id = project.budget_entity_id
+        btable = s3db.budget_budget
+        query = (btable.budget_entity_id == budget_entity_id)
+        budget = db(query).select(btable.id, # Needed for update_record
+                                  # If we want to provide smoothed default expected values
+                                  #btable.total_budget,
+                                  btable.currency,
+                                  # Assume Monthly
+                                  #btable.monitoring_frequency,
+                                  limitby=(0, 1)
+                                  ).first()
+        if not budget:
+            return
+        try:
+            budget.update_record(name = project.name)
+        except:
+            # unique=True violation
+            budget.update_record(name = "Budget for %s" % project.name)
+
+        mtable = s3db.budget_monitoring
+        exists = db(mtable.budget_entity_id == budget_entity_id).select(mtable.id,
+                                                                        limitby=(0, 1))
+        if not exists:
+            # Create Monitoring Data entries
+            start_date = project.start_date
+            end_date = project.end_date
+            if not start_date or not end_date:
+                return
+            # Assume Monthly
+            #monitoring_frequency = budget.monitoring_frequency
+            #if not monitoring_frequency:
+            #    return
+            #total_budget = budget.total_budget
+            currency = budget.currency
+            # Create entries for the 1st of every month between start_date and end_date
+            from dateutil import rrule
+            dates = list(rrule.rrule(rrule.MONTHLY, bymonthday=1, dtstart=start_date, until=end_date))
+            for d in dates:
+                mtable.insert(budget_entity_id = budget_entity_id,
+                              # @ToDo: This needs to be modified whenever entries are manually edited
+                              # Set/update this in budget_monitoring_onaccept
+                              # - also check here that we don't exceed overall budget
+                              start_date = start_date,
+                              end_date = d,
+                              currency = currency,
+                              )
+                # Start date relates to previous entry
+                start_date = d
 
     # -----------------------------------------------------------------------------
     def customise_project_programme_controller(**attr):

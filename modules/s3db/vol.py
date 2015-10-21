@@ -29,6 +29,7 @@
 """
 
 __all__ = ("S3VolunteerModel",
+           "S3VolunteerActivityModel",
            "S3VolunteerAwardModel",
            "S3VolunteerClusterModel",
            "vol_service_record",
@@ -59,6 +60,7 @@ class S3VolunteerModel(S3Model):
         T = current.T
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
+        # VNRC Options
         availability_opts = {1: T("No Restrictions"),
                              2: T("Weekends only"),
                              3: T("School Holidays only"),
@@ -114,6 +116,212 @@ class S3VolunteerModel(S3Model):
         else:
             output = DIV(current.T("No"), _style="color:red")
         return output
+
+# =============================================================================
+class S3VolunteerActivityModel(S3Model):
+    """
+        Currently used by CRMADA
+    """
+
+    names = ("vol_activity_type",
+             "vol_activity",
+             "vol_activity_activity_type",
+             "vol_activity_hours",
+             "vol_activity_hours_activity_type",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+        #auth = current.auth
+
+        add_components = self.add_components
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        #ADMIN = current.session.s3.system_roles.ADMIN
+        #is_admin = auth.s3_has_role(ADMIN)
+
+        #root_org = auth.root_org()
+        #if is_admin:
+        #    filter_opts = ()
+        #elif root_org:
+        #    filter_opts = (root_org, None)
+        #else:
+        #    filter_opts = (None,)
+
+        # ---------------------------------------------------------------------
+        # Volunteer Activity Type
+        #
+        tablename = "vol_activity_type"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     # Only included in order to be able to set
+                     # realm_entity to filter appropriately
+                     #self.org_organisation_id(default = root_org,
+                     #                         readable = is_admin,
+                     #                         writable = is_admin,
+                     #                         ),
+                     s3_comments(label = T("Description"),
+                                 comment = None,
+                                 ),
+                     *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Activity Type"),
+            title_display = T("Activity Type"),
+            title_list = T("Activity Types"),
+            title_update = T("Edit Activity Type"),
+            title_upload = T("Import Activity Types"),
+            label_list_button = T("List Activity Types"),
+            label_delete_button = T("Delete Activity Type"),
+            msg_record_created = T("Activity Type added"),
+            msg_record_modified = T("Activity Type updated"),
+            msg_record_deleted = T("Activity Type deleted"),
+            msg_list_empty = T("No Activity Types found"))
+
+        comment = S3PopupLink(c = "vol",
+                              f = "activity_type",
+                              label = crud_strings[tablename].label_create,
+                              title = T("Activity Type"),
+                              )
+
+        represent = S3Represent(lookup=tablename)
+        activity_type_id = S3ReusableField("activity_type_id", "reference %s" % tablename,
+                                           label = T("Activity Type"),
+                                           requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db,
+                                                                  "vol_activity_type.id",
+                                                                  represent,
+                                                                  #filterby="organisation_id",
+                                                                  #filter_opts=filter_opts,
+                                                                  )),
+                                           ondelete = "SET NULL",
+                                           represent = represent,
+                                           comment = comment
+                                           )
+
+        # ---------------------------------------------------------------------
+        # Volunteer Activities
+        #
+        tablename = "vol_activity"
+        define_table(tablename,
+                     self.org_organisation_id(),
+                     self.gis_location_id(),
+                     s3_date(),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Activity"),
+            title_display = T("Activity"),
+            title_list = T("Activities"),
+            title_update = T("Edit Activity"),
+            title_upload = T("Import Activities"),
+            label_list_button = T("List Activities"),
+            label_delete_button = T("Delete Activity"),
+            msg_record_created = T("Activity added"),
+            msg_record_modified = T("Activity updated"),
+            msg_record_deleted = T("Activity deleted"),
+            msg_list_empty = T("No Activities found"))
+
+        represent = S3Represent(lookup=tablename)
+        activity_id = S3ReusableField("activity_id", "reference %s" % tablename,
+                                      label = T("Activity"),
+                                      requires = IS_ONE_OF(db,
+                                                           "vol_activity.id",
+                                                           represent,
+                                                           #filterby="organisation_id",
+                                                           #filter_opts=filter_opts,
+                                                           ),
+                                      represent = represent,
+                                      #comment = comment
+                                      )
+
+        # Components
+        add_components(tablename,
+                       # Activity Types
+                       vol_activity_type = {"link": "vol_activity_activity_type",
+                                            "joinby": "activity_id",
+                                            "key": "activity_type_id",
+                                            "actuate": "link",
+                                            },
+                       )
+                                                
+        crud_form = S3SQLCustomForm("organisation_id",
+                                    "location_id",
+                                    "date",
+                                    S3SQLInlineComponentCheckbox("activity_type",
+                                                                 label = T("Activity Types"),
+                                                                 field = "activity_type_id",
+                                                                 #option_help = "comments",
+                                                                 cols = 4,
+                                                                 ),
+                                    "comments",
+                                    )
+
+        self.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+        # ---------------------------------------------------------------------
+        # Volunteer Activities <> Activity Types link Table
+        #
+        tablename = "vol_activity_activity_type"
+        define_table(tablename,
+                     activity_id(ondelete = "CASCADE",
+                                 ),
+                     activity_type_id(),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Volunteer Activities <> People link table
+        #
+        #vol_roles = current.deployment_settings.get_hrm_vol_roles()
+
+        tablename = "vol_activity_hours"
+        define_table(tablename,
+                     activity_id(ondelete = "RESTRICT",
+                                 ),
+                     self.pr_person_id(empty=False),
+                     self.hrm_job_title_id(#readable = vol_roles,
+                                           #writable = vol_roles,
+                                           ),
+                     Field("hours", "double",
+                           label = T("Hours"),
+                           ),
+                     # Training records are auto-populated
+                     #Field("training", "boolean",
+                     #      default = False,
+                     #      label = T("Type"),
+                     #      represent = lambda opt: \
+                     #                  T("Training") if opt else T("Work"),
+                     #      writable = False,
+                     #      ),
+                     #Field("training_id", self.hrm_training,
+                     #      label = T("Course"),
+                     #      represent = hrm_TrainingRepresent(),
+                     #      writable = False,
+                     #      ),
+                     #Field.Method("month", hrm_programme_hours_month),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Volunteer Activity Hours <> Activity Type link table
+        #
+
+        tablename = "vol_activity_hours_activity_type"
+        define_table(tablename,
+                     Field("activity_hours_id", "reference vol_activity_hours"),
+                     activity_type_id(),
+                     *s3_meta_fields())
+
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class S3VolunteerAwardModel(S3Model):

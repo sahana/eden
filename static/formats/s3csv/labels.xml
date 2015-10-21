@@ -63,8 +63,11 @@
         <label>Sex</label>
         <!--<label>Title</label>-->
         <option value="2" name="female">
+            <!-- mg -->
+            <label>V</label>
             <label>F</label>
             <label>f</label>
+            <label>Femme</label>
             <label>Female</label>
             <label>female</label>
             <label>Mrs</label>
@@ -73,8 +76,11 @@
             <label>Ms.</label>
         </option>
         <option value="3" name="male">
+            <!-- mg -->
+            <label>L</label>
             <label>M</label>
             <label>m</label>
+            <label>Homme</label>
             <label>Male</label>
             <label>male</label>
             <label>Mr</label>

@@ -398,6 +398,15 @@ def staff_org_site_json():
     return records.json()
 
 # =============================================================================
+def activity_type():
+    
+    return s3_rest_controller()
+
+def activity():
+    
+    return s3_rest_controller()
+
+# =============================================================================
 def programme():
     """ Volunteer Programmes controller """
 
