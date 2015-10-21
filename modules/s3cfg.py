@@ -2574,7 +2574,7 @@ class S3Config(Storage):
                 "site_id" - Use the HR's Site Location
                 "person_id" - Use the HR's Person Location (i.e. Home Address)
                 ("person_id", "site_id") - Use the HR's Person Location if-available, fallback to the Site if-not
-                ("site_id","person_id") - Use the HR's Site Location if-available, fallback to the Person's Home Address if-not
+                ("site_id", "person_id") - Use the HR's Site Location if-available, fallback to the Person's Home Address if-not
             NB This is read onaccept of editing Home Addresses & Assigning Volunteers to Sites so is not a fully-dynamic change
             - onaccept is used for performance (avoiding joins)
         """
@@ -2601,7 +2601,7 @@ class S3Config(Storage):
     def get_hrm_multiple_orgs(self):
         """
             True: Human Resources are being managed across multiple Organisations
-            False: Human Resources are only being manage internally within a single Organisation with no Branches
+            False: Human Resources are only being managed internally within a single Organisation with no Branches
         """
         return self.hrm.get("multiple_orgs", True)
 
@@ -2821,7 +2821,7 @@ class S3Config(Storage):
     def get_hrm_vol_experience(self):
         """
             Whether to use Experience for Volunteers &, if so, which table to use
-            - options are: False, "experience", "programme" or "both"
+            - options are: False, "experience", "activity", "programme" or "both"
         """
         return self.__lazy("hrm", "vol_experience", default="programme")
 

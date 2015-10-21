@@ -7889,6 +7889,33 @@ class hrm_Record(S3Method):
                                         pagesize = None, # all records
                                         )
                     profile_widgets.append(hours_widget)
+                elif vol_experience == "activity":
+                    # Exclude records which are just to link to Activity & also Training Hours
+                    #filter = (FS("hours") != None) & \
+                    #         (FS("activity_id") != None)
+                    list_fields = ["id",
+                                   "date",
+                                   "activity_id",
+                                   "job_title_id",
+                                   "hours",
+                                   ]
+                    #if s3db.vol_activity_hours.job_title_id.readable:
+                    #    list_fields.append("job_title_id")
+                    #list_fields.append("hours")
+                    hours_widget = dict(label = "Activity Hours",
+                                        label_create = "Add Activity Hours",
+                                        type = "datatable",
+                                        actions = dt_row_actions("hours"),
+                                        tablename = "vol_activity_hours",
+                                        context = "person",
+                                        #filter = filter,
+                                        list_fields = list_fields,
+                                        create_controller = controller,
+                                        create_function = "person",
+                                        create_component = "activity_hours",
+                                        pagesize = None, # all records
+                                        )
+                    profile_widgets.append(hours_widget)
 
             teams = settings.get_hrm_teams()
             if teams:

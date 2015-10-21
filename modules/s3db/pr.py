@@ -1043,6 +1043,7 @@ class S3PersonModel(S3Model):
                        hrm_programme_hours = {"name": "hours",
                                               "joinby": "person_id",
                                               },
+                       vol_activity_hours = "person_id",
                        # Appraisals
                        hrm_appraisal = "person_id",
                        # Awards

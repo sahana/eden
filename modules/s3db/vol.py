@@ -137,6 +137,7 @@ class S3VolunteerActivityModel(S3Model):
         #auth = current.auth
 
         add_components = self.add_components
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
 
@@ -189,7 +190,7 @@ class S3VolunteerActivityModel(S3Model):
                               title = T("Activity Type"),
                               )
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         activity_type_id = S3ReusableField("activity_type_id", "reference %s" % tablename,
                                            label = T("Activity Type"),
                                            requires = IS_EMPTY_OR(
@@ -199,7 +200,7 @@ class S3VolunteerActivityModel(S3Model):
                                                                   #filterby="organisation_id",
                                                                   #filter_opts=filter_opts,
                                                                   )),
-                                           ondelete = "SET NULL",
+                                           ondelete = "CASCADE",
                                            represent = represent,
                                            comment = comment
                                            )
@@ -211,7 +212,10 @@ class S3VolunteerActivityModel(S3Model):
         define_table(tablename,
                      self.org_organisation_id(),
                      self.gis_location_id(),
-                     s3_date(),
+                     s3_date(future=0),
+                     s3_date("end_date",
+                             label = T("End Date"),
+                             ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -250,22 +254,22 @@ class S3VolunteerActivityModel(S3Model):
                                             "actuate": "link",
                                             },
                        )
-                                                
+
         crud_form = S3SQLCustomForm("organisation_id",
                                     "location_id",
                                     "date",
                                     S3SQLInlineComponentCheckbox("activity_type",
                                                                  label = T("Activity Types"),
                                                                  field = "activity_type_id",
-                                                                 #option_help = "comments",
+                                                                 option_help = "comments",
                                                                  cols = 4,
                                                                  ),
                                     "comments",
                                     )
 
-        self.configure(tablename,
-                       crud_form = crud_form,
-                       )
+        configure(tablename,
+                  crud_form = crud_form,
+                  )
 
         # ---------------------------------------------------------------------
         # Volunteer Activities <> Activity Types link Table
@@ -290,6 +294,10 @@ class S3VolunteerActivityModel(S3Model):
                      self.hrm_job_title_id(#readable = vol_roles,
                                            #writable = vol_roles,
                                            ),
+                     s3_date(future=0),
+                     s3_date("end_date",
+                             label = T("End Date"),
+                             ),
                      Field("hours", "double",
                            label = T("Hours"),
                            ),
@@ -303,12 +311,103 @@ class S3VolunteerActivityModel(S3Model):
                      #      ),
                      #Field("training_id", self.hrm_training,
                      #      label = T("Course"),
-                     #      represent = hrm_TrainingRepresent(),
+                     #      represent = self.hrm_TrainingRepresent(),
                      #      writable = False,
                      #      ),
-                     #Field.Method("month", hrm_programme_hours_month),
+                     Field.Method("month", vol_activity_hours_month),
                      s3_comments(),
                      *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Hours"),
+            title_display = T("Hours Details"),
+            title_list = T("Hours"),
+            title_update = T("Edit Hours"),
+            title_upload = T("Import Hours"),
+            label_list_button = T("List Hours"),
+            label_delete_button = T("Delete Hours"),
+            msg_record_created = T("Hours added"),
+            msg_record_modified = T("Hours updated"),
+            msg_record_deleted = T("Hours deleted"),
+            msg_list_empty = T("Currently no hours recorded for this volunteer"))
+
+        filter_widgets = [
+            S3OptionsFilter("person_id$human_resource.organisation_id",
+                            # Doesn't support translations
+                            #represent="%(name)s",
+                            ),
+            S3OptionsFilter("activity_hours_activity_type.activity_type_id",
+                            # Doesn't support translation
+                            #represent = "%(name)s",
+                            ),
+            S3OptionsFilter("job_title_id",
+                            #label = T("Volunteer Role"),
+                            # Doesn't support translation
+                            #represent = "%(name)s",
+                            ),
+            S3DateFilter("date",
+                         hide_time = True,
+                         ),
+            ]
+
+        report_fields = [#"training",
+                         #"activity_id",
+                         "activity_hours_activity_type.activity_type_id",
+                         "job_title_id",
+                         #"training_id",
+                         (T("Month"), "month"),
+                         "hours",
+                         "person_id$gender",
+                         ]
+
+        report_options = Storage(rows = report_fields,
+                                 cols = report_fields,
+                                 fact = report_fields,
+                                 defaults = Storage(rows = "activity_hours_activity_type.activity_type_id",
+                                                    cols = "month",
+                                                    fact = "sum(hours)",
+                                                    totals = True,
+                                                    )
+                                 )
+
+        # Components
+        add_components(tablename,
+                       # Format for Filter/Report
+                       vol_activity_hours_activity_type = "activity_hours_id",
+                       # Format for S3SQLInlineComponentCheckbox
+                       vol_activity_type = {"link": "vol_activity_hours_activity_type",
+                                            "joinby": "activity_hours_id",
+                                            "key": "activity_type_id",
+                                            "actuate": "link",
+                                            },
+                       )
+                                                
+        crud_form = S3SQLCustomForm("person_id",
+                                    "date",
+                                    #"end_date",
+                                    "job_title_id",
+                                    "hours",
+                                    # @ToDo: Filter to just those in the parent Activity
+                                    S3SQLInlineComponentCheckbox("activity_type",
+                                                                 label = T("Activity Types"),
+                                                                 field = "activity_type_id",
+                                                                 option_help = "comments",
+                                                                 cols = 4,
+                                                                 ),
+                                    "comments",
+                                    )
+
+        configure(tablename,
+                  context = {"person": "person_id",
+                             },
+                  crud_form = crud_form,
+                  extra_fields = ["date"],
+                  filter_widgets = filter_widgets,
+                  onaccept = vol_activity_hours_onaccept,
+                  ondelete = vol_activity_hours_onaccept,
+                  orderby = "vol_activity_hours.date desc",
+                  report_options = report_options,
+                  )
 
         # ---------------------------------------------------------------------
         # Volunteer Activity Hours <> Activity Type link table
@@ -322,6 +421,89 @@ class S3VolunteerActivityModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return {}
+
+# =============================================================================
+def vol_activity_hours_month(row):
+    """
+        Virtual field for vol_activity_hours - returns the date of the first
+        day of the month of this entry, used for activity hours report.
+
+        Requires "date" to be in the additional report_fields
+
+        @param row: the Row
+    """
+
+    try:
+        thisdate = row["vol_activity_hours.date"]
+    except AttributeError:
+        return current.messages["NONE"]
+    if not thisdate:
+        return current.messages["NONE"]
+
+    #thisdate = thisdate.date()
+    month = thisdate.month
+    year = thisdate.year
+    first = datetime.date(year, month, 1)
+
+    return first.strftime("%y-%m")
+
+# =============================================================================
+def vol_activity_hours_onaccept(form):
+    """
+        Update the Active Status for the volunteer
+        - called both onaccept & ondelete
+    """
+
+    vol_active = current.deployment_settings.get_hrm_vol_active()
+    if not callable(vol_active):
+        # Nothing to do (either field is disabled or else set manually)
+        return
+
+    # Deletion and update have a different format
+    try:
+        id = form.vars.id
+        delete = False
+    except:
+        id = form.id
+        delete = True
+
+    # Get the full record
+    db = current.db
+    table = db.vol_activity_hours
+    record = db(table.id == id).select(table.person_id,
+                                       table.deleted_fk,
+                                       limitby=(0, 1)).first()
+
+    if delete:
+        deleted_fks = json.loads(record.deleted_fk)
+        person_id = deleted_fks["person_id"]
+    else:
+        person_id = record.person_id
+
+    # Recalculate the Active Status for this Volunteer
+    active = vol_active(person_id)
+
+    # Read the current value
+    s3db = current.s3db
+    dtable = s3db.vol_details
+    htable = s3db.hrm_human_resource
+    query = (htable.person_id == person_id) & \
+            (dtable.human_resource_id == htable.id)
+    row = db(query).select(dtable.id,
+                           dtable.active,
+                           limitby=(0, 1)).first()
+    if row:
+        if row.active != active:
+            # Update
+            db(dtable.id == row.id).update(active=active)
+    else:
+        # Create record
+        row = db(htable.person_id == person_id).select(htable.id,
+                                                       limitby=(0, 1)
+                                                       ).first()
+        if row:
+            dtable.insert(human_resource_id = row.id,
+                          active = active)
 
 # =============================================================================
 class S3VolunteerAwardModel(S3Model):

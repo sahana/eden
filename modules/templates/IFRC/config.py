@@ -1156,6 +1156,8 @@ def config(settings):
         root_org = current.auth.root_org_name()
         if root_org in (IRCS, PMI, VNRC):
             return "both"
+        elif root_org == CRMADA:
+            return "activity"
         return default
 
     settings.hrm.vol_experience = hrm_vol_experience

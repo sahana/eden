@@ -39,6 +39,7 @@ class S3MainMenu(default.S3MainMenu):
 
         T = current.T
         auth = current.auth
+        settings = current.deployment_settings
 
         has_role = auth.s3_has_role
         root_org = auth.root_org_name()
@@ -50,7 +51,11 @@ class S3MainMenu(default.S3MainMenu):
         s3db.inv_recv_crud_strings()
         inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
 
-        use_certs = lambda i: current.deployment_settings.get_hrm_use_certificates()
+        vol_activities = lambda i: True if root_org == "Malagasy Red Cross Society" else False
+
+        use_certs = lambda i: settings.get_hrm_use_certificates()
+
+        vol_programmes = lambda i: settings.get_hrm_vol_experience() in ("programme", "both")
 
         #def hrm(item):
         #    return root_org != "Honduran Red Cross" or \
@@ -116,7 +121,8 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Volunteers", c="vol", f="volunteer", m="summary"),
                 MM("Teams", c="vol", f="group", check=vol_teams),
                 MM("Volunteer Roles", c="vol", f="job_title", check=vol_roles),
-                MM("Programs", c="vol", f="programme"),
+                MM("Activities", c="vol", f="activity", check=vol_activities),
+                MM("Programs", c="vol", f="programme", check=vol_programmes),
                 #MM("Skill List", c="vol", f="skill"),
                 MM("Training Events", c="vol", f="training_event"),
                 MM("Training Courses", c="vol", f="course"),
@@ -944,7 +950,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Activities", f="activity",
                       check=[manager_mode, use_activities])(
                         M("Create", m="create"),
-                        #M("Import", m="import"),
+                        M("Import Hours", f="activity_hours", m="import"),
                     ),
                     M("Activity Types", f="activity_type",
                       check=[manager_mode, use_activities, is_super_editor])(
@@ -994,6 +1000,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Reports", f="volunteer", m="report",
                       check=manager_mode)(
                         M("Volunteer Report", m="report"),
+                        M("Hours by Activity Type", f="activity_hours", m="report",
+                          check=use_activities),
                         M("Hours by Role Report", f="programme_hours", m="report",
                           vars=Storage(rows="job_title_id",
                                        cols="month",

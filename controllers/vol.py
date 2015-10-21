@@ -402,8 +402,25 @@ def activity_type():
     
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
 def activity():
     
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def activity_hours():
+    """
+        Volunteer Activity Hours controller
+        - used for Imports & Reports
+    """
+
+    mode = session.s3.hrm.mode
+    def prep(r):
+        if mode is not None:
+            auth.permission.fail()
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # =============================================================================
