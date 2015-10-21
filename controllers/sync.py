@@ -75,16 +75,19 @@ def repository():
                         component_table = r.component.table
                         for fname in ("infile_pattern",
                                       "outfile_pattern",
+                                      "human_readable",
                                       "delete_input_files",
                                       ):
                             field = component_table[fname]
                             field.readable = field.writable = True
                         infile_pattern = "infile_pattern"
                         outfile_pattern = "outfile_pattern"
+                        human_readable = "human_readable"
                         delete_input_files = "delete_input_files"
                     else:
                         infile_pattern = None
                         outfile_pattern = None
+                        human_readable = None
                         delete_input_files = None
 
                     crud_form = s3base.S3SQLCustomForm(
@@ -92,6 +95,7 @@ def repository():
                                     infile_pattern,
                                     delete_input_files,
                                     outfile_pattern,
+                                    human_readable,
                                     "last_pull",
                                     "last_push",
                                     "mode",
