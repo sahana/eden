@@ -187,7 +187,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
              limit=None,
              msince=None,
              filters=None,
-             mixed=False):
+             mixed=False,
+             pretty_print=False):
         """
             Respond to an incoming pull from a peer repository
 
@@ -197,6 +198,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             @param msince: minimum modification date/time for records to send
             @param filters: URL filters for record extraction
             @param mixed: negotiate resource with peer (disregard resource)
+            @param pretty_print: make the output human-readable
         """
 
         if not resource or mixed:
@@ -214,6 +216,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                                      filters=filters,
                                      msince=msince,
                                      stylesheet=stylesheet,
+                                     pretty_print=pretty_print,
                                      )
         count = resource.results
         msg = "Data sent to peer (%s records)" % count

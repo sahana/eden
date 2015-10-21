@@ -304,6 +304,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                               msince = msince,
                               filters = filters,
                               mixed = mixed,
+                              pretty_print = task.human_readable,
                               )
 
         status = output.get("status")
@@ -362,7 +363,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
              limit=None,
              msince=None,
              filters=None,
-             mixed=False):
+             mixed=False,
+             pretty_print=False):
         """
             Respond to an incoming pull from the peer repository
 
@@ -372,6 +374,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             @param msince: minimum modification date/time for records to send
             @param filters: URL filters for record extraction
             @param mixed: negotiate resource with peer (disregard resource)
+            @param pretty_print: make the output human-readable
 
             @return: a dict {status, remote, message, response}, with:
                         - status....the outcome of the operation
