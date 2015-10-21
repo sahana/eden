@@ -505,7 +505,7 @@ def config(settings):
          "pr_person_details.mother_name"             : (BRCS, ),
          "pr_person_details.father_name"             : (ARCS, BRCS, IRCS),
          "pr_person_details.grandfather_name"        : (ARCS, IRCS),
-         "pr_person_details.year_of_birth"           : (ARCS, CRMADA),
+         "pr_person_details.year_of_birth"           : (ARCS, ),
          "pr_person_details.affiliations"            : (PRC, ),
          "pr_person_details.company"                 : (PRC, ),
          "vol_details.availability"                  : (CRMADA, VNRC),
@@ -3290,6 +3290,7 @@ def config(settings):
                     ctable = r.component.table
                     ctable.hours.readable = ctable.hours.writable = False
                     ctable.job_title_id.readable = ctable.job_title_id.writable = False
+
             elif component_name == "physical_description":
                 from gluon import DIV
                 ctable = r.component.table
@@ -3298,6 +3299,29 @@ def config(settings):
                 ctable.medical_conditions.comment = DIV(_class="tooltip",
                                                         _title="%s|%s" % (T("Medical Conditions"),
                                                                           T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
+
+            elif component_name == "identity":
+                if root_org == CRMADA:
+                    controller = r.controller
+                    table = r.component.table
+                    # Set default to National ID Card
+                    table.type.default = 2
+                    # Relabel
+                    table.valid_from.label = T("Date of Delivery")
+                    field = table.place
+                    field.label = T("Place of Delivery")
+                    field.readable = field.writable = True
+                    # Hide unneeded fields
+                    # @ToDo: Do this dynamically in JS based on Type
+                    hide_fields = ("description", "valid_until", "country_code", "ia_name")
+                    for fname in hide_fields:
+                        field = table[fname]
+                        field.readable = field.writable = False
+                    list_fields = s3db.get_config("pr_identity", "list_fields")
+                    hide_fields = set(hide_fields)
+                    list_fields = (fs for fs in list_fields if fs not in hide_fields)
+                    s3db.configure("pr_identity", list_fields = list_fields)
+
             elif method == "cv" or component_name == "education":
                 if vnrc:
                     etable = s3db.pr_education
@@ -3486,6 +3510,7 @@ def config(settings):
                     s3db.configure("pr_person",
                                    crud_form = S3SQLCustomForm(*crud_fields),
                                    )
+
                 if method == "record" or component_name == "human_resource":
                     # Hide unwanted fields in human_resource
                     htable = s3db.hrm_human_resource

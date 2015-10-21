@@ -6562,7 +6562,7 @@ def hrm_group_controller():
                            create_next = create_next,
                            )
 
-        if r.interactive or r.representation in ("aadata", "xls"):
+        if r.interactive or r.representation in ("aadata", "xls", "pdf"):
             if r.component_name == "group_membership":
                 hrm_configure_pr_group_membership()
                 if r.representation == "xls":
