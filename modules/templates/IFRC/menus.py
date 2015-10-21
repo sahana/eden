@@ -595,12 +595,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
         inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
 
         settings = current.deployment_settings
-        #use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
         root_org = auth.root_org_name()
-        def use_adjust(i):
-            #if root_org in ("Australian Red Cross", "Honduran Red Cross"):
-            if root_org == "Australian Red Cross":
-                # Australian & Honduran RC use proper Logistics workflow
+        def no_direct_stock_edits(i):
+            if root_org in ("Australian Red Cross", "Malagasy Red Cross Society"):
+                # Australian & Malagasy RC use proper Logistics workflow
                 return True
             else:
                 # Others use simplified version
@@ -651,7 +649,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     M("Warehouse Stock", c="inv", f="inv_item", args="summary")(
                         M("Search Shipped Items", f="track_item"),
-                        M("Adjust Stock Levels", f="adj", check=use_adjust),
+                        M("Adjust Stock Levels", f="adj", check=no_direct_stock_edits),
                         #M("Kitting", f="kitting", check=use_kits),
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
@@ -659,6 +657,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Warehouse Stock", f="inv_item",m="report"),
                         M("Expiration Report", c="inv", f="track_item",
                           vars=dict(report="exp")),
+                        # CRMADA want this - requires support in config.py atm (move that to core)
+                        #M("Stock Movements", f="inv_item", m="grouped",
+                        #  vars={"report": "movements"},
+                        #  check=no_direct_stock_edits,
+                        #  ),
                         #M("Monetization Report", c="inv", f="inv_item",
                         #  vars=dict(report="mon")),
                         #M("Utilization Report", c="inv", f="track_item",
@@ -906,6 +909,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         else:
             awards_label = "Awards"
 
+        use_activities = lambda i: True if root_org == "Malagasy Red Cross Society" else False
+
         return M(c="vol")(
                     M("Volunteers", f="volunteer", m="summary",
                       check=[manager_mode])(
@@ -935,6 +940,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=[manager_mode, use_skills])(
                         M("Create", m="create"),
                         #M("Skill Provisions", f="skill_provision"),
+                    ),
+                    M("Activities", f="activity",
+                      check=[manager_mode, use_activities])(
+                        M("Create", m="create"),
+                        #M("Import", m="import"),
+                    ),
+                    M("Activity Types", f="activity_type",
+                      check=[manager_mode, use_activities, is_super_editor])(
+                        M("Create", m="create"),
+                        #M("Import", m="import"),
                     ),
                     M("Training Events", f="training_event",
                       check=manager_mode)(

@@ -1830,7 +1830,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def project_project_postprocess(form):
         """
-            When using Project Monitoring (i.e. HNRC) then create the entries
+            When using Budget Monitoring (i.e. HNRC) then create the entries
         """
 
         db = current.db
