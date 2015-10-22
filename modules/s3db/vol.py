@@ -137,6 +137,7 @@ class S3VolunteerActivityModel(S3Model):
     """
 
     names = ("vol_activity_type",
+             "vol_activity_type_sector",
              "vol_activity",
              "vol_activity_activity_type",
              "vol_activity_hours",
@@ -218,17 +219,55 @@ class S3VolunteerActivityModel(S3Model):
                                            comment = comment
                                            )
 
+        # Components
+        add_components(tablename,
+                       # Sectors
+                       org_sector = {"link": "vol_activity_type_sector",
+                                     "joinby": "activity_type_id",
+                                     "key": "sector_id",
+                                     "actuate": "link",
+                                     },
+                       )
+
+        crud_form = S3SQLCustomForm("name",
+                                    S3SQLInlineComponentCheckbox("sector",
+                                                                 label = T("Sectors"),
+                                                                 field = "sector_id",
+                                                                 option_help = "comments",
+                                                                 cols = 4,
+                                                                 ),
+                                    "comments",
+                                    )
+
+        configure(tablename,
+                  crud_form = crud_form,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Volunteer Activity Types <> Sectors
+        # Choice of Sector filters the list of Activity Types 
+        #
+        tablename = "vol_activity_type_sector"
+        define_table(tablename,
+                     activity_type_id(empty = False,
+                                      ondelete = "CASCADE",
+                                      ),
+                     self.org_sector_id(empty = False,
+                                        ondelete = "CASCADE",
+                                        ),
+                     *s3_meta_fields())
+
         # ---------------------------------------------------------------------
         # Volunteer Activities
         #
         tablename = "vol_activity"
         define_table(tablename,
-                     self.org_organisation_id(),
-                     self.org_sector_id(empty = False,
-                                        ),
                      Field("name",
                            label = T("Name"),
                            ),
+                     self.org_organisation_id(),
+                     self.org_sector_id(empty = False,
+                                        ),
                      self.gis_location_id(),
                      s3_date(future=0),
                      s3_date("end_date",
@@ -280,13 +319,33 @@ class S3VolunteerActivityModel(S3Model):
         crud_form = S3SQLCustomForm("organisation_id",
                                     "sector_id",
                                     # @ToDo: Filter list based on Sector
-                                    S3SQLInlineComponentCheckbox("activity_type",
-                                                                 label = T("Activity Types"),
-                                                                 field = "activity_type_id",
-                                                                 option_help = "comments",
-                                                                 cols = 4,
-                                                                 ),
-                                    "name",
+                                    #S3SQLInlineComponentCheckbox("activity_type",
+                                    #                             label = T("Activity Types"),
+                                    #                             field = "activity_type_id",
+                                    #                             option_help = "comments",
+                                    #                             cols = 4,
+                                    #                             ),
+                                    S3SQLInlineLink("activity_type",
+                                                    label = T("Activity Types"),
+                                                    field = "activity_type_id",
+                                                    #help_field = s3db.project_theme_help_fields,
+                                                    cols = 4,
+                                                    translate = True,
+                                                    # Filter Theme by Sector
+                                                    filterby = "activity_type_id:vol_activity_type_sector.sector_id",
+                                                    match = "activity_type_sector.sector_id",
+                                                    script = '''
+$.filterOptionsS3({
+ 'trigger':'sector_id',
+ 'target':{'alias':'activity_type','name':'activity_type_id','inlineType':'link'},
+ 'lookupPrefix':'vol',
+ 'lookupResource':'activity_type',
+ 'lookupKey':'activity_type_id:vol_activity_type_sector.sector_id',
+ 'showEmptyField':false,
+ //'tooltip':'project_theme_help_fields(id,name)'
+})'''
+                                                    ),
+                                    (T("Activity Name"), "name"),
                                     "location_id",
                                     "date",
                                     "comments",
@@ -1132,68 +1191,134 @@ def vol_service_record(r, **attr):
         if total > 0:
             courses.append(TR(TD(""), TD("Total"), TD("%d" % total)))
 
-        # Programme Hours
-        # - grouped by Programme/Role
-        programmes = OrderedDict()
-        hrstable = s3db.hrm_programme_hours
-        ptable = db.hrm_programme
-        jtable = db.hrm_job_title
-        query = (hrstable.deleted == False) & \
-                (hrstable.training == False) & \
-                (hrstable.person_id == person_id) & \
-                (hrstable.programme_id == ptable.id)
-        left = jtable.on(hrstable.job_title_id == jtable.id)
-        rows = db(query).select(hrstable.date,
-                                hrstable.hours,
-                                jtable.name,
-                                ptable.name,
-                                ptable.name_long,
-                                left=left,
-                                orderby = ~hrstable.date)
-        NONE = current.messages["NONE"]
-        for row in rows:
-            _row = row["hrm_programme_hours"]
-            _date = _row.date
-            hours = _row.hours or 0
-            role = row["hrm_job_title"]["name"] or NONE
-            prow = row["hrm_programme"]
-            if prow.name_long:
-                programme = prow.name_long
-            else:
-                programme = prow.name
-            if programme not in programmes:
-                programmes[programme] = OrderedDict()
-            p = programmes[programme]
-            if role in p:
-                p[role]["end_date"] = _date
-                p[role]["hours"] += hours
-            else:
-                p[role] = dict(start_date = _date,
-                               end_date = _date,
-                               hours = hours,
-                               )
-        date_represent = hrstable.date.represent
-        programme = TABLE(TR(TH(T("Start Date")),
-                             TH(T("End Date")),
-                             TH(T("Work on Program")),
-                             TH(T("Role")),
-                             TH(T("Hours"))))
-        total = 0
-        for p in programmes:
-            _p = programmes[p]
-            for r in _p:
-                role = _p[r]
-                hours = role["hours"]
-                total += hours
-                programme.append(TR(date_represent(role["start_date"]),
-                                    date_represent(role["end_date"]),
-                                    p,
-                                    r,
-                                    str(hours)
-                                    ))
+        vol_experience = settings.get_hrm_vol_experience()
+        if vol_experience == "activity":
+            # Activity Hours
+            # - grouped by Activity Type/Role
+            activity_types = OrderedDict()
+            hrstable = s3db.vol_activity_hours
+            attable = db.vol_activity_type
+            ltable = db.vol_activity_hours_activity_type
+            jtable = db.hrm_job_title
+            query = (hrstable.deleted == False) & \
+                    (hrstable.person_id == person_id)
+            left = [jtable.on(hrstable.job_title_id == jtable.id),
+                    attable.on((hrstable.id == ltable.activity_hours_id) & \
+                               (ltable.activity_type_id == attable.id)),
+                    ]
+            rows = db(query).select(hrstable.date,
+                                    hrstable.hours,
+                                    jtable.name,
+                                    attable.name,
+                                    left=left,
+                                    orderby = ~hrstable.date)
+            NONE = current.messages["NONE"]
+            for row in rows:
+                _row = row["vol_activity_hours"]
+                _date = _row.date
+                hours = _row.hours or 0
+                role = row["hrm_job_title"]["name"] or NONE
+                atrow = row["vol_activity_type"]
+                atype = atrow.name
+                if atype not in activity_types:
+                    activity_types[atype] = OrderedDict()
+                a = activity_types[atype]
+                if role in a:
+                    a[role]["end_date"] = _date
+                    a[role]["hours"] += hours
+                else:
+                    a[role] = dict(start_date = _date,
+                                   end_date = _date,
+                                   hours = hours,
+                                   )
+            date_represent = hrstable.date.represent
+            programme = TABLE(TR(TH(T("Start Date")),
+                                 TH(T("End Date")),
+                                 TH(T("Activity Type")),
+                                 TH(T("Role")),
+                                 TH(T("Hours"))))
+            total = 0
+            for a in activity_types:
+                _a = activity_types[a]
+                for r in _a:
+                    role = _a[r]
+                    hours = role["hours"]
+                    total += hours
+                    programme.append(TR(date_represent(role["start_date"]),
+                                        date_represent(role["end_date"]),
+                                        a,
+                                        r,
+                                        str(hours)
+                                        ))
 
-        if total > 0:
-            programme.append(TR("", "", "", TD("Total"), TD("%d" % total)))
+            if total > 0:
+                programme.append(TR("", "", "", TD("Total"), TD("%d" % total)))
+            
+        elif vol_experience in ("programme", "both"):
+            # Programme Hours
+            # - grouped by Programme/Role
+            programmes = OrderedDict()
+            hrstable = s3db.hrm_programme_hours
+            ptable = db.hrm_programme
+            jtable = db.hrm_job_title
+            query = (hrstable.deleted == False) & \
+                    (hrstable.training == False) & \
+                    (hrstable.person_id == person_id) & \
+                    (hrstable.programme_id == ptable.id)
+            left = jtable.on(hrstable.job_title_id == jtable.id)
+            rows = db(query).select(hrstable.date,
+                                    hrstable.hours,
+                                    jtable.name,
+                                    ptable.name,
+                                    ptable.name_long,
+                                    left=left,
+                                    orderby = ~hrstable.date)
+            NONE = current.messages["NONE"]
+            for row in rows:
+                _row = row["hrm_programme_hours"]
+                _date = _row.date
+                hours = _row.hours or 0
+                role = row["hrm_job_title"]["name"] or NONE
+                prow = row["hrm_programme"]
+                if prow.name_long:
+                    programme = prow.name_long
+                else:
+                    programme = prow.name
+                if programme not in programmes:
+                    programmes[programme] = OrderedDict()
+                p = programmes[programme]
+                if role in p:
+                    p[role]["end_date"] = _date
+                    p[role]["hours"] += hours
+                else:
+                    p[role] = dict(start_date = _date,
+                                   end_date = _date,
+                                   hours = hours,
+                                   )
+            date_represent = hrstable.date.represent
+            programme = TABLE(TR(TH(T("Start Date")),
+                                 TH(T("End Date")),
+                                 TH(T("Work on Program")),
+                                 TH(T("Role")),
+                                 TH(T("Hours"))))
+            total = 0
+            for p in programmes:
+                _p = programmes[p]
+                for r in _p:
+                    role = _p[r]
+                    hours = role["hours"]
+                    total += hours
+                    programme.append(TR(date_represent(role["start_date"]),
+                                        date_represent(role["end_date"]),
+                                        p,
+                                        r,
+                                        str(hours)
+                                        ))
+
+            if total > 0:
+                programme.append(TR("", "", "", TD("Total"), TD("%d" % total)))
+        else:
+            programme = ""
 
         # Space for the printed document to be signed
         datestamp = S3DateTime.date_represent(current.request.now)

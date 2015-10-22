@@ -5913,51 +5913,73 @@ def hrm_rheader(r, tabs=[], profile=False):
         experience_tab2 = None
         if group == "volunteer":
             vol_experience = settings.get_hrm_vol_experience()
-            if vol_experience in ("programme", "both"):
+            if vol_experience in ("programme", "both", "activity"):
                 # Integrated into Record tab
                 #experience_tab = (T("Hours"), "hours")
-                # Show all Hours spent on both Programmes & Trainings
+                # Show all Hours spent on both Programmes/Activities & Trainings
                 # - last month & last year
                 now = r.utcnow
                 last_year = now - datetime.timedelta(days=365)
                 db = current.db
                 s3db = current.s3db
-                ptable = s3db.hrm_programme
-                phtable = db.hrm_programme_hours
-                bquery = (phtable.deleted == False) & \
-                         (phtable.person_id == r.id)
-                query = bquery & \
-                        (phtable.programme_id == ptable.id)
-                row = db(query).select(ptable.name,
-                                       phtable.date,
-                                       orderby=phtable.date).last()
-                if row:
-                    programme = row.hrm_programme.name
+                if vol_experience == "activity":
+                    ahtable = db.vol_activity_hours
+                    bquery = (ahtable.deleted == False) & \
+                             (ahtable.person_id == r.id)
+                    dfield = ahtable.date
+                    fields = [dfield,
+                              ahtable.hours,
+                              #ahtable.training,
+                              ]
                 else:
-                    programme = ""
+                    ptable = s3db.hrm_programme
+                    phtable = db.hrm_programme_hours
+                    bquery = (phtable.deleted == False) & \
+                             (phtable.person_id == r.id)
+                    query = (phtable.programme_id == ptable.id)
+                    query &= bquery
+                    row = db(query).select(ptable.name,
+                                           phtable.date,
+                                           orderby=phtable.date).last()
+                    if row:
+                        programme = row.hrm_programme.name
+                    else:
+                        programme = ""
+                    dfield = phtable.date
+                    fields = [dfield,
+                              phtable.hours,
+                              phtable.training,
+                              ]
+                    training_hours_year = 0
+                    training_hours_month = 0
+
                 query = bquery & \
-                        (phtable.date > last_year.date())
-                rows = db(query).select(phtable.date,
-                                        phtable.hours,
-                                        phtable.training)
+                        (dfield > last_year.date())
+                rows = db(query).select(*fields)
                 programme_hours_year = 0
                 programme_hours_month = 0
-                training_hours_year = 0
-                training_hours_month = 0
                 last_month = now - datetime.timedelta(days=30)
                 last_month = last_month.date()
-                for row in rows:
-                    hours = row.hours
-                    if hours:
-                        training = row.training
-                        if training:
-                            training_hours_year += hours
-                            if row.date > last_month:
-                                training_hours_month += hours
-                        else:
+                if vol_experience == "activity":
+                    for row in rows:
+                        hours = row.hours
+                        if hours:
                             programme_hours_year += hours
                             if row.date > last_month:
                                 programme_hours_month += hours
+                else:
+                    for row in rows:
+                        hours = row.hours
+                        if hours:
+                            training = row.training
+                            if training:
+                                training_hours_year += hours
+                                if row.date > last_month:
+                                    training_hours_month += hours
+                            else:
+                                programme_hours_year += hours
+                                if row.date > last_month:
+                                    programme_hours_month += hours
 
                 vol_active = settings.get_hrm_vol_active()
                 if vol_active:
@@ -5999,20 +6021,30 @@ def hrm_rheader(r, tabs=[], profile=False):
                                     active]
                 else:
                     active_cells = []
-                row1 = TR(TH("%s:" % T("Program")),
-                          programme,
-                          *active_cells
-                          )
-                row2 = TR(TH("%s:" % T("Program Hours (Month)")),
-                          str(programme_hours_month),
-                          TH("%s:" % T("Training Hours (Month)")),
-                          str(training_hours_month)
-                          )
-                row3 = TR(TH("%s:" % T("Program Hours (Year)")),
-                          str(programme_hours_year),
-                          TH("%s:" % T("Training Hours (Year)")),
-                          str(training_hours_year)
-                          )
+                if vol_experience == "activity":
+                    row1 = TR(*active_cells
+                              )
+                    row2 = TR(TH("%s:" % T("Activity Hours (Month)")),
+                              str(programme_hours_month),
+                              )
+                    row3 = TR(TH("%s:" % T("Activity Hours (Year)")),
+                              str(programme_hours_year),
+                              )
+                else:
+                    row1 = TR(TH("%s:" % T("Program")),
+                              programme,
+                              *active_cells
+                              )
+                    row2 = TR(TH("%s:" % T("Program Hours (Month)")),
+                              str(programme_hours_month),
+                              TH("%s:" % T("Training Hours (Month)")),
+                              str(training_hours_month)
+                              )
+                    row3 = TR(TH("%s:" % T("Program Hours (Year)")),
+                              str(programme_hours_year),
+                              TH("%s:" % T("Training Hours (Year)")),
+                              str(training_hours_year)
+                              )
                 tbl = TABLE(TR(TH(name,
                                   _colspan=4)
                                ),
@@ -6035,9 +6067,6 @@ def hrm_rheader(r, tabs=[], profile=False):
                     experience_tab2 = (T("Experience"), "experience")
             elif vol_experience == "experience" and not use_cv:
                 experience_tab = (T("Experience"), "experience")
-            elif vol_experience == "activity":
-                # @ToDo: Add like for Programmes
-                pass
         elif settings.get_hrm_staff_experience() == "experience" and not use_cv:
             experience_tab = (T("Experience"), "experience")
 

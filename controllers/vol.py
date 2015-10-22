@@ -447,7 +447,6 @@ def activity():
             s3db.configure("vol_activity_hours",
                            crud_form = crud_form,
                            )
-
         
         return True
     s3.prep = prep

@@ -264,6 +264,7 @@ project_reader,"Project Reader",,org,,,,READ,,,,,
 project_reader,"Project Reader",,pr,,,,READ,,,,,
 project_reader,"Project Reader",,hrm,hr_search,,,READ,,,,,
 project_data_entry,"Project Data Entry",,project,,,,"READ|CREATE","READ|CREATE|UPDATE",,,,
+project_data_entry,"Project Data Entry",,project,,,any,READ,,,,,# Need to have access to unfiltered Orgs lists
 project_data_entry,"Project Data Entry",,project,location,"pr_person",,"READ|CREATE",,,,,"Community Contacts"
 project_data_entry,"Project Data Entry",,project,partner,,,READ,,,,,
 project_data_entry,"Project Data Entry",,,,"org_sector",,READ,,,,,
@@ -277,6 +278,7 @@ project_data_entry,"Project Data Entry",,,,"org_organisation",,"READ|UPDATE",,,,
 project_data_entry,"Project Data Entry",,pr,,,,READ,,,,,
 project_data_entry,"Project Data Entry",,hrm,hr_search,,,READ,,,,,
 project_editor,"Project Editor",,project,,,,"READ|CREATE|UPDATE",,,,,
+project_editor,"Project Editor",,project,,,any,READ,,,,,# Need to have access to unfiltered Orgs lists
 project_editor,"Project Editor",,project,location,"pr_person",,"READ|CREATE|UPDATE",,,,,"Community Contacts"
 project_editor,"Project Editor",,,,"org_sector",,READ,,,,,
 project_editor,"Project Editor",,,,project_project,,"READ|CREATE|UPDATE",,,,,
@@ -289,6 +291,7 @@ project_editor,"Project Editor",,,,"org_organisation",,"READ|UPDATE",,,,,"Used t
 project_editor,"Project Editor",,pr,,,,READ,,,,,
 project_editor,"Project Editor",,hrm,hr_search,,,READ,,,,,
 project_super,"Project Super Editor",,project,,,,"READ|CREATE|UPDATE|DELETE",,,,,
+project_super,"Project Super Editor",,project,,,any,READ,,,,,# Need to have access to unfiltered Orgs lists
 project_super,"Project Super Editor",,project,location,"pr_person",,"READ|CREATE|UPDATE",,,,,"Community Contacts"
 project_super,"Project Super Editor",,,,"org_sector",,READ,,,,,
 project_super,"Project Super Editor",,,,project_project,,"READ|CREATE|UPDATE|DELETE",,,,,
@@ -488,6 +491,7 @@ vol_data_entry,"Volunteer Data Entry",,pr,contact_emergency,,,"READ|CREATE","REA
 vol_data_entry,"Volunteer Data Entry",,,,"hrm_human_resource",,"READ|CREATE","READ|CREATE|UPDATE",,,,
 vol_data_entry,"Volunteer Data Entry",,,,"hrm_competency",,"READ|CREATE","READ|CREATE|UPDATE",,,,
 vol_data_entry,"Volunteer Data Entry",,,,"hrm_experience",,"READ|CREATE","READ|CREATE|UPDATE",,,,
+vol_data_entry,"Volunteer Data Entry",,,,"hrm_skill",,READ,,,,,
 vol_data_entry,"Volunteer Data Entry",,,,"hrm_training",,"READ|CREATE","READ|CREATE|UPDATE",,,,
 vol_data_entry,"Volunteer Data Entry",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
 vol_data_entry,"Volunteer Data Entry",,,,"org_sector",,"READ",,,,,"Used to classify Volunteer Activities"
@@ -520,6 +524,7 @@ vol_editor,"Volunteer Editor",,vol,volunteer,,,"READ|CREATE|UPDATE",,,,,
 vol_editor,"Volunteer Editor",,,,"hrm_human_resource",,"READ|CREATE|UPDATE",,,,,
 vol_editor,"Volunteer Editor",,,,"hrm_competency",,"READ|CREATE|UPDATE",,,,,
 vol_editor,"Volunteer Editor",,,,"hrm_experience",,"READ|CREATE|UPDATE",,,,,
+vol_editor,"Volunteer Editor",,,,"hrm_skill",,READ,,,,,
 vol_editor,"Volunteer Editor",,,,"hrm_training",,"READ|CREATE|UPDATE",,,,,
 vol_editor,"Volunteer Editor",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
 vol_editor,"Volunteer Editor",,,,"org_sector",,"READ",,,,,"Used to classify Volunteer Activities"
@@ -547,11 +552,13 @@ vol_super,"Volunteer Super Editor",,vol,course,,,"READ|CREATE|UPDATE|DELETE",,,,
 vol_super,"Volunteer Super Editor",,vol,department,,,"READ|CREATE|UPDATE|DELETE",,,,,
 vol_super,"Volunteer Super Editor",,vol,job_title,,,"READ|CREATE|UPDATE|DELETE",,,,,
 vol_super,"Volunteer Super Editor",,vol,programme,,,"READ|CREATE|UPDATE|DELETE",,,,,
+vol_super,"Volunteer Super Editor",,vol,skill,,,"READ|CREATE|UPDATE|DELETE",,,,,
 vol_super,"Volunteer Super Editor",,vol,training,,,"READ|CREATE|UPDATE|DELETE",,,,,
 vol_super,"Volunteer Super Editor",,vol,volunteer,,,"READ|CREATE|UPDATE|DELETE",,,,,
 vol_super,"Volunteer Super Editor",,,,"hrm_human_resource",,"READ|CREATE|UPDATE|DELETE",,,,,
 vol_super,"Volunteer Super Editor",,,,"hrm_competency",,"READ|CREATE|UPDATE|DELETE",,,,,
 vol_super,"Volunteer Super Editor",,,,"hrm_experience",,"READ|CREATE|UPDATE|DELETE",,,,,
+vol_super,"Volunteer Super Editor",,,,"hrm_skill",,"READ|CREATE|UPDATE|DELETE",,,,,
 vol_super,"Volunteer Super Editor",,,,"hrm_training",,"READ|CREATE|UPDATE|DELETE",,,,,
 vol_super,"Volunteer Super Editor",,,,"org_organisation",,"READ|UPDATE",,,,,"Used to filter organisation fields"
 vol_super,"Volunteer Super Editor",,,,"org_sector",,"READ",,,,,"Used to classify Volunteer Activities"
