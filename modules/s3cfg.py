@@ -2818,15 +2818,14 @@ class S3Config(Storage):
     #    """
     #    return self.__lazy("hrm", "vol_affiliation", default=None)
 
-    def get_hrm_vol_availability(self):
+    def get_hrm_vol_availability_tab(self):
         """
-            Whether to use Availability for Volunteers
+            Whether to use Availability Tab for Volunteers
             Options:
-                None (don't show)
-                True (show field inline)
-                List of Strings for Options (on Tab)
+                None
+                True
         """
-        return self.__lazy("hrm", "vol_availability", default=None)
+        return self.__lazy("hrm", "vol_availability_tab", default=None)
 
     def get_hrm_vol_experience(self):
         """
@@ -3241,6 +3240,12 @@ class S3Config(Storage):
             else:
                 group = "60+"
         return group
+
+    def get_pr_person_availability_options(self):
+        """
+            Dict of integer-keyed options for Person Availability
+        """
+        return self.__lazy("pr", "person_availability_options", default=None)
 
     def get_pr_hide_third_gender(self):
         """

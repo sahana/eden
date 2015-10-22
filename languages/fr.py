@@ -2452,7 +2452,7 @@
 'Lahar': 'lahars',
 'Landslide': "L'éboulement",
 'Language': 'Langue',
-'Last Name': 'Prénom',
+'Last Name': 'Nom de Famille',
 'Last known location': 'Dernière position connue',
 'Last synchronization time': 'Heure de la dernière synchronisation',
 'Last updated ': 'Dernière mise à jour',

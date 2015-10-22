@@ -67,7 +67,6 @@ class S3PatientModel(S3Model):
                                     requires = IS_ADD_PERSON_WIDGET2(),
                                     widget = S3AddPersonWidget2(),
                                     ),
-                          #person_id(empty=False, label = T("Patient")),
                           Field("country",
                                 label = T("Current Location Country"),
                                 represent = lambda code: \

@@ -298,7 +298,7 @@ project_super,"Project Super Editor",,,,project_project,,"READ|CREATE|UPDATE|DEL
 project_super,"Project Super Editor",,,,"project_theme",,READ,,,,,
 project_super,"Project Super Editor",,,,"project_hazard",,READ,,,,,
 project_super,"Project Super Editor",,,,"project_activity_type",,READ,,,,,
-project_super,"Project Super Editor",,,,"project_beneficiary_type",,READ,,,,,
+project_super,"Project Super Editor",,,,"project_beneficiary_type",,"READ|CREATE","READ|CREATE|UPDATE|DELETE",,,,
 project_super,"Project Super Editor",,org,,,,"READ|CREATE|UPDATE",,,,,
 project_super,"Project Super Editor",,,,"org_organisation",,"READ|CREATE|UPDATE",,,,,"Used to filter organisation fields"
 project_super,"Project Super Editor",,pr,,,,READ,,,,,

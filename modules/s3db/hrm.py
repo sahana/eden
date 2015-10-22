@@ -700,8 +700,6 @@ class S3HRModel(S3Model):
                                            },
                         # Application for Deployment (RDRT)
                         deploy_application = "human_resource_id",
-                        # Availability
-                        #hrm_availability = "human_resource_id",
                         # Hours
                         #hrm_hours = "human_resource_id",
                         )
@@ -728,6 +726,15 @@ class S3HRModel(S3Model):
                                                   "fkey": "person_id",
                                                   "pkey": "person_id",
                                                   },
+                           # Availability
+                           pr_person_availability = {"link": "pr_person",
+                                                     "joinby": "id",
+                                                     "key": "id",
+                                                     "fkey": "person_id",
+                                                     "pkey": "person_id",
+                                                     # Will need tochange in future
+                                                     "multiple": False,
+                                                     },
                            # Volunteer Details
                            vol_details = {"joinby": "human_resource_id",
                                           "multiple": False,
@@ -785,8 +792,9 @@ class S3HRModel(S3Model):
                                                            multiple = False,
                                                            ))
             crud_fields.append("details.volunteer_type")
-            if settings.get_hrm_vol_availability() is True:
-                crud_fields.append("details.availability")
+            if settings.get_hrm_vol_availability_tab() is False and \
+               settings.get_pr_person_availability_options() is not None:
+                crud_fields.append("person_availability.options")
             crud_fields.extend(("details.card",
                                 # @ToDo: Move these to the IFRC Template (PH RC only people to use this)
                                 "volunteer_cluster.vol_cluster_type_id",
@@ -6085,8 +6093,7 @@ def hrm_rheader(r, tabs=[], profile=False):
         else:
             description_tab = None
 
-        availability = settings.get_hrm_vol_availability()
-        if isinstance(availability, (list, tuple)):
+        if settings.get_hrm_vol_availability_tab():
             availability_tab = (T("Availability"), "availability")
         else:
             availability_tab = None

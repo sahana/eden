@@ -1140,20 +1140,39 @@ def config(settings):
 
     settings.hrm.vol_active = hrm_vol_active
 
-    def hrm_vol_availability(default):
-        """ Whether to track Volunteer Availability """
+    def pr_person_availability_options(default):
 
         root_org = current.auth.root_org_name()
         if root_org == VNRC:
-            # Simple inline field with dropdowns
-            return True
+            # Doesn't seem used anyway...perhaps a bug in hrm_Record?
+            return {1: T("No Restrictions"),
+                    2: T("Weekends only"),
+                    3: T("School Holidays only"),
+                    }
         elif root_org == CRMADA:
-            # Tab with list of Booleans
-            return vol_programme_active
-        # Default to Off
-        return False
+            return {1: "%s, %s" % (T("Frequent"), T("1-2 times per week")),
+                    2: "%s, %s" % (T("Sometimes"), T("When needed")),
+                    3: "%s, %s" % (T("Projects"), T("1-3 times per month")),
+                    4: T("Once per month"),
+                    5: T("Exceptional Cases"),
+                    6: T("Other"),
+                    }
 
-    settings.hrm.vol_availability = hrm_vol_availability
+        # Default to Off
+        return None
+
+    settings.pr.person_availability_options = pr_person_availability_options
+
+    def hrm_vol_availability_tab(default):
+        """ Whether to show Volunteer Availability Tab """
+
+        root_org = current.auth.root_org_name()
+        if root_org == CRMADA:
+            return True
+        # Default to Off
+        return None
+
+    settings.hrm.vol_availability_tab = hrm_vol_availability_tab
 
     def hrm_vol_departments(default):
         """ Whether to use Volunteer Departments """

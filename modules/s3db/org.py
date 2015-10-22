@@ -5077,6 +5077,8 @@ class org_OrganisationRepresent(S3Represent):
                               (btable.deleted != True)),
                     ptable.on(ptable.id == btable.organisation_id),
                     ]
+        else:
+            left = []
 
         if self.translate:
             ltable = s3db.org_organisation_name

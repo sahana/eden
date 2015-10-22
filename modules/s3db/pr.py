@@ -31,8 +31,9 @@ __all__ = ("S3PersonEntity",
            "S3OrgAuthModel",
            "S3PersonModel",
            "S3GroupModel",
-           "S3ContactModel",
            "S3AddressModel",
+           "S3AvailabilityModel",
+           "S3ContactModel",
            "S3PersonImageModel",
            "S3PersonIdentityModel",
            "S3PersonEducationModel",
@@ -1047,7 +1048,11 @@ class S3PersonModel(S3Model):
                        # Appraisals
                        hrm_appraisal = "person_id",
                        # Availability
-                       vol_availability = "person_id",
+                       pr_person_availability = {"name": "availability",
+                                                 "joinby": "person_id",
+                                                 # Will need tochange in future
+                                                 "multiple": False,
+                                                 },
                        # Awards
                        hrm_award = {"name": "staff_award",
                                     "joinby": "person_id",
@@ -2637,6 +2642,158 @@ class S3AddressModel(S3Model):
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class S3AvailabilityModel(S3Model):
+    """
+        Availability for Persons, Sites, Services, Assets, etc
+        - will allow for automated rostering/matching
+    """
+
+    names = ("pr_date_formula",
+             "pr_time_formula",
+             "pr_slot",
+             "pr_person_availability",
+             "pr_person_availability_slot",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Date Formula
+        #
+        interval_opts = {1: T("Daily"),
+                         2: T("Weekly"),
+                         #3: T("Monthly"),
+                         #4: T("Yearly"),
+                         }
+
+        days_of_week = {0: T("Sunday"),
+                        1: T("Monday"),
+                        2: T("Tuesday"),
+                        3: T("Wednesday"),
+                        4: T("Thursday"),
+                        5: T("Friday"),
+                        6: T("Sunday"),
+                        }
+
+        tablename = "pr_date_formula"
+        self.define_table(tablename,
+                          Field("name",
+                                label = T("Name"),
+                                ),
+                          # "interval" is a reserved word in MySQL
+                          Field("date_interval", "integer",
+                                represent = S3Represent(options=interval_opts),
+                                requires = IS_IN_SET(interval_opts),
+                                ),
+                          Field("rate", "integer"), # Repeat Frequency
+                          Field("days_of_week", "list:integer",
+                                represent = S3Represent(options=days_of_week),
+                                requires = IS_IN_SET((0, 1, 2, 3, 4, 5, 6),
+                                                     multiple = True,
+                                                     ),
+                                ),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Time Formula
+        #
+        tablename = "pr_time_formula"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     Field("all_day", "boolean",
+                           default = False,
+                           represent = s3_yes_no_represent,
+                           ),
+                     Field("start_time", "time",
+                           # @ToDo: s3_time reusablefield?
+                           #widget = 
+                           ),
+                     Field("end_time", "time",
+                           #widget = 
+                           ),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Slots
+        #
+        tablename = "pr_slot"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     Field("date_formula_id", "reference pr_date_formula"),
+                     Field("time_formula_id", "reference pr_time_formula"),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Person Availability
+        #
+
+        availability_options = \
+            current.deployment_settings.get_pr_person_availability_options()
+        if availability_options is None:
+            options_readable = False
+            options_represent = None
+            options_requires = None
+        else:
+            options_readable = True
+            options_represent = S3Represent(options=availability_options)
+            options_requires = IS_EMPTY_OR(IS_IN_SET(availability_options))
+
+        tablename = "pr_person_availability"
+        define_table(tablename,
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     #s3_date("start_date",
+                     #        label = T("Start Date"),
+                     #        ),
+                     #s3_date("end_date",
+                     #        label = T("End Date"),
+                     #        ),
+                     #self.gis_location_id(),
+                     # Dropdown of alternate options
+                     # - cannot be used for Rostering, but can give additional
+                     #   information to the slots or just be a simpler alternative
+                     Field("options", "integer",
+                           represent = options_represent,
+                           requires = options_requires,
+                           readable = options_readable,
+                           writable = options_readable,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        self.add_components(tablename,
+                            # Inline Form added in controller to provide a list of slots
+                            pr_slot = {"link": "pr_person_availability_slot",
+                                       "joinby": "availability_id",
+                                       "key": "slot_id",
+                                       "actuate": "link",
+                                       },
+                            )
+
+        # ---------------------------------------------------------------------
+        # Person Availability <> Slots
+        #
+        tablename = "pr_person_availability_slot"
+        define_table(tablename,
+                     Field("availability_id", "reference pr_person_availability"),
+                     Field("slot_id", "reference pr_slot"),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class S3PersonImageModel(S3Model):
