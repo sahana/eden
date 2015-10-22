@@ -1095,7 +1095,10 @@ class S3Profile(S3CRUD):
         """
 
         create = ""
+
         insert = widget.get("insert", True)
+        if not insert:
+            return create
 
         table = resource.table
         tablename = resource.tablename
@@ -1106,8 +1109,8 @@ class S3Profile(S3CRUD):
         f = widget.get("create_function", f)
 
         permit = current.auth.s3_has_permission
-        if insert and permit("create", table, c=c, f=f) and \
-                      permit("update", r.table, record_id=r.id, c=c, f=f):
+        if permit("create", table, c=c, f=f) and \
+           permit("update", r.table, record_id=r.id, c=c, f=f):
 
             #if tablename = "org_organisation":
                 # @ToDo: Special check for creating resources on Organisation profile

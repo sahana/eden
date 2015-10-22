@@ -2128,6 +2128,7 @@ def config(settings):
             if arcs:
                 field = s3db.vol_details.card
                 field.readable = field.writable = True
+
             elif vnrc:
                 field = table.job_title_id
                 field.readable = field.writable = False
@@ -2184,6 +2185,24 @@ def config(settings):
                                                 )
                     s3db.configure("hrm_human_resource",
                                    crud_form = crud_form,
+                                   )
+
+                elif root_org == CRMADA:
+                    # Add Activity Type & Tweak Order
+                    list_fields = ["person_id",
+                                   "organisation_id",
+                                   "job_title_id",
+                                   (settings.get_ui_label_mobile_phone(), "phone.value"),
+                                   (T("Training"), "training.course_id"),
+                                   (T("Activity Types"), "person_id$activity_hours.activity_hours_activity_type.activity_type_id"),
+                                   (T("Certificates"), "person_id$certification.certificate_id"),
+                                   (T("Email"), "email.value"),
+                                   "location_id",
+                                   "details.active",
+                                   ]
+
+                    s3db.configure("hrm_human_resource",
+                                   list_fields = list_fields,
                                    )
 
                 elif root_org == IRCS:

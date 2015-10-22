@@ -6235,6 +6235,11 @@ def hrm_rheader(r, tabs=[], profile=False):
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
                                record.name),
+                            TR(TH("%s: " % table.sector_id.label),
+                               table.sector_id.represent(record.sector_id)),
+                            # @ToDo: (ltable)
+                            #TR(TH("%s: " % table.activity_type_id.label),
+                            #   table.activity_type_id.represent(record.activity_type_id)),
                             TR(TH("%s: " % table.location_id.label),
                                table.location_id.represent(record.location_id)),
                             TR(TH("%s: " % table.date.label),
@@ -7933,16 +7938,18 @@ class hrm_Record(S3Method):
                     #    list_fields.append("job_title_id")
                     #list_fields.append("hours")
                     hours_widget = dict(label = "Activity Hours",
-                                        label_create = "Add Activity Hours",
+                                        # Don't Add Hours here since the Activity List will be very hard to find the right one in
+                                        insert = False,
+                                        #label_create = "Add Activity Hours",
                                         type = "datatable",
                                         actions = dt_row_actions("hours"),
                                         tablename = "vol_activity_hours",
                                         context = "person",
                                         #filter = filter,
                                         list_fields = list_fields,
-                                        create_controller = controller,
-                                        create_function = "person",
-                                        create_component = "activity_hours",
+                                        #create_controller = controller,
+                                        #create_function = "person",
+                                        #create_component = "activity_hours",
                                         pagesize = None, # all records
                                         )
                     profile_widgets.append(hours_widget)

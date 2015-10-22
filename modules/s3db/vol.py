@@ -223,10 +223,12 @@ class S3VolunteerActivityModel(S3Model):
         #
         tablename = "vol_activity"
         define_table(tablename,
+                     self.org_organisation_id(),
+                     self.org_sector_id(empty = False,
+                                        ),
                      Field("name",
                            label = T("Name"),
                            ),
-                     self.org_organisation_id(),
                      self.gis_location_id(),
                      s3_date(future=0),
                      s3_date("end_date",
@@ -275,16 +277,18 @@ class S3VolunteerActivityModel(S3Model):
                                              },
                        )
 
-        crud_form = S3SQLCustomForm("name",
-                                    "organisation_id",
-                                    "location_id",
-                                    "date",
+        crud_form = S3SQLCustomForm("organisation_id",
+                                    "sector_id",
+                                    # @ToDo: Filter list based on Sector
                                     S3SQLInlineComponentCheckbox("activity_type",
                                                                  label = T("Activity Types"),
                                                                  field = "activity_type_id",
                                                                  option_help = "comments",
                                                                  cols = 4,
                                                                  ),
+                                    "name",
+                                    "location_id",
+                                    "date",
                                     "comments",
                                     )
 
@@ -311,7 +315,10 @@ class S3VolunteerActivityModel(S3Model):
         define_table(tablename,
                      activity_id(ondelete = "RESTRICT",
                                  ),
-                     self.pr_person_id(empty=False),
+                     self.pr_person_id(empty = False,
+                                       # Don't create here
+                                       comment = None,
+                                       ),
                      self.hrm_job_title_id(#readable = vol_roles,
                                            #writable = vol_roles,
                                            ),
@@ -402,27 +409,28 @@ class S3VolunteerActivityModel(S3Model):
                                             "actuate": "link",
                                             },
                        )
-                                                
-        crud_form = S3SQLCustomForm("activity_id",
-                                    "person_id",
-                                    "date",
-                                    #"end_date",
-                                    "job_title_id",
-                                    "hours",
-                                    # @ToDo: Filter to just those in the parent Activity
-                                    S3SQLInlineComponentCheckbox("activity_type",
-                                                                 label = T("Activity Types"),
-                                                                 field = "activity_type_id",
-                                                                 option_help = "comments",
-                                                                 cols = 4,
-                                                                 ),
-                                    "comments",
-                                    )
+
+        # Done in the controller in order to limit options
+        #crud_form = S3SQLCustomForm("activity_id",
+        #                            "person_id",
+        #                            "date",
+        #                            #"end_date",
+        #                            "job_title_id",
+        #                            "hours",
+        #                            # @ToDo: Filter to just those in the parent Activity
+        #                            S3SQLInlineComponentCheckbox("activity_type",
+        #                                                         label = T("Activity Types"),
+        #                                                         field = "activity_type_id",
+        #                                                         option_help = "comments",
+        #                                                         cols = 4,
+        #                                                         ),
+        #                            "comments",
+        #                            )
 
         configure(tablename,
                   context = {"person": "person_id",
                              },
-                  crud_form = crud_form,
+                  #crud_form = crud_form,
                   extra_fields = ["date"],
                   filter_widgets = filter_widgets,
                   onaccept = vol_activity_hours_onaccept,
@@ -1270,9 +1278,9 @@ def vol_volunteer_controller():
                             "location_id",
                             ))
         if settings.get_hrm_use_trainings():
-            list_fields.append((T("Trainings"),"person_id$training.course_id"))
+            list_fields.append((T("Trainings"), "person_id$training.course_id"))
         if settings.get_hrm_use_certificates():
-            list_fields.append((T("Certificates"),"person_id$certification.certificate_id"))
+            list_fields.append((T("Certificates"), "person_id$certification.certificate_id"))
 
         # Volunteer Programme and Active-status
         report_options = get_config("report_options")

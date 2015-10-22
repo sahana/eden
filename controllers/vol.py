@@ -413,15 +413,42 @@ def activity():
                     (ltable.activity_id == r.id)
             rows = db(query).select(ltable.activity_type_id)
             activity_types = [row.activity_type_id for row in rows]
-            field = s3db.vol_activity_hours_activity_type.activity_type_id
-            field.requires = \
-                IS_EMPTY_OR(IS_ONE_OF(db,
-                                      "vol_activity_type.id",
-                                      field.represent,
-                                      # Not currently working
-                                      filterby="id",
-                                      filter_opts=activity_types,
-                                      ))
+            # S3SQLInlineComponentCheckbox uses it's own filter, not the requires
+            #field = s3db.vol_activity_hours_activity_type.activity_type_id
+            #field.requires = \
+            #    IS_EMPTY_OR(IS_ONE_OF(db,
+            #                          "vol_activity_type.id",
+            #                          field.represent,
+            #                          filterby="id",
+            #                          filter_opts=activity_types,
+            #                          ))
+
+            from s3 import S3SQLCustomForm, S3SQLInlineComponentCheckbox
+            crud_form = S3SQLCustomForm("person_id",
+                                        "date",
+                                        #"end_date",
+                                        "job_title_id",
+                                        "hours",
+                                        S3SQLInlineComponentCheckbox("activity_type",
+                                                                     label = T("Activity Types"),
+                                                                     field = "activity_type_id",
+                                                                     #filter = {"lookuptable": ,
+                                                                     #          "lookuptable": ,
+                                                                     #          }
+                                                                     filterby = {"field": "id",
+                                                                                 "options": activity_types,
+                                                                                 },
+                                                                     option_help = "comments",
+                                                                     cols = 4,
+                                                                     ),
+                                        "comments",
+                                        )
+
+            s3db.configure("vol_activity_hours",
+                           crud_form = crud_form,
+                           )
+
+        
         return True
     s3.prep = prep
 

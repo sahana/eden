@@ -3647,7 +3647,8 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
 
             data = {"component": component_name,
                     "field": fieldname,
-                    "data": items}
+                    "data": items,
+                    }
         else:
             raise AttributeError("Undefined component")
 
@@ -3800,6 +3801,7 @@ class S3SQLInlineComponentCheckbox(S3SQLInlineComponent):
         else:
             fields = ["id", "name"]
 
+        # @ToDo: Get the filter from the IS_ONE_OF?
         opt_filter = opts.get("filter", None)
         if opt_filter:
             linktable = s3db[opt_filter["linktable"]]
