@@ -30,12 +30,21 @@
 
 __all__ = ("S3VolunteerModel",
            "S3VolunteerActivityModel",
+           "S3VolunteerAvailabilityModel",
            "S3VolunteerAwardModel",
            "S3VolunteerClusterModel",
            "vol_service_record",
            "vol_person_controller",
            "vol_volunteer_controller",
            )
+
+try:
+    import json # try stdlib (Python 2.6)
+except ImportError:
+    try:
+        import simplejson as json # try external module
+    except:
+        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 try:
     # Python 2.7
@@ -50,6 +59,9 @@ from gluon.storage import Storage
 from ..s3 import *
 from s3layouts import S3PopupLink
 
+# Compact JSON encoding
+SEPARATORS = (",", ":")
+
 # =============================================================================
 class S3VolunteerModel(S3Model):
 
@@ -61,6 +73,7 @@ class S3VolunteerModel(S3Model):
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         # VNRC Options
+        # @ToDo: Be able to pull options from settings & yet still have just a list not list of booleans
         availability_opts = {1: T("No Restrictions"),
                              2: T("Weekends only"),
                              3: T("School Holidays only"),
@@ -101,7 +114,7 @@ class S3VolunteerModel(S3Model):
                                 ),
                           *s3_meta_fields())
 
-    # =========================================================================
+    # -------------------------------------------------------------------------
     @staticmethod
     def vol_active_represent(opt):
         """ Represent the Active status of a Volunteer """
@@ -210,6 +223,9 @@ class S3VolunteerActivityModel(S3Model):
         #
         tablename = "vol_activity"
         define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           ),
                      self.org_organisation_id(),
                      self.gis_location_id(),
                      s3_date(future=0),
@@ -253,9 +269,14 @@ class S3VolunteerActivityModel(S3Model):
                                             "key": "activity_type_id",
                                             "actuate": "link",
                                             },
+                       # Hours
+                       vol_activity_hours = {"name": "hours",
+                                             "joinby": "activity_id",
+                                             },
                        )
 
-        crud_form = S3SQLCustomForm("organisation_id",
+        crud_form = S3SQLCustomForm("name",
+                                    "organisation_id",
                                     "location_id",
                                     "date",
                                     S3SQLInlineComponentCheckbox("activity_type",
@@ -382,7 +403,8 @@ class S3VolunteerActivityModel(S3Model):
                                             },
                        )
                                                 
-        crud_form = S3SQLCustomForm("person_id",
+        crud_form = S3SQLCustomForm("activity_id",
+                                    "person_id",
                                     "date",
                                     #"end_date",
                                     "job_title_id",
@@ -413,10 +435,25 @@ class S3VolunteerActivityModel(S3Model):
         # Volunteer Activity Hours <> Activity Type link table
         #
 
+        # Filter Activity Type List to just those for the Activity
+        # We will only add hours on Tab of Activity
+        #options = {"trigger": "activity_id",
+        #           "target": {"alias": "activity_hours_activity_type",
+        #                      "name": "activity_type_id",
+        #                      },
+        #           "scope": "form",
+        #           "lookupPrefix": "vol",
+        #           "lookupResource": "activity_type",
+        #           "optional": True,
+        #           }
+        #script = '''$.filterOptionsS3(%s)''' % \
+        #                    json.dumps(options, separators=SEPARATORS)
+
         tablename = "vol_activity_hours_activity_type"
         define_table(tablename,
                      Field("activity_hours_id", "reference vol_activity_hours"),
-                     activity_type_id(),
+                     activity_type_id(#script = script,
+                                      ),
                      *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
@@ -504,6 +541,56 @@ def vol_activity_hours_onaccept(form):
         if row:
             dtable.insert(human_resource_id = row.id,
                           active = active)
+
+# =============================================================================
+class S3VolunteerAvailabilityModel(S3Model):
+
+    names = ("vol_availability",)
+
+    def model(self):
+
+        #T = current.T
+
+        # List of Options for which only 1 can be selected
+        # Frequent, 1-2 times per week
+        # Once per month
+        # Exceptional Cases
+        # Sometimes, when needed
+        # Projects, 1-3 times per month
+        # Other
+
+        # ---------------------------------------------------------------------
+        # Volunteer Availability
+        #
+        tablename = "vol_availability"
+        self.define_table(tablename,
+                          self.pr_person_id(ondelete = "CASCADE"),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.add_components(tablename,
+                            availability_data = "availability_id",
+                            )
+
+        # @ToDo: Build options from settings
+        crud_form = None
+
+        self.configure(tablename,
+                       crud_form  = crud_form,
+                       )
+
+        # ---------------------------------------------------------------------
+        # Volunteer Availability Data
+        # - set of Boolean options for which any can be selected
+        #
+        tablename = "vol_availability_data"
+        self.define_table(tablename,
+                          Field("availability_id", "reference vol_availability",
+                                ondelete = "CASCADE",
+                                ),
+                          Field("slot"),
+                          Field("value", "boolean"),
+                          *s3_meta_fields())
 
 # =============================================================================
 class S3VolunteerAwardModel(S3Model):
@@ -1259,13 +1346,12 @@ def vol_volunteer_controller():
                     if settings.get_hrm_use_code() is not True:
                         table.code.readable = table.code.writable = False
                     # Organisation Dependent Fields
-                    # @ToDo: Move these to the IFRC Template
+                    # @ToDo: Move these to the IFRC Template & make Lazy settings
                     set_org_dependent_field = settings.set_org_dependent_field
                     set_org_dependent_field("pr_person_details", "father_name")
                     set_org_dependent_field("pr_person_details", "mother_name")
                     set_org_dependent_field("pr_person_details", "affiliations")
                     set_org_dependent_field("pr_person_details", "company")
-                    set_org_dependent_field("vol_details", "availability")
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
                     set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")
@@ -1482,6 +1568,7 @@ def vol_person_controller():
                 s3db.pr_person_details.occupation.label = T("Normal Job")
 
                 # Organisation Dependent Fields
+                # @ToDo: Move these to the IFRC Template & make Lazy settings
                 set_org_dependent_field = settings.set_org_dependent_field
                 set_org_dependent_field("pr_person", "middle_name")
                 set_org_dependent_field("pr_person_details", "father_name")
@@ -1541,8 +1628,8 @@ def vol_person_controller():
                     field.readable = field.writable = False
 
                 # Organisation Dependent Fields
+                # @ToDo: Move these to the IFRC Template & make Lazy settings
                 set_org_dependent_field = settings.set_org_dependent_field
-                set_org_dependent_field("vol_details", "availability")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_type_id")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_id")
                 set_org_dependent_field("vol_volunteer_cluster", "vol_cluster_position_id")

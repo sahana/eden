@@ -500,6 +500,7 @@ def config(settings):
     # Set the label for Sites
     settings.org.site_label = "Office/Warehouse/Facility"
     # Enable certain fields just for specific Organisations
+    # @ToDo: Make these Lazy settings
     settings.org.dependent_fields = \
         {"pr_person.middle_name"                     : (CVTL, VNRC),
          "pr_person_details.mother_name"             : (BRCS, ),
@@ -508,7 +509,6 @@ def config(settings):
          "pr_person_details.year_of_birth"           : (ARCS, ),
          "pr_person_details.affiliations"            : (PRC, ),
          "pr_person_details.company"                 : (PRC, ),
-         "vol_details.availability"                  : (CRMADA, VNRC),
          "vol_details.card"                          : (ARCS, ),
          "vol_volunteer_cluster.vol_cluster_type_id"     : (PRC, ),
          "vol_volunteer_cluster.vol_cluster_id"          : (PRC, ),
@@ -1139,6 +1139,21 @@ def config(settings):
         return False
 
     settings.hrm.vol_active = hrm_vol_active
+
+    def hrm_vol_availability(default):
+        """ Whether to track Volunteer Availability """
+
+        root_org = current.auth.root_org_name()
+        if root_org == VNRC:
+            # Simple inline field with dropdowns
+            return True
+        elif root_org == CRMADA:
+            # Tab with list of Booleans
+            return vol_programme_active
+        # Default to Off
+        return False
+
+    settings.hrm.vol_availability = hrm_vol_availability
 
     def hrm_vol_departments(default):
         """ Whether to use Volunteer Departments """
@@ -3182,8 +3197,9 @@ def config(settings):
             table.initials.readable = table.initials.writable = False
             table.local_name.readable = table.local_name.writable = False
             table.preferred_name.readable = table.preferred_name.writable = False
-            field = s3db.pr_person_details.religion
-            field.readable = field.writable = False
+            dtable = s3db.pr_person_details 
+            dtable.religion.readable = dtable.religion.writable = False
+            dtable.nationality.default = "MG"
         elif root_org == IRCS:
             settings.hrm.activity_types = None
             settings.hrm.use_id = False

@@ -10,6 +10,11 @@ except ImportError:
 import s3menus as default
 
 red_cross_filter = {"organisation_type.name" : "Red Cross / Red Crescent"}
+CRMADA = "Malagasy Red Cross Society"
+#HNRC = "Honduran Red Cross"
+IRCS = "Iraqi Red Crescent Society"
+NRCS = "Nepal Red Cross Society"
+NZRC = "New Zealand Red Cross"
 
 # =============================================================================
 class S3MainMenu(default.S3MainMenu):
@@ -51,24 +56,24 @@ class S3MainMenu(default.S3MainMenu):
         s3db.inv_recv_crud_strings()
         inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
 
-        vol_activities = lambda i: True if root_org == "Malagasy Red Cross Society" else False
+        vol_activities = lambda i: True if root_org == CRMADA else False
 
         use_certs = lambda i: settings.get_hrm_use_certificates()
 
         vol_programmes = lambda i: settings.get_hrm_vol_experience() in ("programme", "both")
 
         #def hrm(item):
-        #    return root_org != "Honduran Red Cross" or \
+        #    return root_org != HNRC or \
         #           has_role(ORG_ADMIN)
 
         #def inv(item):
-        #    return root_org != "Honduran Red Cross" or \
+        #    return root_org != HNRC or \
         #           has_role("hn_wh_manager") or \
         #           has_role("hn_national_wh_manager") or \
         #           has_role(ORG_ADMIN)
 
         #def basic_warehouse(i):
-        #    if root_org == "Honduran Red Cross"  and \
+        #    if root_org == HNRC  and \
         #       not (has_role("hn_national_wh_manager") or \
         #            has_role(ORG_ADMIN)):
         #        # Hide menu entries which user shouldn't need access to
@@ -77,7 +82,7 @@ class S3MainMenu(default.S3MainMenu):
         #        return True
 
         #def multi_warehouse(i):
-        #    if root_org == "Honduran Red Cross" and \
+        #    if root_org == HNRC and \
         #       not (has_role("hn_national_wh_manager") or \
         #            has_role(ORG_ADMIN)):
         #        # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
@@ -86,18 +91,18 @@ class S3MainMenu(default.S3MainMenu):
         #        return True
 
         def outreach(item):
-            return root_org == "New Zealand Red Cross" or \
+            return root_org == NZRC or \
                    root_org is None and has_role(ADMIN)
 
         #def vol(item):
-        #    return root_org != "Honduran Red Cross" or \
+        #    return root_org != HNRC or \
         #           has_role(ORG_ADMIN)
 
         def vol_roles(item):
-            return root_org != "Iraqi Red Crescent Society"
+            return root_org != IRCS
 
         def vol_teams(item):
-            return root_org != "Iraqi Red Crescent Society"
+            return root_org != IRCS
 
         return [
             homepage("gis")(
@@ -195,17 +200,17 @@ class S3MainMenu(default.S3MainMenu):
         ORG_ADMIN = system_roles.ORG_ADMIN
 
         #def hrm(item):
-        #    return root_org != "Honduran Red Cross" or \
+        #    return root_org != HNRC or \
         #           has_role(ORG_ADMIN)
 
         #def inv(item):
-        #    return root_org != "Honduran Red Cross" or \
+        #    return root_org != HNRC or \
         #           has_role("hn_wh_manager") or \
         #           has_role("hn_national_wh_manager") or \
         #           has_role(ORG_ADMIN)
 
         #def vol(item):
-        #    return root_org != "Honduran Red Cross" or \
+        #    return root_org != HNRC or \
         #           has_role(ORG_ADMIN)
 
         if controller == "vol":
@@ -603,20 +608,20 @@ class S3OptionsMenu(default.S3OptionsMenu):
         settings = current.deployment_settings
         root_org = auth.root_org_name()
         def no_direct_stock_edits(i):
-            if root_org in ("Australian Red Cross", "Malagasy Red Cross Society"):
+            if root_org in ("Australian Red Cross", CRMADA):
                 # Australian & Malagasy RC use proper Logistics workflow
                 return True
             else:
                 # Others use simplified version
                 return False
         #def use_facilities(i):
-        #    if root_org == "Honduran Red Cross":
+        #    if root_org == HNRC:
         #        # Honduran RC don't use Facilities
         #        return False
         #    else:
         #        return True
         #def basic_warehouse(i):
-        #    if root_org == "Honduran Red Cross"  and \
+        #    if root_org == HNRC  and \
         #       not (has_role("hn_national_wh_manager") or \
         #            has_role(ORG_ADMIN)):
         #        # Hide menu entries which user shouldn't need access to
@@ -624,7 +629,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         #    else:
         #        return True
         #def multi_warehouse(i):
-        #    if root_org == "Honduran Red Cross"  and \
+        #    if root_org == HNRC  and \
         #       not (has_role("hn_national_wh_manager") or \
         #            has_role(ORG_ADMIN)):
         #        # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
@@ -633,13 +638,13 @@ class S3OptionsMenu(default.S3OptionsMenu):
         #    else:
         #        return True
         #def use_kits(i):
-        #    if root_org == "Honduran Red Cross":
+        #    if root_org == HNRC:
         #        # Honduran RC use Kits
         #        return True
         #    else:
         #        return False
         def use_types(i):
-            if root_org == "Nepal Red Cross Society":
+            if root_org == NRCS:
                 # Nepal RC use Warehouse Types
                 return True
             else:
@@ -750,7 +755,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         #root_org = current.auth.root_org_name()
         #def community_volunteers(i):
-        #    if root_org == "Honduran Red Cross":
+        #    if root_org == HNRC:
         #        return True
         #    else:
         #        return False
@@ -898,7 +903,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         use_certs = lambda i: settings.get_hrm_use_certificates()
         use_skills = lambda i: settings.get_hrm_use_skills()
         show_programmes = lambda i: settings.get_hrm_vol_experience() in ("programme", "both")
-        show_program_reports = lambda i: root_org != "Iraqi Red Crescent Society" and \
+        show_program_reports = lambda i: root_org != IRCS and \
                                          settings.get_hrm_vol_experience() in ("programme", "both")
         show_tasks = lambda i: settings.has_module("project") and \
                                settings.get_project_mode_task()
@@ -910,12 +915,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
             settings.set_org_dependent_field(tablename, fieldname,
                                              enable_field = False)
 
-        if root_org == "Iraqi Red Crescent Society":
+        if root_org == IRCS:
             awards_label = "Recommendation Letter Types"
         else:
             awards_label = "Awards"
 
-        use_activities = lambda i: True if root_org == "Malagasy Red Cross Society" else False
+        use_activities = lambda i: True if root_org == CRMADA else False
 
         return M(c="vol")(
                     M("Volunteers", f="volunteer", m="summary",

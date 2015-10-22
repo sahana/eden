@@ -1046,6 +1046,8 @@ class S3PersonModel(S3Model):
                        vol_activity_hours = "person_id",
                        # Appraisals
                        hrm_appraisal = "person_id",
+                       # Availability
+                       vol_availability = "person_id",
                        # Awards
                        hrm_award = {"name": "staff_award",
                                     "joinby": "person_id",

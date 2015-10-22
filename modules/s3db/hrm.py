@@ -784,9 +784,10 @@ class S3HRModel(S3Model):
                                                            link = False,
                                                            multiple = False,
                                                            ))
-            crud_fields.extend(("details.volunteer_type",
-                                "details.availability",
-                                "details.card",
+            crud_fields.append("details.volunteer_type")
+            if settings.get_hrm_vol_availability() is True:
+                crud_fields.append("details.availability")
+            crud_fields.extend(("details.card",
                                 # @ToDo: Move these to the IFRC Template (PH RC only people to use this)
                                 "volunteer_cluster.vol_cluster_type_id",
                                 "volunteer_cluster.vol_cluster_id",
@@ -1947,6 +1948,8 @@ class S3HRJobModel(S3Model):
 
         # =========================================================================
         # Availability
+        #
+        # unused - see vol_availability
         #
         weekdays = {1: T("Monday"),
                     2: T("Tuesday"),
@@ -6032,6 +6035,9 @@ def hrm_rheader(r, tabs=[], profile=False):
                     experience_tab2 = (T("Experience"), "experience")
             elif vol_experience == "experience" and not use_cv:
                 experience_tab = (T("Experience"), "experience")
+            elif vol_experience == "activity":
+                # @ToDo: Add like for Programmes
+                pass
         elif settings.get_hrm_staff_experience() == "experience" and not use_cv:
             experience_tab = (T("Experience"), "experience")
 
@@ -6049,6 +6055,12 @@ def hrm_rheader(r, tabs=[], profile=False):
             description_tab = (T("Description"), "physical_description")
         else:
             description_tab = None
+
+        availability = settings.get_hrm_vol_availability()
+        if isinstance(availability, (list, tuple)):
+            availability_tab = (T("Availability"), "availability")
+        else:
+            availability_tab = None
 
         if settings.get_hrm_use_education() and not use_cv:
             education_tab = (T("Education"), "education")
@@ -6121,7 +6133,8 @@ def hrm_rheader(r, tabs=[], profile=False):
                 tabs.append((T("Public Contacts"), "public_contacts"))
             if "private" in contacts_tabs:
                 tabs.append((T("Private Contacts"), "private_contacts"))
-            tabs += [education_tab,
+            tabs += [availability_tab,
+                     education_tab,
                      trainings_tab,
                      certificates_tab,
                      skills_tab,
@@ -6148,7 +6161,8 @@ def hrm_rheader(r, tabs=[], profile=False):
                 tabs.append((T("Private Contacts"), "private_contacts"))
             if record_method is not None:
                 hr_tab = (T("Positions"), "human_resource")
-            tabs += [trainings_tab,
+            tabs += [availability_tab,
+                     trainings_tab,
                      certificates_tab,
                      skills_tab,
                      credentials_tab,
@@ -6184,7 +6198,8 @@ def hrm_rheader(r, tabs=[], profile=False):
                 tabs.append((T("Public Contacts"), "public_contacts"))
             if "private" in contacts_tabs:
                 tabs.append((T("Private Contacts"), "private_contacts"))
-            tabs += [salary_tab,
+            tabs += [availability_tab,
+                     salary_tab,
                      education_tab,
                      trainings_tab,
                      certificates_tab,
@@ -6210,6 +6225,21 @@ def hrm_rheader(r, tabs=[], profile=False):
                                   vars = get_vars),
                         ),
                       tbl,
+                      rheader_tabs)
+
+    elif resourcename == "activity":
+        # Tabs
+        tabs = [(T("Activity Details"), None),
+                (T("Hours"), "hours"),
+                ]
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+        rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
+                               record.name),
+                            TR(TH("%s: " % table.location_id.label),
+                               table.location_id.represent(record.location_id)),
+                            TR(TH("%s: " % table.date.label),
+                               table.date.represent(record.date)),
+                            ),
                       rheader_tabs)
 
     elif resourcename == "training_event":

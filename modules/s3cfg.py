@@ -2818,6 +2818,16 @@ class S3Config(Storage):
     #    """
     #    return self.__lazy("hrm", "vol_affiliation", default=None)
 
+    def get_hrm_vol_availability(self):
+        """
+            Whether to use Availability for Volunteers
+            Options:
+                None (don't show)
+                True (show field inline)
+                List of Strings for Options (on Tab)
+        """
+        return self.__lazy("hrm", "vol_availability", default=None)
+
     def get_hrm_vol_experience(self):
         """
             Whether to use Experience for Volunteers &, if so, which table to use

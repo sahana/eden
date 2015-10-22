@@ -404,8 +404,29 @@ def activity_type():
 
 # -----------------------------------------------------------------------------
 def activity():
-    
-    return s3_rest_controller()
+
+    def prep(r):
+        if r.component_name == "hours":
+            # Limit Activity Types to those for the Activity
+            ltable = s3db.vol_activity_activity_type
+            query = (ltable.deleted == False) & \
+                    (ltable.activity_id == r.id)
+            rows = db(query).select(ltable.activity_type_id)
+            activity_types = [row.activity_type_id for row in rows]
+            field = s3db.vol_activity_hours_activity_type.activity_type_id
+            field.requires = \
+                IS_EMPTY_OR(IS_ONE_OF(db,
+                                      "vol_activity_type.id",
+                                      field.represent,
+                                      # Not currently working
+                                      filterby="id",
+                                      filter_opts=activity_types,
+                                      ))
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller(rheader = s3db.hrm_rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def activity_hours():
@@ -437,12 +458,12 @@ def programme():
             auth.permission.fail()
         if r.component_name == "person":
             s3db.configure("hrm_programme_hours",
-                           list_fields=["person_id",
-                                        "training",
-                                        "programme_id",
-                                        "date",
-                                        "hours",
-                                        ])
+                           list_fields = ["person_id",
+                                          "training",
+                                          "programme_id",
+                                          "date",
+                                          "hours",
+                                          ])
         return True
     s3.prep = prep
 
