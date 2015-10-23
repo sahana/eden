@@ -3255,19 +3255,21 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         # Widget type
         widget = options.get("widget")
         if widget != "hierarchy":
-            # Get the selectable entries for the widget and construct
-            # a validator from it
-            zero = None if multiple else options.get("zero", XML("&nbsp"))
-            opts = self.get_options()
-            if zero is None:
-                # Remove the empty option
-                opts = dict((k, v) for k, v in opts.items() if k != "")
-            requires = IS_IN_SET(opts,
-                                 multiple=multiple,
-                                 zero=zero,
-                                 sort=options.get("sort", True))
-            if zero is not None:
-                requires = IS_EMPTY_OR(requires)
+            requires = options.get("requires")
+            if requires is None:
+                # Get the selectable entries for the widget and construct
+                # a validator from it
+                zero = None if multiple else options.get("zero", XML("&nbsp"))
+                opts = self.get_options()
+                if zero is None:
+                    # Remove the empty option
+                    opts = dict((k, v) for k, v in opts.items() if k != "")
+                requires = IS_IN_SET(opts,
+                                     multiple=multiple,
+                                     zero=zero,
+                                     sort=options.get("sort", True))
+                if zero is not None:
+                    requires = IS_EMPTY_OR(requires)
             dummy_field.requires = requires
 
         # Helper to extract widget options
@@ -3282,6 +3284,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                                   "size",
                                   "help_field",
                                   "multiple",
+                                  "sort",
                                   ))
             w = S3GroupedOptionsWidget(**w_opts)
         elif widget == "hierarchy":

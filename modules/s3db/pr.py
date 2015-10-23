@@ -2664,6 +2664,8 @@ class S3AvailabilityModel(S3Model):
         configure = self.configure
         define_table = self.define_table
 
+        db = current.db
+
         # ---------------------------------------------------------------------
         # Date Formula
         #
@@ -2719,10 +2721,10 @@ class S3AvailabilityModel(S3Model):
                            ),
                      Field("start_time", "time",
                            # @ToDo: s3_time reusablefield?
-                           #widget = 
+                           #widget =
                            ),
                      Field("end_time", "time",
-                           #widget = 
+                           #widget =
                            ),
                      *s3_meta_fields())
 
@@ -2798,11 +2800,11 @@ class S3AvailabilityModel(S3Model):
         self.add_components(tablename,
                             # Inline Form added in customise to provide a list of slots
                             pr_person_availability_slot = "availability_id",
-                            #pr_slot = {"link": "pr_person_availability_slot",
-                            #           "joinby": "availability_id",
-                            #           "key": "slot_id",
-                            #           "actuate": "link",
-                            #           },
+                            pr_slot = {"link": "pr_person_availability_slot",
+                                       "joinby": "availability_id",
+                                       "key": "slot_id",
+                                       "actuate": "link",
+                                       },
                             )
 
         # ---------------------------------------------------------------------

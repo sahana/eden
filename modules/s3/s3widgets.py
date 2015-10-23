@@ -2593,7 +2593,7 @@ class S3GroupedOptionsWidget(FormWidget):
         widget_opts = {"columns": self.cols,
                        "emptyText": str(current.T("No options available")),
                        "order": "columns",
-                       "sort": True,
+                       "sort": self.sort,
                        }
         script = '''$('#%s').groupedopts(%s)''' % \
                  (_id, json.dumps(widget_opts, separators=SEPARATORS))
