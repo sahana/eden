@@ -529,6 +529,12 @@ def role():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def slot():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def tooltip():
     """ Ajax tooltips """
 

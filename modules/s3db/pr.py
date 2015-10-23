@@ -2661,6 +2661,7 @@ class S3AvailabilityModel(S3Model):
 
         T = current.T
 
+        configure = self.configure
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
@@ -2682,23 +2683,27 @@ class S3AvailabilityModel(S3Model):
                         }
 
         tablename = "pr_date_formula"
-        self.define_table(tablename,
-                          Field("name",
-                                label = T("Name"),
-                                ),
-                          # "interval" is a reserved word in MySQL
-                          Field("date_interval", "integer",
-                                represent = S3Represent(options=interval_opts),
-                                requires = IS_IN_SET(interval_opts),
-                                ),
-                          Field("rate", "integer"), # Repeat Frequency
-                          Field("days_of_week", "list:integer",
-                                represent = S3Represent(options=days_of_week),
-                                requires = IS_IN_SET((0, 1, 2, 3, 4, 5, 6),
-                                                     multiple = True,
-                                                     ),
-                                ),
-                          *s3_meta_fields())
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     # "interval" is a reserved word in MySQL
+                     Field("date_interval", "integer",
+                           represent = S3Represent(options=interval_opts),
+                           #requires = IS_IN_SET(interval_opts),
+                           ),
+                     Field("rate", "integer"), # Repeat Frequency
+                     Field("days_of_week", "list:integer",
+                           represent = S3Represent(options=days_of_week),
+                           #requires = IS_IN_SET((0, 1, 2, 3, 4, 5, 6),
+                           #                     multiple = True,
+                           #                     ),
+                           ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
 
         # ---------------------------------------------------------------------
         # Time Formula
@@ -2721,6 +2726,10 @@ class S3AvailabilityModel(S3Model):
                            ),
                      *s3_meta_fields())
 
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
         # ---------------------------------------------------------------------
         # Slots
         #
@@ -2732,6 +2741,20 @@ class S3AvailabilityModel(S3Model):
                      Field("date_formula_id", "reference pr_date_formula"),
                      Field("time_formula_id", "reference pr_time_formula"),
                      *s3_meta_fields())
+
+        represent = S3Represent(lookup=tablename, translate=True)
+        slot_id = S3ReusableField("slot_id", "reference %s" % tablename,
+                                  label = T("Slot"),
+                                  ondelete = "RESTRICT",
+                                  represent = represent,
+                                  requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "pr_slot.id",
+                                                          represent)),
+                                  #comment=S3PopupLink(c = "pr",
+                                  #                    f = "slot",
+                                  #                    label = ADD_SLOT,
+                                  #                    ),
+                                  )
 
         # ---------------------------------------------------------------------
         # Person Availability
@@ -2773,12 +2796,13 @@ class S3AvailabilityModel(S3Model):
                      *s3_meta_fields())
 
         self.add_components(tablename,
-                            # Inline Form added in controller to provide a list of slots
-                            pr_slot = {"link": "pr_person_availability_slot",
-                                       "joinby": "availability_id",
-                                       "key": "slot_id",
-                                       "actuate": "link",
-                                       },
+                            # Inline Form added in customise to provide a list of slots
+                            pr_person_availability_slot = "availability_id",
+                            #pr_slot = {"link": "pr_person_availability_slot",
+                            #           "joinby": "availability_id",
+                            #           "key": "slot_id",
+                            #           "actuate": "link",
+                            #           },
                             )
 
         # ---------------------------------------------------------------------
@@ -2787,7 +2811,8 @@ class S3AvailabilityModel(S3Model):
         tablename = "pr_person_availability_slot"
         define_table(tablename,
                      Field("availability_id", "reference pr_person_availability"),
-                     Field("slot_id", "reference pr_slot"),
+                     slot_id(),
+                     Field("available", "boolean"),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------

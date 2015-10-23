@@ -7326,7 +7326,7 @@ class S3RoleManager(S3Method):
         db = current.db
         T = current.T
 
-        CACL = T("Application Permissions")
+        CACL = T("Module Permissions")
         FACL = T("Function Permissions")
         TACL = T("Table Permissions")
 
