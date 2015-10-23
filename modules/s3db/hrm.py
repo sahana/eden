@@ -5935,18 +5935,23 @@ def hrm_rheader(r, tabs=[], profile=False):
                 s3db = current.s3db
                 if vol_experience == "activity":
                     ahtable = db.vol_activity_hours
+                    attable = db.vol_activity_hours_activity_type
                     bquery = (ahtable.deleted == False) & \
                              (ahtable.person_id == r.id)
+                    bleft = [attable.on(ahtable.id == attable.activity_hours_id),
+                             ]
                     dfield = ahtable.date
                     fields = [dfield,
                               ahtable.hours,
                               #ahtable.training,
+                              attable.activity_type_id,
                               ]
                 else:
                     ptable = s3db.hrm_programme
                     phtable = db.hrm_programme_hours
                     bquery = (phtable.deleted == False) & \
                              (phtable.person_id == r.id)
+                    bleft = None
                     query = (phtable.programme_id == ptable.id)
                     query &= bquery
                     row = db(query).select(ptable.name,
@@ -5966,18 +5971,26 @@ def hrm_rheader(r, tabs=[], profile=False):
 
                 query = bquery & \
                         (dfield > last_year.date())
-                rows = db(query).select(*fields)
+                rows = db(query).select(*fields,
+                                        left = bleft)
                 programme_hours_year = 0
                 programme_hours_month = 0
                 last_month = now - datetime.timedelta(days=30)
                 last_month = last_month.date()
                 if vol_experience == "activity":
+                    activity_type_ids = []
                     for row in rows:
-                        hours = row.hours
+                        activity_type_ids.append(row["vol_activity_hours.activity_type_id"])
+                        hours = row["vol_activity_hours.hours"]
                         if hours:
                             programme_hours_year += hours
                             if row.date > last_month:
                                 programme_hours_month += hours
+                    # Uniquify
+                    activity_type_ids = list(set(activity_type_ids))
+                    # Represent
+                    activity_types = s3db.vol_activity_activity_type.activity_type_id.represent.bulk(activity_type_ids)
+                    activity_types = ", ".join(activity_types.values())
                 else:
                     for row in rows:
                         hours = row.hours
@@ -6035,10 +6048,13 @@ def hrm_rheader(r, tabs=[], profile=False):
                 if vol_experience == "activity":
                     row1 = TR(*active_cells
                               )
-                    row2 = TR(TH("%s:" % T("Activity Hours (Month)")),
+                    row2 = TR(TH("%s:" % T("Activity Types")),
+                              str(activity_types),
+                              )
+                    row3 = TR(TH("%s:" % T("Activity Hours (Month)")),
                               str(programme_hours_month),
                               )
-                    row3 = TR(TH("%s:" % T("Activity Hours (Year)")),
+                    row4 = TR(TH("%s:" % T("Activity Hours (Year)")),
                               str(programme_hours_year),
                               )
                 else:
@@ -6056,12 +6072,15 @@ def hrm_rheader(r, tabs=[], profile=False):
                               TH("%s:" % T("Training Hours (Year)")),
                               str(training_hours_year)
                               )
+                    row4 - ""
+
                 tbl = TABLE(TR(TH(name,
                                   _colspan=4)
                                ),
                             row1,
                             row2,
                             row3,
+                            row4,
                             )
                 service_record = DIV(A(T("Service Record"),
                                        _href = URL(c = "vol",
