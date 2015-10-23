@@ -471,6 +471,20 @@ def activity_hours():
     return s3_rest_controller()
 
 # =============================================================================
+def facility():
+    """
+        e.g. Training Venues
+    """
+
+    # Open record in this controller after creation
+    s3db.configure("org_facility",
+                   create_next = URL(c="vol", f="facility",
+                                     args = ["[id]", "read"]),
+                   )
+
+    return s3db.org_facility_controller()
+
+# =============================================================================
 def programme():
     """ Volunteer Programmes controller """
 

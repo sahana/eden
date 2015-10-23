@@ -965,6 +965,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Training Events", f="training_event",
                       check=manager_mode)(
                         M("Create", m="create"),
+                        M("Facilities", f="facility"),
                         M("Search Training Participants", f="training"),
                         M("Import Participant List", f="training", m="import"),
                     ),

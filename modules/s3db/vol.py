@@ -272,7 +272,7 @@ class S3VolunteerActivityModel(S3Model):
             msg_record_deleted = T("Activity deleted"),
             msg_list_empty = T("No Activities found"))
 
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, show_link=True)
         activity_id = S3ReusableField("activity_id", "reference %s" % tablename,
                                       label = T("Activity"),
                                       requires = IS_ONE_OF(db,
@@ -314,9 +314,9 @@ class S3VolunteerActivityModel(S3Model):
                                                     #help_field = s3db.project_theme_help_fields,
                                                     cols = 4,
                                                     translate = True,
-                                                    # Filter Theme by Sector
+                                                    # Filter Activity Type by Sector
                                                     filterby = "activity_type_id:vol_activity_type_sector.sector_id",
-                                                    match = "activity_type_sector.sector_id",
+                                                    match = "sector_id",
                                                     script = '''
 $.filterOptionsS3({
  'trigger':'sector_id',
@@ -336,6 +336,13 @@ $.filterOptionsS3({
 
         configure(tablename,
                   crud_form = crud_form,
+                  list_fields = ["name",
+                                 "organisation_id",
+                                 "sector_id",
+                                 "activity_activity_type.activity_type_id",
+                                 "location_id",
+                                 "date",
+                                 ],
                   )
 
         # ---------------------------------------------------------------------
@@ -475,6 +482,13 @@ $.filterOptionsS3({
                   #crud_form = crud_form,
                   extra_fields = ["date"],
                   filter_widgets = filter_widgets,
+                  list_fields = ["activity_id",
+                                 "person_id",
+                                 "date",
+                                 "job_title_id",
+                                 "hours",
+                                 "activity_hours_activity_type.activity_type_id",
+                                 ],
                   onaccept = vol_activity_hours_onaccept,
                   ondelete = vol_activity_hours_onaccept,
                   orderby = "vol_activity_hours.date desc",

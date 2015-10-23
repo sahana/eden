@@ -2214,6 +2214,7 @@ def config(settings):
                                    (settings.get_ui_label_mobile_phone(), "phone.value"),
                                    (T("Trainings"), "training.course_id"),
                                    (T("Activity Types"), "person_id$activity_hours.activity_hours_activity_type.activity_type_id"),
+                                   (T("Activities"), "person_id$activity_hours.activity_id"),
                                    (T("Certificates"), "person_id$certification.certificate_id"),
                                    (T("Email"), "email.value"),
                                    "location_id",
