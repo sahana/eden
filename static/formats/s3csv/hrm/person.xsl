@@ -89,8 +89,9 @@
          Permanent L4...................optional.....person permanent address L4
          Skills.........................optional.....comma-separated list of Skills
          Teams..........................optional.....comma-separated list of Groups
-         Trainings......................optional.....comma-separated list of Training Courses
+         Trainings......................optional.....comma-separated list of Training Courses attended
          Training:XXXX..................optional.....Date of Training Course XXXX OR "True" to add Training Courses by column
+         External Trainings.............optional.....comma-separated list of External Training Courses attended
          Certificates...................optional.....comma-separated list of Certificates
          Certificate:XXXX...............optional.....Expiry Date of Certificate XXXX OR "True" to add Certificate by column
          Education Level................optional.....person education level of award (highest)
@@ -105,9 +106,6 @@
          Disciplinary Type..............optional.....hrm_disciplinary_action.disciplinary_type_id
          Disciplinary Date..............optional.....hrm_disciplinary_action.date
          Disciplinary Body..............optional.....hrm_disciplinary_action.disciplinary_body
-         Volunteer Cluster Type.........optional.....volunteer_cluster cluster_type name
-         Volunteer Cluster..............optional.....volunteer_cluster cluster name
-         Volunteer Cluster Position.....optional.....volunteer_cluster cluster_position name
          Active.........................optional.....volunteer_details.active
          Volunteer Type.................optional.....volunteer_details.volunteer_type
          Deployable.....................optional.....link to deployments module (true|false)
@@ -120,6 +118,11 @@
          Identity Card Volume No
          Identity Card Family Order No
          Identity Card Order No
+
+         PHRC-specific:
+         Volunteer Cluster Type.........optional.....volunteer_cluster cluster_type name
+         Volunteer Cluster..............optional.....volunteer_cluster cluster name
+         Volunteer Cluster Position.....optional.....volunteer_cluster cluster_position name
 
          Column headers looked up in labels.xml:
 
@@ -376,7 +379,7 @@
                         <xsl:if test="$OrgName!=''">
                             <reference field="organisation_id" resource="org_organisation">
                                 <xsl:attribute name="tuid">
-                                    <xsl:value-of select="$OrgName"/>
+                                    <xsl:value-of select="concat('ORG:', $OrgName)"/>
                                 </xsl:attribute>
                             </reference>
                         </xsl:if>
@@ -423,7 +426,7 @@
                         <xsl:if test="$OrgName!=''">
                             <reference field="organisation_id" resource="org_organisation">
                                 <xsl:attribute name="tuid">
-                                    <xsl:value-of select="$OrgName"/>
+                                    <xsl:value-of select="concat('ORG:', $OrgName)"/>
                                 </xsl:attribute>
                             </reference>
                         </xsl:if>
@@ -645,11 +648,11 @@
     <xsl:template match="row">
 
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
         <xsl:variable name="BloodType" select="col[@field='Blood Type']"/>
         <xsl:variable name="Ethnicity" select="col[@field='Ethnicity']"/>
         <xsl:variable name="Teams" select="col[@field='Teams']"/>
         <xsl:variable name="Trainings" select="col[@field='Trainings']"/>
+        <xsl:variable name="TrainingsExternal" select="col[@field='External Trainings']"/>
         <xsl:variable name="Certificates" select="col[@field='Certificates']"/>
         <xsl:variable name="DeployableRoles" select="col[@field='Deployable Roles']"/>
 
@@ -876,9 +879,7 @@
                         <xsl:with-param name="StaffID" select="$staffID"/>
                         <xsl:with-param name="Status">
                             <xsl:call-template name="lowercase">
-                                <xsl:with-param name="string">
-                                   <xsl:value-of select="col[@field='Status']"/>
-                                </xsl:with-param>
+                                <xsl:with-param name="string" select="col[@field='Status']"/>
                             </xsl:call-template>
                         </xsl:with-param>
                         <xsl:with-param name="type" select="$type"/>
@@ -910,37 +911,43 @@
             <!-- Awards -->
             <xsl:if test="col[@field='Award Type']/text() != ''">
                 <xsl:call-template name="Award">
-                    <xsl:with-param name="person_tuid">
-                        <xsl:value-of select="$person_tuid"/>
-                    </xsl:with-param>
+                    <xsl:with-param name="person_tuid" select="$person_tuid"/>
                 </xsl:call-template>
             </xsl:if>
 
             <!-- Disciplinary Record -->
             <xsl:if test="col[@field='Disciplinary Type']/text() != ''">
                 <xsl:call-template name="DisciplinaryAction">
-                    <xsl:with-param name="person_tuid">
-                        <xsl:value-of select="$person_tuid"/>
-                    </xsl:with-param>
+                    <xsl:with-param name="person_tuid" select="$person_tuid"/>
                 </xsl:call-template>
             </xsl:if>
 
             <!-- Job Roles that a deployable is credentialled for -->
             <xsl:call-template name="splitList">
-                <xsl:with-param name="list"><xsl:value-of select="$DeployableRoles"/></xsl:with-param>
+                <xsl:with-param name="list" select="$DeployableRoles"/>
                 <xsl:with-param name="arg">deployablerole_ref</xsl:with-param>
             </xsl:call-template>
 
             <!-- Teams -->
             <xsl:call-template name="splitList">
-                <xsl:with-param name="list"><xsl:value-of select="$Teams"/></xsl:with-param>
+                <xsl:with-param name="list" select="$Teams"/>
                 <xsl:with-param name="arg">team</xsl:with-param>
             </xsl:call-template>
 
             <!-- Trainings -->
             <xsl:call-template name="splitList">
-                <xsl:with-param name="list"><xsl:value-of select="$Trainings"/></xsl:with-param>
+                <xsl:with-param name="list" select="$Trainings"/>
                 <xsl:with-param name="arg">training</xsl:with-param>
+                <xsl:with-param name="org" select="$OrgName"/>
+            </xsl:call-template>
+
+            <!-- External Trainings -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list" select="$TrainingsExternal"/>
+                <xsl:with-param name="arg">training</xsl:with-param>
+                <xsl:with-param name="arg2">T</xsl:with-param>
+                <!-- Org still present for filtering -->
+                <xsl:with-param name="org" select="$OrgName"/>
             </xsl:call-template>
 
             <!-- Training:XXXX -->
@@ -951,6 +958,7 @@
                         <xsl:with-param name="item" select="normalize-space(substring-after(@field, ':'))"/>
                         <xsl:with-param name="arg">training</xsl:with-param>
                         <xsl:with-param name="date" select="$Date"/>
+                        <xsl:with-param name="org" select="$OrgName"/>
                     </xsl:call-template>
                 </xsl:if>
             </xsl:for-each>
@@ -961,7 +969,7 @@
 -->
             <!-- Certificates -->
             <xsl:call-template name="splitList">
-                <xsl:with-param name="list"><xsl:value-of select="$Certificates"/></xsl:with-param>
+                <xsl:with-param name="list" select="$Certificates"/>
                 <xsl:with-param name="arg">certificate</xsl:with-param>
             </xsl:call-template>
 
@@ -980,7 +988,7 @@
 
         <!-- Job Roles that a deployable is credentialled for -->
         <xsl:call-template name="splitList">
-            <xsl:with-param name="list"><xsl:value-of select="$DeployableRoles"/></xsl:with-param>
+            <xsl:with-param name="list" select="$DeployableRoles"/>
             <xsl:with-param name="arg">deployablerole</xsl:with-param>
         </xsl:call-template>
 
@@ -1708,7 +1716,10 @@
     <xsl:template name="resource">
         <xsl:param name="item"/>
         <xsl:param name="arg"/>
-        <xsl:param name="date"/>
+        <xsl:param name="arg2"/>
+        <xsl:param name="org"/>
+        <xsl:param name="date"/> <!-- Not accessible via SplitList currently -->
+
         <xsl:choose>
             <!-- Contacts -->
             <xsl:when test="$arg='email'">
@@ -1766,6 +1777,10 @@
                         <resource name="hrm_course">
                             <xsl:attribute name="tuid"><xsl:value-of select="$item"/></xsl:attribute>
                             <data field="name"><xsl:value-of select="$item"/></data>
+                            <reference field="organisation_id" resource="org_organisation">
+                                <xsl:attribute name="tuid"><xsl:value-of select="concat('ORG:', $org)"/></xsl:attribute>
+                            </reference>
+                            <data field="external"><xsl:value-of select="$arg2"/></data>
                         </resource>
                     </reference>
                     <xsl:if test="$date!='' and $date!='TRUE' and $date!='True' and $date!='true' and $date!='YES' and $date!='Yes' and $date!='yes'">

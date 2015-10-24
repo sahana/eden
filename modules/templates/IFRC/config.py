@@ -1123,6 +1123,16 @@ def config(settings):
 
     settings.hrm.teams_orgs = hrm_teams_orgs
 
+    def hrm_trainings_external(default):
+        """ Whether Training Courses should be split into Internal & External """
+
+        root_org = current.auth.root_org_name()
+        if root_org == CRMADA:
+            return True
+        return False
+
+    settings.hrm.trainings_external = hrm_trainings_external
+
     def hrm_vol_active(default):
         """ Whether & How to track Volunteers as Active """
 
@@ -1703,13 +1713,18 @@ def config(settings):
 
         list_fields = ["code",
                        "name",
-                       "organisation_id",
-                       (T("Sectors"), "course_sector.sector_id"),
                        ]
+        ADMIN = current.session.s3.system_roles.ADMIN
+        if current.auth.s3_has_role(ADMIN):
+            list_fields.append("organisation_id")
+        if settings.get_hrm_trainings_external():
+            list_fields.append("external")
+        list_fields.append((T("Sectors"), "course_sector.sector_id"))
 
         from s3 import S3SQLCustomForm, S3SQLInlineLink
         crud_form = S3SQLCustomForm("code",
                                     "name",
+                                    "external",
                                     "organisation_id",
                                     S3SQLInlineLink("sector",
                                                     field = "sector_id",
@@ -3315,6 +3330,12 @@ def config(settings):
             dtable = s3db.pr_person_details
             dtable.religion.readable = dtable.religion.writable = False
             dtable.nationality.default = "MG"
+            # Simplify UI: Just have 1 Address
+            s3db.add_components("pr_person",
+                                pr_address = {"joinby": "pe_id",
+                                              "multiple": False,
+                                              },
+                                )
         elif root_org == IRCS:
             settings.hrm.activity_types = None
             settings.hrm.use_id = False
@@ -3399,7 +3420,12 @@ def config(settings):
 
             component_name = r.component_name
             method = r.method
-            if component_name == "appraisal":
+            if component_name == "address":
+                if root_org == CRMADA:
+                    ctable = r.component.table
+                    ctable.type.readable = ctable.type.writable = False
+
+            elif component_name == "appraisal":
                 atable = r.component.table
                 atable.organisation_id.readable = atable.organisation_id.writable = False
                 # Organisation needs to be an NS
@@ -3418,6 +3444,7 @@ def config(settings):
                                            filterby = "type",
                                            filter_opts = (4,),
                                            )
+
             elif component_name == "experience":
                 if root_org == IRCS:
                     ctable = r.component.table

@@ -2691,6 +2691,12 @@ class S3Config(Storage):
         """
         return self.__lazy("hrm", "teams_orgs", default=1)
 
+    def get_hrm_trainings_external(self):
+        """
+            Whether Training Courses should be split into Internal & External
+        """
+        return self.__lazy("hrm", "trainings_external", default=False)
+
     def get_hrm_cv_tab(self):
         """
             Whether Human Resources should consolidate tabs into 1x CV page:

@@ -1258,7 +1258,7 @@ def s3_date(name="date", **attr):
         # @todo: deprecate (once S3CalendarWidget supports all legacy options)
 
         # Must use Gregorian calendar
-        calendar == "Gregorian"
+        calendar = "Gregorian"
 
         # Past/future options
         if past is not None:

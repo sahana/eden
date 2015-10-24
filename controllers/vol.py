@@ -444,6 +444,21 @@ def activity():
                                         "comments",
                                         )
 
+            # Limit the Dates to the same as the Activity
+            record = r.record
+            start_date = record.date
+            end_date = record.end_date
+            if end_date is None or start_date == end_date:
+                field = s3db.vol_activity_hours.date
+                field.default = start_date
+                field.readable = field.writable = False
+            else:
+                # @ToDo: Check widget options (currently this branch is never taken)
+                s3db.vol_activity_hours.date.requires = IS_UTC_DATE(calendar="Gregorian",
+                                                                    minimum=start_date,
+                                                                    maximum=end_date,
+                                                                    )
+
             s3db.configure("vol_activity_hours",
                            crud_form = crud_form,
                            )

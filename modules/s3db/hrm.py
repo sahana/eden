@@ -2528,6 +2528,8 @@ class S3HRSkillModel(S3Model):
         # =========================================================================
         # Courses
         #
+        external_courses = settings.get_hrm_trainings_external()
+
         tablename = "hrm_course"
         define_table(tablename,
                      Field("code", length=64,
@@ -2544,6 +2546,13 @@ class S3HRSkillModel(S3Model):
                                      readable = is_admin,
                                      writable = is_admin,
                                      ),
+                     Field("external", "boolean",
+                           default = False,
+                           label = T("External"),
+                           represent = s3_yes_no_represent,
+                           readable = external_courses,
+                           writable = external_courses,
+                           ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -2580,7 +2589,8 @@ class S3HRSkillModel(S3Model):
                                                 IS_ONE_OF(db, "hrm_course.id",
                                                           represent,
                                                           filterby="organisation_id",
-                                                          filter_opts=filter_opts)),
+                                                          filter_opts=filter_opts,
+                                                          )),
                                     sortby = "name",
                                     comment = course_help,
                                     # Comment this to use a Dropdown & not an Autocomplete
@@ -2793,7 +2803,8 @@ class S3HRSkillModel(S3Model):
                      training_event_id(readable = False,
                                        writable = False,
                                        ),
-                     course_id(empty=False),
+                     course_id(empty = False,
+                               ),
                      s3_datetime(),
                      s3_datetime("end_date",
                                  label = T("End Date"),
@@ -5899,11 +5910,12 @@ def hrm_rheader(r, tabs=[], profile=False):
     resourcename = r.name
 
     if resourcename == "person":
+        s3db = current.s3db
         settings = current.deployment_settings
         get_vars = r.get_vars
         hr = get_vars.get("human_resource.id", None)
         if hr:
-            name = current.s3db.hrm_human_resource_represent(int(hr))
+            name = s3db.hrm_human_resource_represent(int(hr))
         else:
             name = s3_fullname(record)
         group = get_vars.get("group", None)
@@ -5932,7 +5944,6 @@ def hrm_rheader(r, tabs=[], profile=False):
                 now = r.utcnow
                 last_year = now - datetime.timedelta(days=365)
                 db = current.db
-                s3db = current.s3db
                 if vol_experience == "activity":
                     ahtable = db.vol_activity_hours
                     attable = db.vol_activity_hours_activity_type
@@ -5943,6 +5954,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                     dfield = ahtable.date
                     fields = [dfield,
                               ahtable.hours,
+                              ahtable.id,
                               #ahtable.training,
                               attable.activity_type_id,
                               ]
@@ -5978,9 +5990,17 @@ def hrm_rheader(r, tabs=[], profile=False):
                 last_month = now - datetime.timedelta(days=30)
                 last_month = last_month.date()
                 if vol_experience == "activity":
+                    activity_hour_ids = []
+                    ahappend = activity_hour_ids.append
                     activity_type_ids = []
+                    atappend = activity_type_ids.append
                     for row in rows:
-                        activity_type_ids.append(row["vol_activity_hours_activity_type.activity_type_id"])
+                        atappend(row["vol_activity_hours_activity_type.activity_type_id"])
+                        ah_id = row["vol_activity_hours.id"]
+                        if ah_id in activity_hour_ids:
+                            # Don't double-count when more than 1 Activity Type
+                            continue
+                        ahappend(ah_id)
                         hours = row["vol_activity_hours.hours"]
                         if hours:
                             programme_hours_year += hours
@@ -5990,7 +6010,13 @@ def hrm_rheader(r, tabs=[], profile=False):
                     activity_type_ids = list(set(activity_type_ids))
                     # Represent
                     activity_types = s3db.vol_activity_activity_type.activity_type_id.represent.bulk(activity_type_ids)
-                    activity_types = ", ".join(activity_types.values())
+                    NONE = current.messages["NONE"]
+                    if activity_types == [NONE]:
+                        activity_types = NONE
+                    else:
+                        activity_types = activity_types.values()
+                        activity_types.remove(NONE)
+                        activity_types = ", ".join([s3_unicode(v) for v in activity_types])
                 else:
                     for row in rows:
                         hours = row.hours
@@ -7790,18 +7816,46 @@ class hrm_CV(S3Method):
                                          )
                 profile_widgets.append(experience_widget)
             if settings.get_hrm_use_trainings():
-                training_widget = dict(label = "Training",
-                                       label_create = "Add Training",
-                                       type = "datatable",
-                                       actions = dt_row_actions("training"),
-                                       tablename = "hrm_training",
-                                       context = "person",
-                                       create_controller = controller,
-                                       create_function = "person",
-                                       create_component = "training",
-                                       pagesize = None, # all records
-                                       )
-                profile_widgets.append(training_widget)
+                if settings.get_hrm_trainings_external():
+                    training_widget = dict(label = "Internal Training",
+                                           label_create = "Add Internal Training",
+                                           type = "datatable",
+                                           actions = dt_row_actions("training"),
+                                           tablename = "hrm_training",
+                                           context = "person",
+                                           filter = FS("course_id$external") == False,
+                                           create_controller = controller,
+                                           create_function = "person",
+                                           create_component = "training",
+                                           pagesize = None, # all records
+                                           )
+                    profile_widgets.append(training_widget)
+                    ext_training_widget = dict(label = "External Training",
+                                               label_create = "Add External Training",
+                                               type = "datatable",
+                                               actions = dt_row_actions("training"),
+                                               tablename = "hrm_training",
+                                               context = "person",
+                                               filter = FS("course_id$external") == True,
+                                               create_controller = controller,
+                                               create_function = "person",
+                                               create_component = "training",
+                                               pagesize = None, # all records
+                                               )
+                    profile_widgets.append(ext_training_widget)
+                else:
+                    training_widget = dict(label = "Training",
+                                           label_create = "Add Training",
+                                           type = "datatable",
+                                           actions = dt_row_actions("training"),
+                                           tablename = "hrm_training",
+                                           context = "person",
+                                           create_controller = controller,
+                                           create_function = "person",
+                                           create_component = "training",
+                                           pagesize = None, # all records
+                                           )
+                    profile_widgets.append(training_widget)
             if settings.get_hrm_use_skills():
                 skills_widget = dict(label = "Skills",
                                      label_create = "Add Skill",

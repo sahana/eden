@@ -5,7 +5,7 @@
     <!-- **********************************************************************
          S3CSV Common Templates
 
-         Copyright (c) 2010-14 Sahana Software Foundation
+         Copyright (c) 2010-15 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -104,12 +104,16 @@
          @param list: the string containing the list
          @param sep: the list separator
          @param arg: argument to be passed on to the "resource" template
+         @param org: argument to be passed on to the "resource" template
+
+         NB You probably want to look at xml/commons.xsl instead DUPE, DUPE, DUPE
     -->
     <xsl:template name="splitList">
 
         <xsl:param name="list"/>
         <xsl:param name="listsep" select="','"/>
         <xsl:param name="arg"/>
+        <xsl:param name="org"/>
 
         <xsl:if test="$listsep">
             <xsl:choose>
@@ -123,11 +127,13 @@
                     <xsl:call-template name="resource">
                         <xsl:with-param name="item" select="normalize-space($head)"/>
                         <xsl:with-param name="arg" select="$arg"/>
+                        <xsl:with-param name="org" select="$org"/>
                     </xsl:call-template>
                     <xsl:call-template name="splitList">
                         <xsl:with-param name="list" select="$tail"/>
                         <xsl:with-param name="listsep" select="$listsep"/>
                         <xsl:with-param name="arg" select="$arg"/>
+                        <xsl:with-param name="org" select="$org"/>
                     </xsl:call-template>
                 </xsl:when>
                 <xsl:otherwise>
@@ -135,6 +141,7 @@
                         <xsl:call-template name="resource">
                             <xsl:with-param name="item" select="normalize-space($list)"/>
                             <xsl:with-param name="arg" select="$arg"/>
+                            <xsl:with-param name="org" select="$org"/>
                         </xsl:call-template>
                     </xsl:if>
                 </xsl:otherwise>

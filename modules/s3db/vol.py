@@ -1476,15 +1476,15 @@ def vol_person_controller():
         - includes components relevant to HRM
     """
 
+    T = current.T
     db = current.db
+    s3db = current.s3db
     get_vars = current.request.get_vars
-    resourcename = "person"
     response = current.response
     s3 = response.s3
-    s3db = current.s3db
     session = current.session
     settings = current.deployment_settings
-    T = current.T
+    resourcename = "person"
 
     configure = s3db.configure
     set_method = s3db.set_method
@@ -1659,7 +1659,20 @@ def vol_person_controller():
                 set_org_dependent_field("pr_person_details", "company")
 
             else:
-                if r.component_name == "hours":
+                component_name = r.component_name
+                if component_name == "asset":
+                    # Edits should always happen via the Asset Log
+                    # @ToDo: Allow this method too, if we can do so safely
+                    configure("asset_asset",
+                              insertable = False,
+                              editable = False,
+                              deletable = False,
+                              )
+
+                elif component_name == "group_membership":
+                    s3db.hrm_configure_pr_group_membership()
+
+                elif component_name == "hours":
                     # Exclude records which are just to link to Programme
                     component_table = r.component.table
                     filter = (r.component.table.hours != None)
@@ -1667,7 +1680,7 @@ def vol_person_controller():
                     component_table.training.readable = False
                     component_table.training_id.readable = False
 
-                elif r.component_name == "physical_description":
+                elif component_name == "physical_description":
                     # Hide all but those details that we want
                     # Lock all the fields
                     table = r.component.table
@@ -1679,16 +1692,27 @@ def vol_person_controller():
                     table.medical_conditions.writable = table.medical_conditions.readable = True
                     table.other_details.writable = table.other_details.readable = True
 
-                elif r.component_name == "asset":
-                    # Edits should always happen via the Asset Log
-                    # @ToDo: Allow this method too, if we can do so safely
-                    configure("asset_asset",
-                              insertable = False,
-                              editable = False,
-                              deletable = False)
-
-                elif r.component_name == "group_membership":
-                    s3db.hrm_configure_pr_group_membership()
+                elif component_name == "training":
+                    external = get_vars.get("~.course_id$external")
+                    if external is not None:
+                        table = s3db.hrm_course
+                        query = (table.deleted == False)
+                        ADMIN = session.s3.system_roles.ADMIN
+                        if current.auth.s3_has_role(ADMIN):
+                            query &= ((table.organisation_id == root_org) | \
+                                      (table.organisation_id == None))
+                        if external == "True":
+                            query &= (table.external == True)
+                        else:
+                            query &= (table.external == False)
+                        rows = db(query).select(table.id)
+                        filter_opts = [row.id for row in rows]
+                        field = s3db.hrm_training.course_id
+                        field.requires = IS_ONE_OF(db, "hrm_course.id",
+                                                   field.represent,
+                                                   filterby="id",
+                                                   filter_opts=filter_opts,
+                                                   )
 
             if r.method == "record" or r.component_name == "human_resource":
                 table = s3db.hrm_human_resource
