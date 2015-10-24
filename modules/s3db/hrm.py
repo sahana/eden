@@ -5984,7 +5984,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                         hours = row["vol_activity_hours.hours"]
                         if hours:
                             programme_hours_year += hours
-                            if row.date > last_month:
+                            if row["vol_activity_hours.date"] > last_month:
                                 programme_hours_month += hours
                     # Uniquify
                     activity_type_ids = list(set(activity_type_ids))
