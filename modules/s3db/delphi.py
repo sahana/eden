@@ -97,7 +97,7 @@ class S3DelphiModel(S3Model):
             msg_list_empty = T("No Groups currently defined"))
 
         configure(tablename,
-                  deduplicate = self.group_duplicate,
+                  deduplicate = S3Duplicate(),
                   list_fields = ["id",
                                  "name",
                                  "description",
@@ -111,7 +111,7 @@ class S3DelphiModel(S3Model):
                        )
 
         group_id = S3ReusableField("group_id", "reference %s" % tablename,
-                                   notnull=True,
+                                   notnull = True,
                                    label = T("Problem Group"),
                                    represent = self.delphi_group_represent,
                                    requires = IS_ONE_OF(db, "delphi_group.id",
@@ -205,7 +205,7 @@ class S3DelphiModel(S3Model):
                            label = T("Description"),
                            represent = s3_comments_represent,
                            ),
-                     Field("criteria", "text", notnull=True,
+                     Field("criteria", "text",
                            label = T("Criteria"),
                            ),
                      Field("active", "boolean",
@@ -234,7 +234,7 @@ class S3DelphiModel(S3Model):
             msg_list_empty = T("No Problems currently defined"))
 
         configure(tablename,
-                  deduplicate = self.problem_duplicate,
+                  deduplicate = S3Duplicate(),
                   list_fields = ["id",
                                  "group_id",
                                  "code",
@@ -409,7 +409,10 @@ class S3DelphiModel(S3Model):
     @staticmethod
     def delphi_problem_represent(id, row=None, show_link=False,
                                  solutions=True):
-        """ FK representation """
+        """
+            FK representation
+            @ToDo: Migrate to S3Represent
+        """
 
         if not row:
             db = current.db
@@ -431,59 +434,6 @@ class S3DelphiModel(S3Model):
                 return row.name
         except:
             return current.messages.UNKNOWN_OPT
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def group_duplicate(item):
-        """
-          This callback will be called when importing records
-          it will look to see if the record being imported is a duplicate.
-
-          @param item: An S3ImportItem object which includes all the details
-                       of the record being imported
-
-          If the record is a duplicate then it will set the item method to update
-
-          Rules for finding a duplicate:
-           - Look for a record with the same name, ignoring case
-        """
-
-        table = item.table
-        data = item.data
-        name = "name" in data and data.name
-
-        query = (table.name.lower() == name.lower())
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def problem_duplicate(item):
-        """
-          This callback will be called when importing records
-          it will look to see if the record being imported is a duplicate.
-
-          @param item: An S3ImportItem object which includes all the details
-                       of the record being imported
-
-          If the record is a duplicate then it will set the item method to update
-
-          Rules for finding a duplicate:
-           - Look for a record with the same name, ignoring case
-        """
-
-        table = item.table
-        name = "name" in item.data and item.data.name
-
-        query = (table.name.lower() == name.lower())
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 def delphi_solution_comments(row):

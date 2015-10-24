@@ -5980,7 +5980,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                 if vol_experience == "activity":
                     activity_type_ids = []
                     for row in rows:
-                        activity_type_ids.append(row["vol_activity_hours.activity_type_id"])
+                        activity_type_ids.append(row["vol_activity_hours_activity_type.activity_type_id"])
                         hours = row["vol_activity_hours.hours"]
                         if hours:
                             programme_hours_year += hours
@@ -6072,7 +6072,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                               TH("%s:" % T("Training Hours (Year)")),
                               str(training_hours_year)
                               )
-                    row4 - ""
+                    row4 = ""
 
                 tbl = TABLE(TR(TH(name,
                                   _colspan=4)
