@@ -1730,15 +1730,13 @@ def cap_rheader(r):
                                   error
                                   )
                 else:
+                    action_btn = None
+                    msg_error_btn = None
                     if not (row and row.id):
                         error = DIV(T("You need to create at least one alert information item in order to be able to broadcast this alert!"),
                                     _class="error")
                         export_btn = ""
-                        action_btn = None
-                        msg_type_btn = False
                     else:
-                        msg_type_btn = False
-                        action_btn = None
                         error = ""
                         export_btn = A(DIV(_class="export_cap_large"),
                                        _href=URL(c="cap", f="alert", args=["%s.cap" % alert_id]),
@@ -1795,7 +1793,6 @@ def cap_rheader(r):
 
                         if record.approved_by is not None:                            
                             if current.auth.s3_has_permission("create", "cap_alert"):
-                                msg_type_btn = True
                                 msg_update_btn = A(T("Update Alert"),
                                                    _id = record.id,
                                                    _data = "Update",
@@ -1865,7 +1862,7 @@ def cap_rheader(r):
                     if action_btn:
                         rheader.insert(1, TR(TD(action_btn)))
 
-                    if msg_type_btn:
+                    if msg_error_btn is not None:
                         rheader.insert(1, TR(TD(msg_error_btn)))
                         rheader.insert(1, TR(TD(msg_cancel_btn)))
                         rheader.insert(1, TR(TD(msg_update_btn)))
