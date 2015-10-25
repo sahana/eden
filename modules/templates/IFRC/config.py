@@ -4426,7 +4426,16 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_project_location_resource(r, tablename):
 
-        from s3 import S3SQLCustomForm, S3SQLInlineComponentCheckbox
+        from s3 import S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponentCheckbox
+
+        s3db = current.s3db
+
+        s3db.project_location.location_id.widget = \
+            S3LocationSelector(show_postcode = False,
+                               show_latlon = False,
+                               show_map = False,
+                               )
+
         crud_form = S3SQLCustomForm(
             "project_id",
             "location_id",
@@ -4448,9 +4457,9 @@ def config(settings):
             "comments",
             )
 
-        current.s3db.configure(tablename,
-                               crud_form = crud_form,
-                               )
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
 
     settings.customise_project_location_resource = customise_project_location_resource
 

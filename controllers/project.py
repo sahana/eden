@@ -408,15 +408,15 @@ def project():
                                       read_url=read_url,
                                       update_url=update_url)
 
-            elif component_name == "indicator":
-                # Open should open the profile page
-                read_url = URL(f="indicator",
-                               args=["[id]", "profile"])
-                update_url = URL(f="indicator",
-                                 args=["[id]", "profile"])
-                s3_action_buttons(r,
-                                  read_url=read_url,
-                                  update_url=update_url)
+            #elif component_name == "indicator":
+            #    # Open should open the profile page
+            #    read_url = URL(f="indicator",
+            #                   args=["[id]", "profile"])
+            #    update_url = URL(f="indicator",
+            #                     args=["[id]", "profile"])
+            #    s3_action_buttons(r,
+            #                      read_url=read_url,
+            #                      update_url=update_url)
 
             elif component_name == "task" and r.component_id:
                 # Put Comments in rfooter
@@ -1079,6 +1079,7 @@ def indicator():
 
     def prep(r):
         if r.method == "profile":
+            # @ToDo: Needs Edit button
             table = r.table
             record = r.record
             code = record.code
