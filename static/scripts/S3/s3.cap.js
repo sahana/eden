@@ -1,5 +1,41 @@
 (function($, JSON) {
 
+    /**
+     * Bind button event handlers for clone
+     */
+    var bindCloneActions = function() {
+        $('.cap-clone-update').unbind('.cap').bind('click.cap', function() {
+            clone(this.id, $(this).attr('data'));
+        });
+    };
+
+    /**
+     * Clone (Ajax)
+     *
+     * @param recordID - record ID for which clone is called
+     * @param msgType - one of the options for msgType change(Update, Cancel and Clear)
+     */
+    var clone = function(recordID, msgType) {
+
+        $.ajax({
+            'url': S3.Ap.concat('/cap/alert/') + recordID + '/' + 'clone?msg_type=' + msgType,
+            'success': function(data) {
+                window.location.href = S3.Ap.concat('/cap/alert/') + data['message'];
+            },
+            'error': function(request, status, error) {
+                var msg;
+                if (error == 'UNAUTHORIZED') {
+                    msg = i18n.gis_requires_login;
+                } else {
+                    msg = request.responseText;
+                }
+                console.log(msg);
+            },
+            'type': 'POST',
+            'dataType': 'json'
+        });
+    };
+
     function get_table($form) {
         var _formname = $form.find('[name=_formname]').val();
         var alert_table = 'cap_alert';
@@ -314,5 +350,7 @@
                 }
             }
         });
+        // bind at document-ready
+        bindCloneActions();
     });
 })(jQuery, JSON, undefined);
