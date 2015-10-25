@@ -65,9 +65,14 @@ def config(settings):
     # Don't auto-approve so that can save draft
     settings.auth.record_approval_manual = ("cap_alert",)
 
-    # =============================================================================
+    # =========================================================================
     # Module Settings
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    # CAP Settings
+    # Uncomment this according to country profile
+    #settings.cap.restrict_fields = True
+    
+    # -------------------------------------------------------------------------
     # Notifications
 
     # Template for the subject line in update notifications
@@ -79,7 +84,7 @@ def config(settings):
     # http://docs.attachmate.com/reflection/ftp/15.6/guide/en/index.htm?toc.htm?6503.htm
     settings.sync.upload_filename = "$s-%s" % ("recent_alert")
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # L10n (Localization) settings
     languages = OrderedDict([
         #("ar", "العربية"),

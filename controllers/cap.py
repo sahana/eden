@@ -162,24 +162,24 @@ def alert():
                                editable=False,
                                deletable=False,
                                )
-            # Uncomment or add to this according to country CAP profile
-            #if r.record.msg_type in ("Update", "Cancel", "Error"):
-                # Use case for change in msg_type
-            #    atable = r.table
-            #    for f in ("template_id",
-            #              "sender",
-            #              "status",
-            #              "msg_type",
-            #              "source",
-            #              "scope",
-            #              "restriction",
-            #              "addresses",
-            #              "codes",
-            #              "note",
-            #              "reference",
-            #              "incidents",
-            #              ):
-            #        atable[f].writable = False
+            if settings.get_cap_restrict_fields():
+                if r.record.msg_type in ("Update", "Cancel", "Error"):
+                    # Use case for change in msg_type
+                    atable = r.table
+                    for f in ("template_id",
+                              "sender",
+                              "status",
+                              "msg_type",
+                              "source",
+                              "scope",
+                              "restriction",
+                              "addresses",
+                              "codes",
+                              "note",
+                              "reference",
+                              "incidents",
+                              ):
+                        atable[f].writable = False
         else:
             r.resource.add_filter(r.table.is_template == False)
             s3.formats["cap"] = r.url() # .have added by JS
@@ -573,7 +573,7 @@ def alert():
                 alert_id = request.args(0)
                 # Check for prepopulate
                 if alert_id:
-                    itable.web.default = current.deployment_settings.get_base_public_url()+\
+                    itable.web.default = settings.get_base_public_url()+\
                                          URL(c="cap", f="alert", args=alert_id)
 
                 if r.record.approved_by is not None:
@@ -583,19 +583,19 @@ def alert():
                                    editable = False,
                                    deletable = False,
                                    )
-                # Uncomment or add to this according to country CAP profile 
-                #if r.record.msg_type in ("Update", "Cancel", "Error"):
-                    # Use case for change in msg_type
-                #    for f in ("language",
-                #              "category",
-                #              "event",
-                #              "event_type_id",
-                #              "audience",
-                #              "event_code",
-                #              "sender_name",
-                #              "parameter",
-                #              ):
-                #        itable[f].writable = False
+                if settings.get_cap_restrict_fields():
+                    if r.record.msg_type in ("Update", "Cancel", "Error"):
+                        # Use case for change in msg_type
+                        for f in ("language",
+                                  "category",
+                                  "event",
+                                  "event_type_id",
+                                  "audience",
+                                  "event_code",
+                                  "sender_name",
+                                  "parameter",
+                                  ):
+                            itable[f].writable = False
 
             elif r.component_name == "area":
                 atable = r.component.table
@@ -893,7 +893,7 @@ def template():
             alert_id = request.args(0)
             # Check for prepopulate
             if alert_id:
-                itable.web.default = current.deployment_settings.get_base_public_url()+\
+                itable.web.default = settings.get_base_public_url()+\
                                      URL(c="cap", f="alert", args=alert_id)
 
         elif r.component_name == "resource":
