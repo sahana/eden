@@ -81,6 +81,14 @@ class S3DVRModel(S3Model):
                            label = T("Case Number"),
                            ),
                      self.org_organisation_id(),
+                     self.super_link("site_id", "org_site",
+                                    filterby="id",
+                                    filter_opts=current.auth.permitted_facilities(),
+                                    label=T("Place"),
+                                    readable = True,
+                                    writable = True,
+                                    represent = self.org_site_represent,                                    
+                                    updateable = True,),
                      self.pr_person_id(
                         # @ToDo: Modify this to update location_id if the selected
                         #        person has a Home Address already
