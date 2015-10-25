@@ -5419,6 +5419,8 @@ def project_indicator_summary_report(r, **attr):
         dates = set(dates)
 
         # Sort
+        dates = [d for d in dates]
+        dates.sort()
         goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))
         for goal in goals:
             outcomes = OrderedDict(sorted(goals[goal]["outcomes"].items(), key=lambda x: x[1]["code"]))
