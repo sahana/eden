@@ -884,7 +884,7 @@
 "Participants": "Katılımcılar",
 "Pass": "Geç",
 "Password": "Şifre",
-"Pending": "Bekliyor",
+"Pending": "Beklemede",
 "Performance Rating": "Performans Değerleme",
 "Person Details": "Kişi Detayları",
 "Person added to Team": "Kişi Takıma eklendi",
@@ -1498,5 +1498,7 @@
 "Normal Address":"Daimi Adresi",
 "Create Case":"Vaka Ekle",
 "This Case Number is already used!":"Bu vaka numarası kullanılmış!",
-"Create Need":"İhtiyaç Ekle"
+"Create Need":"İhtiyaç Ekle",
+"Followup Date":"Takip Tarihi",
+"Closed":"Kapalı"
 }

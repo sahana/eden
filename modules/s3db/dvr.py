@@ -57,6 +57,50 @@ class S3DVRModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         configure = self.configure
+        
+        # ---------------------------------------------------------------------
+        # Needs
+        #
+        tablename = "dvr_need"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_NEED = T("Create Need")
+        crud_strings[tablename] = Storage(
+            label_create = ADD_NEED,
+            title_display = T("Need Details"),
+            title_list = T("Needs"),
+            title_update = T("Edit Need"),
+            label_list_button = T("List Needs"),
+            label_delete_button = T("Delete Need"),
+            msg_record_created = T("Need added"),
+            msg_record_modified = T("Need updated"),
+            msg_record_deleted = T("Need deleted"),
+            msg_list_empty = T("No Needs found")
+        )
+
+        represent = S3Represent(lookup=tablename, translate=True)
+        need_id = S3ReusableField("need_id", "reference %s" % tablename,
+                                  label = T("Need"),
+                                  ondelete = "RESTRICT",
+                                  represent = represent,
+                                  requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "dvr_need.id",
+                                                          represent)),
+                                  comment=S3PopupLink(c = "dvr",
+                                                      f = "need",
+                                                      label = ADD_NEED,
+                                                      ),
+                                  )
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
 
         # ---------------------------------------------------------------------
         # Case
@@ -81,6 +125,14 @@ class S3DVRModel(S3Model):
                            label = T("Case Number"),
                            ),
                      self.org_organisation_id(),
+                     self.super_link("site_id", "org_site",
+                                    filterby="id",
+                                    filter_opts=current.auth.permitted_facilities(),
+                                    label=current.deployment_settings.get_org_site_label(),
+                                    readable = True,
+                                    writable = True,
+                                    represent = self.org_site_represent,                                    
+                                    updateable = True,),
                      self.pr_person_id(
                         # @ToDo: Modify this to update location_id if the selected
                         #        person has a Home Address already
@@ -212,50 +264,7 @@ class S3DVRModel(S3Model):
                   crud_form = crud_form,
                   report_options = report_options,
                   )
-
-        # ---------------------------------------------------------------------
-        # Needs
-        #
-        tablename = "dvr_need"
-        define_table(tablename,
-                     Field("name",
-                           label = T("Name"),
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        # CRUD Strings
-        ADD_NEED = T("Create Need")
-        crud_strings[tablename] = Storage(
-            label_create = ADD_NEED,
-            title_display = T("Need Details"),
-            title_list = T("Needs"),
-            title_update = T("Edit Need"),
-            label_list_button = T("List Needs"),
-            label_delete_button = T("Delete Need"),
-            msg_record_created = T("Need added"),
-            msg_record_modified = T("Need updated"),
-            msg_record_deleted = T("Need deleted"),
-            msg_list_empty = T("No Needs found")
-        )
-
-        represent = S3Represent(lookup=tablename, translate=True)
-        need_id = S3ReusableField("need_id", "reference %s" % tablename,
-                                  label = T("Need"),
-                                  ondelete = "RESTRICT",
-                                  represent = represent,
-                                  requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, "dvr_need.id",
-                                                          represent)),
-                                  comment=S3PopupLink(c = "dvr",
-                                                      f = "need",
-                                                      label = ADD_NEED,
-                                                      ),
-                                  )
-
-        configure(tablename,
-                  deduplicate = S3Duplicate(),
-                  )
+        
 
         # ---------------------------------------------------------------------
         # Cases <> Needs
