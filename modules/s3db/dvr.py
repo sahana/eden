@@ -73,7 +73,14 @@ class S3DVRModel(S3Model):
             2: T("Pending"),
             3: T("Closed"),
         }
+<<<<<<< HEAD
 
+=======
+        
+        org_site_represent = self.org_site_represent
+        auth = current.auth
+        
+>>>>>>> 8470873... add site_id to dvr_case
         tablename = "dvr_case"
         define_table(tablename,
                      # @ToDo: Option to autogenerate these, like Waybills, et al
@@ -81,6 +88,13 @@ class S3DVRModel(S3Model):
                            label = T("Case Number"),
                            ),
                      self.org_organisation_id(),
+                     self.super_link("site_id", "org_site",
+                                    filterby="id",
+                                    filter_opts=auth.permitted_facilities(),
+                                    readable = True,
+                                    writable = True,
+                                    represent = org_site_represent,                                    
+                                    updateable = True,),
                      self.pr_person_id(
                         # @ToDo: Modify this to update location_id if the selected
                         #        person has a Home Address already
@@ -88,7 +102,11 @@ class S3DVRModel(S3Model):
                         represent = self.pr_PersonRepresent(show_link=True),
                         requires = IS_ADD_PERSON_WIDGET2(),
                         widget = S3AddPersonWidget2(controller="pr"),
+<<<<<<< HEAD
                      ),
+=======
+                     ),                     
+>>>>>>> 8470873... add site_id to dvr_case
                      #Field("damage", "integer",
                      #      label= T("Damage Assessment"),
                      #      represent = lambda opt: \
@@ -160,6 +178,7 @@ class S3DVRModel(S3Model):
 
         crud_form = S3SQLCustomForm("reference",
                                     "organisation_id",
+                                    "site_id",
                                     "status",
                                     "person_id",
                                     S3SQLInlineComponent("current_address",

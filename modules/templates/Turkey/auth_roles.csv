@@ -19,7 +19,6 @@ AUTHENTICATED,Authenticated,,,,inv_inv_item,,,,,,But not see any stock
 AUTHENTICATED,Authenticated,,,,asset_asset,,,,,,or Assets
 AUTHENTICATED,Authenticated,,msg,search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,,project,,,READ,,,,,
-AUTHENTICATED,Authenticated,,req,,,READ,,,,,Authenticated can see all Requests
 AUTHENTICATED,Authenticated,,supply,,,READ|CREATE,,,,,Authenticated  users can see the Supply Catalogue
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,asset,,,READ|CREATE|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,asset_asset,READ|CREATE|UPDATE|DELETE,,,,,
@@ -41,6 +40,12 @@ ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all recor
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,inv,,,READ|CREATE|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,inv,warehouse,,READ|CREATE|UPDATE|DELETE,,,,,
 ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,inv_inv_item,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,dvr,,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,dvr,case,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,dvr_case,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,inv_warehouse,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,org_office,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,org_facility,READ|CREATE|UPDATE|DELETE,,,,,
 HR_MANAGER,hr_manager,Human Resources Manager,hrm,,,READ|CREATE|UPDATE|DELETE,,,,,
 HR_MANAGER,hr_manager,Human Resources Manager,hrm,person,,READ|CREATE|UPDATE|DELETE,,,,,
 HR_MANAGER,hr_manager,Human Resources Manager,hrm,staff,,READ|CREATE|UPDATE|DELETE,,,,,
