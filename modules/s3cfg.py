@@ -2306,6 +2306,13 @@ class S3Config(Storage):
         """
 
         return self.cap.get("authorisation", True)
+    
+    def get_cap_restrict_fields(self):
+        """
+            Whether to restrict fields for update, cancel or error of alerts
+        """
+        
+        return self.cap.get("restrict_fields", False)
 
     # -------------------------------------------------------------------------
     # CMS: Content Management System

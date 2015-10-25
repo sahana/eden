@@ -2,8 +2,8 @@
 <div id='home'>
 <h1>{{=title}}</h1>
 <div class='subscribe-button'>
-{{fn = "alert.rss" if current.auth.s3_logged_in() else "public.rss"}}
-  <a href='/{{=appname}}/cap/{{=fn}}' target='_blank'><i class='icon-rss'></i>{{=T("RSS Feeds")}}</a>
+{{fn = "alert" if current.auth.s3_logged_in() else "public"}}
+  <a href='/{{=appname}}/cap/{{=fn}}.rss' target='_blank'><i class='icon-rss'></i>{{=T("RSS Feeds")}}</a>
 </div>
 <div class='large-3 columns'>
 <fieldset>
