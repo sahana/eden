@@ -26,6 +26,8 @@ class S3MainMenu(default.S3MainMenu):
             MM("Facilities", c="org", f="facility"),
             MM("Organizations", c="org", f="organisation"),
             homepage("gis"),
+            MM("About", c="cms", f="page", vars={"name": "About"}),
+            MM("Listserv", c="cms", f="page", vars={"name": "Listserv"}),
             MM("More", link=False)(
                 MM("Requests", c="req", f="req", vars = {"type": "1"}),
                 homepage("inv"),
