@@ -63,7 +63,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Import", m="import")
                     ),
-                    M("Facilities", f="facility")(
+                    M("Facilities", f="facility", m="summary")(
                         M("Create", m="create"),
                         M("Map", m="map"),
                         M("Import", m="import"),
