@@ -9,6 +9,7 @@ AUTHENTICATED,Authenticated,,pr,person,,READ|CREATE,READ|UPDATE,,,,Can edit thei
 AUTHENTICATED,Authenticated,,gis,,,READ,,,,,
 AUTHENTICATED,Authenticated,,org,,,READ,,,,,
 AUTHENTICATED,Authenticated,,sync,repository,,CREATE,READ|UPDATE|DELETE,,,,
+AUTHENTICATED,Authenticated,,cap,warning_priority,,READ,,,,,For subscriptions
 MAP_ADMIN,Map Admin,,gis,,,ALL,,,,,
 MAP_ADMIN,Map Admin,,cap,area,,READ|CREATE|UPDATE|DELETE,,,,,
 ALERT_EDITOR,Alert Editor,Can create the CAP Message and submit that for approval,cap,alert,,READ|CREATE|UPDATE,,,,,
