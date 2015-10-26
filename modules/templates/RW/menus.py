@@ -15,6 +15,15 @@ class S3MainMenu(default.S3MainMenu):
 
     # -------------------------------------------------------------------------
     @classmethod
+    def menu_help(cls, **attr):
+        """ Help Menu """
+
+        return [MM("About", f="about", right=True),
+                MM("Contact", f="contact", right=True),
+                ]
+
+    # -------------------------------------------------------------------------
+    @classmethod
     def menu_modules(cls):
         """ Custom Modules Menu """
 
