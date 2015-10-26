@@ -248,13 +248,14 @@ class WorkJobModel(S3Model):
                        "workers_assigned",
                        ]
 
+        # Table configuration
         configure(tablename,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   list_layout = work_JobListLayout(),
                   )
 
-        # Custom Methods
+        # Custom methods
         set_method("work", "job",
                    method = "signup",
                    action = work_SignUp,
@@ -476,13 +477,13 @@ class work_SignUp(S3Method):
         """
 
         output = {}
-        if r.http == "POST": # @todo: must become .json
+        if r.http == "POST":
             if r.representation == "json":
                 method = r.method
                 if method == "signup":
-                    return self.signup(r, **attr)
+                    output = self.signup(r, **attr)
                 elif method == "cancel":
-                    return self.cancel(r, **attr)
+                    output = self.cancel(r, **attr)
                 else:
                     r.error(405, current.ERROR.BAD_METHOD)
             else:
@@ -526,6 +527,10 @@ class work_SignUp(S3Method):
                           }
             assignment_id = atable.insert(**assignment)
             if assignment_id:
+                current.audit("create", "work", "assignment",
+                              record = assignment_id,
+                              representation = r.representation,
+                              )
                 assignment["id"] = assignment_id
                 # Post-process create
                 s3db.update_super(atable, assignment)
@@ -726,7 +731,13 @@ class work_JobListLayout(S3DataListLayout):
     # ---------------------------------------------------------------------
     def render_footer(self, list_id, item_id, resource, rfields, record):
         """
-            @todo: docstring
+            Render the card footer (including card action button)
+
+            @param list_id: the HTML ID of the list
+            @param item_id: the HTML ID of the item
+            @param resource: the S3Resource to render
+            @param rfields: the S3ResourceFields to render
+            @param record: the record as dict
         """
 
         T = current.T
