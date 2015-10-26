@@ -363,10 +363,12 @@ def dojs(dogis = False, warnings = True):
                      "popup",
                      "register_validation",
                      "select_person",
+                     "sync",
                      "timeline",
                      "ui.contacts",
                      "ui.embeddedcomponent",
                      "ui.locationselector",
+                     "work",
                      ):
         print "Compressing s3.%s.js" % filename
         inputFilename = os.path.join("..", "S3", "s3.%s.js" % filename)

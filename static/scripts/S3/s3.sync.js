@@ -4,6 +4,8 @@
 
 (function($, undefined) {
 
+    "use strict";
+
     /**
      * Show/hide fields in repository form depending on API type selected
      */

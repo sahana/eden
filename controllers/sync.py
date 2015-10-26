@@ -61,9 +61,10 @@ def repository():
 
                 # Inject script to show/hide relevant fields depending
                 # on the API type selected:
-                script = "/%s/static/scripts/S3/s3.sync.js" % r.application
-                if script not in s3.scripts:
-                    s3.scripts.append(script)
+                script = "s3.sync.js" if s3.debug else "s3.sync.min.js"
+                path = "/%s/static/scripts/S3/%s" % (appname, script)
+                if path not in s3.scripts:
+                    s3.scripts.append(path)
 
             elif r.id:
 

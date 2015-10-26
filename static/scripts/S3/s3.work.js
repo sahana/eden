@@ -4,6 +4,8 @@
 
 (function($, undefined) {
 
+    "use strict";
+
     /**
      * Bind button event handlers for sign-up and cancellation
      */

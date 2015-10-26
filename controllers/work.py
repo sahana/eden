@@ -64,9 +64,10 @@ def job():
         if r.representation == "html" and r.method == "datalist":
             # View template and script for job list
             response.view = "work/joblist.html"
-            script = "/%s/static/scripts/S3/s3.work.js" % r.application
-            if script not in s3.scripts:
-                s3.scripts.append(script)
+            script = "s3.work.js" if s3.debug else "s3.work.min.js"
+            path = "/%s/static/scripts/S3/%s" % (appname, script)
+            if path not in s3.scripts:
+                s3.scripts.append(path)
             # Hide options menu
             current.menu.options = None
 
