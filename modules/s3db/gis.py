@@ -793,8 +793,20 @@ class S3LocationModel(S3Model):
         # Try the Name
         # @ToDo: Hook for possible duplicates vs definite?
         #query = (table.name.lower().like('%%%s%%' % name.lower()))
-        query = (table.name.lower() == name.lower()) & \
+        
+        if current.deployment_settings.get_database_type() == "postgres":
+            # Python lower() only works properly on Unicode strings not UTF-8 encoded strings
+            # Oddity:
+            # Python lower() converts the TR char İ to i (Correctly, according to http://www.fileformat.info/info/unicode/char/0130/index.htm)
+            # PostgreSQL LOWER() on Windows doesn't convert it, although this seems to be a locale issue:
+            # http://stackoverflow.com/questions/18507589/the-lower-function-on-international-characters-in-postgresql
+            # Works fine on Debian servers if the locale is a .UTF-8 before the Postgres cluster is created
+            query = (table.name.lower() == s3_unicode(name).lower().encode("utf8")) & \
                 (table.level == level)
+        else :
+            query = (table.name.lower() == name.lower()) & \
+                (table.level == level)
+        
         if parent:
             query &= (table.parent == parent)
         if end_date:
