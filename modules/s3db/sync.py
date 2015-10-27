@@ -394,6 +394,10 @@ class SyncDataModel(S3Model):
                      repository_id(),
                      Field("resource_name",
                            notnull = True,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Resource Name"),
+                                                T("Table name of the resource to synchronize"))),
                            ),
                      Field("infile_pattern",
                            label = T("Input File Name"),
@@ -460,6 +464,10 @@ class SyncDataModel(S3Model):
                                        sync_mode.get(opt, NONE),
                            requires = IS_IN_SET(sync_mode,
                                                 zero=None),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Synchronization mode"),
+                                                T("How data shall be transferred"))),
                            ),
                      Field("strategy", "list:string",
                            default = sync_strategy.values(),
@@ -469,6 +477,10 @@ class SyncDataModel(S3Model):
                                                 multiple=True,
                                                 zero=None),
                            widget = CheckboxesWidgetS3.widget,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Strategy"),
+                                                T("Which methods to apply when importing data to the local repository"))),
                            ),
                      Field("update_method", "integer",
                            default = 1,
@@ -481,6 +493,10 @@ class SyncDataModel(S3Model):
                            # hide while not implemented
                            readable = False,
                            writable = False,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Update Method"),
+                                                T("How local records shall be updated"))),
                            ),
                      Field("update_policy",
                            default = sync_policies.NEWER,
@@ -488,6 +504,10 @@ class SyncDataModel(S3Model):
                            represent = sync_policy_represent,
                            requires = IS_IN_SET(sync_policies,
                                                 zero=None),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Update Policy"),
+                                                T("Under which conditions local records shall be updated"))),
                            ),
                      Field("conflict_policy",
                            default = sync_policies.NEWER,
@@ -495,37 +515,12 @@ class SyncDataModel(S3Model):
                            represent = sync_policy_represent,
                            requires = IS_IN_SET(sync_policies,
                                                 zero=None),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (
+                                                T("Conflict Policy"),
+                                                T("Under which condition a local record shall be updated if it also has been modified locally since the last synchronization"))),
                            ),
                      *s3_meta_fields())
-
-        # Field configuration
-        # @todo: make in-line
-        table = db[tablename]
-        table.resource_name.comment = DIV(_class="tooltip",
-                                          _title="%s|%s" % (
-                                            T("Resource Name"),
-                                            T("Table name of the resource to synchronize")))
-
-        table.mode.comment = DIV(_class="tooltip",
-                                 _title="%s|%s" % (
-                                    T("Synchronization mode"),
-                                    T("How data shall be transferred")))
-        table.strategy.comment = DIV(_class="tooltip",
-                                     _title="%s|%s" % (
-                                        T("Strategy"),
-                                        T("Which methods to apply when importing data to the local repository")))
-        table.update_method.comment = DIV(_class="tooltip",
-                                          _title="%s|%s" % (
-                                            T("Update Method"),
-                                            T("How local records shall be updated")))
-        table.update_policy.comment = DIV(_class="tooltip",
-                                          _title="%s|%s" % (
-                                            T("Update Policy"),
-                                            T("Under which conditions local records shall be updated")))
-        table.conflict_policy.comment = DIV(_class="tooltip",
-                                            _title="%s|%s" % (
-                                                T("Conflict Policy"),
-                                                T("Under which condition a local record shall be updated if it also has been modified locally since the last synchronization")))
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -542,6 +537,9 @@ class SyncDataModel(S3Model):
         # Resource Configuration
         configure(tablename,
                   create_onvalidation = self.sync_task_onvalidation,
+                  deduplicate = S3Duplicate(primary=("repository_id",
+                                                     "resource_name",
+                                                     )),
                   )
 
         # Reusable Field
