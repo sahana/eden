@@ -609,7 +609,10 @@ class work_JobListLayout(S3DataListLayout):
 
         logged_in_person = current.auth.s3_logged_in_person()
         if not logged_in_person:
+            self.logged_in = False
             return
+
+        self.logged_in = True
 
         db = current.db
         atable = current.s3db.work_assignment
@@ -760,26 +763,38 @@ class work_JobListLayout(S3DataListLayout):
             actionable = True
 
         if actionable:
-            record_id = raw["work_job.id"]
-            if record_id in self.current_assignments:
-                button = A("Cancel my assignment",
-                           _class="delete-btn-ajax job-cancel",
+            if not self.logged_in:
+                button = A(T("Login to sign up for this job"),
+                           _href = URL(c="default", f="user",
+                                       args = ["login"],
+                                       vars = {"_next": URL(c="work", f="job",
+                                                            args = ["datalist"],
+                                                            ),
+                                               },
+                                       ),
+                           _class = "action-btn",
                            )
-            elif status != "ONHOLD":
-                workers_needed = raw["work_job.workers_max"]
-                if not workers_needed:
-                    workers_needed = raw["work_job.workers_min"]
-                workers_assigned = raw["work_job.workers_assigned"]
-                if workers_assigned < workers_needed:
-                    button = A(T("Sign me up"),
-                               _class="action-btn job-signup",
+            else:
+                record_id = raw["work_job.id"]
+                if record_id in self.current_assignments:
+                    button = A("Cancel my assignment",
+                               _class="delete-btn-ajax job-cancel",
                                )
+                elif status != "ONHOLD":
+                    workers_needed = raw["work_job.workers_max"]
+                    if not workers_needed:
+                        workers_needed = raw["work_job.workers_min"]
+                    workers_assigned = raw["work_job.workers_assigned"]
+                    if workers_assigned < workers_needed:
+                        button = A(T("Sign me up"),
+                                   _class="action-btn job-signup",
+                                   )
+                    else:
+                        actionable = False
+                        button_text = T("No more workers needed")
                 else:
                     actionable = False
-                    button_text = T("No more workers needed")
-            else:
-                actionable = False
-                button_text = T("Job is on hold")
+                    button_text = T("Job is on hold")
 
         if not actionable:
             button = A(button_text,
