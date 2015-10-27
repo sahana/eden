@@ -4208,6 +4208,7 @@ def config(settings):
         else:
             postprocess = None
             HFA = "drr.hfa"
+            budget = None
             objectives = "objectives"
             outputs = S3SQLInlineComponent(
                 "output",
@@ -4224,7 +4225,7 @@ def config(settings):
             "status_id",
             "start_date",
             "end_date",
-            #budget,
+            budget,
             #S3SQLInlineComponent(
             #    "location",
             #    label = T("Locations"),
