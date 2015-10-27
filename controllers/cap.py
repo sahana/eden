@@ -513,7 +513,7 @@ def alert():
                                    DIV(SPAN("%s :: " % T("Reference ID"),
                                             _class="cap-label"
                                             ),
-                                       SPAN(table.reference.represent(record.reference),
+                                       SPAN(record.reference,
                                             _class="cap-value"
                                             ),
                                        ),

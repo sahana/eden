@@ -1731,7 +1731,7 @@ def cap_rheader(r):
                                   )
                 else:
                     action_btn = None
-                    msg_error_btn = None
+                    msg_type_buttons = None
                     if not (row and row.id):
                         error = DIV(T("You need to create at least one alert information item in order to be able to broadcast this alert!"),
                                     _class="error")
@@ -1793,21 +1793,23 @@ def cap_rheader(r):
 
                         if record.approved_by is not None:                            
                             if current.auth.s3_has_permission("create", "cap_alert"):
-                                msg_update_btn = A(T("Update Alert"),
-                                                   _id = record.id,
-                                                   _data = "Update",
-                                                   _class = "action-btn cap-clone-update",
-                                                   )
-                                msg_cancel_btn = A(T("Cancel Alert"),
-                                                   _id = record.id,
-                                                   _data = "Cancel",
-                                                   _class = "action-btn cap-clone-update",
-                                                   )
-                                msg_error_btn = A(T("Error Alert"),
-                                                   _id = record.id,
-                                                   _data = "Error",
-                                                   _class = "action-btn cap-clone-update",
-                                                  )
+                                msg_type_buttons = TAG[""](
+                                        TR(TD(A(T("Update Alert"),
+                                                _id = record.id,
+                                                _data = "Update",
+                                                _class = "action-btn cap-clone-update",
+                                                ))),
+                                        TR(TD(A(T("Cancel Alert"),
+                                                _id = record.id,
+                                                _data = "Cancel",
+                                                _class = "action-btn cap-clone-update",
+                                                ))),
+                                        TR(TD(A(T("Error Alert"),
+                                                _id = record.id,
+                                                _data = "Error",
+                                                _class = "action-btn cap-clone-update",
+                                                ))),
+                                        )
 
                     tabs = [(T("Alert Details"), None),
                             (T("Information"), "info"),
@@ -1862,10 +1864,8 @@ def cap_rheader(r):
                     if action_btn:
                         rheader.insert(1, TR(TD(action_btn)))
 
-                    if msg_error_btn is not None:
-                        rheader.insert(1, TR(TD(msg_error_btn)))
-                        rheader.insert(1, TR(TD(msg_cancel_btn)))
-                        rheader.insert(1, TR(TD(msg_update_btn)))
+                    if msg_type_buttons is not None:
+                        rheader.insert(1, msg_type_buttons)
 
             elif tablename == "cap_area":
                 # Used only for Area Templates
