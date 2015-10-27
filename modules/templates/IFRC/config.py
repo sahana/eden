@@ -1055,7 +1055,7 @@ def config(settings):
 
     settings.ui.location_filter_bulk_select_option = location_filter_bulk_select_option
 
-    def mandatory_lastname(default):
+    def mandatory_last_name(default):
         """ Whether the Last Name is Mandatory """
 
         root_org = current.auth.root_org_name()
@@ -1063,7 +1063,7 @@ def config(settings):
             return False
         return True
 
-    settings.L10n.mandatory_lastname = mandatory_lastname
+    settings.L10n.mandatory_lastname = mandatory_last_name
 
     def hrm_use_certificates(default):
         """ Whether to use Certificates """
@@ -4150,14 +4150,6 @@ def config(settings):
         # Custom Crud Form
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
-        HFA = "drr.hfa"
-        objectives = "objectives"
-        outputs = S3SQLInlineComponent(
-            "output",
-            label = T("Outputs"),
-            fields = ["name", "status"],
-        )
-
         if settings.get_project_programmes():
             # Inject inline link for programmes including AddResourceLink
             #from s3layouts import S3PopupLink
@@ -4174,6 +4166,54 @@ def config(settings):
                                         )
         else:
             programme = None
+
+        # Special cases for different NS
+        root_org = current.auth.root_org_name()
+        if root_org == CRMADA:
+            settings.project.details_tab = True
+            #settings.project.community_volunteers = True
+            HFA = None
+            # Done in a more structured way instead
+            objectives = None
+            outputs = None
+            settings.project.goals = True
+            settings.project.indicators = True
+            settings.project.outcomes = True
+            settings.project.outputs = True
+            # Use Budget module instead of ProjectAnnualBudget
+            settings.project.multiple_budgets = False
+            settings.project.budget_monitoring = True
+            # Require start/end dates
+            table.start_date.requires = table.start_date.requires.other
+            table.end_date.requires = table.end_date.requires.other
+            budget = S3SQLInlineComponent("budget",
+                                          label = T("Budget"),
+                                          #link = False,
+                                          multiple = False,
+                                          fields = ["total_budget",
+                                                    "currency",
+                                                    #"monitoring_frequency",
+                                                    ],
+                                          )
+            btable = s3db.budget_budget
+            # Need to provide a name
+            import random, string
+            btable.name.default = "".join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(16))
+            btable.monitoring_frequency.default = 3 # Monthly
+            postprocess = project_project_postprocess
+            list_fields = s3db.get_config("project_project", "list_fields")
+            list_fields += [(T("Monthly Status"), "current_status_by_indicators"),
+                            (T("Cumulative Status"), "overall_status_by_indicators"),
+                            ]
+        else:
+            postprocess = None
+            HFA = "drr.hfa"
+            objectives = "objectives"
+            outputs = S3SQLInlineComponent(
+                "output",
+                label = T("Outputs"),
+                fields = ["name", "status"],
+            )
 
         crud_form = S3SQLCustomForm(
             "organisation_id",
@@ -4282,7 +4322,7 @@ def config(settings):
             #"budget",
             #"currency",
             "comments",
-            #postprocess = postprocess,
+            postprocess = postprocess,
         )
 
         s3db.configure(tablename,
@@ -4419,7 +4459,6 @@ def config(settings):
             resource.configure(filter_widgets = filter_widgets,
                                report_options = report_options,
                                )
-
 
     settings.customise_project_beneficiary_resource = customise_project_beneficiary_resource
 
