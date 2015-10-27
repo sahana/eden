@@ -455,8 +455,32 @@ def config(settings):
             field.label = current.T("Facility")
             field.readable = field.writable = True
 
-            # @todo: allow only facilities which do not have a req_site_needs yet
-            # @todo: if there aren't any, set insertable=False
+            # Allow only facilities which do not have a req_site_needs
+            # yet (single component), and filter out obsolete facilities
+            from s3 import IS_ONE_OF, FS
+            dbset = current.db(table.id == None)
+            left = table.on(table.site_id == current.s3db.org_site.id)
+            field.requires = IS_ONE_OF(dbset, "org_site.site_id",
+                                       field.represent,
+                                       left = left,
+                                       not_filterby = "obsolete",
+                                       not_filter_opts = (True,),
+                                       orderby = "org_site.name",
+                                       sort = True,
+                                       )
+            if not r.record:
+                query = FS("site_id$obsolete") != True
+                r.resource.add_filter(query)
+
+            # Allow adding of facilities in popup
+            from s3layouts import S3PopupLink
+            field.comment = S3PopupLink(c = "org",
+                                        f = "facility",
+                                        vars = {"child": "site_id",
+                                                "parent": "site_needs",
+                                                },
+                                        title = T("Add New Facility"),
+                                        )
 
         # Filters
         from s3 import S3LocationFilter, S3TextFilter
