@@ -326,11 +326,15 @@
         <xsl:variable name="marker_height" select="./map[1]/@marker_height"/>
         <xsl:variable name="marker_width" select="./map[1]/@marker_width"/>
         <xsl:variable name="style" select="./map[1]/style/@value"/>
+
+        <xsl:variable name="resource" select="@name"/>
+        <xsl:variable name="NumberOfFeatures" select="count(//resource[@name=$resource])"/>
+
         <xsl:choose>
             <xsl:when test="$geometry!='null'">
                 <!-- Use pre-prepared GeoJSON -->
                 <xsl:choose>
-                    <xsl:when test="count(//resource)=1 and count(//resource/map[1]/geometry)=1">
+                    <xsl:when test="$NumberOfFeatures=1 and count(./map[1]/geometry)=1">
                         <type>Feature</type>
                         <geometry>
                             <xsl:attribute name="value">
@@ -418,7 +422,7 @@
                             via making these also use the map element
                 -->
                 <xsl:choose>
-                    <xsl:when test="count(//resource)=1">
+                    <xsl:when test="$NumberOfFeatures=1">
                         <type>Feature</type>
                         <geometry>
                             <type>

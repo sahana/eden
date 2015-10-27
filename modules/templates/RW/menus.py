@@ -31,8 +31,8 @@ class S3MainMenu(default.S3MainMenu):
             MM("News", c="cms", f="newsfeed", args="datalist",
                icon="icon-news",
                ),
-            MM("Current Needs", c="req", f="site_needs"),
-            MM("Facilities", c="org", f="facility"),
+            MM("Current Needs", c="req", f="site_needs", m="summary"),
+            MM("Facilities", c="org", f="facility", m="summary"),
             MM("Organizations", c="org", f="organisation"),
             homepage("gis"),
             MM("More", link=False)(
