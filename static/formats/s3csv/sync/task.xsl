@@ -19,7 +19,7 @@
          Mode............................sync_task.mode
                                          PULL|PUSH|BOTH|NONE
          Strategy........................sync_task.strategy
-                                         CREATE|UPDATE|DELETE|ALL|NONE
+                                         CREATE|UPDATE|DELETE|MERGE or ALL
                                          (multiple, separated by +)
          Update Policy...................sync_task.update_policy
                                          NEWER|THIS|OTHER|MASTER
