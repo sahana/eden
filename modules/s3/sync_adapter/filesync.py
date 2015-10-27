@@ -441,6 +441,9 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
 
         path = self.repository.path
+        if not os.path.isabs(path):
+            path = os.path.join(current.request.folder, path)
+
         pattern = task.infile_pattern
 
         if path and pattern:
@@ -477,6 +480,9 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
 
         path = self.repository.path
+        if not os.path.isabs(path):
+            path = os.path.join(current.request.folder, path)
+
         pattern = task.outfile_pattern
 
         if not path or not pattern:

@@ -297,6 +297,7 @@ class SyncDataModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
+                  deduplicate = S3Duplicate(primary=("name",)),
                   list_fields = ["name",
                                  "uuid",
                                  "accept_push",
