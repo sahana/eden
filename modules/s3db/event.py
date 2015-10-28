@@ -28,6 +28,7 @@
 """
 
 __all__ = ("S3EventModel",
+           "S3EventChecklistModel",
            "S3IncidentModel",
            "S3IncidentReportModel",
            "S3IncidentReportOrganisationGroupModel",
@@ -557,6 +558,126 @@ class S3EventModel(S3Model):
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
+
+# =============================================================================
+class S3EventChecklistModel(S3Model):
+    """
+        Event Checklist Model
+
+        For configuring the checklist on incident of the event
+    """
+
+    names = ("event_checklist",
+             "event_checklist_entry",
+             )
+
+    def model(self):
+
+        T = current.T
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Event Checklist
+        #
+        tablename = "event_checklist"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name of Checklist"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     self.event_event_id(empty = False,
+                                         ondelete = "CASCADE",
+                                         comment = S3PopupLink(c = "event",
+                                                    f = "event",
+                                                    label = T("Create Event"),
+                                                    title = T("Event"),
+                                                    tooltip = T("Create Event"),
+                                                    ),
+                                         ),
+                     self.event_incident_id(empty = False,
+                                            ondelete = "CASCADE",
+                                            comment = S3PopupLink(c = "event",
+                                                    f = "incident",
+                                                    label = T("Create Incident"),
+                                                    title = T("Incident"),
+                                                    tooltip = T("Create Incident"),
+                                                    ),
+                                            ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Event Checklist"),
+            title_display = T("Event Checklist Details"),
+            title_list = T("Event Checklists"),
+            title_update = T("Edit Event Checklist"),
+            title_upload = T("Import Event Checklists"),
+            label_list_button = T("List Event Checklists"),
+            label_delete_button = T("Delete Event Checklist"),
+            msg_record_created = T("Event Checklist added"),
+            msg_record_modified = T("Event Checklist updated"),
+            msg_record_deleted = T("Event Checklist removed"),
+            msg_list_empty = T("No Event Checklists currently registered")
+            )
+
+        self.configure(tablename,
+                       create_next = URL(args=["[id]", "checklist_entry"]),
+                       )
+
+        checklist_represent = S3Represent(lookup=tablename, translate=True)
+
+        event_checklist_id = S3ReusableField("event_checklist_id", "reference %s" % tablename,
+                                             label = T("Event Checklist"),
+                                             ondelete = "CASCADE",
+                                             represent = checklist_represent,
+                                             requires = IS_EMPTY_OR(
+                                                         IS_ONE_OF(db, "event_checklist.id",
+                                                                   checklist_represent)),
+                                             )
+
+        # Components
+        self.add_components(tablename,
+                            event_checklist_entry = "event_checklist_id",
+                            )
+
+        # ---------------------------------------------------------------------
+        # Event Checklist entry
+        #
+        # ---------------------------------------------------------------------
+        tablename = "event_checklist_entry"
+        define_table(tablename,
+                     event_checklist_id(),
+                     Field("name",
+                           label = T("Entry Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("quantity",
+                           label = T("Quantity/Total/Sum"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_date("completion_date",
+                             default = "now",
+                             label = T("Completion Date"),
+                             requires = IS_NOT_EMPTY(),
+                             ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("New Event Checklist Entry"),
+            title_display = T("Event Checklist Entry Details"),
+            title_list = T("Event Checklist Entries"),
+            title_update = T("Edit Event Checklist Entry"),
+            label_list_button = T("List Event Checklist Entries"),
+            label_delete_button = T("Delete Event Checklist Entry"),
+            msg_record_created = T("Event Checklist Entry added"),
+            msg_record_modified = T("Event Checklist Entry updated"),
+            msg_record_deleted = T("Event Checklist Entry deleted"),
+            msg_list_empty = T("No Event Checklist Entries currently registered"))
+
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class S3IncidentModel(S3Model):
@@ -2958,6 +3079,23 @@ def event_rheader(r):
                                     TR(TH("%s: " % table.zero_hour.label),
                                        table.zero_hour.represent(record.zero_hour)),
                                     TR(closed),
+                                    ), rheader_tabs)
+
+        if r.tablename == "event_checklist":
+            record = r.record
+            if record:
+                table = r.table
+                tabs = [(T("Checklist Details"), None),
+                        (T("Checklist Entry"), "checklist_entry"),
+                        ]
+
+                rheader_tabs = s3_rheader_tabs(r, tabs)
+
+                rheader = DIV(TABLE(TR(TH("%s: " % T("Event")),
+                                       table.event_id.represent(record.event_id)),
+                                    TR(TH("%s: " % T('Incident')),
+                                       table.incident_id.represent(record.incident_id)),
+                                    TR(TH("%s: " % r.table.name.label), record.name),
                                     ), rheader_tabs)
 
     return rheader
