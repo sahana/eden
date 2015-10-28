@@ -1698,8 +1698,9 @@ def vol_person_controller():
                         table = s3db.hrm_course
                         query = (table.deleted == False)
                         ADMIN = session.s3.system_roles.ADMIN
-                        if current.auth.s3_has_role(ADMIN):
-                            query &= ((table.organisation_id == root_org) | \
+                        auth = current.auth
+                        if not auth.s3_has_role(ADMIN):
+                            query &= ((table.organisation_id == auth.root_org()) | \
                                       (table.organisation_id == None))
                         if external == "True":
                             query &= (table.external == True)

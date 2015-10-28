@@ -1551,7 +1551,6 @@
 'Distribution deleted': 'Distribution supprimée',
 'Distribution groups': 'Groupes de distribution',
 'Distribution updated': 'Distribution mise à jour',
-'District': 'Quartier',
 'Do you really want to delete these records?': 'Voulez-vous vraiment supprimer ces enregistrements ?',
 'Do you want to cancel this received shipment? The items will be removed from the Inventory. This action CANNOT be undone!': "Voulez-vous annuler cette livraison reçue? Les éléments seront supprimés de l'inventaire. Cette action ne peut pas être annulée.",
 'Do you want to cancel this sent shipment? The items will be returned to the Inventory. This action CANNOT be undone!': "Voulez-vous annuler cette expédition envoyée? Les éléments seront renvoyés à l'inventaire. Cette action ne peut pas être annulée.",

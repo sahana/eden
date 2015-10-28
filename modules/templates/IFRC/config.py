@@ -278,8 +278,8 @@ def config(settings):
         ("ne", "नेपाली"),          # Nepali
         ("prs", "دری"),        # Dari
         ("ps", "پښتو"),        # Pashto
-        #("th", "ภาษาไทย"),        # Thai
-        ("vi", "Tiếng Việt"),   # Vietnamese
+        #("th", "ภาษาไทย"),                           # Thai
+        ("vi", "Tiếng Việt"),  # Vietnamese
         ("zh-cn", "中文 (简体)"),
     ])
     # Default Language
@@ -2110,20 +2110,21 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
-        controller = current.request.controller
-        if controller != "deploy":
-            # Default Filter
-            from s3 import s3_set_default_filter
-            s3_set_default_filter("~.organisation_id",
-                                  user_org_and_children_default_filter,
-                                  tablename = "hrm_human_resource")
-
         s3db = current.s3db
 
         # Special cases for different NS
         arcs = False
         vnrc = False
         root_org = current.auth.root_org_name()
+
+        controller = current.request.controller
+        if controller != "deploy" and root_org != CRMADA: # CRMADA have too many branches which causes issues
+            # Default Filter
+            from s3 import s3_set_default_filter
+            s3_set_default_filter("~.organisation_id",
+                                  user_org_and_children_default_filter,
+                                  tablename = "hrm_human_resource")
+
         if root_org == VNRC:
             vnrc = True
             # @ToDo: Make this use the same lookup as in ns_only to check if user can see HRs from multiple NS
@@ -3127,7 +3128,7 @@ def config(settings):
                                 ))
 
         # @ToDo: Make prettier
-        # - ideally turn into a Grid (JS? GridWidget?)
+        # - reduce labels to just Rows/Columns
         from s3 import S3SQLCustomForm, S3SQLInlineLink
         from gluon.validators import IS_IN_SET
         crud_form = S3SQLCustomForm(

@@ -382,7 +382,7 @@ class S3Importer(S3Method):
             db.commit()
 
             extension = ofilename.rsplit(".", 1).pop()
-            if extension not in ("csv", "xls", "xlsx"):
+            if extension not in ("csv", "xls", "xlsx", "xlsm"):
                 if self.ajax:
                     return {"Error": self.messages.invalid_file_format}
                 response.flash = None
@@ -530,7 +530,7 @@ class S3Importer(S3Method):
         # @todo: manage different file formats
         # @todo: find file format from request.extension
         extension = source.rsplit(".", 1).pop()
-        if extension not in ("csv, ""xls", "xlsx"):
+        if extension not in ("csv, ""xls", "xlsx", "xlsm"):
             fileFormat = "csv"
         else:
             fileFormat = extension
@@ -943,7 +943,7 @@ class S3Importer(S3Method):
 
         # ---------------------------------------------------------------------
         # XLS
-        elif fileFormat in ("xls", "xlsx"):
+        elif fileFormat in ("xls", "xlsx", "xlsm"):
 
             fmt = "xls"
             src = openFile

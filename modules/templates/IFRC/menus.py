@@ -199,9 +199,10 @@ class S3MainMenu(default.S3MainMenu):
         #ADMIN = system_roles.ADMIN
         ORG_ADMIN = system_roles.ORG_ADMIN
 
-        #def hrm(item):
-        #    return root_org != HNRC or \
-        #           has_role(ORG_ADMIN)
+        def hrm(item):
+            # @ToDo: Bot sure why this isn't hidden automatically when user doesn't have access
+            return root_org != CRMADA or \
+                   has_role(ORG_ADMIN)
 
         #def inv(item):
         #    return root_org != HNRC or \
@@ -263,7 +264,7 @@ class S3MainMenu(default.S3MainMenu):
 
             dashboard = DB(_id="dashboard")(
                 DB("Staff", c="hrm", f="staff", m="summary",
-                   #check = hrm,
+                   check = hrm,
                    image = "graphic_staff.png",
                    title = "Staff",
                    text = "Add new and manage existing staff."),

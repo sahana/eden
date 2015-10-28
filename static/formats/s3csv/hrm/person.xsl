@@ -110,6 +110,9 @@
          Volunteer Type.................optional.....volunteer_details.volunteer_type
          Deployable.....................optional.....link to deployments module (true|false)
          Deployable Roles...............optional.....credentials (job_titles for which person is deployable)
+         Availability...................optional.....Availability dropdown
+         Availability Comments..........optional.....Availability Comments
+         Slot:XXXX......................optional.....Availability for Slot XXXX
 
          Turkey-specific:
          Identity Card City
@@ -217,16 +220,6 @@
     <xsl:key name="education_level" match="row"
              use="col[@field='Education Level']"/>
 
-    <xsl:key name="volunteerclusters" match="row"
-             use="concat(col[@field='Volunteer Cluster Type'],
-                         col[@field='Volunteer Cluster'])"/>
-
-    <xsl:key name="volunteerclustertypes" match="row"
-             use="col[@field='Volunteer Cluster Type']"/>
-
-    <xsl:key name="volunteerclustertpositions" match="row"
-             use="col[@field='Volunteer Cluster Position']"/>
-
     <xsl:key name="stafflevels" match="row"
              use="col[@field='Staff Level']"/>
 
@@ -238,6 +231,16 @@
 
     <xsl:key name="disciplinarytypes" match="row"
              use="col[@field='Disciplinary Type']"/>
+
+    <xsl:key name="volunteerclustertypes" match="row"
+             use="col[@field='Volunteer Cluster Type']"/>
+
+    <xsl:key name="volunteerclusters" match="row"
+             use="concat(col[@field='Volunteer Cluster Type'],
+                         col[@field='Volunteer Cluster'])"/>
+
+    <xsl:key name="volunteerclusterpositions" match="row"
+             use="col[@field='Volunteer Cluster Position']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -304,7 +307,7 @@
             </xsl:for-each>
 
             <!-- Volunteer Cluster Positions -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('volunteerclustertpositions',
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('volunteerclusterpositions',
                                                                        col[@field='Volunteer Cluster Position'])[1])]">
                 <xsl:call-template name="VolunteerClusterPosition"/>
             </xsl:for-each>
@@ -339,6 +342,13 @@
                 <xsl:call-template name="DisciplinaryActionType">
                     <xsl:with-param name="Field">Disciplinary Type</xsl:with-param>
                 </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Availability Slots -->
+            <xsl:for-each select="table/row[1]">
+                <xsl:for-each select="col[starts-with(@field, 'Slot')]">
+                    <xsl:call-template name="Slot"/>
+                </xsl:for-each>
             </xsl:for-each>
 
             <!-- Process all table rows for person records -->
@@ -967,6 +977,10 @@
                 <xsl:with-param name="course_list" select="col[@field='Trainings']"/>
             </xsl:call-template>
 -->
+
+            <!-- Availability -->
+            <xsl:call-template name="Availability"/>
+
             <!-- Certificates -->
             <xsl:call-template name="splitList">
                 <xsl:with-param name="list" select="$Certificates"/>
@@ -1895,6 +1909,67 @@
                         <data field="name"><xsl:value-of select="$skill"/></data>
                     </resource>
                 </reference>
+            </resource>
+        </xsl:if>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Slot">
+        <xsl:variable name="SlotName" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$SlotName!=''">
+            <resource name="pr_slot">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Slot:', $SlotName)"/>
+                </xsl:attribute>
+                <data field="name">
+                    <xsl:value-of select="$SlotName"/>
+                </data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Availability">
+        <xsl:variable name="Options" select="col[@field='Availability']"/>
+        <xsl:variable name="Comments" select="col[@field='Availability Comments']"/>
+
+        <resource name="pr_person_availability">
+            <xsl:if test="$Options!=''">
+                <!-- @ToDo: A nicer way to handle options -->
+                <data field="options">
+                    <xsl:value-of select="col[@field='Availability']"/>
+                </data>
+            </xsl:if>
+            <xsl:if test="$Comments!=''">
+                <data field="comments">
+                    <xsl:value-of select="col[@field='Availability Comments']"/>
+                </data>
+            </xsl:if>
+            <xsl:for-each select="col[starts-with(@field, 'Slot')]">
+                <xsl:call-template name="AvailabilitySlot" />
+            </xsl:for-each>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="AvailabilitySlot">
+        <xsl:variable name="Slot" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+    
+        <xsl:if test="$Value!=''">
+            <resource name="pr_person_availability_slot">
+                <reference field="slot_id" resource="pr_slot">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Slot:', $Slot)"/>
+                    </xsl:attribute>
+                </reference>
+                <data field="available">
+                    <xsl:value-of select="$Value"/>
+                </data>
             </resource>
         </xsl:if>
 

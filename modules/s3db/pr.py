@@ -2744,6 +2744,10 @@ class S3AvailabilityModel(S3Model):
                      Field("time_formula_id", "reference pr_time_formula"),
                      *s3_meta_fields())
 
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
         represent = S3Represent(lookup=tablename, translate=True)
         slot_id = S3ReusableField("slot_id", "reference %s" % tablename,
                                   label = T("Slot"),
