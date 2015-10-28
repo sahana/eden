@@ -161,6 +161,7 @@ def alert():
                 s3db.configure(tablename,
                                editable=False,
                                deletable=False,
+                               insertable=False,
                                )
             if settings.get_cap_restrict_fields():
                 if r.record.msg_type in ("Update", "Cancel", "Error"):
@@ -582,6 +583,7 @@ def alert():
                     s3db.configure("cap_info",
                                    editable = False,
                                    deletable = False,
+                                   insertable=False,
                                    )
                 if settings.get_cap_restrict_fields():
                     if r.record.msg_type in ("Update", "Cancel", "Error"):
@@ -635,6 +637,7 @@ def alert():
                     s3db.configure("cap_area",
                                    editable = False,
                                    deletable = False,
+                                   insertable=False,
                                    )
 
             elif r.component_name == "resource":
@@ -661,6 +664,7 @@ def alert():
                     s3db.configure("cap_resource",
                                    editable = False,
                                    deletable = False,
+                                   insertable=False,
                                    )
 
             # @ToDo: Move inside correct component context (None?)
