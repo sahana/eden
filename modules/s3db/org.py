@@ -2356,10 +2356,22 @@ class S3OrganisationSectorModel(S3Model):
         else:
             return
         duplicate = current.db(query).select(table.id,
+                                             table.name,
                                              limitby=(0, 1)).first()
         if duplicate:
+            if not name:
+                # Reference imports use abbreviation only,
+                # but name is required => retain original name
+                data["name"] = duplicate.name
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
+        elif not name:
+            # Do not allow reference imports to create new sectors
+            error = "Invalid sector: %s" % abrv
+            item.accepted = False
+            item.error = error
+            if item.element is not None:
+                item.element.set(current.xml.ATTRIBUTE["error"], error)
 
     # -------------------------------------------------------------------------
     @staticmethod

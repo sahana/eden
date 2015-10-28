@@ -33,7 +33,7 @@
     right: 0;
     top: 0;
     width: 550px;
-    z-index: 1000;
+    z-index: 900;
 }
 
 .image-caption h1,
@@ -124,7 +124,7 @@ p.quote.mb4 {
     padding-top: 20px;
     padding-bottom: 20px;
 }
- 
+
 #what-they-do h2 {
     font-size: 28px;
     font-weight: bold;
