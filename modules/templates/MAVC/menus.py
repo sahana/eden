@@ -9,6 +9,7 @@ except ImportError:
     pass
 import s3menus as default
 
+# =============================================================================
 class S3MainMenu(default.S3MainMenu):
     """
         Custom Application Main Menu:
@@ -195,8 +196,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #    M("Search"),
                     #    M("Create", m="create"),
                     #),
-                    M("Organizations", c="org", f="organisation")(
-                        M("Search"),
+                    M("Organizations", c="org", f="organisation", m="summary")(
+                        M("Search", m="summary"),
                         M("Create", m="create",
                           restrict=[AUTHENTICATED]),
                     ),

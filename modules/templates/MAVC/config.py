@@ -197,7 +197,69 @@ def config(settings):
                            listadd = False,
                            )
 
+        # Custom filters to match the information provided
+        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
+        filter_widgets = [
+            S3TextFilter(["name",
+                          "acronym",
+                          #"website",
+                          #"comments",
+                          ],
+                         label = T("Search"),
+                         comment = T("Search by organization name or acronym. You can use * as wildcard."),
+                         ),
+            S3OptionsFilter("sector_organisation.sector_id",
+                            ),
+            S3OptionsFilter("organisation_organisation_type.organisation_type_id",
+                            label = T("Type"),
+                            ),
+            S3LocationFilter("organisation_location.location_id",
+                             label = T("Areas Served"),
+                             levels = ("L1", "L2", "L3", "L4"),
+                             #hidden = True,
+                             ),
+            ]
+
+        s3db.configure("org_organisation",
+                       filter_widgets = filter_widgets,
+                       )
+
     settings.customise_org_organisation_resource = customise_org_organisation_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_location_resource(r, tablename):
+
+        table = current.s3db.org_organisation_location
+
+        # Use location selector for "Areas served"
+        from s3 import S3LocationSelector
+        field = table.location_id
+        field.widget = S3LocationSelector(levels = ["L1", "L2", "L3", "L4"],
+                                          show_postcode = False,
+                                          show_map = False,
+                                          )
+
+    settings.customise_org_organisation_location_resource = customise_org_organisation_location_resource
+    # -------------------------------------------------------------------------
+    def customise_org_organisation_controller(**attr):
+
+        INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
+
+        # Custom tabs for organisations
+        tabs = [(T("Basic Details"), None),
+               (T("Areas Served"), "organisation_location"),
+               (INDIVIDUALS, "human_resource"),
+               (T("Offices"), "office"),
+               (T("Warehouses"), "warehouse"),
+               (T("Facilities"), "facility"),
+               ]
+
+        attr = dict(attr)
+        attr["rheader"] = lambda r, tabs=tabs: \
+                          current.s3db.org_rheader(r, tabs=tabs)
+        return attr
+
+    settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -325,12 +387,12 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10,
         #)),
-        #("stats", Storage(
-        #    name_nice = T("Statistics"),
-        #    #description = "Manages statistics",
-        #    restricted = True,
-        #    module_type = None,
-        #)),
+        ("stats", Storage(
+           name_nice = T("Statistics"),
+           #description = "Manages statistics",
+           restricted = True,
+           module_type = None,
+        )),
     ])
 
 # END =========================================================================
