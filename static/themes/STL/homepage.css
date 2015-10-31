@@ -7,3 +7,6 @@
 #site-title h3 {
     margin-top: 1.5rem;
 }
+.row.home-top {
+    min-height: 30rem;
+}
