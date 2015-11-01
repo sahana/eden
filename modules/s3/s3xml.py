@@ -1409,6 +1409,7 @@ class S3XML(S3Codec):
 
         # Extract the UUID
         UID = cls.UID
+        uid = None
         if UID in table.fields and UID not in skip:
             uid = current.xml.import_uid(element.get(UID, None))
             if uid:
@@ -1496,7 +1497,9 @@ class S3XML(S3Codec):
                         continue
                     record[f] = value
 
-        if deleted:
+        if deleted and uid:
+            # UUID is enough to identify the record,
+            # so can skip parsing field data
             return record
 
         # Fields

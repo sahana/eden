@@ -2806,6 +2806,13 @@ class S3AvailabilityModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        configure(tablename,
+                  # @todo: adapt deduplicator once we allow multiple
+                  #        availability records per person (e.g. include
+                  #        start/end dates and location_id)
+                  deduplicate = S3Duplicate(primary=("person_id",)),
+                  )
+
         self.add_components(tablename,
                             # Inline Form added in customise to provide a list of slots
                             pr_person_availability_slot = "availability_id",

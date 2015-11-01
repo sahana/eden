@@ -1935,13 +1935,18 @@ class S3ImportItem(object):
             if not deleted:
                 self.method = UPDATE
 
-        elif not deleted:
+        else:
 
             if UID in data and not synchronise_uuids:
                 # The import item has a UUID but there is no match
                 # in the database, so this must be a new record
                 self.id = None
-                self.method = CREATE
+                if not deleted:
+                    self.method = CREATE
+                else:
+                    # Nonexistent record to be deleted => skip
+                    self.method = DELETE
+                    self.skip = True
             else:
                 # Use the resource's deduplicator to identify the original
                 resolve = current.s3db.get_config(self.tablename, "deduplicate")
@@ -3734,7 +3739,8 @@ class S3Duplicate(object):
         # Update import item if match found:
         if duplicate:
             item.id = duplicate[table._id]
-            item.method = item.METHOD.UPDATE
+            if not data.deleted:
+                item.method = item.METHOD.UPDATE
 
         # For uses outside of imports:
         return duplicate
