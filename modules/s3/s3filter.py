@@ -1537,6 +1537,7 @@ class S3OptionsFilter(S3FilterWidget):
                                        cols = cols,
                                        size = opts["size"] or 12,
                                        help_field = opts["help_field"],
+                                       sort = opts.get("sort", True),
                                        )
         else:
             # Default widget_type = "multiselect"
@@ -1586,7 +1587,8 @@ class S3OptionsFilter(S3FilterWidget):
                                 multiple = True,
                                 cols = cols,
                                 size = opts["size"] or 12,
-                                help_field = opts["help_field"]
+                                help_field = opts["help_field"],
+                                sort = opts.get("sort", True),
                                 )
                 options = {attr["_id"]:
                            widget._options({"type": ftype}, [])}

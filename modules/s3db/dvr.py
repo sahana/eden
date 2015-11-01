@@ -78,6 +78,21 @@ class S3DVRModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Case Type"),
+            title_display = T("Case Type"),
+            title_list = T("Case Types"),
+            title_update = T("Edit Case Type"),
+            label_list_button = T("List Case Types"),
+            label_delete_button = T("Delete Case Type"),
+            msg_record_created = T("Case Type added"),
+            msg_record_modified = T("Case Type updated"),
+            msg_record_deleted = T("Case Type deleted"),
+            msg_list_empty = T("No Case Types currently registered")
+            )
+
+        # Represent for reference
         case_type_represent = S3Represent(lookup = "dvr_case_type",
                                           translate = True,
                                           )
@@ -93,15 +108,18 @@ class S3DVRModel(S3Model):
         #}
 
         # Case status options
+        # => tuple list to enforce widget order
         case_status_opts = (("PENDING", T("Pending")),
                             ("OPEN", T("Open")),
                             ("CLOSED", T("Closed")),
                             )
 
         # Case priority options
-        case_priority_opts = (("HIGH", T("High")),
-                              ("MEDIUM", T("Medium")),
-                              ("LOW", T("Low")),
+        # => tuple list to enforce widget order
+        # => numeric key so it can be sorted by
+        case_priority_opts = ((3, T("High")),
+                              (2, T("Medium")),
+                              (1, T("Low")),
                               )
 
         SITE = current.deployment_settings.get_org_site_label()
@@ -143,8 +161,8 @@ class S3DVRModel(S3Model):
                                                 zero = None,
                                                 ),
                            ),
-                     Field("priority",
-                           default = "MEDIUM",
+                     Field("priority", "integer",
+                           default = 2,
                            label = T("Priority"),
                            represent = S3Represent(options=dict(case_priority_opts)),
                            requires = IS_IN_SET(case_priority_opts,
@@ -349,12 +367,44 @@ class S3DVRModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"dvr_case_status_opts": case_status_opts,
+                }
 
 # =============================================================================
-def dvr_rheader():
+def dvr_rheader(r, tabs=[]):
+    """ DVR module resource headers """
 
-    # @todo
-    pass
+    if r.representation != "html":
+        # RHeaders only used in interactive views
+        return None
+
+    tablename = r.tablename
+    record = r.record
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "pr_person":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), ""),
+                        ]
+
+            dvr_case = r.resource.select(["dvr_case.reference"]).rows
+            case = lambda row: dvr_case[0]["dvr_case.reference"] \
+                               if dvr_case else current.messages["NONE"]
+            name = lambda row: s3_fullname(row)
+
+            rheader_fields = [[(T("Case Number"), case)],
+                              [(T("Name"), name)],
+                              ["date_of_birth"],
+                              ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
+
+    return rheader
 
 # END =========================================================================

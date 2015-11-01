@@ -7006,7 +7006,7 @@ class org_AssignMethod(S3Method):
                                                 ),
                                 dt_bulk_actions=dt_bulk_actions,
                                 dt_pageLength=display_length,
-                                dt_pagination='true',
+                                dt_pagination="true",
                                 dt_searching="false",
                                 )
 
