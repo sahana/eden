@@ -126,7 +126,7 @@ class S3Msg(object):
         self.CONTACT_OPTS = {"EMAIL":       T("Email"),
                              "FACEBOOK":    T("Facebook"),
                              "FAX":         T("Fax"),
-                             "HOME_PHONE":  T("Home phone"),
+                             "HOME_PHONE":  T("Home Phone"),
                              "RADIO":       T("Radio Callsign"),
                              "RSS":         T("RSS Feed"),
                              "SKYPE":       T("Skype"),

@@ -1785,7 +1785,6 @@
 'Editable?': 'Modifiable ?',
 'Education materials received': 'Le matériel éducatif a reçu',
 'Education materials, source': 'Le matériel éducatif, source',
-'Education': 'Formation',
 'Effects Inventory': 'inventaire des effets',
 'Eggs': 'Oeufs',
 'Either a shelter or a location must be specified': 'Soit un logement ou un emplacement doit être spécifié',

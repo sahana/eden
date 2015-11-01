@@ -2818,8 +2818,11 @@ class S3AvailabilityModel(S3Model):
         define_table(tablename,
                      Field("availability_id", "reference pr_person_availability"),
                      slot_id(),
-                     Field("available", "boolean"),
                      *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary=("availability_id", "slot_id")),
+                  )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

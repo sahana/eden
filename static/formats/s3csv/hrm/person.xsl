@@ -1958,18 +1958,26 @@
     <!-- ****************************************************************** -->
     <xsl:template name="AvailabilitySlot">
         <xsl:variable name="Slot" select="normalize-space(substring-after(@field, ':'))"/>
-        <xsl:variable name="Value" select="text()"/>
+        <xsl:variable name="Value">
+            <xsl:call-template name="uppercase">
+                <xsl:with-param name="string">
+                   <xsl:value-of select="text()"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:variable>
     
         <xsl:if test="$Value!=''">
             <resource name="pr_person_availability_slot">
+                <xsl:if test="$Value='N' or $Value='NO' or $Value='F' or $Value='FALSE'">
+                    <xsl:attribute name="deleted">
+                        <xsl:text>true</xsl:text>
+                    </xsl:attribute>
+                </xsl:if>
                 <reference field="slot_id" resource="pr_slot">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('Slot:', $Slot)"/>
                     </xsl:attribute>
                 </reference>
-                <data field="available">
-                    <xsl:value-of select="$Value"/>
-                </data>
             </resource>
         </xsl:if>
 

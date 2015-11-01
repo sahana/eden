@@ -454,7 +454,7 @@ class S3AddPersonWidget(FormWidget):
                         _class="box_top")
             # Select from registry buttons
             _class ="box_top"
-            select_row = TR(TD(A(T("Select from registry"),
+            select_row = TR(TD(A(T("Select from Registry"),
                                  _href="#",
                                  _id="select_from_registry",
                                  _class="action-btn"),
@@ -1519,7 +1519,8 @@ class S3CalendarWidget(FormWidget):
 
         offset = S3DateTime.get_offset_value(current.session.s3.utc_offset)
 
-        pyears, fyears = 10, 10
+        # RAD : default to something quite generous
+        pyears, fyears = 80, 80
 
         # Minimum
         earliest = None
@@ -1731,8 +1732,10 @@ class S3DateWidget(FormWidget):
 
     def __init__(self,
                  format = None,
-                 past=1440,
-                 future=1440,
+                 #past=1440,
+                 #future=1440,
+                 past=None,
+                 future=None,
                  start_field = None,
                  default_interval = None,
                  default_explicit = False,
@@ -1828,41 +1831,47 @@ class S3DateWidget(FormWidget):
         # Convert to Days
         now = current.request.utcnow
         past = self.past
-        if past:
-            past = now - relativedelta(months=past)
-            if now > past:
-                days = (now - past).days
-                minDate = "-%s" % days
-            else:
-                days = (past - now).days
-                minDate = "+%s" % days
+        if past is None:
+            past = ""
         else:
-            minDate = "-0"
+            if past:
+                past = now - relativedelta(months=past)
+                if now > past:
+                    days = (now - past).days
+                    minDate = "-%s" % days
+                else:
+                    days = (past - now).days
+                    minDate = "+%s" % days
+            else:
+                minDate = "-0"
+            past = ",minDate:%s" % minDate
+
         future = self.future
-        if future:
-            future = now + relativedelta(months=future)
-            if future > now:
-                days = (future - now).days
-                maxDate = "+%s" % days
-            else:
-                days = (now - future).days
-                maxDate = "-%s" % days
+        if future is None:
+            future = ""
         else:
-            maxDate = "+0"
+            if future:
+                future = now + relativedelta(months=future)
+                if future > now:
+                    days = (future - now).days
+                    maxDate = "+%s" % days
+                else:
+                    days = (now - future).days
+                    maxDate = "-%s" % days
+            else:
+                maxDate = "+0"
+            future = ",maxDate:%s" % maxDate
 
         # Set auto updation of end_date based on start_date if start_field attr are set
         start_field = self.start_field
         default_interval = self.default_interval
 
         script = \
-'''$('#%(selector)s').datepicker('option',{yearRange:'c-100:c+100',
- dateFormat:'%(format)s',
- minDate:%(past)s,
- maxDate:%(future)s}).one('click',function(){$(this).focus()})''' % \
+'''$('#%(selector)s').datepicker('option',{yearRange:'c-100:c+100',dateFormat:'%(format)s'%(past)s%(future)s}).one('click',function(){$(this).focus()})''' % \
             dict(selector = selector,
                  format = format,
-                 past = minDate,
-                 future = maxDate,
+                 past = past,
+                 future = future,
                  )
 
         if script not in jquery_ready: # Prevents loading twice when form has errors

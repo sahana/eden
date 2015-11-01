@@ -27,7 +27,7 @@
 'RSS Channels': 'އާރްއެސްއެސް ޗެނަލް',
 'Save and Edit': 'ސޭވް ނުވަތަ އެޑިޓް',
 'Save and edit information': 'ސޭވް އެންޑް އެޑިޓް',
-'Saved filters': 'ފިލްޓަަރ ސޭވް',
+'Saved Filters': 'ފިލްޓަަރ ސޭވް',
 'Scope': 'ސްކޯޕް',
 'Search': 'ހޯދާ',
 'Select': 'ސިލެކްޓް',

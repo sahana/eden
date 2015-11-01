@@ -2276,7 +2276,7 @@ class S3FilterForm(object):
 
         fm = current.deployment_settings.get_search_filter_manager()
         if fm and opts.get("filter_manager", resource is not None):
-            show_fm = A(T("Saved filters"),
+            show_fm = A(T("Saved Filters"),
                         _class="show-filter-manager action-lnk")
             controls.append(show_fm)
 
@@ -2351,7 +2351,7 @@ class S3FilterForm(object):
             @return: the widget
         """
 
-        SELECT_FILTER = current.T("Saved Filters...")
+        SELECT_FILTER = current.T("Saved Filters")
 
         ajaxurl = self.opts.get("saveurl", URL(args=["filter.json"], vars={}))
 

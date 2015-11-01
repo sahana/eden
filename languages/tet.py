@@ -564,7 +564,7 @@
 'Select an existing bin': 'Hili nia fatin ida',
 'Select an image to upload. You can crop this later by opening this record.': 'Hili imajen neebe atu hafoun. Ita bele hatama husi loke  gravasaun sira nee',
 'Select data type': 'Hili dadus tipu',
-'Select from registry': 'Hili husi rezistu',
+'Select from Registry': 'Hili husi rezistu',
 'Select the default site.': 'Hili iha fatin neebe prepara ona',
 'Send message': 'Haruka mensajen',
 'Shelter': 'Tenda',

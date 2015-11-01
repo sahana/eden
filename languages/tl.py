@@ -337,7 +337,7 @@
 'High Water': 'Pagtaas ng Tubig',
 'Home Country': 'Bansang Pinagmulan',
 'Home Crime': 'Krimen sa Bahay',
-'Home phone': 'Telepono sa bahay',
+'Home Phone': 'Telepono sa bahay',
 'Hour': 'Oras',
 'Hours': 'Mga Oras',
 'How data shall be transferred': 'Kung paano ililipat ang data',

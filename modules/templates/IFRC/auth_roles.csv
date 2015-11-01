@@ -614,6 +614,7 @@ ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all re
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"hrm_human_resource",,ALL,,,,,
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"hrm_competency",,ALL,,,,,
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"hrm_experience",,ALL,,,,,
+ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"hrm_skill",,ALL,,,,,
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"hrm_training",,ALL,,,,,
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"inv_warehouse",,ALL,,,,,
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"inv_warehouse_type",,ALL,,,,,
@@ -621,6 +622,7 @@ ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all re
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"org_facility_type",,ALL,,,,,
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"org_organisation",,ALL,,,,,
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"org_organisation_organisation_type",,ALL,,,,,
+ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"org_sector",,"READ",,,,,"Used to classify Volunteer Activities"
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"pr_address",,ALL,,,,,
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"pr_contact",,ALL,,,,,
 ORG_ADMIN,"Organisation Admin","Can manage Organisation Users and control all record permissions",,,"pr_contact_emergency",,ALL,,,,,

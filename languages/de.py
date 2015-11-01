@@ -3408,7 +3408,7 @@
 'Save: Default Lat, Lon & Zoom for the Viewport': 'Speichern: Standardmäßig Länge/Breite und Zoomfaktor',
 'Save': 'Speichern',
 'Saved.': 'Gespeichert.',
-'Saved filters': 'Gespeicherte Filter',
+'Saved Filters': 'Gespeicherte Filter',
 'Saving...': 'Wird gespeichert...',
 'Scale of Results': 'Umfang der Ergebnisse',
 'Scenario Details': 'Details zum Szenario',

@@ -3054,7 +3054,7 @@ def config(settings):
             # Restrict options to just those wanted by VNRC
             from gluon import IS_IN_SET
             table.contact_method.requires = IS_IN_SET({"EMAIL":       T("Email"),
-                                                       "HOME_PHONE":  T("Home phone"),
+                                                       "HOME_PHONE":  T("Home Phone"),
                                                        "SMS":         T("Mobile Phone"),
                                                        "WORK_PHONE":  T("Work phone"),
                                                        },
@@ -3109,7 +3109,7 @@ def config(settings):
         stname = str(stable)
 
         key = lambda row: "%s %s" % (row[dtname]["name"], row[ttname]["name"])
-        query = stable.deleted != True
+        query = (stable.deleted != True)
         slots = current.db(query).select(stable.id,
                                          stable.name,
                                          dtable.name,
