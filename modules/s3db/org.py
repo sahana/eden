@@ -565,8 +565,8 @@ class S3OrganisationModel(S3Model):
             default_row = "country"
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
-                                 fact = ["count(id)",
-                                         "list(name)",
+                                 fact = [(T("Number of Organizations"), "count(id)"),
+                                         (T("List of Organizations"), "list(name)"),
                                          ],
                                  defaults=Storage(rows = default_row,
                                                   cols = "organisation_organisation_type.organisation_type_id",

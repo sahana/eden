@@ -1,0 +1,12 @@
+@charset "UTF-8";
+
+#site-title {
+    text-align: center;
+    padding-top: 1rem;
+}
+#site-title h3 {
+    margin-top: 1.5rem;
+}
+.row.home-top {
+    min-height: 30rem;
+}

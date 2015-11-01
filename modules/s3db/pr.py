@@ -1019,6 +1019,11 @@ class S3PersonModel(S3Model):
                                                   # multiple instances for tracking reasons
                                                   "multiple": False,
                                                   },
+                       # Disaster Victim Registry
+                       dvr_case = {"name": "dvr_case",
+                                   "joinby": "person_id",
+                                   "multiple": False,
+                                   },
                        # Evacuee Registry
                        evr_case = {"joinby": "person_id",
                                    "multiple": False,

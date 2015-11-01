@@ -1,0 +1,58 @@
+uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
+AUTHENTICATED,Authenticated,,gis,,,READ,READ|CREATE|UPDATE|DELETE,,,,Authenticated users can see the Map
+AUTHENTICATED,Authenticated,,gis,location,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
+AUTHENTICATED,Authenticated,,org,office,,READ,,,,,
+AUTHENTICATED,Authenticated,,org,organisation,,READ,,,,,
+AUTHENTICATED,Authenticated,,,,org_organisation,READ,,,,,
+AUTHENTICATED,Authenticated,,pr,,,READ|UPDATE,,,,,Authenticated users can only see/edit their own PR records
+AUTHENTICATED,Authenticated,,pr,person,,CREATE,READ|UPDATE,,,,But need to be able to add/edit addresses
+AUTHENTICATED,Authenticated,,pr,pentity,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
+AUTHENTICATED,Authenticated,,pr,person_search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
+AUTHENTICATED,Authenticated,,,,pr_contact,CREATE,READ|UPDATE,,,,
+AUTHENTICATED,Authenticated,,,,pr_person,READ|UPDATE,,,,,Authenticated users can only see/edit their own PR records
+AUTHENTICATED,Authenticated,,hrm,,,READ|UPDATE,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,person,,,READ|UPDATE,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,staff,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,volunteer,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,inv,warehouse,,READ,,,,,Authenticated can see all Warehouses
+AUTHENTICATED,Authenticated,,,,inv_inv_item,,,,,,But not see any stock
+AUTHENTICATED,Authenticated,,,,asset_asset,,,,,,or Assets
+AUTHENTICATED,Authenticated,,msg,search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
+AUTHENTICATED,Authenticated,,project,,,READ,,,,,
+AUTHENTICATED,Authenticated,,req,,,READ,,,,,Authenticated can see all Requests
+AUTHENTICATED,Authenticated,,supply,,,READ|CREATE,,,,,Authenticated  users can see the Supply Catalogue
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,asset,,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,asset_asset,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,hrm,,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,hrm,person,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,hrm,staff,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,hrm,volunteer,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,org,,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,org,office,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,org,organisation,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,org_organisation,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,pr,,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,pr_contact,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,pr_person,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,pr,person,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,project,,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,req,,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,vol,,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,inv,,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,inv,warehouse,,READ|CREATE|UPDATE|DELETE,,,,,
+ORG_ADMIN,Organisation Admin,Can manage Organisation Users and control all record permissions,,,inv_inv_item,READ|CREATE|UPDATE|DELETE,,,,,
+HR_MANAGER,hr_manager,Human Resources Manager,hrm,,,READ|CREATE|UPDATE|DELETE,,,,,
+HR_MANAGER,hr_manager,Human Resources Manager,hrm,person,,READ|CREATE|UPDATE|DELETE,,,,,
+HR_MANAGER,hr_manager,Human Resources Manager,hrm,staff,,READ|CREATE|UPDATE|DELETE,,,,,
+HR_MANAGER,hr_manager,Human Resources Manager,hrm,volunteer,,READ|CREATE|UPDATE|DELETE,,,,,
+HR_MANAGER,hr_manager,Human Resources Manager,pr,,,READ|CREATE|UPDATE|DELETE,,,,,
+HR_MANAGER,hr_manager,Human Resources Manager,,,pr_person,READ|CREATE|UPDATE|DELETE,,,,,
+HR_MANAGER,hr_manager,Human Resources Manager,pr,person,,READ|CREATE|UPDATE|DELETE,,,,,
+HR_MANAGER,hr_manager,Human Resources Manager,vol,,,READ|CREATE|UPDATE|DELETE,,,,,
+LOGS_MANAGER,logs_manager,Logistics Manager,asset,,,READ|CREATE|UPDATE|DELETE,,,,,
+LOGS_MANAGER,logs_manager,Logistics Manager,,,asset_asset,READ|CREATE|UPDATE|DELETE,,,,,
+LOGS_MANAGER,logs_manager,Logistics Manager,inv,,,READ|CREATE|UPDATE|DELETE,,,,,
+LOGS_MANAGER,logs_manager,Logistics Manager,inv,warehouse,,READ|CREATE|UPDATE|DELETE,,,,,
+LOGS_MANAGER,logs_manager,Logistics Manager,,,inv_inv_item,READ|CREATE|UPDATE|DELETE,,,,,
+PROJECT_MANAGER,project_manager,Project Manager,project,,,READ|CREATE|UPDATE|DELETE,,,,,
+STAFF,staff,Staff of an Organisation,,,pr_contact,READ,,,,,

@@ -1741,7 +1741,7 @@ def vol_person_controller():
 
             resource = r.resource
             if mode is not None:
-                r.resource.build_query(id=s3_logged_in_person())
+                r.resource.build_query(id=current.auth.s3_logged_in_person())
             elif r.method not in ("deduplicate", "search_ac"):
                 if not r.id and not hr_id:
                     # pre-action redirect => must retain prior errors
