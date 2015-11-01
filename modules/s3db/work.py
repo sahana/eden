@@ -455,8 +455,10 @@ def work_rheader(r, tabs=[]):
                         (T("Assignments"), "assignment"),
                         ]
 
-            rheader_fields = [["name", "start_date"],
-                              ["status", "duration"],
+            rheader_fields = [["name"],
+                              ["site_id"],
+                              ["start_date", "duration"],
+                              ["status"],
                               ]
 
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
