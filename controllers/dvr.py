@@ -32,6 +32,26 @@ def person():
         resource = r.resource
         resource.add_filter(FS("dvr_case.id") != None)
 
+        if r.component and r.id:
+            ctable = r.component.table
+            if "case_id" in ctable.fields and \
+               str(ctable.case_id.type)[:18] == "reference dvr_case":
+
+                case_id = ctable.case_id
+
+                dvr_case = s3db.dvr_case
+                query = (dvr_case.person_id == r.id) & \
+                        (dvr_case.deleted != True)
+                cases = db(query).select(dvr_case.id, limitby=(0, 2))
+
+                if len(cases) == 1:
+                    case_id.default = cases.first().id
+                    case_id.readable = case_id.writable = False
+                else:
+                    case_id.requires = IS_ONE_OF(db(query), "dvr_case.id",
+                                                 case_id.represent,
+                                                 )
+
         if r.interactive:
 
             # Adapt CRUD strings to context

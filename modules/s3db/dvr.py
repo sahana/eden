@@ -27,7 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3DVRModel",
+__all__ = ("DVRCaseModel",
+           "DVRNeedsModel",
+           "DVRCaseActivityModel",
            "dvr_rheader",
            )
 
@@ -38,16 +40,18 @@ from ..s3 import *
 from s3layouts import S3PopupLink
 
 # =============================================================================
-class S3DVRModel(S3Model):
+class DVRCaseModel(S3Model):
     """
+        Model for DVR Cases
+
         Allow an individual or household to register to receive
         compensation and/or distributions of relief items
     """
 
     names = ("dvr_case",
+             "dvr_case_id",
+             "dvr_case_status_opts",
              "dvr_case_type",
-             "dvr_need",
-             "dvr_case_need",
              )
 
     def model(self):
@@ -55,7 +59,7 @@ class S3DVRModel(S3Model):
         T = current.T
         db = current.db
 
-        UNKNOWN_OPT = current.messages.UNKNOWN_OPT
+        #UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
@@ -172,14 +176,14 @@ class S3DVRModel(S3Model):
                            ),
                      self.org_organisation_id(),
                      self.super_link("site_id", "org_site",
-                                    filterby = "site_id",
-                                    filter_opts = permitted_facilities,
-                                    label = SITE,
-                                    readable = True,
-                                    writable = True,
-                                    represent = self.org_site_represent,
-                                    updateable = True,
-                                    ),
+                                     filterby = "site_id",
+                                     filter_opts = permitted_facilities,
+                                     label = SITE,
+                                     readable = True,
+                                     writable = True,
+                                     represent = self.org_site_represent,
+                                     updateable = True,
+                                     ),
                      self.pr_person_id(
                         # @ToDo: Modify this to update location_id if the selected
                         #        person has a Home Address already
@@ -188,7 +192,7 @@ class S3DVRModel(S3Model):
                         requires = IS_ADD_PERSON_WIDGET2(),
                         widget = S3AddPersonWidget2(controller="pr"),
                         ondelete = "CASCADE",
-                     ),
+                        ),
                      #Field("damage", "integer",
                      #      label= T("Damage Assessment"),
                      #      represent = lambda opt: \
@@ -213,24 +217,17 @@ class S3DVRModel(S3Model):
             msg_record_created = T("Case added"),
             msg_record_modified = T("Case updated"),
             msg_record_deleted = T("Case deleted"),
-            msg_list_empty = T("No Cases found")
-        )
+            msg_list_empty = T("No Cases found"),
+            )
 
-        represent = S3Represent(lookup=tablename, fields=("reference",))
-        case_id = S3ReusableField("case_id", "reference %s" % tablename,
-                                  label = T("Case"),
-                                  ondelete = "RESTRICT",
-                                  represent = represent,
-                                  requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, "dvr_case.id",
-                                                          represent)),
-                                  )
-
+        # Components
         self.add_components(tablename,
                             dvr_need =  {"link": "dvr_case_need",
                                          "joinby": "case_id",
                                          "key": "need_id",
                                          },
+                            dvr_case_activity = "case_id",
+                            # Not valid for write:
                             pr_address = ({"name": "current_address",
                                            "link": "pr_person",
                                            "joinby": "id",
@@ -252,33 +249,36 @@ class S3DVRModel(S3Model):
                                           ),
                             )
 
+        # CRUD form
         crud_form = S3SQLCustomForm("reference",
                                     "organisation_id",
                                     "status",
                                     "person_id",
-                                    S3SQLInlineComponent("current_address",
-                                                         label = T("Current Address"),
-                                                         fields = [("", "location_id"),
-                                                                   ],
-                                                         default = {"type": 1}, # Current Home Address
-                                                         link = False,
-                                                         multiple = False,
-                                                         ),
-                                    S3SQLInlineComponent("permanent_address",
-                                                         comment = T("If Displaced"),
-                                                         label = T("Normal Address"),
-                                                         fields = [("", "location_id"),
-                                                                   ],
-                                                         default = {"type": 2}, # Permanent Home Address
-                                                         link = False,
-                                                         multiple = False,
-                                                         ),
+                                    # Not valid for write:
+                                    #S3SQLInlineComponent("current_address",
+                                    #                     label = T("Current Address"),
+                                    #                     fields = [("", "location_id"),
+                                    #                               ],
+                                    #                     default = {"type": 1}, # Current Home Address
+                                    #                     link = False,
+                                    #                     multiple = False,
+                                    #                     ),
+                                    #S3SQLInlineComponent("permanent_address",
+                                    #                     comment = T("If Displaced"),
+                                    #                     label = T("Normal Address"),
+                                    #                     fields = [("", "location_id"),
+                                    #                               ],
+                                    #                     default = {"type": 2}, # Permanent Home Address
+                                    #                     link = False,
+                                    #                     multiple = False,
+                                    #                     ),
                                     S3SQLInlineLink("need",
                                                     field = "need_id",
                                                     ),
                                     "comments",
                                     )
 
+        # Report options
         axes = ["organisation_id",
                 "case_need.need_id",
                 ]
@@ -300,11 +300,61 @@ class S3DVRModel(S3Model):
                                        },
                           }
 
+        # Table configuration
         configure(tablename,
                   crud_form = crud_form,
                   report_options = report_options,
                   )
 
+        # Reusable field
+        represent = S3Represent(lookup=tablename, fields=("reference",))
+        case_id = S3ReusableField("case_id", "reference %s" % tablename,
+                                  label = T("Case"),
+                                  ondelete = "RESTRICT",
+                                  represent = represent,
+                                  requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "dvr_case.id",
+                                                          represent)),
+                                  )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"dvr_case_id": case_id,
+                "dvr_case_status_opts": case_status_opts,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"dvr_case_id": lambda **attr: dummy("case_id"),
+                "dvr_case_status_opts": {},
+                }
+
+# =============================================================================
+class DVRNeedsModel(S3Model):
+    """ Model for Needs """
+
+    names = ("dvr_need",
+             "dvr_need_id",
+             "dvr_case_need",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        configure = self.configure
 
         # ---------------------------------------------------------------------
         # Needs
@@ -329,9 +379,15 @@ class S3DVRModel(S3Model):
             msg_record_created = T("Need added"),
             msg_record_modified = T("Need updated"),
             msg_record_deleted = T("Need deleted"),
-            msg_list_empty = T("No Needs found")
-        )
+            msg_list_empty = T("No Needs found"),
+            )
 
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # Reusable field
         represent = S3Represent(lookup=tablename, translate=True)
         need_id = S3ReusableField("need_id", "reference %s" % tablename,
                                   label = T("Need"),
@@ -346,36 +402,161 @@ class S3DVRModel(S3Model):
                                                       ),
                                   )
 
-        configure(tablename,
-                  deduplicate = S3Duplicate(),
-                  )
-
         # ---------------------------------------------------------------------
-        # Cases <> Needs
+        # Link table Case <=> Need
         #
         tablename = "dvr_case_need"
         define_table(tablename,
-                     case_id(empty = False,
-                             ondelete = "CASCADE",
-                             ),
+                     self.dvr_case_id(empty = False,
+                                      ondelete = "CASCADE",
+                                      ),
                      need_id(empty = False,
                              ondelete = "CASCADE",
                              ),
-                     #s3_comments(),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {"dvr_case_status_opts": case_status_opts,
+        return {"dvr_need_id": need_id,
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"dvr_need_id": lambda **attr: dummy("need_id"),
+                }
+
+# =============================================================================
+class DVRCaseActivityModel(S3Model):
+    """ Model for Case Activities """
+
+    names = ("dvr_case_activity",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        configure = self.configure
+
+        twoweeks = current.request.utcnow + datetime.timedelta(days=14)
+
+        # ---------------------------------------------------------------------
+        # Case Activity
+        #
+        tablename = "dvr_case_activity"
+        define_table(tablename,
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     self.dvr_case_id(empty = False,
+                                      label = T("Case Number"),
+                                      ondelete = "CASCADE",
+                                      ),
+                     s3_date("start_date",
+                             label = T("Registered on"),
+                             default = "now",
+                             ),
+                     self.dvr_need_id(label = T("Need Type"),
+                                      ),
+                     Field("need_details", "text",
+                           label = T("Need Details"),
+                           represent = s3_text_represent,
+                           widget = s3_comments_widget,
+                           ),
+                     # Activate in template as needed:
+                     self.org_organisation_id(label=T("Referral Agency"),
+                                              readable = False,
+                                              writable = False,
+                                              ),
+                     Field("referral_details", "text",
+                           label = T("Support provided"),
+                           represent = s3_text_represent,
+                           ),
+                     Field("followup", "boolean",
+                           default = True,
+                           label = T("Follow up"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     s3_date("followup_date",
+                             default = twoweeks,
+                             label = T("Date for Follow-up"),
+                             past = 0,
+                             ),
+                     # @todo: provide options lookup?
+                     Field("outcome",
+                           label = T("Outcome"),
+                           ),
+                     Field("completed", "boolean",
+                           default = False,
+                           label = T("Completed"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     #s3_date("end_date",
+                     #        readable = False,
+                     #        writable = False,
+                     #        ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Activity"),
+            title_display = T("Activity Details"),
+            title_list = T("Activities"),
+            title_update = T("Edit Activity"),
+            label_list_button = T("List Activities"),
+            label_delete_button = T("Delete Activity"),
+            msg_record_created = T("Activity added"),
+            msg_record_modified = T("Activity updated"),
+            msg_record_deleted = T("Activity deleted"),
+            msg_list_empty = T("No Activities currently registered"),
+            )
+
+        list_fields = ["start_date",
+                       "need_id",
+                       "need_details",
+                       "referral_details",
+                       "followup",
+                       "followup_date",
+                       "completed",
+                       ]
+
+        # Table configuration
+        configure(tablename,
+                  list_fields = list_fields,
+                  orderby = "dvr_case_activity.start_date desc",
+                  )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        return {}
 
 # =============================================================================
 def dvr_rheader(r, tabs=[]):
     """ DVR module resource headers """
 
     if r.representation != "html":
-        # RHeaders only used in interactive views
+        # Resource headers only used in interactive views
         return None
 
     tablename = r.tablename
@@ -391,6 +572,7 @@ def dvr_rheader(r, tabs=[]):
 
             if not tabs:
                 tabs = [(T("Basic Details"), ""),
+                        (T("Activities"), "case_activity"),
                         ]
 
             dvr_case = r.resource.select(["dvr_case.reference"]).rows

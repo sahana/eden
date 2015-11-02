@@ -1024,6 +1024,7 @@ class S3PersonModel(S3Model):
                                    "joinby": "person_id",
                                    "multiple": False,
                                    },
+                       dvr_case_activity = "person_id",
                        # Evacuee Registry
                        evr_case = {"joinby": "person_id",
                                    "multiple": False,
