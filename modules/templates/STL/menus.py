@@ -54,9 +54,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Case Types", f="case_type")(
                         M("Create", m="create"),
                     ),
-                    #M("Needs", f="need")(
-                    #    M("Create", m="create"),
-                    #),
+                    M("Need Types", f="need")(
+                       M("Create", m="create"),
+                    ),
                 )
 
 # END =========================================================================

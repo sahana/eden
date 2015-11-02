@@ -144,6 +144,10 @@ def person():
                                     #label = T("Case Type"),
                                     options = lambda: get_s3_filter_opts("dvr_case_type"),
                                     ),
+                    S3OptionsFilter("dvr_case_activity.need_id",
+                                    options = lambda: get_s3_filter_opts("dvr_need"),
+                                    hidden = True,
+                                    ),
                     ]
 
                 resource.configure(crud_form = crud_form,

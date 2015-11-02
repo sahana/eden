@@ -368,18 +368,18 @@ class DVRNeedsModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_NEED = T("Create Need")
+        ADD_NEED = T("Create Need Type")
         crud_strings[tablename] = Storage(
             label_create = ADD_NEED,
-            title_display = T("Need Details"),
-            title_list = T("Needs"),
-            title_update = T("Edit Need"),
-            label_list_button = T("List Needs"),
-            label_delete_button = T("Delete Need"),
-            msg_record_created = T("Need added"),
-            msg_record_modified = T("Need updated"),
-            msg_record_deleted = T("Need deleted"),
-            msg_list_empty = T("No Needs found"),
+            title_display = T("Need Type Details"),
+            title_list = T("Need Types"),
+            title_update = T("Edit Need Type"),
+            label_list_button = T("List Need Types"),
+            label_delete_button = T("Delete Need Type"),
+            msg_record_created = T("Need Type added"),
+            msg_record_modified = T("Need Type updated"),
+            msg_record_deleted = T("Need Type deleted"),
+            msg_list_empty = T("No Need Types found"),
             )
 
         # Table configuration
@@ -390,7 +390,7 @@ class DVRNeedsModel(S3Model):
         # Reusable field
         represent = S3Represent(lookup=tablename, translate=True)
         need_id = S3ReusableField("need_id", "reference %s" % tablename,
-                                  label = T("Need"),
+                                  label = T("Need Type"),
                                   ondelete = "RESTRICT",
                                   represent = represent,
                                   requires = IS_EMPTY_OR(
@@ -468,8 +468,7 @@ class DVRCaseActivityModel(S3Model):
                              label = T("Registered on"),
                              default = "now",
                              ),
-                     self.dvr_need_id(label = T("Need Type"),
-                                      ),
+                     self.dvr_need_id(),
                      Field("need_details", "text",
                            label = T("Need Details"),
                            represent = s3_text_represent,
@@ -575,12 +574,18 @@ def dvr_rheader(r, tabs=[]):
                         (T("Activities"), "case_activity"),
                         ]
 
-            dvr_case = r.resource.select(["dvr_case.reference"]).rows
-            case = lambda row: dvr_case[0]["dvr_case.reference"] \
-                               if dvr_case else current.messages["NONE"]
+            case = r.resource.select(["dvr_case.reference",
+                                      "dvr_case.case_type_id",
+                                      ],
+                                      represent=True,
+                                      ).rows[0]
+
+            case_number = lambda row: case["dvr_case.reference"]
+            case_type = lambda row: case["dvr_case.case_type_id"]
             name = lambda row: s3_fullname(row)
 
-            rheader_fields = [[(T("Case Number"), case)],
+            rheader_fields = [[(T("Case Number"), case_number)],
+                              [(T("Case Type"), case_type)],
                               [(T("Name"), name)],
                               ["date_of_birth"],
                               ]
