@@ -20,7 +20,7 @@ def config(settings):
     T = current.T
 
     settings.base.system_name = T("Sahana Eden Deployment")
-    settings.base.theme = "default"
+    #settings.base.theme = "default"
 
     # -----------------------------------------------------------------------------
     settings.modules = OrderedDict([

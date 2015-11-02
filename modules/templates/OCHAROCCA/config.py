@@ -22,7 +22,7 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Pre-Populate
-    settings.base.prepopulate = ("OCHAROCCA", "default/users")
+    settings.base.prepopulate += ("OCHAROCCA", "default/users")
 
     settings.base.system_name = T("OCHA Regional Office of Caucasus and Central Asia (ROCCA) Humanitarian Data Platform")
     settings.base.system_name_short = T("Humanitarian Data Platform")

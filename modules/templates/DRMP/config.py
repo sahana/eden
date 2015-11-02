@@ -30,7 +30,7 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Pre-Populate
-    settings.base.prepopulate = ("DRMP", "default/users")
+    settings.base.prepopulate += ("DRMP", "default/users")
 
     settings.base.system_name = T("Timor-Leste Disaster Risk Management Information System")
     settings.base.system_name_short = T("DRMIS")

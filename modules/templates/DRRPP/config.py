@@ -22,7 +22,7 @@ def config(settings):
     # Base Settings
 
     # Pre-Populate
-    settings.base.prepopulate = ("DRRPP", "default/users")
+    settings.base.prepopulate += ("DRRPP", "default/users")
 
     settings.base.system_name = T("DRR Project Portal")
     settings.base.system_name_short = T("DRRPP")

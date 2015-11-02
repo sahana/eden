@@ -27,7 +27,7 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Pre-Populate
-    settings.base.prepopulate = ("MCOP", "default/users")
+    settings.base.prepopulate += ("MCOP", "default/users")
 
     settings.base.system_name = T("Sahana: Washington Common Operating Picture (WA-COP)")
     settings.base.system_name_short = T("Sahana")

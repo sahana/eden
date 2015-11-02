@@ -21,7 +21,7 @@ def config(settings):
     #settings.base.system_name_short = T("MAVC")
 
     # PrePopulate data
-    settings.base.prepopulate = ("MAVC", "default/users", "MAVC/Demo")
+    settings.base.prepopulate += ("MAVC", "default/users", "MAVC/Demo")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "MAVC"

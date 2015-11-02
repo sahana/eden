@@ -21,7 +21,7 @@ def config(settings):
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
-    settings.base.prepopulate = ("STL", "default/users", "STL/Demo")
+    settings.base.prepopulate += ("STL", "default/users", "STL/Demo")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "STL"

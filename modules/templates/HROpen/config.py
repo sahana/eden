@@ -21,7 +21,7 @@ def config(settings):
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
-    settings.base.prepopulate = ("HROpen", "default/users")
+    settings.base.prepopulate += ("HROpen", "default/users")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "HROpen"

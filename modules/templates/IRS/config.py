@@ -23,7 +23,7 @@ def config(settings):
     settings.base.system_name_short = T("SL IRS")
 
     # PrePopulate data
-    settings.base.prepopulate = ("IRS", "default/users")
+    settings.base.prepopulate += ("IRS", "default/users")
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "IRS"

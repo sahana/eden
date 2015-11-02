@@ -30,7 +30,7 @@ def config(settings):
                                                      ),
                                          }
     # Prepop default
-    settings.base.prepopulate = "template:default"
+    settings.base.prepopulate += ("CAD", "default/users", "CAD/Demo")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "default"

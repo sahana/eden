@@ -24,7 +24,7 @@ def config(settings):
     settings.base.system_name_short = "RGIMS"
 
     # Pre-Populate
-    settings.base.prepopulate = ("RGIMS", "default/users")
+    settings.base.prepopulate += ("RGIMS", "default/users")
 
     # Theme
     settings.base.theme = "RGIMS"

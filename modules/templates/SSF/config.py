@@ -25,7 +25,7 @@ def config(settings):
     T = current.T
 
     # Pre-Populate
-    settings.base.prepopulate = ("SSF", "default/users")
+    settings.base.prepopulate += ("SSF", "default/users")
     # Base settings
     settings.base.system_name = T("Sahana Sunflower: A Community Portal")
     settings.base.system_name_short = T("Sahana Sunflower")

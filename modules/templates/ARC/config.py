@@ -23,7 +23,7 @@ def config(settings):
     # System Settings
     # -------------------------------------------------------------------------
     # Pre-Populate
-    settings.base.prepopulate = ("ARC", "ARC/Demo", "default/users")
+    settings.base.prepopulate += ("ARC", "ARC/Demo", "default/users")
 
     settings.base.system_name = T("Resource Management System")
     settings.base.system_name_short = T("ARC Demo")

@@ -31,7 +31,7 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Pre-Populate
-    settings.base.prepopulate = ("Philippines", "default/users")
+    settings.base.prepopulate += ("Philippines", "default/users")
 
     settings.base.system_name = T("Sahana")
     settings.base.system_name_short = T("Sahana")

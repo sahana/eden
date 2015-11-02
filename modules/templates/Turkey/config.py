@@ -22,7 +22,7 @@ def config(settings):
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
-    settings.base.prepopulate = ("Turkey", "default/users", "Turkey/Demo")
+    settings.base.prepopulate += ("Turkey", "default/users", "Turkey/Demo")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "Turkey"

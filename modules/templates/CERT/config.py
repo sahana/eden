@@ -22,7 +22,7 @@ def config(settings):
     T = current.T
 
     # Pre-Populate
-    settings.base.prepopulate = ("CERT", "default/users")
+    settings.base.prepopulate += ("CERT", "default/users")
 
     # Theme
     #settings.base.theme = "CERT"

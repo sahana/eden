@@ -24,7 +24,7 @@ def config(settings):
     settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
-    settings.base.prepopulate = ("Magnu", "default/users")
+    settings.base.prepopulate += ("Magnu", "default/users")
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "Magnu"

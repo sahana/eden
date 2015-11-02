@@ -122,7 +122,7 @@ class S3Config(Storage):
         self.auth.email_domains = []
         self.base = Storage()
         # Allow templates to append rather than replace
-        self.base.prepopulate = ["core"]
+        self.base.prepopulate = ["default/base"]
         self.cap = Storage()
         self.cms = Storage()
         self.cr = Storage()

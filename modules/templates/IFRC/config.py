@@ -24,8 +24,8 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Pre-Populate
-    #settings.base.prepopulate = ("IFRC", "IFRC/Train", "IFRC/Demo")
-    settings.base.prepopulate = ("IFRC", "IFRC/Train")
+    #settings.base.prepopulate += ("IFRC", "IFRC/Train", "IFRC/Demo")
+    settings.base.prepopulate += ("IFRC", "IFRC/Train")
 
     settings.base.system_name = T("Resource Management System")
     settings.base.system_name_short = T("RMS")

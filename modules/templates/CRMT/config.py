@@ -24,7 +24,7 @@ def config(settings):
 
     # -----------------------------------------------------------------------------
     # Pre-Populate
-    settings.base.prepopulate = ("CRMT", "default/users", "CRMT/Demo")
+    settings.base.prepopulate += ("CRMT", "default/users", "CRMT/Demo")
 
     settings.base.system_name = T("Sahana LA Community Resilience Mapping Tool")
     settings.base.system_name_short = T("CRMT")

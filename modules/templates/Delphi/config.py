@@ -23,10 +23,10 @@ def config(settings):
     settings.base.system_name_short = T("Decision Support 2.0")
 
     # Pre-Populate
-    settings.base.prepopulate = ("Delphi",
-                                 #"Delphi/Demo",
-                                 "default/users",
-                                 )
+    settings.base.prepopulate += ("Delphi",
+                                  #"Delphi/Demo",
+                                  "default/users",
+                                  )
 
     # Uncomment to Hide the language toolbar
     #settings.L10n.display_toolbar = False
