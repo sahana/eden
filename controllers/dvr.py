@@ -194,4 +194,19 @@ def need():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def housing():
+    """ Housing: RESTful CRUD Controller for option lookups """
+
+    s3.prep = lambda r: r.method == "options" and \
+                        r.representation == "s3json"
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def housing_type():
+    """ Housing Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
 # END =========================================================================

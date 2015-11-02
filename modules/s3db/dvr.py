@@ -30,6 +30,7 @@
 __all__ = ("DVRCaseModel",
            "DVRNeedsModel",
            "DVRCaseActivityModel",
+           "DVRHousingInformationModel",
            "dvr_rheader",
            )
 
@@ -227,6 +228,9 @@ class DVRCaseModel(S3Model):
                                          "key": "need_id",
                                          },
                             dvr_case_activity = "case_id",
+                            dvr_housing = {"joinby": "case_id",
+                                           "multiple": False,
+                                           },
                             # Not valid for write:
                             pr_address = ({"name": "current_address",
                                            "link": "pr_person",
@@ -457,6 +461,8 @@ class DVRCaseActivityModel(S3Model):
         #
         tablename = "dvr_case_activity"
         define_table(tablename,
+                     # Beneficiary (component link):
+                     # @todo: populate from case and hide in case perspective
                      self.pr_person_id(empty = False,
                                        ondelete = "CASCADE",
                                        ),
@@ -551,6 +557,125 @@ class DVRCaseActivityModel(S3Model):
         return {}
 
 # =============================================================================
+class DVRHousingInformationModel(S3Model):
+    """ Model for Housing Information """
+
+    names = ("dvr_housing",
+             "dvr_housing_type",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        configure = self.configure
+
+        # ---------------------------------------------------------------------
+        # Housing Types
+        #
+        tablename = "dvr_housing_type"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Type"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Housing Type"),
+            title_display = T("Housing Type"),
+            title_list = T("Housing Types"),
+            title_update = T("Edit Housing Type"),
+            label_list_button = T("List Housing Types"),
+            label_delete_button = T("Delete Housing Type"),
+            msg_record_created = T("Housing Type added"),
+            msg_record_modified = T("Housing Type updated"),
+            msg_record_deleted = T("Housing Type deleted"),
+            msg_list_empty = T("No Housing Types currently registered")
+            )
+
+        # Represent for reference
+        housing_type_represent = S3Represent(lookup = "dvr_housing_type",
+                                             translate = True,
+                                             )
+
+        # ---------------------------------------------------------------------
+        # Housing Information
+        #
+        tablename = "dvr_housing"
+        define_table(tablename,
+                     # Beneficiary (component link):
+                     # @todo: populate from case and hide in case perspective
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     self.dvr_case_id(empty = False,
+                                      label = T("Case Number"),
+                                      ondelete = "CASCADE",
+                                      ),
+                     FieldS3("housing_type_id", "reference dvr_housing_type",
+                             label = T("Housing Type"),
+                             represent = housing_type_represent,
+                             requires = IS_EMPTY_OR(IS_ONE_OF(
+                                                db, "dvr_housing_type.id",
+                                                housing_type_represent,
+                                                )),
+                             sortby = "name",
+                             comment = S3PopupLink(c = "dvr",
+                                                   f = "housing_type",
+                                                   tooltip = T("Create a new housing type"),
+                                                   ),
+                             ),
+                     Field("monthly_costs", "double",
+                           label = T("Monthly Costs"),
+                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           ),
+                     s3_currency(),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Housing Information"),
+            title_display = T("Housing Information"),
+            title_list = T("Housing Information"),
+            title_update = T("Edit Housing Information"),
+            label_list_button = T("List Housing Information"),
+            label_delete_button = T("Delete Housing Information"),
+            msg_record_created = T("Housing Information added"),
+            msg_record_modified = T("Housing Information updated"),
+            msg_record_deleted = T("Housing Information deleted"),
+            msg_list_empty = T("No Housing Information currently registered"),
+            )
+
+        list_fields = ["housing_type_id",
+                       "monthly_costs",
+                       "comments",
+                       ]
+
+        # Table configuration
+        configure(tablename,
+                  list_fields = list_fields,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        return {}
+
+# =============================================================================
 def dvr_rheader(r, tabs=[]):
     """ DVR module resource headers """
 
@@ -572,6 +697,7 @@ def dvr_rheader(r, tabs=[]):
             if not tabs:
                 tabs = [(T("Basic Details"), ""),
                         (T("Activities"), "case_activity"),
+                        (T("Housing"), "housing"),
                         ]
 
             case = r.resource.select(["dvr_case.reference",
