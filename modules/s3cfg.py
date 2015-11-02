@@ -121,6 +121,8 @@ class S3Config(Storage):
         self.auth = Storage()
         self.auth.email_domains = []
         self.base = Storage()
+        # Allow templates to append rather than replace
+        self.base.prepopulate = ["core"]
         self.cap = Storage()
         self.cms = Storage()
         self.cr = Storage()
@@ -158,30 +160,21 @@ class S3Config(Storage):
 
         self._debug = None
         self._lazy_unwrapped = []
+        
+        # Provide a minimal list of core modules
+        self.modules = {"default": Storage(name_nice = "Home",
+                                           ),      # Default
+                        "admin": Storage(name_nice = "Administration",
+                                         ),        # Admin
+                        "gis": Storage(name_nice = "Map",
+                                       ),          # GIS
+                        "pr": Storage(),           # Person Registry
+                        "org": Storage(name_nice = "Organizations",
+                                       ),          # Organization Registry
+                        }
 
     # -------------------------------------------------------------------------
-    # Template
-    def get_template(self):
-        """
-            Which deployment template to use for config.py, layouts.py, menus.py
-            http://eden.sahanafoundation.org/wiki/BluePrint/Templates
-        """
-        return self.base.get("template", "default")
-
-    def get_template_location(self):
-
-        return self.base.get("template_location", "modules")
-
-    def exec_template(self, path):
-        """
-            Legacy function, retained for backwards-compatibility with
-            existing 000_config.py instances => modern 000_config.py
-            should just call settings.import_template()
-
-            @todo: deprecate
-        """
-        self.import_template()
-
+    # Debug
     def check_debug(self):
         """
             (Lazy) check debug mode and activate the respective settings
@@ -204,6 +197,29 @@ class S3Config(Storage):
                 s3.debug = False
                 track_changes(False)
 
+    # -------------------------------------------------------------------------
+    # Template
+    def get_template(self):
+        """
+            Which deployment template to use for config.py, layouts.py, menus.py
+            http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Templates
+        """
+        return self.base.get("template", "default")
+
+    def get_template_location(self):
+
+        return self.base.get("template_location", "modules")
+
+    def exec_template(self, path):
+        """
+            Legacy function, retained for backwards-compatibility with
+            existing 000_config.py instances => modern 000_config.py
+            should just call settings.import_template()
+
+            @todo: deprecate
+        """
+        self.import_template()
+
     def import_template(self, config="config"):
         """
             Import and invoke the template config (new module pattern)
@@ -216,6 +232,8 @@ class S3Config(Storage):
         """
 
         name = self.get_template()
+        if "/" in name:
+            name = ".".join(name.split("/"))
         package = "templates.%s" % name
 
         self.check_debug()
@@ -317,21 +335,9 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     def has_module(self, module_name):
         """
-            List of Active Modules
+            Whether a Module is enabled in the current template
         """
-        if not self.modules:
-            # Provide a minimal list of core modules
-            _modules = [
-                "default",      # Default
-                "admin",        # Admin
-                "gis",          # GIS
-                "pr",           # Person Registry
-                "org"           # Organization Registry
-            ]
-        else:
-            _modules = self.modules
-
-        return module_name in _modules
+        return module_name in self.modules
 
     # -------------------------------------------------------------------------
     def is_cd_version(self):

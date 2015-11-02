@@ -1,0 +1,3 @@
+UUID,Name,OU,OU Type,Region Country,Default Country,Default L1,Default L2,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Marker,WMS Browser
+SITE_DEFAULT,Default,,,,NZ,,,6,-41.99,172.34,900913,-53,-28,165,180,,
+,NZ,,,NZ,NZ,,,6,-41.99,172.34,900913,-53,-28,165,180,,

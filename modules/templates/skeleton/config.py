@@ -26,6 +26,7 @@ def config(settings):
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
+    #settings.base.prepopulate += ("skeleton", "default/users")
     settings.base.prepopulate = ("skeleton", "default/users")
 
     # Theme (folder to use for views/layout.html)
