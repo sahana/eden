@@ -59,28 +59,34 @@ S3OptionsMenu = default_menus.S3OptionsMenu
 current.menu = Storage(options=None, override={})
 if auth.permission.format in ("html"):
 
-    menus = None
     theme = settings.get_theme()
+
     location = settings.get_template_location()
     package = "applications.%s.%s.templates.%%s.menus" % (appname, location)
+
+    menu_locations = []
     if theme != "default":
-        # Custom theme => try loading menus from theme
-        menus = package % theme
+        menu_locations.append(theme)
     else:
         template = settings.get_template()
-        if template != "default":
-            # Custom template => try loading menus from template
-            menus = package % template
+        if isinstance(template, (tuple, list)):
+            menu_locations.extend(template)
+        else:
+            menu_locations.append(template)
 
-    if menus:
+    for name in menu_locations:
+        if name == "default":
+            # Using s3menus.py
+            continue
         try:
-            deployment_menus = __import__(menus,
+            deployment_menus = __import__(package % name,
                                           fromlist=["S3MainMenu",
                                                     "S3OptionsMenu",
                                                     ],
                                           )
         except ImportError:
-            pass
+            # No menus.py (using except is faster than os.stat)
+            continue
         else:
             if hasattr(deployment_menus, "S3MainMenu"):
                 S3MainMenu = deployment_menus.S3MainMenu
