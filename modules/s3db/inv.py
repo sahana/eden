@@ -4904,7 +4904,8 @@ def inv_stock_movements(resource, selectors, orderby):
         # Outgoing quantities
         quantity_in = raw["inv_track_item.quantity"]
         if quantity_in:
-            if raw["inv_send.date"] > latest:
+            send_date = raw["inv_send.date"]
+            if send_date and send_date > latest:
                 item_data["quantity_out_after"] += quantity_in
                 continue
             else:
