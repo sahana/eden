@@ -84,8 +84,9 @@ class DVRCaseModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
+        ADD_CASE_TYPE = T("Create Case Type")
         crud_strings[tablename] = Storage(
-            label_create = T("Create Case Type"),
+            label_create = ADD_CASE_TYPE,
             title_display = T("Case Type"),
             title_list = T("Case Types"),
             title_update = T("Edit Case Type"),
@@ -146,7 +147,8 @@ class DVRCaseModel(S3Model):
                              sortby = "name",
                              comment = S3PopupLink(c = "dvr",
                                                    f = "case_type",
-                                                   tooltip = T("Create a new case type"),
+                                                   title = ADD_CASE_TYPE,
+                                                   tooltip = T("Choose the case type from the drop-down, or click the link to create a new type"),
                                                    # Always look up options from dvr/case
                                                    # (required if inline in person form):
                                                    vars = {"parent": "case",
@@ -402,7 +404,8 @@ class DVRNeedsModel(S3Model):
                                                           represent)),
                                   comment=S3PopupLink(c = "dvr",
                                                       f = "need",
-                                                      label = ADD_NEED,
+                                                      title = ADD_NEED,
+                                                      tooltip = T("Choose the need type from the drop-down, or click the link to create a new type"),
                                                       ),
                                   )
 
@@ -586,8 +589,9 @@ class DVRHousingInformationModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
+        ADD_HOUSING_TYPE = T("Create Housing Type")
         crud_strings[tablename] = Storage(
-            label_create = T("Create Housing Type"),
+            label_create = ADD_HOUSING_TYPE,
             title_display = T("Housing Type"),
             title_list = T("Housing Types"),
             title_update = T("Edit Housing Type"),
@@ -628,7 +632,8 @@ class DVRHousingInformationModel(S3Model):
                              sortby = "name",
                              comment = S3PopupLink(c = "dvr",
                                                    f = "housing_type",
-                                                   tooltip = T("Create a new housing type"),
+                                                   title = ADD_HOUSING_TYPE,
+                                                   tooltip = T("Choose the housing type from the drop-down, or click the link to create a new type"),
                                                    ),
                              ),
                      Field("monthly_costs", "double",
