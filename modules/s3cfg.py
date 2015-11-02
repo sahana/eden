@@ -206,32 +206,43 @@ class S3Config(Storage):
 
     def import_template(self, config="config"):
         """
-            Import and invoke the template config (new module pattern)
+            Import and invoke the template config (new module pattern). Allows
+            to specify multiple templates like:
+
+                settings.template = ("default", "locations.US")
+
+            Configurations will be imported and executed in order of appearance
 
             @param config: name of the config-module
 
-            @todo: rewrite all config.py's with module pattern
             @todo: remove fallback when migration complete (+giving some
                    time for downstream projects to adapt)
         """
 
-        name = self.get_template()
-        package = "templates.%s" % name
+        names = self.get_template()
+        if not isinstance(names, (list, tuple)):
+            names = [names]
 
-        self.check_debug()
+        for name in names:
+            package = "templates.%s" % name
 
-        template = None
-        try:
-            # Import the template
-            template = getattr(__import__(package, fromlist=[config]), config)
-        except ImportError:
-            # Legacy template in "private"?
-            self.execute_template(name)
-        else:
-            template.config(self)
-            # Store location in response.s3 for compiled views
-            current.response.s3.template_location = "modules"
-        return template
+            self.check_debug()
+
+            template = None
+            try:
+                # Import the template
+                template = getattr(__import__(package, fromlist=[config]), config)
+            except ImportError:
+                # Legacy template in "private"?
+                if len(names) > 1:
+                    raise SyntaxError("Cascading templates not supported for script pattern")
+                self.execute_template(name)
+            else:
+                template.config(self)
+                # Store location in response.s3 for compiled views
+                current.response.s3.template_location = "modules"
+
+        return self
 
     def execute_template(self, name):
         """
@@ -1508,7 +1519,7 @@ class S3Config(Storage):
             Whether to translate CAP Area names
         """
         return self.L10n.get("translate_cap_area", False)
-    
+
     def get_L10n_pootle_url(self):
         """ URL for Pootle server """
         return self.L10n.get("pootle_url", "http://pootle.sahanafoundation.org/")
@@ -2169,16 +2180,16 @@ class S3Config(Storage):
     def get_sync_upload_filename(self):
         """
             Filename for upload via FTP Sync
-            
+
             Available placeholders:
                 $S = System Name (long)
                 $s = System Name (short)
                 $r = Resource Name
             Use {} to separate the placeholder from immediately following
             identifier characters (like: ${placeholder}text).
-        """        
+        """
         return self.sync.get("upload_filename", "$s $r")
-    
+
     # =========================================================================
     # Modules
 
@@ -2306,12 +2317,12 @@ class S3Config(Storage):
         """
 
         return self.cap.get("authorisation", True)
-    
+
     def get_cap_restrict_fields(self):
         """
             Whether to restrict fields for update, cancel or error of alerts
         """
-        
+
         return self.cap.get("restrict_fields", False)
 
     # -------------------------------------------------------------------------
@@ -3722,7 +3733,7 @@ class S3Config(Storage):
     def get_req_commit_people(self):
         """
             Whether Skills Requests should be Committed with Named Indviduals
-            or just Anonymous Skill 
+            or just Anonymous Skill
 
             @ToDo: Make this do something
         """
