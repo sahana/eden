@@ -375,7 +375,7 @@ class S3Notifications(object):
             return None
 
         # Render and send the message(s)
-        theme = settings.get_template()
+        themes = settings.get_template()
         prefix = resource.get_config("notify_template", "notify")
 
         send = current.msg.send_by_pe_id
@@ -392,10 +392,17 @@ class S3Notifications(object):
             filenames = ["%s_%s.html" % (prefix, method.lower())]
             if method == "EMAIL" and email_format:
                 filenames.insert(0, "%s_email_%s.html" % (prefix, email_format))
-            if theme != "default":
+            if themes != "default":
                 location = settings.get_template_location()
-                path = join(location, "templates", theme, "views", "msg")
-                template = get_template(path, filenames)
+                if not isinstance(themes, (list, tuple)):
+                    themes = [themes]
+                else:
+                    themes.reverse()
+                for theme in themes:
+                    path = join(location, "templates", theme, "views", "msg")
+                    template = get_template(path, filenames)
+                    if template is not None:
+                        break
             if template is None:
                 path = join("views", "msg")
                 template = get_template(path, filenames)

@@ -139,6 +139,7 @@ class S3DeployModel(S3Model):
                            default = "https://github.com/flavour/eden",
                            label = T("Eden Repo git URL"),
                            ),
+                     # @ToDo: Allow Multiple
                      Field("template",
                            label = T("Template"),
                            required = True,
@@ -556,10 +557,9 @@ def setup_log(filename, category, data):
 # -----------------------------------------------------------------------------
 def setup_get_templates():
     path = os.path.join(current.request.folder, "modules", "templates")
-    templates = set(
-                    os.path.basename(folder) for folder, subfolders, files in os.walk(path) \
-                        for file_ in files if file_ == 'config.py'
-                )
+    templates = set(os.path.basename(folder) for folder, subfolders, files in os.walk(path) \
+                        for file_ in files if file_ == "config.py"
+                    )
 
     return templates
 

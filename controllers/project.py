@@ -144,6 +144,7 @@ def project():
                     allowed_roles = dict(settings.get_project_organisation_roles())
                     if settings.get_template() == "DRRPP":
                         # Partner NS should only come via sync from RMS
+                        # @ToDo: Move to Template customise
                         allowed_roles.pop(9, None)
 
                     lead_role = 1

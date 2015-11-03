@@ -79,51 +79,64 @@ def index():
                 break
 
     custom = None
+    templates = settings.get_template()
     if page:
         # Go to a custom page,
         # - args[0] = name of the class in /modules/templates/<template>/controllers.py
         # - other args & vars passed through
-        template = settings.get_template()
-        location = settings.get_template_location()
-        package = "applications.%s.%s.templates.%s" % \
-                    (appname, location, template)
-        name = "controllers"
-        try:
-            custom = getattr(__import__(package, fromlist=[name]), name)
-        except (ImportError, AttributeError):
-            # No Custom Page available, continue with the default
-            page = "%s/templates/%s/controllers.py" % (location, template)
-            current.log.warning("File not loadable",
-                                "%s, %s" % (page, sys.exc_info()[1]))
+        template_location = settings.get_template_location()
+        if not isinstance(templates, (list, tuple)):
+            templates = [templates]
         else:
-            if hasattr(custom, page):
-                controller = getattr(custom, page)()
-            elif page != "login":
-                raise(HTTP(404, "Function not found: %s()" % page))
+            templates.reverse()
+        for template in templates:
+            package = "applications.%s.%s.templates.%s" % \
+                        (appname, template_location, template)
+            name = "controllers"
+            try:
+                custom = getattr(__import__(package, fromlist=[name]), name)
+            except (ImportError, AttributeError):
+                # No Custom Page available, continue with the default
+                #page = "%s/templates/%s/controllers.py" % (location, template)
+                #current.log.warning("File not loadable",
+                #                    "%s, %s" % (page, sys.exc_info()[1]))
+                continue
             else:
-                controller = custom.index()
-            output = controller()
-            return output
-
-    elif settings.get_template() != "default":
-        # Try a Custom Homepage
-        package = "applications.%s.%s.templates.%s" % \
-                    (appname,
-                     settings.get_template_location(),
-                     settings.get_template())
-        name = "controllers"
-        try:
-            custom = getattr(__import__(package, fromlist=[name]), name)
-        except (ImportError, AttributeError):
-            # No Custom Page available, continue with the default
-            # @ToDo: cache this result in session
-            import sys
-            current.log.warning("Custom homepage cannot be loaded",
-                                sys.exc_info()[1])
-        else:
-            if hasattr(custom, "index"):
-                output = custom.index()()
+                if hasattr(custom, page):
+                    controller = getattr(custom, page)()
+                elif page != "login":
+                    raise(HTTP(404, "Function not found: %s()" % page))
+                else:
+                    controller = custom.index()
+                output = controller()
                 return output
+
+    elif templates != "default":
+        # Try a Custom Homepage
+        name = "controllers"
+        template_location = settings.get_template_location()
+        if not isinstance(templates, (list, tuple)):
+            templates = [templates]
+        else:
+            templates.reverse()
+        for template in templates:
+            package = "applications.%s.%s.templates.%s" % \
+                        (appname,
+                         template_location,
+                         template)
+            try:
+                custom = getattr(__import__(package, fromlist=[name]), name)
+            except (ImportError, AttributeError):
+                # No Custom Page available, continue with the next option, or default
+                # @ToDo: cache this result in session
+                #import sys
+                #current.log.warning("Custom homepage cannot be loaded",
+                                    #sys.exc_info()[1])
+                continue
+            else:
+                if hasattr(custom, "index"):
+                    output = custom.index()()
+                    return output
 
     # Default Homepage
     title = settings.get_system_name()
@@ -552,21 +565,31 @@ def user():
         if s3.crud.submit_style:
             form[0][-1][1][0]["_class"] = s3.crud.submit_style
 
-    if settings.get_template() != "default":
+    templates = settings.get_template()
+    if templates != "default":
         # Try a Custom View
-        view = os.path.join(request.folder,
-                            settings.get_template_location(),
-                            "templates",
-                            settings.get_template(),
-                            "views",
-                            "user.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+        folder = request.folder
+        template_location = settings.get_template_location()
+        if not isinstance(templates, (list, tuple)):
+            templates = [templates]
+        else:
+            templates.reverse()
+        for template in templates:
+            view = os.path.join(folder,
+                                template_location,
+                                "templates",
+                                template,
+                                "views",
+                                "user.html")
+            if os.path.exists(view):
+                try:
+                    # Pass view as file not str to work in compiled mode
+                    response.view = open(view, "rb")
+                except IOError:
+                    from gluon.http import HTTP
+                    raise HTTP("404", "Unable to open Custom View: %s" % view)
+                else:
+                    break
 
     return dict(title=title,
                 form=form,
@@ -938,21 +961,7 @@ def about():
         versions available to this instance of Sahana Eden.
     """
 
-    if settings.get_template() != "default":
-        # Try a Custom View
-        view = os.path.join(request.folder,
-                            settings.get_template_location(),
-                            "templates",
-                            settings.get_template(),
-                            "views",
-                            "about.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+    _custom_view("about")
 
     # Allow editing of page content from browser using CMS module
     if settings.has_module("cms"):
@@ -1170,21 +1179,7 @@ def about():
 def help():
     """ CMS page or Custom View """
 
-    if settings.get_template() != "default":
-        # Try a Custom View
-        view = os.path.join(request.folder,
-                            settings.get_template_location(),
-                            "templates",
-                            settings.get_template(),
-                            "views",
-                            "help.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+    _custom_view("help")
 
     # Allow editing of page content from browser using CMS module
     if settings.has_module("cms"):
@@ -1248,21 +1243,7 @@ def help():
 def privacy():
     """ Custom View """
 
-    if settings.get_template() != "default":
-        # Try a Custom View
-        view = os.path.join(request.folder,
-                            settings.get_template_location(),
-                            "templates",
-                            settings.get_template(),
-                            "views",
-                            "privacy.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+    _custom_view("privacy")
 
     response.title = T("Privacy")
     return dict()
@@ -1271,21 +1252,7 @@ def privacy():
 def tos():
     """ Custom View """
 
-    if settings.get_template() != "default":
-        # Try a Custom View
-        view = os.path.join(request.folder,
-                            settings.get_template_location(),
-                            "templates",
-                            settings.get_template(),
-                            "views",
-                            "tos.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+    _custom_view("tos")
 
     response.title = T("Terms of Service")
     return dict()
@@ -1294,21 +1261,7 @@ def tos():
 def video():
     """ Custom View """
 
-    if settings.get_template() != "default":
-        # Try a Custom View
-        view = os.path.join(request.folder,
-                            settings.get_template_location(),
-                            "templates",
-                            settings.get_template(),
-                            "views",
-                            "video.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+    _custom_view("video")
 
     response.title = T("Video Tutorials")
     return dict()
@@ -1350,40 +1303,46 @@ def contact():
         output = s3_rest_controller(prefix, resourcename)
         return output
 
-    template = settings.get_template()
-    if template != "default":
+    templates = settings.get_template()
+    if templates != "default":
         # Try a Custom Controller
         location = settings.get_template_location()
-        package = "applications.%s.%s.templates.%s" % \
-                    (appname, location, template)
-        name = "controllers"
-        try:
-            custom = getattr(__import__(package, fromlist=[name]), name)
-        except (ImportError, AttributeError):
-            # No Custom Page available, try a custom view
-            pass
+        if not isinstance(templates, (list, tuple)):
+            templates = [templates]
         else:
-            if hasattr(custom, "contact"):
-                controller = getattr(custom, "contact")()
-                return controller()
+            templates.reverse()
+        for template in templates:
+            package = "applications.%s.%s.templates.%s" % \
+                        (appname, location, template)
+            name = "controllers"
+            try:
+                custom = getattr(__import__(package, fromlist=[name]), name)
+            except (ImportError, AttributeError):
+                # No Custom Page available, try a custom view
+                pass
+            else:
+                if hasattr(custom, "contact"):
+                    controller = getattr(custom, "contact")()
+                    return controller()
 
         # Try a Custom View
-        view = os.path.join(request.folder,
-                            location,
-                            "templates",
-                            template,
-                            "views",
-                            "contact.html")
-        if os.path.exists(view):
-            try:
-                # Pass view as file not str to work in compiled mode
-                response.view = open(view, "rb")
-            except IOError:
-                from gluon.http import HTTP
-                raise HTTP("404", "Unable to open Custom View: %s" % view)
+        for template in templates:
+            view = os.path.join(request.folder,
+                                location,
+                                "templates",
+                                template,
+                                "views",
+                                "contact.html")
+            if os.path.exists(view):
+                try:
+                    # Pass view as file not str to work in compiled mode
+                    response.view = open(view, "rb")
+                except IOError:
+                    from gluon.http import HTTP
+                    raise HTTP("404", "Unable to open Custom View: %s" % view)
 
-            response.title = T("Contact us")
-            return dict()
+                response.title = T("Contact us")
+                return dict()
 
     if settings.has_module("cms"):
         # Use CMS
@@ -1447,5 +1406,37 @@ def get_settings():
             return response.json(return_settings)
 
         raise(HTTP("400", "Invalid/Missing argument"))
+
+# -----------------------------------------------------------------------------
+def _custom_view(filename):
+    """
+        See if there is a custom view for a page &, if so, use that
+    """
+
+    templates = settings.get_template()
+    if templates != "default":
+        folder = request.folder
+        template_location = settings.get_template_location()
+        if not isinstance(templates, (list, tuple)):
+            templates = [templates]
+        else:
+            templates.reverse()
+        for template in templates:
+            # Try a Custom View
+            view = os.path.join(folder,
+                                template_location,
+                                "templates",
+                                template,
+                                "views",
+                                "%s.html" % filename)
+            if os.path.exists(view):
+                try:
+                    # Pass view as file not str to work in compiled mode
+                    response.view = open(view, "rb")
+                except IOError:
+                    from gluon.http import HTTP
+                    raise HTTP("404", "Unable to open Custom View: %s" % view)
+                else:
+                    break
 
 # END =========================================================================

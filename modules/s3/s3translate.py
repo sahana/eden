@@ -1013,8 +1013,13 @@ class Strings:
             request = current.request
             settings = current.deployment_settings
             appname = request.application
+
+            folder = request.folder
+            join = os.path.join
+
             langcode = langfile[:-3]
-            langfile = os.path.join(request.folder, "languages", langfile)
+            langfile = join(folder, "languages", langfile)
+
             # If the language file doesn't exist, create it
             if not os.path.exists(langfile):
                 f = open(langfile, "w")
@@ -1026,14 +1031,20 @@ class Strings:
 
             if all_template_flag == 1:
                 # Select All Templates
-                A.grp.group_files(os.path.join(request.folder, "modules", "templates"))
+                A.grp.group_files(join(folder, "modules", "templates"))
             else:
-                # A specific template is selected
-                template_folder = os.path.join(request.folder, "modules", "templates", settings.get_template())
-                A.grp.group_files(template_folder)
+                # Specific template(s) is selected
+                templates = settings.get_template()
+                if not isinstance(templates, (list, tuple)):
+                    templates = [templates]
+                group_files = A.grp.group_files
+                for template in templates:
+                    template_folder = join(folder, "modules", "templates", template)
+                    group_files(template_folder)
+
             R = TranslateReadFiles()
 
-            # Select Modules
+            ## Select Modules
 
             # Core Modules are always included
             core_modules = ("auth", "default")
