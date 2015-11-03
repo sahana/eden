@@ -290,9 +290,11 @@ class S3NavigationItem(object):
         application = current.request.application
         settings = current.deployment_settings
         theme = settings.get_theme()
-        template_location = settings.get_template_location()
-        package = "applications.%s.%s.templates.%s.layouts" % \
-                  (application, template_location, theme)
+        theme_location = current.response.s3.theme_location
+        if theme_location:
+            theme_location = "%s." % theme_location[:-1]
+        package = "applications.%s.modules.templates.%s%s.layouts" % \
+                  (application, theme_location, theme)
         try:
             override = getattr(__import__(package, fromlist=[name]), name)
         except ImportError:

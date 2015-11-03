@@ -254,10 +254,13 @@ class S3Config(Storage):
                 if len(names) > 1:
                     raise SyntaxError("Cascading templates not supported for script pattern")
                 self.execute_template(name)
+                return self
             else:
                 template.config(self)
-                # Store location in response.s3 for compiled views
-                current.response.s3.template_location = "modules"
+
+        # Store location in response.s3 for compiled views
+        # No longer supported
+        #current.response.s3.template_location = "modules"
 
         return self
 
@@ -281,7 +284,9 @@ class S3Config(Storage):
             print >> sys.stderr, "%s/config.py: script pattern deprecated." % name
             # Remember the non-standard location
             # (need to be in response.s3 for compiled views)
-            current.response.s3.template_location = self.base.template_location = location
+            # No longer supported
+            #current.response.s3.template_location =
+            self.base.template_location = location
             # Execute config.py
             from gluon.fileutils import read_file
             from gluon.restricted import restricted
@@ -297,9 +302,19 @@ class S3Config(Storage):
     # Theme
     def get_theme(self):
         """
-            Which templates folder to use for views/layout.html
+            Which template folder to use for views/layout.html
+
+            NB Only themes in modules/templates are supported now
         """
-        return self.base.get("theme", "default")
+
+        theme = self.base.get("theme", "default")
+        if "." in theme:
+            theme_location, theme = theme.split(".", 1)
+            # Result cached in response.s3 for compiled views
+            current.response.s3.theme_location = "%s/" % theme_location
+        else:
+            current.response.s3.theme_location = ""
+        return theme
 
     def get_base_xtheme(self):
         """

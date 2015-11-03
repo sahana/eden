@@ -61,11 +61,12 @@ if auth.permission.format in ("html"):
 
     theme = settings.get_theme()
 
-    location = settings.get_template_location()
-    package = "applications.%s.%s.templates.%%s.menus" % (appname, location)
+    package = "applications.%s.modules.templates.%%s.menus" % appname
 
     menu_locations = []
     if theme != "default":
+        if s3.theme_location:
+            theme = "%s.%s" % (s3.theme_location[:-1], theme)
         menu_locations.append(theme)
     else:
         template = settings.get_template()

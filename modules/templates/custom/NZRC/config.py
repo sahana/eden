@@ -22,10 +22,10 @@ def config(settings):
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
-    #settings.base.prepopulate.append("custom/NZRC")
+    settings.base.prepopulate.append("custom/NZRC")
 
     # Theme (folder to use for views/layout.html)
-    settings.base.theme = "RMSAmericas"
+    settings.base.theme = "custom.NZRC"
 
     # Authentication settings
     # Should users be allowed to register themselves?

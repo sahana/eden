@@ -69,6 +69,7 @@ __all__ = ("S3OrganisationModel",
            "org_SiteRepresent",
            #"org_AssignMethod",
            #"org_CapacityReport",
+           "org_logo_represent",
            "org_customise_org_resource_fields",
            "org_organisation_list_layout",
            "org_resource_list_layout",
@@ -7348,6 +7349,74 @@ class org_CapacityReport(S3Method):
 
         output.seek(0)
         return output.read()
+
+# =============================================================================
+def org_logo_represent(org = None,
+                       fallback_org = None,
+                       width = 60,
+                       ):
+    """
+        Produce an Org Logo DIV
+
+        @param org: the name of the Org to use (or None to lookup root_org)
+        @param fallback_org: the name of the fallback Org to use (if root_org lookup fails)
+        @param width: the width of the image
+    """
+
+    logo = None
+
+    if not org:
+        # Lookup Root Organisation name
+        org = current.auth.root_org_name()
+
+    if org:
+        db = current.db
+        s3db = current.s3db
+        otable = s3db.org_organisation
+        query = (otable.name == org)
+        fields = [otable.logo,
+                  ]
+
+        language = current.session.s3.language
+        if language == current.deployment_settings.get_L10n_default_language():
+            left = None
+        else:
+            ltable = s3db.org_organisation_name
+            left = ltable.on((ltable.organisation_id == otable.id) & \
+                             (ltable.language == language))
+            fields += [ltable.name_l10n,
+                       #ltable.acronym_l10n,
+                       ]
+
+        record = db(query).select(left = left,
+                                  limitby = (0, 1),
+                                  cache = s3db.cache,
+                                  *fields).first()
+
+        if record:
+            if left:
+                org = record["org_organisation_name.name_l10n"] or org
+                logo = record["org_organisation.logo"]
+            else:
+                logo = record.logo
+
+            if logo:
+                # Select resized version if-available
+                size = (width, None)
+                image = s3db.pr_image_represent(logo, size=size)
+                url_small = URL(c="default", f="download", args=image)
+                alt = "%s logo" % org
+                logo = IMG(_src=url_small, _alt=alt, _width=width)
+
+    if not logo and fallback_org:
+        # Default to fallback org
+        logo = org_image_represent(org=fallback_org, width=width)
+
+    if not logo:
+        # Placeholder
+        logo = IMG(_src="", _alt="logo", _width=width)
+
+    return (org, logo)
 
 # =============================================================================
 def org_customise_org_resource_fields(method):

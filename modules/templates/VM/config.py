@@ -18,8 +18,8 @@ def config(settings):
 
     T = current.T
 
-    #settings.base.system_name = T("Sahana Volunteer Management")
-    #settings.base.system_name_short = T("Sahana VMS")
+    settings.base.system_name = T("Sahana Volunteer Management")
+    settings.base.system_name_short = T("Sahana VMS")
 
     # PrePopulate data
     settings.base.prepopulate += ("VM", "default/users")

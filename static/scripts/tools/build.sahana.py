@@ -611,9 +611,12 @@ def docss():
 
     # Theme
     theme = settings.get_theme()
-    location = settings.get_template_location()
+    location = current.response.s3.theme_location
     print "Using theme %s" % theme
-    css_cfg = os.path.join("..", "..", "..", location, "templates", theme, "css.cfg")
+    if location:
+        css_cfg = os.path.join("..", "..", "..", "modules", "templates", location[:-1], theme, "css.cfg")
+    else:
+        css_cfg = os.path.join("..", "..", "..", "modules", "templates", theme, "css.cfg")
     f = open(css_cfg, "r")
     files = f.readlines()
     f.close()
