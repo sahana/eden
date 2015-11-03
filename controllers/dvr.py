@@ -209,4 +209,16 @@ def housing_type():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def beneficiary_data():
+    """ Beneficiary Data: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def beneficiary_type():
+    """ Beneficiary Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
 # END =========================================================================

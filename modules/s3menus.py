@@ -796,6 +796,9 @@ class S3OptionsMenu(object):
                     M("Need Types", f="need")(
                         M("Create", m="create"),
                     ),
+                    M("Beneficiary Types", f="beneficiary_type")(
+                       M("Create", m="create"),
+                    ),
                 )
 
     # -------------------------------------------------------------------------

@@ -60,6 +60,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Housing Types", f="housing_type")(
                        M("Create", m="create"),
                     ),
+                    M("Beneficiary Types", f="beneficiary_type")(
+                       M("Create", m="create"),
+                    ),
                 )
 
 # END =========================================================================

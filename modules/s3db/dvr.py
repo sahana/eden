@@ -30,6 +30,7 @@
 __all__ = ("DVRCaseModel",
            "DVRNeedsModel",
            "DVRCaseActivityModel",
+           "DVRCaseBeneficiaryModel",
            "DVRHousingInformationModel",
            "dvr_rheader",
            )
@@ -233,6 +234,7 @@ class DVRCaseModel(S3Model):
                             dvr_housing = {"joinby": "case_id",
                                            "multiple": False,
                                            },
+                            dvr_beneficiary_data = "case_id",
                             # Not valid for write:
                             pr_address = ({"name": "current_address",
                                            "link": "pr_person",
@@ -560,6 +562,163 @@ class DVRCaseActivityModel(S3Model):
         return {}
 
 # =============================================================================
+class DVRCaseBeneficiaryModel(S3Model):
+    """
+        Model for Case Beneficiary Data (=statistical data about beneficiaries
+        of the case besides the main beneficiary, e.g. household members)
+    """
+
+    names = ("dvr_beneficiary_type",
+             "dvr_beneficiary_data",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        configure = self.configure
+
+        # ---------------------------------------------------------------------
+        # Beneficiary Types (e.g. Age Groups)
+        #
+        tablename = "dvr_beneficiary_type"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Type"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_BENEFICIARY_TYPE = T("Create Beneficiary Type")
+        crud_strings[tablename] = Storage(
+            label_create = ADD_BENEFICIARY_TYPE,
+            title_display = T("Beneficiary Type"),
+            title_list = T("Beneficiary Types"),
+            title_update = T("Edit Beneficiary Type"),
+            label_list_button = T("List Beneficiary Types"),
+            label_delete_button = T("Delete Beneficiary Type"),
+            msg_record_created = T("Beneficiary Type added"),
+            msg_record_modified = T("Beneficiary Type updated"),
+            msg_record_deleted = T("Beneficiary Type deleted"),
+            msg_list_empty = T("No Beneficiary Types currently registered")
+            )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        beneficiary_type_id = S3ReusableField("beneficiary_type_id", "reference %s" % tablename,
+                                              label = T("Beneficiary Type"),
+                                              ondelete = "RESTRICT",
+                                              represent = represent,
+                                              requires = IS_EMPTY_OR(
+                                                            IS_ONE_OF(db, "dvr_beneficiary_type.id",
+                                                                      represent)),
+                                              )
+
+        # ---------------------------------------------------------------------
+        # Beneficiary data
+        #
+        show_third_gender = not current.deployment_settings.get_pr_hide_third_gender()
+
+        tablename = "dvr_beneficiary_data"
+        define_table(tablename,
+                     # Main Beneficiary (component link):
+                     # @todo: populate from case and hide in case perspective
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     self.dvr_case_id(empty = False,
+                                      label = T("Case Number"),
+                                      ondelete = "CASCADE",
+                                      ),
+                     beneficiary_type_id(),
+                     Field("total", "integer",
+                           label = T("Number of Beneficiaries"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
+                           # Expose in templates when not using per-gender fields
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("female", "integer",
+                           label = T("Number Female"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
+                           ),
+                     Field("male", "integer",
+                           label = T("Number Male"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
+                           ),
+                     Field("other", "integer",
+                           label = T("Number Other Gender"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
+                           readable = show_third_gender,
+                           writable = show_third_gender,
+                           ),
+                     Field("in_school", "integer",
+                           label = T("Number in School"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
+                           ),
+                     Field("employed", "integer",
+                           label = T("Number Employed"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Beneficiary Data"),
+            title_display = T("Beneficiary Data"),
+            title_list = T("Beneficiary Data"),
+            title_update = T("Edit Beneficiary Data"),
+            label_list_button = T("List Beneficiary Data"),
+            label_delete_button = T("Delete Beneficiary Data"),
+            msg_record_created = T("Beneficiary Data added"),
+            msg_record_modified = T("Beneficiary Data updated"),
+            msg_record_deleted = T("Beneficiary Data deleted"),
+            msg_list_empty = T("No Beneficiary Data currently registered"),
+            )
+
+        # List fields
+        list_fields = ["beneficiary_type_id",
+                       "female",
+                       "male",
+                       "in_school",
+                       "employed",
+                       "comments",
+                       ]
+        if show_third_gender:
+            list_fields.insert(3, "other")
+
+        # Table configuration
+        configure(tablename,
+                  list_fields = list_fields,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"dvr_beneficiary_type_id": beneficiary_type_id,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"dvr_beneficiary_type_id": lambda **attr: dummy("beneficiary_type_id"),
+                }
+
+
+# =============================================================================
 class DVRHousingInformationModel(S3Model):
     """ Model for Housing Information """
 
@@ -702,6 +861,7 @@ def dvr_rheader(r, tabs=[]):
             if not tabs:
                 tabs = [(T("Basic Details"), ""),
                         (T("Activities"), "case_activity"),
+                        (T("Beneficiaries"), "beneficiary_data"),
                         (T("Housing"), "housing"),
                         ]
 
