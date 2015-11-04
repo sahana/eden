@@ -1035,8 +1035,8 @@ class Strings:
             else:
                 # Specific template(s) is selected
                 templates = settings.get_template()
-                if not isinstance(templates, (list, tuple)):
-                    templates = [templates]
+                if not isinstance(templates, (tuple, list)):
+                    templates = (templates,)
                 group_files = A.grp.group_files
                 for template in templates:
                     template_folder = join(folder, "modules", "templates", template)

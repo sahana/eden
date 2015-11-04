@@ -394,11 +394,9 @@ class S3Notifications(object):
                 filenames.insert(0, "%s_email_%s.html" % (prefix, email_format))
             if themes != "default":
                 location = settings.get_template_location()
-                if not isinstance(themes, (list, tuple)):
-                    themes = [themes]
-                else:
-                    themes.reverse()
-                for theme in themes:
+                if not isinstance(themes, (tuple, list)):
+                    themes = (themes,)
+                for theme in themes[::-1]:
                     path = join(location, "templates", theme, "views", "msg")
                     template = get_template(path, filenames)
                     if template is not None:

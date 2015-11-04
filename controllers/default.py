@@ -85,11 +85,9 @@ def index():
         # - args[0] = name of the class in /modules/templates/<template>/controllers.py
         # - other args & vars passed through
         template_location = settings.get_template_location()
-        if not isinstance(templates, (list, tuple)):
-            templates = [templates]
-        else:
-            templates.reverse()
-        for template in templates:
+        if not isinstance(templates, (tuple, list)):
+            templates = (templates,)
+        for template in templates[::-1]:
             package = "applications.%s.%s.templates.%s" % \
                         (appname, template_location, template)
             name = "controllers"
@@ -115,11 +113,9 @@ def index():
         # Try a Custom Homepage
         name = "controllers"
         template_location = settings.get_template_location()
-        if not isinstance(templates, (list, tuple)):
-            templates = [templates]
-        else:
-            templates.reverse()
-        for template in templates:
+        if not isinstance(templates, (tuple, list)):
+            templates = (templates,)
+        for template in templates[::-1]:
             package = "applications.%s.%s.templates.%s" % \
                         (appname,
                          template_location,
@@ -570,11 +566,9 @@ def user():
         # Try a Custom View
         folder = request.folder
         template_location = settings.get_template_location()
-        if not isinstance(templates, (list, tuple)):
-            templates = [templates]
-        else:
-            templates.reverse()
-        for template in templates:
+        if not isinstance(templates, (tuple, list)):
+            templates = (templates,)
+        for template in templates[::-1]:
             view = os.path.join(folder,
                                 template_location,
                                 "templates",
@@ -1307,11 +1301,9 @@ def contact():
     if templates != "default":
         # Try a Custom Controller
         location = settings.get_template_location()
-        if not isinstance(templates, (list, tuple)):
-            templates = [templates]
-        else:
-            templates.reverse()
-        for template in templates:
+        if not isinstance(templates, (tuple, list)):
+            templates = (templates,)
+        for template in templates[::-1]:
             package = "applications.%s.%s.templates.%s" % \
                         (appname, location, template)
             name = "controllers"
@@ -1417,11 +1409,9 @@ def _custom_view(filename):
     if templates != "default":
         folder = request.folder
         template_location = settings.get_template_location()
-        if not isinstance(templates, (list, tuple)):
-            templates = [templates]
-        else:
-            templates.reverse()
-        for template in templates:
+        if not isinstance(templates, (tuple, list)):
+            templates = (templates,)
+        for template in templates[::-1]:
             # Try a Custom View
             view = os.path.join(folder,
                                 template_location,
