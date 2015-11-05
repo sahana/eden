@@ -164,7 +164,7 @@ class S3Config(Storage):
 
         self._debug = None
         self._lazy_unwrapped = []
-        
+
         # Provide a minimal list of core modules
         self.modules = {"default": Storage(name_nice = "Home",
                                            ),      # Default
@@ -233,7 +233,6 @@ class S3Config(Storage):
 
             Configurations will be imported and executed in order of appearance
 
-
             @param config: name of the config-module
 
             @todo: remove fallback when migration complete (+giving some
@@ -258,7 +257,7 @@ class S3Config(Storage):
                 if len(names) > 1:
                     raise SyntaxError("Cascading templates not supported for script pattern")
                 self.execute_template(name)
-                return self
+                break
             else:
                 template.config(self)
 

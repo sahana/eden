@@ -36,11 +36,9 @@ def loadAllTests():
     # Run the file modules/templates/<current_template>/tests.py to get tests list.
     found = False
     templates = settings.get_template()
-    if not isinstance(templates, (list, tuple)):
-        templates = [templates]
-    else:
-        templates.reverse()
-    for template in templates:
+    if not isinstance(templates, (tuple, list)):
+        templates = (templates,)
+    for template in templates[::-1]:
         path = os.path.join(folder,
                             "modules", "templates",
                             template,

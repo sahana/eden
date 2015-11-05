@@ -20,11 +20,9 @@ def maintenance(period="daily"):
     if templates != "default":
         # Try to import maintenance routine from template
         template_location = settings.get_template_location()
-        if not isinstance(templates, (list, tuple)):
-            templates = [templates]
-        else:
-            templates.reverse()
-        for template in templates:
+        if not isinstance(templates, (tuple, list)):
+            templates = (templates,)
+        for template in templates[::-1]:
             package = "applications.%s.%s.templates.%s" % \
                       (appname, template_location, template)
             name = "maintenance"

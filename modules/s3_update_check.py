@@ -49,8 +49,8 @@ def update_check(settings):
 
     templates = settings.get_template()
     location = settings.get_template_location()
-    if not isinstance(templates, (list, tuple)):
-        templates = [templates]
+    if not isinstance(templates, (tuple, list)):
+        templates = (templates,)
     template_dep = {}
     template_optional_dep = {}
     for template in templates:

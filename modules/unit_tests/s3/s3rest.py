@@ -188,7 +188,7 @@ class URLBuilderTests(unittest.TestCase):
         # No change
         self.assertEqual(r.url(target=None),
                          "/%s/pr/person/%s/contact/%s/method.xml?test=test" % (a, p, c))
-        self.assertEqual(r.url(target=p),
+        self.assertEqual(r.url(target=c),
                          "/%s/pr/person/%s/contact/%s/method.xml?test=test" % (a, p, c))
 
         # Set to None (resets method)
