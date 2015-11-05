@@ -108,10 +108,10 @@ def config(settings):
     #settings.L10n.translate_org_organisation = True
     # Finance settings
     settings.fin.currencies = {
-       "HRK" : T("Kuna"),
-       "EUR" : T("Euros"),
-       #"GBP" : T("Great British Pounds"),
-       "USD" : T("United States Dollars"),
+       "HRK" : "Kuna",
+       "EUR" : "Euros",
+       #"GBP" : "Great British Pounds",
+       "USD" : "United States Dollars",
     }
     settings.fin.currency_default = "HRK"
 

@@ -131,10 +131,14 @@ class S3Config(Storage):
         self.event = Storage()
         self.evr = Storage()
         self.fin = Storage()
+        # Allow templates to append rather than replace
+        self.fin.currencies = {}
         # @ToDo: Move to self.ui
         self.frontpage = Storage()
         self.frontpage.rss = []
         self.gis = Storage()
+        # Allow templates to append rather than replace
+        self.gis.countries = []
         self.hms = Storage()
         self.hrm = Storage()
         self.inv = Storage()
@@ -935,13 +939,12 @@ class S3Config(Storage):
         """
             Which Currencies can the user select?
         """
-        currencies = self.__lazy("fin", "currencies")
-        if currencies is None:
-            T = current.T
+        currencies = self.__lazy("fin", "currencies", {})
+        if currencies == {}:
             currencies = {
-                "EUR" : T("Euros"),
-                "GBP" : T("Great British Pounds"),
-                "USD" : T("United States Dollars"),
+                "EUR" : "Euros",
+                "GBP" : "Great British Pounds",
+                "USD" : "United States Dollars",
             }
         return currencies
 
@@ -1032,7 +1035,7 @@ class S3Config(Storage):
 
     def get_gis_countries(self):
         """
-            Which country codes should be accessible to the location selector?
+            Which ISO2 country codes should be accessible to the location selector?
         """
         return self.gis.get("countries", [])
 

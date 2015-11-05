@@ -262,13 +262,11 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Finance settings
     settings.fin.currencies = {
-        #"AUD" : T("Australian Dollars"),
-        "CAD" : T("Canadian Dollars"),
-        "EUR" : T("Euros"),
-        "GBP" : T("Great British Pounds"),
-        #"PHP" : T("Philippine Pesos"),
-        "CHF" : T("Swiss Francs"),
-        "USD" : T("United States Dollars"),
+        "CAD" : "Canadian Dollars",
+        "EUR" : "Euros",
+        "GBP" : "Great British Pounds",
+        "CHF" : "Swiss Francs",
+        "USD" : "United States Dollars",
     }
 
     # -------------------------------------------------------------------------

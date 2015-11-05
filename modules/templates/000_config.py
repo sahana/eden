@@ -95,6 +95,7 @@ settings.auth.hmac_key = "akeytochange"
 #settings.mail.server = "127.0.0.1:25"
 #settings.mail.tls = True
 # Useful for Windows Laptops:
+# https://www.google.com/settings/security/lesssecureapps
 #settings.mail.server = "smtp.gmail.com:587"
 #settings.mail.tls = True
 #settings.mail.login = "username:password"

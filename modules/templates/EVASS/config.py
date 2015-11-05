@@ -74,11 +74,11 @@ def config(settings):
 
     # Finance settings
     settings.fin.currency_default = "EUR"
-    settings.fin.currencies = {
-        "EUR": T("Euros"),
-        "GBP": T("Great British Pounds"),
-        "USD": T("United States Dollars"),
-    }
+    #settings.fin.currencies = {
+    #    "EUR": "Euros",
+    #    "GBP": "Great British Pounds",
+    #    "USD": "United States Dollars",
+    #}
 
     # -------------------------------------------------------------------------
     # GIS (Map) settings

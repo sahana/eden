@@ -74,14 +74,11 @@ def config(settings):
     # =============================================================================
     # Finance Settings
     settings.fin.currencies = {
-        #"AUD" : T("Australian Dollars"),
-        #"CAD" : T("Canadian Dollars"),
-        "EUR" : T("Euros"),             # Needed for IFRC RMS interop
-        #"GBP" : T("Great British Pounds"),
-        "PHP" : T("Philippine Pesos"),  # Needed for IFRC RMS interop
-        "CHF" : T("Swiss Francs"),      # Needed for IFRC RMS interop
-        "USD" : T("United States Dollars"),
-        "NZD" : T("New Zealand Dollars"),
+        "EUR" : "Euros",             # Needed for IFRC RMS interop
+        "PHP" : "Philippine Pesos",  # Needed for IFRC RMS interop
+        "CHF" : "Swiss Francs",      # Needed for IFRC RMS interop
+        "USD" : "United States Dollars",
+        "NZD" : "New Zealand Dollars",
     }
 
     # =============================================================================

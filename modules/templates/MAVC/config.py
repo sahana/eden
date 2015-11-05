@@ -102,10 +102,10 @@ def config(settings):
     #settings.L10n.translate_org_organisation = True
     # Finance settings
     settings.fin.currencies = {
-        "EUR" : T("Euros"),
-        "GBP" : T("Great British Pounds"),
-        "PHP" : T("Philippine Pesos"),
-        "USD" : T("United States Dollars"),
+        "EUR" : "Euros",
+        "GBP" : "Great British Pounds",
+        "PHP" : "Philippine Pesos",
+        "USD" : "United States Dollars",
     }
     #settings.fin.currency_default = "USD"
 

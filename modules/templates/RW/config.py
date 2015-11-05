@@ -87,11 +87,11 @@ def config(settings):
     # Uncomment this to Translate Site Names
     settings.L10n.translate_org_site = True
     # Finance settings
-    settings.fin.currencies = {
-       "EUR" : T("Euros"),
-       "GBP" : T("Great British Pounds"),
-       "USD" : T("United States Dollars"),
-    }
+    #settings.fin.currencies = {
+    #   "EUR" : "Euros",
+    #   "GBP" : "Great British Pounds",
+    #   "USD" : "United States Dollars",
+    #}
     settings.fin.currency_default = "EUR"
 
     # Security Policy

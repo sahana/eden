@@ -282,7 +282,7 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Finance settings
     settings.fin.currencies = {
-        "USD" : T("United States Dollars"),
+        "USD" : "United States Dollars",
     }
 
     # =============================================================================

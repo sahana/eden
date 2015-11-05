@@ -40,9 +40,9 @@ def config(settings):
 
     # Finance settings
     settings.fin.currencies = {
-        "USD" : T("United States Dollars"),
-        "EUR" : T("Euros"),
-        "PHP" : T("Philippine Pesos")
+        "USD" : "United States Dollars",
+        "EUR" : "Euros",
+        "PHP" : "Philippine Pesos",
     }
     settings.fin.currency_default = "PHP"
 

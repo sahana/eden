@@ -2366,8 +2366,6 @@ $.filterOptionsS3({
         # Send Welcome mail
         self.s3_send_welcome_email(user)
 
-        return
-
     # -------------------------------------------------------------------------
     def s3_link_user(self, user):
         """
@@ -2415,8 +2413,6 @@ $.filterOptionsS3({
             if "member" in link_user_to:
                 # Add Member Record
                 member_id = self.s3_link_to_member(user, person_id)
-
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod

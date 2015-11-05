@@ -1155,7 +1155,7 @@ def s3_currency(name="currency", **attr):
     """
         Return a standard Currency field
 
-        @ToDo: Move to a Finance module
+        @ToDo: Move to a Finance module?
     """
 
     settings = current.deployment_settings

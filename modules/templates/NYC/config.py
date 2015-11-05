@@ -72,7 +72,7 @@ def config(settings):
     settings.gis.countries = ("US",)
 
     settings.fin.currencies = {
-        "USD" : T("United States Dollars"),
+        "USD" : "United States Dollars",
     }
 
     settings.L10n.languages = OrderedDict([

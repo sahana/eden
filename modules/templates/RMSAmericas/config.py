@@ -294,15 +294,15 @@ def config(settings):
         """ RMS- and NS-specific currencies (lazy setting) """
 
         # Currencies that are common for all NS
-        currencies = {"EUR" : T("Euros"),
-                      "CHF" : T("Swiss Francs"),
-                      "USD" : T("United States Dollars"),
+        currencies = {"EUR" : "Euros",
+                      "CHF" : "Swiss Francs",
+                      "USD" : "United States Dollars",
                       }
 
         # NS-specific currencies
         root_org = current.auth.root_org_name()
         if root_org == HNRC:
-            currencies["HNL"] = T("Honduran Lempira")
+            currencies["HNL"] = "Honduran Lempira"
         return currencies
 
     settings.fin.currencies = currencies

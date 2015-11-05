@@ -94,9 +94,9 @@ def config(settings):
 
     # Finance settings
     #settings.fin.currencies = {
-    #    "USD" :T("United States Dollars"),
-    #    "EUR" :T("Euros"),
-    #    "GBP" :T("Great British Pounds")
+    #    "USD" : "United States Dollars",
+    #    "EUR" : "Euros",
+    #    "GBP" : "Great British Pounds",
     #}
     #settings.fin.currency_default = "USD" # Dollars
     #settings.fin.currency_writable = False # False currently breaks things

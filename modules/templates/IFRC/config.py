@@ -335,38 +335,38 @@ def config(settings):
         """ RMS- and NS-specific currencies """
 
         # Currencies that are common for all NS
-        currencies = {"EUR" : T("Euros"),
-                      "CHF" : T("Swiss Francs"),
-                      "USD" : T("United States Dollars"),
+        currencies = {"EUR" : "Euros"
+                      "CHF" : "Swiss Francs"
+                      "USD" : "United States Dollars"
                       }
 
         # NS-specific currencies
         root_org = current.auth.root_org_name()
         if root_org == ARCS:
-            currencies["AFN"] = T("Afghani")
+            currencies["AFN"] = "Afghani"
         elif root_org == AURC:
-            currencies["AUD"] = T("Australian Dollars")
+            currencies["AUD"] = "Australian Dollars"
         elif root_org == BRCS:
-            currencies["BDT"] = T("Taka")
+            currencies["BDT"] = "Taka"
         elif root_org == CRMADA:
-            currencies["CAD"] = T("Canadian Dollars")
-            currencies["MGA"] = T("Malagasy Ariary")
-            currencies["NOK"] = T("Norwegian Krone")
+            currencies["CAD"] = "Canadian Dollars"
+            currencies["MGA"] = "Malagasy Ariary"
+            currencies["NOK"] = "Norwegian Krone"
         elif root_org == IRCS:
-            currencies["IQD"] = T("Iraqi Dinar"),
+            currencies["IQD"] = "Iraqi Dinar"
         elif root_org == NRCS:
-            currencies["NPR"] = T("Nepalese Rupee"),
+            currencies["NPR"] = "Nepalese Rupee"
         elif root_org == NZRC:
-            currencies["NZD"] = T("New Zealand Dollars")
+            currencies["NZD"] = "New Zealand Dollars"
         elif root_org == PMI:
-            currencies["IDR"] = T("Indonesian Rupiah")
+            currencies["IDR"] = "Indonesian Rupiah"
         elif root_org == PRC:
-            currencies["PHP"] = T("Philippine Pesos")
+            currencies["PHP"] = "Philippine Pesos"
         elif root_org == VNRC:
-            currencies["VND"] = T("Vietnamese Dong")
+            currencies["VND"] = "Vietnamese Dong"
         else:
-            currencies["GBP"] = T("Great British Pounds")
-            currencies["CAD"] = T("Canadian Dollars")
+            currencies["GBP"] = "Great British Pounds"
+            currencies["CAD"] = "Canadian Dollars"
         return currencies
 
     settings.fin.currencies = currencies
@@ -849,6 +849,7 @@ def config(settings):
         try:
             type_id = db(ttable.name == "Red Cross / Red Crescent").select(ttable.id,
                                                                            limitby=(0, 1),
+                                                                           cache = s3db.cache,
                                                                            ).first().id
         except:
             # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
@@ -1680,7 +1681,7 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_hrm_certificate_controller(**attr):
 
-        # Organisation needs to be an NS/Branch
+        # Organisation needs to be an NS
         ns_only("hrm_certificate",
                 required = False,
                 branches = False,
@@ -1695,7 +1696,7 @@ def config(settings):
 
         tablename = "hrm_course"
 
-        # Organisation needs to be an NS/Branch
+        # Organisation needs to be an NS
         ns_only(tablename,
                 required = False,
                 branches = False,
@@ -1767,7 +1768,7 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_hrm_department_controller(**attr):
 
-        # Organisation needs to be an NS/Branch
+        # Organisation needs to be an NS
         ns_only("hrm_department",
                 required = False,
                 branches = False,
@@ -2473,7 +2474,7 @@ def config(settings):
             # Filter to just deployables
             s3.filter = (table.type == 4)
         else:
-            # Organisation needs to be an NS/Branch
+            # Organisation needs to be an NS
             ns_only("hrm_job_title",
                     required = False,
                     branches = False,
@@ -2518,7 +2519,7 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_hrm_programme_controller(**attr):
 
-        # Organisation needs to be an NS/Branch
+        # Organisation needs to be an NS
         ns_only("hrm_programme",
                 required = False,
                 branches = False,

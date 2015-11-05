@@ -39,69 +39,22 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        T = current.T
-        auth = current.auth
-
-        has_role = auth.s3_has_role
-        root_org = auth.root_org_name()
-        system_roles = current.session.s3.system_roles
-        ADMIN = system_roles.ADMIN
-        ORG_ADMIN = system_roles.ORG_ADMIN
-
-        s3db = current.s3db
-        s3db.inv_recv_crud_strings()
-        inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
-
-        use_certs = lambda i: current.deployment_settings.get_hrm_use_certificates()
-
-        def hrm(item):
-            return root_org != "Honduran Red Cross" or \
-                   has_role(ORG_ADMIN)
-
-        def inv(item):
-            return root_org != "Honduran Red Cross" or \
-                   has_role("hn_wh_manager") or \
-                   has_role("hn_national_wh_manager") or \
-                   has_role(ORG_ADMIN)
-
-        def basic_warehouse(i):
-            if root_org == "Honduran Red Cross"  and \
-               not (has_role("hn_national_wh_manager") or \
-                    has_role(ORG_ADMIN)):
-                # Hide menu entries which user shouldn't need access to
-                return False
-            else:
-                return True
-
-        def multi_warehouse(i):
-            if root_org == "Honduran Red Cross" and \
-               not (has_role("hn_national_wh_manager") or \
-                    has_role(ORG_ADMIN)):
-                # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
-                return False
-            else:
-                return True
-
-        def vol(item):
-            return root_org != "Honduran Red Cross" or \
-                   has_role(ORG_ADMIN)
-
         return [
             homepage("gis")(
             ),
-            homepage("hrm", "org", name=T("Staff"),
-                     vars=dict(group="staff"), check=hrm)(
-                MM("Staff", c="hrm", f="staff", m="summary"),
-                MM("Teams", c="hrm", f="group"),
-                MM("Organizations", c="org", f="organisation"),
-                MM("Offices", c="org", f="office"),
-                MM("Job Titles", c="hrm", f="job_title"),
-                #MM("Skill List", c="hrm", f="skill"),
-                MM("Training Events", c="hrm", f="training_event"),
-                MM("Training Courses", c="hrm", f="course"),
-                MM("Certificate List", c="hrm", f="certificate", check=use_certs),
-            ),
-            homepage("vol", name=T("Volunteers"), check=vol)(
+            #homepage("hrm", "org", name="Staff",
+            #         vars=dict(group="staff"), check=hrm)(
+            #    MM("Staff", c="hrm", f="staff", m="summary"),
+            #    MM("Teams", c="hrm", f="group"),
+            #    MM("Organizations", c="org", f="organisation"),
+            #    MM("Offices", c="org", f="office"),
+            #    MM("Job Titles", c="hrm", f="job_title"),
+            #    #MM("Skill List", c="hrm", f="skill"),
+            #    MM("Training Events", c="hrm", f="training_event"),
+            #    MM("Training Courses", c="hrm", f="course"),
+            #    MM("Certificate List", c="hrm", f="certificate", check=use_certs),
+            #),
+            homepage("vol", name="Volunteers")(
                 MM("Volunteers", c="vol", f="volunteer", m="summary"),
                 MM("Teams", c="vol", f="group"),
                 MM("Volunteer Roles", c="vol", f="job_title"),
@@ -109,48 +62,22 @@ class S3MainMenu(default.S3MainMenu):
                 #MM("Skill List", c="vol", f="skill"),
                 MM("Training Events", c="vol", f="training_event"),
                 MM("Training Courses", c="vol", f="course"),
-                MM("Certificate List", c="vol", f="certificate", check=use_certs),
+                MM("Certificate List", c="vol", f="certificate"),
             ),
-            #homepage("member")(
-            #    MM("Members", c="member", f="membership", m="summary"),
-            #),
-            homepage("inv", "supply", "req", check=inv)(
-                MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
-                MM(inv_recv_list, c="inv", f="recv", check=multi_warehouse),
-                MM("Sent Shipments", c="inv", f="send", check=multi_warehouse),
-                MM("Items", c="supply", f="item", check=basic_warehouse),
-                MM("Catalogs", c="supply", f="catalog", check=basic_warehouse),
-                #MM("Item Categories", c="supply", f="item_category"),
-                M("Suppliers", c="inv", f="supplier", check=basic_warehouse)(),
-                M("Facilities", c="inv", f="facility", check=basic_warehouse)(),
-                M("Requests", c="req", f="req")(),
-                #M("Commitments", f="commit")(),
+            homepage("member")(
+                MM("Members", c="member", f="membership", m="summary"),
             ),
-            #homepage("asset")(
-            #    MM("Assets", c="asset", f="asset", m="summary"),
-            #    MM("Items", c="asset", f="item", m="summary"),
-            #),
-            #homepage("survey")(
-            #    MM("Assessment Templates", c="survey", f="template"),
-            #    MM("Disaster Assessments", c="survey", f="series"),
-            #),
-            homepage("project", f="project", m="summary")(
-                MM("Projects", c="project", f="project", m="summary"),
-                #MM("Locations", c="project", f="location"),
-                #MM("Outreach", c="po", f="index", check=outreach),
+            homepage("dvr")(
+                MM("Cases", c="dvr", f="case", m="summary"),
             ),
-            #homepage("vulnerability")(
-            #    MM("Map", c="vulnerability", f="index"),
-            #),
-            #homepage("event")(
-            #    MM("Events", c="event", f="event"),
-            #    MM("Incident Reports", c="event", f="incident_report"),
-            #),
-            #homepage("deploy", name="RDRT", f="mission", m="summary",
-            #         vars={"~.status__belongs": "2"})(
-            #    MM("Missions", c="deploy", f="mission", m="summary"),
-            #    MM("Members", c="deploy", f="human_resource", m="summary"),
-            #),
+            homepage("po")(
+                MM("Households", c="po", f="household", m="summary"),
+            ),
+            homepage("deploy", name="Deployments", f="mission", m="summary",
+                     vars={"~.status__belongs": "2"})(
+                MM("Missions", c="deploy", f="mission", m="summary"),
+                MM("Members", c="deploy", f="human_resource", m="summary"),
+            ),
         ]
 
     # -------------------------------------------------------------------------

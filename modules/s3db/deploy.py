@@ -67,6 +67,7 @@ class S3DeploymentModel(S3Model):
 
         T = current.T
         db = current.db
+        settings = current.deployment_settings
 
         add_components = self.add_components
         configure = self.configure
@@ -205,7 +206,7 @@ class S3DeploymentModel(S3Model):
                                pagesize = None,
                                )
 
-        hr_label = current.deployment_settings.get_deploy_hr_label()
+        hr_label = settings.get_deploy_hr_label()
         if hr_label == "Member":
             label = "Members Deployed"
             label_create = "Deploy New Member"
@@ -253,6 +254,16 @@ class S3DeploymentModel(S3Model):
                            #list_layout = s3db.doc_document_list_layouts,
                            )
 
+        if settings.has_module("event"):
+            text_fields = ["name",
+                           "code",
+                           "event_type_id$name",
+                           ]
+        else:
+            text_fields = ["name",
+                           "code",
+                           ]
+
         # Table configuration
         profile = URL(c="deploy", f="mission", args=["[id]", "profile"])
         configure(tablename,
@@ -260,10 +271,7 @@ class S3DeploymentModel(S3Model):
                   crud_form = crud_form,
                   delete_next = URL(c="deploy", f="mission", args="summary"),
                   filter_widgets = [
-                    S3TextFilter(["name",
-                                  "code",
-                                  "event_type_id$name",
-                                  ],
+                    S3TextFilter(text_fields,
                                  label=T("Search")
                                  ),
                     S3LocationFilter("location_id",

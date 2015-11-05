@@ -4296,31 +4296,31 @@ class S3ProjectPlanningModel(S3Model):
         table = s3db.project_indicator_data
         query = (table.project_id == project_id) & \
                 (table.deleted == False) & \
-                (table.end_date < current.request.utcnow)
+                (table.end_date < current.request.utcnow) & \
+                (table.target_value != None) & \
+                (table.value != None)
         indicator_data = db(query).select(table.indicator_id,
                                           table.target_value,
                                           table.value,
                                           table.end_date,
                                           orderby = ~table.end_date,
                                           )
-        latest_record = indicator_data.first()
-        if not latest_record:
+        if not indicator_data:
             # No Indicator Data yet recorded
             # => Nothing we can do
             return
-        latest_date = latest_record.end_date
+        latest_date = None
         for d in indicator_data:
             target_value = d.target_value
             value = d.value
-            if target_value is None or value is None:
-                # Ignore
-                continue
-            elif target_value == 0.0 and value == 0.0:
+            if target_value == 0.0 and value == 0.0:
                 # Ignore
                 continue
             else:
-                indicator_id = d.indicator_id
                 end_date = d.end_date
+                if not latest_date:
+                    latest_date = end_date
+                indicator_id = d.indicator_id
                 if indicator_id not in indicators:
                     indicators[indicator_id] = {"total_target": target_value,
                                                 "total_value": value,

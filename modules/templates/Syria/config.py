@@ -122,10 +122,10 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Finance settings
     settings.fin.currencies = {
-        "CHF" : T("Swiss Francs"),
-        "EUR" : T("Euros"),
-        "GBP" : T("Great British Pounds"),
-        "USD" : T("United States Dollars"),
+        "CHF" : "Swiss Francs",
+        "EUR" : "Euros",
+        "GBP" : "Great British Pounds",
+        "USD" : "United States Dollars",
     }
 
     # -----------------------------------------------------------------------------

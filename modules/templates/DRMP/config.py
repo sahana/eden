@@ -147,10 +147,10 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Finance settings
     settings.fin.currencies = {
-        "AUD" : T("Australian Dollars"),
-        "EUR" : T("Euros"),
-        "GBP" : T("Great British Pounds"),
-        "USD" : T("United States Dollars"),
+        "AUD" : "Australian Dollars",
+        "EUR" : "Euros",
+        "GBP" : "Great British Pounds",
+        "USD" : "United States Dollars",
     }
 
     # -----------------------------------------------------------------------------

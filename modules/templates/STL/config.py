@@ -77,10 +77,10 @@ def config(settings):
     settings.L10n.translate_org_organisation = True
     # Finance settings
     settings.fin.currencies = {
-        "EUR" : T("Euros"),
-        #"GBP" : T("Great British Pounds"),
-        "TRY" : T("Turkish Lira"),
-        "USD" : T("United States Dollars"),
+        "EUR" : "Euros",
+        #"GBP" : "Great British Pounds",
+        "TRY" : "Turkish Lira",
+        "USD" : "United States Dollars",
     }
     settings.fin.currency_default = "TRY"
 

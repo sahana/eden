@@ -96,10 +96,10 @@ def config(settings):
     settings.L10n.utc_offset = "+0530"
 
     settings.fin.currencies = {
-        "EUR" : T("Euros"),
-        "GBP" : T("Great British Pounds"),
-        "INR" : T("Indian Rupees"),
-        "USD" : T("United States Dollars"),
+        "EUR" : "Euros",
+        "GBP" : "Great British Pounds",
+        "INR" : "Indian Rupees",
+        "USD" : "United States Dollars",
     }
     settings.fin.currency_default = "INR"
 

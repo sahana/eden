@@ -3688,7 +3688,7 @@
 'Location 1': 'Localidad 1',
 'Location 2': 'Localidad 2',
 'Location De-duplicated': 'Localidad no duplicada',
-'Location Details': 'Detalles de la ubicación',
+'Location Details': 'Detalles de la Ubicación',
 'Location Hierarchy Level 0 Name': 'Nombre de la ubicación jerarquíca de nivel 0',
 'Location Hierarchy Level 1 Name': 'Nombre de la ubicación jerarquíca de nivel 1',
 'Location Hierarchy Level 2 Name': 'Nombre de la ubicación jerarquíca de nivel 2',
