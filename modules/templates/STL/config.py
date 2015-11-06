@@ -289,6 +289,28 @@ def config(settings):
                     list_fields = r.resource.get_config("list_fields")
                     if "dvr_case.organisation_id" in list_fields:
                         list_fields.remove("dvr_case.organisation_id")
+                    # Limit sites to root_org
+                    field = ctable.site_id
+                    requires = field.requires
+                    if requires:
+                        from gluon import IS_EMPTY_OR
+                        if isinstance(requires, IS_EMPTY_OR):
+                            requires = requires.other
+                        if hasattr(requires, "dbset"):
+                            stable = s3db.org_site
+                            query = (stable.organisation_id == root_org)
+                            requires.dbset = current.db(query)
+                else:
+                    # Inject filter script for sites (filter by selected org)
+                    script = '''$.filterOptionsS3({
+'trigger':'sub_dvr_case_organisation_id',
+'target':'sub_dvr_case_site_id',
+'lookupResource':'site',
+'lookupPrefix':'org',
+'lookupField':'site_id',
+'lookupKey':'organisation_id'
+})'''
+                    s3.jquery_ready.append(script)
 
             return result
         s3.prep = custom_prep

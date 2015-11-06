@@ -76,6 +76,7 @@ def person():
                                 "dvr_case.reference",
                                 "dvr_case.case_type_id",
                                 "dvr_case.organisation_id",
+                                "dvr_case.site_id",
                                 "dvr_case.date",
                                 "dvr_case.priority",
                                 "dvr_case.status",
