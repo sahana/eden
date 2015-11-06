@@ -114,26 +114,78 @@ class S3DataTable(object):
 
         if orderby:
 
-            _orderby = []
-
+            # Resolve orderby expression into column names
+            orderby_dirs = {}
+            orderby_cols = []
+            append = orderby_cols.append
             INVERT = current.db._adapter.INVERT
             for f in s3_orderby_fields(None, orderby, expr=True):
                 if type(f) is Expression:
                     colname = str(f.first)
-                    direction = "desc" \
-                                if f.op == INVERT else "asc"
+                    direction = "desc" if f.op == INVERT else "asc"
                 else:
                     colname = str(f)
                     direction = "asc"
-                for idx, rfield in enumerate(rfields):
+                orderby_dirs[colname] = direction
+                append(colname)
+            pos = 0
+
+            # Helper function to resolve a reference's "sortby" into
+            # a list of column names
+            ftuples = {}
+            def resolve_sortby(rfield):
+                colname = rfield.colname
+                if colname in ftuples:
+                    return ftuples[colname]
+                ftype = rfield.ftype
+                sortby = None
+                if ftype[:9] == "reference":
+                    field = rfield.field
+                    if hasattr(field, "sortby") and field.sortby:
+                        sortby = field.sortby
+                        if not isinstance(sortby, (tuple, list)):
+                            sortby = [sortby]
+                        p = "%s.%%s" % ftype[10:].split(".")[0]
+                        sortby = [p % fname for fname in sortby]
+                ftuples[colname] = sortby
+                return sortby
+
+            dt_ordering = [] # order expression for datatable
+            append = dt_ordering.append
+
+            # Match orderby-fields against table columns (=rfields)
+            seen = set()
+            skip = seen.add
+            for i, colname in enumerate(orderby_cols):
+                if i < pos:
+                    # Already consumed by sortby-tuple
+                    continue
+                direction = orderby_dirs[colname]
+                for col_idx, rfield in enumerate(rfields):
+                    if col_idx in seen:
+                        # Column already in dt_ordering
+                        continue
+                    sortby = None
                     if rfield.colname == colname:
-                        _orderby.append([idx, direction])
+                        # Match a single orderby-field
+                        sortby = (colname,)
+                    else:
+                        # Match between sortby and the orderby-field tuple
+                        # (must appear in same order and sorting direction)
+                        sortby = resolve_sortby(rfield)
+                        if not sortby or \
+                           sortby != orderby_cols[i:i + len(sortby)] or \
+                           any(orderby_dirs[c] != direction for c in sortby):
+                            sortby = None
+                    if sortby:
+                        append([col_idx, direction])
+                        pos += len(sortby)
+                        skip(col_idx)
                         break
-
         else:
-            _orderby = [[1, "asc"]]
+            dt_ordering = [[1, "asc"]]
 
-        self.orderby = _orderby
+        self.orderby = dt_ordering
 
     # -------------------------------------------------------------------------
     def html(self,
