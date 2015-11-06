@@ -2591,6 +2591,7 @@ class S3Config(Storage):
     def get_hrm_email_required(self):
         """
             If set to True then Staff & Volunteers require an email address
+            NB Currently this also acts on Members!
         """
         return self.hrm.get("email_required", True)
 

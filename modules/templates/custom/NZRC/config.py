@@ -74,6 +74,15 @@ def config(settings):
     settings.org.branches = True
 
     # -------------------------------------------------------------------------
+    # PR
+    # Uncomment to do a search for duplicates in AddPersonWidget2
+    settings.pr.lookup_duplicates = True
+    
+    # -------------------------------------------------------------------------
+    # HRM
+    settings.hrm.email_required = False
+
+    # -------------------------------------------------------------------------
     def ns_only(tablename,
                 fieldname = "organisation_id",
                 required = True,

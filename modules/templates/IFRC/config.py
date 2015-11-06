@@ -335,9 +335,9 @@ def config(settings):
         """ RMS- and NS-specific currencies """
 
         # Currencies that are common for all NS
-        currencies = {"EUR" : "Euros"
-                      "CHF" : "Swiss Francs"
-                      "USD" : "United States Dollars"
+        currencies = {"EUR" : "Euros",
+                      "CHF" : "Swiss Francs",
+                      "USD" : "United States Dollars",
                       }
 
         # NS-specific currencies
@@ -538,7 +538,7 @@ def config(settings):
     # Uncomment to consolidate tabs into Staff Record (set to False to hide the tab)
     settings.hrm.record_tab = "record"
 
-    # Uncomment to do a search for duplicates in the new AddPersonWidget2
+    # Uncomment to do a search for duplicates in AddPersonWidget2
     settings.pr.lookup_duplicates = True
 
     # RDRT

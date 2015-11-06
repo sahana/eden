@@ -11,7 +11,7 @@ def config(settings):
     #T = current.T
 
     # Pre-Populate
-    settings.base.prepopulate.append("locations.NZ")
+    settings.base.prepopulate.append("locations/NZ")
 
     # Uncomment to restrict to specific country/countries
     settings.gis.countries.append("NZ")
