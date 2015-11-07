@@ -67,9 +67,9 @@ class S3MainMenu(default.S3MainMenu):
             homepage("member")(
                 MM("Members", c="member", f="membership", m="summary"),
             ),
-            homepage("dvr")(
-                MM("Cases", c="dvr", f="case", m="summary"),
-            ),
+            #homepage("dvr")(
+            #    MM("Cases", c="dvr", f="case", m="summary"),
+            #),
             homepage("po")(
                 MM("Households", c="po", f="household", m="summary"),
             ),

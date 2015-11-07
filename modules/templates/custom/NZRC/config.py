@@ -996,11 +996,11 @@ def config(settings):
            name_nice = T("Opportunities"),
            restricted = True,
         )),
-        ("dvr", Storage(
-           name_nice = T("Case Management"),
-           #description = "Allow affected individuals & households to register to receive compensation and distributions",
-           restricted = True,
-        )),
+        #("dvr", Storage(
+        #   name_nice = T("Case Management"),
+        #   #description = "Allow affected individuals & households to register to receive compensation and distributions",
+        #   restricted = True,
+        #)),
         ("po", Storage(
            name_nice = T("Project Outreach"),
            #description = "Allow affected individuals & households to register to receive compensation and distributions",
