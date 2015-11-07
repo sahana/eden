@@ -862,6 +862,9 @@ $.filterOptionsS3({
         supply_item_id = S3ReusableField("item_id", "integer",
                                          writable=False,
                                          readable=False)
+        supply_item_category_id = S3ReusableField("item_category_id", "integer",
+                                                  writable=False,
+                                                  readable=False)
         item_id = S3ReusableField("item_entity_id", "integer",
                                   writable=False,
                                   readable=False)()
@@ -870,6 +873,7 @@ $.filterOptionsS3({
                                        readable=False)
 
         return dict(supply_item_id = supply_item_id,
+                    supply_item_category_id = supply_item_category_id,
                     supply_item_entity_id = item_id,
                     supply_item_pack_id = item_pack_id,
                     supply_item_pack_quantity = lambda tablename: lambda row: 0,

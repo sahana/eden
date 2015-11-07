@@ -691,7 +691,8 @@ class S3VolunteerAwardModel(S3Model):
         define_table(tablename,
                      self.pr_person_id(empty=False),
                      award_id(),
-                     s3_date(),
+                     s3_date(future = 0,
+                             ),
                      Field("number",
                            label = T("Number"),
                            # Enable in templates as-required

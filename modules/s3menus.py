@@ -1738,7 +1738,7 @@ class S3OptionsMenu(object):
             if t == "Stock":
                 create_menu = M("Create", m="create", vars={"type": 1})
             elif t == "People":
-                create_menu = M("Create", m="create", vars={"type": 2})
+                create_menu = M("Create", m="create", vars={"type": 3})
             else:
                 create_menu = M("Create", m="create")
         else:

@@ -5910,6 +5910,7 @@ def hrm_rheader(r, tabs=[], profile=False):
     resourcename = r.name
 
     if resourcename == "person":
+        record_id = r.id
         s3db = current.s3db
         settings = current.deployment_settings
         get_vars = r.get_vars
@@ -5948,7 +5949,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                     ahtable = db.vol_activity_hours
                     attable = db.vol_activity_hours_activity_type
                     bquery = (ahtable.deleted == False) & \
-                             (ahtable.person_id == r.id)
+                             (ahtable.person_id == record_id)
                     bleft = [attable.on(ahtable.id == attable.activity_hours_id),
                              ]
                     dfield = ahtable.date
@@ -5962,7 +5963,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                     ptable = s3db.hrm_programme
                     phtable = db.hrm_programme_hours
                     bquery = (phtable.deleted == False) & \
-                             (phtable.person_id == r.id)
+                             (phtable.person_id == record_id)
                     bleft = None
                     query = (phtable.programme_id == ptable.id)
                     query &= bquery
@@ -6036,7 +6037,7 @@ def hrm_rheader(r, tabs=[], profile=False):
                     if not hr:
                         # @ToDo: Handle multiple active HR records
                         htable = s3db.hrm_human_resource
-                        query = (htable.person_id == r.id) & \
+                        query = (htable.person_id == record_id) & \
                                 (htable.deleted == False)
                         hr = db(query).select(htable.id, limitby=(0, 1)).first()
                         if hr:
@@ -6297,15 +6298,15 @@ def hrm_rheader(r, tabs=[], profile=False):
                      (T("Assets"), "asset"),
                      ]
             # Add role manager tab if a user record exists
-            user_id = current.auth.s3_get_user_id(record.id)
+            user_id = current.auth.s3_get_user_id(record_id)
             if user_id:
                 tabs.append((T("Roles"), "roles"))
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(service_record,
-                      A(s3_avatar_represent(record.id,
+                      A(s3_avatar_represent(record_id,
                                             "pr_person",
                                             _class="rheader-avatar"),
-                        _href=URL(f="person", args=[record.id, "image"],
+                        _href=URL(f="person", args=[record_id, "image"],
                                   vars = get_vars),
                         ),
                       tbl,

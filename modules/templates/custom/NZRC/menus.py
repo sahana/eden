@@ -73,7 +73,13 @@ class S3MainMenu(default.S3MainMenu):
             homepage("po")(
                 MM("Households", c="po", f="household", m="summary"),
             ),
-            homepage("deploy", name="Deployments", f="mission", m="summary",
+            homepage("req")(
+                MM("Opportunities", c="req", f="req", m="summary"),
+            ),
+            homepage("project")(
+                MM("Tasks", c="project", f="task"),
+            ),
+            homepage("deploy", name="Delegates", f="mission", m="summary",
                      vars={"~.status__belongs": "2"})(
                 MM("Missions", c="deploy", f="mission", m="summary"),
                 MM("Members", c="deploy", f="human_resource", m="summary"),
@@ -316,6 +322,62 @@ class S3OptionsMenu(default.S3OptionsMenu):
         # Same as HRM
         return self.hrm()
 
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project():
+        """ Tasks """
+
+        return M(c="project")(
+                M("Projects", f="project")(
+                    M("Create", m="create"),
+                    M("Open Tasks for Project", vars={"tasks":1}),
+                ),
+                M("Tasks", f="task")(
+                    M("Create", m="create"),
+                ),
+                M("Daily Work", f="time")(
+                   M("My Logged Hours", vars={"mine":1}),
+                   M("My Open Tasks", f="task", vars={"mine":1}),
+                ),
+                M("Reports", f="report")(
+                    M("Activity Report", f="activity", m="report"),
+                    M("Last Week's Work", f="time", m="report",
+                      vars=Storage(rows="person_id",
+                                   cols="day",
+                                   fact="sum(hours)",
+                                   week=1)),
+                    M("Last Month's Work", f="time", m="report",
+                      vars=Storage(rows="person_id",
+                                   cols="week",
+                                   fact="sum(hours)",
+                                   month=1)),
+                    M("Project Time Report", f="time", m="report"),
+                ),
+            )
+                    
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def req():
+        """ Volunteer Opportunities """
+
+        #recurring = lambda i: settings.get_req_recurring()
+
+        return M(c="req")(
+                    M("Requests", f="req")(
+                        M("Create", m="create", vars={"type": 3}),
+                        M("List Recurring Requests", f="req_template", #check=recurring
+                          ),
+                        M("Map", m="map"),
+                        M("Report", m="report"),
+                        M("Search All Requested Skills", f="req_skill"),
+                    ),
+                    M("Commitments", f="commit", #check=use_commit
+                      )(),
+                    M("Facilities", c="req", f="facility")(
+                        M("Create", m="create", t="org_facility"),
+                    ),
+                )
+                    
     # -------------------------------------------------------------------------
     @staticmethod
     def vol():

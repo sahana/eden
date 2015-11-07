@@ -22,7 +22,7 @@ def config(settings):
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
-    settings.base.prepopulate.append("custom/NZRC")
+    settings.base.prepopulate+= ("custom/NZRC", "custom/NZRC/Demo")
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "custom.NZRC"
@@ -81,6 +81,25 @@ def config(settings):
     # -------------------------------------------------------------------------
     # HRM
     settings.hrm.email_required = False
+
+    settings.hrm.use_credentials = False
+
+    # -------------------------------------------------------------------------
+    # Projects
+    settings.project.mode_task = True
+    
+    # -------------------------------------------------------------------------
+    # Req
+    settings.req.req_type = ["People"]
+
+    # Uncomment to Commit Named People rather than simply Anonymous Skills
+    settings.req.commit_people = True
+
+    # Disable Inline Forms, unless we enable separate controllers
+    # (otherwise Create form cannot redirect to next tab correctly)
+    settings.req.inline_forms = False
+
+    settings.req.show_quantity_transit = False
 
     # -------------------------------------------------------------------------
     def ns_only(tablename,
@@ -564,6 +583,18 @@ def config(settings):
     settings.customise_hrm_department_resource = customise_hrm_department_resource
 
     # -----------------------------------------------------------------------------
+    def hrm_human_resource_create_onaccept(form):
+        
+        s3db = current.s3db
+
+        # Make Volunteer deployable
+        s3db.deploy_application.insert(human_resource_id=form.vars.id)
+
+        # Fire nromal onaccept
+        s3db.hrm_human_resource_onaccept(form)
+        
+
+    # -----------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
 
         db = current.db
@@ -592,6 +623,10 @@ def config(settings):
                                    )
         # Don't create new branches here
         field.comment = None
+
+        s3db.configure("hrm_human_resource",
+                       create_onaccept = hrm_human_resource_create_onaccept,
+                       )
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
@@ -633,6 +668,67 @@ def config(settings):
         return attr
 
     settings.customise_hrm_experience_controller = customise_hrm_experience_controller
+
+    # =============================================================================
+    def vol_programme_active(person_id):
+        """
+            Whether a Volunteer counts as 'Active' based on the number of hours
+            they've done (both Trainings & Programmes) per month, averaged over
+            the last year.
+            If nothing recorded for the last 3 months, don't penalise as assume
+            that data entry hasn't yet been done.
+
+            @ToDo: This should be based on the HRM record, not Person record
+                   - could be active with Org1 but not with Org2
+            @ToDo: allow to be calculated differently per-Org
+        """
+
+        now = current.request.utcnow
+
+        # Time spent on Programme work
+        htable = current.s3db.hrm_programme_hours
+        query = (htable.deleted == False) & \
+                (htable.person_id == person_id) & \
+                (htable.date != None)
+        programmes = current.db(query).select(htable.hours,
+                                              htable.date,
+                                              orderby=htable.date)
+        if programmes:
+            # Ignore up to 3 months of records
+            three_months_prior = (now - datetime.timedelta(days=92))
+            end = max(programmes.last().date, three_months_prior.date())
+            last_year = end - datetime.timedelta(days=365)
+            # Is this the Volunteer's first year?
+            if programmes.first().date > last_year:
+                # Only start counting from their first month
+                start = programmes.first().date
+            else:
+                # Start from a year before the latest record
+                start = last_year
+
+            # Total hours between start and end
+            programme_hours = 0
+            for programme in programmes:
+                if programme.date >= start and programme.date <= end and programme.hours:
+                    programme_hours += programme.hours
+
+            # Average hours per month
+            months = max(1, (end - start).days / 30.5)
+            average = programme_hours / months
+
+            # Active?
+            if average >= 8:
+                return True
+
+        return False
+
+    def hrm_vol_active(default):
+        """ Whether & How to track Volunteers as Active """
+
+        # Use formula based on hrm_programme
+        return vol_programme_active
+
+    settings.hrm.vol_active = hrm_vol_active
 
     # -----------------------------------------------------------------------------
     def rdrt_member_profile_header(r):
@@ -767,6 +863,22 @@ def config(settings):
     settings.customise_member_membership_resource = customise_member_membership_resource
 
     # -----------------------------------------------------------------------------
+    def customise_member_membership_type_resource(r, tablename):
+
+        field = current.s3db.member_membership_type.organisation_id
+        field.readable = field.writable = False
+
+    settings.customise_member_membership_type_resource = customise_member_membership_type_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_vol_award_resource(r, tablename):
+
+        field = current.s3db.vol_award.organisation_id
+        field.readable = field.writable = False
+
+    settings.customise_vol_award_resource = customise_vol_award_resource
+
+    # -----------------------------------------------------------------------------
     def customise_dvr_case_resource(r, tablename):
 
         db = current.db
@@ -872,9 +984,17 @@ def config(settings):
                restricted = True,
         )),
         ("deploy", Storage(
-               name_nice = T("Regional Disaster Response Teams"),
+               name_nice = T("Delegates"),
                #description = "Alerting and Deployment of Disaster Response Teams",
                restricted = True,
+        )),
+        ("project", Storage(
+               name_nice = T("Tasks"),
+               restricted = True,
+        )),
+        ("req", Storage(
+           name_nice = T("Opportunities"),
+           restricted = True,
         )),
         ("dvr", Storage(
            name_nice = T("Case Management"),

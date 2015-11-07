@@ -1885,4 +1885,14 @@ def site_needs():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def facility():
+    # Open record in this controller after creation
+    s3db.configure("org_facility",
+                   create_next = URL(c="req", f="facility",
+                                     args = ["[id]", "read"]),
+                   )
+
+    return s3db.org_facility_controller()
+
 # END =========================================================================

@@ -162,6 +162,7 @@ class S3RequestModel(S3Model):
         ask_transport = settings.get_req_ask_transport()
         date_writable = settings.get_req_date_writable()
         recurring = settings.get_req_recurring()
+        transit_status =  settings.get_req_show_quantity_transit()
         requester_label = settings.get_req_requester_label()
         requester_is_author = settings.get_req_requester_is_author()
         if requester_is_author:
@@ -350,6 +351,8 @@ class S3RequestModel(S3Model):
                                      ),
                           req_status("transit_status",
                                      label = T("Transit Status"),
+                                     readable = transit_status,
+                                     writable = req_status_writable and transit_status,
                                      ),
                           req_status("fulfil_status",
                                      label = T("Fulfil. Status"),
@@ -400,12 +403,6 @@ class S3RequestModel(S3Model):
             #             label = T("Search")
             #             comment=T("Search for a commitment by Committer name, Request ID, Site or Organization."),
             #             ),
-            S3OptionsFilter("transit_status",
-                            # Better to default (easier to customise/consistency)
-                            #label = T("Transit Status"),
-                            options = req_status_opts,
-                            cols = 3,
-                            ),
             S3OptionsFilter("fulfil_status",
                             # Better to default (easier to customise/consistency)
                             #label = T("Fulfill Status"),
@@ -442,30 +439,45 @@ class S3RequestModel(S3Model):
                          ),
             ]
 
+        position = 1
+        if transit_status:
+            position += 1
+            filter_widgets.insert(0,
+                                  S3OptionsFilter("transit_status",
+                                                  # Better to default (easier to customise/consistency)
+                                                  #label = T("Transit Status"),
+                                                  options = req_status_opts,
+                                                  cols = 3,
+                                                  ))
+
         if not default_type:
-            filter_widgets.insert(2, S3OptionsFilter("type",
-                                                     label = T("Type"),
-                                                     cols = len(req_types),
-                                                     ))
+            filter_widgets.insert(position,
+                                  S3OptionsFilter("type",
+                                                  label = T("Type"),
+                                                  cols = len(req_types),
+                                                  ))
         if default_type == 1 or (not default_type and 1 in req_types):
-            filter_widgets.insert(4, S3OptionsFilter("req_item.item_id$item_category_id",
-                                                     label = T("Item Category"),
-                                                     hidden = True,
-                                                     ))
+            filter_widgets.insert(position + 2,
+                                  S3OptionsFilter("req_item.item_id$item_category_id",
+                                                  label = T("Item Category"),
+                                                  hidden = True,
+                                                  ))
         if default_type == 3 or (not default_type and 3 in req_types):
-            filter_widgets.insert(4, S3OptionsFilter("req_skill.skill_id",
-                                                     # Better to default (easier to customise/consistency)
-                                                     #label = T("Skill"),
-                                                     hidden = True,
-                                                     ))
+            filter_widgets.insert(position + 2,
+                                  S3OptionsFilter("req_skill.skill_id",
+                                                  # Better to default (easier to customise/consistency)
+                                                  #label = T("Skill"),
+                                                  hidden = True,
+                                                  ))
         if use_commit:
-            filter_widgets.insert(2, S3OptionsFilter("commit_status",
-                                                     # Better to default (easier to customise/consistency)
-                                                     #label = T("Commit Status"),
-                                                     options = req_status_opts,
-                                                     cols = 3,
-                                                     hidden = True,
-                                                     ))
+            filter_widgets.insert(position,
+                                  S3OptionsFilter("commit_status",
+                                                  # Better to default (easier to customise/consistency)
+                                                  #label = T("Commit Status"),
+                                                  options = req_status_opts,
+                                                  cols = 3,
+                                                  hidden = True,
+                                                  ))
 
         report_fields = ["priority",
                          "site_id$organisation_id",
@@ -515,13 +527,14 @@ class S3RequestModel(S3Model):
             list_fields.insert(1, "req_ref")
         list_fields.extend(("priority",
                             (T("Details"), "details"),
-                            (T("Drivers"), "drivers"),
                             ))
+        if 1 in req_types:
+            list_fields.append((T("Drivers"), "drivers"))
         if use_commit:
             list_fields.append("commit_status")
-        list_fields.extend(("transit_status",
-                            "fulfil_status",
-                            ))
+        if transit_status:
+            list_fields.append("transit_status")
+        list_fields.append("fulfil_status")
         if use_commit:
             list_fields.append((T("Committed By"), "commit.site_id"))
 

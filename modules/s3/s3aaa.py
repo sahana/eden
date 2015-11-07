@@ -66,7 +66,7 @@ from s3dal import Row, Rows, Query, Table
 from s3datetime import S3DateTime
 from s3error import S3PermissionError
 from s3fields import S3Represent, s3_uid, s3_timestamp, s3_deletion_status, s3_comments
-from s3rest import S3Method
+from s3rest import S3Method, S3Request
 from s3track import S3Tracker
 from s3utils import s3_addrow, s3_get_extension, s3_mark_required
 
@@ -2851,6 +2851,7 @@ $.filterOptionsS3({
 
         db = current.db
         s3db = current.s3db
+        settings = current.deployment_settings
 
         user_id = user.id
         organisation_id = user.organisation_id
@@ -2859,7 +2860,7 @@ $.filterOptionsS3({
         htable = s3db.table(htablename)
 
         if not htable or (not organisation_id and \
-                          current.deployment_settings.get_hrm_org_required()):
+                          settings.get_hrm_org_required()):
             return None
 
         # Update existing HR record for this user
@@ -2923,6 +2924,15 @@ $.filterOptionsS3({
             if hr_id:
                 record["id"] = hr_id
                 s3db.update_super(htable, record)
+                # Customise the resource
+                customise = settings.customise_resource(htablename)
+                if customise:
+                    #import pydevd;pydevd.settrace()
+                    request = S3Request("hrm", "human_resource",
+                                        current.request,
+                                        args=[str(hr_id)])
+                    customise(request, htablename)
+
                 self.s3_set_record_owner(htable, hr_id)
                 s3db.onaccept(htablename, record, method="create")
 
@@ -2984,6 +2994,14 @@ $.filterOptionsS3({
             member_id = mtable.insert(**record)
             if member_id:
                 record["id"] = member_id
+                # Customise the resource
+                customise = current.deployment_settings.customise_resource(mtablename)
+                if customise:
+                    request = S3Request("member", "membership",
+                                        current.request,
+                                        args=[str(member_id)])
+                    customise(request, mtablename)
+
                 self.s3_set_record_owner(mtable, member_id)
                 s3db.onaccept(mtablename, record, method="create")
 

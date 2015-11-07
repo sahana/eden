@@ -2847,6 +2847,8 @@ class S3Config(Storage):
             Whether to use a 'Active' field for Volunteers &, if so, whether
             this is set manually or calculated by a function
             - options are: False, True or a function
+
+            NB If using a function, put this inside a Lazy lookup
         """
         return self.__lazy("hrm", "vol_active", default=False)
 
