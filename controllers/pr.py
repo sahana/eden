@@ -570,6 +570,15 @@ def filter():
     output = s3_rest_controller()
     return output
 
+def subscription():
+    """
+        REST controller for subscriptions
+        - to allow Admins to control subscriptions for people
+    """
+
+    output = s3_rest_controller()
+    return output
+    
 # =============================================================================
 def human_resource():
     """

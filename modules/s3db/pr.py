@@ -3734,11 +3734,13 @@ class S3SavedFilterModel(S3Model):
                                     label = T("Filter"),
                                     ondelete = "SET NULL",
                                     represent = represent,
-                                    requires = IS_EMPTY_OR(IS_ONE_OF(
-                                                    db, "pr_filter.id",
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(
+                                                    current.db, "pr_filter.id",
                                                     represent,
                                                     orderby="pr_filter.title",
-                                                    sort=True)),
+                                                    sort=True,
+                                                    )),
                                     )
 
         self.configure(tablename,
