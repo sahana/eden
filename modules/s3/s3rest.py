@@ -524,7 +524,70 @@ class S3Request(object):
             self.representation = representation
         else:
             self.representation = self.DEFAULT_REPRESENTATION
-        return
+
+        # Check for special URL variable $search, indicating
+        # that the request body contains filter queries:
+        if self.http == "POST" and "$search" in self.get_vars:
+            self.__search()
+
+    # -------------------------------------------------------------------------
+    def __search(self):
+        """
+            Process filters in POST, interprets URL filter expressions
+            in POST vars (if multipart), or from JSON request body (if
+            not multipart or $search=ajax).
+
+            NB: overrides S3Request method as GET (r.http) to trigger
+                the correct method handlers, but will not change
+                current.request.env.request_method
+        """
+
+        get_vars = self.get_vars
+        content_type = self.env.get("content_type") or ""
+
+        mode = get_vars.get("$search")
+
+        # Override request method
+        if mode:
+            self.http = "GET"
+
+        # Retrieve filters from request body
+        if mode == "ajax" or content_type[:10] != "multipart/":
+            # Read body JSON
+            s = self.body
+            s.seek(0)
+            try:
+                filters = json.load(s)
+            except ValueError:
+                filters = {}
+            if not isinstance(filters, dict):
+                filters = {}
+        else:
+            # Read POST vars
+            filters = self.post_vars
+
+        # Move filters into GET vars
+        get_vars = dict(get_vars)
+        post_vars = dict(self.post_vars)
+
+        del get_vars["$search"]
+        for k, v in filters.items():
+            k0 = k[0]
+            if k == "$filter" or \
+               k0 != "_" and ("." in k or k0 == "(" and ")" in k):
+                # Copy filter expression into GET vars
+                get_vars[k] = v
+                # Remove filter expression from POST vars
+                if k in post_vars:
+                    del post_vars[k]
+
+        # Override self.get_vars and self.post_vars
+        self.get_vars = get_vars
+        self.post_vars = post_vars
+
+        # Update combined vars
+        self.vars = get_vars.copy()
+        self.vars.update(self.post_vars)
 
     # -------------------------------------------------------------------------
     # REST Interface

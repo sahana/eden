@@ -9,10 +9,188 @@ import unittest
 from gluon import *
 from gluon.storage import Storage
 from s3.s3rest import S3Request
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
+
+# =============================================================================
+class POSTFilterTests(unittest.TestCase):
+    """ Tests for POST filter queries """
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        request = current.request
+        self.request_body = request._body
+        self.content_type = request.env.content_type
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        request = current.request
+        request._body = self.request_body
+        request.env.content_type = self.content_type
+
+    # -------------------------------------------------------------------------
+    def testPOSTFilter(self):
+        """ Test POST filter interpretation with multipart request body """
+
+        assertEqual = self.assertEqual
+        assertNotIn = self.assertNotIn
+        assertIn = self.assertIn
+
+        request = current.request
+        request.env.content_type = "multipart/form-data"
+
+        # Test with valid filter expression JSON
+        r = S3Request(prefix = "org",
+                      name = "organisation",
+                      http = "POST",
+                      get_vars = {"$search": "form", "test": "retained"},
+                      post_vars = {"service_organisation.service_id__belongs": "1",
+                                   "other": "testing",
+                                   },
+                      )
+        # Method changed to GET:
+        assertEqual(r.http, "GET")
+        get_vars = r.get_vars
+        post_vars = r.post_vars
+        # $search removed from GET vars:
+        assertNotIn("$search", get_vars)
+        # Filter queries from POST vars added to GET vars:
+        assertEqual(get_vars.get("service_organisation.service_id__belongs"), "1")
+        # Filter queries removed from POST vars:
+        assertNotIn("service_organisation.service_id__belongs", post_vars)
+        # Must retain other GET vars:
+        assertEqual(get_vars.get("test"), "retained")
+
+        # Test without $search
+        r = S3Request(prefix = "org",
+                      name = "organisation",
+                      http = "POST",
+                      get_vars = {"test": "retained"},
+                      post_vars = {"service_organisation.service_id__belongs": "1",
+                                   "other": "testing",
+                                   },
+                      )
+        # Method should still be POST:
+        assertEqual(r.http, "POST")
+        get_vars = r.get_vars
+        post_vars = r.post_vars
+        # $search never was in GET vars - confirm this to exclude test regression
+        assertNotIn("$search", get_vars)
+        # Filter queries from POST vars not added to GET vars:
+        assertNotIn("service_organisation.service_id__belongs", get_vars)
+        # Filter queries still in POST vars:
+        assertIn("service_organisation.service_id__belongs", post_vars)
+        # Must retain other GET vars:
+        assertEqual(get_vars.get("test"), "retained")
+
+        # Test with empty post vars
+        request._body = StringIO('')
+        r = S3Request(prefix = "org",
+                      name = "organisation",
+                      http = "POST",
+                      get_vars = {"$search": "ajax", "test": "retained"},
+                      post_vars = {"service_organisation.service_id__belongs": "1",
+                                   "other": "testing",
+                                   },
+                      )
+        # Method changed to GET:
+        assertEqual(r.http, "GET")
+        get_vars = r.get_vars
+        post_vars = r.post_vars
+        # $search removed from GET vars:
+        assertNotIn("$search", get_vars)
+        # Filter queries from POST vars not added to GET vars:
+        assertNotIn("service_organisation.service_id__belongs", get_vars)
+        # Filter queries still in POST vars:
+        assertIn("service_organisation.service_id__belongs", post_vars)
+        # Must retain other GET vars:
+        assertEqual(get_vars.get("test"), "retained")
+
+    # -------------------------------------------------------------------------
+    def testPOSTFilterAjax(self):
+        """ Test POST filter interpretation with JSON request body """
+
+        assertEqual = self.assertEqual
+        assertNotIn = self.assertNotIn
+
+        request = current.request
+
+        # Test with valid filter expression JSON
+        request._body = StringIO('{"service_organisation.service_id__belongs":"1"}')
+        r = S3Request(prefix = "org",
+                      name = "organisation",
+                      http = "POST",
+                      get_vars = {"$search": "ajax", "test": "retained"},
+                      )
+        # Method changed to GET:
+        assertEqual(r.http, "GET")
+        get_vars = r.get_vars
+        # $search removed from GET vars:
+        assertNotIn("$search", get_vars)
+        # Filter queries from JSON body added to GET vars:
+        assertEqual(get_vars.get("service_organisation.service_id__belongs"), "1")
+        # Must retain other GET vars:
+        assertEqual(get_vars.get("test"), "retained")
+
+        # Test without $search
+        request._body = StringIO('{"service_organisation.service_id__belongs":"1"}')
+        r = S3Request(prefix = "org",
+                      name = "organisation",
+                      http = "POST",
+                      get_vars = {"test": "retained"},
+                      )
+        # Method should still be POST:
+        assertEqual(r.http, "POST")
+        get_vars = r.get_vars
+        # $search never was in GET vars - confirm this to exclude test regression
+        assertNotIn("$search", get_vars)
+        # Filter queries from JSON body not added to GET vars:
+        assertNotIn("service_organisation.service_id__belongs", get_vars)
+        # Must retain other GET vars:
+        assertEqual(get_vars.get("test"), "retained")
+
+        # Test with valid JSON but invalid filter expression
+        request._body = StringIO('[1,2,3]')
+        r = S3Request(prefix = "org",
+                      name = "organisation",
+                      http = "POST",
+                      get_vars = {"$search": "ajax", "test": "retained"},
+                      )
+        # Method changed to GET:
+        assertEqual(r.http, "GET")
+        get_vars = r.get_vars
+        # $search removed from GET vars:
+        assertNotIn("$search", get_vars)
+        # Filter queries from JSON body not added to GET vars:
+        assertNotIn("service_organisation.service_id__belongs", get_vars)
+        # Must retain other GET vars:
+        assertEqual(get_vars.get("test"), "retained")
+
+        # Test with empty body
+        request._body = StringIO('')
+        r = S3Request(prefix = "org",
+                      name = "organisation",
+                      http = "POST",
+                      get_vars = {"$search": "ajax", "test": "retained"},
+                      )
+        # Method changed to GET:
+        assertEqual(r.http, "GET")
+        get_vars = r.get_vars
+        # $search removed from GET vars:
+        assertNotIn("$search", get_vars)
+        # Filter queries from JSON body not added to GET vars:
+        assertNotIn("service_organisation.service_id__belongs", get_vars)
+        # Must retain other GET vars:
+        assertEqual(get_vars.get("test"), "retained")
 
 # =============================================================================
 class URLBuilderTests(unittest.TestCase):
 
+    # -------------------------------------------------------------------------
     def setUp(self):
 
         current.auth.override = True
@@ -36,12 +214,19 @@ class URLBuilderTests(unittest.TestCase):
                                args=[self.p, "contact", self.c, "method"],
                                vars=Storage(format="xml", test="test"))
 
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.auth.override = False
+
+    # -------------------------------------------------------------------------
     def testURLConstruction(self):
 
         (a, p, c, r) = (self.a, self.p, self.c, self.r)
         self.assertEqual(r.url(),
                          "/%s/pr/person/%s/contact/%s/method.xml?test=test" % (a, p, c))
 
+    # -------------------------------------------------------------------------
     def testURLMethodOverride(self):
 
         (a, p, c, r) = (self.a, self.p, self.c, self.r)
@@ -78,6 +263,7 @@ class URLBuilderTests(unittest.TestCase):
         self.assertEqual(r.url(method="read"),
                          "/%s/pr/person/%s/read.xml?test=test" % (a, p))
 
+    # -------------------------------------------------------------------------
     def testURLRepresentationOverride(self):
 
         (a, p, c, r) = (self.a, self.p, self.c, self.r)
@@ -94,6 +280,7 @@ class URLBuilderTests(unittest.TestCase):
         self.assertEqual(r.url(representation="pdf"),
                          "/%s/pr/person/%s/contact/%s/method.pdf?test=test" % (a, p, c))
 
+    # -------------------------------------------------------------------------
     def testURLMasterIDOverride(self):
 
         (a, p, c, r) = (self.a, self.p, self.c, self.r)
@@ -123,6 +310,7 @@ class URLBuilderTests(unittest.TestCase):
         self.assertEqual(r.url(id=[]),
                          "/%s/pr/person/%%5Bid%%5D/contact.xml?test=test" % a)
 
+    # -------------------------------------------------------------------------
     def testURLComponentOverride(self):
 
         (a, p, c, r) = (self.a, self.p, self.c, self.r)
@@ -141,6 +329,7 @@ class URLBuilderTests(unittest.TestCase):
         self.assertEqual(r.url(component="other"),
                          "/%s/pr/person/%s/other.xml?test=test" % (a, p))
 
+    # -------------------------------------------------------------------------
     def testURLComponentIDOverride(self):
 
         (a, p, c, r) = (self.a, self.p, self.c, self.r)
@@ -157,6 +346,7 @@ class URLBuilderTests(unittest.TestCase):
         self.assertEqual(r.url(component_id=5),
                          "/%s/pr/person/%s/contact/5/method.xml?test=test" % (a, p))
 
+    # -------------------------------------------------------------------------
     def testURLTargetOverrideMaster(self):
 
         (a, p, c, r) = (self.a, self.p, self.c, self.r)
@@ -181,6 +371,7 @@ class URLBuilderTests(unittest.TestCase):
         self.assertEqual(r.url(target=5),
                          "/%s/pr/person/5/method.xml?test=test" % a)
 
+    # -------------------------------------------------------------------------
     def testURLTargetOverrideComponent(self):
 
         (a, p, c, r) = (self.a, self.p, self.c, self.r)
@@ -199,6 +390,7 @@ class URLBuilderTests(unittest.TestCase):
         self.assertEqual(r.url(target=5),
                          "/%s/pr/person/%s/contact/5/method.xml?test=test" % (a, p))
 
+    # -------------------------------------------------------------------------
     def testURLVarsOverride(self):
 
         (a, p, c, r) = (self.a, self.p, self.c, self.r)
@@ -217,6 +409,7 @@ class URLBuilderTests(unittest.TestCase):
         self.assertEqual(r.url(vars={"other":"test"}),
                          "/%s/pr/person/%s/contact/%s/method.xml?other=test" % (a, p, c))
 
+    # -------------------------------------------------------------------------
     def testURLCombinations(self):
 
         (a, p, c, r) = (self.a, self.p, self.c, self.r)
@@ -265,10 +458,6 @@ class URLBuilderTests(unittest.TestCase):
         self.assertEqual(r.url(method="deduplicate", target=0, vars={}),
                          "/%s/pr/person/deduplicate.xml" % a)
 
-    def tearDown(self):
-
-        current.auth.override = False
-
 # =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
@@ -285,6 +474,7 @@ def run_suite(*test_classes):
 if __name__ == "__main__":
 
     run_suite(
+        POSTFilterTests,
         URLBuilderTests,
     )
 

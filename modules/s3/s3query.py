@@ -2148,7 +2148,10 @@ class S3URLQuery(object):
 
         for key, value in vars.iteritems():
 
-            if key == "$filter":
+            if not key:
+                continue
+
+            elif key == "$filter":
                 # Instantiate the advanced filter parser
                 parser = S3URLQueryParser()
                 if parser.parser is None:
