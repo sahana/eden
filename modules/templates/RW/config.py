@@ -294,7 +294,6 @@ def config(settings):
             S3OptionsFilter("organisation_id",
                             ),
             S3LocationFilter("location_id",
-                             levels = ("L2", "L3", "L4"),
                              ),
             ]
 
@@ -409,9 +408,12 @@ def config(settings):
                          ),
             S3LocationFilter("org_facility.location_id",
                              label = T("Location"),
-                             levels = ("L2", "L3", "L4"),
                              #hidden = True,
                              ),
+            S3OptionsFilter("organisation_organisation_type.organisation_type_id",
+                            label = T("Type"),
+                            #hidden = True,
+                            ),
             S3OptionsFilter("service_organisation.service_id",
                             #hidden = True,
                             ),
