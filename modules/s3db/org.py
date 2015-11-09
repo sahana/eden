@@ -2930,18 +2930,22 @@ class S3SiteModel(S3Model):
         #           method = "assign",
         #           action = self.hrm_AssignMethod(component="human_resource_site"))
 
+        list_fields = ["id",
+                       "code",
+                       "instance_type",
+                       "name",
+                       "organisation_id",
+                       "location_id",
+                       ]
+
         self.configure(tablename,
                        context = {"location": "location_id",
                                   "organisation": "organisation_id",
                                   "org_group": "organisation_id$group_membership.group_id",
                                   },
-                       list_fields = ["id",
-                                      "code",
-                                      "instance_type",
-                                      "name",
-                                      "organisation_id",
-                                      "location_id",
-                                      ],
+                       list_fields = list_fields,
+                       # Include site_id in JSON (for filterOptionsS3):
+                       json_fields = list_fields + ["site_id"],
                        onaccept = self.org_site_onaccept,
                        ondelete_cascade = self.org_site_ondelete_cascade,
                        )

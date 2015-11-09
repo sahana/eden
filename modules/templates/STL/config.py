@@ -312,6 +312,13 @@ def config(settings):
 })'''
                     s3.jquery_ready.append(script)
 
+                # Hide Postcode in addresses (not used)
+                atable = s3db.pr_address
+                from s3 import S3LocationSelector
+                location_id = atable.location_id
+                location_id.widget = S3LocationSelector(show_address=True,
+                                                        show_postcode = False,
+                                                        )
             return result
         s3.prep = custom_prep
 

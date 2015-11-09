@@ -260,6 +260,7 @@ class DVRCaseModel(S3Model):
         # CRUD form
         crud_form = S3SQLCustomForm("reference",
                                     "organisation_id",
+                                    "date",
                                     "status",
                                     "person_id",
                                     # Not valid for write:
@@ -312,6 +313,7 @@ class DVRCaseModel(S3Model):
         configure(tablename,
                   crud_form = crud_form,
                   report_options = report_options,
+                  onvalidation = self.case_onvalidation,
                   )
 
         # Reusable field
@@ -345,6 +347,78 @@ class DVRCaseModel(S3Model):
         return {"dvr_case_id": lambda **attr: dummy("case_id"),
                 "dvr_case_status_opts": {},
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_onvalidation(form):
+        """
+            Ensure case numbers are unique within the organisation
+
+            @param form: the FORM
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Read form data
+        form_vars = form.vars
+        record_id = form_vars.id if "id" in form_vars else None
+        try:
+            reference = form_vars.reference
+        except AttributeError:
+            reference = None
+
+        if reference:
+            # Make sure the case reference is unique within the organisation
+
+            ctable = s3db.dvr_case
+            otable = s3db.org_organisation
+
+            # Get the organisation_id
+            if "organisation_id" not in form_vars:
+                if not record_id:
+                    # Create form with hidden organisation_id
+                    # => use default
+                    organisation_id = ctable.organisation_id.default
+                else:
+                    # Reload the record to get the organisation_id
+                    query = (ctable.id == record_id)
+                    row = db(query).select(ctable.organisation_id,
+                                           limitby = (0, 1)).first()
+                    if not row:
+                        return
+                    organisation_id = row.organisation_id
+            else:
+                # Use the organisation_id in the form
+                organisation_id = form_vars.organisation_id
+
+            # Case duplicate query
+            dquery = (ctable.reference == reference) & \
+                     (ctable.deleted != True)
+            if record_id:
+                dquery &= (ctable.id != record_id)
+            msg = current.T("This Case Number is already in use")
+
+            # Add organisation query to duplicate query
+            if current.deployment_settings.get_org_branches():
+                # Get the root organisation
+                query = (otable.id == organisation_id)
+                row = db(query).select(otable.root_organisation,
+                                    limitby = (0, 1)).first()
+                root_organisation = row.root_organisation \
+                                    if row else organisation_id
+                dquery &= (otable.root_organisation == root_organisation)
+                left = otable.on(otable.id == ctable.organisation_id)
+            else:
+                dquery &= (ctable.organisation_id == organisation_id)
+                left = None
+
+            # Is there a record with the same reference?
+            row = db(dquery).select(ctable.id,
+                                    left = left,
+                                    limitby = (0, 1)).first()
+            if row:
+                form.errors["reference"] = msg
 
 # =============================================================================
 class DVRNeedsModel(S3Model):
