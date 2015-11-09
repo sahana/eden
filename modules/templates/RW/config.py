@@ -354,6 +354,11 @@ def config(settings):
                                        label = T("Type"),
                                        multiple = False,
                                        ),
+                       S3SQLInlineLink(
+                            "service",
+                            label = T("Services"),
+                            field = "service_id",
+                            ),
                        S3SQLInlineComponent(
                             "facility",
                             label = T("Main Facility"),
@@ -407,10 +412,14 @@ def config(settings):
                              levels = ("L2", "L3", "L4"),
                              #hidden = True,
                              ),
+            S3OptionsFilter("service_organisation.service_id",
+                            #hidden = True,
+                            ),
             ]
 
         list_fields = ["name",
                        (T("Type"), "organisation_organisation_type.organisation_type_id"),
+                       (T("Services"), "service.name"),
                        (T("Adresse"), "main_facility.location_id"),
                        (T("Phone #"), "main_facility.phone1"),
                        (T("Email"), "main_facility.email"),

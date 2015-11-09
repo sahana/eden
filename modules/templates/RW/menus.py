@@ -81,6 +81,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
+                    M("Service Types", f="service",
+                      restrict=[ADMIN])(
+                        M("Create", m="create"),
+                    ),
                     M("Office Types", f="office_type",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
