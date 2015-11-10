@@ -278,9 +278,9 @@ def config(settings):
                 result = True
 
             if r.controller == "dvr" and not r.component:
+                ctable = s3db.dvr_case
                 root_org = current.auth.root_org()
                 if root_org:
-                    ctable = s3db.dvr_case
                     # Set default for organisation_id and hide the field
                     field = ctable.organisation_id
                     field.default = root_org
@@ -319,12 +319,23 @@ def config(settings):
                 location_id.widget = S3LocationSelector(show_address=True,
                                                         show_postcode = False,
                                                         )
+                # Expose Head of Household fields:
+                fields = ("head_of_household",
+                          "hoh_name",
+                          "hoh_gender",
+                          "hoh_relationship"
+                          )
+                for fname in fields:
+                    field = ctable[fname]
+                    field.readable = field.writable = True
+
+                # Inject script to toggle Head of Household form fields
+                path = "/%s/static/themes/STL/js/dvr.js" % current.request.application
+                if path not in s3.scripts:
+                    s3.scripts.append(path)
+
             return result
         s3.prep = custom_prep
-
-        # Custom RHeader
-        #if current.request.controller == "vol":
-        #    attr["rheader"] = vol_rheader
 
         return attr
 

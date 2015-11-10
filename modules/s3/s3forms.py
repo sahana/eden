@@ -1093,13 +1093,14 @@ class S3SQLCustomForm(S3SQLForm):
 
             rows = self.subrows
             if alias in rows and rows[alias] is not None:
-                #subid = rows[alias][subtable._id]
+                # Add the record ID for update-onvalidation
+                pkey = subtable._id
+                subform.vars[pkey.name] = rows[alias][pkey]
                 subonvalidation = get_config(subtable._tablename,
                                              "update_onvalidation",
                                   get_config(subtable._tablename,
                                              "onvalidation", None))
             else:
-                #subid = None
                 subonvalidation = get_config(subtable._tablename,
                                              "create_onvalidation",
                                   get_config(subtable._tablename,

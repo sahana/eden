@@ -118,6 +118,10 @@ def person():
                                         link = False,
                                         multiple = False,
                                         ),
+                                "dvr_case.head_of_household",
+                                "dvr_case.hoh_name",
+                                "dvr_case.hoh_gender",
+                                "dvr_case.hoh_relationship",
                                 "dvr_case.comments",
                                 )
 

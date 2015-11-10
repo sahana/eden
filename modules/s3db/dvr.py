@@ -197,6 +197,32 @@ class DVRCaseModel(S3Model):
                         widget = S3AddPersonWidget2(controller="pr"),
                         ondelete = "CASCADE",
                         ),
+                     Field("head_of_household", "boolean",
+                           default = True,
+                           label = T("Head of Household"),
+                           represent = s3_yes_no_represent,
+                           # Enable in template if required
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("hoh_name",
+                           label = T("Head of Household Name"),
+                           # Enable in template if required
+                           readable = False,
+                           writable = False,
+                           ),
+                     self.pr_gender("hoh_gender",
+                                    label = T("Head of Household Gender"),
+                                    # Enable in template if required
+                                    readable = False,
+                                    writable = False,
+                                    ),
+                     Field("hoh_relationship",
+                           label = T("Head of Household Relationship"),
+                           # Enable in template if required
+                           readable = False,
+                           writable = False,
+                           ),
                      #Field("damage", "integer",
                      #      label= T("Damage Assessment"),
                      #      represent = lambda opt: \
