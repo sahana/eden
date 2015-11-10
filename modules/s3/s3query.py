@@ -223,7 +223,7 @@ class S3FieldSelector(object):
             try:
                 value = value()
             except:
-                current.log.error(sys.exc_info()[1])
+                current.log.error("%s.%s: %s" % (tname, fname, sys.exc_info()[1]))
                 value = None
 
         if hasattr(field, "expr"):

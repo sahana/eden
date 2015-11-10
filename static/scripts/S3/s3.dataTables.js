@@ -797,7 +797,15 @@
                     }
                 }
 
-                settings.jqXHR = $.ajaxS3({
+                // Use $.searchS3 if filter framework is available,
+                // otherwise (e.g. custom page without s3.filter.js)
+                // fall back to $.ajaxS3
+                var ajaxMethod = $.ajaxS3;
+                if ($.searchS3 !== undefined) {
+                    ajaxMethod = $.searchS3;
+                }
+
+                settings.jqXHR = ajaxMethod({
                     'type':     conf.method,
                     //'url':      conf.url,
                     'url':      ajax_urls[id], // Needs to be dynamic to be able to be altered by reloadAjax()

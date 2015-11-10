@@ -5423,7 +5423,7 @@ class org_SiteRepresent(S3Represent):
 def org_site_has_assets(row, tablename="org_facility"):
     """ Whether a Site has Assets """
 
-    if not settings.has_module("asset"):
+    if not current.deployment_settings.has_module("asset"):
         return False
 
     if hasattr(row, tablename):
@@ -5453,7 +5453,7 @@ def org_site_has_assets(row, tablename="org_facility"):
 def org_site_has_inv(row, tablename="org_facility"):
     """ Whether a Site has Inventory """
 
-    if not settings.has_module("inv"):
+    if not current.deployment_settings.has_module("inv"):
         return False
 
     if hasattr(row, tablename):
@@ -5484,7 +5484,7 @@ def org_site_has_inv(row, tablename="org_facility"):
 def org_site_top_req_priority(row, tablename="org_facility"):
     """ Highest priority of open requests for a site """
 
-    if not settings.has_module("req"):
+    if not current.deployment_settings.has_module("req"):
         return None
 
     try:

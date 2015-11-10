@@ -8,6 +8,204 @@ S3.search = {};
 (function() {
 
     /**
+     * Rewrite the Ajax options for a filtered GET, converting into a POST
+     *
+     * @param {object} s - the Ajax options dict
+     */
+    var searchRewriteAjaxOptions = function(s) {
+
+        // Rewrite only GET
+        if (s.type != 'GET') {
+            return;
+        } else {
+            s.type = 'POST';
+        }
+
+        // Helper function to check whether a URL variable is a filter expression
+        var isFilterKey = function(k) {
+            var k0 = k[0];
+            return (k == '$filter' || k0 != '_' && (k.search(/\./) != -1 || k0 == '(' && k.search(/\)/) != -1));
+        };
+
+        var parts = s.url.split('#'),
+            path = parts[0],
+            fragment = null,
+            query = null;
+
+        // Split the URL into path, query and fragment
+        if (parts.length > 1) {
+            fragment = parts[1];
+        }
+        parts = path.split('?');
+        path = parts[0];
+        if (parts.length > 1) {
+            query = parts[1];
+        }
+
+        var ajaxData = s.data,
+            postData = {},
+            queryDict = {},
+            queryItem,
+            valueCount,
+            itemCount,
+            i,
+            j,
+            k,
+            v;
+
+        // Helper function to add a query item to a query item dict
+        var addQueryItem = function(items, key, val) {
+            if (Array.isArray(val)) {
+                for (j = 0, valueCount = val.length; j < valueCount; j++) {
+                    addQueryItem(items, key, val[j]);
+                }
+                return;
+            }
+            if (!items.hasOwnProperty(key)) {
+                items[key] = val;
+            } else if (Array.isArray(items[key])) {
+                items[key].push(val);
+            } else {
+                items[key] = [items[key], val];
+            }
+        };
+
+        // Add the original ajaxData to the queryDict
+        for (i = 0, itemCount = ajaxData.length; i < itemCount; i++) {
+            queryItem = ajaxData[i];
+            addQueryItem(queryDict, queryItem.name, queryItem.value);
+        }
+
+        // Parse the query string, add filter expressions to the
+        // postData, and other query items to the queryDict
+        if (query) {
+            var items = S3.queryString.parse(query);
+            for (k in items) {
+                v = items[k];
+                if (isFilterKey(k)) {
+                    addQueryItem(postData, k, v);
+                } else {
+                    addQueryItem(queryDict, k, v);
+                }
+            }
+        }
+        s.data = JSON.stringify(postData);
+        s.processData = false;
+
+        // Construct new Ajax URL
+        var ajaxURL = path + '?$search=ajax';
+
+        // Stringify and append queryDict
+        var queryString = S3.queryString.stringify(queryDict);
+        if (queryString) {
+            ajaxURL += '&' + queryString;
+        }
+
+        // Append fragment
+        if (fragment !== null) {
+            ajaxURL += '#' + fragment;
+        }
+        s.url = ajaxURL;
+    };
+
+    /**
+     * Default options for $.searchS3
+     */
+    var searchS3Defaults = {
+        timeout : 10000,
+        retryLimit: 5,
+        dataType: 'json',
+        processData: false,
+        async: true,
+        type: 'POST'
+    };
+
+    /**
+     * Ajax search request method, converts GET into POST, encoding
+     * URL filters as JSON request body, thus allowing arbitrary
+     * length of filter options as well as TLS encryption of filters
+     *
+     * @param {object} s - the Ajax options
+     * @prop {string} s.url - the Ajax URL
+     * @prop {Array} s.data - GET variables as array of dicts {name: k, value: v},
+     *                        will be appended to the POST URL
+     * @prop {function} s.done - the done-callback (alternatively s.success)
+     * @prop {function} s.fail - the fail-callback (alternatively s.error)
+     *
+     * @note: only GET requests will be converted, while POST requests
+     *        will be sent unmodified (=equivalent to $.AjaxS3)
+     */
+    $.searchS3 = function(s) {
+
+        var message,
+            options = $.extend({}, searchS3Defaults, s),
+            doneCallback = null,
+            failCallback = null;
+
+        if (s.done) {
+            doneCallback = s.done;
+        } else if (s.success) {
+            doneCallback = s.success;
+        }
+        if (s.fail) {
+            failCallback = s.fail;
+        } else if (s.error) {
+            failCallback = s.error;
+        }
+
+        // Prevent callbacks from being executed twice
+        options.done = null;
+        options.success = null;
+        options.fail = null;
+        options.error = null;
+
+        // Retry-counter
+        options.tryCount = 0;
+
+        // Rewrite the Ajax options
+        searchRewriteAjaxOptions(options);
+
+        if (s.message) {
+            message = i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '...';
+            S3.showAlert(message, 'info');
+        }
+        $.ajax(
+            options
+        ).done(function(data, status) {
+            S3.hideAlerts();
+            this.tryCount = 0;
+            if (data.message) {
+                S3.showAlert(data.message, 'success');
+            }
+            // Call done/success callback:
+            if (doneCallback) {
+                doneCallback(data, status);
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            if (textStatus == 'timeout') {
+                this.tryCount++;
+                if (this.tryCount <= this.retryLimit) {
+                    // Try again
+                    message = i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '... ' + i18n.ajax_rtr + ' ' + this.tryCount;
+                    S3.showAlert(message, 'warning');
+                    $.ajax(this);
+                    return;
+                }
+                message = i18n.ajax_wht + ' ' + (this.retryLimit + 1) + ' ' + i18n.ajax_gvn;
+                S3.showAlert(message, 'error');
+            } else if (jqXHR.status == 500) {
+                S3.showAlert(i18n.ajax_500, 'error');
+            } else {
+                S3.showAlert(i18n.ajax_dwn, 'error');
+            }
+            // Call fail/error callback:
+            if (failCallback) {
+                failCallback(jqXHR, textStatus, errorThrown);
+            }
+        });
+    };
+
+    /**
      * pendingTargets: targets which were invisible during last filter-submit
      */
     var pendingTargets = {};
@@ -70,7 +268,7 @@ S3.search = {};
             $(this).val('');
         });
         form.find('.options-filter, .location-filter').each(function() {
-            $this = $(this);
+            var $this = $(this);
             if (this.tagName.toLowerCase() == 'select') {
                 $this.val('');
                 if ($this.hasClass('groupedopts-filter-widget') &&
@@ -186,9 +384,7 @@ S3.search = {};
                 value = '';
                 values = $this.val();
                 if (values) {
-                    if (values instanceof Array) {
-                        // multiple=True
-                    } else {
+                    if (!(values instanceof Array)) {
                         // multiple=False, but a single option may contain multiple
                         values = values.split(',');
                     }
@@ -284,6 +480,7 @@ S3.search = {};
                 // Standard SELECT
                 value = '';
                 values = $(this).val();
+                var v;
                 if (values) {
                     for (i=0; i < values.length; i++) {
                         v = quoteValue(values[i]);
@@ -1206,7 +1403,7 @@ S3.search = {};
         widget.options3 = [];
         widget.options4 = [];
         widget.options5 = [];
-        var new_level, opt, _opt, i;
+        var new_level, opt, _opt, i, option;
         if (hierarchy.hasOwnProperty('L' + level)) {
             // Top-level
             var _hierarchy = hierarchy['L' + level];
