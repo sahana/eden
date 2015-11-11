@@ -22,6 +22,7 @@
              <match>|StandardName|AlternativeName1|AlternativeName2|</match>
              <label>AlternativeName1</label>
              <label>AlternativeName2</label>
+             <tag>ColumnHashtagWithout#</tag>
              <option value="InternalValue" name="StandardLabel">
                  <label>AlternativeOptionLabel1</label>
                  <label>AlternativeOptionLabel2</label>
@@ -35,6 +36,7 @@
              <label>PersonGender</label>
              <label>Gender</label>
              <label>Sex</label>
+             <tag>sex</tag>
              <option value="1" name="female">
                  <label>F</label>
              </option>
@@ -62,6 +64,7 @@
         <label>Gender</label>
         <label>Sex</label>
         <!--<label>Title</label>-->
+        <tag>sex</tag>
         <option value="2" name="female">
             <!-- mg -->
             <label>V</label>

@@ -39,11 +39,12 @@
     -->
 
     <xsl:template name="ResolveColumnHeader">
+
         <xsl:param name="colname"/>
-        <xsl:variable name="labels" select="document('labels.xml')//labels"/>
-        <xsl:variable name="src" select="//labels/column[@name=$colname]"/>
-        <xsl:variable name="map" select="$labels/column[@name=$colname]"/>
         <xsl:value-of select="concat('|', $colname, '|')"/>
+
+        <!-- Label alternatives in the source file -->
+        <xsl:variable name="src" select="//labels/column[@name=$colname]"/>
         <xsl:for-each select="$src/label">
             <xsl:variable name="label" select="text()"/>
             <xsl:variable name="duplicates" select="preceding-sibling::label[text()=$label]"/>
@@ -51,6 +52,9 @@
                 <xsl:value-of select="concat($label, '|')"/>
             </xsl:if>
         </xsl:for-each>
+        <!-- Label alternatives in labels.xml -->
+        <xsl:variable name="labels" select="document('labels.xml')//labels"/>
+        <xsl:variable name="map" select="$labels/column[@name=$colname]"/>
         <xsl:for-each select="$map/label">
             <xsl:variable name="label" select="text()"/>
             <xsl:variable name="srcdup" select="$src/label[text()=$label]"/>
@@ -59,6 +63,33 @@
                 <xsl:value-of select="concat($label, '|')"/>
             </xsl:if>
         </xsl:for-each>
+
+        <!-- Column hashtags -->
+        <xsl:variable name="hashtags">
+            <!-- Hashtags in source file -->
+            <xsl:for-each select="$src/tag">
+                <xsl:variable name="tag" select="text()"/>
+                <xsl:variable name="srcdup" select="preceding-sibling::tag[text()=$tag]"/>
+                <xsl:if test="$tag!='' and not($srcdup)">
+                    <xsl:value-of select="concat($tag, '|')"/>
+                </xsl:if>
+            </xsl:for-each>
+            <!-- Hashtags in labels.xml -->
+            <xsl:for-each select="$map/tag">
+                <xsl:variable name="tag" select="text()"/>
+                <xsl:variable name="srcdup" select="$src/tag[text()=$tag]"/>
+                <xsl:variable name="mapdup" select="preceding-sibling::tag[text()=$tag]"/>
+                <xsl:if test="$tag!='' and not($srcdup) and not($mapdup)">
+                    <xsl:value-of select="concat($tag, '|')"/>
+                </xsl:if>
+            </xsl:for-each>
+        </xsl:variable>
+
+        <!-- Append hashtags -->
+        <xsl:if test="$hashtags!=''">
+            <xsl:value-of select="concat('#|', $hashtags)"/>
+        </xsl:if>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -74,23 +105,61 @@
     -->
 
     <xsl:template name="GetColumnValue">
+
         <xsl:param name="colhdrs"/>
-        <xsl:variable name="colname" select="substring-before(substring-after($colhdrs, '|'), '|')"/>
-        <xsl:variable name="col" select="col[contains($colhdrs, concat('|', @field, '|'))][1]"/>
+
+        <!-- Column label alternatives -->
+        <xsl:variable name="colLabels">
+            <xsl:choose>
+                <xsl:when test="contains($colhdrs, '#')">
+                    <xsl:value-of select="substring-before($colhdrs, '#')"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$colhdrs"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <!-- Column hashtags -->
+        <xsl:variable name="colTags">
+            <xsl:choose>
+                <xsl:when test="contains($colhdrs, '#')">
+                    <xsl:value-of select="substring-after($colhdrs, '#')"/>
+                </xsl:when>
+            </xsl:choose>
+        </xsl:variable>
+
+        <!-- Get the column value -->
+        <xsl:variable name="colValue">
+            <xsl:choose>
+                <xsl:when test="$colTags!='' and col[contains($colTags, concat('|', substring-after(@hashtag, '#'), '|'))][1]">
+                    <xsl:value-of select="col[contains($colTags, concat('|', substring-after(@hashtag, '#'), '|'))][1]/text()"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="col[contains($colhdrs, concat('|', @field, '|'))][1]/text()"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <!-- Variables for value mapping -->
+        <xsl:variable name="colname" select="substring-before(substring-after($colLabels, '|'), '|')"/>
         <xsl:variable name="srcmap" select="//labels/column[@name=$colname]"/>
         <xsl:variable name="lblmap" select="document('labels.xml')//labels/column[@name=$colname]"/>
-        <xsl:variable name="label" select="$col/text()"/>
-        <xsl:variable name="alt1" select="$srcmap/option[@name=$label or ./label/text()=$label]"/>
-        <xsl:variable name="alt2" select="$lblmap/option[@name=$label or ./label/text()=$label]"/>
+        <xsl:variable name="alt1" select="$srcmap/option[@name=$colValue or ./label/text()=$colValue]"/>
+        <xsl:variable name="alt2" select="$lblmap/option[@name=$colValue or ./label/text()=$colValue]"/>
+
         <xsl:choose>
             <xsl:when test="$alt1">
+                <!-- Apply value mapping from source -->
                 <xsl:value-of select="$alt1[1]/@value"/>
             </xsl:when>
             <xsl:when test="$alt2">
+                <!-- Apply value mapping from labels.xml -->
                 <xsl:value-of select="$alt2[1]/@value"/>
             </xsl:when>
             <xsl:otherwise>
-                <xsl:value-of select="$label"/>
+                <!-- Use value from source verbatim -->
+                <xsl:value-of select="$colValue"/>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>

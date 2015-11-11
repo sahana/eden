@@ -145,8 +145,8 @@ def csv2tree(source,
                     try:
                         v = v.strip()
                     except AttributeError: # v is a List
-                        if v:
-                            items[k] = s3_unicode(v)
+                        v = s3_unicode(v)
+                    items[k] = v
             if all(v[0] == '#' for v in items.values()):
                 hashtags.update(items)
                 continue
