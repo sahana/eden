@@ -1726,15 +1726,17 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
         icon = series.lower().replace(" ", "_")
         series_title = SPAN(" %s" % series_title,
                             _class="card-title")
-        if settings.get_cms_show_titles() and raw["cms_post.title"]:
-            title = SPAN(raw["cms_post.title"],
-                         _class="card-title2")
+        raw_title = raw["cms_post.title"]
+        if settings.get_cms_show_titles() and raw_title:
+            title = SPAN(s3_truncate(raw_title), _class="card-title2")
             card_label = TAG[""](ICON(icon),
                                  series_title,
-                                 title)
+                                 title,
+                                 )
         else:
             card_label = TAG[""](ICON(icon),
-                                 series_title)
+                                 series_title,
+                                 )
         # Type cards
         if series == "Alert":
             # Apply additional highlighting for Alerts
