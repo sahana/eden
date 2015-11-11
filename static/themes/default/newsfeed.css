@@ -70,6 +70,13 @@
 .list_formats {
     margin-top: 0.5rem;
 }
+.latest-updates .action-btn.s3_modal {
+    float: right;
+    font-weight: normal;
+}
+body.rtl .latest-updates  .action-btn.s3_modal {
+    float: left;
+}
 
 .side-filter {
     margin-top: 10px;
@@ -145,9 +152,19 @@
 .dl-item .pull-right {
     float: right;
 }
+body.rtl .dl-item .pull-right {
+    float: left;
+}
 .dl-item .pull-left {
     float: left;
     margin-right: 0.8rem;
+}
+body.rtl .dl-item .pull-left {
+    float: right;
+    margin-left: 0.8rem;
+}
+body.rtl .fright {
+    float: left !important;
 }
 .dl-item .media {
     font-size: 0.8rem;
