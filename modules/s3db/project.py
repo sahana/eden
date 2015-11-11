@@ -4285,12 +4285,6 @@ class S3ProjectPlanningModel(S3Model):
         db = current.db
         s3db = current.s3db
 
-        project = None
-        goals = {}
-        outcomes = {}
-        outputs = {}
-        indicators = {}
-
         # Read all of the past Indicator Data for this Project
         # (We ignore future values)
         table = s3db.project_indicator_data
@@ -4309,6 +4303,13 @@ class S3ProjectPlanningModel(S3Model):
             # No Indicator Data yet recorded
             # => Nothing we can do
             return
+
+        project = None
+        goals = {}
+        outcomes = {}
+        outputs = {}
+        indicators = {}
+
         latest_date = None
         for d in indicator_data:
             target_value = d.target_value
@@ -5379,14 +5380,13 @@ def project_indicator_summary_report(r, **attr):
                 dict(code = row.code,
                      name = row.name,
                      dates = {},
+                     years = {},
                      status = row.overall_status,
                      target = 0,
                      actual = 0,
                      )
 
         # Indicator Data
-        dates = []
-        dappend = dates.append
         table = s3db.project_indicator_data
         query = (table.project_id == project_id) & \
                 (table.end_date <= current.request.utcnow) & \
@@ -5397,9 +5397,15 @@ def project_indicator_summary_report(r, **attr):
                                 table.value,
                                 orderby=table.end_date,
                                 )
+        dates = []
+        dappend = dates.append
+        years = []
+        yappend = years.append
         for row in rows:
             date = row.end_date
             dappend(date)
+            year = date.year
+            yappend(year)
             indicator_id = row.indicator_id
             target = row.target_value
             actual = row.value
@@ -5414,13 +5420,26 @@ def project_indicator_summary_report(r, **attr):
             indicator["dates"][date] = dict(target = target,
                                             actual = actual,
                                             )
+            iyears = indicator["years"]
+            if year in iyears:
+                if target:
+                    iyears[year]["target"] += target
+                if actual != NONE:
+                    iyears[year]["actual"] += actual
+            else:
+                iyears[year] = dict(target = target,
+                                    actual = actual,
+                                    )
 
         # Uniquify
         dates = set(dates)
+        years = set(years)
 
         # Sort
         dates = [d for d in dates]
         dates.sort()
+        years = [y for y in years]
+        years.sort()
         goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))
         for goal in goals:
             outcomes = OrderedDict(sorted(goals[goal]["outcomes"].items(), key=lambda x: x[1]["code"]))
@@ -5447,10 +5466,23 @@ def project_indicator_summary_report(r, **attr):
                         )
         happend = header_row.append
         represent = table.end_date.represent
+
+        y = 0
+        year = years[y]
         for d in dates:
-            happend(TD(T(represent(d)),
+            if d.year != year:
+                happend(TD(year,
+                           _colspan=2,
+                           ))
+                y += 1
+                year = years[y]
+            happend(TD(represent(d),
                        _colspan=2,
                        ))
+        happend(TD(year,
+                   _colspan=2,
+                   ))
+
         happend(TD(T("Actual Total"),
                    _rowspan=2,
                    ))
@@ -5466,9 +5498,12 @@ def project_indicator_summary_report(r, **attr):
         for d in dates:
             rappend(TD(T("Target")))
             rappend(TD(T("Actual")))
+        for y in years:
+            rappend(TD(T("Target")))
+            rappend(TD(T("Actual")))
         iappend(row_2)
 
-        colspan = (2 * len(dates)) + 3
+        colspan = (2 * len(dates)) + (2 * len(years)) + 3
 
         for goal_id in goals:
             goal = goals[goal_id]
@@ -5520,7 +5555,19 @@ def project_indicator_summary_report(r, **attr):
                                  _class="project_indicator")
                         rappend = row.append
                         rappend(TD(indicator["target"]))
+                        y = 0
+                        year = years[y]
                         for d in dates:
+                            if d.year != year:
+                                iyear = indicator["years"].get(year)
+                                if iyear:
+                                    rappend(TD(iyear["target"]))
+                                    rappend(TD(iyear["actual"]))
+                                else:
+                                    rappend(TD(NONE))
+                                    rappend(TD(NONE))
+                                y += 1
+                                year = years[y]
                             date = indicator["dates"].get(d)
                             if date:
                                 rappend(TD(date["target"]))
@@ -5528,6 +5575,13 @@ def project_indicator_summary_report(r, **attr):
                             else:
                                 rappend(TD(NONE))
                                 rappend(TD(NONE))
+                        iyear = indicator["years"].get(year)
+                        if iyear:
+                            rappend(TD(iyear["target"]))
+                            rappend(TD(iyear["actual"]))
+                        else:
+                            rappend(TD(NONE))
+                            rappend(TD(NONE))
                         rappend(TD(indicator["actual"]))
                         rappend(TD(project_status_represent(indicator["status"])))
                         iappend(row)
