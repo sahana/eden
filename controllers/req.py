@@ -1864,6 +1864,22 @@ def organisation_needs():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def organisation_needs_skill():
+    """ RESTful controller for option lookups """
+
+    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def organisation_needs_item():
+    """ RESTful controller for option lookups """
+
+    s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def site_needs():
     """
         RESTful CRUD Controller for Site Needs

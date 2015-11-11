@@ -211,25 +211,6 @@ def config(settings):
     settings.customise_cms_post_controller = customise_cms_post_controller
 
     # -------------------------------------------------------------------------
-    def customise_org_organisation_resource(r, tablename):
-
-        s3db = current.s3db
-
-        # List fields
-        list_fields = ["name",
-                       "acronym",
-                       "organisation_organisation_type.organisation_type_id",
-                       "website",
-                       "comments",
-                       ]
-
-        s3db.configure("org_organisation",
-                       list_fields = list_fields,
-                       )
-
-    settings.customise_org_organisation_resource = customise_org_organisation_resource
-
-    # -------------------------------------------------------------------------
     def customise_project_location_resource(r, tablename):
 
         s3db = current.s3db
@@ -441,11 +422,11 @@ def config(settings):
     def customise_org_organisation_controller(**attr):
 
         tabs = [(T("Basic Details"), None),
+                (T("Needs"), "needs"),
                 (T("Facilities"), "facility"),
                 (T("Warehouses"), "warehouse"),
                 (T("Offices"), "office"),
                 (T("Staff & Volunteers"), "human_resource"),
-                (T("Needs"), "needs"),
                 #(T("Assets"), "asset"),
                 #(T("Projects"), "project"),
                 #(T("User Roles"), "roles"),
@@ -456,6 +437,36 @@ def config(settings):
         return attr
 
     settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # -------------------------------------------------------------------------
+    def customise_req_organisation_needs_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+        crud_form = S3SQLCustomForm(
+                        S3SQLInlineComponent("organisation_needs_skill",
+                                             label = T("Volunteers needed"),
+                                             fields = ["skill_id",
+                                                       "demand",
+                                                       ],
+                                             ),
+                        S3SQLInlineComponent("organisation_needs_item",
+                                             label = T("Supplies needed"),
+                                             fields = ["item_id",
+                                                       "demand",
+                                                       ],
+                                             ),
+                        "organisation_id",
+                        (T("Cash Donations needed"), "money"),
+                        "money_details",
+                        "vol",
+                        "vol_details",
+                        )
+
+        current.s3db.configure("req_organisation_needs",
+                               crud_form = crud_form,
+                               )
+
+    settings.customise_req_organisation_needs_resource = customise_req_organisation_needs_resource
 
     # -------------------------------------------------------------------------
     def customise_req_site_needs_resource(r, tablename):

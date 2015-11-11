@@ -2066,6 +2066,8 @@ class S3RequestSummaryModel(S3Model):
     """
 
     names = ("req_organisation_needs",
+             "req_organisation_needs_item",
+             "req_organisation_needs_skill",
              "req_site_needs",
              )
 
@@ -2115,10 +2117,83 @@ class S3RequestSummaryModel(S3Model):
             msg_record_modified=T("Organization Needs updated"),
             msg_record_deleted=T("Organization Needs deleted"))
 
+        # Table configuration
         configure(tablename,
                   context = {"organisation": "organisation_id",
                              },
                   )
+
+        # Components
+        self.add_components(tablename,
+                            req_organisation_needs_skill = "organisation_needs_id",
+                            req_organisation_needs_item = "organisation_needs_id",
+                            )
+
+        # Reusable field (for component links)
+        organisation_needs_id = S3ReusableField("organisation_needs_id",
+                                    "reference %s" % tablename,
+                                    ondelete = "CASCADE",
+                                    requires = IS_ONE_OF(current.db,
+                                                         "req_organisation_needs.id",
+                                                         ),
+                                    )
+
+        # -----------------------------------------------------------------
+        # Demand options (numeric keys so can be sorted by)
+        #
+        demand_options = {1: T("Low"),
+                          2: T("Moderate"),
+                          3: T("High"),
+                          4: T("Urgent"),
+                          }
+
+        demand = S3ReusableField("demand", "integer",
+                                 label = T("Demand"),
+                                 requires = IS_IN_SET(demand_options,
+                                                      zero=None,
+                                                      sort=True,
+                                                      ),
+                                 represent = S3Represent(options=demand_options)
+                                 )
+
+        # -----------------------------------------------------------------
+        # Linktable Needs <=> Supply Items
+        #
+        item_id = self.supply_item_id
+        CREATE_ITEM = crud_strings["supply_item"].label_create
+
+        tablename = "req_organisation_needs_item"
+        define_table(tablename,
+                     organisation_needs_id(empty=False),
+                     item_id(comment = S3PopupLink(c = "supply",
+                                                   f = "item",
+                                                   label = CREATE_ITEM,
+                                                   tooltip = None,
+                                                   vars = {"prefix": "req"},
+                                                   ),
+                              widget = None,
+                             ),
+                     demand(),
+                     *s3_meta_fields())
+
+        # -----------------------------------------------------------------
+        # Linktable Needs <=> Skills
+        #
+        skill_id = self.hrm_skill_id
+        CREATE_SKILL = crud_strings["hrm_skill"].label_create
+
+        tablename = "req_organisation_needs_skill"
+        define_table(tablename,
+                     organisation_needs_id(empty=False),
+                     skill_id(comment = S3PopupLink(c = "hrm",
+                                                    f = "skill",
+                                                    label = CREATE_SKILL,
+                                                    tooltip = None,
+                                                    vars = {"prefix": "req"},
+                                                    ),
+                              ),
+                     demand(),
+                     *s3_meta_fields())
 
         # -----------------------------------------------------------------
         # Summary of Needs for a site
@@ -4020,7 +4095,7 @@ class req_CheckMethod(S3Method):
                 qty_in_label = s3_unicode(T("Quantity in %s")) % org_name
             else:
                 qty_in_label = T("Quantity Available")
-            
+
             # Build the Output Representation
             row = TR(TH(table.skill_id.label),
                      TH(table.quantity.label),
@@ -4125,7 +4200,7 @@ class req_CheckMethod(S3Method):
                     s3.rfooter = TAG[""](commit_btn)
             else:
                 response.error = T("User has no Organization to check against!")
-                
+
             output["items"] = items
             s3.no_sspag = True # pag won't work
             s3.no_formats = True
