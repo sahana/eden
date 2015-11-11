@@ -5,20 +5,20 @@
  </div>
  <div class='large-6 medium-7 small-12 columns end'>
   <div class='row'>
+   <h2 class='latest-updates'>{{=response.s3.crud_strings["cms_post"].title_list}}</h2>
+   <div class='small-10 columns'>
    {{if current.auth.s3_has_permission("update", "cms_post"):}}
-   <a id='cms_post_create' href='/{{=appname}}/cms/newsfeed/create.popup?refresh=datalist' class='btn btn-primary main-add s3_modal' role='button' title='{{=T("Add New Information")}}'>
-    <i class='icon icon-plus-sign big-add'></i>
+   <a id='cms_post_create' href='/{{=appname}}/cms/newsfeed/create.popup?refresh=datalist' class='action-btn s3_modal' role='button' title='{{=T("Add New Information")}}'>
+    {{=T("Add New Information")}}
    </a>
    {{pass}}
-  </div>
-  <div class='row'>
-   <div class='small-10 columns'>
-    <h4 class='latest-updates'>{{=response.s3.crud_strings["cms_post"].title_list}}</h4>
    </div>
-   <div class='list_formats small-2 columns'>
+   <div class='list_formats small-2 columns dl-exports'>
      <!-- @ToDo: Read Filter Status -->
      <div class='export_xls' title='{{=T("Export in XLS format")}}' onclick="window.open('/{{=appname}}/cms/newsfeed.xls');"></div>
    </div>
+  </div>
+  <div class='row'>
   </div>
   <div class='row'>
    <div class="card-holder-home">
