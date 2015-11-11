@@ -7250,12 +7250,11 @@ class org_CapacityReport(S3Method):
         try:
             import xlwt
         except ImportError:
-            ERROR = S3XLS().ERROR
             if current.auth.permission.format in S3Request.INTERACTIVE_FORMATS:
-                current.session.error = ERROR.XLWT_ERROR
+                current.session.error = S3XLS.ERROR.XLWT_ERROR
                 redirect(URL(extension=""))
             else:
-                error = ERROR.XLWT_ERROR
+                error = S3XLS.ERROR.XLWT_ERROR
                 current.log.error(error)
                 return error
 

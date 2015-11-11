@@ -49,6 +49,9 @@ class S3XLS(S3Codec):
         Simple Microsoft Excel format codec
     """
 
+    # The xlwt library supports a maximum of 182 characters in a single cell
+    MAX_CELL_SIZE = 182
+
     # Customizable styles
     COL_WIDTH_MULTIPLIER = 310
     LARGE_HEADER_COLOUR = 0x2C
@@ -160,8 +163,7 @@ class S3XLS(S3Codec):
 
         import datetime
 
-        # The xlwt library supports a maximum of 182 characters in a single cell
-        MAX_CELL_SIZE = 182
+        MAX_CELL_SIZE = self.MAX_CELL_SIZE
         COL_WIDTH_MULTIPLIER = self.COL_WIDTH_MULTIPLIER
 
         # Get the attributes
@@ -214,6 +216,8 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         time_format = dt_format_translate(settings.get_L10n_time_format())
         datetime_format = dt_format_translate(settings.get_L10n_datetime_format())
 
+        title_row = settings.get_xls_title_row()
+
         # Get styles
         styles = self._styles(use_colour = use_colour,
                               evenodd = evenodd,
@@ -237,14 +241,14 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             sheet_name = sheet_name[:31] if sheetnum == 1 else sheet_name[:28]
         count = 1
         while len(sheets) <= sheetnum:
-            sheets.append(book.add_sheet('%s-%s' % (sheet_name, count)))
+            sheets.append(book.add_sheet("%s-%s" % (sheet_name, count)))
             count += 1
 
         # Add header row to all sheets, determine columns widths
         header_style = styles["header"]
         for sheet in sheets:
             # Move this down if a title row will be added
-            if settings.get_xls_title_row():
+            if title_row:
                 header_row = sheet.row(2)
             else:
                 header_row = sheet.row(0)
@@ -275,21 +279,24 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                 sheet.col(write_col_index).width = width
                 col_index += 1
 
+        title = str(title)
+
         # Title row (optional, deployment setting)
-        if settings.get_xls_title_row():
+        if title_row:
+            T = current.T
             large_header_style = styles["large_header"]
-            notes_style = style["notes"]
+            notes_style = styles["notes"]
             for sheet in sheets:
                 # First row => Title (standard = "title_list" CRUD string)
                 current_row = sheet.row(0)
                 if col_index > 0:
-                    sheet.write_merge(0, 0, 0, col_index, str(title),
+                    sheet.write_merge(0, 0, 0, col_index, title,
                                       large_header_style,
                                       )
                 current_row.height = 500
                 # Second row => Export date/time
                 current_row = sheet.row(1)
-                current_row.write(0, str(current.T("Date Exported:")), notes_style)
+                current_row.write(0, "%s:" % T("Date Exported"), notes_style)
                 current_row.write(1, request.now, notes_style)
                 # Fix the size of the last column to display the date
                 if 16 * COL_WIDTH_MULTIPLIER > width:
@@ -298,7 +305,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         # Initialize counters
         totalCols = col_index
         # Move the rows down if a title row is included
-        if settings.get_xls_title_row():
+        if title_row:
             row_index = 2
         else:
             row_index = 0
@@ -475,7 +482,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         output.seek(0)
 
         # Response headers
-        filename = "%s_%s.xls" % (request.env.server_name, str(title))
+        filename = "%s_%s.xls" % (request.env.server_name, title)
         disposition = "attachment; filename=\"%s\"" % filename
         response = current.response
         response.headers["Content-Type"] = contenttype(".xls")
