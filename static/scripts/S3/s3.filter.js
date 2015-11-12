@@ -12,7 +12,7 @@ S3.search = {};
      *
      * @param {object} s - the Ajax options dict
      */
-    var searchRewriteAjaxOptions = function(s) {
+    var searchRewriteAjaxOptions = function(s, method) {
 
         // Rewrite only GET
         if (s.type != 'GET') {
@@ -71,9 +71,11 @@ S3.search = {};
         };
 
         // Add the original ajaxData to the queryDict
-        for (i = 0, itemCount = ajaxData.length; i < itemCount; i++) {
-            queryItem = ajaxData[i];
-            addQueryItem(queryDict, queryItem.name, queryItem.value);
+        if (ajaxData) {
+            for (i = 0, itemCount = ajaxData.length; i < itemCount; i++) {
+                queryItem = ajaxData[i];
+                addQueryItem(queryDict, queryItem.name, queryItem.value);
+            }
         }
 
         // Parse the query string, add filter expressions to the
@@ -89,11 +91,15 @@ S3.search = {};
                 }
             }
         }
-        s.data = JSON.stringify(postData);
+        if (method == "ajax") {
+            s.data = JSON.stringify(postData);
+        } else {
+            s.data = postData;
+        }
         s.processData = false;
 
         // Construct new Ajax URL
-        var ajaxURL = path + '?$search=ajax';
+        var ajaxURL = path + '?$search=' + method;
 
         // Stringify and append queryDict
         var queryString = S3.queryString.stringify(queryDict);
@@ -163,7 +169,7 @@ S3.search = {};
         options.tryCount = 0;
 
         // Rewrite the Ajax options
-        searchRewriteAjaxOptions(options);
+        searchRewriteAjaxOptions(options, 'ajax');
 
         if (s.message) {
             message = i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '...';
@@ -203,6 +209,48 @@ S3.search = {};
                 failCallback(jqXHR, textStatus, errorThrown);
             }
         });
+    };
+
+    /**
+     * Non-Ajax search request method, converts GET into POST, encoding
+     * URL filters as form data, thus allowing arbitrary length of filter
+     * options as well as TLS encryption of filters. Opens the filtered URL
+     * in the window specified by target (default: _self)
+     *
+     * @param {string} url: the request URL
+     * @param {string} target: the target window
+     */
+    $.searchDownloadS3 = function(url, target) {
+
+        var options = $.extend({}, searchS3Defaults, {url: url}),
+            form = document.createElement("form");
+
+        options.type = 'GET';
+        searchRewriteAjaxOptions(options, 'form');
+
+        form.action = options.url;
+        form.method = 'POST';
+        form.target = target || '_self';
+        form.enctype = 'multipart/form-data';
+
+        var data = options.data;
+        if (data) {
+            var key,
+                input;
+            for (key in data) {
+                input = document.createElement('textarea');
+                input.name = key;
+                if (typeof data[key] === 'object') {
+                    input.value = JSON.stringify(data[key]);
+                } else {
+                    input.value = data[key];
+                }
+                form.appendChild(input);
+            }
+        }
+        form.style.display = 'none';
+        document.body.appendChild(form);
+        form.submit();
     };
 
     /**

@@ -1337,9 +1337,10 @@
 
             if (oSetting) {
                 var arguments = 'id=' + tableid,
-                    serverFilterArgs = $('#' + tableid + '_dataTable_filter');
-                if (serverFilterArgs.val() !== '') {
-                    arguments += '&sFilter=' + serverFilterArgs.val();
+                    serverFilterArgs = $('#' + tableid + '_dataTable_filter'),
+                    sFilter = serverFilterArgs.val();
+                if (sFilter !== undefined && sFilter !== '') {
+                    arguments += '&sFilter=' + sFilter;
                 }
                 arguments += '&sSearch=' + oSetting.oPreviousSearch['sSearch'];
                 columns = oSetting.aoColumns;
@@ -1361,7 +1362,13 @@
             } else {
                 url = appendUrlQuery(url, extension, '');
             }
-            window.open(url);
+            // Use $.searchS3Download if available, otherwise (e.g. custom
+            // page without s3.filter.js) fall back to window.open:
+            if ($.searchDownloadS3 !== undefined) {
+                $.searchDownloadS3(url, '_blank');
+            } else {
+                window.open(url);
+            }
         });
 
         if (S3.dataTables.Resize) {
