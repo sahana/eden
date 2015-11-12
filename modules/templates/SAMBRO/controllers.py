@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime, timedelta
+from applications.eden.modules.s3.s3utils import s3_debug
 
 try:
     import json # try stdlib (Python 2.6)
@@ -267,6 +268,15 @@ class subscriptions(S3CustomController):
                                        resource = "auth_user",
                                        _name = "person-filter",
                                        ),
+                                 S3OptionsFilter("id",
+                                       label = T("Group"),
+                                       represent = S3Represent(lookup="pr_group",
+                                            fields = ["name"],
+                                            ),
+                                       widget = "multiselect",
+                                       resource = "pr_group",
+                                       _name = "group-filter",
+                                       ),                                       
                                  ]
             # Title
             title = T("Manage Recipients")
@@ -586,10 +596,16 @@ $('#method_selector').change(function(){
             #subscription["notify_on"] = listify(formvars.notify_on)
             #subscription["frequency"] = formvars.frequency
 
+            # Group IDs
+            group_ids = formvars["group-filter"]
+            if group_ids is not None:
+                # Admin Filters through pr_group
+                pass                
+                
             # Recipient IDs
             user_ids = formvars["person-filter"]
             if user_ids is not None:
-                # Admin Filters
+                # Admin Filters through users
                 user_pe_id = auth.s3_user_pe_id
                 get_user_id = auth.s3_get_user_id
                 if len(user_ids) > 0:
