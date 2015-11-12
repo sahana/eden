@@ -141,6 +141,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Organisations
     settings.org.tags = True
+    settings.org.service_locations = True
 
     # -------------------------------------------------------------------------
     # Project Module
@@ -422,6 +423,7 @@ def config(settings):
     def customise_org_organisation_controller(**attr):
 
         tabs = [(T("Basic Details"), None),
+                (T("Service Locations"), "service_location"),
                 (T("Needs"), "needs"),
                 (T("Facilities"), "facility"),
                 (T("Warehouses"), "warehouse"),

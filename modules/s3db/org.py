@@ -675,6 +675,8 @@ class S3OrganisationModel(S3Model):
                                       "key": "service_id",
                                       "actuate": "hide",
                                       },
+                       # Service Locations
+                       org_service_location = "organisation_id",
                        # Format for filter_widget
                        org_service_organisation = "organisation_id",
                        # Assets
@@ -2647,7 +2649,7 @@ class S3OrganisationServiceModel(S3Model):
                         "status",
                         "comments",
                         )
-                        
+
         # List fields
         list_fields = ["organisation_id",
                        "site_id",
@@ -2684,7 +2686,7 @@ class S3OrganisationServiceModel(S3Model):
                                                             "org_service_location.id",
                                                          ),
                                               )
-        
+
 
         # ---------------------------------------------------------------------
         # Service types at service location
@@ -2696,7 +2698,7 @@ class S3OrganisationServiceModel(S3Model):
                      #s3_comments(),
                      *s3_meta_fields()
                      )
-        
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -5725,6 +5727,8 @@ def org_rheader(r, tabs=[]):
                     append_tab((T("Tags"), "tag"))
                 if settings.get_org_resources_tab():
                     tabs.insert(-1, (T("Resources"), "resource"))
+                if settings.get_org_service_locations():
+                    tabs.insert(-1, (T("Service Locations"), "service_location"))
 
             if settings.get_L10n_translate_org_organisation():
                     tabs.insert(1, (T("Local Names"), "name"))

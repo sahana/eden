@@ -3163,6 +3163,12 @@ class S3Config(Storage):
         """
         return self.org.get("services_hierarchical", False)
 
+    def get_org_service_locations(self):
+        """
+            Whether to expose the service locations tab for organisations
+        """
+        return self.__lazy("org", "service_locations", default=False)
+
     def get_org_site_code_len(self):
         """
             Length of auto-generated Codes for Facilities (org_site)
