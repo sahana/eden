@@ -2444,6 +2444,8 @@ class S3OrganisationServiceModel(S3Model):
 
     names = ("org_service",
              "org_service_organisation",
+             "org_service_location",
+             #"org_service_location_service",
              )
 
     def model(self):
@@ -2454,6 +2456,9 @@ class S3OrganisationServiceModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        super_link = self.super_link
+
+        organisation_id = self.org_organisation_id
 
         hierarchical_service_types = current.deployment_settings.get_org_services_hierarchical()
 
@@ -2535,7 +2540,7 @@ class S3OrganisationServiceModel(S3Model):
         tablename = "org_service_organisation"
         define_table(tablename,
                      service_id(),
-                     self.org_organisation_id(),
+                     organisation_id(),
                      *s3_meta_fields()
                      )
 
@@ -2555,7 +2560,146 @@ class S3OrganisationServiceModel(S3Model):
                   deduplicate = self.org_service_organisation_deduplicate,
                   )
 
+        # ---------------------------------------------------------------------
+        # Service status options
+        #
+        service_status_opts = (("PLANNED", T("Planned")),
+                               ("ACTIVE", T("Active")),
+                               ("SUSPENDED", T("Suspended")),
+                               ("DISCONTINUED", T("Discontinued")),
+                               )
+
+        # ---------------------------------------------------------------------
+        # Organisation Service Locations
+        #
+        SITE = current.deployment_settings.get_org_site_label()
+
+        tablename = "org_service_location"
+        define_table(tablename,
+                     super_link("doc_id", "doc_entity"),
+                     organisation_id(),
+                     # The site where the organisation provides services:
+                     # (component not instance)
+                     super_link("site_id", "org_site",
+                                label = SITE,
+                                readable = True,
+                                writable = True,
+                                represent = self.org_site_represent,
+                                ),
+                     # Alternative 1: bare location (e.g. Lx)
+                     # - can be enabled in template as required
+                     self.gis_location_id(readable = False,
+                                          writable = False,
+                                          ),
+                     # Alternative 2: free-text for location
+                     # - can be enabled in template as required
+                     Field("location",
+                           label = T("Location"),
+                           readable = False,
+                           writable = False,
+                           ),
+                     s3_date("start_date",
+                             label = T("Start Date"),
+                             default = "now",
+                             set_min = "#org_service_location_end_date",
+                             ),
+                     s3_date("end_date",
+                             label = T("End Date"),
+                             set_max = "#org_service_location_start_date",
+                             ),
+                     Field("status",
+                           default = "ACTIVE",
+                           label = T("Status"),
+                           represent = S3Represent(options=dict(service_status_opts)),
+                           requires = IS_IN_SET(service_status_opts,
+                                                sort = False,
+                                                zero = None,
+                                                ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Service Location"),
+            title_display = T("Service Location Details"),
+            title_list = T("Service Locations"),
+            title_update = T("Edit Service Location"),
+            title_upload = T("Import Service Locations"),
+            label_list_button = T("List Service Locations"),
+            label_delete_button = T("Delete Service Location"),
+            msg_record_created = T("Service Location added"),
+            msg_record_modified = T("Service Location updated"),
+            msg_record_deleted = T("Service Location deleted"),
+            msg_list_empty = T("No Service Locations currently registered"))
+
+        # CRUD form
+        service_widget = "hierarchy" if hierarchical_service_types else None
+        crud_form = S3SQLCustomForm(
+                        "organisation_id",
+                        "site_id",
+                        S3SQLInlineLink("service",
+                                        field = "service_id",
+                                        widget = service_widget,
+                                        ),
+                        "start_date",
+                        "end_date",
+                        "status",
+                        "comments",
+                        )
+                        
+        # List fields
+        list_fields = ["organisation_id",
+                       "site_id",
+                       "service_location_service.service_id",
+                       "status",
+                       "start_date",
+                       "end_date",
+                       "comments",
+                       ]
+
+        # Table configuration
+        configure(tablename,
+                  crud_form = crud_form,
+                  list_fields = list_fields,
+                  super_entity = "doc_entity",
+                  )
+
+        # Components
+        self.add_components(tablename,
+                            #org_service_location_service = "service_location_id",
+                            org_service = {"link": "org_service_location_service",
+                                           "joinby": "service_location_id",
+                                           "key": "service_id",
+                                           "actuate": "link",
+                                           "autodelete": False,
+                                           },
+                            )
+
+        # Reusable field
+        service_location_id = S3ReusableField("service_location_id",
+                                              "reference %s" % tablename,
+                                              ondelete = "CASCADE",
+                                              requires = IS_ONE_OF(current.db,
+                                                            "org_service_location.id",
+                                                         ),
+                                              )
+        
+
+        # ---------------------------------------------------------------------
+        # Service types at service location
+        #
+        tablename = "org_service_location_service"
+        define_table(tablename,
+                     service_location_id(),
+                     service_id(),
+                     #s3_comments(),
+                     *s3_meta_fields()
+                     )
+        
+        # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
+        #
         return {}
 
     # -------------------------------------------------------------------------
