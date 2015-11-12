@@ -2110,12 +2110,18 @@ class S3RequestSummaryModel(S3Model):
         # CRUD strings
         ADD_NEEDS = T("Add Organization Needs")
         crud_strings[tablename] = Storage(
+            label_create = ADD_NEEDS,
+            title_list = T("Organization Needs"),
             title_display=T("Organization Needs"),
             title_update=T("Edit Organization Needs"),
+            title_upload = T("Import Organization Needs"),
+            label_list_button = T("List Organization Needs"),
             label_delete_button=T("Delete Organization Needs"),
             msg_record_created=T("Organization Needs added"),
             msg_record_modified=T("Organization Needs updated"),
-            msg_record_deleted=T("Organization Needs deleted"))
+            msg_record_deleted=T("Organization Needs deleted"),
+            msg_list_empty = T("No Organization Needs currently registered"),
+            )
 
         # Table configuration
         configure(tablename,
