@@ -103,11 +103,23 @@ class S3MainMenu(default.S3MainMenu):
         else:
             # Logged-in
             user_id = auth.s3_logged_in_person()
+            if auth.s3_has_role("ALERT_EDITOR") or \
+               auth.s3_has_role("ALERT_APPROVER"):
+                notification_settings = MM("Manage Recipients",
+                                           c="pr",
+                                           f="subscription",
+                                           )
+            else:
+                notification_settings = MM("Notification Settings",
+                                           c="default",
+                                           f="index",
+                                           m="subscriptions",
+                                           )
+                
             menu_auth = MM(auth.user.email, link=False, right=True)(
                            MM("Edit Profile", c="pr", f="person", args=[user_id]),
                            MM("Details", c="default", f="user", m="profile"),
-                           MM("Notification Settings", c="default", f="index",
-                              m="subscriptions"),
+                           notification_settings,
                            MM("Change Password", c="default", f="user",
                               m="change_password"),
                            MM("Logout", c="default", f="user", m="logout"),

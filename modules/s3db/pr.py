@@ -3823,15 +3823,20 @@ class S3SubscriptionModel(S3Model):
         tablename = "pr_subscription"
         self.define_table(tablename,
                           # Component not Instance
-                          self.super_link("pe_id", "pr_pentity"),
+                          self.super_link("pe_id", "pr_pentity",
+                                          represent = pr_PersonEntityRepresent(),
+                                          ),
                           self.pr_filter_id(),
                           Field("notify_on", "list:string",
                                 default = ["new"],
                                 represent = S3Represent(options=trigger_opts,
-                                                        multiple=True),
+                                                        multiple=True,
+                                                        ),
                                 requires = IS_IN_SET(trigger_opts,
                                                      multiple=True,
-                                                     zero=None),
+                                                     zero=None,
+                                                     ),
+                                widget = S3MultiSelectWidget(),
                                 ),
                           Field("frequency",
                                 default = "daily",
@@ -3844,10 +3849,13 @@ class S3SubscriptionModel(S3Model):
                           Field("method", "list:string",
                                 default = ["EMAIL"],
                                 represent = S3Represent(options=MSG_CONTACT_OPTS,
-                                                        multiple=True),
+                                                        multiple=True,
+                                                        ),
                                 requires = IS_IN_SET(MSG_CONTACT_OPTS,
                                                      multiple=True,
-                                                     zero=None),
+                                                     zero=None,
+                                                     ),
+                                widget = S3MultiSelectWidget(),
                                 ),
                           Field("email_format",
                                 represent = S3Represent(options=email_format_opts),
@@ -3857,6 +3865,29 @@ class S3SubscriptionModel(S3Model):
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Subscription"),
+            title_display = T("Subscription Details"),
+            title_list = T("Person Subscriptions"),
+            title_update = T("Edit Subscription"),
+            label_list_button = T("List Person Subscriptions"),
+            label_delete_button = T("Delete Person Subscription"),
+            msg_record_created = T("Subscription added"),
+            msg_record_modified = T("Subscription updated"),
+            msg_record_deleted = T("Subscription removed"),
+            msg_list_empty = T("No Subscription currently registered")
+            )
+
+        list_fields = [(T("Person"), "pe_id"),
+                       "notify_on",
+                       "frequency",
+                       "method",
+                       ]
+        
+        self.configure(tablename,
+                       list_fields = list_fields,
+                       )
 
         self.add_components(tablename,
                             pr_subscription_resource = "subscription_id",

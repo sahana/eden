@@ -570,6 +570,7 @@ def filter():
     output = s3_rest_controller()
     return output
 
+# =============================================================================
 def subscription():
     """
         REST controller for subscriptions
