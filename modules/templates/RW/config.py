@@ -441,21 +441,28 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_req_organisation_needs_resource(r, tablename):
 
+        if tablename == "req_organisation_needs":
+            organisation_id = "organisation_id"
+        else:
+            organisation_id = None
+
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
         crud_form = S3SQLCustomForm(
+                        organisation_id,
                         S3SQLInlineComponent("organisation_needs_skill",
                                              label = T("Volunteers needed"),
                                              fields = ["skill_id",
                                                        "demand",
+                                                       "comments",
                                                        ],
                                              ),
                         S3SQLInlineComponent("organisation_needs_item",
                                              label = T("Supplies needed"),
                                              fields = ["item_id",
                                                        "demand",
+                                                       "comments",
                                                        ],
                                              ),
-                        "organisation_id",
                         (T("Cash Donations needed"), "money"),
                         "money_details",
                         "vol",

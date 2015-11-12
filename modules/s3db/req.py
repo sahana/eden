@@ -2174,6 +2174,7 @@ class S3RequestSummaryModel(S3Model):
                               widget = None,
                              ),
                      demand(),
+                     s3_comments(),
                      *s3_meta_fields())
 
         # -----------------------------------------------------------------
@@ -2193,6 +2194,7 @@ class S3RequestSummaryModel(S3Model):
                                                     ),
                               ),
                      demand(),
+                     s3_comments(),
                      *s3_meta_fields())
 
         # -----------------------------------------------------------------
