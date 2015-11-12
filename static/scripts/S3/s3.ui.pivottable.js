@@ -1650,8 +1650,8 @@
         _updateURL: function(url, filters) {
 
             // Construct the URL
-            var url_parts,
-                url_vars,
+            var urlParts,
+                urlVars,
                 queries = [],
                 update = {},
                 seen = {},
@@ -1669,12 +1669,12 @@
 
             // Add filters from ajaxURL
             var ajaxURL = this.options.ajaxURL;
-            url_parts = ajaxURL.split('?');
-            if (url_parts.length > 1) {
-                url_vars = url_parts[1].split('&');
+            urlParts = ajaxURL.split('?');
+            if (urlParts.length > 1) {
+                urlVars = urlParts[1].split('&');
                 seen = {};
-                for (i=0, len=url_vars.length; i < len; i++) {
-                    q = url_vars[i].split('=');
+                for (i=0, len=urlVars.length; i < len; i++) {
+                    q = urlVars[i].split('=');
                     if (q.length > 1) {
                         k = decodeURIComponent(q[0]);
                         if (!update[k]) {
@@ -1689,12 +1689,12 @@
             }
 
             // Extract all original filters
-            url_parts = url.split('?');
-            if (url_parts.length > 1) {
-                url_vars = url_parts[1].split('&');
+            urlParts = url.split('?');
+            if (urlParts.length > 1) {
+                urlVars = urlParts[1].split('&');
                 seen = {};
-                for (i=0, len=url_vars.length; i < len; i++) {
-                    q = url_vars[i].split('=');
+                for (i=0, len=urlVars.length; i < len; i++) {
+                    q = urlVars[i].split('=');
                     if (q.length > 1) {
                         k = decodeURIComponent(q[0]);
                         if (!update[k]) {
@@ -1705,10 +1705,10 @@
             }
 
             // Update URL
-            var url_query = queries.join('&');
-            var filtered_url = url_parts[0];
-            if (url_query) {
-                filtered_url = filtered_url + '?' + url_query;
+            var urlQuery = queries.join('&');
+            var filtered_url = urlParts[0];
+            if (urlQuery) {
+                filtered_url = filtered_url + '?' + urlQuery;
             }
             return filtered_url;
         },
@@ -1724,18 +1724,18 @@
             var ajaxURL = this.options.ajaxURL;
 
             // Construct the URL
-            var url_parts = ajaxURL.split('?'),
+            var urlParts = ajaxURL.split('?'),
                 query = [],
-                needs_reload = false;
+                needsReload = false;
 
-            var qstr, url_vars;
+            var qstr, urlVars;
 
-            if (url_parts.length > 1) {
-                qstr = url_parts[1];
-                url_vars = qstr.split('&');
+            if (urlParts.length > 1) {
+                qstr = urlParts[1];
+                urlVars = qstr.split('&');
             } else {
                 qstr = '';
-                url_vars = [];
+                urlVars = [];
             }
 
             var option, q, newopt;
@@ -1745,8 +1745,8 @@
                     q = option + '=' + newopt;
                     if (option == 'totals') {
                         this.options.showTotals = newopt ? true : false;
-                    } else if (!(needs_reload || $.inArray(q, url_vars) != -1 )) {
-                        needs_reload = true;
+                    } else if (!(needsReload || $.inArray(q, urlVars) != -1 )) {
+                        needsReload = true;
                     }
                     query.push(q);
                 }
@@ -1783,18 +1783,18 @@
             }
 
             // Check which existing URL query vars to retain/replace
-            for (i=0, len=url_vars.length; i < len; i++) {
-                q = url_vars[i].split('=');
+            for (i=0, len=urlVars.length; i < len; i++) {
+                q = urlVars[i].split('=');
                 if (q.length > 1) {
                     k = decodeURIComponent(q[0]);
                     v = decodeURIComponent(q[1]);
 
                     if (remove[k]) {
-                        needs_reload = true;
+                        needsReload = true;
                         continue;
                     } else if (update[k]) {
-                        if (!(needs_reload || $.inArray(k + '=' + v, update[k]) != -1)) {
-                            needs_reload = true;
+                        if (!(needsReload || $.inArray(k + '=' + v, update[k]) != -1)) {
+                            needsReload = true;
                         }
                         // Will be replaced
                         continue;
@@ -1805,7 +1805,7 @@
                         continue;
                     } else {
                         // Keep this
-                        query.push(url_vars[i]);
+                        query.push(urlVars[i]);
                     }
                 }
             }
@@ -1813,20 +1813,20 @@
             // Add new filters
             for (k in update) {
                 for (i=0, len=update[k].length; i < len; i++) {
-                    if (!(needs_reload || $.inArray(update[k][i], url_vars) != -1)) {
-                        needs_reload = true;
+                    if (!(needsReload || $.inArray(update[k][i], urlVars) != -1)) {
+                        needsReload = true;
                     }
                     query.push(update[k][i]);
                 }
             }
 
-            var url_query = query.join('&'),
-                filtered_url = url_parts[0];
-            if (url_query) {
-                filtered_url = filtered_url + '?' + url_query;
+            var urlQuery = query.join('&'),
+                filtered_url = urlParts[0];
+            if (urlQuery) {
+                filtered_url = filtered_url + '?' + urlQuery;
             }
             this.options.ajaxURL = filtered_url;
-            return needs_reload;
+            return needsReload;
         },
 
         /**
@@ -1845,37 +1845,56 @@
                 // extract filters
                 filters = this._getFilters();
             }
-
             var pt = this,
                 $el = (this.element),
-                needs_reload;
-
-            var pivotdata = $el.find('input[type="hidden"][name="pivotdata"]');
+                needsReload,
+                pivotdata = $el.find('input[type="hidden"][name="pivotdata"]');
             if (!pivotdata.length) {
                 return;
             }
+
+            // Show throbber
             $el.find('.pt-throbber').show();
+
+            // Update ajaxURL with current options and filters
             if (options || filters) {
-                needs_reload = this._updateAjaxURL(options, filters);
+                needsReload = this._updateAjaxURL(options, filters);
             }
-            if (needs_reload || force) {
-                var ajaxURL = this.options.ajaxURL;
+
+            if (needsReload || force) {
+                // Reload data from server
+
+                // Use $.searchS3 if available, otherwise (e.g. custom
+                // page without s3.filter.js) fall back to $.ajaxS3:
+                var ajaxURL = this.options.ajaxURL,
+                    ajaxMethod = $.ajaxS3;
+                if ($.searchS3 !== undefined) {
+                    ajaxMethod = $.searchS3;
+                }
+
+                // Hide empty section while loading
                 $el.find('.pt-empty').hide();
-                $.ajax({
+
+                ajaxMethod({
                     'url': ajaxURL,
-                    'dataType': 'json'
-                }).done(function(data) {
-                    pivotdata.first().val(JSON.stringify(data));
-                    pt.refresh();
-                }).fail(function(jqXHR, textStatus, errorThrown) {
-                    if (errorThrown == 'UNAUTHORIZED') {
-                        msg = i18n.gis_requires_login;
-                    } else {
-                        msg = jqXHR.responseText;
+                    'dataType': 'json',
+                    'type': 'GET',
+                    'success': function(data) {
+                        pivotdata.first().val(JSON.stringify(data));
+                        pt.refresh();
+                    },
+                    'error': function(jqXHR, textStatus, errorThrown) {
+                        var msg;
+                        if (errorThrown == 'UNAUTHORIZED') {
+                            msg = i18n.gis_requires_login;
+                        } else {
+                            msg = jqXHR.responseText;
+                        }
+                        console.log(msg);
                     }
-                    console.log(msg);
                 });
             } else {
+                // Refresh without reloading
                 pt.refresh();
             }
         },
