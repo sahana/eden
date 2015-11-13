@@ -19,6 +19,16 @@
   <div class='row'>
    <div id='map' class='small-12 columns'></div>
   </div>
+  <div id='list-add' class='row'>
+   <div class="small-12 columns">
+    {{try:}}{{=H3(addtitle)}}{{except:}}{{pass}}
+    {{try:}}{{=addheader}}{{except:}}{{pass}}
+    {{include "key.html"}}
+    <div class='form-container'>
+     {{try:}}{{=form}}{{except:}}{{pass}}
+    </div>
+   </div>
+  </div>
   <div class='row'>
    <div class='medium-3 large-4 medium-push-9 large-push-8 columns'>
     <div id='list-btn-add'>
@@ -28,14 +38,6 @@
     </div>
    </div>
    <div class='medium-9 large-8 medium-pull-3 large-pull-4 columns'>
-    <div id='list-add'>
-     {{try:}}{{=H3(addtitle)}}{{except:}}{{pass}}
-     {{try:}}{{=addheader}}{{except:}}{{pass}}
-     {{include "key.html"}}
-     <div class='form-container'>
-      {{try:}}{{=form}}{{except:}}{{pass}}
-     </div>
-    </div>
     {{try:}}{{if list_filter_form:}}
     <div id='list-filter' class='form-container'>
      {{=list_filter_form}}

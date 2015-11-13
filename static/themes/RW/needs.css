@@ -1,0 +1,10 @@
+.org-needs,
+.org-needs ul li {
+    font-size: 0.8rem;
+} 
+.org-needs {
+    font-weight: bold;
+}
+.org-needs ul li {
+    font-weight: normal;
+}

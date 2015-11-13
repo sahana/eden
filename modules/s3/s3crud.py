@@ -577,17 +577,6 @@ class S3CRUD(S3Method):
 
         _config = self._config
         editable = _config("editable", True)
-        list_fields = _config("list_fields")
-
-        # List fields
-        if not list_fields:
-            fields = resource.readable_fields()
-        else:
-            fields = [table[f] for f in list_fields if f in table.fields]
-        if not fields:
-            fields = []
-        if fields[0].name != table.fields[0]:
-            fields.insert(0, table[table.fields[0]])
 
         # Get the target record ID
         record_id = self.record_id
@@ -745,32 +734,30 @@ class S3CRUD(S3Method):
 
         elif representation == "csv":
             exporter = S3Exporter().csv
-            return exporter(resource)
+            output = exporter(resource)
 
         #elif representation == "map":
         #    exporter = S3Map()
-        #    return exporter(r, **attr)
+        #    output = exporter(r, **attr)
 
         elif representation == "pdf":
             exporter = S3Exporter().pdf
-            return exporter(resource, request=r, **attr)
+            output = exporter(resource, request=r, **attr)
 
         elif representation == "shp":
+            list_fields = resource.list_fields()
             exporter = S3Exporter().shp
-            return exporter(resource,
-                            list_fields=list_fields,
-                            **attr)
+            output = exporter(resource, list_fields=list_fields, **attr)
 
         elif representation == "svg":
+            list_fields = resource.list_fields()
             exporter = S3Exporter().svg
-            return exporter(resource,
-                            list_fields=list_fields,
-                            **attr)
+            output = exporter(resource, list_fields=list_fields, **attr)
 
         elif representation == "xls":
-            list_fields = _config("list_fields")
+            list_fields = resource.list_fields()
             exporter = S3Exporter().xls
-            return exporter(resource, list_fields=list_fields)
+            output = exporter(resource, list_fields=list_fields)
 
         elif representation == "json":
             exporter = S3Exporter().json
@@ -782,7 +769,7 @@ class S3CRUD(S3Method):
             else:
                 tooltip = None
 
-            return exporter(resource, tooltip=tooltip)
+            output = exporter(resource, tooltip=tooltip)
 
         else:
             r.error(415, current.ERROR.BAD_FORMAT)
