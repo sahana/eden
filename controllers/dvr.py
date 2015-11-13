@@ -75,6 +75,7 @@ def person():
                 crud_form = S3SQLCustomForm(
                                 "dvr_case.reference",
                                 "dvr_case.case_type_id",
+                                "dvr_case.beneficiary",
                                 "dvr_case.organisation_id",
                                 "dvr_case.site_id",
                                 "dvr_case.date",

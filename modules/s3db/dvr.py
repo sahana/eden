@@ -129,6 +129,11 @@ class DVRCaseModel(S3Model):
                               (1, T("Low")),
                               )
 
+        # Case beneficiary options
+        case_beneficiary_opts = {"INDIVIDUAL": T("Individual"),
+                                 "HOUSEHOLD": T("Household"),
+                                 }
+
         SITE = current.deployment_settings.get_org_site_label()
         permitted_facilities = current.auth.permitted_facilities(redirect_on_error=False)
 
@@ -156,6 +161,14 @@ class DVRCaseModel(S3Model):
                                                            },
                                                    ),
                              ),
+                     Field("beneficiary",
+                           default = "INDIVIDUAL",
+                           label = T("Assistance for"),
+                           represent = S3Represent(options=case_beneficiary_opts),
+                           requires = IS_IN_SET(case_beneficiary_opts,
+                                                zero = None,
+                                                ),
+                           ),
                      s3_date(label = T("Registration Date"),
                              default = "now",
                              empty = False,
