@@ -144,6 +144,10 @@ def config(settings):
     settings.org.service_locations = True
 
     # -------------------------------------------------------------------------
+    # Human Resources
+    settings.hrm.skill_types = True
+
+    # -------------------------------------------------------------------------
     # Project Module
     settings.project.projects = True
     settings.project.mode_3w = True
