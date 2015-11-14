@@ -44,6 +44,7 @@ class S3MainMenu(default.S3MainMenu):
                 homepage("hrm"),
                 homepage("vol"),
                 homepage("project"),
+                homepage("event"),
                 #MM("Missing Persons", c="mpr", f="person"),
             ),
         ]
