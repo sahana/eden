@@ -1385,8 +1385,8 @@ class S3Config(Storage):
                                                        ("km", "ភាសាខ្មែរ"),         # Khmer
                                                        ("ko", "한국어"),
                                                        ("mn", "Монгол хэл"),   # Mongolian
-                                                       #("my", "မြန်မာစာ"),        # Burmese
-                                                       ("ne", "नेपाली"),          # Nepali
+                                                       ("my", "မြန်မာစာ"),        # Burmese
+                                                       ("ne", "नेपाली"),           # Nepali
                                                        ("prs", "دری"),         # Dari
                                                        ("ps", "پښتو"),         # Pashto
                                                        ("pt", "Português"),
