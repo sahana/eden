@@ -108,6 +108,8 @@ def person():
                                         multiple = False,
                                         name = "phone",
                                         ),
+                                "person_details.marital_status",
+                                "person_details.nationality",
                                 S3SQLInlineComponent(
                                         "address",
                                         label = T("Current Address"),
