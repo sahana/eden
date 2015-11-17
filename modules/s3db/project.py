@@ -5527,12 +5527,14 @@ class project_IndicatorSummaryReport(S3Method):
         iappend = item.append
         row_2 = TR()
         rappend = row_2.append
+        TARGET = T("Target")
+        ACTUAL = T("Actual")
         for d in dates:
-            rappend(TD(T("Target")))
-            rappend(TD(T("Actual")))
+            rappend(TD(TARGET))
+            rappend(TD(ACTUAL))
         for y in years:
-            rappend(TD(T("Target")))
-            rappend(TD(T("Actual")))
+            rappend(TD(TARGET))
+            rappend(TD(ACTUAL))
         iappend(row_2)
 
         colspan = (2 * len(dates)) + (2 * len(years)) + 3
@@ -5666,11 +5668,12 @@ class project_IndicatorSummaryReport(S3Method):
 
         represent = current.s3db.project_indicator_data.end_date.represent
 
-        labels = [T("Number"),
-                  T("Indicators"),
-                  T("Total Target"),
-                  ]
-        lappend = labels.append
+        labels11 = [str(T("Number")),
+                    str(T("Indicators")),
+                    str(T("Total Target")),
+                    ]
+        labels12 = []
+        lappend = labels12.append
         y = 0
         year = years[y]
         for d in dates:
@@ -5679,18 +5682,35 @@ class project_IndicatorSummaryReport(S3Method):
                 y += 1
                 year = years[y]
             lappend(represent(d))
-        labels += [str(year),
-                   T("Actual Total"),
-                   T("% Achieved"),
-                   ]
+        lappend(str(year))
+        labels13 = [str(T("Actual Total")),
+                    str(T("% Achieved")),
+                    ]
+
+        labels22 = []
+        lappend = labels22.append
+        y = 0
+        year = years[y]
+        TARGET = str(T("Target"))
+        ACTUAL = str(T("Actual"))
+        for d in dates:
+            if d.year != year:
+                lappend(TARGET)
+                lappend(ACTUAL)
+                y += 1
+                year = years[y]
+            lappend(TARGET)
+            lappend(ACTUAL)
+        lappend(TARGET)
+        lappend(ACTUAL)
 
         # Get styles
         COL_WIDTH_MULTIPLIER = S3XLS.COL_WIDTH_MULTIPLIER
         styles = S3XLS._styles(use_colour = True,
                                evenodd = False,
-                               #datetime_format = datetime_format,
                                )
         large_header_style = styles["large_header"]
+        large_header_style.alignment.horz = large_header_style.alignment.HORZ_LEFT
         notes_style = styles["notes"]
 
         # Create the workbook
@@ -5699,10 +5719,11 @@ class project_IndicatorSummaryReport(S3Method):
         # Add sheet
         sheet = book.add_sheet(str(T("Report")))
 
-        # Set column Widths#
+        # Set column Widths
+        import pydevd;pydevd.settrace()
         col_index = 0
         column_widths = []
-        for label in labels:
+        for label in labels11 + labels22 + labels13:
             width = max(len(label) * COL_WIDTH_MULTIPLIER, 2000)
             width = min(width, 65535) # USHRT_MAX
             column_widths.append(width)
@@ -5710,168 +5731,42 @@ class project_IndicatorSummaryReport(S3Method):
             col_index += 1
 
         # First row => Title
-        sheet.write_merge(0, 0, 0, col_index, title,
-                          large_header_style,
-                          )
         current_row = sheet.row(0)
         current_row.height = 500
+        current_row.write(0, title, large_header_style)
         # Second row => Export date/time
         current_row = sheet.row(1)
         current_row.write(0, "%s:" % T("Date Exported"), notes_style)
         current_row.write(1, current.request.now, notes_style)
+        # Fix the size of the first column to display the label
+        if 13 * COL_WIDTH_MULTIPLIER > sheet.col(0).width:
+            sheet.col(0).width = 13 * COL_WIDTH_MULTIPLIER
         # Fix the size of the last column to display the date
         if 16 * COL_WIDTH_MULTIPLIER > width:
             sheet.col(col_index).width = 16 * COL_WIDTH_MULTIPLIER
 
-        # Add header row to all sheets, determine columns widths
+        # Third row => Column Headers
         header_style = styles["header"]
+        current_row = sheet.row(2)
+        col_index = 0
+        for label in labels11:
+            current_row.write(col_index, label, header_style)
+            col_index += 1
+        for label in labels12:
+            #current_row.write(col_index, label, header_style)
+            sheet.write_merge(2, 2, col_index, col_index + 1, label, header_style)
+            col_index += 1
+        for label in labels13:
+            current_row.write(col_index, label, header_style)
+            col_index += 1
+        # Third row => Column Headers
+        #current_row = sheet.row(3)
+        #col_index = 0
+        #for label in labels2:
+        #    current_row.write(col_index, label, header_style)
+        #    col_index += 1
 
-        header_row = TR(TD(T("Number"),
-                           _rowspan=2,
-                           _class="tal",
-                           ),
-                        TD(T("Indicators"),
-                           _rowspan=2,
-                           _class="tal",
-                           ),
-                        TD(T("Total Target"),
-                           _rowspan=2,
-                           ),
-                        )
-        happend = header_row.append
-
-        y = 0
-        year = years[y]
-        for d in dates:
-            if d.year != year:
-                happend(TD(year,
-                           _colspan=2,
-                           ))
-                y += 1
-                year = years[y]
-            happend(TD(represent(d),
-                       _colspan=2,
-                       ))
-        happend(TD(year,
-                   _colspan=2,
-                   ))
-
-        happend(TD(T("Actual Total"),
-                   _rowspan=2,
-                   ))
-        happend(TD(T("% Achieved"),
-                   _rowspan=2,
-                   ))
-        item = TABLE(header_row,
-                     _class="indicator_summary_report"
-                     )
-        iappend = item.append
-        row_2 = TR()
-        rappend = row_2.append
-        for d in dates:
-            rappend(TD(T("Target")))
-            rappend(TD(T("Actual")))
-        for y in years:
-            rappend(TD(T("Target")))
-            rappend(TD(T("Actual")))
-        iappend(row_2)
-
-        colspan = (2 * len(dates)) + (2 * len(years)) + 3
-
-        for goal_id in goals:
-            goal = goals[goal_id]
-            row = TR(TD("%s: %s" % (T("Goal"), goal["code"]),
-                        _class="tal",
-                        ),
-                     TD(goal["name"],
-                        _class="tal",
-                        _colspan=colspan,
-                        ),
-                     TD(project_status_represent(goal["status"])),
-                     _class="project_goal")
-            iappend(row)
-            outcomes = goal["outcomes"]
-            for output_id in outcomes:
-                outcome = outcomes[output_id]
-                row = TR(TD("%s: %s" % (T("Outcome"), outcome["code"]),
-                            _class="tal",
-                            ),
-                         TD(outcome["name"],
-                            _class="tal",
-                            _colspan=colspan,
-                            ),
-                         TD(project_status_represent(outcome["status"])),
-                         _class="project_outcome")
-                iappend(row)
-                outputs = outcome["outputs"]
-                for p in outputs:
-                    output = outputs[p]
-                    row = TR(TD("%s: %s" % (T("Output"), output["code"]),
-                                _class="tal",
-                                ),
-                             TD(output["name"],
-                                _class="tal",
-                                _colspan=colspan,
-                                ),
-                             TD(project_status_represent(output["status"])),
-                             _class="project_output")
-                    iappend(row)
-                    indicators = output["indicators"]
-                    for i in indicators:
-                        indicator = indicators[i]
-                        row = TR(TD("%s: %s" % (T("Indicator"), indicator["code"]),
-                                    _class="tal",
-                                    ),
-                                 TD(indicator["name"],
-                                    _class="tal",
-                                    ),
-                                 _class="project_indicator")
-                        rappend = row.append
-                        rappend(TD(indicator["target"]))
-                        y = 0
-                        year = years[y]
-                        for d in dates:
-                            if d.year != year:
-                                iyear = indicator["years"].get(year)
-                                if iyear:
-                                    rappend(TD(iyear["target"]))
-                                    rappend(TD(iyear["actual"]))
-                                else:
-                                    rappend(TD(NONE))
-                                    rappend(TD(NONE))
-                                y += 1
-                                year = years[y]
-                            date = indicator["dates"].get(d)
-                            if date:
-                                rappend(TD(date["target"]))
-                                rappend(TD(date["actual"]))
-                            else:
-                                rappend(TD(NONE))
-                                rappend(TD(NONE))
-                        iyear = indicator["years"].get(year)
-                        if iyear:
-                            rappend(TD(iyear["target"]))
-                            rappend(TD(iyear["actual"]))
-                        else:
-                            rappend(TD(NONE))
-                            rappend(TD(NONE))
-                        rappend(TD(indicator["actual"]))
-                        rappend(TD(project_status_represent(indicator["status"])))
-                        iappend(row)
-
-        record = r.record
-        iappend(TR(TD(T("Overall Project Status"),
-                      _colspan=colspan + 1,
-                      _class="tar",
-                      ),
-                   TD(project_status_represent(record.overall_status_by_indicators)),
-                   ))
-
-        output = dict(item=item)
-        output["subtitle"] = "%s: %s" % (T("Project"), record.name)
-        # @ToDo: Add "On Date" (especially for PDF/XLS output)
-
-        # Write output
+        # Export to File
         try:
             from cStringIO import StringIO    # Faster, where available
         except:

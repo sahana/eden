@@ -51,6 +51,8 @@ def config(settings):
     # Uncomment to show the Print control:
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
+    # Show Lat/Lon fields in Location Selector
+    settings.gis.latlon_selector = True
 
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)

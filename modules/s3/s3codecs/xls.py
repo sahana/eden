@@ -551,6 +551,10 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
 
         import xlwt
 
+        if datetime_format is None:
+            # Support easier usage from external functions
+            datetime_format = cls.dt_format_translate(current.deployment_settings.get_L10n_datetime_format())
+
         # Styles
         large_header = xlwt.XFStyle()
         large_header.font.bold = True
