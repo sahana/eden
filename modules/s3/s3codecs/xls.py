@@ -54,12 +54,16 @@ class S3XLS(S3Codec):
 
     # Customizable styles
     COL_WIDTH_MULTIPLIER = 310
-    LARGE_HEADER_COLOUR = 0x2C
-    HEADER_COLOUR = 0x2C
-    SUB_HEADER_COLOUR = 0x18
+    # Python xlwt Colours
+    # https://docs.google.com/spreadsheets/d/1ihNaZcUh7961yU7db1-Db0lbws4NT24B7koY8v8GHNQ/pubhtml?gid=1072579560&single=true
+    LARGE_HEADER_COLOUR = 0x2C # pale_blue
+    HEADER_COLOUR = 0x2C # pale_blue
+    SUB_HEADER_COLOUR = 0x18 # periwinkle
     SUB_TOTALS_COLOUR = 0x96
     TOTALS_COLOUR = 0x00
-    ROW_ALTERNATING_COLOURS = [0x2A, 0x2B]
+    ROW_ALTERNATING_COLOURS = [0x2A, # light_green
+                               0x2B, # light_yellow
+                               ]
 
     ERROR = Storage(
         XLRD_ERROR = "XLS export requires python-xlrd module to be installed on server",
@@ -555,13 +559,15 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             # Support easier usage from external functions
             datetime_format = cls.dt_format_translate(current.deployment_settings.get_L10n_datetime_format())
 
+
         # Styles
         large_header = xlwt.XFStyle()
         large_header.font.bold = True
         large_header.font.height = 400
         if use_colour:
+            SOLID_PATTERN = large_header.pattern.SOLID_PATTERN
             large_header.alignment.horz = large_header.alignment.HORZ_CENTER
-            large_header.pattern.pattern = large_header.pattern.SOLID_PATTERN
+            large_header.pattern.pattern = SOLID_PATTERN
             large_header.pattern.pattern_fore_colour = cls.LARGE_HEADER_COLOUR
 
         notes = xlwt.XFStyle()
@@ -573,35 +579,35 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         header.font.bold = True
         header.num_format_str = datetime_format
         if use_colour:
-            header.pattern.pattern = header.pattern.SOLID_PATTERN
+            header.pattern.pattern = SOLID_PATTERN
             header.pattern.pattern_fore_colour = cls.HEADER_COLOUR
 
         subheader = xlwt.XFStyle()
         subheader.font.bold = True
         if use_colour:
-            subheader.pattern.pattern = subheader.pattern.SOLID_PATTERN
+            subheader.pattern.pattern = SOLID_PATTERN
             subheader.pattern.pattern_fore_colour = cls.SUB_HEADER_COLOUR
 
         subtotals = xlwt.XFStyle()
         subtotals.font.bold = True
         if use_colour:
-            subtotals.pattern.pattern = subtotals.pattern.SOLID_PATTERN
+            subtotals.pattern.pattern = SOLID_PATTERN
             subtotals.pattern.pattern_fore_colour = cls.SUB_TOTALS_COLOUR
 
         totals = xlwt.XFStyle()
         totals.font.bold = True
         if use_colour:
-            totals.pattern.pattern = totals.pattern.SOLID_PATTERN
+            totals.pattern.pattern = SOLID_PATTERN
             totals.pattern.pattern_fore_colour = cls.TOTALS_COLOUR
 
         odd = xlwt.XFStyle()
         if use_colour and evenodd:
-            odd.pattern.pattern = odd.pattern.SOLID_PATTERN
+            odd.pattern.pattern = SOLID_PATTERN
             odd.pattern.pattern_fore_colour = cls.ROW_ALTERNATING_COLOURS[0]
 
         even = xlwt.XFStyle()
         if use_colour and evenodd:
-            even.pattern.pattern = even.pattern.SOLID_PATTERN
+            even.pattern.pattern = SOLID_PATTERN
             even.pattern.pattern_fore_colour = cls.ROW_ALTERNATING_COLOURS[1]
 
         return {"large_header": large_header,

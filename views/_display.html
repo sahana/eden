@@ -24,9 +24,7 @@
   {{include "last_update.html"}}
  </div>
  <div class='small-12 columns'>
-  {{try:}}
-  {{include}}
-  {{except:}}{{pass}}
+  {{try:}}{{include}}{{except:}}{{pass}}
  </div>
  <div id='map' class='small-12 columns'></div>
  <div class='small-12 columns'>

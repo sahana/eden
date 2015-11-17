@@ -68,11 +68,8 @@
   {{=XML(s3.rfooter)}}
  </div>
 </div>{{pass}}
-{{if ltype == "datalist":}}
-{{include "dataLists.html"}}
-{{else:}}
-{{include "dataTables.html"}}
-{{pass}}
+{{if ltype == "datalist":}}{{include "dataLists.html"}}
+{{else:}}{{include "dataTables.html"}}{{pass}}
 {{if r.http == "POST" or not hide_listadd:}}
 {{script = '''$('#list-add').show()
 $('#show-add-btn').hide()'''}}
