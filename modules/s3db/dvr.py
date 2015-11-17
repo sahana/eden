@@ -265,15 +265,16 @@ class DVRCaseModel(S3Model):
 
         # Components
         self.add_components(tablename,
+                            dvr_beneficiary_data = "case_id",
+                            dvr_case_activity = "case_id",
+                            dvr_case_service_contact = "case_id",
+                            dvr_housing = {"joinby": "case_id",
+                                           "multiple": False,
+                                           },
                             dvr_need =  {"link": "dvr_case_need",
                                          "joinby": "case_id",
                                          "key": "need_id",
                                          },
-                            dvr_case_activity = "case_id",
-                            dvr_housing = {"joinby": "case_id",
-                                           "multiple": False,
-                                           },
-                            dvr_beneficiary_data = "case_id",
                             # Not valid for write:
                             pr_address = ({"name": "current_address",
                                            "link": "pr_person",
@@ -561,6 +562,7 @@ class DVRCaseActivityModel(S3Model):
     """ Model for Case Activities """
 
     names = ("dvr_case_activity",
+             "dvr_case_service_contact",
              )
 
     def model(self):
@@ -661,6 +663,41 @@ class DVRCaseActivityModel(S3Model):
                   list_fields = list_fields,
                   orderby = "dvr_case_activity.start_date desc",
                   )
+
+        # ---------------------------------------------------------------------
+        # Case Service Contacts (other than case activities)
+        #
+        tablename = "dvr_case_service_contact"
+        define_table(tablename,
+                     # Beneficiary (component link):
+                     # @todo: populate from case and hide in case perspective
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     self.dvr_case_id(empty = False,
+                                      label = T("Case Number"),
+                                      ondelete = "CASCADE",
+                                      ),
+                     s3_date(),
+                     self.dvr_need_id(),
+                     self.org_organisation_id(label=T("Providing Agency"),
+                                              ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Service Contact"),
+            title_display = T("Service Contact Details"),
+            title_list = T("Service Contacts"),
+            title_update = T("Edit Service Contacts"),
+            label_list_button = T("List Service Contacts"),
+            label_delete_button = T("Delete Service Contact"),
+            msg_record_created = T("Service Contact added"),
+            msg_record_modified = T("Service Contact updated"),
+            msg_record_deleted = T("Service Contact deleted"),
+            msg_list_empty = T("No Service Contacts currently registered"),
+            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -976,6 +1013,7 @@ def dvr_rheader(r, tabs=[]):
                         (T("Activities"), "case_activity"),
                         (T("Beneficiaries"), "beneficiary_data"),
                         (T("Housing"), "housing"),
+                        (T("Service Contacts"), "case_service_contact"),
                         ]
 
             case = r.resource.select(["dvr_case.reference",

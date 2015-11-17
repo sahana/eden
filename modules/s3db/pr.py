@@ -1020,15 +1020,16 @@ class S3PersonModel(S3Model):
                                                   "multiple": False,
                                                   },
                        # Disaster Victim Registry
+                       dvr_beneficiary_data = "person_id",
                        dvr_case = {"name": "dvr_case",
                                    "joinby": "person_id",
                                    "multiple": False,
                                    },
                        dvr_case_activity = "person_id",
+                       dvr_case_service_contact = "person_id",
                        dvr_housing = {"joinby": "person_id",
                                       "multiple": False,
                                       },
-                       dvr_beneficiary_data = "person_id",
                        # Evacuee Registry
                        evr_case = {"joinby": "person_id",
                                    "multiple": False,
@@ -5352,7 +5353,7 @@ def pr_rheader(r, tabs=[]):
             s3db = current.s3db
 
             if tablename == "pr_person":
-                
+
                 record_id = record.id
                 pdtable = s3db.pr_person_details
                 query = (pdtable.person_id == record_id)
