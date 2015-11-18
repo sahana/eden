@@ -120,6 +120,13 @@ def person():
                                         label = T("Language / Communication Mode"),
                                         ),
                                 S3SQLInlineComponent(
+                                        "contact_emergency",
+                                        fields = ["name", "relationship", "phone",
+                                                  ],
+                                        label = T("Emergency Contact"),
+                                        multiple = False,
+                                        ),
+                                S3SQLInlineComponent(
                                         "address",
                                         label = T("Current Address"),
                                         fields = [("", "location_id"),
