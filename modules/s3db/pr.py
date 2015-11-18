@@ -3604,6 +3604,11 @@ class S3PersonDetailsModel(S3Model):
                                 label = T("Military Service"),
                                 represent = s3_yes_no_represent,
                                 ),
+                          Field("illiterate", "boolean",
+                                label = T("Illiterate"),
+                                represent = s3_yes_no_represent,
+                                default=False,
+                                ),
                           *s3_meta_fields())
 
         # CRUD Strings
