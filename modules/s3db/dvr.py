@@ -52,6 +52,7 @@ class DVRCaseModel(S3Model):
 
     names = ("dvr_case",
              "dvr_case_id",
+             "dvr_case_language",
              "dvr_case_status_opts",
              "dvr_case_type",
              )
@@ -66,6 +67,8 @@ class DVRCaseModel(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         configure = self.configure
+
+        person_id = self.pr_person_id
 
         # ---------------------------------------------------------------------
         # Case Types
@@ -201,7 +204,7 @@ class DVRCaseModel(S3Model):
                                      represent = self.org_site_represent,
                                      updateable = True,
                                      ),
-                     self.pr_person_id(
+                     person_id(
                         # @ToDo: Modify this to update location_id if the selected
                         #        person has a Home Address already
                         comment = None,
@@ -366,6 +369,43 @@ class DVRCaseModel(S3Model):
                                                 IS_ONE_OF(db, "dvr_case.id",
                                                           represent)),
                                   )
+
+        # ---------------------------------------------------------------------
+        # Case Language: languages that can be used to communicate with
+        #                case beneficiaries
+        #
+
+        # Quality/Mode of communication:
+        lang_quality_opts = (("N", T("native")),
+                             ("F", T("fluent")),
+                             ("S", T("simplified/slow")),
+                             ("W", T("written-only")),
+                             ("I", T("interpreter required")),
+                             )
+
+        tablename = "dvr_case_language"
+        define_table(tablename,
+                     person_id(empty = False,
+                               ondelete = "CASCADE",
+                               ),
+                     Field("language",
+                           label = T("Language"),
+                           represent = IS_ISO639_2_LANGUAGE_CODE.represent_local,
+                           requires = IS_ISO639_2_LANGUAGE_CODE(select = None,
+                                                                translate = True,
+                                                                ),
+                           ),
+                     Field("quality",
+                           default = "N",
+                           label = T("Quality/Mode"),
+                           represent = S3Represent(options=dict(lang_quality_opts)),
+                           requires = IS_IN_SET(lang_quality_opts,
+                                                sort = False,
+                                                zero = None,
+                                                ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

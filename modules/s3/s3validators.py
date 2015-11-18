@@ -3253,6 +3253,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                  multiple = False,
                  select = DEFAULT,
                  sort = False,
+                 translate = False,
                  zero = ""):
         """
             Constructor
@@ -3263,6 +3264,9 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                            defaults to settings.L10n.languages,
                            set explicitly to None to allow all languages
             @param sort: sort options in selector
+            @param translate: translate the language options into
+                              the current UI language (only with
+                              explicit select=None)
             @param zero: use this label for the empty-option (default="")
         """
         super(IS_ISO639_2_LANGUAGE_CODE, self).__init__(
@@ -3277,6 +3281,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
             self._select = current.deployment_settings.get_L10n_languages()
         else:
             self._select = select
+        self.translate = translate
 
     # -------------------------------------------------------------------------
     def options(self, zero=True):
@@ -3292,7 +3297,11 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
             items = [(k, v) for k, v in self._select.items()
                             if k in language_codes_dict]
         else:
-            items = self.language_codes()
+            if self.translate:
+                T = current.T
+                items = [(k, T(v)) for k, v in self.language_codes()]
+            else:
+                items = self.language_codes()
         if self.sort:
             items.sort(options_sorter)
         if zero and not self.zero is None and not self.multiple:
@@ -3303,7 +3312,9 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
     @classmethod
     def represent(cls, code):
         """
-            Represent a language code by language name
+            Represent a language code by language name, uses the
+            representation from deployment_settings if available
+            rather than translation into current UI language.
 
             @param code: the language code
         """
@@ -3312,10 +3323,24 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
         if code in l10n_languages:
             name = l10n_languages[code]
         else:
-            all_languages = dict(cls.language_codes())
-            name = all_languages.get(code)
-            if name is None:
-                name = current.messages.UNKNOWN_OPT
+            name = cls.represent_local(code)
+        return name
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def represent_local(cls, code):
+        """
+            Represent a language code by language name, translated
+            into current UI language (preferrable for database fields).
+
+            @param code: the language code
+        """
+
+        name = dict(cls.language_codes()).get(code)
+        if name is None:
+            name = current.messages.UNKNOWN_OPT
+        else:
+            name = current.T(name)
         return name
 
     # -------------------------------------------------------------------------

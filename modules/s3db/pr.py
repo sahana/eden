@@ -1026,6 +1026,7 @@ class S3PersonModel(S3Model):
                                    "multiple": False,
                                    },
                        dvr_case_activity = "person_id",
+                       dvr_case_language = "person_id",
                        dvr_case_service_contact = "person_id",
                        dvr_housing = {"joinby": "person_id",
                                       "multiple": False,
@@ -3605,9 +3606,9 @@ class S3PersonDetailsModel(S3Model):
                                 represent = s3_yes_no_represent,
                                 ),
                           Field("illiterate", "boolean",
+                                default = False,
                                 label = T("Illiterate"),
                                 represent = s3_yes_no_represent,
-                                default=False,
                                 ),
                           *s3_meta_fields())
 

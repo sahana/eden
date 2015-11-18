@@ -86,6 +86,7 @@ def person():
                                 "last_name",
                                 "date_of_birth",
                                 "gender",
+                                "person_details.marital_status",
                                 S3SQLInlineComponent(
                                         "contact",
                                         fields = [("", "value"),
@@ -108,9 +109,16 @@ def person():
                                         multiple = False,
                                         name = "phone",
                                         ),
-                                "person_details.marital_status",
                                 "person_details.nationality",
                                 "person_details.illiterate",
+                                S3SQLInlineComponent(
+                                        "case_language",
+                                        fields = ["language",
+                                                  "quality",
+                                                  "comments",
+                                                  ],
+                                        label = T("Language / Communication Mode"),
+                                        ),
                                 S3SQLInlineComponent(
                                         "address",
                                         label = T("Current Address"),
