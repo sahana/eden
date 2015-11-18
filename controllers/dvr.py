@@ -110,6 +110,7 @@ def person():
                                         ),
                                 "person_details.marital_status",
                                 "person_details.nationality",
+                                "person_details.illiterate",
                                 S3SQLInlineComponent(
                                         "address",
                                         label = T("Current Address"),
