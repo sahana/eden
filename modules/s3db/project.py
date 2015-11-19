@@ -422,6 +422,10 @@ class S3ProjectModel(S3Model):
                    action = self.project_timeline)
 
         set_method("project", "project",
+                   method = "summary_report",
+                   action = project_SummaryReport)
+
+        set_method("project", "project",
                    method = "indicator_summary_report",
                    action = project_IndicatorSummaryReport)
 
@@ -5279,6 +5283,280 @@ def project_status_represent(value):
                 )
 
 # =============================================================================
+class project_SummaryReport(S3Method):
+    """
+        Display the a Summary of the Project
+
+       @ToDo: Handle deployments which miss a step
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "project":
+            if r.representation == "pdf":
+                output = self.pdf(r, **attr)
+                return output
+        raise HTTP(405, current.ERROR.BAD_METHOD)
+
+    # -------------------------------------------------------------------------
+    def _extract(self, r, **attr):
+        """
+            Extract the Data
+        """
+
+        
+        db = current.db
+        s3db = current.s3db
+
+        NONE = current.messages["NONE"]
+
+        project_id = r.id
+
+        # Goals
+        goals = {}
+        table = s3db.project_goal
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.code,
+                                table.name,
+                                table.overall_status,
+                                )
+        for row in rows:
+            goals[row.id] = dict(code = row.code,
+                                 name = row.name,
+                                 outcomes = {},
+                                 status = row.overall_status,
+                                 )
+
+        # Outcomes
+        table = s3db.project_outcome
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.goal_id,
+                                table.code,
+                                table.name,
+                                table.overall_status,
+                                )
+        for row in rows:
+            goals[row.goal_id]["outcomes"][row.id] = dict(code = row.code,
+                                                          name = row.name,
+                                                          outputs = {},
+                                                          status = row.overall_status,
+                                                          )
+
+        # Outputs
+        table = s3db.project_output
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.goal_id,
+                                table.outcome_id,
+                                table.code,
+                                table.name,
+                                table.overall_status,
+                                )
+        for row in rows:
+            goals[row.goal_id]["outcomes"][row.outcome_id]["outputs"][row.id] = \
+                dict(code = row.code,
+                     name = row.name,
+                     indicators = {},
+                     status = row.overall_status,
+                     )
+
+        # Indicators
+        indicators = {}
+        table = s3db.project_indicator
+        query = (table.project_id == project_id) & \
+                (table.deleted == False)
+        rows = db(query).select(table.id,
+                                table.goal_id,
+                                table.outcome_id,
+                                table.output_id,
+                                table.code,
+                                table.name,
+                                table.overall_status,
+                                )
+        for row in rows:
+            indicator_id = row.id
+            goal_id = row.goal_id
+            outcome_id = row.outcome_id
+            output_id = row.output_id
+            indicators[indicator_id] = dict(goal = goal_id,
+                                            outcome = outcome_id,
+                                            output = output_id,
+                                            )
+            goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
+                dict(code = row.code,
+                     name = row.name,
+                     dates = {},
+                     years = {},
+                     status = row.overall_status,
+                     target = 0,
+                     actual = 0,
+                     )
+
+        # Indicator Data
+        table = s3db.project_indicator_data
+        query = (table.project_id == project_id) & \
+                (table.end_date <= current.request.utcnow) & \
+                (table.deleted == False)
+        rows = db(query).select(table.indicator_id,
+                                table.end_date,
+                                table.target_value,
+                                table.value,
+                                orderby=table.end_date,
+                                )
+        dates = []
+        dappend = dates.append
+        years = []
+        yappend = years.append
+        for row in rows:
+            date = row.end_date
+            dappend(date)
+            year = date.year
+            yappend(year)
+            indicator_id = row.indicator_id
+            target = row.target_value
+            actual = row.value
+            i = indicators[indicator_id]
+            indicator = goals[i["goal"]]["outcomes"][i["outcome"]]["outputs"][i["output"]]["indicators"][indicator_id]
+            if target:
+                indicator["target"] += target
+            if actual:
+                indicator["actual"] += actual
+            elif actual is None:
+                actual = NONE
+            indicator["dates"][date] = dict(target = target,
+                                            actual = actual,
+                                            )
+            iyears = indicator["years"]
+            if year in iyears:
+                if target:
+                    iyears[year]["target"] += target
+                if actual != NONE:
+                    iyears[year]["actual"] += actual
+            else:
+                iyears[year] = dict(target = target,
+                                    actual = actual,
+                                    )
+
+        # Uniquify
+        dates = set(dates)
+        years = set(years)
+
+        # Sort
+        dates = [d for d in dates]
+        dates.sort()
+        years = [y for y in years]
+        years.sort()
+        goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))
+        for goal in goals:
+            outcomes = OrderedDict(sorted(goals[goal]["outcomes"].items(), key=lambda x: x[1]["code"]))
+            for outcome in outcomes:
+                outputs = OrderedDict(sorted(outcomes[outcome]["outputs"].items(), key=lambda x: x[1]["code"]))
+                for output in outputs:
+                    indicators = OrderedDict(sorted(outputs[output]["indicators"].items(), key=lambda x: x[1]["code"]))
+                    outputs[output]["indicators"] = indicators
+                outcomes[outcome]["outputs"] = outputs
+            goals[goal]["outcomes"] = outcomes
+
+        return dates, years, goals
+
+    # -------------------------------------------------------------------------
+    def pdf(self, r, **attr):
+        """
+            PDF Representation
+        """
+
+        from ..s3.s3codecs.pdf import EdenDocTemplate, S3RL_PDF
+
+        T = current.T
+        s3db = current.s3db
+
+        record = r.record
+        table =  s3db.project_project
+        project_title = s3db.project_project_represent(None, record)
+        #dates, years, goals = self._extract(r, **attr)
+
+        report_title = s3_unicode(T("Project Summary Report")).encode("utf8")
+        filename = "%s_%s.pdf" % (report_title, project_title)
+
+        header = DIV(T("Narrative Report"))
+        body = DIV(TABLE(TR(TD(T("Project Name")),
+                            TD(record.name),
+                            ),
+                         TR(TD(T("Program")),
+                            TD(record.name),
+                            ),
+                         TR(TD(T("Description")),
+                            TD(record.name),
+                            ),
+                         TR(TD(T("Status")),
+                            TD(record.name),
+                            ),
+                         TR(TD(T("Budget")),
+                            TD(record.name),
+                            ),
+                         TR(TD(T("Start Date")),
+                            TD(record.name),
+                            ),
+                         TR(TD(T("End Date")),
+                            TD(record.name),
+                            ),
+                         TR(TD(T("Hazards")),
+                            TD(record.name),
+                            ),
+                         TR(TD(T("Sectors")),
+                            TD(record.name),
+                            ),
+                         TR(TD(T("Themes")),
+                            TD(record.name),
+                            ),
+                         TR(TD(T("Contact Person")),
+                            TD(record.name),
+                            ),
+                         ),
+                   TABLE(TR(TD(T("Current Status of Project"),
+                               _colspan=2,
+                               )
+                            ),
+                         TR(),
+                         ),
+                   )
+        footer = DIV("%s: %s" % (report_title, project_title))
+
+        doc = EdenDocTemplate(title=report_title)
+        printable_width = doc.printable_width
+        get_html_flowable = S3RL_PDF().get_html_flowable
+        header_flowable = get_html_flowable(header, printable_width)
+        body_flowable = get_html_flowable(body, printable_width)
+        footer_flowable = get_html_flowable(footer, printable_width)
+
+        # Build the PDF
+        doc.build(header_flowable,
+                  body_flowable,
+                  footer_flowable,
+                  )
+
+        # Return the generated PDF
+        response = current.response
+        from gluon.contenttype import contenttype
+        response.headers["Content-Type"] = contenttype(".pdf")
+        disposition = "attachment; filename=\"%s\"" % filename
+        response.headers["Content-disposition"] = disposition
+
+        return doc.output.getvalue()
+
+# =============================================================================
 class project_IndicatorSummaryReport(S3Method):
     """
         Display the a Summary of the Indicator Statuses for the Project
@@ -5947,11 +6225,11 @@ class project_IndicatorSummaryReport(S3Method):
         output.seek(0)
 
         # Response headers
-        filename = "%s.xls" % title
-        disposition = "attachment; filename=\"%s\"" % filename
+        filename = "%s.xls" % title.encode("utf8")
         response = current.response
         from gluon.contenttype import contenttype
         response.headers["Content-Type"] = contenttype(".xls")
+        disposition = "attachment; filename=\"%s\"" % filename
         response.headers["Content-disposition"] = disposition
 
         return output.read()

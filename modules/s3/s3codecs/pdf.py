@@ -95,8 +95,7 @@ try:
     biDiImported = True
 except ImportError:
     biDiImported = False
-    from s3 import s3_debug
-    s3_debug("S3PDF", "BiDirectional Support not available: Install Python-BiDi")
+    current.log.warning("S3PDF", "BiDirectional Support not available: Install Python-BiDi")
 
 PDF_WIDTH = 0
 PDF_HEIGHT = 1

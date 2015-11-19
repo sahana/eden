@@ -1,6 +1,7 @@
 UUID,Country,L1,L2,L3,L4,L5,Edit L1
 SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Village / Suburb",,
 ,AF,Province,District,Village,,,
+,AL,County,District,Municipality,,,
 ,AM,Province,Community,Settlement,,,
 ,AS,District,County,Village,,,
 ,AT,State,"District / City",Municipality,
@@ -9,6 +10,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,BA,"District / Entity",Canton,Municipality,,,
 ,BD,Division,District,"Thana / Upazil","Village / Union / Area",,
 ,BE,Region,Province,Arrondissement,Commune,
+,BG,Province,Municipality,,,
 ,BI,Province,Commune,Colline,Sous Colline,
 ,CF,Prefecture,Sub-Prefecture,Commune,,
 ,CM,Region,Division,Sub-Division,Village,
@@ -22,6 +24,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,ID,Province,"Regency / City",District,Administrative Village,,
 ,IN,State,District,Subdistrict,,,
 ,IQ,Province,District,,,,
+,IT,Region,Province,Commune,,,
 ,KE,Province,District,Division,Location,
 ,KG,"Oblast / State City","District (Rayon) / Oblast City","Town / Village Group",Village,,
 ,KH,Province,District,Commune,Village,
@@ -51,3 +54,4 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,US,State,County,City,Neighborhood,,False
 ,UZ,Province,District,,,,
 ,VN,Province,District,Commune,,,
+,XK,District,Municipality,,,,
