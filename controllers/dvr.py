@@ -74,19 +74,14 @@ def person():
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 crud_form = S3SQLCustomForm(
                                 "dvr_case.reference",
-                                "dvr_case.case_type_id",
-                                "dvr_case.beneficiary",
                                 "dvr_case.organisation_id",
-                                "dvr_case.site_id",
                                 "dvr_case.date",
-                                "dvr_case.priority",
                                 "dvr_case.status",
                                 "first_name",
                                 "middle_name",
                                 "last_name",
                                 "date_of_birth",
                                 "gender",
-                                "person_details.marital_status",
                                 S3SQLInlineComponent(
                                         "contact",
                                         fields = [("", "value"),
@@ -110,22 +105,6 @@ def person():
                                         name = "phone",
                                         ),
                                 "person_details.nationality",
-                                "person_details.illiterate",
-                                S3SQLInlineComponent(
-                                        "case_language",
-                                        fields = ["language",
-                                                  "quality",
-                                                  "comments",
-                                                  ],
-                                        label = T("Language / Communication Mode"),
-                                        ),
-                                S3SQLInlineComponent(
-                                        "contact_emergency",
-                                        fields = ["name", "relationship", "phone",
-                                                  ],
-                                        label = T("Emergency Contact"),
-                                        multiple = False,
-                                        ),
                                 S3SQLInlineComponent(
                                         "address",
                                         label = T("Current Address"),
@@ -137,10 +116,6 @@ def person():
                                         link = False,
                                         multiple = False,
                                         ),
-                                "dvr_case.head_of_household",
-                                "dvr_case.hoh_name",
-                                "dvr_case.hoh_gender",
-                                "dvr_case.hoh_relationship",
                                 "dvr_case.comments",
                                 )
 
@@ -164,14 +139,6 @@ def person():
                                     options = lambda: OrderedDict(s3db.dvr_case_status_opts),
                                     sort = False,
                                     ),
-                    S3OptionsFilter("dvr_case.case_type_id",
-                                    #label = T("Case Type"),
-                                    options = lambda: get_s3_filter_opts("dvr_case_type"),
-                                    ),
-                    S3OptionsFilter("dvr_case_activity.need_id",
-                                    options = lambda: get_s3_filter_opts("dvr_need"),
-                                    hidden = True,
-                                    ),
                     ]
 
                 resource.configure(crud_form = crud_form,
@@ -180,19 +147,15 @@ def person():
 
         # Module-specific list fields (must be outside of r.interactive)
         list_fields = ["dvr_case.reference",
-                       "dvr_case.case_type_id",
-                       "dvr_case.priority",
                        "first_name",
                        "middle_name",
                        "last_name",
                        "date_of_birth",
                        "gender",
-                       #"dvr_case.organisation_id",
                        "dvr_case.date",
                        "dvr_case.status",
                        ]
         resource.configure(list_fields = list_fields,
-                           #orderby = "dvr_case.priority desc",
                            )
 
         return True
