@@ -1600,7 +1600,7 @@ class S3XML(S3Codec):
                         error = sys.exc_info()[1]
 
                 if not skip_validation:
-                    if not isinstance(value, (basestring, list, tuple)):
+                    if not isinstance(value, (basestring, list, tuple, bool)):
                         v = str(value)
                     elif isinstance(value, basestring):
                         v = value.encode("utf-8")
