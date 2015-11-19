@@ -167,6 +167,13 @@ def config(settings):
                 ctable = s3db.dvr_case
                 root_org = current.auth.root_org()
 
+                field = ctable.valid_until
+
+                # Case is valid for 5 years
+                from dateutil.relativedelta import relativedelta
+                field.default = r.utcnow + relativedelta(years=5)
+                field.readable = field.writable = True
+
                 if root_org:
                     # Set default for organisation_id and hide the field
                     field = ctable.organisation_id
@@ -199,6 +206,7 @@ def config(settings):
                                 "dvr_case.reference",
                                 "dvr_case.organisation_id",
                                 "dvr_case.date",
+                                "dvr_case.valid_until",
                                 "dvr_case.status_id",
                                 "first_name",
                                 "last_name",
@@ -224,6 +232,7 @@ def config(settings):
                                "date_of_birth",
                                "gender",
                                "dvr_case.date",
+                               "dvr_case.valid_until",
                                "dvr_case.status_id",
                                ]
                 resource.configure(list_fields = list_fields,

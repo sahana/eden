@@ -232,6 +232,12 @@ class DVRCaseModel(S3Model):
                              default = "now",
                              empty = False,
                              ),
+                     s3_date("valid_until",
+                             label = T("Valid until"),
+                             # Enable in template if required
+                             readable = False,
+                             writable = False,
+                             ),
                      status_id(),
                      Field("priority", "integer",
                            default = 2,
