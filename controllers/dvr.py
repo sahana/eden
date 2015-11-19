@@ -26,6 +26,9 @@ def index_alt():
 def person():
     """ Persons: RESTful CRUD Controller """
 
+    # Set the default case status
+    default_status = s3db.dvr_case_default_status()
+
     def prep(r):
 
         # Filter to persons who have a case registered
@@ -76,7 +79,7 @@ def person():
                                 "dvr_case.reference",
                                 "dvr_case.organisation_id",
                                 "dvr_case.date",
-                                "dvr_case.status",
+                                "dvr_case.status_id",
                                 "first_name",
                                 "middle_name",
                                 "last_name",
@@ -132,11 +135,11 @@ def person():
                                   label = T("Search"),
                                   comment = T("You can search by name or case number"),
                                   ),
-                    S3OptionsFilter("dvr_case.status",
+                    S3OptionsFilter("dvr_case.status_id",
                                     cols = 3,
-                                    default = "OPEN",
+                                    default = default_status,
                                     #label = T("Case Status"),
-                                    options = lambda: OrderedDict(s3db.dvr_case_status_opts),
+                                    options = s3db.dvr_case_status_filter_opts,
                                     sort = False,
                                     ),
                     ]
@@ -153,7 +156,7 @@ def person():
                        "date_of_birth",
                        "gender",
                        "dvr_case.date",
-                       "dvr_case.status",
+                       "dvr_case.status_id",
                        ]
         resource.configure(list_fields = list_fields,
                            )
@@ -164,6 +167,12 @@ def person():
     return s3_rest_controller("pr", "person", rheader = s3db.dvr_rheader)
 
 # -----------------------------------------------------------------------------
+def case_status():
+    """ Case Statuses: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def case_type():
     """ Case Types: RESTful CRUD Controller """
 
@@ -172,6 +181,8 @@ def case_type():
 # -----------------------------------------------------------------------------
 def case():
     """ Cases: RESTful CRUD Controller """
+
+    s3db.dvr_case_default_status()
 
     return s3_rest_controller()
 

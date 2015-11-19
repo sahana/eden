@@ -32,6 +32,8 @@ __all__ = ("DVRCaseModel",
            "DVRCaseActivityModel",
            "DVRCaseBeneficiaryModel",
            "DVRHousingInformationModel",
+           "dvr_case_default_status",
+           "dvr_case_status_filter_opts",
            "dvr_rheader",
            )
 
@@ -53,7 +55,7 @@ class DVRCaseModel(S3Model):
     names = ("dvr_case",
              "dvr_case_id",
              "dvr_case_language",
-             "dvr_case_status_opts",
+             "dvr_case_status",
              "dvr_case_type",
              )
 
@@ -108,6 +110,67 @@ class DVRCaseModel(S3Model):
                                           )
 
         # ---------------------------------------------------------------------
+        # Case Statuses
+        #
+        tablename = "dvr_case_status"
+        define_table(tablename,
+                     Field("workflow_position", "integer",
+                           default = 1,
+                           label = T("Workflow Position"),
+                           requires = IS_INT_IN_RANGE(1, None),
+                           ),
+                     Field("code", notnull=True, unique=True,
+                           label = T("Status Code"),
+                           length = 64,
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("name",
+                           label = T("Status"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("is_default", "boolean",
+                           default = False,
+                           label = T("Default Status"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_CASE_TYPE = T("Create Case Status")
+        crud_strings[tablename] = Storage(
+            label_create = ADD_CASE_TYPE,
+            title_display = T("Case Status"),
+            title_list = T("Case Statuses"),
+            title_update = T("Edit Case Status"),
+            label_list_button = T("List Case Statuses"),
+            label_delete_button = T("Delete Case Status"),
+            msg_record_created = T("Case Status added"),
+            msg_record_modified = T("Case Status updated"),
+            msg_record_deleted = T("Case Status deleted"),
+            msg_list_empty = T("No Case Statuses currently registered")
+            )
+
+        # Table configuration
+        configure(tablename,
+                  onaccept = self.case_status_onaccept,
+                  )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename)
+        status_id = S3ReusableField("status_id", "reference %s" % tablename,
+                                    label = T("Status"),
+                                    ondelete = "RESTRICT",
+                                    represent = represent,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "dvr_case_status.id",
+                                                          represent,
+                                                          orderby = "dvr_case_status.workflow_position",
+                                                          sort = False,
+                                                          )),
+                                    sortby = "workflow_position",
+                                    )
+
+        # ---------------------------------------------------------------------
         # Case
         #
         #dvr_damage_opts = {
@@ -116,13 +179,6 @@ class DVRCaseModel(S3Model):
         #    3: T("Medium"),
         #    4: T("Low"),
         #}
-
-        # Case status options
-        # => tuple list to enforce widget order
-        case_status_opts = (("PENDING", T("Pending")),
-                            ("OPEN", T("Open")),
-                            ("CLOSED", T("Closed")),
-                            )
 
         # Case priority options
         # => tuple list to enforce widget order
@@ -176,15 +232,7 @@ class DVRCaseModel(S3Model):
                              default = "now",
                              empty = False,
                              ),
-                     Field("status",
-                           default = "OPEN",
-                           label = T("Status"),
-                           represent = S3Represent(options=dict(case_status_opts)),
-                           requires = IS_IN_SET(case_status_opts,
-                                                sort = False,
-                                                zero = None,
-                                                ),
-                           ),
+                     status_id(),
                      Field("priority", "integer",
                            default = 2,
                            label = T("Priority"),
@@ -304,7 +352,7 @@ class DVRCaseModel(S3Model):
         crud_form = S3SQLCustomForm("reference",
                                     "organisation_id",
                                     "date",
-                                    "status",
+                                    "status_id",
                                     "person_id",
                                     # Not valid for write:
                                     #S3SQLInlineComponent("current_address",
@@ -411,7 +459,6 @@ class DVRCaseModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"dvr_case_id": case_id,
-                "dvr_case_status_opts": case_status_opts,
                 }
 
     # -------------------------------------------------------------------------
@@ -425,8 +472,32 @@ class DVRCaseModel(S3Model):
                                 )
 
         return {"dvr_case_id": lambda **attr: dummy("case_id"),
-                "dvr_case_status_opts": {},
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_status_onaccept(form):
+        """
+            Onaccept routine for case statuses
+
+            @param form: the FORM
+        """
+
+        form_vars = form.vars
+        try:
+            record_id = form_vars.id
+        except AttributeError:
+            record_id = None
+
+        if not record_id:
+            return
+
+        # If this status is the default, then set is_default-flag
+        # for all other statuses to False:
+        if "is_default" in form_vars and form_vars.is_default:
+            table = current.s3db.dvr_case_status
+            db = current.db
+            db(table.id != record_id).update(is_default = False)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -442,7 +513,15 @@ class DVRCaseModel(S3Model):
 
         # Read form data
         form_vars = form.vars
-        record_id = form_vars.id if "id" in form_vars else None
+        if "id" in form_vars:
+            # Inline subtable update
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            # Regular update form
+            record_id = form.record_id
+        else:
+            # New record
+            record_id = None
         try:
             reference = form_vars.reference
         except AttributeError:
@@ -1028,6 +1107,60 @@ class DVRHousingInformationModel(S3Model):
         """ Safe defaults for names in case the module is disabled """
 
         return {}
+
+# =============================================================================
+def dvr_case_default_status():
+    """
+        Helper to get/set the default status for case records
+
+        @return: the default status_id
+    """
+
+    s3db = current.s3db
+
+    ctable = s3db.dvr_case
+    field = ctable.status_id
+
+    default = field.default
+    if default:
+        # Already set
+        return default
+
+    # Look up the default status
+    stable = s3db.dvr_case_status
+    query = (stable.is_default == True) & \
+            (stable.deleted != True)
+    row = current.db(query).select(stable.id, limitby=(0, 1)).first()
+
+    if row:
+        # Set as field default in case table
+        ctable = s3db.dvr_case
+        default = field.default = row.id
+
+    return default
+
+# =============================================================================
+def dvr_case_status_filter_opts():
+    """
+        Get filter options for case status, ordered by workflow position
+
+        @return: OrderedDict of options
+
+        @note: set sort=False for filter widget to retain this order
+    """
+
+    table = current.s3db.dvr_case_status
+    query = (table.deleted != True)
+    rows = current.db(query).select(table.id,
+                                    table.name,
+                                    orderby = "workflow_position",
+                                    )
+
+    if not rows:
+        return {}
+
+    T = current.T
+    return OrderedDict((row.id, T(row.name)) for row in rows)
 
 # =============================================================================
 def dvr_rheader(r, tabs=[]):

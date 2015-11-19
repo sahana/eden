@@ -358,7 +358,7 @@ def config(settings):
                                "gender",
                                #"dvr_case.organisation_id",
                                "dvr_case.date",
-                               "dvr_case.status",
+                               "dvr_case.status_id",
                                ]
                 resource.configure(list_fields = list_fields,
                                    #orderby = "dvr_case.priority desc",
@@ -563,7 +563,7 @@ def dvr_person_form():
                            "dvr_case.site_id",
                            "dvr_case.date",
                            "dvr_case.priority",
-                           "dvr_case.status",
+                           "dvr_case.status_id",
                            "first_name",
                            "middle_name",
                            "last_name",
@@ -637,34 +637,22 @@ def dvr_person_filters():
         @return: list of filter widgets
     """
 
-    T = current.T
-    s3db = current.s3db
+    filter_widgets = current.s3db.get_config("pr_person", "filter_widgets")
 
-    from s3 import get_s3_filter_opts, S3TextFilter, S3OptionsFilter
+    if filter_widgets is None:
+        return None
 
-    return [S3TextFilter(["first_name",
-                          "middle_name",
-                          "last_name",
-                          "dvr_case.reference",
-                          ],
-                          label = T("Search"),
-                          comment = T("You can search by name or case number"),
-                          ),
-            S3OptionsFilter("dvr_case.status",
-                            cols = 3,
-                            default = "OPEN",
-                            #label = T("Case Status"),
-                            options = lambda: OrderedDict(s3db.dvr_case_status_opts),
-                            sort = False,
-                            ),
-            S3OptionsFilter("dvr_case.case_type_id",
-                            #label = T("Case Type"),
-                            options = lambda: get_s3_filter_opts("dvr_case_type"),
-                            ),
-            S3OptionsFilter("dvr_case_activity.need_id",
-                            options = lambda: get_s3_filter_opts("dvr_need"),
-                            hidden = True,
-                            ),
-            ]
+    from s3 import get_s3_filter_opts, S3OptionsFilter
+    filter_widgets.extend([
+        S3OptionsFilter("dvr_case.case_type_id",
+                        options = lambda: get_s3_filter_opts("dvr_case_type"),
+                        ),
+        S3OptionsFilter("dvr_case_activity.need_id",
+                        options = lambda: get_s3_filter_opts("dvr_need"),
+                        hidden = True,
+                        ),
+        ])
+
+    return filter_widgets
 
 # END =========================================================================
