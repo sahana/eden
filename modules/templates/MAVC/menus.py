@@ -49,32 +49,38 @@ class S3MainMenu(default.S3MainMenu):
         INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
 
         return [
+            homepage(name = "&nbsp;",
+                     left = True,
+                     icon = "%s/static/themes/img/logo-small.png" % \
+                            current.request.application,
+                     ),
+            MM("Organizations", c="org", f="organisation"),
             #MM("Dashboard", c="default", f="index",
             #   args=["dashboard"],
             #   restrict=[AUTHENTICATED],
             #   ),
-            MM("Stakeholder Network", link=False)(
-                #MM("Networks", c="org", f="group"),
-                #MM("Groups", c="hrm", f="group"),
-                MM("Organizations", c="org", f="organisation", m="summary"),
-                MM(INDIVIDUALS, c="hrm", f="staff", m="summary",
-                   restrict=[AUTHENTICATED]),
-            ),
-            MM("Requests for Aid", link=False)(
-                MM("Requests", c="req", f="req", m="summary"),
-            ),
-            MM("Aid Delivery", link=False)(
-                MM("Shipments", c="inv", f="send", m="summary"),
-            ),
-            MM("Map", c="gis", f="index",
-               icon="icon-map",
-               #restrict=[AUTHENTICATED],
-               ),
-            MM("Validation", link=False, restrict=[VALIDATOR])(
-                    MM("Organizations", c="org", f="organisation", m="review"),
-                    MM("Requests", c="req", f="req", m="review"),
-                    MM("Shipments", c="inv", f="send", m="review"),
-               ),
+            #MM("Stakeholder Network", link=False)(
+            #    #MM("Networks", c="org", f="group"),
+            #    #MM("Groups", c="hrm", f="group"),
+            #    MM("Organizations", c="org", f="organisation", m="summary"),
+            #    MM(INDIVIDUALS, c="hrm", f="staff", m="summary",
+            #       restrict=[AUTHENTICATED]),
+            #),
+            #MM("Requests for Aid", link=False)(
+            #    MM("Requests", c="req", f="req", m="summary"),
+            #),
+            #MM("Aid Delivery", link=False)(
+            #    MM("Shipments", c="inv", f="send", m="summary"),
+            #),
+            #MM("Map", c="gis", f="index",
+            #   icon="icon-map",
+            #   #restrict=[AUTHENTICATED],
+            #   ),
+            #MM("Validation", link=False, restrict=[VALIDATOR])(
+            #        MM("Organizations", c="org", f="organisation", m="review"),
+            #        MM("Requests", c="req", f="req", m="review"),
+            #        MM("Shipments", c="inv", f="send", m="review"),
+            #   ),
         ]
 
     # -------------------------------------------------------------------------
@@ -196,8 +202,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #    M("Search"),
                     #    M("Create", m="create"),
                     #),
-                    M("Organizations", c="org", f="organisation", m="summary")(
-                        M("Search", m="summary"),
+                    M("Organizations", c="org", f="organisation")(
+                        #M("Search", m="summary"),
                         M("Create", m="create",
                           restrict=[AUTHENTICATED]),
                     ),
@@ -221,16 +227,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("View"),
                         M("Create", m="create"),
                     ),
-                    M("Job Title Catalog", c="hrm", f="job_title",
-                      restrict=[ADMIN])(
-                        M("View"),
-                        M("Create", m="create"),
-                    ),
-                    M("Skills Catalog", c="hrm", f="skill",
-                      restrict=[ADMIN])(
-                        M("View"),
-                        M("Create", m="create"),
-                    ),
+                    #M("Job Title Catalog", c="hrm", f="job_title",
+                    #  restrict=[ADMIN])(
+                    #    M("View"),
+                    #    M("Create", m="create"),
+                    #),
+                    #M("Skills Catalog", c="hrm", f="skill",
+                    #  restrict=[ADMIN])(
+                    #    M("View"),
+                    #    M("Create", m="create"),
+                    #),
                     #M("Organization Approval", c="org", f="organisation",
                     #  m="review", restrict=[ADMIN])(
                     #),

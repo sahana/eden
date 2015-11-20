@@ -24,7 +24,7 @@ def config(settings):
     settings.base.prepopulate += ("MAVC", "default/users", "MAVC/Demo")
 
     # Theme (folder to use for views/layout.html)
-    #settings.base.theme = "MAVC"
+    settings.base.theme = "MAVC"
 
     # Authentication settings
     # Should users be allowed to register themselves?
