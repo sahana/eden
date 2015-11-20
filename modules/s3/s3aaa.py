@@ -4073,7 +4073,7 @@ $.filterOptionsS3({
 
         if isinstance(person_id, basestring) and not person_id.isdigit():
             utable = self.settings.table_user
-            query = (utable.email == person_id)
+            query = (utable.email.belongs([person_id]))
             user = current.db(query).select(utable.id,
                                             limitby=(0, 1)).first()
             if user:
@@ -4087,10 +4087,10 @@ $.filterOptionsS3({
                 ptable = s3db.pr_person
                 if not ptable:
                     return None
-                query = (ptable.id == person_id) & \
-                        (ptable.pe_id == ltable.pe_id)
+                query = (ptable.id.belongs([person_id])) & \
+                        (ptable.pe_id.belongs([ltable.pe_id]))
             else:
-                query = (ltable.pe_id == pe_id)
+                query = (ltable.pe_id.belongs([pe_id]))
             link = current.db(query).select(ltable.user_id,
                                             limitby=(0, 1)).first()
             if link:
