@@ -906,6 +906,9 @@ $.filterOptionsS3({
                            crud_form = crud_form,
                            )
 
+        # Reset to standard submit button
+        s3.crud.submit_button = T("Save")
+
     # -------------------------------------------------------------------------
     @staticmethod
     def req_prep(r):

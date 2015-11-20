@@ -145,6 +145,19 @@ def config(settings):
                                          }
 
     # -------------------------------------------------------------------------
+    # Inventory Module Settings
+    #
+    settings.inv.facility_label = "Facility"
+    settings.inv.facility_manage_staff = False
+
+    # -------------------------------------------------------------------------
+    # Requests Module Settings
+    #
+    settings.req.req_type = ("Stock",)
+    settings.req.use_commit = False
+    settings.req.recurring = False
+
+    # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #
     def customise_pr_person_controller(**attr):
