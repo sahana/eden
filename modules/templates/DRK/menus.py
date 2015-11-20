@@ -37,7 +37,7 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         return [
-            MM("Refugees", c="dvr", f="person"),
+            MM("Refugees", c="dvr", f=("person", "case_activity")),
             MM("ToDo", c="project", f="task"),
             homepage("inv"),
             homepage("vol"),
@@ -135,6 +135,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Cases", f="person")(
                         M("Create", m="create"),
                     ),
+                    M("Activities", f="case_activity")(
+                        M("Emergencies", vars = {"~.emergency": "True"}),
+                        M("All Activities"),
+                        M("Report", m="report"),
+                    )
                     #M("Case Types", f="case_type")(
                     #    M("Create", m="create"),
                     #),

@@ -167,6 +167,32 @@ def person():
     return s3_rest_controller("pr", "person", rheader = s3db.dvr_rheader)
 
 # -----------------------------------------------------------------------------
+def case_activity():
+
+    def prep(r):
+
+        resource = r.resource
+        list_fields = ["case_id$reference",
+                       "person_id$first_name",
+                       "person_id$last_name",
+                       "need_id",
+                       "need_details",
+                       "emergency",
+                       "referral_details",
+                       "followup",
+                       "followup_date",
+                       "completed",
+                       ]
+        resource.configure(list_fields = list_fields,
+                           insertable = False,
+                           deletable = False,
+                           )
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def case_status():
     """ Case Statuses: RESTful CRUD Controller """
 
