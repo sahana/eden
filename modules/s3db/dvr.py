@@ -706,15 +706,19 @@ class DVRCaseActivityModel(S3Model):
         #
         tablename = "dvr_case_activity"
         define_table(tablename,
-                     # Beneficiary (component link):
-                     # @todo: populate from case and hide in case perspective
-                     self.pr_person_id(empty = False,
-                                       ondelete = "CASCADE",
-                                       ),
-                     self.dvr_case_id(empty = False,
+                     self.dvr_case_id(comment = None,
+                                      empty = False,
                                       label = T("Case Number"),
                                       ondelete = "CASCADE",
+                                      writable = False,
                                       ),
+                     # Beneficiary (component link):
+                     # @todo: populate from case and hide in case perspective
+                     self.pr_person_id(comment = None,
+                                       empty = False,
+                                       ondelete = "CASCADE",
+                                       writable = False,
+                                       ),
                      s3_date("start_date",
                              label = T("Registered on"),
                              default = "now",
@@ -724,6 +728,11 @@ class DVRCaseActivityModel(S3Model):
                            label = T("Need Details"),
                            represent = s3_text_represent,
                            widget = s3_comments_widget,
+                           ),
+                     Field("emergency", "boolean",
+                           default = False,
+                           label = T("Emergency"),
+                           represent = s3_yes_no_represent,
                            ),
                      # Activate in template as needed:
                      self.org_organisation_id(label=T("Referral Agency"),
@@ -774,19 +783,79 @@ class DVRCaseActivityModel(S3Model):
             msg_list_empty = T("No Activities currently registered"),
             )
 
+        # List fields
         list_fields = ["start_date",
                        "need_id",
                        "need_details",
+                       "emergency",
                        "referral_details",
                        "followup",
                        "followup_date",
                        "completed",
                        ]
 
+        # Filter widgets
+        filter_widgets = [S3TextFilter(["person_id$first_name",
+                                        "person_id$last_name",
+                                        "case_id$reference",
+                                        "need_details",
+                                        "referral_details",
+                                        ],
+                                        label = T("Search"),
+                                        ),
+                          S3OptionsFilter("emergency",
+                                          options = {True: T("Yes"),
+                                                     False: T("No"),
+                                                     },
+                                          cols = 2,
+                                          ),
+                          S3OptionsFilter("need_id",
+                                          options = lambda: get_s3_filter_opts("dvr_need"),
+                                          ),
+                          S3OptionsFilter("completed",
+                                          default = False,
+                                          options = {True: T("Yes"),
+                                                     False: T("No"),
+                                                     },
+                                          cols = 2,
+                                          ),
+                          S3OptionsFilter("followup",
+                                          label = T("Follow-up required"),
+                                          options = {True: T("Yes"),
+                                                     False: T("No"),
+                                                     },
+                                          cols = 2,
+                                          hidden = True,
+                                          ),
+                          ]
+
+        # Report options
+        axes = ["need_id",
+                (T("Case Status"), "case_id$status_id"),
+                "emergency",
+                "followup",
+                "completed",
+                ]
+        facts = [(T("Number of Activities"), "count(id)"),
+                 (T("Number of Cases"), "count(case_id)"),
+                 ]
+        report_options = {"rows": axes,
+                          "cols": axes,
+                          "fact": facts,
+                          "defaults": {"rows": "need_id",
+                                       "cols": "completed",
+                                       "fact": facts[0],
+                                       "totals": True,
+                                       "chart": "barchart:rows",
+                                       },
+                          }
+
         # Table configuration
         configure(tablename,
+                  filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   orderby = "dvr_case_activity.start_date desc",
+                  report_options = report_options,
                   )
 
         # ---------------------------------------------------------------------
