@@ -279,6 +279,7 @@
 'Add Group': 'Dodaj grupu',
 'Add Group Member': 'Dodaj člana grupe',
 'Add Group Membership': 'Dodaj članstvo grupe',
+'Add Hazard': 'Dodaj Rizik',
 'Add Hospital': 'Dodaj Bolnicu',
 'Add Hours': 'Dodaj sate',
 'Add Human Resource': 'Dodaj ljudski resurs',

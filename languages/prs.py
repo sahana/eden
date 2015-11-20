@@ -107,6 +107,7 @@
 'Add Deployment': 'گسترش را اضافه نمایید',
 'Add Education Detail': 'جزئیات آموزشی را اضافه نمایید',
 'Add Group Member': 'اعضای گروپ را اضافه نمایید',
+'Add Hazard': 'خطر به پروژه را اضافه نمایید',
 'Add Hazard to Project': 'خطر به پروژه را اضافه نمایید',
 'Add Hours': 'ساعات را اضافه نمایید',
 'Add Identity': 'هوویت را اضافه نمایید',

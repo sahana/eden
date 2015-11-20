@@ -110,6 +110,7 @@
 'Add Deployment': 'विकास राख्नुहोस् ',
 'Add Education Detail': 'शैक्षिक विवरण राख्नुहोस् ',
 'Add Group Member': 'समूह सदस्य राख्नुहोस् ',
+'Add Hazard': 'परियोजनामा खतरा राख्नुहोस्',
 'Add Hazard to Project': 'परियोजनामा खतरा राख्नुहोस्',
 'Add Hours': 'घण्टा राख्नुहोस्',
 'Add Identity': 'परिचय राख्नुहोस्',

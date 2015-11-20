@@ -2658,9 +2658,8 @@ class S3ProjectHazardModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_HAZARD = T("Create Hazard")
         crud_strings[tablename] = Storage(
-            label_create = ADD_HAZARD,
+            label_create = T("Create Hazard"),
             title_display = T("Hazard Details"),
             title_list = T("Hazards"),
             title_update = T("Edit Hazard"),
@@ -2697,7 +2696,7 @@ class S3ProjectHazardModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("New Hazard"),
+            label_create = T("Add Hazard"),
             title_display = T("Hazard"),
             title_list = T("Hazards"),
             title_update = T("Edit Hazard"),
@@ -5397,8 +5396,6 @@ class project_SummaryReport(S3Method):
             goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
                 dict(code = row.code,
                      name = row.name,
-                     dates = {},
-                     years = {},
                      status = row.overall_status,
                      target = 0,
                      actual = 0,
@@ -5415,15 +5412,8 @@ class project_SummaryReport(S3Method):
                                 table.value,
                                 orderby=table.end_date,
                                 )
-        dates = []
-        dappend = dates.append
-        years = []
-        yappend = years.append
         for row in rows:
             date = row.end_date
-            dappend(date)
-            year = date.year
-            yappend(year)
             indicator_id = row.indicator_id
             target = row.target_value
             actual = row.value
@@ -5433,31 +5423,8 @@ class project_SummaryReport(S3Method):
                 indicator["target"] += target
             if actual:
                 indicator["actual"] += actual
-            elif actual is None:
-                actual = NONE
-            indicator["dates"][date] = dict(target = target,
-                                            actual = actual,
-                                            )
-            iyears = indicator["years"]
-            if year in iyears:
-                if target:
-                    iyears[year]["target"] += target
-                if actual != NONE:
-                    iyears[year]["actual"] += actual
-            else:
-                iyears[year] = dict(target = target,
-                                    actual = actual,
-                                    )
-
-        # Uniquify
-        dates = set(dates)
-        years = set(years)
 
         # Sort
-        dates = [d for d in dates]
-        dates.sort()
-        years = [y for y in years]
-        years.sort()
         goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))
         for goal in goals:
             outcomes = OrderedDict(sorted(goals[goal]["outcomes"].items(), key=lambda x: x[1]["code"]))
@@ -5469,7 +5436,7 @@ class project_SummaryReport(S3Method):
                 outcomes[outcome]["outputs"] = outputs
             goals[goal]["outcomes"] = outcomes
 
-        return dates, years, goals
+        return date, goals
 
     # -------------------------------------------------------------------------
     def pdf(self, r, **attr):
@@ -5480,58 +5447,155 @@ class project_SummaryReport(S3Method):
         from ..s3.s3codecs.pdf import EdenDocTemplate, S3RL_PDF
 
         T = current.T
+        db = current.db
         s3db = current.s3db
 
+        NONE = current.messages["NONE"]
+
+        # Extract Data
+        date, goals = self._extract(r, **attr)
+
         record = r.record
-        table =  s3db.project_project
+        project_id = r.id
         project_title = s3db.project_project_represent(None, record)
-        #dates, years, goals = self._extract(r, **attr)
+
+        table =  s3db.project_project
+        date_represent = table.start_date.represent
+
+        ptable = s3db.project_programme
+        ltable = s3db.project_programme_project
+        query = (ltable.project_id == project_id) & \
+                (ltable.programme_id == ptable.id)
+        program = db(query).select(ptable.name,
+                                   limitby=(0, 1)).first()
+        if program:
+            program = program.name
+        else:
+            program = NONE
+
+        stable = s3db.project_status
+        status = db(stable.id == record.status_id).select(stable.name,
+                                                          limitby=(0, 1)
+                                                          ).first()
+        if status:
+            status = status.name
+        else:
+            status = NONE
+
+        btable = s3db.budget_budget
+        budget = db(btable.budget_entity_id == record.budget_entity_id).select(btable.total_budget,
+                                                                               btable.currency,
+                                                                               limitby=(0, 1)
+                                                                               ).first()
+        if budget:
+            budget = "%s %s" % (budget.currency, budget.total_budget)
+        else:
+            budget = NONE
+
+        htable = s3db.project_hazard
+        ltable = s3db.project_hazard_project
+        query = (ltable.project_id == project_id) & \
+                (ltable.hazard_id == htable.id)
+        hazards = db(query).select(htable.name)
+        if hazards:
+            hazards = ", ".join([T(h.name) for h in hazards])
+        else:
+            hazards = NONE
+
+        stable = s3db.org_sector
+        ltable = s3db.project_sector_project
+        query = (ltable.project_id == project_id) & \
+                (ltable.sector_id == stable.id)
+        sectors = db(query).select(stable.name)
+        if sectors:
+            sectors = ", ".join([T(s.name) for s in sectors])
+        else:
+            sectors = NONE
+
+        ttable = s3db.project_theme
+        ltable = s3db.project_theme_project
+        query = (ltable.project_id == project_id) & \
+                (ltable.theme_id == ttable.id)
+        themes = db(query).select(ttable.name)
+        if themes:
+            themes = ", ".join([T(t.name) for t in themes])
+        else:
+            themes = NONE
 
         report_title = s3_unicode(T("Project Summary Report")).encode("utf8")
         filename = "%s_%s.pdf" % (report_title, project_title)
 
-        header = DIV(T("Narrative Report"))
-        body = DIV(TABLE(TR(TD(T("Project Name")),
-                            TD(record.name),
-                            ),
-                         TR(TD(T("Program")),
-                            TD(record.name),
-                            ),
-                         TR(TD(T("Description")),
-                            TD(record.name),
-                            ),
-                         TR(TD(T("Status")),
-                            TD(record.name),
-                            ),
-                         TR(TD(T("Budget")),
-                            TD(record.name),
-                            ),
-                         TR(TD(T("Start Date")),
-                            TD(record.name),
-                            ),
-                         TR(TD(T("End Date")),
-                            TD(record.name),
-                            ),
-                         TR(TD(T("Hazards")),
-                            TD(record.name),
-                            ),
-                         TR(TD(T("Sectors")),
-                            TD(record.name),
-                            ),
-                         TR(TD(T("Themes")),
-                            TD(record.name),
-                            ),
-                         TR(TD(T("Contact Person")),
-                            TD(record.name),
-                            ),
-                         ),
-                   TABLE(TR(TD(T("Current Status of Project"),
-                               _colspan=2,
-                               )
-                            ),
-                         TR(),
-                         ),
+        header = DIV(s3db.org_organisation_logo(record.organisation_id),
+                     date_represent(r.utcnow),
+                     # @ToDo: This is overflowing
+                     H1(T("Narrative Report")),
+                     H2("%s: %s" % (T("Date"), date_represent(date))),
+                     )
+
+        narrative = TABLE(TR(TD(T("Project Name")),
+                             TD(record.name),
+                             ),
+                          TR(TD(T("Program")),
+                             TD(program),
+                             ),
+                          TR(TD(T("Description")),
+                             TD(record.description),
+                             ),
+                          TR(TD(T("Status")),
+                             TD(status),
+                             ),
+                          TR(TD(T("Budget")),
+                             TD(budget),
+                             ),
+                          TR(TD(T("Start Date")),
+                             TD(date_represent(record.start_date)),
+                             ),
+                          TR(TD(T("End Date")),
+                             TD(date_represent(record.end_date)),
+                             ),
+                          TR(TD(T("Hazards")),
+                             TD(hazards),
+                             ),
+                          TR(TD(T("Sectors")),
+                             TD(sectors),
+                             ),
+                          TR(TD(T("Themes")),
+                             TD(themes),
+                             ),
+                          TR(TD(T("Contact Person")),
+                             TD(table.human_resource_id.represent(record.human_resource_id)),
+                             ),
+                          )
+
+        status_table = TABLE(TR(TD(T("Current Planned Status"),
+                                   ),
+                                TD(
+                                   ),
+                                ),
+                             TR(TD(T("Overall Planned Status"),
+                                   ),
+                                TD(
+                                   ),
+                                ),
+                             TR(TD(T("Current Status"),
+                                   ),
+                                TD(
+                                   ),
+                                ),
+                             TR(TD(T("Overall Status"),
+                                   ),
+                                TD(
+                                   ),
+                                ),
+                             )
+
+        #for goal in goals:
+
+        body = DIV(narrative,
+                   H1(T("Current Status of Project")),
+                   status_table,
                    )
+
         footer = DIV("%s: %s" % (report_title, project_title))
 
         doc = EdenDocTemplate(title=report_title)

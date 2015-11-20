@@ -106,6 +106,7 @@
 'Add Deployment': 'اضافه کړی پراخوالی',
 'Add Education Detail': 'اضافه کړی علمی معلومات',
 'Add Group Member': 'اضافه کړی د ګروپ کسان',
+'Add Hazard': 'اضافه کړی خطر پروژی ته',
 'Add Hazard to Project': 'اضافه کړی خطر پروژی ته',
 'Add Hours': 'اضافه کړی ساعتونه',
 'Add Identity': 'اضافه کړی پیژنګلنه',
