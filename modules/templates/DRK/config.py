@@ -213,6 +213,7 @@ def config(settings):
                                 "date_of_birth",
                                 "gender",
                                 "person_details.nationality",
+                                "person_details.marital_status",
                                 "dvr_case.comments",
                                 )
                     resource.configure(crud_form = crud_form,
@@ -239,6 +240,14 @@ def config(settings):
                                    )
             return result
         s3.prep = custom_prep
+
+        # Custom rheader tabs
+        attr = dict(attr)
+        tabs = [(T("Basic Details"), ""),
+                (T("Activities"), "case_activity"),
+                (T("Identity"), "identity"),
+                ]
+        attr["rheader"] = lambda r: s3db.dvr_rheader(r, tabs=tabs)
 
         return attr
 

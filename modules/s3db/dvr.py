@@ -1193,6 +1193,7 @@ def dvr_rheader(r, tabs=[]):
                         (T("Beneficiaries"), "beneficiary_data"),
                         (T("Housing"), "housing"),
                         (T("Service Contacts"), "case_service_contact"),
+                        (T("Identity"), "identity"),
                         ]
 
             case = r.resource.select(["dvr_case.reference",
