@@ -4,15 +4,14 @@
   {{try:}}{{=s3db.ocr_buttons(r)}}{{except:}}{{pass}}
  </div>
 </div>
+{{try:}}{{rheader=rheader}}
 <div class='row'>
  <div id='rheader' class='small-12 columns'>
-  {{try:}}{{=XML(rheader)}}
+  {{=XML(rheader)}}
  </div>
 </div>
 <div id='component' class='row'>
 {{except:}}
- </div>
-</div>
 <div class='row'>
 {{pass}}
  <div class='small-12 columns'>

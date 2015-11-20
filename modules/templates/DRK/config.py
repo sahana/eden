@@ -34,7 +34,7 @@ def config(settings):
 
     # Authentication settings
     # Should users be allowed to register themselves?
-    #settings.security.self_registration = False
+    settings.security.self_registration = False
     # Do new users need to verify their email address?
     #settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
@@ -59,34 +59,34 @@ def config(settings):
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
-    #settings.L10n.languages = OrderedDict([
-    #    ("ar", "العربية"),
-    #    ("bs", "Bosanski"),
-    #    ("en", "English"),
-    #    ("fr", "Français"),
-    #    ("de", "Deutsch"),
-    #    ("el", "ελληνικά"),
-    #    ("es", "Español"),
-    #    ("it", "Italiano"),
-    #    ("ja", "日本語"),
-    #    ("km", "ភាសាខ្មែរ"),
-    #    ("ko", "한국어"),
-    #    ("ne", "नेपाली"),          # Nepali
-    #    ("prs", "دری"), # Dari
-    #    ("ps", "پښتو"), # Pashto
-    #    ("pt", "Português"),
-    #    ("pt-br", "Português (Brasil)"),
-    #    ("ru", "русский"),
-    #    ("tet", "Tetum"),
-    #    ("tl", "Tagalog"),
-    #    ("tr", "Türkçe"),
-    #    ("ur", "اردو"),
-    #    ("vi", "Tiếng Việt"),
-    #    ("zh-cn", "中文 (简体)"),
-    #    ("zh-tw", "中文 (繁體)"),
-    #])
+    settings.L10n.languages = OrderedDict([
+       #("ar", "العربية"),
+       #("bs", "Bosanski"),
+       ("en", "English"),
+       #("fr", "Français"),
+       ("de", "Deutsch"),
+       #("el", "ελληνικά"),
+       #("es", "Español"),
+       #("it", "Italiano"),
+       #("ja", "日本語"),
+       #("km", "ភាសាខ្មែរ"),
+       #("ko", "한국어"),
+       #("ne", "नेपाली"),          # Nepali
+       #("prs", "دری"), # Dari
+       #("ps", "پښتو"), # Pashto
+       #("pt", "Português"),
+       #("pt-br", "Português (Brasil)"),
+       #("ru", "русский"),
+       #("tet", "Tetum"),
+       #("tl", "Tagalog"),
+       #("tr", "Türkçe"),
+       #("ur", "اردو"),
+       #("vi", "Tiếng Việt"),
+       #("zh-cn", "中文 (简体)"),
+       #("zh-tw", "中文 (繁體)"),
+    ])
     # Default language for Language Toolbar (& GIS Locations in future)
-    #settings.L10n.default_language = "en"
+    settings.L10n.default_language = "de"
     # Uncomment to Hide the language toolbar
     #settings.L10n.display_toolbar = False
     # Default timezone for users
@@ -121,7 +121,7 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
     #
-    #settings.security.policy = 7 # Organisation-ACLs
+    settings.security.policy = 7 # Organisation-ACLs
 
     # -------------------------------------------------------------------------
     # Project Module Settings
