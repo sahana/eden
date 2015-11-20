@@ -53,6 +53,9 @@ form {
         .label-row td:empty {
             padding: 0;
         }
+        .inline-form select {
+            max-width: 18rem;
+        }
     }
     .inline-open-add {
         display: inline-block;
