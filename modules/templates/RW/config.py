@@ -148,6 +148,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Human Resources
     settings.hrm.skill_types = True
+    settings.hrm.org_required = False
 
     # -------------------------------------------------------------------------
     # Project Module
@@ -216,6 +217,23 @@ def config(settings):
         return attr
 
     settings.customise_cms_post_controller = customise_cms_post_controller
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_human_resource_resource(r, tablename):
+
+        s3db = current.s3db
+        # Load Model
+        s3db.hrm_human_resource
+        # Retrieve CRUD fields
+        crud_fields = current.response.s3.hrm.crud_fields
+        crud_fields.append("comments")
+        from s3 import S3SQLCustomForm
+        crud_form = S3SQLCustomForm(*crud_fields)
+        s3db.configure("hrm_human_resource",
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
     # -------------------------------------------------------------------------
     def customise_project_location_resource(r, tablename):

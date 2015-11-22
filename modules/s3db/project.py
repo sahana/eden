@@ -5456,6 +5456,7 @@ class project_SummaryReport(S3Method):
         date, goals = self._extract(r, **attr)
 
         record = r.record
+        organisation_id = record.organisation_id
         project_id = r.id
         project_title = s3db.project_project_represent(None, record)
 
@@ -5522,10 +5523,29 @@ class project_SummaryReport(S3Method):
         else:
             themes = NONE
 
+        otable = s3db.project_organisation
+        query = (otable.project_id == project_id) & \
+                (otable.organisation_id != organisation_id)
+        partners = db(query).select(otable.organisation_id)
+        if partners:
+            org_represent = s3db.org_OrganisationRepresent() # show_link=False
+            partners = org_represent.bulk([row.organisation_id for row in partners])
+            del partners[None]
+            partners = partners.values()
+
+        gtable = s3db.project_location
+        query = (gtable.project_id == project_id)
+        locations = db(query).select(gtable.location_id)
+        if locations:
+            location_represent = s3db.gis_LocationRepresent() # show_link=False
+            locations = location_represent.bulk([row.location_id for row in locations])
+            del locations[None]
+            locations = locations.values()
+
         report_title = s3_unicode(T("Project Summary Report")).encode("utf8")
         filename = "%s_%s.pdf" % (report_title, project_title)
 
-        header = DIV(s3db.org_organisation_logo(record.organisation_id),
+        header = DIV(s3db.org_organisation_logo(organisation_id),
                      date_represent(r.utcnow),
                      # @ToDo: This is overflowing
                      H1(T("Narrative Report")),
@@ -5565,7 +5585,26 @@ class project_SummaryReport(S3Method):
                           TR(TD(T("Contact Person")),
                              TD(table.human_resource_id.represent(record.human_resource_id)),
                              ),
+                          TR(TD(T("Partner Organizations"),
+                                _colspan=2,
+                                ),
+                             ),
                           )
+        nappend = narrative.append
+
+        for p in partners:
+            nappend(TR(TD(),
+                       TD(p),
+                       ))
+
+        nappend(TR(TD(T("Locations"),
+                      _colspan=2,
+                      ),
+                   ))
+        for l in locations:
+            nappend(TR(TD(),
+                       TD(l),
+                       ))
 
         status_table = TABLE(TR(TD(T("Current Planned Status"),
                                    ),

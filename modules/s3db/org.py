@@ -5226,7 +5226,6 @@ class org_OrganisationRepresent(S3Represent):
             @param values: the organisation IDs
         """
 
-        db = current.db
         s3db = current.s3db
         otable = s3db.org_organisation
 
@@ -5238,8 +5237,7 @@ class org_OrganisationRepresent(S3Represent):
         show_parent = self.parent
         if show_parent:
             btable = s3db.org_organisation_branch
-            ptable = db.org_organisation \
-                       .with_alias("org_parent_organisation")
+            ptable = otable.with_alias("org_parent_organisation")
 
             fields.append(ptable.name)
 
@@ -5260,8 +5258,7 @@ class org_OrganisationRepresent(S3Represent):
             fields.extend([ltable.name_l10n, ltable.acronym_l10n])
 
             if show_parent:
-                lptable = db.org_organisation_name \
-                            .with_alias("org_parent_organisation_name")
+                lptable = ltable.with_alias("org_parent_organisation_name")
                 fields.append(lptable.name_l10n)
 
                 left.append(lptable.on(lptable.organisation_id == btable.organisation_id))
@@ -5272,7 +5269,7 @@ class org_OrganisationRepresent(S3Represent):
         else:
             query = (otable.id.belongs(values))
 
-        rows = db(query).select(left=left, limitby=(0, count), *fields)
+        rows = current.db(query).select(left=left, limitby=(0, count), *fields)
         self.queries += 1
 
         return rows
