@@ -320,7 +320,11 @@ def config(settings):
 
         # "Obsolete" labeled as "inactive"
         field = table.obsolete
-        field.label = T("inactive")
+        field.label = T("Inactive")
+
+        # Show Last Updated field in list view
+        list_fields = s3db.get_config(tablename, "list_fields")
+        list_fields.append((T("Last Updated"), "modified_on"))
 
     settings.customise_org_facility_resource = customise_org_facility_resource
 
@@ -339,7 +343,7 @@ def config(settings):
         s3db = current.s3db
 
         # Filtered component to access phone number and email
-        s3db.add_components("org_organisation",
+        s3db.add_components(tablename,
                             org_facility = {"name": "main_facility",
                                             "joinby": "organisation_id",
                                             "filterby": "main_facility",
@@ -433,9 +437,10 @@ def config(settings):
                        (T("Email"), "main_facility.email"),
                        (T("Facebook"), "main_facility.facebook"),
                        "website",
+                       (T("Last Updated"), "modified_on"),
                        ]
 
-        s3db.configure("org_organisation",
+        s3db.configure(tablename,
                        crud_form = crud_form,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
