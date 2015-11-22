@@ -3846,9 +3846,8 @@ class S3FacilityModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_FAC = T("Create Facility")
         crud_strings[tablename] = Storage(
-            label_create = ADD_FAC,
+            label_create = T("Create Facility"),
             title_display = T("Facility Details"),
             title_list = T("Facilities"),
             title_update = T("Edit Facility"),
@@ -4132,14 +4131,16 @@ class S3FacilityModel(S3Model):
         data = item.data
         name = data.get("name")
         org = data.get("organisation_id")
-        address = data.get("address")
+        #address = data.get("address")
 
         table = item.table
         query = (table.name.lower() == name.lower())
         if org:
-            query = query & (table.organisation_id == org)
-        if address:
-            query = query & (table.address == address)
+            # Either same Org or no Org defined yet
+            query = query & ((table.organisation_id == org) | \
+                             (table.organisation_id == None))
+        #if address:
+        #    query = query & (table.address == address)
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
         if duplicate:
