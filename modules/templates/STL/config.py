@@ -312,12 +312,12 @@ def config(settings):
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent
                     crud_form = S3SQLCustomForm(
                                 "dvr_case.reference",
-                                "dvr_case.case_type_id",
-                                "dvr_case.beneficiary",
+                                "dvr_case.date",
                                 "dvr_case.organisation_id",
                                 "dvr_case.site_id",
-                                "dvr_case.date",
                                 "dvr_case.priority",
+                                "dvr_case.case_type_id",
+                                "dvr_case.beneficiary",                                
                                 "dvr_case.status_id",
                                 "first_name",
                                 "middle_name",
@@ -365,6 +365,13 @@ def config(settings):
                                                   ],
                                         label = T("Emergency Contact"),
                                         multiple = False,
+                                        ),
+                                S3SQLInlineComponent(
+                                        "identity",
+                                        fields = ["type",
+                                                  "description",
+                                                  "value",
+                                                  ],
                                         ),
                                 S3SQLInlineComponent(
                                         "address",
