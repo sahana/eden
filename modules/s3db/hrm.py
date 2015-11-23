@@ -835,6 +835,7 @@ class S3HRModel(S3Model):
             hrm_url = None
 
         # Custom Form
+        s3.hrm = Storage(crud_fields = crud_fields) # Store fields for easy ability to modify later
         crud_form = S3SQLCustomForm(*crud_fields)
 
         if settings.get_hrm_org_required():

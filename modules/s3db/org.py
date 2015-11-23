@@ -3846,9 +3846,8 @@ class S3FacilityModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_FAC = T("Create Facility")
         crud_strings[tablename] = Storage(
-            label_create = ADD_FAC,
+            label_create = T("Create Facility"),
             title_display = T("Facility Details"),
             title_list = T("Facilities"),
             title_update = T("Edit Facility"),
@@ -4132,14 +4131,16 @@ class S3FacilityModel(S3Model):
         data = item.data
         name = data.get("name")
         org = data.get("organisation_id")
-        address = data.get("address")
+        #address = data.get("address")
 
         table = item.table
         query = (table.name.lower() == name.lower())
         if org:
-            query = query & (table.organisation_id == org)
-        if address:
-            query = query & (table.address == address)
+            # Either same Org or no Org defined yet
+            query = query & ((table.organisation_id == org) | \
+                             (table.organisation_id == None))
+        #if address:
+        #    query = query & (table.address == address)
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
         if duplicate:
@@ -5226,7 +5227,6 @@ class org_OrganisationRepresent(S3Represent):
             @param values: the organisation IDs
         """
 
-        db = current.db
         s3db = current.s3db
         otable = s3db.org_organisation
 
@@ -5238,8 +5238,7 @@ class org_OrganisationRepresent(S3Represent):
         show_parent = self.parent
         if show_parent:
             btable = s3db.org_organisation_branch
-            ptable = db.org_organisation \
-                       .with_alias("org_parent_organisation")
+            ptable = otable.with_alias("org_parent_organisation")
 
             fields.append(ptable.name)
 
@@ -5260,8 +5259,7 @@ class org_OrganisationRepresent(S3Represent):
             fields.extend([ltable.name_l10n, ltable.acronym_l10n])
 
             if show_parent:
-                lptable = db.org_organisation_name \
-                            .with_alias("org_parent_organisation_name")
+                lptable = ltable.with_alias("org_parent_organisation_name")
                 fields.append(lptable.name_l10n)
 
                 left.append(lptable.on(lptable.organisation_id == btable.organisation_id))
@@ -5272,7 +5270,7 @@ class org_OrganisationRepresent(S3Represent):
         else:
             query = (otable.id.belongs(values))
 
-        rows = db(query).select(left=left, limitby=(0, count), *fields)
+        rows = current.db(query).select(left=left, limitby=(0, count), *fields)
         self.queries += 1
 
         return rows

@@ -148,6 +148,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Human Resources
     settings.hrm.skill_types = True
+    settings.hrm.org_required = False
 
     # -------------------------------------------------------------------------
     # Project Module
@@ -216,6 +217,23 @@ def config(settings):
         return attr
 
     settings.customise_cms_post_controller = customise_cms_post_controller
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_human_resource_resource(r, tablename):
+
+        s3db = current.s3db
+        # Load Model
+        s3db.hrm_human_resource
+        # Retrieve CRUD fields
+        crud_fields = current.response.s3.hrm.crud_fields
+        crud_fields.append("comments")
+        from s3 import S3SQLCustomForm
+        crud_form = S3SQLCustomForm(*crud_fields)
+        s3db.configure("hrm_human_resource",
+                       crud_form = crud_form,
+                       )
+
+    settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
 
     # -------------------------------------------------------------------------
     def customise_project_location_resource(r, tablename):
@@ -302,7 +320,11 @@ def config(settings):
 
         # "Obsolete" labeled as "inactive"
         field = table.obsolete
-        field.label = T("inactive")
+        field.label = T("Inactive")
+
+        # Show Last Updated field in list view
+        list_fields = s3db.get_config(tablename, "list_fields")
+        list_fields.append((T("Last Updated"), "modified_on"))
 
     settings.customise_org_facility_resource = customise_org_facility_resource
 
@@ -321,7 +343,7 @@ def config(settings):
         s3db = current.s3db
 
         # Filtered component to access phone number and email
-        s3db.add_components("org_organisation",
+        s3db.add_components(tablename,
                             org_facility = {"name": "main_facility",
                                             "joinby": "organisation_id",
                                             "filterby": "main_facility",
@@ -415,9 +437,10 @@ def config(settings):
                        (T("Email"), "main_facility.email"),
                        (T("Facebook"), "main_facility.facebook"),
                        "website",
+                       (T("Last Updated"), "modified_on"),
                        ]
 
-        s3db.configure("org_organisation",
+        s3db.configure(tablename,
                        crud_form = crud_form,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
