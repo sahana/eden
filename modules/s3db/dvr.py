@@ -31,7 +31,7 @@ __all__ = ("DVRCaseModel",
            "DVRNeedsModel",
            "DVRCaseActivityModel",
            "DVRCaseBeneficiaryModel",
-           "DVRHousingInformationModel",
+           "DVRCaseEconomyInformationModel",
            "dvr_case_default_status",
            "dvr_case_status_filter_opts",
            "dvr_rheader",
@@ -325,7 +325,7 @@ class DVRCaseModel(S3Model):
                             dvr_beneficiary_data = "case_id",
                             dvr_case_activity = "case_id",
                             dvr_case_service_contact = "case_id",
-                            dvr_housing = {"joinby": "case_id",
+                            dvr_economy = {"joinby": "case_id",
                                            "multiple": False,
                                            },
                             dvr_need =  {"link": "dvr_case_need",
@@ -1063,10 +1063,10 @@ class DVRCaseBeneficiaryModel(S3Model):
 
 
 # =============================================================================
-class DVRHousingInformationModel(S3Model):
-    """ Model for Housing Information """
+class DVRCaseEconomyInformationModel(S3Model):
+    """ Model for Household Economy Information """
 
-    names = ("dvr_housing",
+    names = ("dvr_economy",
              "dvr_housing_type",
              )
 
@@ -1112,9 +1112,9 @@ class DVRHousingInformationModel(S3Model):
                                              )
 
         # ---------------------------------------------------------------------
-        # Housing Information
+        # Household Economy Information
         #
-        tablename = "dvr_housing"
+        tablename = "dvr_economy"
         define_table(tablename,
                      # Beneficiary (component link):
                      # @todo: populate from case and hide in case perspective
@@ -1260,7 +1260,7 @@ def dvr_rheader(r, tabs=[]):
                 tabs = [(T("Basic Details"), ""),
                         (T("Activities"), "case_activity"),
                         (T("Beneficiaries"), "beneficiary_data"),
-                        (T("Housing"), "housing"),
+                        (T("Economy"), "economy"),
                         (T("Service Contacts"), "case_service_contact"),
                         (T("Identity"), "identity"),
                         ]

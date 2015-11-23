@@ -1028,7 +1028,7 @@ class S3PersonModel(S3Model):
                        dvr_case_activity = "person_id",
                        dvr_case_language = "person_id",
                        dvr_case_service_contact = "person_id",
-                       dvr_housing = {"joinby": "person_id",
+                       dvr_economy = {"joinby": "person_id",
                                       "multiple": False,
                                       },
                        # Evacuee Registry
