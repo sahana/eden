@@ -265,6 +265,7 @@ def config(settings):
                                "last_name",
                                "date_of_birth",
                                "gender",
+                               "person_details.nationality",
                                "dvr_case.date",
                                "dvr_case.valid_until",
                                "dvr_case.status_id",

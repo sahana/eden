@@ -142,6 +142,8 @@ def person():
                                     options = s3db.dvr_case_status_filter_opts,
                                     sort = False,
                                     ),
+                    S3OptionsFilter("person_details.nationality",
+                                    ),
                     ]
 
                 resource.configure(crud_form = crud_form,
