@@ -5,6 +5,7 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3import.py
 #
+import datetime
 import unittest
 
 from gluon import *
@@ -576,6 +577,61 @@ class DuplicateDetectionTests(unittest.TestCase):
             deduplicate = S3Duplicate(secondary=17)
 
 # =============================================================================
+class MtimeImportTests(unittest.TestCase):
+
+    def setUp(self):
+
+        current.auth.override = True
+
+    def tearDown(self):
+
+        current.auth.override = False
+        current.db.rollback()
+
+    # -------------------------------------------------------------------------
+    def testMtimeImport(self):
+        """
+            Verify that create-postprocess does not overwrite
+            imported modified_on
+        """
+
+        s3db = current.s3db
+
+        assertEqual = self.assertEqual
+
+        # Fixed modified_on date in the past
+        mtime = datetime.datetime(1988, 8, 13, 10, 0, 0)
+
+        xmlstr = """
+<s3xml>
+    <resource name="org_facility" modified_on="%(mtime)s" uuid="MTFAC">
+        <data field="name">MtimeTestOffice</data>
+        <reference field="organisation_id">
+            <resource name="org_organisation" modified_on="%(mtime)s" uuid="MTORG">
+                <data field="name">MtimeTestOrg</data>
+            </resource>
+        </reference>
+    </resource>
+</s3xml>""" % {"mtime": mtime.isoformat()}
+
+        from lxml import etree
+        tree = etree.ElementTree(etree.fromstring(xmlstr))
+
+        # Import the data
+        resource = s3db.resource("org_facility")
+        result = resource.import_xml(tree)
+
+        # Verify outer resource
+        resource = s3db.resource("org_facility", uid="MTFAC")
+        row = resource.select(["id", "modified_on"], as_rows=True)[0]
+        assertEqual(row.modified_on, mtime)
+
+        # Verify inner resource
+        resource = s3db.resource("org_organisation", uid="MTORG")
+        row = resource.select(["id", "modified_on"], as_rows=True)[0]
+        assertEqual(row.modified_on, mtime)
+
+# =============================================================================
 def run_suite(*test_classes):
     """ Run the test suite """
 
@@ -597,6 +653,7 @@ if __name__ == "__main__":
         PostParseTests,
         FailedReferenceTests,
         DuplicateDetectionTests,
+        MtimeImportTests,
     )
 
 # END ========================================================================
