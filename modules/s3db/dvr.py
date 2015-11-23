@@ -1149,16 +1149,16 @@ class DVRCaseEconomyInformationModel(S3Model):
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Housing Information"),
-            title_display = T("Housing Information"),
-            title_list = T("Housing Information"),
-            title_update = T("Edit Housing Information"),
-            label_list_button = T("List Housing Information"),
-            label_delete_button = T("Delete Housing Information"),
-            msg_record_created = T("Housing Information added"),
-            msg_record_modified = T("Housing Information updated"),
-            msg_record_deleted = T("Housing Information deleted"),
-            msg_list_empty = T("No Housing Information currently registered"),
+            label_create = T("Create Economy Information"),
+            title_display = T("Economy Information"),
+            title_list = T("Economy Information"),
+            title_update = T("Edit Economy Information"),
+            label_list_button = T("List Economy Information"),
+            label_delete_button = T("Delete Economy Information"),
+            msg_record_created = T("Economy Information added"),
+            msg_record_modified = T("Economy Information updated"),
+            msg_record_deleted = T("Economy Information deleted"),
+            msg_list_empty = T("No Economy Information currently registered"),
             )
 
         list_fields = ["housing_type_id",
