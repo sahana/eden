@@ -5580,8 +5580,6 @@ class project_SummaryReport(S3Method):
         header = DIV(s3db.org_organisation_logo(organisation_id),
                      date_represent(r.utcnow),
                      # @ToDo: This is overflowing
-                     H1(T("Narrative Report")),
-                     H2("%s: %s" % (T("Date"), date_represent(date))),
                      )
 
         narrative = TABLE(TR(TD(T("Project Name")),
@@ -5762,7 +5760,9 @@ class project_SummaryReport(S3Method):
                                  )
                         sappend(row)
 
-        body = DIV(narrative,
+        body = DIV(H1(T("Narrative Report")),
+                   H3("%s: %s" % (T("Date"), date_represent(date))),
+                   narrative,
                    H1(T("Current Status of Project")),
                    status_table,
                    )
@@ -6153,19 +6153,19 @@ class project_IndicatorSummaryReport(S3Method):
                    TD(project_status_represent(record.overall_status_by_indicators)),
                    ))
 
-        iappend(TR(SPAN(DIV(_title = T("Export as XLS"),
-                            _class = "custom-export export_xls",
-                            data = {"url": r.url(method = "indicator_summary_report",
-                                                 representation = "xls",
-                                                 #vars = r.get_vars,
-                                                 ),
-                                    },
-                            ),
-                        _class="list_formats",
-                        ),
-                   _class="tar",
-                   _colspan=colspan + 5,
-                   ))
+        #iappend(TR(SPAN(DIV(_title = T("Export as XLS"),
+        #                    _class = "custom-export export_xls",
+        #                    data = {"url": r.url(method = "indicator_summary_report",
+        #                                         representation = "xls",
+        #                                         #vars = r.get_vars,
+        #                                         ),
+        #                            },
+        #                    ),
+        #                _class="list_formats",
+        #                ),
+        #           _class="tar",
+        #           _colspan=colspan + 5,
+        #           ))
 
         output = dict(item=item)
         output["title"] = T("Summary of Progress Indicators for Outcomes and Indicators")
@@ -9733,8 +9733,18 @@ def project_rheader(r):
         rheader = S3ResourceHeader(rheader_fields, tabs)(r)
 
         if indicators:
-            rfooter = DIV(A(T("Summary of Progress by Indicator"),
+            rfooter = DIV(A(ICON("print"),
+                            T("Project Summary Report"),
+                            _href=URL(args=[r.id, "summary_report"], extension="pdf"),
+                            _class="action-btn",
+                            ),
+                          A(T("Summary of Progress by Indicator"),
                             _href=URL(args=[r.id, "indicator_summary_report"]),
+                            _class="action-btn",
+                            ),
+                          A(ICON("table"),
+                            T("Summary of Progress by Indicator"),
+                            _href=URL(args=[r.id, "indicator_summary_report"], extension="xls"),
                             _class="action-btn",
                             ),
                           A(T("Total Project Progress"),
