@@ -187,7 +187,8 @@ class S3PersonEntity(S3Model):
         super_entity(tablename, "pe_id", pe_types,
                      #super_link("source_id", "doc_source_entity"),
                      Field("type"),
-                     Field("pe_label", length=128))
+                     Field("pe_label", length=128),
+                     )
 
         # Resource configuration
         configure(tablename,
@@ -275,7 +276,8 @@ class S3PersonEntity(S3Model):
         pr_pe_label = S3ReusableField("pe_label", length=128,
                                       label = T("ID Tag Number"),
                                       requires = IS_EMPTY_OR(IS_NOT_ONE_OF(db,
-                                                             "pr_pentity.pe_label")))
+                                                             "pr_pentity.pe_label")),
+                                      )
 
         # Custom Method for S3AutocompleteWidget
         self.set_method("pr", "pentity",

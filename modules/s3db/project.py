@@ -5437,7 +5437,9 @@ class project_SummaryReport(S3Method):
             #if actual:
             #    indicator["current_actual"] = actual # We just want to store the last per Indicator
             #    indicator["overall_actual"] += actual
-            indicator["comments"] = row.comments # We just want to store the last per Indicator
+            comments = row.comments
+            if comments:
+                indicator["comments"] = comments # We just want to store the last per Indicator
 
         # Sort
         goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))

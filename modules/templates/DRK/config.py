@@ -60,30 +60,8 @@ def config(settings):
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
     settings.L10n.languages = OrderedDict([
-       #("ar", "العربية"),
-       #("bs", "Bosanski"),
        ("en", "English"),
-       #("fr", "Français"),
        ("de", "Deutsch"),
-       #("el", "ελληνικά"),
-       #("es", "Español"),
-       #("it", "Italiano"),
-       #("ja", "日本語"),
-       #("km", "ភាសាខ្មែរ"),
-       #("ko", "한국어"),
-       #("ne", "नेपाली"),          # Nepali
-       #("prs", "دری"), # Dari
-       #("ps", "پښتو"), # Pashto
-       #("pt", "Português"),
-       #("pt-br", "Português (Brasil)"),
-       #("ru", "русский"),
-       #("tet", "Tetum"),
-       #("tl", "Tagalog"),
-       #("tr", "Türkçe"),
-       #("ur", "اردو"),
-       #("vi", "Tiếng Việt"),
-       #("zh-cn", "中文 (简体)"),
-       #("zh-tw", "中文 (繁體)"),
     ])
     # Default language for Language Toolbar (& GIS Locations in future)
     settings.L10n.default_language = "de"
@@ -103,12 +81,12 @@ def config(settings):
     # Uncomment this to Translate Organisation Names/Acronyms
     #settings.L10n.translate_org_organisation = True
     # Finance settings
-    #settings.fin.currencies = {
-    #    "EUR" : "Euros",
+    settings.fin.currencies = {
+        "EUR" : "Euros",
     #    "GBP" : "Great British Pounds",
     #    "USD" : "United States Dollars",
-    #}
-    #settings.fin.currency_default = "USD"
+    }
+    settings.fin.currency_default = "EUR"
 
     # Security Policy
     # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -156,6 +134,11 @@ def config(settings):
     settings.req.req_type = ("Stock",)
     settings.req.use_commit = False
     settings.req.recurring = False
+
+    # -------------------------------------------------------------------------
+    # Shelter Module Settings
+    #
+    settings.cr.shelter_population_dynamic = True
 
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
@@ -434,12 +417,12 @@ def config(settings):
            restricted = True,
            module_type = 2
         )),
-        #("cr", Storage(
-        #    name_nice = T("Shelters"),
-        #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
-        #    restricted = True,
-        #    module_type = 10
-        #)),
+        ("cr", Storage(
+            name_nice = T("Shelters"),
+            #description = "Tracks the location, capacity and breakdown of victims in Shelters",
+            restricted = True,
+            module_type = 10
+        )),
         #("hms", Storage(
         #    name_nice = T("Hospitals"),
         #    #description = "Helps to monitor status of hospitals",

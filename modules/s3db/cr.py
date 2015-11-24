@@ -580,6 +580,10 @@ class S3ShelterModel(S3Model):
                    action = self.hrm_AssignMethod(component="human_resource_site"))
 
         set_method("cr", "shelter",
+                   method="check-in",
+                   action = self.org_SiteCheckInMethod())
+
+        set_method("cr", "shelter",
                    method = "dispatch",
                    action = cr_notification_dispatcher)
 

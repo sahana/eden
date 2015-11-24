@@ -67,6 +67,7 @@ __all__ = ("S3OrganisationModel",
            "org_update_affiliations",
            "org_OrganisationRepresent",
            "org_SiteRepresent",
+           "org_SiteCheckInMethod",
            #"org_AssignMethod",
            #"org_CapacityReport",
            "org_logo_represent",
@@ -5569,6 +5570,136 @@ class org_SiteRepresent(S3Represent):
                     name = "%s (%s)" % (name, instance_type)
 
         return s3_unicode(name)
+
+# =============================================================================
+class org_SiteCheckInMethod(S3Method):
+    """
+        Custom Method to allow a trackable resource to check-in/out to a Site
+        e.g. using a Barcode scanner (for the person's pe_label)
+    """
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def apply_method(r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        if r.representation == "html":
+
+            T = current.T
+            s3db = current.s3db
+            response = current.response
+
+            title = T("Check-In")
+
+            # Give the user a form to check-in/out
+
+            # Test the formstyle
+            formstyle = current.deployment_settings.get_ui_formstyle()
+            row = formstyle("test", "test", "test", "test")
+            if isinstance(row, tuple):
+                # Formstyle with separate row for label (e.g. default Eden formstyle)
+                tuple_rows = True
+            else:
+                # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
+                tuple_rows = False
+
+            form_rows = []
+            comment = ""
+
+            # @ToDo: Hide this & populate from barcode scanner
+            # (or show to allow manual entering of code?)
+            _id = "pe_label"
+            label = LABEL("%s:" % T("Code"))
+            widget = INPUT(_name=_id)
+            row = formstyle("%s__row" % _id, label, widget, comment)
+            if tuple_rows:
+                form_rows.append(row[0])
+                form_rows.append(row[1])
+            else:
+                form_rows.append(row)
+
+            _id = "check-in"
+            label = ""
+            widget = INPUT(_type="submit",
+                           _class="btn crud-submit-button",
+                           _name=_id,
+                           _value=T("Check-In"))
+            row = formstyle("%s__row" % _id, label, widget, comment)
+            if tuple_rows:
+                form_rows.append(row[0])
+                form_rows.append(row[1])
+            else:
+                form_rows.append(row)
+
+            _id = "check-out"
+            widget = INPUT(_type="submit",
+                           _class="btn crud-submit-button",
+                           _name=_id,
+                           _value=T("Check-Out"))
+            row = formstyle("%s__row" % _id, label, widget, comment)
+            if tuple_rows:
+                form_rows.append(row[0])
+                form_rows.append(row[1])
+            else:
+                form_rows.append(row)
+
+            if tuple_rows:
+                # Assume TRs
+                form = FORM(TABLE(*form_rows))
+            else:
+                form = FORM(*form_rows)
+
+            if form.accepts(current.request.vars, current.session):
+                db = current.db
+                pe_label = form.vars.pe_label
+                ptable = current.s3db.pr_person
+                person = db(ptable.pe_label == pe_label).select(ptable.id,
+                                                                ptable.location_id,
+                                                                limitby=(0, 1),
+                                                                ).first()
+                if not person:
+                    response.error = T("Person not found!")
+                else:
+                    from ..s3.s3track import S3Trackable
+                    tracker = S3Trackable(ptable, record_id=person.id)
+                    if "check-in" in r.post_vars:
+                        # We're not Checking-in in S3Track terms (that's about interlocking with another object)
+                        #tracker.check_in()
+                        #timestmp = form.vars.get("timestmp", None)
+                        #if timestmp:
+                        #    # @ToDo: Convert from string
+                        #    pass
+                        #tracker.set_location(location_id, timestmp=timestmp)
+                        tracker.set_location(r.record.location_id)
+                        # @ToDo: Hook to be able to update cr_shelter_registration
+                        response.confirmation = T("Checked-In successfully!")
+                    elif "check-out" in r.post_vars:
+                        # Check-Out
+                        # We're not Checking-out in S3Track terms (that's about removing an interlock with another object)
+                        # What we're doing is saying that we're now back at our base location
+                        #tracker.check_out()
+                        #timestmp = form_vars.get("timestmp", None)
+                        #if timestmp:
+                        #    # @ToDo: Convert from string
+                        #    pass
+                        #tracker.set_location(r.record.location_id, timestmp=timestmp)
+                        tracker.set_location(person.location_id)
+                        # @ToDo: Hook to be able to update cr_shelter_registration
+                        response.confirmation = T("Checked-Out successfully!")
+
+            response.view = "check-in.html"
+            output = dict(form = form,
+                          title = title,
+                          )
+            return output
+
+        else:
+            raise HTTP(415, current.ERROR.BAD_FORMAT)
 
 # =============================================================================
 def org_site_has_assets(row, tablename="org_facility"):
