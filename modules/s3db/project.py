@@ -5403,6 +5403,7 @@ class project_SummaryReport(S3Method):
             goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
                 dict(code = row.code,
                      name = row.name,
+                     comments = NONE,
                      current_status = row.current_status,
                      overall_status = row.overall_status,
                      current_target = NONE,
