@@ -37,7 +37,7 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         return [
-            MM("Refugees", c="dvr", f=("person", "case_activity")),
+            MM("Refugees", c=("dvr", "pr")),
             MM("ToDo", c="project", f="task"),
             homepage("req"),
             homepage("inv"),
@@ -134,7 +134,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ DVR / Disaster Victim Registry """
 
         return M(c="dvr")(
-                    M("Cases", f="person")(
+                    M("Cases", c=("dvr", "pr"), f="person")(
                         M("Create", m="create"),
                     ),
                     M("Activities", f="case_activity")(

@@ -1022,7 +1022,9 @@ class S3PersonModel(S3Model):
                        # Disaster Victim Registry
                        dvr_beneficiary_data = "person_id",
                        dvr_case = {"name": "dvr_case",
+                                   "link": "dvr_case_person",
                                    "joinby": "person_id",
+                                   "key": "case_id",
                                    "multiple": False,
                                    },
                        dvr_case_activity = "person_id",
@@ -5094,6 +5096,8 @@ class pr_PersonRepresent(S3Represent):
                     controller = "hrm"
                 elif c == "vol":
                     controller = "vol"
+                elif c == "dvr":
+                    controller = "dvr"
                 else:
                     controller = "pr"
             linkto = URL(c=controller, f="person", args=["[id]"])

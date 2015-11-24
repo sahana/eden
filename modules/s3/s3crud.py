@@ -2989,17 +2989,19 @@ class S3CRUD(S3Method):
                                       ))
                 else:
                     args = [record_id]
+                    # Don't forward get_vars, except "viewing"
+                    get_vars = Storage()
+                    if "viewing" in r.get_vars:
+                        get_vars.viewing = r.get_vars["viewing"]
                     if update:
                         url = str(URL(r=r, c=c, f=f,
-                                      args=args + ["update"],
-                                      # Don't forward all vars unconditionally
-                                      #vars=r.get_vars
+                                      args = args + ["update"],
+                                      vars = get_vars
                                       ))
                     else:
                         url = str(URL(r=r, c=c, f=f,
-                                      args=args + ["read"],
-                                      # Don't forward all vars unconditionally
-                                      #vars=r.get_vars
+                                      args = args + ["read"],
+                                      vars = get_vars
                                       ))
             if iframe_safe:
                 url = iframe_safe(url)

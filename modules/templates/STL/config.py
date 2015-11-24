@@ -317,7 +317,7 @@ def config(settings):
                                 "dvr_case.site_id",
                                 "dvr_case.priority",
                                 "dvr_case.case_type_id",
-                                "dvr_case.beneficiary",                                
+                                "dvr_case.beneficiary",
                                 "dvr_case.status_id",
                                 "first_name",
                                 "middle_name",
@@ -428,8 +428,9 @@ def config(settings):
 })'''
                         s3.jquery_ready.append(script)
 
-                    # Expose Head of Household fields:
-                    fields = ("head_of_household",
+                    # Expose additional case fields:
+                    fields = ("beneficiary",
+                              "head_of_household",
                               "hoh_name",
                               "hoh_gender",
                               "hoh_relationship"

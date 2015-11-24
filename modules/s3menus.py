@@ -786,18 +786,25 @@ class S3OptionsMenu(object):
         """ DVR Menu """
 
         return M(c="dvr")(
-                    M("Cases", f="case")(
+                    M("Cases", f="person")(
                         M("Create", m="create"),
-                        M("Report", m="report"),
                     ),
+                    #M("Activities", f="case_activity")(
+                    #    M("Emergencies", vars = {"~.emergency": "True"}),
+                    #    M("All Activities"),
+                    #    M("Report", m="report"),
+                    #),
                     M("Case Types", f="case_type")(
-                        M("Create", m="create"),
+                       M("Create", m="create"),
                     ),
                     M("Need Types", f="need")(
-                        M("Create", m="create"),
+                      M("Create", m="create"),
+                    ),
+                    M("Housing Types", f="housing_type")(
+                      M("Create", m="create"),
                     ),
                     M("Beneficiary Types", f="beneficiary_type")(
-                       M("Create", m="create"),
+                      M("Create", m="create"),
                     ),
                 )
 

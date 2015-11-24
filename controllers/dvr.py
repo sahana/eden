@@ -10,8 +10,7 @@ if not settings.has_module(module):
 def index():
     """ Module's Home Page """
 
-    #return s3db.cms_index(module, alt_function="index_alt")
-    return {}
+    return s3db.cms_index(module, alt_function="index_alt")
 
 # -----------------------------------------------------------------------------
 def index_alt():
@@ -19,8 +18,8 @@ def index_alt():
         Module homepage for non-Admin users when no CMS content found
     """
 
-    # Just redirect to the list of Cases
-    s3_redirect_default(URL(f="case"))
+    # Just redirect to the person list
+    s3_redirect_default(URL(f="person"))
 
 # -----------------------------------------------------------------------------
 def person():
@@ -40,17 +39,21 @@ def person():
             if "case_id" in ctable.fields and \
                str(ctable.case_id.type)[:18] == "reference dvr_case":
 
+                # Find the Case ID
+                ltable = s3db.dvr_case_person
+                query = (ltable.person_id == r.id) & \
+                        (ltable.deleted != True)
+                links = db(query).select(ltable.case_id, limitby=(0, 2))
+
                 case_id = ctable.case_id
-
-                dvr_case = s3db.dvr_case
-                query = (dvr_case.person_id == r.id) & \
-                        (dvr_case.deleted != True)
-                cases = db(query).select(dvr_case.id, limitby=(0, 2))
-
-                if len(cases) == 1:
-                    case_id.default = cases.first().id
+                if links:
+                    # Set default
+                    case_id.default = links.first().case_id
+                if len(links) == 1:
+                    # Only one case => hide case selector
                     case_id.readable = case_id.writable = False
                 else:
+                    # Configure case selector
                     case_id.requires = IS_ONE_OF(db(query), "dvr_case.id",
                                                  case_id.represent,
                                                  )
@@ -72,8 +75,10 @@ def person():
                 )
 
             if not r.component:
-
                 # Module-specific CRUD form
+                # NB: this assumes single case per person, must use
+                #     case perspective (dvr/case) for multiple cases
+                #     per person!
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 crud_form = S3SQLCustomForm(
                                 "dvr_case.reference",
@@ -169,7 +174,85 @@ def person():
     return s3_rest_controller("pr", "person", rheader = s3db.dvr_rheader)
 
 # -----------------------------------------------------------------------------
+def case_person():
+    """
+        RESTful CRUD controller for person<=>case links, normally called
+        only from component tab in person perspective (Family Members)
+    """
+
+    def prep(r):
+
+        table = r.table
+        resource = r.resource
+
+        get_vars = r.get_vars
+        if "viewing" in get_vars:
+
+            try:
+                vtablename, record_id = get_vars["viewing"].split(".")
+            except ValueError:
+                return False
+
+            if vtablename == "pr_person":
+                # Get all case_ids with this person_id
+                query = (table.person_id == record_id) & \
+                        (table.deleted != True)
+                rows = db(query).select()
+                case_ids = set(row.case_id for row in rows)
+                # Hide the link for this person (to prevent changes/deletion)
+                if case_ids:
+                    resource.add_filter(FS("person_id") != record_id)
+            else:
+                case_ids = set()
+
+            # Single case ID?
+            case_id = tuple(case_ids)[0] if len(case_ids) == 1 else None
+
+            # Show only links for relevant cases
+            # NB Filter also prevents showing all links if case_ids is empty
+            if not r.id:
+                if len(case_ids) == 1:
+                    r.resource.add_filter(FS("case_id") == case_id)
+                else:
+                    r.resource.add_filter(FS("case_id").belongs(case_ids))
+
+            list_fields = ["person_id",
+                           "person_id$gender",
+                           "person_id$date_of_birth",
+                           ]
+            if len(case_ids) == 1:
+                field = table.case_id
+                field.default = case_id
+                # If we have only one relevant case, then hide the case ID
+                # in create-forms:
+                if not r.id:
+                    field.readable = field.writable = False
+            else:
+                # Show the case ID in list fields if there is more than one
+                # relevant case
+                list_fields.insert(0, "case_id")
+
+            r.resource.configure(list_fields = list_fields)
+
+        # Do not allow update of person_id
+        if r.id:
+            field = table.person_id
+            field.writable = False
+            field.comment = None
+
+        return True
+    s3.prep = prep
+
+    # Disable unwanted fields in person widget (can override in template)
+    settings.pr.request_email = False
+    settings.pr.request_home_phone = False
+    settings.hrm.email_required = False
+
+    return s3_rest_controller(rheader = s3db.dvr_rheader)
+
+# -----------------------------------------------------------------------------
 def case_activity():
+    """ Case Activities: RESTful CRUD Controller """
 
     def prep(r):
 
@@ -212,7 +295,43 @@ def case():
 
     s3db.dvr_case_default_status()
 
-    return s3_rest_controller()
+    def prep(r):
+
+        component_name = r.component_name
+
+        if component_name == "case_person":
+
+            # Disable unwanted fields in person widget
+            # (can override in template)
+            settings.pr.request_email = False
+            settings.pr.request_home_phone = False
+            settings.hrm.email_required = False
+
+        elif component_name == "case_activity":
+
+            # Persons linked to this case
+            ltable = s3db.dvr_case_person
+            query = (ltable.case_id == r.id) & \
+                    (ltable.deleted != True)
+            rows = db(query).select(ltable.person_id)
+            person_ids = set(row.person_id for row in rows)
+
+            ctable = r.component.table
+            field = ctable.person_id
+
+            # Simple drop-down
+            field.readable = field.writable = True
+            field.widget = None
+
+            # Person is required
+            query = s3db.pr_person.id.belongs(person_ids)
+            field.requires = IS_ONE_OF(db(query), "pr_person.id",
+                                       field.represent,
+                                       )
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller(rheader = s3db.dvr_rheader)
 
 # -----------------------------------------------------------------------------
 def need():

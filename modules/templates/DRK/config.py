@@ -160,6 +160,12 @@ def config(settings):
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #
+    dvr_case_tabs = [(T("Basic Details"), ""),
+                     (T("Family Members"), "case_person/"),
+                     (T("Activities"), "case_activity"),
+                     (T("Identity"), "identity"),
+                     ]
+
     def customise_pr_person_controller(**attr):
 
         s3db = current.s3db
@@ -277,15 +283,23 @@ def config(settings):
 
         # Custom rheader tabs
         attr = dict(attr)
-        tabs = [(T("Basic Details"), ""),
-                (T("Activities"), "case_activity"),
-                (T("Identity"), "identity"),
-                ]
-        attr["rheader"] = lambda r: s3db.dvr_rheader(r, tabs=tabs)
+        attr["rheader"] = lambda r: s3db.dvr_rheader(r, tabs=dvr_case_tabs)
 
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_person_controller(**attr):
+
+        s3db = current.s3db
+
+        attr = dict(attr)
+        attr["rheader"] = lambda r: s3db.dvr_rheader(r, tabs=dvr_case_tabs)
+
+        return attr
+
+    settings.customise_dvr_case_person_controller = customise_dvr_case_person_controller
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

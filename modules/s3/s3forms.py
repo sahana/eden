@@ -1174,7 +1174,13 @@ class S3SQLCustomForm(S3SQLForm):
                 if not row:
                     return
                 main_data[pkey] = row[table[pkey]]
-            subdata[component.fkey] = main_data[pkey]
+            if component.link:
+                link = Storage(resource = component.link,
+                               master = main_data,
+                               )
+            else:
+                link = None
+                subdata[component.fkey] = main_data[pkey]
 
             # Do we already have a record for this component?
             # If yes, then get the subrecord ID
@@ -1195,8 +1201,10 @@ class S3SQLCustomForm(S3SQLForm):
             # Accept the subrecord
             self._accept(subid,
                          subdata,
-                         alias=alias,
-                         format=format)
+                         alias = alias,
+                         link = link,
+                         format = format,
+                         )
 
         # Accept components (e.g. Inline-Forms)
         for item in self.components:
