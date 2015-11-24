@@ -3479,6 +3479,7 @@ $.filterOptionsS3({
             # add in JS using S3.timeline.eventSource.addMany(events) where events is a []
 
             db = current.db
+            # @ToDo: Limit the fields returned to just those used
             rows1 = db(db.inv_send.id > 0).select()     # select rows from inv_send
             rows2 = db(db.inv_recv.id > 0).select()     # select rows form inv_recv
 

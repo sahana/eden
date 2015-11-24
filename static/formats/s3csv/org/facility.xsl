@@ -134,6 +134,7 @@
         </xsl:variable>
 
         <resource name="org_facility">
+
             <!-- Link to Location -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">

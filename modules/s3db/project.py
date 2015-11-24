@@ -2065,8 +2065,8 @@ class S3ProjectBeneficiaryModel(S3Model):
                                               ondelete = "CASCADE",
                                               ),
                      beneficiary_id(empty = False,
-                                              ondelete = "CASCADE",
-                                              ),
+                                    ondelete = "CASCADE",
+                                    ),
                      #s3_comments(),
                      *s3_meta_fields())
 
@@ -2100,7 +2100,7 @@ class S3ProjectBeneficiaryModel(S3Model):
     def project_beneficiary_represent(id, row=None):
         """
             FK representation
-            @ToDo: Bulk
+            @ToDo: Bulk inc Translation
         """
 
         if row:
@@ -5326,13 +5326,15 @@ class project_SummaryReport(S3Method):
         rows = db(query).select(table.id,
                                 table.code,
                                 table.name,
+                                table.current_status,
                                 table.overall_status,
                                 )
         for row in rows:
             goals[row.id] = dict(code = row.code,
                                  name = row.name,
                                  outcomes = {},
-                                 status = row.overall_status,
+                                 current_status = row.current_status,
+                                 overall_status = row.overall_status,
                                  )
 
         # Outcomes
@@ -5343,13 +5345,15 @@ class project_SummaryReport(S3Method):
                                 table.goal_id,
                                 table.code,
                                 table.name,
+                                table.current_status,
                                 table.overall_status,
                                 )
         for row in rows:
             goals[row.goal_id]["outcomes"][row.id] = dict(code = row.code,
                                                           name = row.name,
                                                           outputs = {},
-                                                          status = row.overall_status,
+                                                          current_status = row.current_status,
+                                                          overall_status = row.overall_status,
                                                           )
 
         # Outputs
@@ -5361,6 +5365,7 @@ class project_SummaryReport(S3Method):
                                 table.outcome_id,
                                 table.code,
                                 table.name,
+                                table.current_status,
                                 table.overall_status,
                                 )
         for row in rows:
@@ -5368,7 +5373,8 @@ class project_SummaryReport(S3Method):
                 dict(code = row.code,
                      name = row.name,
                      indicators = {},
-                     status = row.overall_status,
+                     current_status = row.current_status,
+                     overall_status = row.overall_status,
                      )
 
         # Indicators
@@ -5382,6 +5388,7 @@ class project_SummaryReport(S3Method):
                                 table.output_id,
                                 table.code,
                                 table.name,
+                                table.current_status,
                                 table.overall_status,
                                 )
         for row in rows:
@@ -5396,9 +5403,12 @@ class project_SummaryReport(S3Method):
             goals[goal_id]["outcomes"][outcome_id]["outputs"][output_id]["indicators"][indicator_id] = \
                 dict(code = row.code,
                      name = row.name,
-                     status = row.overall_status,
-                     target = 0,
-                     actual = 0,
+                     current_status = row.current_status,
+                     overall_status = row.overall_status,
+                     current_target = NONE,
+                     overall_target = 0,
+                     #current_actual = NONE,
+                     #overall_actual = 0,
                      )
 
         # Indicator Data
@@ -5409,20 +5419,24 @@ class project_SummaryReport(S3Method):
         rows = db(query).select(table.indicator_id,
                                 table.end_date,
                                 table.target_value,
-                                table.value,
+                                #table.value,
+                                table.comments,
                                 orderby=table.end_date,
                                 )
         for row in rows:
-            date = row.end_date
+            date = row.end_date # We just want to store the last
             indicator_id = row.indicator_id
             target = row.target_value
-            actual = row.value
+            #actual = row.value
             i = indicators[indicator_id]
             indicator = goals[i["goal"]]["outcomes"][i["outcome"]]["outputs"][i["output"]]["indicators"][indicator_id]
             if target:
-                indicator["target"] += target
-            if actual:
-                indicator["actual"] += actual
+                indicator["current_target"] = target # We just want to store the last per Indicator
+                indicator["overall_target"] += target
+            #if actual:
+            #    indicator["current_actual"] = actual # We just want to store the last per Indicator
+            #    indicator["overall_actual"] += actual
+            indicator["comments"] = row.comments # We just want to store the last per Indicator
 
         # Sort
         goals = OrderedDict(sorted(goals.items(), key=lambda x: x[1]["code"]))
@@ -5542,6 +5556,24 @@ class project_SummaryReport(S3Method):
             del locations[None]
             locations = locations.values()
 
+        btable = s3db.project_beneficiary
+        query = (btable.project_id == project_id)
+        beneficiaries = db(query).select(btable.parameter_id,
+                                         btable.value,
+                                         )
+        if beneficiaries:
+            ben_represent = S3Represent(lookup="stats_parameter",
+                                        translate=True,
+                                        )
+            benef_types = ben_represent.bulk([row.parameter_id for row in beneficiaries])
+            del benef_types[None]
+            benefs = []
+            bappend = benefs.append
+            for row in beneficiaries:
+                # @ToDo: Add Location?
+                bappend("%s %s" % (row.value, benef_types.get(row.parameter_id)))
+            beneficiaries = benefs
+
         report_title = s3_unicode(T("Project Summary Report")).encode("utf8")
         filename = "%s_%s.pdf" % (report_title, project_title)
 
@@ -5606,29 +5638,129 @@ class project_SummaryReport(S3Method):
                        TD(l),
                        ))
 
-        status_table = TABLE(TR(TD(T("Current Planned Status"),
-                                   ),
-                                TD(
-                                   ),
-                                ),
-                             TR(TD(T("Overall Planned Status"),
-                                   ),
-                                TD(
-                                   ),
-                                ),
+        nappend(TR(TD(T("Beneficiaries"),
+                      _colspan=2,
+                      ),
+                   ))
+        for b in beneficiaries:
+            nappend(TR(TD(),
+                       TD(b),
+                       ))
+
+        status_table = TABLE(#TR(TD(T("Current Planned Status"),
+                             #      ),
+                             #   TD(
+                             #      ),
+                             #   ),
+                             #TR(TD(T("Overall Planned Status"),
+                             #      ),
+                             #   TD(
+                             #      ),
+                             #   ),
                              TR(TD(T("Current Status"),
                                    ),
-                                TD(
+                                # @ToDo: Colours?
+                                TD(project_status_represent(record.current_status_by_indicators),
                                    ),
                                 ),
                              TR(TD(T("Overall Status"),
                                    ),
-                                TD(
+                                TD(project_status_represent(record.overall_status_by_indicators),
                                    ),
                                 ),
                              )
+        sappend = status_table.append
 
-        #for goal in goals:
+        for goal_id in goals:
+            goal = goals[goal_id]
+            row = TR(TD("%s: %s" % (T("Goal"), goal["code"]),
+                        ),
+                     TD(goal["name"]),
+                     _class="project_goal",
+                     )
+            sappend(row)
+            row = TR(TD(T("Current Status"),
+                        ),
+                     TD(project_status_represent(goal["current_status"]))
+                     )
+            sappend(row)
+            row = TR(TD(T("Overall Status"),
+                        ),
+                     TD(project_status_represent(goal["overall_status"]))
+                     )
+            sappend(row)
+            outcomes = goal["outcomes"]
+            for outcome_id in outcomes:
+                outcome = outcomes[outcome_id]
+                row = TR(TD("%s: %s" % (T("Outcome"), outcome["code"]),
+                            ),
+                         TD(outcome["name"]),
+                         _class="project_outcome",
+                         )
+                sappend(row)
+                row = TR(TD(T("Current Status"),
+                            ),
+                         TD(project_status_represent(outcome["current_status"]))
+                         )
+                sappend(row)
+                row = TR(TD(T("Overall Status"),
+                            ),
+                         TD(project_status_represent(outcome["overall_status"]))
+                         )
+                sappend(row)
+                outputs = outcome["outputs"]
+                for output_id in outputs:
+                    output = outputs[output_id]
+                    row = TR(TD("%s: %s" % (T("Output"), output["code"]),
+                                ),
+                             TD(output["name"]),
+                             _class="project_output",
+                             )
+                    sappend(row)
+                    row = TR(TD(T("Current Status"),
+                                ),
+                             TD(project_status_represent(output["current_status"]))
+                             )
+                    sappend(row)
+                    row = TR(TD(T("Overall Status"),
+                                ),
+                             TD(project_status_represent(output["overall_status"]))
+                             )
+                    sappend(row)
+                    indicators = output["indicators"]
+                    for i in indicators:
+                        indicator = indicators[i]
+                        row = TR(TD("%s: %s" % (T("Indicator"), indicator["code"]),
+                                    ),
+                                 TD(indicator["name"]),
+                                 _class="project_indicator",
+                                 )
+                        sappend(row)
+                        row = TR(TD(T("Current Target"),
+                                    ),
+                                 TD(indicator["current_target"])
+                                 )
+                        sappend(row)
+                        row = TR(TD(T("Overall Target"),
+                                    ),
+                                 TD(indicator["overall_target"])
+                                 )
+                        sappend(row)
+                        row = TR(TD(T("Current Status"),
+                                    ),
+                                 TD(project_status_represent(indicator["current_status"]))
+                                 )
+                        sappend(row)
+                        row = TR(TD(T("Overall Status"),
+                                    ),
+                                 TD(project_status_represent(indicator["overall_status"]))
+                                 )
+                        sappend(row)
+                        row = TR(TD(T("Justification"),
+                                    ),
+                                 TD(indicator["comments"])
+                                 )
+                        sappend(row)
 
         body = DIV(narrative,
                    H1(T("Current Status of Project")),
@@ -5640,8 +5772,17 @@ class project_SummaryReport(S3Method):
         doc = EdenDocTemplate(title=report_title)
         printable_width = doc.printable_width
         get_html_flowable = S3RL_PDF().get_html_flowable
+        styles = {"tr.project_goal": {"background-color": "#44aaff",
+                                      },
+                  "tr.project_outcome": {"background-color": "#ccc1da",
+                                         },
+                  "tr.project_output": {"background-color": "#c2d69b",
+                                        },
+                  "tr.project_indicator": {"background-color": "#d9d9d9",
+                                           },
+                  }
         header_flowable = get_html_flowable(header, printable_width)
-        body_flowable = get_html_flowable(body, printable_width)
+        body_flowable = get_html_flowable(body, printable_width, styles)
         footer_flowable = get_html_flowable(footer, printable_width)
 
         # Build the PDF
@@ -5859,12 +6000,12 @@ class project_IndicatorSummaryReport(S3Method):
             HTML Representation
         """
 
-        dates, years, goals = self._extract(r, **attr)
-        colspan = (2 * len(dates)) + (2 * len(years)) + 3
-
         T = current.T
         s3db = current.s3db
         NONE = current.messages["NONE"]
+
+        dates, years, goals = self._extract(r, **attr)
+        colspan = (2 * len(dates)) + (2 * len(years)) + 3
 
         header_row = TR(TD(T("Number"),
                            _rowspan=2,
@@ -5903,20 +6044,7 @@ class project_IndicatorSummaryReport(S3Method):
         happend(TD(T("% Achieved"),
                    _rowspan=2,
                    ))
-        item = TABLE(TR(SPAN(DIV(_title = T("Export as XLS"),
-                                 _class = "custom-export export_xls",
-                                 data = {"url": r.url(method = "indicator_summary_report",
-                                                      representation = "xls",
-                                                      #vars = r.get_vars,
-                                                      ),
-                                         },
-                                 ),
-                             _class="list_formats",
-                             ),
-                        _class="tar",
-                        _colspan=colspan + 5,
-                        ),
-                     header_row,
+        item = TABLE(header_row,
                      _class="indicator_summary_report"
                      )
         iappend = item.append
@@ -5942,11 +6070,12 @@ class project_IndicatorSummaryReport(S3Method):
                         _colspan=colspan,
                         ),
                      TD(project_status_represent(goal["status"])),
-                     _class="project_goal")
+                     _class="project_goal",
+                     )
             iappend(row)
             outcomes = goal["outcomes"]
-            for output_id in outcomes:
-                outcome = outcomes[output_id]
+            for outcome_id in outcomes:
+                outcome = outcomes[outcome_id]
                 row = TR(TD("%s: %s" % (T("Outcome"), outcome["code"]),
                             _class="tal",
                             ),
@@ -5955,11 +6084,12 @@ class project_IndicatorSummaryReport(S3Method):
                             _colspan=colspan,
                             ),
                          TD(project_status_represent(outcome["status"])),
-                         _class="project_outcome")
+                         _class="project_outcome",
+                         )
                 iappend(row)
                 outputs = outcome["outputs"]
-                for p in outputs:
-                    output = outputs[p]
+                for output_id in outputs:
+                    output = outputs[output_id]
                     row = TR(TD("%s: %s" % (T("Output"), output["code"]),
                                 _class="tal",
                                 ),
@@ -5968,7 +6098,8 @@ class project_IndicatorSummaryReport(S3Method):
                                 _colspan=colspan,
                                 ),
                              TD(project_status_represent(output["status"])),
-                             _class="project_output")
+                             _class="project_output",
+                             )
                     iappend(row)
                     indicators = output["indicators"]
                     for i in indicators:
@@ -5979,7 +6110,8 @@ class project_IndicatorSummaryReport(S3Method):
                                  TD(indicator["name"],
                                     _class="tal",
                                     ),
-                                 _class="project_indicator")
+                                 _class="project_indicator",
+                                 )
                         rappend = row.append
                         rappend(TD(indicator["target"]))
                         y = 0
@@ -6019,6 +6151,20 @@ class project_IndicatorSummaryReport(S3Method):
                       _class="tar",
                       ),
                    TD(project_status_represent(record.overall_status_by_indicators)),
+                   ))
+
+        iappend(TR(SPAN(DIV(_title = T("Export as XLS"),
+                            _class = "custom-export export_xls",
+                            data = {"url": r.url(method = "indicator_summary_report",
+                                                 representation = "xls",
+                                                 #vars = r.get_vars,
+                                                 ),
+                                    },
+                            ),
+                        _class="list_formats",
+                        ),
+                   _class="tar",
+                   _colspan=colspan + 5,
                    ))
 
         output = dict(item=item)
