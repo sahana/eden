@@ -5513,7 +5513,7 @@ class project_SummaryReport(S3Method):
                 (ltable.hazard_id == htable.id)
         hazards = db(query).select(htable.name)
         if hazards:
-            hazards = ", ".join([T(h.name) for h in hazards])
+            hazards = ", ".join([s3_unicode(T(h.name)) for h in hazards])
         else:
             hazards = NONE
 
@@ -5523,7 +5523,7 @@ class project_SummaryReport(S3Method):
                 (ltable.sector_id == stable.id)
         sectors = db(query).select(stable.name)
         if sectors:
-            sectors = ", ".join([T(s.name) for s in sectors])
+            sectors = ", ".join([s3_unicode(T(s.name)) for s in sectors])
         else:
             sectors = NONE
 
@@ -5533,7 +5533,7 @@ class project_SummaryReport(S3Method):
                 (ltable.theme_id == ttable.id)
         themes = db(query).select(ttable.name)
         if themes:
-            themes = ", ".join([T(t.name) for t in themes])
+            themes = ", ".join([s3_unicode(T(t.name)) for t in themes])
         else:
             themes = NONE
 
