@@ -5696,7 +5696,7 @@ class org_SiteCheckInMethod(S3Method):
                     if postprocess:
                         postprocess(r.record.site_id, person_id)
                     response.confirmation = T("Checked-Out successfully!")
-˜
+
         # @ToDo: Allow configuring the special chars via Web UI?
         # NB  small tilde  char not visible in Notepad++ using default font, switch to Consolas!
         success = T("Scan succesful: check In or Out?")
