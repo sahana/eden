@@ -280,30 +280,24 @@ def config(settings):
             if r.controller == "dvr" and not r.component:
 
                 ctable = s3db.dvr_case
-                
-                #Mandatory Fields
+
+                # Mandatory Fields
                 from s3 import IS_NOT_EMPTY
                 from gluon import IS_EMPTY_OR
-                ctable.reference.requires = IS_NOT_EMPTY()                
-                #organsation_id
-                field = ctable.organisation_id
-                requires = field.requires
-                if requires:
+
+                # Require a case number
+                ctable.reference.requires = IS_NOT_EMPTY()
+
+                # Require organisation, site and status
+                for fn in ("organisation_id",
+                           "site_id",
+                           "status_id",
+                           ):
+                    field = ctable[fn]
+                    requires = field.requires
                     if isinstance(requires, IS_EMPTY_OR):
                         field.requires = requires.other
-                #site_id
-                field = ctable.site_id
-                requires = field.requires
-                if requires:
-                    if isinstance(requires, IS_EMPTY_OR):
-                        field.requires = requires.other
-                #status_id
-                field = ctable.status_id
-                requires = field.requires
-                if requires:
-                    if isinstance(requires, IS_EMPTY_OR):
-                        field.requires = requires.other
-                
+
                 root_org = current.auth.root_org()
 
                 if root_org:
@@ -320,7 +314,7 @@ def config(settings):
                     # Limit sites to root_org
                     field = ctable.site_id
                     requires = field.requires
-                    if requires:                        
+                    if requires:
                         if isinstance(requires, IS_EMPTY_OR):
                             requires = requires.other
                         if hasattr(requires, "dbset"):
