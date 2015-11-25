@@ -130,7 +130,8 @@ def person():
                 # Module-specific filter widgets
                 from s3 import get_s3_filter_opts, S3TextFilter, S3OptionsFilter
                 filter_widgets = [
-                    S3TextFilter(["first_name",
+                    S3TextFilter(["pe_label",
+                                  "first_name",
                                   "middle_name",
                                   "last_name",
                                   #"email.value",
@@ -138,7 +139,7 @@ def person():
                                   "dvr_case.reference",
                                   ],
                                   label = T("Search"),
-                                  comment = T("You can search by name or case number"),
+                                  comment = T("You can search by name, ID or case number"),
                                   ),
                     S3OptionsFilter("dvr_case.status_id",
                                     cols = 3,

@@ -898,7 +898,8 @@ class DVRCaseActivityModel(S3Model):
                        ]
 
         # Filter widgets
-        filter_widgets = [S3TextFilter(["person_id$first_name",
+        filter_widgets = [S3TextFilter(["person_id$pe_label",
+                                        "person_id$first_name",
                                         "person_id$last_name",
                                         "case_id$reference",
                                         "need_details",
