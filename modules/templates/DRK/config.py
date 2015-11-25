@@ -141,6 +141,28 @@ def config(settings):
     settings.cr.shelter_population_dynamic = True
 
     # -------------------------------------------------------------------------
+    def site_check_in(site_id, person_id):
+
+        # @ToDo: Update shelter_registration
+        return
+
+    # -------------------------------------------------------------------------
+    def site_check_out(site_id, person_id):
+
+        # @ToDo: Update shelter_registration
+        return
+
+    # -------------------------------------------------------------------------
+    def customise_cr_shelter_resource(r, tablename):
+
+        current.s3db.configure(tablename,
+                               site_check_in = site_check_in,
+                               site_check_out = site_check_out,
+                               )
+
+    settings.customise_cr_shelter_resource = customise_cr_shelter_resource
+
+    # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #
     dvr_case_tabs = [(T("Basic Details"), ""),
@@ -149,6 +171,7 @@ def config(settings):
                      (T("Identity"), "identity"),
                      ]
 
+    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         s3db = current.s3db

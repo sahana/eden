@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 
 """ Sahana Eden Organisation Model
 
@@ -5588,118 +5588,132 @@ class org_SiteCheckInMethod(S3Method):
             @param attr: controller options for this request
         """
 
-        if r.representation == "html":
-
-            T = current.T
-            s3db = current.s3db
-            response = current.response
-
-            title = T("Check-In")
-
-            # Give the user a form to check-in/out
-
-            # Test the formstyle
-            formstyle = current.deployment_settings.get_ui_formstyle()
-            row = formstyle("test", "test", "test", "test")
-            if isinstance(row, tuple):
-                # Formstyle with separate row for label (e.g. default Eden formstyle)
-                tuple_rows = True
-            else:
-                # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
-                tuple_rows = False
-
-            form_rows = []
-            comment = ""
-
-            # @ToDo: Hide this & populate from barcode scanner
-            # (or show to allow manual entering of code?)
-            _id = "pe_label"
-            label = LABEL("%s:" % T("Code"))
-            widget = INPUT(_name=_id)
-            row = formstyle("%s__row" % _id, label, widget, comment)
-            if tuple_rows:
-                form_rows.append(row[0])
-                form_rows.append(row[1])
-            else:
-                form_rows.append(row)
-
-            _id = "check-in"
-            label = ""
-            widget = INPUT(_type="submit",
-                           _class="btn crud-submit-button",
-                           _name=_id,
-                           _value=T("Check-In"))
-            row = formstyle("%s__row" % _id, label, widget, comment)
-            if tuple_rows:
-                form_rows.append(row[0])
-                form_rows.append(row[1])
-            else:
-                form_rows.append(row)
-
-            _id = "check-out"
-            widget = INPUT(_type="submit",
-                           _class="btn crud-submit-button",
-                           _name=_id,
-                           _value=T("Check-Out"))
-            row = formstyle("%s__row" % _id, label, widget, comment)
-            if tuple_rows:
-                form_rows.append(row[0])
-                form_rows.append(row[1])
-            else:
-                form_rows.append(row)
-
-            if tuple_rows:
-                # Assume TRs
-                form = FORM(TABLE(*form_rows))
-            else:
-                form = FORM(*form_rows)
-
-            if form.accepts(current.request.vars, current.session):
-                db = current.db
-                pe_label = form.vars.pe_label
-                ptable = current.s3db.pr_person
-                person = db(ptable.pe_label == pe_label).select(ptable.id,
-                                                                ptable.location_id,
-                                                                limitby=(0, 1),
-                                                                ).first()
-                if not person:
-                    response.error = T("Person not found!")
-                else:
-                    from ..s3.s3track import S3Trackable
-                    tracker = S3Trackable(ptable, record_id=person.id)
-                    if "check-in" in r.post_vars:
-                        # We're not Checking-in in S3Track terms (that's about interlocking with another object)
-                        #tracker.check_in()
-                        #timestmp = form.vars.get("timestmp", None)
-                        #if timestmp:
-                        #    # @ToDo: Convert from string
-                        #    pass
-                        #tracker.set_location(location_id, timestmp=timestmp)
-                        tracker.set_location(r.record.location_id)
-                        # @ToDo: Hook to be able to update cr_shelter_registration
-                        response.confirmation = T("Checked-In successfully!")
-                    elif "check-out" in r.post_vars:
-                        # Check-Out
-                        # We're not Checking-out in S3Track terms (that's about removing an interlock with another object)
-                        # What we're doing is saying that we're now back at our base location
-                        #tracker.check_out()
-                        #timestmp = form_vars.get("timestmp", None)
-                        #if timestmp:
-                        #    # @ToDo: Convert from string
-                        #    pass
-                        #tracker.set_location(r.record.location_id, timestmp=timestmp)
-                        tracker.set_location(person.location_id)
-                        # @ToDo: Hook to be able to update cr_shelter_registration
-                        response.confirmation = T("Checked-Out successfully!")
-
-            response.view = "check-in.html"
-            output = dict(form = form,
-                          title = title,
-                          )
-            return output
-
-        else:
+        if r.representation != "html":
+            # @ToDo: JSON Format for Mobile Devices
             raise HTTP(415, current.ERROR.BAD_FORMAT)
+
+        T = current.T
+        s3db = current.s3db
+        response = current.response
+
+        title = T("Check-In")
+
+        # Give the user a form to check-in/out
+
+        # Test the formstyle
+        formstyle = current.deployment_settings.get_ui_formstyle()
+        row = formstyle("test", "test", "test", "test")
+        if isinstance(row, tuple):
+            # Formstyle with separate row for label (e.g. default Eden formstyle)
+            tuple_rows = True
+        else:
+            # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
+            tuple_rows = False
+
+        form_rows = []
+        comment = ""
+
+        # @ToDo: Hide this & populate from barcode scanner
+        # (deployment_setting to allow manual entering of code?)
+        _id = "pe_label"
+        label = LABEL("%s:" % T("Code"))
+        widget = INPUT(_name=_id, _id=_id)
+        row = formstyle("%s__row" % _id, label, widget, comment)
+        if tuple_rows:
+            form_rows.append(row[0])
+            form_rows.append(row[1])
+        else:
+            form_rows.append(row)
+
+        # @ToDo: Hide these buttons until scanned (or entered manually)
+        # @ToDo: Only show relevant button (see whether we are already checked-in via AJAX call) 
+        _id = "check-in"
+        label = ""
+        widget = INPUT(_type="submit",
+                       _class="btn crud-submit-button",
+                       _name=_id,
+                       _value=T("Check-In"))
+        row = formstyle("%s__row" % _id, label, widget, comment)
+        if tuple_rows:
+            form_rows.append(row[0])
+            form_rows.append(row[1])
+        else:
+            form_rows.append(row)
+
+        _id = "check-out"
+        widget = INPUT(_type="submit",
+                       _class="btn crud-submit-button",
+                       _name=_id,
+                       _value=T("Check-Out"))
+        row = formstyle("%s__row" % _id, label, widget, comment)
+        if tuple_rows:
+            form_rows.append(row[0])
+            form_rows.append(row[1])
+        else:
+            form_rows.append(row)
+
+        if tuple_rows:
+            # Assume TRs
+            form = FORM(TABLE(*form_rows))
+        else:
+            form = FORM(*form_rows)
+
+        if form.accepts(current.request.vars, current.session):
+            db = current.db
+            s3db = current.s3db
+            pe_label = form.vars.pe_label
+            ptable = s3db.pr_person
+            person = db(ptable.pe_label == pe_label).select(ptable.id,
+                                                            ptable.location_id,
+                                                            limitby=(0, 1),
+                                                            ).first()
+            if not person:
+                response.error = T("Person not found!")
+            else:
+                from ..s3.s3track import S3Trackable
+                person_id = person.id
+                tracker = S3Trackable(ptable, record_id=person_id)
+                if "check-in" in r.post_vars:
+                    # We're not Checking-in in S3Track terms (that's about interlocking with another object)
+                    #tracker.check_in()
+                    record = r.record
+                    # @ToDo: Check if we are already checked-in?
+                    tracker.set_location(record.location_id)
+                    # Check for Hook (e.g. to be able to update cr_shelter_registration)
+                    postprocess = s3db.get_config(r.tablename, "site_check_in")
+                    if postprocess:
+                        postprocess(record.site_id, person_id)
+                    response.confirmation = T("Checked-In successfully!")
+                elif "check-out" in r.post_vars:
+                    # Check-Out
+                    # We're not Checking-out in S3Track terms (that's about removing an interlock with another object)
+                    # What we're doing is saying that we're now back at our base location
+                    #tracker.check_out()
+                    # @ToDo: Check if we are already checked-out?
+                    tracker.set_location(person.location_id)
+                    # Check for Hook (e.g. to be able to update cr_shelter_registration)
+                    postprocess = s3db.get_config(r.tablename, "site_check_out")
+                    if postprocess:
+                        postprocess(r.record.site_id, person_id)
+                    response.confirmation = T("Checked-Out successfully!")
+˜
+        # @ToDo: Allow configuring the special chars via Web UI?
+        # NB  small tilde  char not visible in Notepad++ using default font, switch to Consolas!
+        success = T("Scan succesful: check In or Out?")
+        # @ToDo: Personalise with Name from AJAX call too?
+        #checked_in = T("You are currently Checked-In, would you like to Check-Out?")
+        #checked_out = T("You are currently Checked-Out, would you like to Check-In?")
+        #s3 = response.s3
+        #if s3.debug:
+        #    s3.scripts.append("/%s/static/scripts/jquery.barcodelistener-1.1.js" % r.application)
+        #else:
+        #    s3.scripts.append("/%s/static/scripts/jquery.barcodelistener-1.1-min.js" % r.application)
+        #s3.jquery_ready.append('''$(document).BarcodeListener([['§','32'],['˜','732']],function(code){$('#pe_label').val(code);S3.showAlert('%(success)s')})''' % success)
+        response.view = "check-in.html"
+        output = dict(form = form,
+                      title = title,
+                      )
+        return output
 
 # =============================================================================
 def org_site_has_assets(row, tablename="org_facility"):
