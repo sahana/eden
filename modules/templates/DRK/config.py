@@ -210,6 +210,7 @@ def config(settings):
                                 "dvr_case.date",
                                 "dvr_case.valid_until",
                                 "dvr_case.status_id",
+                                (T("ID"), "pe_label"),
                                 "first_name",
                                 "last_name",
                                 "date_of_birth",
@@ -250,6 +251,7 @@ def config(settings):
 
                 # Custom list fields (must be outside of r.interactive)
                 list_fields = ["dvr_case.reference",
+                               (T("ID"), "pe_label"),
                                "first_name",
                                "last_name",
                                "date_of_birth",
@@ -283,6 +285,46 @@ def config(settings):
         return attr
 
     settings.customise_dvr_case_person_controller = customise_dvr_case_person_controller
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_activity_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep 
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if not r.component:
+
+                # Custom list fields
+                list_fields = [(T("ID"), "person_id$pe_label"),
+                               "person_id$first_name",
+                               "person_id$last_name",
+                               "need_id",
+                               "need_details",
+                               "emergency",
+                               "referral_details",
+                               "followup",
+                               "followup_date",
+                               "completed",
+                               ]
+
+                r.resource.configure(list_fields = list_fields,
+                                    )
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_dvr_case_activity_controller = customise_dvr_case_activity_controller
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
