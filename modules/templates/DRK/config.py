@@ -142,15 +142,74 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def site_check_in(site_id, person_id):
+        """
+            When a person is checked-in to a Shelter then update the Shelter Registration
+            (We assume they are checked-in during initial registration)
+        """
 
-        # @ToDo: Update shelter_registration
-        return
+        s3db = current.s3db
+
+        # Find the Registration
+        stable = s3db.cr_shelter
+        rtable = s3db.cr_shelter_registration
+        query = (stable.site_id == site_id) & \
+                (stable.id == rtable.shelter_id) & \
+                (rtable.person_id == person_id)
+        registration = current.db(query).select(rtable.id,
+                                                rtable.registration_status,
+                                                limitby=(0, 1),
+                                                ).first()
+        if not registration:
+            error = T("Registration not found")
+            warning = None
+            return error, warning
+
+        if registration.registration_status == 2:
+            error = None
+            warning = T("Client was already checked-in")
+            return error, warning
+
+        # Update the Shelter Registration
+        registration.update_record(registration_status = 2)
+        onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
+        if onaccept:
+            onaccept(registration)
+        return None, None
 
     # -------------------------------------------------------------------------
     def site_check_out(site_id, person_id):
+        """
+            When a person is checked-out from a Shelter then update the Shelter Registration
+        """
 
-        # @ToDo: Update shelter_registration
-        return
+        s3db = current.s3db
+
+        # Find the Registration
+        stable = s3db.cr_shelter
+        rtable = s3db.cr_shelter_registration
+        query = (stable.site_id == site_id) & \
+                (stable.id == rtable.shelter_id) & \
+                (rtable.person_id == person_id)
+        registration = current.db(query).select(rtable.id,
+                                                rtable.registration_status,
+                                                limitby=(0, 1),
+                                                ).first()
+        if not registration:
+            error = T("Registration not found")
+            warning = None
+            return error, warning
+
+        if registration.registration_status == 3:
+            error = None
+            warning = T("Client was already checked-out")
+            return error, warning
+
+        # Update the Shelter Registration
+        registration.update_record(registration_status = 3)
+        onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
+        if onaccept:
+            onaccept(registration)
+        return None, None
 
     # -------------------------------------------------------------------------
     def customise_cr_shelter_resource(r, tablename):

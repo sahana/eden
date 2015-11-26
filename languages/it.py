@@ -859,6 +859,8 @@
 'Click to edit': 'Fare clic per modificare',
 'Click where you want to open Streetview': 'Fare click dove si desidera aprire Streetview',
 'Client ID': 'Client ID',
+'Client Registration': 'Registrazione di persone',
+'Client Reservation': 'Prenotazione di persone',
 'Client Secret': 'Client Secret',
 'Clinical Laboratory': 'Laboratorio Clinico',
 'Clinical Operations': 'Operazioni cliniche',

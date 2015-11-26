@@ -5626,8 +5626,6 @@ class org_SiteCheckInMethod(S3Method):
         s3db = current.s3db
         response = current.response
 
-        title = T("Check-In")
-
         # Give the user a form to check-in/out
 
         # Test the formstyle
@@ -5712,8 +5710,15 @@ class org_SiteCheckInMethod(S3Method):
                     # Check for Hook (e.g. to be able to update cr_shelter_registration)
                     postprocess = s3db.get_config(r.tablename, "site_check_in")
                     if postprocess:
-                        postprocess(record.site_id, person_id)
-                    response.confirmation = T("Checked-In successfully!")
+                        error, warning = postprocess(record.site_id, person_id)
+                        if warning:
+                            response.warning = warning
+                        if error:
+                            response.error = error
+                        else:
+                            response.confirmation = T("Checked-in successfully!")
+                    else:
+                        response.confirmation = T("Checked-in successfully!")
                 elif "check-out" in r.post_vars:
                     # Check-Out
                     # We're not Checking-out in S3Track terms (that's about removing an interlock with another object)
@@ -5724,8 +5729,15 @@ class org_SiteCheckInMethod(S3Method):
                     # Check for Hook (e.g. to be able to update cr_shelter_registration)
                     postprocess = s3db.get_config(r.tablename, "site_check_out")
                     if postprocess:
-                        postprocess(r.record.site_id, person_id)
-                    response.confirmation = T("Checked-Out successfully!")
+                        error, warning = postprocess(r.record.site_id, person_id)
+                        if warning:
+                            response.warning = warning
+                        if error:
+                            response.error = error
+                        else:
+                            response.confirmation = T("Checked-out successfully!")
+                    else:
+                        response.confirmation = T("Checked-out successfully!")
 
         # @ToDo: Allow configuring the special chars via Web UI?
         # NB  small tilde  char not visible in Notepad++ using default font, switch to Consolas!
@@ -5741,7 +5753,7 @@ class org_SiteCheckInMethod(S3Method):
         #s3.jquery_ready.append('''$(document).BarcodeListener([['§','32'],['˜','732']],function(code){$('#pe_label').val(code);S3.showAlert('%(success)s')})''' % success)
         response.view = "check-in.html"
         output = dict(form = form,
-                      title = title,
+                      title = T("Check-In"),
                       )
         return output
 

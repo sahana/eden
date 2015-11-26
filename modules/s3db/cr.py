@@ -957,9 +957,10 @@ class S3ShelterRegistrationModel(S3Model):
 
         T = current.T
 
-        define_table = self.define_table
         configure = self.configure
+        define_table = self.define_table
         settings = current.deployment_settings
+        shelter_id = self.cr_shelter_id
 
         # ---------------------------------------------------------------------
         # Shelter Allocation: table to allocate shelter capacity to a group
@@ -975,7 +976,9 @@ class S3ShelterRegistrationModel(S3Model):
 
         tablename = "cr_shelter_allocation"
         define_table(tablename,
-                     self.cr_shelter_id(ondelete="CASCADE"),
+                     shelter_id(empty = False,
+                                ondelete = "CASCADE",
+                                ),
                      self.pr_group_id(comment = None),
                      Field("status", "integer",
                            requires = IS_IN_SET(allocation_status_opts),
@@ -1007,56 +1010,57 @@ class S3ShelterRegistrationModel(S3Model):
                                        2: T("Checked-in"),
                                        3: T("Checked-out"),
                                        }
+
         housing_unit = settings.get_cr_shelter_housing_unit_management()
 
         tablename = "cr_shelter_registration"
-        self.define_table(tablename,
-                          self.cr_shelter_id(empty = False,
-                                             ondelete = "CASCADE",
+        define_table(tablename,
+                     shelter_id(empty = False,
+                                ondelete = "CASCADE",
+                                ),
+                     # The comment explains how to register a new person
+                     # it should not be done in a popup
+                     self.pr_person_id(
+                         comment = DIV(_class="tooltip",
+                                       _title="%s|%s" % (T("Person"),
+                                                         #  @ToDo: Generalise (this is EVASS-specific)
+                                                         T("Type the name of a registered person \
+                                                           or to add an unregistered person to this \
+                                                           shelter click on Evacuees")
+                                                         )
+                                       ),
+                         ),
+                     self.cr_housing_unit_id(readable = housing_unit,
+                                             writable = housing_unit,
                                              ),
-                          # The comment explains how to register a new person
-                          # it should not be done in a popup
-                          self.pr_person_id(
-                              comment = DIV(_class="tooltip",
-                                            _title="%s|%s" % (T("Person"),
-                                                              T("Type the name of a registered person \
-                                                                or to add an unregistered person to this \
-                                                                shelter click on Evacuees")
-                                                              )
+                     Field("day_or_night", "integer",
+                           label = T("Presence in the shelter"),
+                           represent = S3Represent(options=cr_day_or_night_opts
+                                                   ),
+                           requires = IS_IN_SET(cr_day_or_night_opts,
+                                                zero=None
+                                                ),
+                           ),
+                     Field("registration_status", "integer",
+                           label = T("Status"),
+                           represent = S3Represent(
+                                            options=cr_registration_status_opts,
                                             ),
-                              ),
-                          self.cr_housing_unit_id(readable = housing_unit,
-                                                  writable = housing_unit,
-                                                  ),
-                          Field("day_or_night", "integer",
-                                label = T("Presence in the shelter"),
-                                represent = S3Represent(
-                                                options=cr_day_or_night_opts
+                           requires = IS_IN_SET(cr_registration_status_opts,
+                                                zero=None
                                                 ),
-                                requires = IS_IN_SET(cr_day_or_night_opts,
-                                                     zero=None
-                                                     ),
-                                ),
-                          Field("registration_status", "integer",
-                                label = T("Status"),
-                                represent = S3Represent(
-                                                options=cr_registration_status_opts,
-                                                ),
-                                requires = IS_IN_SET(cr_registration_status_opts,
-                                                     zero=None
-                                                     ),
-                                ),
-                          s3_datetime("check_in_date",
-                                      label = T("Check-in date"),
-                                      default = "now",
-                                      #empty = False,
-                                      future = 0,
-                                      ),
-                          s3_datetime("check_out_date",
-                                      label = T("Check-out date"),
-                                      ),
-                          s3_comments(),
-                          *s3_meta_fields())
+                           ),
+                     s3_datetime("check_in_date",
+                                 label = T("Check-in date"),
+                                 default = "now",
+                                 #empty = False,
+                                 future = 0,
+                                 ),
+                     s3_datetime("check_out_date",
+                                 label = T("Check-out date"),
+                                 ),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         population_onaccept = lambda form: \
             self.shelter_population_onaccept(form,
@@ -1183,8 +1187,8 @@ def cr_shelter_rheader(r, tabs=[]):
             if settings.get_cr_tags():
                 tabs.append((T("Tags"), "tag"))
             if settings.get_cr_shelter_people_registration():
-                tabs.extend([(T("People Reservation"), "shelter_allocation"),
-                             (T("People Registration"), "shelter_registration"),
+                tabs.extend([(T("Client Reservation"), "shelter_allocation"),
+                             (T("Client Registration"), "shelter_registration"),
                              ])
             if settings.has_module("hrm"):
                 STAFF = settings.get_hrm_staff_label()

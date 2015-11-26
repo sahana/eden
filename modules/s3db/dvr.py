@@ -135,9 +135,8 @@ class DVRCaseModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        ADD_CASE_TYPE = T("Create Case Status")
         crud_strings[tablename] = Storage(
-            label_create = ADD_CASE_TYPE,
+            label_create = T("Create Case Status"),
             title_display = T("Case Status"),
             title_list = T("Case Statuses"),
             title_update = T("Edit Case Status"),
