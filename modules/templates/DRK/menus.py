@@ -36,12 +36,18 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
+        default_site = current.deployment_settings.get_org_default_site()
+        if default_site:
+            args = [default_site, "profile"]
+        else:
+            args = None
+
         return [
             MM("Refugees", c=("dvr", "pr")),
             MM("ToDo", c="project", f="task"),
             homepage("req"),
             homepage("inv"),
-            #MM("Facilities", c="org", f=("facility", "organisation")),
+            MM("Dashboard", c="cr", f="shelter", args=args),
             homepage("vol"),
             homepage("hrm"),
         ]

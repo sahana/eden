@@ -65,9 +65,10 @@ class DVRCaseModel(S3Model):
         T = current.T
         db = current.db
 
+        configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        configure = self.configure
+        settings = current.deployment_settings
 
         person_id = self.pr_person_id
 
@@ -185,7 +186,9 @@ class DVRCaseModel(S3Model):
                                  "HOUSEHOLD": T("Household"),
                                  }
 
-        SITE = current.deployment_settings.get_org_site_label()
+        SITE = settings.get_org_site_label()
+        default_organisation = settings.get_org_default_organisation()
+        default_site = settings.get_org_default_site()
         permitted_facilities = current.auth.permitted_facilities(redirect_on_error=False)
 
         tablename = "dvr_case"
@@ -243,13 +246,17 @@ class DVRCaseModel(S3Model):
                                                 zero = None,
                                                 ),
                            ),
-                     self.org_organisation_id(),
+                     self.org_organisation_id(default = default_organisation,
+                                              readable = not default_organisation,
+                                              writable = not default_organisation,
+                                              ),
                      self.super_link("site_id", "org_site",
+                                     default = default_site,
                                      filterby = "site_id",
                                      filter_opts = permitted_facilities,
                                      label = SITE,
-                                     readable = True,
-                                     writable = True,
+                                     readable = not default_site,
+                                     writable = not default_site,
                                      represent = self.org_site_represent,
                                      updateable = True,
                                      ),

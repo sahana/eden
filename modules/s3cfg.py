@@ -3079,6 +3079,62 @@ class S3Config(Storage):
         """
         return self.org.get("autocomplete", False)
 
+    def get_org_default_organisation(self):
+        """
+            If the system is only used by a single Organisation then this can be defaulted/hidden
+            - if-appropriate can also use lazy settings to set this from the user.organisation_id
+        """
+        default_organisation = self.__lazy("org", "default_organisation", default=None)
+        if default_organisation:
+            if not isinstance(default_organisation, (int, long)):
+                # Check Session cache
+                default_organisation_id = current.session.s3.default_organisation_id
+                if default_organisation_id:
+                    default_organisation = default_organisation_id
+                else:
+                    # Convert Name to ID
+                    table = current.s3db.org_organisation
+                    org = current.db(table.name == default_organisation).select(table.id,
+                                                                                limitby=(0, 1)
+                                                                                ).first()
+                    try:
+                        default_organisation = org.id
+                        # Cache
+                        current.session.s3.default_organisation_id = default_organisation
+                    except:
+                        # Prepop not done?
+                        current.log.error("Default Organisation not found: %s" % default_organisation)
+                        default_organisation = None
+        return default_organisation
+
+    def get_org_default_site(self):
+        """
+            If the system is only used by a single Site then this can be defaulted/hidden
+            - if-appropriate can also use lazy settings to set this from the user.site_id
+        """
+        default_site = self.org.get("default_site", None)
+        if default_site:
+            if not isinstance(default_site, (int, long)):
+                # Check Session cache
+                default_site_id = current.session.s3.default_site_id
+                if default_site_id:
+                    default_site = default_site_id
+                else:
+                    # Convert Name to ID
+                    table = current.s3db.org_site
+                    site = current.db(table.name == default_site).select(table.site_id,
+                                                                        limitby=(0, 1)
+                                                                        ).first()
+                    try:
+                        default_site = site.site_id
+                        # Cache
+                        current.session.s3.default_site_id = default_site
+                    except:
+                        # Prepop not done?
+                        current.log.error("Default Site not found: %s" % default_site)
+                        default_site = None
+        return default_site
+
     def get_org_sector(self):
         """
             Whether to use an Organization Sector field

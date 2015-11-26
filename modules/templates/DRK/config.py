@@ -102,6 +102,18 @@ def config(settings):
     settings.security.policy = 7 # Organisation-ACLs
 
     # -------------------------------------------------------------------------
+    # Inventory Module Settings
+    #
+    settings.inv.facility_label = "Facility"
+    settings.inv.facility_manage_staff = False
+
+    # -------------------------------------------------------------------------
+    # Organisations Module Settings
+    #
+    settings.org.default_organisation = "Deutsches Rotes Kreuz"
+    settings.org.default_site = "BEA Benjamin Franklin Village"
+
+    # -------------------------------------------------------------------------
     # Project Module Settings
     #
     settings.project.mode_task = True
@@ -121,12 +133,6 @@ def config(settings):
                                          #11: T("Reopened"),
                                          12: T("Completed"),
                                          }
-
-    # -------------------------------------------------------------------------
-    # Inventory Module Settings
-    #
-    settings.inv.facility_label = "Facility"
-    settings.inv.facility_manage_staff = False
 
     # -------------------------------------------------------------------------
     # Requests Module Settings
@@ -249,7 +255,8 @@ def config(settings):
             if r.controller == "dvr" and not r.component:
 
                 ctable = s3db.dvr_case
-                root_org = current.auth.root_org()
+                #default_organisation = current.auth.root_org()
+                default_organisation = settings.get_org_default_organisation()
 
                 field = ctable.valid_until
 
@@ -258,29 +265,31 @@ def config(settings):
                 field.default = r.utcnow + relativedelta(years=5)
                 field.readable = field.writable = True
 
-                if root_org:
+                if default_organisation:
                     # Set default for organisation_id and hide the field
-                    field = ctable.organisation_id
-                    field.default = root_org
-                    field.readable = field.writable = False
+                    # (already done in core model)
+                    #field = ctable.organisation_id
+                    #field.default = default_organisation
+                    #field.readable = field.writable = False
 
                     # Hide organisation_id in list_fields, too
                     list_fields = r.resource.get_config("list_fields")
                     if "dvr_case.organisation_id" in list_fields:
                         list_fields.remove("dvr_case.organisation_id")
 
-                    # Limit sites to root_org
-                    field = ctable.site_id
-                    requires = field.requires
-                    if requires:
-                        from gluon import IS_EMPTY_OR
-                        if isinstance(requires, IS_EMPTY_OR):
-                            requires = requires.other
-                        if hasattr(requires, "dbset"):
-                            stable = s3db.org_site
-                            query = (stable.organisation_id == root_org)
-                            requires.dbset = current.db(query)
-
+                    default_site = settings.get_org_default_site()
+                    if not default_site:
+                        # Limit sites to default_organisation
+                        field = ctable.site_id
+                        requires = field.requires
+                        if requires:
+                            from gluon import IS_EMPTY_OR
+                            if isinstance(requires, IS_EMPTY_OR):
+                                requires = requires.other
+                            if hasattr(requires, "dbset"):
+                                stable = s3db.org_site
+                                query = (stable.organisation_id == default_organisation)
+                                requires.dbset = current.db(query)
 
                 resource = r.resource
                 if r.interactive:
@@ -289,6 +298,7 @@ def config(settings):
                     crud_form = S3SQLCustomForm(
                                 "dvr_case.reference",
                                 "dvr_case.organisation_id",
+                                "dvr_case.site_id",
                                 "dvr_case.date",
                                 "dvr_case.valid_until",
                                 "dvr_case.status_id",
