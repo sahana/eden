@@ -5588,8 +5588,38 @@ class org_SiteCheckInMethod(S3Method):
             @param attr: controller options for this request
         """
 
-        if r.representation != "html":
-            # @ToDo: JSON Format for Mobile Devices
+        representation = r.representation
+        if representation == "json":
+            # AJAX lookup to see if a person is checked-in or not
+            pe_label = r.get_vars.get("pe")
+            if not pe_label:
+                return current.xml.json_message(False, 400, "Label not Provided")
+            s3db = current.s3db
+            ptable = s3db.pr_person
+            person = current.db(ptable.pe_label == pe_label).select(ptable.id,
+                                                                    ptable.first_name,
+                                                                    limitby=(0, 1),
+                                                                    ).first()
+            if not person:
+                return current.xml.json_message(False, 404, "Person not Found")
+            else:
+                result = dict(n=person.first_name)
+                from ..s3.s3track import S3Trackable
+                tracker = S3Trackable(ptable, record_id=person.id)
+                locations = tracker.get_location(_fields=[s3db.gis_location.id])
+                if locations:
+                    if locations[0].id == r.record.location_id:
+                        # Checked-in
+                        result.update(c=1)
+                    else:
+                        # Checked-out
+                        result.update(c=2)
+                else:
+                    # Unknown
+                    result.update(c=3)
+                return current.xml.json_message(True, 200, result)
+
+        elif representation != "html":
             raise HTTP(415, current.ERROR.BAD_FORMAT)
 
         T = current.T
@@ -5696,7 +5726,7 @@ class org_SiteCheckInMethod(S3Method):
                     if postprocess:
                         postprocess(r.record.site_id, person_id)
                     response.confirmation = T("Checked-Out successfully!")
-˜
+
         # @ToDo: Allow configuring the special chars via Web UI?
         # NB  small tilde  char not visible in Notepad++ using default font, switch to Consolas!
         success = T("Scan succesful: check In or Out?")

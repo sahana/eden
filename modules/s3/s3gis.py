@@ -2623,7 +2623,9 @@ class GIS(object):
                 pass
             else:
                 _latlons = tracker.get_location(_fields=[gtable.lat,
-                                                         gtable.lon])
+                                                         gtable.lon],
+                                                empty = False,
+                                                )
                 index = 0
                 for _id in ids:
                     _location = _latlons[index]

@@ -246,7 +246,8 @@ class S3Trackable(object):
                      _fields=None,
                      _filter=None,
                      as_rows=False,
-                     exclude=[]):
+                     exclude=[],
+                     empty = True):
         """
             Get the current location of the instance(s) (at the given time)
 
@@ -255,6 +256,7 @@ class S3Trackable(object):
             @param _filter: filter for the locations
             @param as_rows: return the result as Rows object
             @param exclude: interlocks to break at (avoids circular check-ins)
+            @param empty: return None if no locations (set to False by gis.get_location_data())
 
             @return: a location record, or a list of location records (if multiple)
 
@@ -311,8 +313,8 @@ class S3Trackable(object):
 
             if location:
                 locations.append(location)
-            else:
-                # Ensure we return an entry so that indexes match
+            elif not empty:
+                # Ensure we return an entry for gis.get_location_data() so that indexes match
                 locations.append(Row({"lat": None, "lon": None}))
 
         if as_rows:
@@ -514,13 +516,15 @@ class S3Trackable(object):
     def get_base_location(self,
                           _fields=None,
                           _filter=None,
-                          as_rows=False):
+                          as_rows=False,
+                          empty=True):
         """
             Get the base location of the instance(s)
 
             @param _fields: fields to retrieve from the location records (None for ALL)
             @param _filter: filter for the locations
             @param as_rows: return the result as Rows object
+            @param empty: return None if no locations (set to False by gis.get_location_data())
 
             @return: the base location(s) of the current instance
         """
@@ -559,8 +563,8 @@ class S3Trackable(object):
                                                 *_fields).first()
             if location:
                 locations.append(location)
-            else:
-                # Ensure we return an entry so that indexes match
+            elif not empty:
+                # Ensure we return an entry for gis.get_location_data() so that indexes match
                 locations.append(Row({"lat": None, "lon": None}))
 
         if as_rows:

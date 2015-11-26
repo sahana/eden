@@ -127,7 +127,7 @@ class S3ShelterModel(S3Model):
                 msg_list_empty = T("No Shelter Types currently registered"))
 
         configure(tablename,
-                  deduplicate = self.cr_shelter_type_duplicate,
+                  deduplicate = S3Duplicate(),
                   )
 
         represent = S3Represent(lookup=tablename, translate=True)
@@ -880,23 +880,6 @@ class S3ShelterModel(S3Model):
         #    query = query & (table.organisation_id == org)
         if address:
             query = query & (table.address == address)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def cr_shelter_type_duplicate(item):
-        """
-            Shelter Type record duplicate detection, used for the deduplicate hook
-
-            @param item: the S3ImportItem to check
-        """
-
-        table = item.table
-        query = (table.name == item.data.name)
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
         if duplicate:

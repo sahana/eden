@@ -17,6 +17,9 @@
          L1.............................optional.....L1
          L2.............................optional.....L2
          L3.............................optional.....L3
+         L4.............................optional.....L4
+         L5.............................optional.....L5
+         Building.......................optional.....Building
          Address........................optional.....Address
          Postcode.......................optional.....Postcode
          Lat............................optional.....Latitude
