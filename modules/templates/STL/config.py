@@ -280,6 +280,24 @@ def config(settings):
             if r.controller == "dvr" and not r.component:
 
                 ctable = s3db.dvr_case
+
+                # Mandatory Fields
+                from s3 import IS_NOT_EMPTY
+                from gluon import IS_EMPTY_OR
+
+                # Require a case number
+                ctable.reference.requires = IS_NOT_EMPTY()
+
+                # Require organisation, site and status
+                for fn in ("organisation_id",
+                           "site_id",
+                           "status_id",
+                           ):
+                    field = ctable[fn]
+                    requires = field.requires
+                    if isinstance(requires, IS_EMPTY_OR):
+                        field.requires = requires.other
+
                 root_org = current.auth.root_org()
 
                 if root_org:
@@ -297,7 +315,6 @@ def config(settings):
                     field = ctable.site_id
                     requires = field.requires
                     if requires:
-                        from gluon import IS_EMPTY_OR
                         if isinstance(requires, IS_EMPTY_OR):
                             requires = requires.other
                         if hasattr(requires, "dbset"):

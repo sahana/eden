@@ -314,7 +314,7 @@ def config(settings):
 
         s3 = current.response.s3
 
-        # Custom prep 
+        # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
 
