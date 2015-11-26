@@ -1040,6 +1040,14 @@ h4.profile-sub-header {
   font-size: 1.2rem;
 }
 
+/* Added to ../scss/custom/_widgets.scss */
+.profile-widget .icon-fullscreen {
+  float: right;
+  position: relative;
+  right: 9px;
+  top: 10px;
+}
+
 /* line 175, ../scss/custom/_widgets.scss */
 .profile .dl-header {
   display: none;

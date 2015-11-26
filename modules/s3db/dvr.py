@@ -126,7 +126,8 @@ class DVRCaseModel(S3Model):
                            ),
                      Field("name",
                            label = T("Status"),
-                           requires = IS_NOT_EMPTY(),
+                           # Removed to allow single column imports of Cases
+                           #requires = IS_NOT_EMPTY(),
                            ),
                      Field("is_default", "boolean",
                            default = False,
@@ -151,6 +152,8 @@ class DVRCaseModel(S3Model):
 
         # Table configuration
         configure(tablename,
+                  # Automatic since unique=True
+                  #deduplicate = S3Duplicate(primary = ("code",)),
                   onaccept = self.case_status_onaccept,
                   )
 

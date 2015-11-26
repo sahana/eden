@@ -338,7 +338,7 @@
                         <type>Feature</type>
                         <geometry>
                             <xsl:attribute name="value">
-                                <xsl:value-of select="./@value"/>
+                                <xsl:value-of select="./map[1]/geometry/@value"/>
                             </xsl:attribute>
                         </geometry>
                         <properties>

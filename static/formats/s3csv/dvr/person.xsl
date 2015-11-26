@@ -15,8 +15,9 @@
          Facility.......................optional.....Facility name
          Facility Type..................optional.....Office, Facility, Hospital, Shelter, Warehouse
          Case...........................optional.....dvr_case.reference
-         Case Type......................optional.....dvr_case.case_type_id @ToDo
+         Case Type......................optional.....dvr_case.case_type_id$name @ToDo
          Registration Date..............optional.....dvr_case.date
+         Status.........................optional.....dvr_case.status_id$code
 
          First Name.....................required.....person first name
          Middle Name....................optional.....person middle name
@@ -106,6 +107,9 @@
     <xsl:key name="education_level" match="row"
              use="col[@field='Education Level']"/>
 
+    <xsl:key name="status" match="row"
+             use="col[@field='Status']"/>
+
     <!-- ****************************************************************** -->
     <xsl:template match="/">
 
@@ -116,6 +120,12 @@
                     <xsl:with-param name="level">Organisation</xsl:with-param>
                     <xsl:with-param name="rows" select="//table/row"/>
                 </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Case Statuses -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('status',
+                                                                   col[@field='Status'])[1])]">
+                <xsl:call-template name="Status"/>
             </xsl:for-each>
 
             <!-- Education Levels -->
@@ -337,6 +347,14 @@
                 </xsl:if>
                 <xsl:if test="col[@field='Registration Date']!=''">
                     <data field="date"><xsl:value-of select="col[@field='Registration Date']"/></data>
+                </xsl:if>
+
+                <xsl:if test="col[@field='Status']!=''">
+                    <reference field="status_id" resource="dvr_case_status">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Status:',col[@field='Status'])"/>
+                        </xsl:attribute>
+                    </reference>
                 </xsl:if>
 
                 <!-- Link to Organisation -->
@@ -973,6 +991,20 @@
                 </resource>
             </xsl:when>
         </xsl:choose>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Status">
+        <xsl:variable name="Status" select="col[@field='Status']"/>
+
+        <xsl:if test="$Status!=''">
+            <resource name="dvr_case_status">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Status:',$Status)"/>
+                </xsl:attribute>
+                <data field="code"><xsl:value-of select="$Status"/></data>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

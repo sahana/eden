@@ -85,6 +85,8 @@ class S3ShelterModel(S3Model):
         set_method = self.set_method
         NAME = T("Name")
 
+        location_id = self.gis_location_id
+
         # -------------------------------------------------------------------------
         # Shelter types
         # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
@@ -284,7 +286,7 @@ class S3ShelterModel(S3Model):
                      shelter_service_id(),       # e.g. medical, housing, food, ...
                      shelter_environment_id(readable = False,
                                             writable = False,),# Enable in template if-required
-                     self.gis_location_id(),
+                     location_id(),
                      Field("phone",
                            label = T("Phone"),
                            requires = IS_EMPTY_OR(s3_phone_requires),
@@ -651,7 +653,12 @@ class S3ShelterModel(S3Model):
                            label = T("Housing Unit Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
-                     shelter_id(ondelete="CASCADE"),
+                     shelter_id(ondelete = "CASCADE"),
+                     location_id(widget = S3LocationSelector(#catalog_layers=True,
+                                                             points = False,
+                                                             polygons = True,
+                                                             ),
+                                 ),
                      Field("status", "integer",
                            default = 1,
                            label = T("Status"),
@@ -797,7 +804,7 @@ class S3ShelterModel(S3Model):
 
         represent = S3Represent(lookup="cr_shelter_unit")
         housing_unit_id = S3ReusableField("shelter_unit_id", db.cr_shelter_unit,
-                                          label = "Housing Unit Name",
+                                          label = T("Housing Unit"),
                                           ondelete = "RESTRICT",
                                           represent = represent,
                                           requires = IS_NULL_OR(IS_ONE_OF(db, "cr_shelter_unit.id",
@@ -1015,6 +1022,7 @@ class S3ShelterRegistrationModel(S3Model):
 
         tablename = "cr_shelter_registration"
         define_table(tablename,
+                     # @ToDo: Convert to site_id? (More flexible & easier to default, etc)
                      shelter_id(empty = False,
                                 ondelete = "CASCADE",
                                 ),

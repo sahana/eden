@@ -145,6 +145,7 @@ def config(settings):
     # Shelter Module Settings
     #
     settings.cr.shelter_population_dynamic = True
+    settings.cr.shelter_housing_unit_management = True
 
     # -------------------------------------------------------------------------
     def site_check_in(site_id, person_id):
@@ -278,7 +279,32 @@ def config(settings):
                         list_fields.remove("dvr_case.organisation_id")
 
                     default_site = settings.get_org_default_site()
-                    if not default_site:
+                    if default_site:
+                        # Set default for organisation_id and hide the field
+                        # (already done in core model)
+
+                        # Set default shelter_id
+                        db = current.db
+                        stable = s3db.cr_shelter
+                        query = (stable.site_id == default_site)
+                        shelter_id = db(query).select(stable.id,
+                                                      limitby=(0, 1)
+                                                      ).first().id
+                        rtable = s3db.cr_shelter_registration
+                        field = rtable.shelter_id
+                        field.default = shelter_id
+                        field.readable = field.writable = False
+                        # Filter housing units to units of this shelter
+                        field = rtable.shelter_unit_id
+                        dbset = db(s3db.cr_shelter_unit.shelter_id == shelter_id)
+                        from gluon import IS_EMPTY_OR
+                        from s3 import IS_ONE_OF
+                        field.requires = IS_EMPTY_OR(
+                                            IS_ONE_OF(dbset, "cr_shelter_unit.id",
+                                                      field.represent,
+                                                      sort=True,
+                                                      ))
+                    else:
                         # Limit sites to default_organisation
                         field = ctable.site_id
                         requires = field.requires
@@ -297,11 +323,20 @@ def config(settings):
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent
                     crud_form = S3SQLCustomForm(
                                 "dvr_case.reference",
+                                # Will always default & be hidden
                                 "dvr_case.organisation_id",
+                                # Will always default & be hidden
                                 "dvr_case.site_id",
                                 "dvr_case.date",
                                 "dvr_case.valid_until",
-                                "dvr_case.status_id",
+                                (T("Case Status"), "dvr_case.status_id"),
+                                # Will always default & be hidden
+                                #"cr_shelter_registration.site_id",
+                                "cr_shelter_registration.shelter_id",
+                                # @ ToDo: Automate this from the Case Status?
+                                (T("Shelter Registration Status"), "cr_shelter_registration.registration_status"),
+                                "cr_shelter_registration.shelter_unit_id",
+                                "cr_shelter_registration.check_in_date",
                                 (T("ID"), "pe_label"),
                                 "first_name",
                                 "last_name",
