@@ -1023,10 +1023,9 @@ class S3PersonModel(S3Model):
                                                   },
                        # Case Management  (Disaster Victim Registry)
                        dvr_beneficiary_data = "person_id",
-                       dvr_case = {"name": "dvr_case",
-                                   "link": "dvr_case_person",
-                                   "joinby": "person_id",
-                                   "key": "case_id",
+                       dvr_case = {"joinby": "person_id",
+                                   # A person can be assigned to only one case
+                                   # @ToDo: allow linking to multiple cases where dupes have been created?
                                    "multiple": False,
                                    },
                        dvr_case_activity = "person_id",
@@ -1037,9 +1036,10 @@ class S3PersonModel(S3Model):
                                       "multiple": False,
                                       },
                        # Evacuee Registry
-                       evr_case = {"joinby": "person_id",
-                                   "multiple": False,
-                                   },
+                       # @ToDo: Re-enable with an alias?
+                       #evr_case = {"joinby": "person_id",
+                       #            "multiple": False,
+                       #            },
                        evr_medical_details = {"joinby": "person_id",
                                               "multiple": False,
                                               },

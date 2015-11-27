@@ -201,6 +201,9 @@ class DVRCaseModel(S3Model):
                      Field("reference",
                            label = T("Case Number"),
                            ),
+                     person_id(empty = False,
+                               ondelete = "CASCADE",
+                               ),  
                      FieldS3("case_type_id", "reference dvr_case_type",
                              label = T("Case Type"),
                              represent = case_type_represent,
@@ -1090,7 +1093,8 @@ class DVRCaseAppointmentModel(S3Model):
         tablename = "dvr_case_appointment"
         define_table(tablename,
                      self.dvr_case_id(comment = None,
-                                      empty = False,
+                                      # @ToDo: Populate this onaccept from imports
+                                      #empty = False,
                                       label = T("Case Number"),
                                       ondelete = "CASCADE",
                                       writable = False,

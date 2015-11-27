@@ -45,7 +45,7 @@ class S3MainMenu(default.S3MainMenu):
         return [
             MM("Refugees", c=("dvr", "pr")),
             MM("ToDo", c="project", f="task"),
-            homepage("req"),
+            #homepage("req"),
             homepage("inv"),
             MM("Dashboard", c="cr", f="shelter", args=args),
             homepage("vol"),
