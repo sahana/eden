@@ -291,6 +291,12 @@ def case_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def case_appointment_type():
+    """ Appointment Type: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def case():
     """ Cases: RESTful CRUD Controller """
 
