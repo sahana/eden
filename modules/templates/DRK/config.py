@@ -153,6 +153,11 @@ def config(settings):
     settings.cr.shelter_housing_unit_management = True
 
     # -------------------------------------------------------------------------
+    # Person Registry Settings
+    #
+    settings.pr.hide_third_gender = False
+    
+    # -------------------------------------------------------------------------
     def site_check_in(site_id, person_id):
         """
             When a person is checked-in to a Shelter then update the Shelter Registration
@@ -257,9 +262,12 @@ def config(settings):
                 result = standard_prep(r)
             else:
                 result = True
+                
 
             if r.controller == "dvr" and not r.component:
 
+                from gluon import IS_EMPTY_OR, IS_NOT_EMPTY
+                
                 ctable = s3db.dvr_case
                 #default_organisation = current.auth.root_org()
                 default_organisation = settings.get_org_default_organisation()
@@ -305,7 +313,6 @@ def config(settings):
                             # Filter housing units to units of this shelter
                             field = rtable.shelter_unit_id
                             dbset = db(s3db.cr_shelter_unit.shelter_id == shelter_id)
-                            from gluon import IS_EMPTY_OR
                             from s3 import IS_ONE_OF
                             field.requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(dbset, "cr_shelter_unit.id",
@@ -317,7 +324,6 @@ def config(settings):
                         field = ctable.site_id
                         requires = field.requires
                         if requires:
-                            from gluon import IS_EMPTY_OR
                             if isinstance(requires, IS_EMPTY_OR):
                                 requires = requires.other
                             if hasattr(requires, "dbset"):
@@ -327,6 +333,35 @@ def config(settings):
 
                 resource = r.resource
                 if r.interactive:
+
+                    # Nationality is required
+                    ctable = s3db.pr_person_details
+                    for fn in ("nationality",
+                               "marital_status",
+                               ):
+                        field = ctable[fn]
+                        requires = field.requires
+                        if not requires:
+                            field.requires = IS_NOT_EMPTY
+                        elif isinstance(requires, IS_EMPTY_OR):
+                            field.requires = requires.other
+
+                    table = resource.table
+                    from s3 import IS_PERSON_GENDER
+                    gender_opts = dict(s3db.pr_gender_opts)
+
+                    field = table.gender
+                    table.default = None
+                    del gender_opts[1] # "unknown" option not allowed
+                    field.requires = IS_PERSON_GENDER(gender_opts,
+                                                      sort = True,
+                                                      zero = None,
+                                                      )
+
+                    # Last name is required
+                    field = table.last_name
+                    field.requires = IS_NOT_EMPTY()
+                    
                     # Custom CRUD form
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent
                     crud_form = S3SQLCustomForm(
