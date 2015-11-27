@@ -365,7 +365,7 @@ def config(settings):
                                         name = "phone",
                                         ),
                                 "person_details.nationality",
-                                "person_details.illiterate",
+                                "person_details.literacy",
                                 S3SQLInlineComponent(
                                         "case_language",
                                         fields = ["language",

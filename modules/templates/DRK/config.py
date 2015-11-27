@@ -454,7 +454,7 @@ def config(settings):
                                         multiple = False,
                                         name = "phone",
                                         ),
-                                "person_details.literacy_status",
+                                "person_details.literacy",
                                 S3SQLInlineComponent(
                                         "case_language",
                                         fields = ["language",
