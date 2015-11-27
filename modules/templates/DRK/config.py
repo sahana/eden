@@ -332,7 +332,7 @@ def config(settings):
                                 requires.dbset = current.db(query)
 
                 resource = r.resource
-                if r.interactive:
+                if r.interactive and r.method != "import":
 
                     # Nationality is required
                     ctable = s3db.pr_person_details

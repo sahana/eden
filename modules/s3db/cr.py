@@ -1100,7 +1100,7 @@ class S3ShelterRegistrationModel(S3Model):
         request = current.request
         controller = request.controller
         if controller == "dvr":
-            # Housing Unit is not mandatory during Caase Registration
+            # Housing Unit is not mandatory during Case Registration
             return
 
         db = current.db
