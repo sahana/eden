@@ -363,7 +363,7 @@ def config(settings):
                                         multiple = False,
                                         name = "phone",
                                         ),
-                                "person_details.illiterate",
+                                "person_details.literacy_status",
                                 S3SQLInlineComponent(
                                         "case_language",
                                         fields = ["language",

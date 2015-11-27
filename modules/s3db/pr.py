@@ -3541,6 +3541,20 @@ class S3PersonDetailsModel(S3Model):
                                                                  zero=None),
                                             )
 
+        pr_literacy_opts = {
+            1: T("unknown"),
+            2: T("illiterate"),
+            3: T("literate"),
+        }
+
+        pr_literacy_status = S3ReusableField("literacy_status", "integer",
+                                            default = 1,
+                                            label = T("Literacy Status"),
+                                            represent = lambda opt: \
+                                                pr_literacy_opts.get(opt, UNKNOWN_OPT),
+                                            requires = IS_IN_SET(pr_literacy_opts,
+                                                                 zero=None),
+                                            )
         pr_religion_opts = current.deployment_settings.get_L10n_religions()
 
         # ---------------------------------------------------------------------
@@ -3635,11 +3649,7 @@ class S3PersonDetailsModel(S3Model):
                                 label = T("Military Service"),
                                 represent = s3_yes_no_represent,
                                 ),
-                          Field("illiterate", "boolean",
-                                default = False,
-                                label = T("Illiterate"),
-                                represent = s3_yes_no_represent,
-                                ),
+                          pr_literacy_status(),
                           *s3_meta_fields())
 
         # CRUD Strings
