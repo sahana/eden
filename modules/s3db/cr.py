@@ -1097,38 +1097,47 @@ class S3ShelterRegistrationModel(S3Model):
             Check if the housing unit belongs to the requested shelter
         """
 
+        request = current.request
+        controller = request.controller
+        if controller == "dvr":
+            # Housing Unit is not mandatory during Caase Registration
+            return
+
         db = current.db
         T = current.T
 
         htable = db.cr_shelter_unit
 
+        unit_id = None
         if type(form) is Row:
-            if current.request.controller == "evr":
+            if controller == "evr":
                 shelter_id = form.shelter_id
                 unit_id = form.shelter_unit_id
-            elif current.request.controller == "cr":
-                shelter_id = current.request.args[0]
+            elif controller == "cr":
+                # @ToDo: don't assume this!
+                shelter_id = request.args[0]
                 unit_id = form.shelter_unit_id
         else:
-            if current.request.controller == "evr":
+            if controller == "evr":
                 shelter_id = form.vars.shelter_id
                 unit_id = form.vars.shelter_unit_id
-            elif current.request.controller == "cr":
-                shelter_id = current.request.args[0]
+            elif controller == "cr":
+                # @ToDo: don't assume this!
+                shelter_id = request.args[0]
                 unit_id = form.vars.shelter_unit_id
 
         if unit_id == None:
             warning = T("Warning: No housing unit selected")
             current.response.warning = warning
         else:
-            record = db(htable.id == unit_id).select(htable.shelter_id).first()
+            record = db(htable.id == unit_id).select(htable.shelter_id,
+                                                     limitby=(0, 1)).first()
 
             shelter_value = str(record.shelter_id)
             if shelter_value != shelter_id:
                 error = T("You have to select a housing unit belonged to the shelter")
                 form.errors["branch_id"] = error
                 current.response.error = error
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod

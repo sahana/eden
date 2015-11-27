@@ -3421,6 +3421,12 @@ class S3Config(Storage):
         """
         return self.__lazy("pr", "name_format", default="%(first_name)s %(middle_name)s %(last_name)s")
 
+    def get_pr_search_shows_hr_details(self):
+        """
+            Whether S3PersonAutocompleteWidget results show the details of their HR record
+        """
+        return self.pr.get("search_shows_hr_details", True)
+
     def get_pr_select_existing(self):
         """
             Whether the AddPersonWidget allows selecting existing PRs
@@ -3431,11 +3437,15 @@ class S3Config(Storage):
         """
         return self.pr.get("select_existing", True)
 
-    def get_pr_search_shows_hr_details(self):
+    def get_pr_separate_name_fields(self):
         """
-            Whether S3PersonAutocompleteWidget results show the details of their HR record
+            Whether the AddPersonWidget2 provides separate name fields or not
+            Options:
+                False (single field
+                2 (first/last)
+                3 (first/middle/last)
         """
-        return self.pr.get("search_shows_hr_details", True)
+        return self.__lazy("pr", "separate_name_fields", False)
 
     def get_pr_use_address(self):
         """

@@ -635,6 +635,7 @@ class S3AddPersonWidget2(FormWidget):
 
     def __init__(self,
                  controller = None,
+                 separate_name_fields = None,
                  father_name = None,
                  grandfather_name = None,
                  year_of_birth = None, # Whether to use Year of Birth (as well as, or instead of, Date of Birth)
@@ -643,6 +644,7 @@ class S3AddPersonWidget2(FormWidget):
         # Controller to retrieve the person or hrm record
         self.controller = controller
 
+        self.separate_name_fields = separate_name_fields
         self.father_name = father_name
         self.grandfather_name = grandfather_name
         self.year_of_birth = year_of_birth
@@ -660,7 +662,7 @@ class S3AddPersonWidget2(FormWidget):
             values = request.post_vars
             # @ToDo: Format these for Display?
             if values.get(str(field).split(".", 1)[1], None) and \
-               "full_name" not in values:
+               "full_name" not in values and "first_name" not in values:
                 # We selected an existing user...this would fail as the non-existent gender would fail to validate
                 # and we can optimise by simply returning the simple widget
                 return INPUT(**attr)
@@ -685,13 +687,6 @@ class S3AddPersonWidget2(FormWidget):
 
         s3 = current.response.s3
 
-        #bootstrap = settings.ui.formstyle == "bootstrap"
-        #if bootstrap:
-        #    # We need to make the HTML markup compliant with this CSS framework
-        #    # @ToDo: This should now be possible by calling the formstyle as-normal
-        #    # No need to test this formstyle as we know it up-front
-        #    tuple_rows = False
-        #else:
         # Test the formstyle
         formstyle = s3.crud.formstyle
         row = formstyle("test", "test", "test", "test")
@@ -710,11 +705,20 @@ class S3AddPersonWidget2(FormWidget):
         controller = self.controller or request.controller
         settings = current.deployment_settings
 
+        separate_name_fields = self.separate_name_fields
+        if separate_name_fields is None:
+            separate_name_fields = settings.get_pr_separate_name_fields()
+        if separate_name_fields:
+            middle_name = separate_name_fields == 3
+
         date_of_birth = None
         year_of_birth = self.year_of_birth
 
         dtable = None
         ptable = s3db.pr_person
+        first_name_field = ptable.first_name
+        middle_name_field = ptable.middle_name
+        last_name_field = ptable.last_name
 
         if year_of_birth is None:
             # Use Global deployment_setting
@@ -770,9 +774,9 @@ class S3AddPersonWidget2(FormWidget):
 
         if value:
             db = current.db
-            fields = [ptable.first_name,
-                      ptable.middle_name,
-                      ptable.last_name,
+            fields = [first_name_field,
+                      middle_name_field,
+                      last_name_field,
                       ptable.pe_id,
                       ]
             details = False
@@ -826,7 +830,13 @@ class S3AddPersonWidget2(FormWidget):
                 values["father_name"] = person_details.father_name
             if grandfather_name:
                 values["grandfather_name"] = person_details.grandfather_name
-            values["full_name"] = s3_fullname(person)
+            if separate_name_fields:
+                values["first_name"] = person.first_name
+                values["last_name"] = person.last_name
+                if middle_name:
+                    values["middle_name"] = person.middle_name
+            else:
+                values["full_name"] = s3_fullname(person)
             if year_of_birth:
                 values["year_of_birth"] = person_details.year_of_birth
             if date_of_birth:
@@ -933,12 +943,19 @@ class S3AddPersonWidget2(FormWidget):
                                           _id = "%s_organisation_id" % fieldname),
                      settings.get_hrm_org_required()))
 
-        # Name field
-        # - can search for an existing person
-        # - can create a new person
-        # - multiple names get assigned to first, middle, last
-        full_name_label = settings.get_pr_label_fullname()
-        fappend(("full_name", T(full_name_label), INPUT(data=data, _size=40), True))
+        if separate_name_fields:
+            fappend(("first_name", first_name_field.label, INPUT(data=data, _size=40), True))
+            if middle_name:
+                fappend(("middle_name", middle_name_field.label, INPUT(_size=40), False))
+            mandatory = settings.get_L10n_mandatory_lastname()
+            fappend(("last_name", last_name_field.label, INPUT(_size=40), mandatory))
+        else:
+            # Unified Name field
+            # - can search for an existing person
+            # - can create a new person
+            # - multiple names get assigned to first, middle, last
+            full_name_label = settings.get_pr_label_fullname()
+            fappend(("full_name", T(full_name_label), INPUT(data=data, _size=40), True))
 
         if father_name:
             fappend(("father_name", father_name.label, INPUT(), False))

@@ -1450,6 +1450,9 @@ class S3PersonModel(S3Model):
                 if show_orgs:
                     fields.append("human_resource.organisation_id$name")
 
+            separate_name_fields = settings.get_pr_separate_name_fields()
+            middle_name = separate_name_fields == 2
+
             name_format = settings.get_pr_name_format()
             match = re.match("\s*?%\((?P<fname>.*?)\)s.*", name_format)
             if match:
@@ -1475,14 +1478,22 @@ class S3PersonModel(S3Model):
             items = []
             iappend = items.append
             for row in rows:
-                name = Storage(first_name=row["pr_person.first_name"],
-                               middle_name=row["pr_person.middle_name"],
-                               last_name=row["pr_person.last_name"],
-                               )
-                name = s3_fullname(name)
-                item = {"id"    : row["pr_person.id"],
-                        "name"  : name,
-                        }
+                if separate_name_fields:
+                    item = {"id"         : row["pr_person.id"],
+                            "first_name" : row["pr_person.first_name"],
+                            "last_name"  : row["pr_person.last_name"],
+                            }
+                    if middle_name:
+                        item.update(middle_name=row["pr_person.middle_name"])
+                else:
+                    name = Storage(first_name=row["pr_person.first_name"],
+                                   middle_name=row["pr_person.middle_name"],
+                                   last_name=row["pr_person.last_name"],
+                                   )
+                    name = s3_fullname(name)
+                    item = {"id"    : row["pr_person.id"],
+                            "name"  : name,
+                            }  
                 if show_hr:
                     job_title = row.get("hrm_job_title.name", None)
                     if job_title:
@@ -1527,6 +1538,8 @@ class S3PersonModel(S3Model):
                   #ptable.last_name,
                   ]
         if tablename == "org_site":
+            separate_name_fields = settings.get_pr_separate_name_fields()
+            middle_name = separate_name_fields == 2
             # Coming from site_contact_person()
             fields.extend((ptable.first_name,
                            ptable.middle_name,
@@ -1563,7 +1576,13 @@ class S3PersonModel(S3Model):
             grandfather_name = None
             year_of_birth = None
         if tablename == "org_site":
-            name = s3_fullname(row)
+            if separate_name_fields:
+                first_name = row.first_name
+                last_name = row.last_name
+                if middle_name:
+                    middle_name = row.middle_name
+            else:
+                name = s3_fullname(row)
         if request_dob:
             date_of_birth = row.date_of_birth
         else:
@@ -1609,7 +1628,13 @@ class S3PersonModel(S3Model):
         item = {}
         if tablename == "org_site":
             item["id"] = id
-            item["name"] = name
+            if separate_name_fields:
+                item["first_name"] = first_name
+                item["last_name"] = last_name
+                if middle_name:
+                    item["middle_name"] = middle_name
+            else:
+                item["name"] = name
         if email:
             item["email"] = email
         if mobile_phone:

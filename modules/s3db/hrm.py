@@ -1109,6 +1109,9 @@ class S3HRModel(S3Model):
             if show_orgs:
                 fields.append("organisation_id$name")
 
+            separate_name_fields = settings.get_pr_separate_name_fields()
+            middle_name = separate_name_fields == 2
+
             name_format = settings.get_pr_name_format()
             test = name_format % dict(first_name=1,
                                       middle_name=2,
@@ -1129,14 +1132,22 @@ class S3HRModel(S3Model):
             output = []
             iappend = output.append
             for row in rows:
-                name = Storage(first_name=row["pr_person.first_name"],
-                               middle_name=row["pr_person.middle_name"],
-                               last_name=row["pr_person.last_name"],
-                               )
-                name = s3_fullname(name)
-                item = {"id"    : row["hrm_human_resource.id"],
-                        "name"  : name,
-                        }
+                if separate_name_fields:
+                    item = {"id"         : row["hrm_human_resource.id"],
+                            "first_name" : row["pr_person.first_name"],
+                            "last_name"  : row["pr_person.last_name"],
+                            }
+                    if middle_name:
+                        item.update(middle_name=row["pr_person.middle_name"])
+                else:
+                    name = Storage(first_name=row["pr_person.first_name"],
+                                   middle_name=row["pr_person.middle_name"],
+                                   last_name=row["pr_person.last_name"],
+                                   )
+                    name = s3_fullname(name)
+                    item = {"id"    : row["hrm_human_resource.id"],
+                            "name"  : name,
+                            }
                 if show_orgs:
                     item["org"] = row["org_organisation.name"]
                 job_title = row.get("hrm_job_title.name", None)

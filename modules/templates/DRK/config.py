@@ -114,6 +114,11 @@ def config(settings):
     settings.org.default_site = "BEA Benjamin Franklin Village"
 
     # -------------------------------------------------------------------------
+    # Persons Module Settings
+    #
+    #settings.pr.separate_name_fields = 2
+
+    # -------------------------------------------------------------------------
     # Project Module Settings
     #
     settings.project.mode_task = True

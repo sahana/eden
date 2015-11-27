@@ -28,6 +28,9 @@
             // Move the user-visible rows underneath the real (hidden) one
             var org_row = $(selector + '_organisation_id__row');
             var name_row = $(selector + '_full_name__row');
+            var first_name_row = $(selector + '_first_name__row');
+            var middle_name_row = $(selector + '_middle_name__row');
+            var last_name_row = $(selector + '_last_name__row');
             var father_name_row = $(selector + '_father_name__row');
             var grandfather_name_row = $(selector + '_grandfather_name__row');
             var date_of_birth_row = $(selector + '_date_of_birth__row');
@@ -49,6 +52,9 @@
                     .after(year_of_birth_row)
                     .after(grandfather_name_row)
                     .after(father_name_row)
+                    .after(last_name_row)
+                    .after(middle_name_row)
+                    .after(first_name_row)
                     .after(name_row)
                     .after(org_row)
                     .after(error_row)
@@ -57,6 +63,9 @@
             title_row.removeClass('hide').show();
             org_row.removeClass('hide').show();
             name_row.removeClass('hide').show();
+            first_name_row.removeClass('hide').show();
+            middle_name_row.removeClass('hide').show();
+            last_name_row.removeClass('hide').show();
             father_name_row.removeClass('hide').show();
             grandfather_name_row.removeClass('hide').show();
             date_of_birth_row.removeClass('hide').show();
@@ -122,6 +131,9 @@
             });
             // Check for Duplicates whenever any of the person fields are changed
             $(selector + '_full_name' + ',' +
+              selector + '_first_name' + ',' +
+              selector + '_middle_name' + ',' +
+              selector + '_last_name' + ',' +
               selector + '_date_of_birth' + ',' +
               selector + '_gender' + ',' +
               selector + '_father_name' + ',' +
@@ -220,6 +232,9 @@
         var selector = '#' + fieldname;
         $(selector + '_organisation_id').prop('disabled', false);
         $(selector + '_full_name').prop('disabled', false);
+        $(selector + '_first_name').prop('disabled', false);
+        $(selector + '_middle_name').prop('disabled', false);
+        $(selector + '_last_name').prop('disabled', false);
         $(selector + '_gender').prop('disabled', false);
         $(selector + '_date_of_birth').prop('disabled', false);
         $(selector + '_year_of_birth').prop('disabled', false);
@@ -235,6 +250,9 @@
         var selector = '#' + fieldname;
         $(selector + '_organisation_id').prop('disabled', true);
         $(selector + '_full_name').prop('disabled', true);
+        $(selector + '_first_name').prop('disabled', true);
+        $(selector + '_middle_name').prop('disabled', true);
+        $(selector + '_last_name').prop('disabled', true);
         $(selector + '_gender').prop('disabled', true);
         $(selector + '_date_of_birth').prop('disabled', true);
         $(selector + '_date_of_birth__row .ui-datepicker-trigger').hide();
@@ -273,6 +291,9 @@
             $(selector).val(existing.value);
             $(selector + '_organisation_id').prop('disabled', true).val(existing.organisation_id);
             $(selector + '_full_name').prop('disabled', true).val(existing.full_name);
+            $(selector + '_first_name').prop('disabled', true).val(existing.first_name);
+            $(selector + '_middle_name').prop('disabled', true).val(existing.middle_name);
+            $(selector + '_last_name').prop('disabled', true).val(existing.last_name);
             $(selector + '_gender').prop('disabled', true).val(existing.gender);
             $(selector + '_date_of_birth').prop('disabled', true).val(existing.date_of_birth);
             $(selector + '_date_of_birth__row .ui-datepicker-trigger').show();
