@@ -436,6 +436,7 @@ def config(settings):
                                 "date_of_birth",
                                 "gender",
                                 "person_details.nationality",
+                                "person_details.occupation",
                                 "person_details.marital_status",
                                 S3SQLInlineComponent(
                                         "contact",
@@ -448,7 +449,7 @@ def config(settings):
                                         multiple = False,
                                         name = "phone",
                                         ),
-                                "person_details.illiterate",
+                                "person_details.literacy_status",
                                 S3SQLInlineComponent(
                                         "case_language",
                                         fields = ["language",
