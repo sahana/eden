@@ -153,11 +153,6 @@ def config(settings):
     settings.cr.shelter_housing_unit_management = True
 
     # -------------------------------------------------------------------------
-    # Person Registry Settings
-    #
-    settings.pr.hide_third_gender = False
-
-    # -------------------------------------------------------------------------
     def site_check_in(site_id, person_id):
         """
             When a person is checked-in to a Shelter then update the Shelter Registration
@@ -237,6 +232,11 @@ def config(settings):
                                )
 
     settings.customise_cr_shelter_resource = customise_cr_shelter_resource
+
+    # -------------------------------------------------------------------------
+    # Person Registry Settings
+    #
+    settings.pr.hide_third_gender = False
 
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
