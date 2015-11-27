@@ -486,14 +486,23 @@ S3.search = {};
                 urlVariable = $('#' + id + '-data').val();
 
             // Helper to convert a JS Date into an ISO format string
-            var isoFormat = function(dt) {
-                return dt.getFullYear() + '-' +
-                       ('0' + (dt.getMonth() + 1)).slice(-2) + '-' +
-                       ('0' + dt.getDate()).slice(-2) + 'T' +
-                       ('0' + dt.getHours()).slice(-2) + ':' +
-                       ('0' + dt.getMinutes()).slice(-2) + ':' +
-                       ('0' + dt.getSeconds()).slice(-2);
-            };
+            var isoFormat;
+            if ($this.hasClass('datetimepicker')) {
+                isoFormat = function(dt) {
+                    return dt.getFullYear() + '-' +
+                           ('0' + (dt.getMonth() + 1)).slice(-2) + '-' +
+                           ('0' + dt.getDate()).slice(-2) + 'T' +
+                           ('0' + dt.getHours()).slice(-2) + ':' +
+                           ('0' + dt.getMinutes()).slice(-2) + ':' +
+                           ('0' + dt.getSeconds()).slice(-2);
+                };
+            } else {
+                isoFormat = function(dt) {
+                    return dt.getFullYear() + '-' +
+                           ('0' + (dt.getMonth() + 1)).slice(-2) + '-' +
+                           ('0' + dt.getDate()).slice(-2);
+                };
+            }
 
             var value = $this.val();
             if (value) {

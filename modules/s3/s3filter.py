@@ -768,12 +768,17 @@ class S3DateFilter(S3RangeFilter):
                             _name = input_id,
                             )
 
+            if operator in input_labels:
+                label = DIV(LABEL("%s:" % T(input_labels[operator]),
+                                  _for=input_id,
+                                  ),
+                            _class="range-filter-label",
+                            )
+            else:
+                label = ""
+
             # Append label and widget
-            append(DIV(DIV(LABEL("%s:" % T(input_labels[operator]),
-                                 _for=input_id,
-                                 ),
-                           _class="range-filter-label",
-                           ),
+            append(DIV(label,
                        DIV(picker,
                            _class="range-filter-widget",
                            ),

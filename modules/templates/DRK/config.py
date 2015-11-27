@@ -287,23 +287,26 @@ def config(settings):
                         db = current.db
                         stable = s3db.cr_shelter
                         query = (stable.site_id == default_site)
-                        shelter_id = db(query).select(stable.id,
-                                                      limitby=(0, 1)
-                                                      ).first().id
-                        rtable = s3db.cr_shelter_registration
-                        field = rtable.shelter_id
-                        field.default = shelter_id
-                        field.readable = field.writable = False
-                        # Filter housing units to units of this shelter
-                        field = rtable.shelter_unit_id
-                        dbset = db(s3db.cr_shelter_unit.shelter_id == shelter_id)
-                        from gluon import IS_EMPTY_OR
-                        from s3 import IS_ONE_OF
-                        field.requires = IS_EMPTY_OR(
-                                            IS_ONE_OF(dbset, "cr_shelter_unit.id",
-                                                      field.represent,
-                                                      sort=True,
-                                                      ))
+                        shelter = db(query).select(stable.id,
+                                                   limitby=(0, 1)
+                                                   ).first()
+                        if shelter:
+                            shelter_id = shelter.id
+                            rtable = s3db.cr_shelter_registration
+                            field = rtable.shelter_id
+                            field.default = shelter_id
+                            field.readable = field.writable = False
+                            
+                            # Filter housing units to units of this shelter
+                            field = rtable.shelter_unit_id
+                            dbset = db(s3db.cr_shelter_unit.shelter_id == shelter_id)
+                            from gluon import IS_EMPTY_OR
+                            from s3 import IS_ONE_OF
+                            field.requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(dbset, "cr_shelter_unit.id",
+                                                          field.represent,
+                                                          sort=True,
+                                                          ))
                     else:
                         # Limit sites to default_organisation
                         field = ctable.site_id
@@ -371,10 +374,15 @@ def config(settings):
 
                     # Remove filter default for case status
                     filter_widgets = resource.get_config("filter_widgets")
-                    for fw in filter_widgets:
-                        if fw.field == "dvr_case.status_id":
-                            fw.opts.default = None
-                            break
+                    if filter_widgets:
+                        for fw in filter_widgets:
+                            if fw.field == "dvr_case.status_id":
+                                fw.opts.default = None
+                                break
+                        from s3 import S3DateFilter
+                        dob_filter = S3DateFilter("date_of_birth")
+                        dob_filter.operator = ["eq"]
+                        filter_widgets.insert(1, dob_filter)
 
                 # Custom list fields (must be outside of r.interactive)
                 list_fields = ["dvr_case.reference",
