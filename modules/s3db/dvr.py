@@ -206,7 +206,7 @@ class DVRCaseModel(S3Model):
                            ),
                      person_id(empty = False,
                                ondelete = "CASCADE",
-                               ),  
+                               ),
                      FieldS3("case_type_id", "reference dvr_case_type",
                              label = T("Case Type"),
                              represent = case_type_represent,
@@ -355,6 +355,7 @@ class DVRCaseModel(S3Model):
         configure(tablename,
                   #report_options = report_options,
                   onvalidation = self.case_onvalidation,
+                  onaccept = self.case_onaccept,
                   )
 
         # Reusable field
@@ -529,6 +530,55 @@ class DVRCaseModel(S3Model):
                                     limitby = (0, 1)).first()
             if row:
                 form.errors["reference"] = msg
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_onaccept(form):
+        """
+            Case onaccept routine:
+            - auto-create active appointments
+
+            @param form: the FORM
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Read form data
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            return
+
+        # Get the person ID
+        if "person_id" in form_vars:
+            person_id = form_vars.person_id
+        else:
+            table = s3db.dvr_case
+            query = (table.id == record_id)
+            row = db(query).select(table.person_id,
+                                   limitby = (0, 1)).first()
+            if not row:
+                return
+            person_id = row.person_id
+
+        atable = s3db.dvr_case_appointment
+        ttable = s3db.dvr_case_appointment_type
+        left = atable.on((atable.type_id == ttable.id) &
+                         (atable.person_id == person_id) &
+                         (atable.deleted != True))
+        query = (atable.id == None) & \
+                (ttable.active == True) & \
+                (ttable.deleted != True)
+        rows = db(query).select(ttable.id, left=left)
+        for row in rows:
+            atable.insert(case_id = record_id,
+                          person_id = person_id,
+                          type_id = row.id,
+                          )
 
 # =============================================================================
 class DVRNeedsModel(S3Model):
