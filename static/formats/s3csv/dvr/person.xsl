@@ -410,6 +410,7 @@
             </resource>
 
             <!-- Person record -->
+            <data field="pe_label"><xsl:value-of select="col[@field='Label']"/></data>
             <data field="first_name"><xsl:value-of select="col[@field='First Name']"/></data>
             <xsl:if test="col[@field='Middle Name']!=''">
                 <data field="middle_name"><xsl:value-of select="col[@field='Middle Name']"/></data>
