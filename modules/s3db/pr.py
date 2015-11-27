@@ -2146,7 +2146,6 @@ class S3GroupModel(S3Model):
                                  "group_head",
                                  ],
                   onaccept = self.group_membership_onaccept,
-                  ondelete = self.group_membership_onaccept,
                   realm_entity = self.group_membership_realm_entity,
                   )
 
