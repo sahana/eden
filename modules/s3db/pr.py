@@ -1024,9 +1024,7 @@ class S3PersonModel(S3Model):
                        # Case Management  (Disaster Victim Registry)
                        dvr_beneficiary_data = "person_id",
                        dvr_case = {"name": "dvr_case",
-                                   "link": "dvr_case_person",
                                    "joinby": "person_id",
-                                   "key": "case_id",
                                    "multiple": False,
                                    },
                        dvr_case_activity = "person_id",
@@ -1917,6 +1915,7 @@ class S3GroupModel(S3Model):
                           4 : T("other"),
                           5 : T("Mailing Lists"),
                           #6 : T("Society"),
+                          7 : T("Case")
                           }
 
         tablename = "pr_group"
@@ -2183,11 +2182,20 @@ class S3GroupModel(S3Model):
 
         db = current.db
         table = db.pr_group_membership
+        gtable = db.pr_group
 
-        record = db(table.id == _id).select(limitby=(0, 1)).first()
+        join = gtable.on(gtable.id == table.group_id)
+        row = db(table.id == _id).select(table.id,
+                                         table.person_id,
+                                         table.group_id,
+                                         table.deleted,
+                                         gtable.group_type,
+                                         join = join,
+                                         limitby = (0, 1)).first()
+        record = row.pr_group_membership
+        group_id = record.group_id
+        person_id = record.person_id
         if record:
-            person_id = record.person_id
-            group_id = record.group_id
             if person_id and group_id and not record.deleted:
                 query = (table.person_id == person_id) & \
                         (table.group_id == group_id) & \
@@ -2201,6 +2209,19 @@ class S3GroupModel(S3Model):
                                  group_id = None,
                                  deleted_fk = json.dumps(deleted_fk))
             pr_update_affiliations(table, record)
+
+        group = row.pr_group
+        if group.group_type == 7:
+            s3db = current.s3db
+            # Generate a case unless we already have one
+            ctable = s3db.table("dvr_case")
+            if ctable:
+                query = (ctable.person_id == person_id) & \
+                        (ctable.deleted != True)
+                row = db(query).select(ctable.id, limitby=(0, 1)).first()
+                if not row:
+                    s3db.dvr_case_default_status()
+                    ctable.insert(person_id=person_id)
 
     # -------------------------------------------------------------------------
     @staticmethod

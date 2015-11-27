@@ -242,7 +242,7 @@ def config(settings):
     # DVR Module Settings and Customizations
     #
     dvr_case_tabs = [(T("Basic Details"), ""),
-                     (T("Family Members"), "case_person/"),
+                     (T("Family Members"), "group_membership/"),
                      (T("Activities"), "case_activity"),
                      (T("Appointments"), "case_appointment"),
                      ]
@@ -365,13 +365,12 @@ def config(settings):
                     # Custom CRUD form
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent
                     crud_form = S3SQLCustomForm(
-                                "dvr_case.reference",
+                                #"dvr_case.reference",
                                 # Will always default & be hidden
                                 "dvr_case.organisation_id",
                                 # Will always default & be hidden
                                 "dvr_case.site_id",
                                 "dvr_case.date",
-                                "dvr_case.valid_until",
                                 (T("Case Status"), "dvr_case.status_id"),
                                 # Will always default & be hidden
                                 #"cr_shelter_registration.site_id",
@@ -425,7 +424,7 @@ def config(settings):
                         filter_widgets.insert(1, dob_filter)
 
                 # Custom list fields (must be outside of r.interactive)
-                list_fields = ["dvr_case.reference",
+                list_fields = [#"dvr_case.reference",
                                (T("ID"), "pe_label"),
                                "first_name",
                                "last_name",
@@ -450,16 +449,50 @@ def config(settings):
     settings.customise_pr_person_controller = customise_pr_person_controller
 
     # -------------------------------------------------------------------------
-    def customise_dvr_case_person_controller(**attr):
+    def customise_pr_group_membership_controller(**attr):
 
         s3db = current.s3db
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            resource = r.resource
+            if r.controller == "dvr" and r.interactive:
+                resource.configure(filter_widgets = None)
+
+                table = resource.table
+                field = table.person_id
+
+                from s3 import IS_ADD_PERSON_WIDGET2, S3AddPersonWidget2
+
+                field.represent = s3db.pr_PersonRepresent(show_link=True)
+                field.requires = IS_ADD_PERSON_WIDGET2()
+                field.widget = S3AddPersonWidget2(controller="dvr")
+                
+            return result
+        s3.prep = custom_prep
 
         attr = dict(attr)
-        attr["rheader"] = lambda r: s3db.dvr_rheader(r, tabs=dvr_case_tabs)
+        def rheader(r):
+            if r.controller == "dvr":
+                return s3db.dvr_rheader(r, tabs=dvr_case_tabs)
+            else:
+                return attr.get("rheader")
+        attr["rheader"] = rheader
 
+        
+        
         return attr
 
-    settings.customise_dvr_case_person_controller = customise_dvr_case_person_controller
+    settings.customise_pr_group_membership_controller = customise_pr_group_membership_controller
 
     # -------------------------------------------------------------------------
     def customise_dvr_case_activity_controller(**attr):

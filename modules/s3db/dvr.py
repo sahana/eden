@@ -56,7 +56,6 @@ class DVRCaseModel(S3Model):
     names = ("dvr_case",
              "dvr_case_id",
              "dvr_case_language",
-             "dvr_case_person",
              "dvr_case_status",
              "dvr_case_type",
              )
@@ -197,6 +196,10 @@ class DVRCaseModel(S3Model):
 
         tablename = "dvr_case"
         define_table(tablename,
+                     person_id(represent = self.pr_PersonRepresent(show_link=True),
+                               requires = IS_ADD_PERSON_WIDGET2(),
+                               widget = S3AddPersonWidget2(controller="dvr"),
+                               ),
                      # @ToDo: Option to autogenerate these, like Waybills, et al
                      Field("reference",
                            label = T("Case Number"),
@@ -313,7 +316,6 @@ class DVRCaseModel(S3Model):
         self.add_components(tablename,
                             dvr_beneficiary_data = "case_id",
                             dvr_case_activity = "case_id",
-                            dvr_case_person = "case_id",
                             dvr_case_service_contact = "case_id",
                             dvr_economy = {"joinby": "case_id",
                                            "multiple": False,
@@ -362,46 +364,6 @@ class DVRCaseModel(S3Model):
                                                 IS_ONE_OF(db, "dvr_case.id",
                                                           represent)),
                                   )
-
-        # ---------------------------------------------------------------------
-        # Link table Case <=> Person (=the case beneficiaries)
-        #
-        tablename = "dvr_case_person"
-        define_table(tablename,
-                     case_id(empty = False,
-                             ondelete = "CASCADE",
-                             ),
-                     person_id(empty = False,
-                               ondelete = "CASCADE",
-                               represent = self.pr_PersonRepresent(show_link=True),
-                               requires = IS_ADD_PERSON_WIDGET2(),
-                               widget = S3AddPersonWidget2(controller="dvr"),
-                               ),
-                     Field("head_of_household", "boolean",
-                           default = False,
-                           represent = s3_yes_no_represent,
-                           ),
-                     *s3_meta_fields())
-
-        # CRUD Strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Add Family Member"),
-            title_display = T("Family Member"),
-            title_list = T("Family Members"),
-            title_update = T("Edit Family Member"),
-            label_list_button = T("List Family Members"),
-            label_delete_button = T("Remove Family Member"),
-            msg_record_created = T("Family Member added"),
-            msg_record_modified = T("Family Member updated"),
-            msg_record_deleted = T("Family Member removed"),
-            msg_list_empty = T("No Family Members currently registered"),
-            )
-
-        # Table configuration
-        configure(tablename,
-                  onvalidation = self.case_person_onvalidation,
-                  onaccept = self.case_person_onaccept,
-                  )
 
         # ---------------------------------------------------------------------
         # Case Language: languages that can be used to communicate with
@@ -564,139 +526,6 @@ class DVRCaseModel(S3Model):
                                     limitby = (0, 1)).first()
             if row:
                 form.errors["reference"] = msg
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def case_person_onvalidation(form):
-        """
-            Onvalidation routine for case-person links:
-            - make sure a person is linked to a case only once
-
-            @param form: the FORM
-        """
-
-        db = current.db
-        table = current.s3db.dvr_case_person
-
-        form_vars = form.vars
-
-        # Get the record ID
-        if "id" in form_vars:
-            record_id = form_vars.id
-        elif hasattr(form, "record_id"):
-            record_id = form.record_id
-        else:
-            record_id = None
-
-        # Get the record
-        if record_id and \
-           ("person_id" not in form_vars or "case_id" not in form_vars):
-            query = (table.id == record_id)
-            record = db(query).select(table.case_id,
-                                      table.person_id,
-                                      limitby = (0, 1)).first()
-        else:
-            record = None
-
-        # Get the case_id (use default if not in form)
-        if "case_id" in form_vars:
-            case_id = form_vars.case_id
-        elif record:
-            case_id = record.case_id
-        else:
-            case_id = table.case_id.default
-
-        # Get the person_id (use default if not in form)
-        if "person_id" in form_vars:
-            person_id = form_vars.person_id
-        elif record:
-            person_id = record.person_id
-        else:
-            person_id = table.person_id.default
-
-        # Check whether there is already a record with the same
-        # case_id and person_id
-        query = (table.case_id == case_id) & \
-                (table.person_id == person_id) & \
-                (table.deleted != True)
-        if record_id:
-            query = (table.id != record_id) & query
-        row = db(query).select(table.id, limitby=(0, 1)).first()
-
-        if row:
-            # Person is already linked to that case
-            error = current.T("The person is already linked to this case")
-            if "case_id" in form_vars:
-                form.errors["case_id"] = error
-            else:
-                form.errors["person_id"] = error
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def case_person_onaccept(form):
-        """
-            Onaccept routine for case-person links
-            - make sure the person is only linked to one case
-            - merge components when linking to another case
-
-            @param form: the FORM
-        """
-
-        db = current.db
-        s3db = current.s3db
-
-        form_vars = form.vars
-
-        # Get the record_id
-        try:
-            record_id = form_vars.id
-        except AttributeError:
-            record_id = None
-        if not record_id:
-            return
-
-        if "case_id" not in form_vars or "person_id" not in form_vars:
-            # Reload the record
-            table = s3db.dvr_case_person
-            query = (table.id == record_id)
-            record = db(query).select(table.case_id,
-                                      table.person_id,
-                                      limitby = (0, 1)).first()
-            if not record:
-                return
-            case_id = record.case_id
-            person_id = record.person_id
-        else:
-            case_id = form_vars.case_id
-            person_id = form_vars.person_id
-
-        # Remove all other links for the same person
-        query = (FS("person_id") == person_id) & \
-                (FS("id") != record_id)
-        resource = s3db.resource("dvr_case_person", filter=query)
-        result = resource.delete()
-
-        if not result:
-            # No links deleted => can return here
-            return
-
-        # Re-link components to the new case
-        components = ("dvr_case_activity",
-                      "dvr_case_service_contact",
-                      "dvr_beneficiary_data",
-                      "dvr_economy",
-                      )
-        accessible_query = current.auth.s3_accessible_query
-
-        for tablename in components:
-            ctable = s3db.table(tablename)
-            if not ctable:
-                continue
-            query = accessible_query("update", ctable) & \
-                    (ctable.person_id == person_id) & \
-                    (ctable.case_id != case_id) & \
-                    (ctable.deleted != True)
-            db(query).update(case_id=case_id)
 
 # =============================================================================
 class DVRNeedsModel(S3Model):
@@ -1525,7 +1354,6 @@ def dvr_rheader(r, tabs=[]):
 
             if not tabs:
                 tabs = [(T("Basic Details"), None),
-                        (T("Persons"), "case_person"),
                         (T("Activities"), "case_activity"),
                         ]
 

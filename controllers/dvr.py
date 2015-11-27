@@ -40,10 +40,10 @@ def person():
                str(ctable.case_id.type)[:18] == "reference dvr_case":
 
                 # Find the Case ID
-                ltable = s3db.dvr_case_person
-                query = (ltable.person_id == r.id) & \
-                        (ltable.deleted != True)
-                links = db(query).select(ltable.case_id, limitby=(0, 2))
+                dvr_case = s3db.dvr_case
+                query = (dvr_case.person_id == r.id) & \
+                        (dvr_case.deleted != True)
+                links = db(query).select(dvr_case.id, limitby=(0, 2))
 
                 case_id = ctable.case_id
                 if links:
@@ -175,64 +175,77 @@ def person():
     return s3_rest_controller("pr", "person", rheader = s3db.dvr_rheader)
 
 # -----------------------------------------------------------------------------
-def case_person():
+def group_membership():
     """
-        RESTful CRUD controller for person<=>case links, normally called
-        only from component tab in person perspective (Family Members)
+        RESTful CRUD controller for person<=>group links, normally called
+        only from component tab in person perspective (e.g. family members)
     """
 
     def prep(r):
 
         table = r.table
         resource = r.resource
-
+        
         get_vars = r.get_vars
         if "viewing" in get_vars:
-
+            
             try:
                 vtablename, record_id = get_vars["viewing"].split(".")
             except ValueError:
                 return False
 
             if vtablename == "pr_person":
-                # Get all case_ids with this person_id
+                # Get all group_ids with this person_id
+                gtable = s3db.pr_group
+                join = gtable.on(gtable.id == table.group_id)
                 query = (table.person_id == record_id) & \
+                        (gtable.group_type == 7) & \
                         (table.deleted != True)
-                rows = db(query).select()
-                case_ids = set(row.case_id for row in rows)
+                rows = db(query).select(table.group_id,
+                                        join=join,
+                                        )
+                group_ids = set(row.group_id for row in rows)
                 # Hide the link for this person (to prevent changes/deletion)
-                if case_ids:
-                    resource.add_filter(FS("person_id") != record_id)
+                if group_ids:
+                    # Single group ID?
+                    group_id = tuple(group_ids)[0] if len(group_ids) == 1 else None
+                else:
+                    group_id = gtable.insert(name = record_id,
+                                             group_type = 7,
+                                             )
+                    table.insert(group_id = group_id,
+                                 person_id = record_id,
+                                 )
+                    group_ids = set((group_id,))
+                resource.add_filter(FS("person_id") != record_id)
             else:
-                case_ids = set()
-
-            # Single case ID?
-            case_id = tuple(case_ids)[0] if len(case_ids) == 1 else None
+                group_ids = set()
+        
 
             # Show only links for relevant cases
             # NB Filter also prevents showing all links if case_ids is empty
             if not r.id:
-                if len(case_ids) == 1:
-                    r.resource.add_filter(FS("case_id") == case_id)
+                if len(group_ids) == 1:
+                    r.resource.add_filter(FS("group_id") == group_id)
                 else:
-                    r.resource.add_filter(FS("case_id").belongs(case_ids))
+                    r.resource.add_filter(FS("group_id").belongs(group_ids))
 
             list_fields = ["person_id",
                            "person_id$gender",
                            "person_id$date_of_birth",
                            ]
-            if len(case_ids) == 1:
-                field = table.case_id
-                field.default = case_id
-                # If we have only one relevant case, then hide the case ID
+            
+            if len(group_ids) == 1:
+                field = table.group_id
+                field.default = group_id
+                # If we have only one relevant case, then hide the group ID
                 # in create-forms:
                 if not r.id:
                     field.readable = field.writable = False
             else:
                 # Show the case ID in list fields if there is more than one
                 # relevant case
-                list_fields.insert(0, "case_id")
-
+                list_fields.insert(0, "group_id")
             r.resource.configure(list_fields = list_fields)
 
         # Do not allow update of person_id
@@ -249,7 +262,9 @@ def case_person():
     settings.pr.request_home_phone = False
     settings.hrm.email_required = False
 
-    return s3_rest_controller(rheader = s3db.dvr_rheader)
+    return s3_rest_controller("pr", "group_membership",
+                              rheader = s3db.dvr_rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def case_activity():
@@ -301,42 +316,6 @@ def case():
     """ Cases: RESTful CRUD Controller """
 
     s3db.dvr_case_default_status()
-
-    def prep(r):
-
-        component_name = r.component_name
-
-        if component_name == "case_person":
-
-            # Disable unwanted fields in person widget
-            # (can override in template)
-            settings.pr.request_email = False
-            settings.pr.request_home_phone = False
-            settings.hrm.email_required = False
-
-        elif component_name == "case_activity":
-
-            # Persons linked to this case
-            ltable = s3db.dvr_case_person
-            query = (ltable.case_id == r.id) & \
-                    (ltable.deleted != True)
-            rows = db(query).select(ltable.person_id)
-            person_ids = set(row.person_id for row in rows)
-
-            ctable = r.component.table
-            field = ctable.person_id
-
-            # Simple drop-down
-            field.readable = field.writable = True
-            field.widget = None
-
-            # Person is required
-            query = s3db.pr_person.id.belongs(person_ids)
-            field.requires = IS_ONE_OF(db(query), "pr_person.id",
-                                       field.represent,
-                                       )
-        return True
-    s3.prep = prep
 
     return s3_rest_controller(rheader = s3db.dvr_rheader)
 
