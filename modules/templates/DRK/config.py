@@ -27,7 +27,7 @@ def config(settings):
 
     # PrePopulate data
     #settings.base.prepopulate = ("skeleton", "default/users")
-    settings.base.prepopulate += ("DRK", "default/users")
+    settings.base.prepopulate += ("DRK", "default/users", "DRK/Demo")
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "DRK"
@@ -229,14 +229,45 @@ def config(settings):
         return None, None
 
     # -------------------------------------------------------------------------
-    def customise_cr_shelter_resource(r, tablename):
+    def customise_cr_shelter_controller(**attr):
 
-        current.s3db.configure(tablename,
-                               site_check_in = site_check_in,
-                               site_check_out = site_check_out,
-                               )
+        s3 = current.response.s3
 
-    settings.customise_cr_shelter_resource = customise_cr_shelter_resource
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method == "check-in":
+                current.s3db.configure("cr_shelter",
+                                       site_check_in = site_check_in,
+                                       site_check_out = site_check_out,
+                                       )
+            return  result
+        s3.prep = custom_prep
+
+        # Custom postp
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.method == "check-in":
+                current.menu.options = None
+                output["rheader"] = ""
+
+            return output
+
+        s3.postp = custom_postp
+
+        return attr
+
+    settings.customise_cr_shelter_controller = customise_cr_shelter_controller
 
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
@@ -729,6 +760,11 @@ def config(settings):
         ("event", Storage(
            name_nice = T("Events"),
            #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+           restricted = True,
+           module_type = 10,
+        )),
+        ("security", Storage(
+           name_nice = T("Security"),
            restricted = True,
            module_type = 10,
         )),

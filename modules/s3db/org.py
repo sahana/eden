@@ -5644,7 +5644,7 @@ class org_SiteCheckInMethod(S3Method):
         # @ToDo: Hide this & populate from barcode scanner
         # (deployment_setting to allow manual entering of code?)
         _id = "pe_label"
-        label = LABEL("%s:" % T("Code"))
+        label = LABEL("%s:" % s3db.pr_person.pe_label.label)
         widget = INPUT(_name=_id, _id=_id)
         row = formstyle("%s__row" % _id, label, widget, comment)
         if tuple_rows:
