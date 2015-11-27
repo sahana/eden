@@ -29,6 +29,10 @@ def zone_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def person():
+    return s3_rest_controller("pr")
+
+# -----------------------------------------------------------------------------
 def staff():
     return s3_rest_controller()
 

@@ -27,6 +27,8 @@
          DOB............................optional.....person date of birth
          Year of Birth..................optional.....person_details year of birth
          Place of Birth.................optional.....person_details place of birth
+         Marital Status.................optional.....person_details marital status
+         Number of Children.............optional.....person_details number of children
          Nationality....................optional.....person_details nationality
          Occupation.....................optional.....person_details occupation
          Company........................optional.....person_details company
@@ -77,6 +79,7 @@
          Year...........................optional.....person education year
          Institute......................optional.....person education institute
          Photo..........................optional.....pr_image.image (URL to remote server to download)
+         Appointment:XX.................optional.....Appointment,Status (Type = XX in column name, Status = cell in row. Multiple allowed. Options: done, Date)
 
          Column headers looked up in labels.xml:
 
@@ -107,6 +110,9 @@
     <xsl:key name="education_level" match="row"
              use="col[@field='Education Level']"/>
 
+    <xsl:key name="family" match="row"
+             use="col[@field='Family']"/>
+
     <xsl:key name="status" match="row"
              use="col[@field='Status']"/>
 
@@ -126,6 +132,17 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('status',
                                                                    col[@field='Status'])[1])]">
                 <xsl:call-template name="Status"/>
+            </xsl:for-each>
+
+            <!-- Case Appointment Types -->
+            <xsl:for-each select="//row[1]/col[starts-with(@field, 'Appointment')]">
+                <xsl:call-template name="AppointmentType"/>
+            </xsl:for-each>
+
+            <!-- Families -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('family',
+                                                                   col[@field='Family'])[1])]">
+                <xsl:call-template name="Family"/>
             </xsl:for-each>
 
             <!-- Education Levels -->
@@ -325,6 +342,8 @@
 
         <xsl:variable name="FacilityName" select="col[@field='Facility']/text()"/>
         <xsl:variable name="FacilityType" select="col[@field='Facility Type']/text()"/>
+        <xsl:variable name="Illiterate" select="col[@field='Illiterate']/text()"/>
+        <xsl:variable name="MaritalStatus" select="col[@field='Marital Status']/text()"/>
 
         <xsl:variable name="gender">
             <xsl:call-template name="GetColumnValue">
@@ -391,6 +410,7 @@
             </resource>
 
             <!-- Person record -->
+            <data field="pe_label"><xsl:value-of select="col[@field='Label']"/></data>
             <data field="first_name"><xsl:value-of select="col[@field='First Name']"/></data>
             <xsl:if test="col[@field='Middle Name']!=''">
                 <data field="middle_name"><xsl:value-of select="col[@field='Middle Name']"/></data>
@@ -408,7 +428,50 @@
                 </data>
             </xsl:if>
 
+            <!-- Family -->
+            <xsl:if test="col[@field='Family']!=''">
+                <resource name="pr_group_membership">
+                    <reference field="parent" resource="pr_group">
+                        <resource name="pr_group">
+                            <xsl:attribute name="tuid">
+                                <xsl:value-of select="concat('Family:',col[@field='Family'])"/>
+                            </xsl:attribute>
+                        </resource>
+                    </reference>
+                </resource>
+            </xsl:if>
+            
+            <!-- Appointments -->
+            <xsl:for-each select="col[starts-with(@field, 'Appointment')]">
+                <xsl:call-template name="Appointment"/>
+            </xsl:for-each>
+
             <resource name="pr_person_details">
+                <xsl:if test="$MaritalStatus!=''">
+                    <data field="marital_status">
+                            <xsl:choose>
+                                <xsl:when test="$MaritalStatus='single'">
+                                    <xsl:text>1</xsl:text>
+                                </xsl:when>
+                                <xsl:when test="$MaritalStatus='married'">
+                                    <xsl:text>2</xsl:text>
+                                </xsl:when>
+                                <xsl:when test="$MaritalStatus='separated'">
+                                    <xsl:text>3</xsl:text>
+                                </xsl:when>
+                                <xsl:when test="$MaritalStatus='divorced'">
+                                    <xsl:text>4</xsl:text>
+                                </xsl:when>
+                                <xsl:when test="$MaritalStatus='widowed'">
+                                    <xsl:text>5</xsl:text>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <!-- Unknown
+                                    <xsl:value-of select="$MaritalStatus"/>-->
+                                </xsl:otherwise>
+                            </xsl:choose>
+                    </data>
+                </xsl:if>
                 <xsl:if test="col[@field='Father Name']!=''">
                     <data field="father_name"><xsl:value-of select="col[@field='Father Name']"/></data>
                 </xsl:if>
@@ -420,6 +483,40 @@
                 </xsl:if>
                 <xsl:if test="col[@field='Grandmother Name']!=''">
                     <data field="grandmother_name"><xsl:value-of select="col[@field='Grandmother Name']"/></data>
+                </xsl:if>
+                <xsl:if test="col[@field='Number of Children']!=''">
+                    <data field="number_children"><xsl:value-of select="col[@field='Number of Children']"/></data>
+                </xsl:if>
+                <xsl:if test="$Illiterate!=''">
+                    <xsl:choose>
+                        <xsl:when test="$Illiterate='Y'">
+                            <data field="illiterate" value="true">True</data>
+                        </xsl:when>
+                        <xsl:when test="$Illiterate='YES'">
+                            <data field="illiterate" value="true">True</data>
+                        </xsl:when>
+                        <xsl:when test="$Illiterate='T'">
+                            <data field="illiterate" value="true">True</data>
+                        </xsl:when>
+                        <xsl:when test="$Illiterate='TRUE'">
+                            <data field="illiterate" value="true">True</data>
+                        </xsl:when>
+                        <xsl:when test="$Illiterate='N'">
+                            <data field="illiterate" value="false">False</data>
+                        </xsl:when>
+                        <xsl:when test="$Illiterate='NO'">
+                            <data field="illiterate" value="false">False</data>
+                        </xsl:when>
+                        <xsl:when test="$Illiterate='F'">
+                            <data field="illiterate" value="false">False</data>
+                        </xsl:when>
+                        <xsl:when test="$Illiterate='FALSE'">
+                            <data field="illiterate" value="false">False</data>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <!-- Unknown -->
+                        </xsl:otherwise>
+                    </xsl:choose>
                 </xsl:if>
                 <xsl:if test="col[@field='Religion']!=''">
 	                <data field="religion">
@@ -1017,6 +1114,90 @@
                     <xsl:value-of select="concat('EducationLevel:',$Level)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$Level"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Family">
+        <xsl:variable name="Family" select="col[@field='Family']"/>
+
+        <xsl:if test="$Family!=''">
+            <resource name="pr_group">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Family:',$Family)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Family"/></data>
+                <!-- Case
+                <data field="group_type">7</data> -->
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <!-- Appointment Type, called in context of "Appointment:TypeName" columns -->
+    <xsl:template name="AppointmentType">
+
+        <xsl:variable name="TypeStr" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="AppointmentType">
+            <xsl:choose>
+                <xsl:when test="contains($TypeStr, ':')">
+                    <xsl:value-of select="normalize-space(substring-after($TypeStr, ':'))"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$TypeStr"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <resource name="dvr_case_appointment_type">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="concat('AppointmentType:', $AppointmentType)"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$AppointmentType"/></data>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Appointment">
+        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
+        <xsl:variable name="Value" select="text()"/>
+
+        <xsl:if test="$Value!=''">
+            <resource name="dvr_case_appointment">
+                <reference field="type_id" resource="dvr_case_appointment_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('AppointmentType:',$Key)"/>
+                    </xsl:attribute>
+                </reference>
+                <xsl:choose>
+                    <xsl:when test="$Value='done'">
+                        <data field="status">
+                            <xsl:text>4</xsl:text>
+                        </data>
+                    </xsl:when>
+                    <xsl:when test="$Value='missed'">
+                        <data field="status">
+                            <xsl:text>5</xsl:text>
+                        </data>
+                    </xsl:when>
+                    <xsl:when test="$Value='cancelled'">
+                        <!-- e.g. no X-Ray as pregnant -->
+                        <data field="status">
+                            <xsl:text>6</xsl:text>
+                        </data>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <!-- Assume a planned date -->
+                        <data field="date">
+                            <xsl:value-of select="$Value"/>
+                        </data>
+                        <data field="status">
+                            <xsl:text>2</xsl:text>
+                        </data>
+                    </xsl:otherwise>
+                </xsl:choose>
             </resource>
         </xsl:if>
     </xsl:template>
