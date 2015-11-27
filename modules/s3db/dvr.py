@@ -918,7 +918,7 @@ class DVRCaseAppointmentModel(S3Model):
                                    5: T("Missed"),
                                    6: T("Cancelled"),
                                    }
-        
+
         tablename = "dvr_case_appointment"
         define_table(tablename,
                      self.dvr_case_id(comment = None,

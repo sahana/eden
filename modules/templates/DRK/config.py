@@ -156,7 +156,7 @@ def config(settings):
     # Person Registry Settings
     #
     settings.pr.hide_third_gender = False
-    
+
     # -------------------------------------------------------------------------
     def site_check_in(site_id, person_id):
         """
@@ -262,12 +262,21 @@ def config(settings):
                 result = standard_prep(r)
             else:
                 result = True
-                
+
 
             if r.controller == "dvr" and not r.component:
 
+                s3db.add_components("pr_person",
+                                    pr_person_tag = {"name": "eo_number",
+                                                     "joinby": "person_id",
+                                                     "filterby": "tag",
+                                                     "filterfor": ("EONUMBER",),
+                                                     "multiple": False,
+                                                     },
+                                    )
+
                 from gluon import IS_EMPTY_OR, IS_NOT_EMPTY
-                
+
                 ctable = s3db.dvr_case
                 #default_organisation = current.auth.root_org()
                 default_organisation = settings.get_org_default_organisation()
@@ -309,7 +318,7 @@ def config(settings):
                             field = rtable.shelter_id
                             field.default = shelter_id
                             field.readable = field.writable = False
-                            
+
                             # Filter housing units to units of this shelter
                             field = rtable.shelter_unit_id
                             dbset = db(s3db.cr_shelter_unit.shelter_id == shelter_id)
@@ -361,7 +370,7 @@ def config(settings):
                     # Last name is required
                     field = table.last_name
                     field.requires = IS_NOT_EMPTY()
-                    
+
                     # Custom CRUD form
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent
                     crud_form = S3SQLCustomForm(
@@ -380,6 +389,17 @@ def config(settings):
                                 "cr_shelter_registration.shelter_unit_id",
                                 "cr_shelter_registration.check_in_date",
                                 (T("ID"), "pe_label"),
+                                S3SQLInlineComponent(
+                                        "eo_number",
+                                        fields = [("", "value"),
+                                                  ],
+                                        filterby = {"field": "tag",
+                                                    "options": "EONUMBER",
+                                                    },
+                                        label = T("EasyOpt Number"),
+                                        multiple = False,
+                                        name = "eo_number",
+                                        ),
                                 "first_name",
                                 "last_name",
                                 "date_of_birth",
@@ -414,10 +434,12 @@ def config(settings):
                     # Remove filter default for case status
                     filter_widgets = resource.get_config("filter_widgets")
                     if filter_widgets:
+                        from s3 import S3TextFilter
                         for fw in filter_widgets:
                             if fw.field == "dvr_case.status_id":
                                 fw.opts.default = None
-                                break
+                            if isinstance(fw, S3TextFilter):
+                                fw.field.append("eo_number.value")
                         from s3 import S3DateFilter
                         dob_filter = S3DateFilter("date_of_birth")
                         dob_filter.operator = ["eq"]
@@ -426,6 +448,7 @@ def config(settings):
                 # Custom list fields (must be outside of r.interactive)
                 list_fields = [#"dvr_case.reference",
                                (T("ID"), "pe_label"),
+                               (T("EasyOpt No."), "eo_number.value"),
                                "first_name",
                                "last_name",
                                "date_of_birth",
@@ -476,7 +499,7 @@ def config(settings):
                 field.represent = s3db.pr_PersonRepresent(show_link=True)
                 field.requires = IS_ADD_PERSON_WIDGET2()
                 field.widget = S3AddPersonWidget2(controller="dvr")
-                
+
             return result
         s3.prep = custom_prep
 
@@ -488,8 +511,8 @@ def config(settings):
                 return attr.get("rheader")
         attr["rheader"] = rheader
 
-        
-        
+
+
         return attr
 
     settings.customise_pr_group_membership_controller = customise_pr_group_membership_controller
@@ -498,6 +521,7 @@ def config(settings):
     def customise_dvr_case_activity_controller(**attr):
 
         s3 = current.response.s3
+        s3db = current.s3db
 
         # Custom prep
         standard_prep = s3.prep
@@ -510,6 +534,23 @@ def config(settings):
                 result = True
 
             if not r.component:
+
+                resource = r.resource
+                filter_widgets = resource.get_config("filter_widgets")
+                if filter_widgets:
+                    s3db.add_components("pr_person",
+                                        pr_person_tag = {"name": "eo_number",
+                                                         "joinby": "person_id",
+                                                         "filterby": "tag",
+                                                         "filterfor": ("EONUMBER",),
+                                                         "multiple": False,
+                                                         },
+                                        )
+                    from s3 import S3TextFilter
+                    for fw in filter_widgets:
+                        if isinstance(fw, S3TextFilter):
+                            fw.field.append("person_id$eo_number.value")
+                            break
 
                 # Custom list fields
                 list_fields = [(T("ID"), "person_id$pe_label"),

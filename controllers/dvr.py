@@ -43,13 +43,13 @@ def person():
                 dvr_case = s3db.dvr_case
                 query = (dvr_case.person_id == r.id) & \
                         (dvr_case.deleted != True)
-                links = db(query).select(dvr_case.id, limitby=(0, 2))
+                cases = db(query).select(dvr_case.id, limitby=(0, 2))
 
                 case_id = ctable.case_id
-                if links:
+                if cases:
                     # Set default
-                    case_id.default = links.first().case_id
-                if len(links) == 1:
+                    case_id.default = cases.first().id
+                if len(cases) == 1:
                     # Only one case => hide case selector
                     case_id.readable = case_id.writable = False
                 else:
@@ -185,10 +185,10 @@ def group_membership():
 
         table = r.table
         resource = r.resource
-        
+
         get_vars = r.get_vars
         if "viewing" in get_vars:
-            
+
             try:
                 vtablename, record_id = get_vars["viewing"].split(".")
             except ValueError:
@@ -220,7 +220,7 @@ def group_membership():
                 resource.add_filter(FS("person_id") != record_id)
             else:
                 group_ids = set()
-        
+
 
             # Show only links for relevant cases
             # NB Filter also prevents showing all links if case_ids is empty
@@ -234,7 +234,7 @@ def group_membership():
                            "person_id$gender",
                            "person_id$date_of_birth",
                            ]
-            
+
             if len(group_ids) == 1:
                 field = table.group_id
                 field.default = group_id
