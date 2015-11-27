@@ -28,6 +28,7 @@
 """
 
 __all__ = ("DVRCaseModel",
+           "DVRCaseFlagModel",
            "DVRNeedsModel",
            "DVRCaseActivityModel",
            "DVRCaseAppointmentModel",
@@ -579,6 +580,102 @@ class DVRCaseModel(S3Model):
                           person_id = person_id,
                           type_id = row.id,
                           )
+
+# =============================================================================
+class DVRCaseFlagModel(S3Model):
+    """ Model for Case Flags """
+
+    names = ("dvr_case_flag",
+             "dvr_case_flag_case",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        configure = self.configure
+
+        # ---------------------------------------------------------------------
+        # Case Flags
+        #
+        tablename = "dvr_case_flag"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_FLAG = T("Create Case Flag")
+        crud_strings[tablename] = Storage(
+            label_create = ADD_FLAG,
+            title_display = T("Case Flag Details"),
+            title_list = T("Case Flags"),
+            title_update = T("Edit Case Flag"),
+            label_list_button = T("List Case Flags"),
+            label_delete_button = T("Delete Case Flag"),
+            msg_record_created = T("Case Flag added"),
+            msg_record_modified = T("Case Flag updated"),
+            msg_record_deleted = T("Case Flag deleted"),
+            msg_list_empty = T("No Case Flags found"),
+            )
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        flag_id = S3ReusableField("flag_id", "reference %s" % tablename,
+                                  label = T("Case Flag"),
+                                  ondelete = "RESTRICT",
+                                  represent = represent,
+                                  requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "dvr_case_flag.id",
+                                                          represent)),
+                                  comment=S3PopupLink(c = "dvr",
+                                                      f = "case_flag",
+                                                      title = ADD_FLAG,
+                                                      tooltip = T("Choose the flag from the drop-down, or click the link to create a new flag"),
+                                                      ),
+                                  )
+
+        # ---------------------------------------------------------------------
+        # Link table Case <=> Flag
+        #
+        tablename = "dvr_case_flag_case"
+        define_table(tablename,
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     flag_id(empty = False,
+                             ondelete = "CASCADE",
+                             ),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"dvr_case_flag_id": flag_id,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"dvr_case_flag_id": lambda **attr: dummy("flag_id"),
+                }
 
 # =============================================================================
 class DVRNeedsModel(S3Model):

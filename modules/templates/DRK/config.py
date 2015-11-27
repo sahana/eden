@@ -403,7 +403,7 @@ def config(settings):
                     field.requires = IS_NOT_EMPTY()
 
                     # Custom CRUD form
-                    from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                    from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
                     crud_form = S3SQLCustomForm(
                                 #"dvr_case.reference",
                                 # Will always default & be hidden
@@ -431,6 +431,11 @@ def config(settings):
                                         multiple = False,
                                         name = "eo_number",
                                         ),
+                                S3SQLInlineLink("case_flag",
+                                                label = T("Flags"),
+                                                field = "flag_id",
+                                                cols = 3,
+                                                ),
                                 "first_name",
                                 "last_name",
                                 "date_of_birth",
