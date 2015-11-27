@@ -30,6 +30,7 @@
 __all__ = ("DVRCaseModel",
            "DVRNeedsModel",
            "DVRCaseActivityModel",
+           "DVRCaseAppointmentModel",
            "DVRCaseBeneficiaryModel",
            "DVRCaseEconomyInformationModel",
            "dvr_case_default_status",
@@ -1004,6 +1005,130 @@ class DVRCaseActivityModel(S3Model):
             msg_record_modified = T("Service Contact updated"),
             msg_record_deleted = T("Service Contact deleted"),
             msg_list_empty = T("No Service Contacts currently registered"),
+            )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        return {}
+
+# =============================================================================
+class DVRCaseAppointmentModel(S3Model):
+    """ Model for Case Appointments """
+
+    names = ("dvr_case_appointment",
+             "dvr_case_appointment_type",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        configure = self.configure
+
+        # ---------------------------------------------------------------------
+        # Case Appointment Type
+        #
+        tablename = "dvr_case_appointment_type"
+        define_table(tablename,
+                     Field("name", length=64, notnull=True, unique=True,
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("active", "boolean",
+                           default = True,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Appointment Type"),
+            title_display = T("Appointment Type Details"),
+            title_list = T("Appointment Types"),
+            title_update = T("Edit Appointment Types"),
+            label_list_button = T("List Appointment Types"),
+            label_delete_button = T("Delete Appointment Type"),
+            msg_record_created = T("Appointment Type added"),
+            msg_record_modified = T("Appointment Type updated"),
+            msg_record_deleted = T("Appointment Type deleted"),
+            msg_list_empty = T("No Appointment Types currently registered"),
+            )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename, translate=True)
+        appointment_type_id = S3ReusableField("type_id", "reference %s" % tablename,
+                                              label = T("Appointment Type"),
+                                              ondelete = "RESTRICT",
+                                              represent = represent,
+                                              requires = IS_EMPTY_OR(
+                                                              IS_ONE_OF(db, "dvr_case_appointment_type.id",
+                                                                        represent,
+                                                                        )),
+                                              )
+
+        # ---------------------------------------------------------------------
+        # Case Appointments
+        #
+        appointment_status_opts = {1: T("Planning"),
+                                   2: T("Planned"),
+                                   3: T("In Progress"),
+                                   4: T("Completed"),
+                                   5: T("Missed"),
+                                   6: T("Cancelled"),
+                                   }
+        
+        tablename = "dvr_case_appointment"
+        define_table(tablename,
+                     self.dvr_case_id(comment = None,
+                                      empty = False,
+                                      label = T("Case Number"),
+                                      ondelete = "CASCADE",
+                                      writable = False,
+                                      ),
+                     # Beneficiary (component link):
+                     # @todo: populate from case and hide in case perspective
+                     self.pr_person_id(comment = None,
+                                       empty = False,
+                                       ondelete = "CASCADE",
+                                       writable = False,
+                                       ),
+                     appointment_type_id(empty = False,
+                                         ),
+                     s3_date(label = T("Planned on"),
+                             ),
+                     Field("status", "integer",
+                           default = 1, # Planning
+                           requires = IS_IN_SET(appointment_status_opts,
+                                                zero = None,
+                                                ),
+                           represent = S3Represent(options=appointment_status_opts,
+                                                   ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Appointment"),
+            title_display = T("Appointment Details"),
+            title_list = T("Appointments"),
+            title_update = T("Edit Appointment"),
+            label_list_button = T("List Appointments"),
+            label_delete_button = T("Delete Appointment"),
+            msg_record_created = T("Appointment added"),
+            msg_record_modified = T("Appointment updated"),
+            msg_record_deleted = T("Appointment deleted"),
+            msg_list_empty = T("No Appointments currently registered"),
             )
 
         # ---------------------------------------------------------------------

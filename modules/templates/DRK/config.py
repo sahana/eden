@@ -234,7 +234,7 @@ def config(settings):
     dvr_case_tabs = [(T("Basic Details"), ""),
                      (T("Family Members"), "case_person/"),
                      (T("Activities"), "case_activity"),
-                     (T("Identity"), "identity"),
+                     (T("Appointments"), "case_appointment"),
                      ]
 
     # -------------------------------------------------------------------------

@@ -1102,6 +1102,7 @@ class S3ShelterRegistrationModel(S3Model):
 
         htable = db.cr_shelter_unit
 
+        unit_id = None
         if type(form) is Row:
             if current.request.controller == "evr":
                 shelter_id = form.shelter_id

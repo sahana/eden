@@ -1030,6 +1030,7 @@ class S3PersonModel(S3Model):
                                    "multiple": False,
                                    },
                        dvr_case_activity = "person_id",
+                       dvr_case_appointment = "person_id",
                        dvr_case_language = "person_id",
                        dvr_case_service_contact = "person_id",
                        dvr_economy = {"joinby": "person_id",
