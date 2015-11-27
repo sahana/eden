@@ -351,6 +351,7 @@ def config(settings):
                                 "date_of_birth",
                                 "gender",
                                 "person_details.nationality",
+                                "person_details.occupation",
                                 "person_details.marital_status",
                                 S3SQLInlineComponent(
                                         "contact",
