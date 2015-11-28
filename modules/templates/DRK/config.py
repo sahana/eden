@@ -8,7 +8,7 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 import datetime
-    
+
 from gluon import current
 from gluon.storage import Storage
 
@@ -296,31 +296,42 @@ def config(settings):
             else:
                 result = True
 
+            from s3 import FS
+            resource = r.resource
+
+            # Filter to persons who have a case registered
+            resource.add_filter(FS("dvr_case.id") != None)
+
+            # Filter to active/inactive cases
+            if not r.record:
+                inactive = r.get_vars.get("inactive")
+                if inactive in ("1", "true", "yes"):
+                    query = FS("dvr_case.inactive") == True
+                else:
+                    query = FS("dvr_case.inactive") == False
+                r.resource.add_filter(query)
+
             if r.controller == "security":
                 # Restricted view for Security staff
-                    if r.component:
-                        redirect(r.url(method=""))
+                if r.component:
+                    redirect(r.url(method=""))
 
-                    current.menu.options = None
-                    from s3 import FS
-                    # Filter to persons who have a case registered
-                    resource = r.resource
-                    resource.add_filter(FS("dvr_case.id") != None)
-                    # Only Show Security Notes ('Needs')
-                    ntable = s3db.dvr_need
-                    need = current.db(ntable.name == "Security").select(ntable.id,
-                                                                        limitby=(0, 1)
-                                                                        ).first()
-                    try:
-                        need_id = need.id
-                    except:
-                        # Prepop not done - deny access to component
-                        need_id = None
-                        atable = s3db.dvr_case_activity
-                        atable.start_date.readable = atable.start_date.writable = False
-                        atable.comments.readable = atable.comments.writable = False
-                    from s3 import S3SQLCustomForm, S3SQLInlineComponent
-                    crud_form = S3SQLCustomForm(
+                current.menu.options = None
+                # Only Show Security Notes ('Needs')
+                ntable = s3db.dvr_need
+                need = current.db(ntable.name == "Security").select(ntable.id,
+                                                                    limitby=(0, 1)
+                                                                    ).first()
+                try:
+                    need_id = need.id
+                except:
+                    # Prepop not done - deny access to component
+                    need_id = None
+                    atable = s3db.dvr_case_activity
+                    atable.start_date.readable = atable.start_date.writable = False
+                    atable.comments.readable = atable.comments.writable = False
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                crud_form = S3SQLCustomForm(
                                 (T("ID"), "pe_label"),
                                 "first_name",
                                 "last_name",
@@ -339,20 +350,21 @@ def config(settings):
                                         label = T("Security Notes"),
                                         ),
                                 )
-                    list_fields = [(T("ID"), "pe_label"),
-                                   "first_name",
-                                   "last_name",
-                                   "date_of_birth",
-                                   #"gender",
-                                   "person_details.nationality",
-                                   "shelter_registration.shelter_unit_id",
-                                   ]
-                    resource.configure(crud_form = crud_form,
-                                       list_fields = list_fields,
-                                       )
+                list_fields = [(T("ID"), "pe_label"),
+                               "first_name",
+                               "last_name",
+                               "date_of_birth",
+                               #"gender",
+                               "person_details.nationality",
+                               "shelter_registration.shelter_unit_id",
+                               ]
+                resource.configure(crud_form = crud_form,
+                                   list_fields = list_fields,
+                                   )
 
             elif r.controller == "dvr" and not r.component:
 
+                # Additional component "EasyOpt Number"
                 s3db.add_components("pr_person",
                                     pr_person_tag = {"name": "eo_number",
                                                      "joinby": "person_id",
@@ -364,15 +376,20 @@ def config(settings):
 
                 from gluon import IS_EMPTY_OR, IS_NOT_EMPTY
 
-                ctable = s3db.dvr_case
+
                 #default_organisation = current.auth.root_org()
                 default_organisation = settings.get_org_default_organisation()
 
-                field = ctable.valid_until
+                ctable = s3db.dvr_case
 
                 # Case is valid for 5 years
+                field = ctable.valid_until
                 from dateutil.relativedelta import relativedelta
                 field.default = r.utcnow + relativedelta(years=5)
+                field.readable = field.writable = True
+
+                # Case can be set to inactive
+                field = ctable.inactive
                 field.readable = field.writable = True
 
                 if default_organisation:
@@ -397,7 +414,7 @@ def config(settings):
                         stable = s3db.cr_shelter
                         query = (stable.site_id == default_site)
                         shelter = db(query).select(stable.id,
-                                                   limitby=(0, 1)
+                                                   limitby=(0, 1),
                                                    ).first()
                         if shelter:
                             shelter_id = shelter.id
@@ -430,9 +447,9 @@ def config(settings):
                 resource = r.resource
                 if r.interactive and r.method != "import":
 
-                    # Nationality is required
+                    # Set mandatory case fields
                     ctable = s3db.pr_person_details
-                    for fn in ("nationality",
+                    for fn in (#"nationality",
                                "marital_status",
                                ):
                         field = ctable[fn]
@@ -442,21 +459,25 @@ def config(settings):
                         elif isinstance(requires, IS_EMPTY_OR):
                             field.requires = requires.other
 
+                    # Set mandatory person fields
                     table = resource.table
                     from s3 import IS_PERSON_GENDER
                     gender_opts = dict(s3db.pr_gender_opts)
 
                     field = table.gender
-                    table.default = None
+                    field.default = None
                     del gender_opts[1] # "unknown" option not allowed
                     field.requires = IS_PERSON_GENDER(gender_opts,
                                                       sort = True,
-                                                      zero = None,
                                                       )
 
                     # Last name is required
                     field = table.last_name
                     field.requires = IS_NOT_EMPTY()
+
+                    # Expose "inactive"-flag?
+                    inactive_flag = "dvr_case.inactive" \
+                                    if r.record and r.method != "read" else None
 
                     # Custom CRUD form
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
@@ -520,6 +541,7 @@ def config(settings):
                                         label = T("Language / Communication Mode"),
                                         ),
                                 "dvr_case.comments",
+                                inactive_flag,
                                 )
                     resource.configure(crud_form = crud_form,
                                        )
@@ -791,7 +813,7 @@ def config(settings):
                 table = resource.table
                 field = table.case_id
                 field.readable = field.writable = False
-                    
+
                 # Custom list fields
                 list_fields = [(T("ID"), "person_id$pe_label"),
                                "person_id$first_name",

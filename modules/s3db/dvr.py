@@ -271,6 +271,13 @@ class DVRCaseModel(S3Model):
                                      represent = self.org_site_represent,
                                      updateable = True,
                                      ),
+                     Field("inactive", "boolean",
+                           default = False,
+                           represent = s3_yes_no_represent,
+                           # Enable in template if required:
+                           readable = False,
+                           writable = False,
+                           ),
                      # Simplified "head of household" fields:
                      # (if not tracked as separate case beneficiaries)
                      Field("head_of_household", "boolean",
@@ -1493,10 +1500,15 @@ def dvr_rheader(r, tabs=[]):
                                     "dvr_case.case_type_id",
                                     ],
                                     represent=True,
-                                    ).rows[0]
-            case_number = lambda row: case["dvr_case.reference"]
-            case_type = lambda row: case["dvr_case.case_type_id"]
-            name = lambda row: s3_fullname(row)
+                                    ).rows
+            if case:
+                case = case[0]
+                case_number = lambda row: case["dvr_case.reference"]
+                case_type = lambda row: case["dvr_case.case_type_id"]
+                name = lambda row: s3_fullname(row)
+            else:
+                # Target record exists, but doesn't match filters
+                return None
 
             rheader_fields = [[(T("Case Number"), case_number)],
                               [(T("Case Type"), case_type)],
