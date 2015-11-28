@@ -2478,6 +2478,18 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Shelters
     #
+    def get_cr_day_and_night(self):
+        """
+            Whether Shelter Capacities/Registrations are different for Day and Night
+        """
+        return self.cr.get("day_and_night", False)
+
+    def get_cr_shelter_people_registration(self):
+        """
+            Enable functionality to track individuals in shelters
+        """
+        return self.cr.get("people_registration", True)
+
     def get_cr_shelter_population_dynamic(self):
         """
             Whether Shelter Population should be done manually (False)
@@ -2489,23 +2501,23 @@ class S3Config(Storage):
             "population_day",
             "population_night".
         """
-        # Only together with people registration:
         if not self.get_cr_shelter_people_registration():
+            # Only relevant when using people registration
             return False
         return self.cr.get("shelter_population_dynamic", False)
-
-    def get_cr_shelter_people_registration(self):
-        """
-            Disable functionality to track individuals in shelters
-        """
-        return self.cr.get("people_registration", True)
 
     def get_cr_shelter_housing_unit_management(self):
         """
             Enable the use of tab "Housing Unit" and enable the housing unit
-            selection during evacuees registration.
+            selection during client registration.
         """
         return self.cr.get("shelter_housing_unit_management", False)
+
+    def get_cr_check_out_is_final(self):
+        """
+            Whether checking out of a Shelter frees up the place or is just leaving the site temporarily
+        """
+        return self.cr.get("check_out_is_final", True)
 
     def get_cr_tags(self):
         """

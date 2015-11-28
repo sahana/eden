@@ -90,6 +90,7 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Shelters
+    settings.cr.day_and_night = True
     settings.cr.shelter_population_dynamic = True
     settings.cr.shelter_housing_unit_management = True
 
@@ -423,16 +424,23 @@ def customise_cr_shelter_resource(r, tablename):
 
     s3db = current.s3db
     from s3 import S3HierarchyWidget
-    s3db.cr_shelter.capacity_day.writable = s3db.cr_shelter.capacity_night.writable = False
-    s3db.cr_shelter.cr_shelter_environment_id.readable = s3db.cr_shelter.cr_shelter_environment_id.writable = True
-    organisation_represent = current.s3db.org_OrganisationRepresent
-    node_represent = organisation_represent(parent=False)
+    table = s3db.cr_shelter
+    table.capacity_day.writable = False
+    table.capacity_night.writable = False
+    table.capacity_day.label = T("Evacuees Capacity (Day and Night)")
+    table.capacity_night.label = T("Evacuees Capacity (Night only)")
+    table.available_capacity_day.label = T("Evacuees Available Capacity (Day and Night)")
+    table.available_capacity_night.label = T("Evacuees Available Capacity (Night only)")
+    table.population_day.label = T("Evacuees Current Population (Day and Night)")
+    table.population_night.label = T("Evacuees Current Population (Night only)")
+    table.cr_shelter_environment_id.readable = s3db.cr_shelter.cr_shelter_environment_id.writable = True
+    node_represent = s3db.org_OrganisationRepresent(parent=False)
     org_widget = S3HierarchyWidget(lookup="org_organisation",
                                    represent=node_represent,
                                    multiple=False,
                                    leafonly=False,
                                    )
-    s3db.cr_shelter.organisation_id.widget = org_widget
+    table.organisation_id.widget = org_widget
 
 # -----------------------------------------------------------------------------
 def customise_pr_group_resource(r, tablename):
