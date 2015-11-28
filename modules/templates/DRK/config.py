@@ -163,7 +163,7 @@ def config(settings):
             Statistics box for Shelter Profile page
         """
 
-        from gluon.html import *
+        from gluon.html import TABLE, TR, TD
         output = TABLE()
 
         db = current.db
@@ -180,14 +180,22 @@ def config(settings):
         except:
             current.log.warning("No Shelter Unit called 'PX'")
             PX = None
+            total = db(rtable.deleted == False).count()
         else:
-            query = (rtable.deleted == False) & \
-                    (rtable.shelter_unit_id == PX)
-            px_count = db(query).count()
+            rows = db(rtable.deleted == False).select(rtable.shelter_unit_id)
+            px_count = 0
+            non_px_count = 0
+            for row in rows:
+                if row.shelter_unit_id == PX:
+                    px_count += 1
+                else:
+                    non_px_count += 1
             PX = TR(TD(T("How many in PX")),
                     TD(px_count),
                     )
-
+        TOTAL = TR(TD(T("How many in BEA (total)")),
+                   TD(total),
+                   )
         # How many in BEA (total)
         # How many in BEA (except PX)
         # How many external (POLICE/HOSPITAL)
