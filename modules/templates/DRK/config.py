@@ -208,7 +208,7 @@ def config(settings):
                 (table.person_id == ctable.person_id) & \
                 (ctable.status_id != HOSPITAL) & \
                 (ctable.status_id != POLICE) & \
-                (ctable.status_id != DISAPPEARED)
+                (ctable.status_id != DISAPPEARED) & \
                 (ctable.archived != True)
         rows = db(query).select(table.person_id,
                                 table.check_in_date,
