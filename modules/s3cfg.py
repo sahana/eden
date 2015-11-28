@@ -2480,6 +2480,13 @@ class S3Config(Storage):
         """
         return self.cr.get("shelter_housing_unit_management", False)
 
+    def get_cr_profile_stats(self):
+        """
+            What Stats should be shown in the Profile page
+             - set to a fn, to which is passed (r)
+        """
+        return self.cr.get("profile_stats", "")
+
     def get_cr_tags(self):
         """
             Whether Shelters should show a Tags tab

@@ -158,6 +158,27 @@ def config(settings):
     settings.cr.shelter_housing_unit_management = True
 
     # -------------------------------------------------------------------------
+    def cr_profile_stats(r):
+        """
+            Statistics box for Shelter Profile page
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        stable = s3db.dvr_case_status
+        rtable = s3db.cr_shelter_registration
+        # How many in BEA (total)
+        # How many in PX
+        # How many in BEA (except PX)
+        # How many external (POLICE/HOSPITAL)
+        # How many free places
+        stats = ""
+        return stats
+
+    settings.cr.profile_stats = cr_profile_stats
+
+    # -------------------------------------------------------------------------
     def org_site_check(site_id):
         """
             Hook for tasks["org_site_check"]:
@@ -170,11 +191,12 @@ def config(settings):
 
         # Read the Statuses
         stable = s3db.dvr_case_status
-        statuses = db(stable.name.belongs(("Hospital", "Disappeared"))).select(stable.name,
-                                                                               stable.id,
-                                                                               ).as_dict(key="name")
+        statuses = db(stable.name.belongs(("Hospital", "Police", "Disappeared"))).select(stable.name,
+                                                                                         stable.id,
+                                                                                         ).as_dict(key="name")
         DISAPPEARED = statuses["Disappeared"]["id"]
         HOSPITAL = statuses["Hospital"]["id"]
+        POLICE = statuses["Police"]["id"]
 
         THREE_DAYS_AGO = current.request.utcnow - datetime.timedelta(days=3)
         table = s3db.cr_shelter_registration
@@ -184,7 +206,10 @@ def config(settings):
                 (stable.id == table.shelter_id) & \
                 (table.check_out_date <= THREE_DAYS_AGO) & \
                 (table.person_id == ctable.person_id) & \
-                (ctable.status_id != HOSPITAL)
+                (ctable.status_id != HOSPITAL) & 
+                (ctable.status_id != POLICE) & 
+                (ctable.status_id != DISAPPEARED)
+                (ctable.archived != True)
         rows = db(query).select(table.person_id,
                                 table.check_in_date,
                                 table.check_out_date,

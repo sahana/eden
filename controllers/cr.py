@@ -88,8 +88,11 @@ def shelter():
             shelter_id = r.id
             name = r.record.name
             
-            # @ToDo: Stats based on settings
-            stats = "" 
+            # Stats panel
+            # @ToDo: Move from header to a custom panel
+            stats = setttings.get_cr_profile_stats()
+            if stats:
+                stats = stats(r)
 
             map_widget = dict(label = T("Housing Units"),
                               type = "map",
