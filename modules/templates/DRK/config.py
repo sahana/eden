@@ -294,8 +294,62 @@ def config(settings):
             else:
                 result = True
 
+            if r.controller == "security":
+                # Restricted view for Security staff
+                    if r.component:
+                        redirect(r.url(method=""))
 
-            if r.controller == "dvr" and not r.component:
+                    current.menu.options = None
+                    from s3 import FS
+                    # Filter to persons who have a case registered
+                    resource = r.resource
+                    resource.add_filter(FS("dvr_case.id") != None)
+                    # Only Show Security Notes ('Needs')
+                    ntable = s3db.dvr_need
+                    need = current.db(ntable.name == "Security").select(ntable.id,
+                                                                        limitby=(0, 1)
+                                                                        ).first()
+                    try:
+                        need_id = need.id
+                    except:
+                        # Prepop not done - deny access to component
+                        need_id = None
+                        atable = s3db.dvr_case_activity
+                        atable.start_date.readable = atable.start_date.writable = False
+                        atable.comments.readable = atable.comments.writable = False
+                    from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                    crud_form = S3SQLCustomForm(
+                                (T("ID"), "pe_label"),
+                                "first_name",
+                                "last_name",
+                                "date_of_birth",
+                                #"gender",
+                                "person_details.nationality",
+                                "cr_shelter_registration.shelter_unit_id",
+                                S3SQLInlineComponent(
+                                        "case_activity",
+                                        fields = [(T("Date"), "start_date"),
+                                                  (T("Comments"), "comments"),
+                                                  ],
+                                        filterby = {"field": "need_id",
+                                                    "options": need_id,
+                                                    },
+                                        label = T("Security Notes"),
+                                        ),
+                                )
+                    list_fields = [(T("ID"), "pe_label"),
+                                   "first_name",
+                                   "last_name",
+                                   "date_of_birth",
+                                   #"gender",
+                                   "person_details.nationality",
+                                   "shelter_registration.shelter_unit_id",
+                                   ]
+                    resource.configure(crud_form = crud_form,
+                                       list_fields = list_fields,
+                                       )
+
+            elif r.controller == "dvr" and not r.component:
 
                 s3db.add_components("pr_person",
                                     pr_person_tag = {"name": "eo_number",
@@ -497,7 +551,10 @@ def config(settings):
 
         # Custom rheader tabs
         attr = dict(attr)
-        attr["rheader"] = lambda r: s3db.dvr_rheader(r, tabs=dvr_case_tabs)
+        if current.request.controller == "security":
+            attr["rheader"] = ""
+        else:
+            attr["rheader"] = lambda r: s3db.dvr_rheader(r, tabs=dvr_case_tabs)
 
         return attr
 
@@ -548,6 +605,60 @@ def config(settings):
         return attr
 
     settings.customise_pr_group_membership_controller = customise_pr_group_membership_controller
+
+    # -------------------------------------------------------------------------
+    def dvr_case_activity_onaccept(form):
+        """
+            Set owned_by_group
+        """
+
+        db = current.db
+        s3db = current.s3db
+        form_vars = form.vars
+        table = s3db.dvr_need
+        needs = db(table.name.belongs(("Medical", "Security"))).select(table.id,
+                                                                       table.name).as_dict(key="name")
+        try:
+            MEDICAL = needs["Medical"]["id"]
+        except:
+            current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_case_activity")
+            return
+        SECURITY = needs["Security"]["id"]
+        need_id = form_vars.need_id
+        if need_id == str(MEDICAL):
+            table = s3db.dvr_case_activity
+            gtable = db.auth_group
+            role = db(gtable.uuid == "MEDICAL").select(gtable.id,
+                                                       limitby=(0, 1)
+                                                       ).first()
+            try:
+                group_id = role.id
+            except:
+                current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_case_activity")
+                return
+            db(table.id == form_vars.id).update(owned_by_group=group_id)
+        elif need_id == str(SECURITY):
+            table = s3db.dvr_case_activity
+            gtable = db.auth_group
+            role = db(gtable.uuid == "SECURITY").select(gtable.id,
+                                                        limitby=(0, 1)
+                                                        ).first()
+            try:
+                group_id = role.id
+            except:
+                current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_case_activity")
+                return
+            db(table.id == form_vars.id).update(owned_by_group=group_id)
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_activity_resource(r, tablename):
+
+        # @ToDo: Check for default onacccept (none right now, but may change)
+        current.s3db.configure(tablename,
+                               onaccept = dvr_case_activity_onaccept,
+                               )
+
+    settings.customise_dvr_case_activity_resource = customise_dvr_case_activity_resource
 
     # -------------------------------------------------------------------------
     def customise_dvr_case_activity_controller(**attr):

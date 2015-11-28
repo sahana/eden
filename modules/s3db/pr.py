@@ -1229,10 +1229,24 @@ class S3PersonModel(S3Model):
         """ Import item deduplication """
 
         db = current.db
-        ptable = db.pr_person
-
-        # Mandatory data
         data = item.data
+
+        # Master field (if-present)
+        pe_label = data.get("pe_label")
+        if pe_label:
+            # Just look at this
+            table = item.table
+            query = (table.pe_label == pe_label)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
+
+            return
+
+        ptable = db.pr_person
+        # Mandatory data
         fname = data.get("first_name")
         mname = data.get("middle_name")
         lname = data.get("last_name")

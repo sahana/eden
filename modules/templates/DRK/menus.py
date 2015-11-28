@@ -42,15 +42,23 @@ class S3MainMenu(default.S3MainMenu):
         else:
             args = None
 
-        return [
-            MM("Refugees", c=("dvr", "pr")),
-            MM("ToDo", c="project", f="task"),
-            #homepage("req"),
-            homepage("inv"),
-            MM("Dashboard", c="cr", f="shelter", args=args),
-            homepage("vol"),
-            homepage("hrm"),
-        ]
+        has_role = current.auth.s3_has_role
+        if has_role("SECURITY") and not has_role("ADMIN"):
+            return [
+                MM("Refugees", c="security", f="person"),
+                MM("ToDo", c="project", f="task"),
+                MM("Dashboard", c="cr", f="shelter", args=args),
+            ]
+        else:
+            return [
+                MM("Refugees", c=("dvr", "pr")),
+                MM("ToDo", c="project", f="task"),
+                #homepage("req"),
+                homepage("inv"),
+                MM("Dashboard", c="cr", f="shelter", args=args),
+                homepage("vol"),
+                homepage("hrm"),
+            ]
 
     # -------------------------------------------------------------------------
     @classmethod

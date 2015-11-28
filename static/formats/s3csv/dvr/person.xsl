@@ -490,28 +490,28 @@
                 <xsl:if test="$Illiterate!=''">
                     <xsl:choose>
                         <xsl:when test="$Illiterate='Y'">
-                            <data field="literacy_status">1</data>
+                            <data field="literacy">1</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='YES'">
-                            <data field="literacy_status">1</data>
+                            <data field="literacy">1</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='T'">
-                            <data field="literacy_status">1</data>
+                            <data field="literacy">1</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='TRUE'">
-                            <data field="literacy_status">1</data>
+                            <data field="literacy">1</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='N'">
-                            <data field="literacy_status">2</data>
+                            <data field="literacy">2</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='NO'">
-                            <data field="literacy_status">2</data>
+                            <data field="literacy">2</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='F'">
-                            <data field="literacy_status">2</data>
+                            <data field="literacy">2</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='FALSE'">
-                            <data field="literacy_status">2</data>
+                            <data field="literacy">2</data>
                         </xsl:when>
                         <xsl:otherwise>
                             <!-- Unknown -->
@@ -1128,8 +1128,8 @@
                     <xsl:value-of select="concat('Family:',$Family)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$Family"/></data>
-                <!-- Case
-                <data field="group_type">7</data> -->
+                <!-- Case -->
+                <data field="group_type">7</data>
             </resource>
         </xsl:if>
     </xsl:template>
