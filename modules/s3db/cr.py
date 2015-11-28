@@ -275,8 +275,8 @@ class S3ShelterModel(S3Model):
                                                                T("Capacity of the shelter for people who need to stay for night only")))
             else:
                 capacity_day_comment = DIV(_class="tooltip",
-                                           _title="%s|%s|%s" % (T("Capacity"),
-                                                                T("Capacity of the shelter as a number of people")))
+                                           _title="%s|%s" % (T("Capacity"),
+                                                             T("Capacity of the shelter as a number of people")))
                 capacity_night_comment = None
 
         tablename = "cr_shelter"
