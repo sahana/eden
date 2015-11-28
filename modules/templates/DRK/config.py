@@ -193,6 +193,7 @@ def config(settings):
             PX = TR(TD(T("How many in PX")),
                     TD(px_count),
                     )
+            total = px_count + non_px_count
         TOTAL = TR(TD(T("How many in BEA (total)")),
                    TD(total),
                    )
