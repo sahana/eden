@@ -2,7 +2,7 @@ Position,Code,Status,Default,Comments
 1,STATUS0,Easy-Allocation,true,
 2,STATUS1,BEA Registration,false,
 3,STATUS2,BÜMAG Asylum Application,false,
-4,STATUS3,GU Accomodation,false,
+4,STATUS3,GU Done,false,
 5,STATUS4,X-Ray,false,
 6,STATUS5,BAMF Registration,false,
 7,STATUS6,Ready for Transfer,false,
