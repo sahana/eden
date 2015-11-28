@@ -210,7 +210,7 @@ def config(settings):
             ltable = s3db.dvr_case_flag_case
 
             for person_id in missing:
-                ltable.create(person_id = person_id,
+                ltable.insert(person_id = person_id,
                               flag_id = SUSPENDED)
                 db(ctable.person_id == person_id).update(status_id = DISAPPEARED)
 

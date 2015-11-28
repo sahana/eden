@@ -87,6 +87,10 @@ def shelter():
         elif method == "profile":
             shelter_id = r.id
             name = r.record.name
+            
+            # @ToDo: Stats based on settings
+            stats = "" 
+
             map_widget = dict(label = T("Housing Units"),
                               type = "map",
                               icon = "icon-map",
@@ -114,7 +118,8 @@ def shelter():
             s3db.configure(tablename,
                            profile_header = DIV(H2(name),
                                                 P(r.record.comments or ""),
-                                                A(T("Check-In"),
+                                                stats,
+                                                A(T("Check-In/Out"),
                                                   _href=r.url(method="check-in"),
                                                   _class="action-btn",
                                                   ),
