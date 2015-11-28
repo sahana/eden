@@ -1053,7 +1053,9 @@ def config(settings):
                                       label = T("Search"),
                                       ),
                         S3OptionsFilter("type_id",
-                                        options = get_s3_filter_opts("dvr_case_appointment_type"),
+                                        options = get_s3_filter_opts("dvr_case_appointment_type",
+                                                                     translate = True,
+                                                                     ),
                                         cols = 3,
                                         ),
                         S3OptionsFilter("status",
@@ -1423,7 +1425,7 @@ def drk_dvr_rheader(r, tabs=[]):
                             not suspended
                 eligible = lambda row, allowance=allowance: \
                                   s3_yes_no_represent(allowance)
-                rheader_fields[-1].append((T("Elibigle for Allowance"), eligible))
+                rheader_fields[-1].append((T("Eligible for Allowance"), eligible))
 
         elif tablename == "dvr_case":
 
