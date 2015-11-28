@@ -48,24 +48,24 @@ def maintenance(period="daily"):
 tasks["maintenance"] = maintenance
 
 # -----------------------------------------------------------------------------
-def org_site_check_in_check(site_id, days, user_id=None):
-    """ Check the Check-In Status for Sites """
+def org_site_check(site_id, user_id=None):
+    """ Check the Status for Sites """
 
     if user_id:
         # Authenticate
         auth.s3_impersonate(user_id)
 
-    # @ToDo
-    # Split into core function & Hook to template setting
-    # Check site_id & see which persons have checked-out over 3 days ago without checking back in (but are not in Hospital)
-    # For these users, set Case Status to 'suspended' and send notification of which people have been suspended
+    # Check for Template-specific processing
+    customise = settings.get("org_site_check")
+    if customise:
+        customise(site_id)
 
-tasks["org_site_check_in_check"] = org_site_check_in_check
+tasks["org_site_check"] = org_site_check
 
 # -----------------------------------------------------------------------------
 if settings.has_module("cap"):
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def cap_ftp_sync(user_id=None):
         """ Get all the FTP repositories and synchronize them """
 

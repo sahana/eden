@@ -118,8 +118,11 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Persons Module Settings
     #
+    settings.pr.hide_third_gender = False
+    # Not ready yet
     #settings.pr.separate_name_fields = 2
-
+    settings.pr.name_format= "%(last_name)s %(first_name)s"
+    
     # -------------------------------------------------------------------------
     # Project Module Settings
     #
@@ -153,6 +156,67 @@ def config(settings):
     #
     settings.cr.shelter_population_dynamic = True
     settings.cr.shelter_housing_unit_management = True
+
+    # -------------------------------------------------------------------------
+    def org_site_check(site_id):
+        """
+            Hook for tasks["org_site_check"]:
+                Check site_id & see which persons have checked-out over 3 days ago
+                without checking back in (but are not in Hospital)
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        # Read the Statuses
+        stable = s3db.dvr_case_status
+        statuses = db(stable.name.belongs(("Hospital", "Disappeared"))).select(stable.name,
+                                                                               stable.id,
+                                                                               ).as_dict(key="name")
+        DISAPPEARED = statuses["Disappeared"]["id"]
+        HOSPITAL = statuses["Hospital"]["id"]
+
+        THREE_DAYS_AGO = current.request.utcnow - datetime.timedelta(days=3)
+        table = s3db.cr_shelter_registration
+        stable = s3db.cr_shelter
+        ctable = s3db.dvr_case
+        query = (stable.site_id == site_id) & \
+                (stable.id == table.shelter_id) & \
+                (table.check_out_date <= THREE_DAYS_AGO) & \
+                (table.person_id == ctable.person_id) & \
+                (ctable.status_id == HOSPITAL)
+        rows = db(query).select(table.person_id,
+                                table.check_in_date,
+                                table.check_out_date,
+                                )
+        if rows:
+            missing = []
+            mappend = missing.append
+            for row in rows:
+                check_in_date = row.check_in_date
+                if not check_in_date or check_in_date < row.check_out_date:
+                    mappend(row.person_id)
+
+            # For these users, set Case Flag to 'Suspended' & Status to 'Disappeared'
+            ftable = s3db.dvr_case_flag
+            flag = db(ftable.name == "Suspended").select(ftable.id,
+                                                         limitby=(0, 1)
+                                                         ).first()
+            try:
+                SUSPENDED = flag.id
+            except:
+                current.log.error("Prepop of Flag Status 'Suspended' not done")
+                return
+            ltable = s3db.dvr_case_flag_case
+
+            for person_id in missing:
+                ltable.create(person_id = person_id,
+                              flag_id = SUSPENDED)
+                db(ctable.person_id == person_id).update(status_id = DISAPPEARED)
+
+            # @ToDo: Send notification of which people have been suspended to ADMIN_HEAD
+
+    settings.org_site_check = org_site_check
 
     # -------------------------------------------------------------------------
     def site_check_in(site_id, person_id):
@@ -267,11 +331,6 @@ def config(settings):
     settings.customise_cr_shelter_controller = customise_cr_shelter_controller
 
     # -------------------------------------------------------------------------
-    # Person Registry Settings
-    #
-    settings.pr.hide_third_gender = False
-
-    # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #
     dvr_case_tabs = [(T("Basic Details"), ""),
@@ -306,10 +365,10 @@ def config(settings):
                     query = FS("dvr_case.inactive") == True
                 else:
                     query = FS("dvr_case.inactive") == False
-                r.resource.add_filter(query)
+                resource.add_filter(query)
 
             # Should not be able to delete records in this view
-            resource.configure(deletable=False)
+            resource.configure(deletable = False)
 
             if r.controller == "security":
                 # Restricted view for Security staff
@@ -320,42 +379,42 @@ def config(settings):
                 resource.add_filter(FS("dvr_case.id") != None)
 
                 current.menu.options = None
-                # Only Show Security Notes ('Needs')
-                ntable = s3db.dvr_need
-                need = current.db(ntable.name == "Security").select(ntable.id,
-                                                                    limitby=(0, 1)
-                                                                    ).first()
+                # Only Show Security Notes
+                ntable = s3db.dvr_note_type
+                note_type = current.db(ntable.name == "Security").select(ntable.id,
+                                                                         limitby=(0, 1)
+                                                                         ).first()
                 try:
-                    need_id = need.id
+                    note_type_id = note_type.id
                 except:
                     # Prepop not done - deny access to component
-                    need_id = None
-                    atable = s3db.dvr_case_activity
-                    atable.start_date.readable = atable.start_date.writable = False
-                    atable.comments.readable = atable.comments.writable = False
+                    note_type_id = None
+                    atable = s3db.dvr_note
+                    atable.date.readable = atable.date.writable = False
+                    atable.note.readable = atable.note.writable = False
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
                 crud_form = S3SQLCustomForm(
                                 (T("ID"), "pe_label"),
-                                "first_name",
                                 "last_name",
+                                "first_name",
                                 "date_of_birth",
                                 #"gender",
                                 "person_details.nationality",
                                 "cr_shelter_registration.shelter_unit_id",
                                 S3SQLInlineComponent(
                                         "case_activity",
-                                        fields = [(T("Date"), "start_date"),
-                                                  (T("Comments"), "comments"),
+                                        fields = [(T("Date"), "date"),
+                                                  "note",
                                                   ],
-                                        filterby = {"field": "need_id",
-                                                    "options": need_id,
+                                        filterby = {"field": "note_type_id",
+                                                    "options": note_type_id,
                                                     },
                                         label = T("Security Notes"),
                                         ),
                                 )
                 list_fields = [(T("ID"), "pe_label"),
-                               "first_name",
                                "last_name",
+                               "first_name",
                                "date_of_birth",
                                #"gender",
                                "person_details.nationality",
@@ -516,8 +575,8 @@ def config(settings):
                                                 field = "flag_id",
                                                 cols = 3,
                                                 ),
-                                "first_name",
                                 "last_name",
+                                "first_name",
                                 "date_of_birth",
                                 "gender",
                                 "person_details.nationality",
@@ -567,8 +626,8 @@ def config(settings):
                 list_fields = [#"dvr_case.reference",
                                (T("ID"), "pe_label"),
                                (T("EasyOpt No."), "eo_number.value"),
-                               "first_name",
                                "last_name",
+                               "first_name",
                                "date_of_birth",
                                "gender",
                                "person_details.nationality",

@@ -30,6 +30,7 @@
 __all__ = ("DVRCaseModel",
            "DVRCaseFlagModel",
            "DVRNeedsModel",
+           "DVRNotesModel",
            "DVRCaseActivityModel",
            "DVRCaseAppointmentModel",
            "DVRCaseBeneficiaryModel",
@@ -780,6 +781,104 @@ class DVRNeedsModel(S3Model):
 
         return {"dvr_need_id": lambda **attr: dummy("need_id"),
                 }
+
+# =============================================================================
+class DVRNotesModel(S3Model):
+    """
+        Model for Notes
+    """
+
+    names = ("dvr_note_type",
+             "dvr_note",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        # Note Types
+        #
+        tablename = "dvr_note_type"
+        define_table(tablename,
+                     Field("name", unique=True,
+                           label = T("Name"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Note Type"),
+            title_display = T("Note Type Details"),
+            title_list = T("Note Types"),
+            title_update = T("Edit Note Type"),
+            label_list_button = T("List Note Types"),
+            label_delete_button = T("Delete Note Type"),
+            msg_record_created = T("Note Type added"),
+            msg_record_modified = T("Note Type updated"),
+            msg_record_deleted = T("Note Type deleted"),
+            msg_list_empty = T("No Note Types found"),
+            )
+
+        # Table configuration
+        #self.configure(tablename,
+        #               # Not needed as unique=True
+        #               deduplicate = S3Duplicate(),
+        #               )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        note_type_id = S3ReusableField("note_type_id", "reference %s" % tablename,
+                                       label = T("Note Type"),
+                                       ondelete = "RESTRICT",
+                                       represent = represent,
+                                       requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "note_type_id.id",
+                                                              represent)),
+                                       )
+
+        # ---------------------------------------------------------------------
+        # Notes
+        #
+        tablename = "dvr_note"
+        define_table(tablename,
+                     # Uncomment if needed for the Case perspective
+                     #self.dvr_case_id(empty = False,
+                     #                 ondelete = "CASCADE",
+                     #                 ),
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     note_type_id(),
+                     s3_date(),
+                     s3_comments("note",
+                                 comment=None,
+                                 ),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Note"),
+            title_display = T("Note Details"),
+            title_list = T("Notes"),
+            title_update = T("Edit Note"),
+            label_list_button = T("List Notes"),
+            label_delete_button = T("Delete Note"),
+            msg_record_created = T("Note added"),
+            msg_record_modified = T("Note updated"),
+            msg_record_deleted = T("Note deleted"),
+            msg_list_empty = T("No Notes found"),
+            )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class DVRCaseActivityModel(S3Model):
