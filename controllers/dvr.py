@@ -294,6 +294,43 @@ def case_activity():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def due_followups():
+    """ RESTful Controller for Due Follow-ups """
+
+    def prep(r):
+        resource = r.resource
+        s3.crud_strings["dvr_case_activity"]["title_list"] = T("Activities to follow up")
+        if not r.record:
+            query = (FS("followup") == True) & \
+                    (FS("followup_date") <= datetime.datetime.utcnow().date()) & \
+                    (FS("completed") != True) & \
+                    ((FS("person_id$dvr_case.archived") == None) | \
+                    (FS("person_id$dvr_case.archived") == False))
+
+            resource.add_filter(query)
+
+        list_fields = ["case_id$reference",
+                       "person_id$first_name",
+                       "person_id$last_name",
+                       "need_id",
+                       "need_details",
+                       "emergency",
+                       "referral_details",
+                       "followup",
+                       "followup_date",
+                       "completed",
+                       ]
+
+        resource.configure(list_fields = list_fields,
+                           insertable = False,
+                           deletable = False,
+                           )
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("dvr", "case_activity")
+
+# -----------------------------------------------------------------------------
 def case_flag():
     """ Case Flags: RESTful CRUD Controller """
 
@@ -316,7 +353,7 @@ def allowance():
     """ Allowances: RESTful CRUD Controller """
 
     return s3_rest_controller()
-    
+
 # -----------------------------------------------------------------------------
 def case_appointment():
     """ Appointments: RESTful CRUD Controller """

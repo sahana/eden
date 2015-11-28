@@ -1223,7 +1223,13 @@ def drk_dvr_rheader(r, tabs=[]):
             if case:
                 case = case[0]
                 case_status = lambda row: case["dvr_case.status_id"]
-                suspended = "Suspended" in case._row["dvr_case_flag.name"]
+                flags = case._row["dvr_case_flag.name"]
+                if flags:
+                    if type(flags) is not list:
+                        flags = [flags]
+                    suspended = "Suspended" in flags
+                else:
+                    suspended = False
                 case_suspended = lambda row: s3_yes_no_represent(suspended)
                 eligible = lambda row: ""
                 name = lambda row: s3_fullname(row)
