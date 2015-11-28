@@ -164,12 +164,10 @@ def config(settings):
         """
 
         from gluon.html import TABLE, TR, TD
-        output = TABLE()
 
         db = current.db
         s3db = current.s3db
 
-        stable = s3db.dvr_case_status
         rtable = s3db.cr_shelter_registration
         utable = s3db.cr_shelter_unit
         PX = db(utable.name == "PX").select(utable.id,
@@ -180,6 +178,7 @@ def config(settings):
         except:
             current.log.warning("No Shelter Unit called 'PX'")
             PX = None
+            NON_PX = None
             total = db(rtable.deleted == False).count()
         else:
             rows = db(rtable.deleted == False).select(rtable.shelter_unit_id)
@@ -190,18 +189,45 @@ def config(settings):
                     px_count += 1
                 else:
                     non_px_count += 1
+            total = px_count + non_px_count
             PX = TR(TD(T("How many in PX")),
                     TD(px_count),
                     )
+            NON_PX = TR(TD(T("How many in BEA (except in PX)")),
+                        TD(px_count),
+                        )
+
         TOTAL = TR(TD(T("How many in BEA (total)")),
                    TD(total),
                    )
-        # How many in BEA (total)
-        # How many in BEA (except PX)
-        # How many external (POLICE/HOSPITAL)
-        # How many free places
-        stats = ""
-        return stats
+        
+        stable = s3db.dvr_case_status
+        statuses = db(stable.name.belongs(("Hospital", "Police"))).select(stable.name,
+                                                                          stable.id,
+                                                                          ).as_dict(key="name")
+        HOSPITAL = statuses["Hospital"]["id"]
+        POLICE = statuses["Police"]["id"]
+        ctable = s3db.dvr_case
+        query = (ctable.deleted == False) & \
+                (ctable.archived == False) & \
+                (ctable.status_id.belongs((HOSPITAL, POLICE)))
+        external = db(query).count()
+        EXTERNAL = TR(TD(T("How many external (Hospital / Police)")),
+                      TD(external),
+                      )
+
+        free = r.record.available_capacity_day
+        FREE = TR(TD(T("How many free places")),
+                  TD(free),
+                  )
+
+        output = TABLE(TOTAL,
+                       PX,
+                       NON_PX,
+                       EXTERNAL,
+                       FREE
+                       )
+        return output
 
     settings.cr.profile_stats = cr_profile_stats
 
@@ -266,6 +292,7 @@ def config(settings):
                     ltable.insert(person_id = person_id,
                                   flag_id = SUSPENDED)
                     db(ctable.person_id == person_id).update(status_id = DISAPPEARED)
+                    # @ToDo: Clear Shelter Registration?
 
                 # @ToDo: Send notification of which people have been suspended to ADMIN_HEAD
 
