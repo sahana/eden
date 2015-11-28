@@ -490,28 +490,28 @@
                 <xsl:if test="$Illiterate!=''">
                     <xsl:choose>
                         <xsl:when test="$Illiterate='Y'">
-                            <data field="illiterate" value="true">True</data>
+                            <data field="literacy_status">1</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='YES'">
-                            <data field="illiterate" value="true">True</data>
+                            <data field="literacy_status">1</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='T'">
-                            <data field="illiterate" value="true">True</data>
+                            <data field="literacy_status">1</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='TRUE'">
-                            <data field="illiterate" value="true">True</data>
+                            <data field="literacy_status">1</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='N'">
-                            <data field="illiterate" value="false">False</data>
+                            <data field="literacy_status">2</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='NO'">
-                            <data field="illiterate" value="false">False</data>
+                            <data field="literacy_status">2</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='F'">
-                            <data field="illiterate" value="false">False</data>
+                            <data field="literacy_status">2</data>
                         </xsl:when>
                         <xsl:when test="$Illiterate='FALSE'">
-                            <data field="illiterate" value="false">False</data>
+                            <data field="literacy_status">2</data>
                         </xsl:when>
                         <xsl:otherwise>
                             <!-- Unknown -->
