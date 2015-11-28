@@ -30,6 +30,7 @@
          Marital Status.................optional.....person_details marital status
          Number of Children.............optional.....person_details number of children
          Nationality....................optional.....person_details nationality
+                                                     (specify XX for "stateless")
          Occupation.....................optional.....person_details occupation
          Company........................optional.....person_details company
          Affiliations............ ......optional.....person_details affiliation
@@ -440,7 +441,7 @@
                     </reference>
                 </resource>
             </xsl:if>
-            
+
             <!-- Appointments -->
             <xsl:for-each select="col[starts-with(@field, 'Appointment')]">
                 <xsl:call-template name="Appointment"/>
@@ -519,30 +520,33 @@
                     </xsl:choose>
                 </xsl:if>
                 <xsl:if test="col[@field='Religion']!=''">
-	                <data field="religion">
+                    <data field="religion">
                         <xsl:call-template name="lowercase">
                             <xsl:with-param name="string">
-                               <xsl:value-of select="col[@field='Religion']"/>
+                            <xsl:value-of select="col[@field='Religion']"/>
                             </xsl:with-param>
                         </xsl:call-template>
                     </data>
-	            </xsl:if>
-	            <xsl:if test="col[@field='Religion other']!=''">
-	                <data field="religion_other"><xsl:value-of select="col[@field='Religion other']"/></data>
-	            </xsl:if>
-	            <xsl:variable name="l0">
+                </xsl:if>
+                <xsl:if test="col[@field='Religion other']!=''">
+                    <data field="religion_other"><xsl:value-of select="col[@field='Religion other']"/></data>
+                </xsl:if>
+
+                <xsl:variable name="Nationality" select="col[@field='Nationality']/text()"/>
+                <xsl:variable name="l0">
                     <xsl:choose>
-                        <xsl:when test="col[@field='Nationality']!=''">
-                            <xsl:value-of select="col[@field='Nationality']"/>
+                        <xsl:when test="$Nationality!='' and $Nationality!='XX'">
+                            <!-- Stateless -->
+                            <xsl:value-of select="$Nationality"/>
                         </xsl:when>
-                        <xsl:when test="col[@field='Passport Country']!=''">
-                            <xsl:value-of select="col[@field='Passport Country']"/>
+                        <xsl:when test="col[@field='Passport Country']/text()!=''">
+                            <xsl:value-of select="col[@field='Passport Country']/text()"/>
                         </xsl:when>
                     </xsl:choose>
                 </xsl:variable>
                 <xsl:variable name="countrycode">
                     <xsl:choose>
-                        <xsl:when test="string-length($l0)!=2">
+                        <xsl:when test="$l0!='XX' and string-length($l0)!=2">
                             <xsl:call-template name="countryname2iso">
                                 <xsl:with-param name="country">
                                     <xsl:value-of select="$l0"/>
@@ -558,21 +562,34 @@
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>
+
                 <data field="nationality">
-                    <xsl:value-of select="$countrycode"/>
+                    <xsl:choose>
+                        <xsl:when test="$Nationality='XX'">
+                            <xsl:value-of select="$Nationality"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$countrycode"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
                 </data>
-	            <xsl:if test="col[@field='Place of Birth']!=''">
+
+                <xsl:if test="col[@field='Place of Birth']!=''">
                     <data field="place_of_birth"><xsl:value-of select="col[@field='Place of Birth']"/></data>
                 </xsl:if>
+
                 <xsl:if test="col[@field='Year of Birth']!=''">
                     <data field="year_of_birth"><xsl:value-of select="col[@field='Year of Birth']"/></data>
                 </xsl:if>
+
                 <xsl:if test="col[@field='Occupation']!=''">
                     <data field="occupation"><xsl:value-of select="col[@field='Occupation']"/></data>
                 </xsl:if>
+
                 <xsl:if test="col[@field='Company']!=''">
                     <data field="company"><xsl:value-of select="col[@field='Company']"/></data>
-	            </xsl:if>
+                </xsl:if>
+
                 <xsl:if test="col[@field='Affiliations']!=''">
                     <data field="affiliations"><xsl:value-of select="col[@field='Affiliations']"/></data>
                 </xsl:if>
