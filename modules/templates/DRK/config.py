@@ -299,9 +299,6 @@ def config(settings):
             from s3 import FS
             resource = r.resource
 
-            # Filter to persons who have a case registered
-            resource.add_filter(FS("dvr_case.id") != None)
-
             # Filter to active/inactive cases
             if not r.record:
                 inactive = r.get_vars.get("inactive")
@@ -315,6 +312,9 @@ def config(settings):
                 # Restricted view for Security staff
                 if r.component:
                     redirect(r.url(method=""))
+
+                # Filter to persons who have a case registered
+                resource.add_filter(FS("dvr_case.id") != None)
 
                 current.menu.options = None
                 # Only Show Security Notes ('Needs')
