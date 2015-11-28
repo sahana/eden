@@ -38,6 +38,7 @@ __all__ = ("DVRCaseModel",
            "DVRCaseAllowanceModel",
            "dvr_case_default_status",
            "dvr_case_status_filter_opts",
+           "dvr_due_followups",
            "dvr_rheader",
            )
 
@@ -1028,6 +1029,10 @@ class DVRCaseActivityModel(S3Model):
                                           cols = 2,
                                           hidden = True,
                                           ),
+                          S3DateFilter("followup_date",
+                                       cols = 2,
+                                       hidden = True,
+                                       ),
                           ]
 
         # Report options
@@ -1645,6 +1650,19 @@ def dvr_case_status_filter_opts():
 
     T = current.T
     return OrderedDict((row.id, T(row.name)) for row in rows)
+
+# =============================================================================
+def dvr_due_followups():
+    """ Number of due follow-ups """
+
+    query = (FS("followup") == True) & \
+            (FS("followup_date") <= datetime.datetime.utcnow().date()) & \
+            (FS("completed") != True) & \
+            ((FS("person_id$dvr_case.archived") == None) | \
+            (FS("person_id$dvr_case.archived") == False))
+    resource = current.s3db.resource("dvr_case_activity", filter=query)
+
+    return resource.count()
 
 # =============================================================================
 def dvr_rheader(r, tabs=[]):
