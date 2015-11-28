@@ -122,7 +122,7 @@ def config(settings):
     # Not ready yet
     settings.pr.separate_name_fields = 2
     settings.pr.name_format= "%(last_name)s %(first_name)s"
-    
+
     # -------------------------------------------------------------------------
     # Project Module Settings
     #
@@ -333,13 +333,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #
-    dvr_case_tabs = [(T("Basic Details"), ""),
-                     (T("Family Members"), "group_membership/"),
-                     (T("Activities"), "case_activity"),
-                     (T("Appointments"), "case_appointment"),
-                     ]
-
-    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         s3db = current.s3db
@@ -358,13 +351,15 @@ def config(settings):
             from s3 import FS
             resource = r.resource
 
-            # Filter to active/inactive cases
+            # Filter to current/archived cases
             if not r.record:
-                inactive = r.get_vars.get("inactive")
-                if inactive in ("1", "true", "yes"):
-                    query = FS("dvr_case.inactive") == True
+                archived = r.get_vars.get("archived")
+                if archived in ("1", "true", "yes"):
+                    query = FS("dvr_case.archived") == True
+                    s3.crud_strings["pr_person"]["title_list"] = T("Archived Cases")
                 else:
-                    query = FS("dvr_case.inactive") == False
+                    query = (FS("dvr_case.archived") == False) | \
+                            (FS("dvr_case.archived") == None)
                 resource.add_filter(query)
 
             # Should not be able to delete records in this view
@@ -450,8 +445,8 @@ def config(settings):
                 field.default = r.utcnow + relativedelta(years=5)
                 field.readable = field.writable = True
 
-                # Case can be set to inactive
-                field = ctable.inactive
+                # Case can be set to archived
+                field = ctable.archived
                 field.readable = field.writable = True
 
                 if default_organisation:
@@ -537,8 +532,8 @@ def config(settings):
                     field = table.last_name
                     field.requires = IS_NOT_EMPTY()
 
-                    # Expose "inactive"-flag?
-                    inactive_flag = "dvr_case.inactive" \
+                    # Expose "archived"-flag?
+                    archived_flag = "dvr_case.archived" \
                                     if r.record and r.method != "read" else None
 
                     # Custom CRUD form
@@ -603,7 +598,7 @@ def config(settings):
                                         label = T("Language / Communication Mode"),
                                         ),
                                 "dvr_case.comments",
-                                inactive_flag,
+                                archived_flag,
                                 )
                     resource.configure(crud_form = crud_form,
                                        )
@@ -645,7 +640,7 @@ def config(settings):
         if current.request.controller == "security":
             attr["rheader"] = ""
         else:
-            attr["rheader"] = lambda r: s3db.dvr_rheader(r, tabs=dvr_case_tabs)
+            attr["rheader"] = drk_dvr_rheader
 
         return attr
 
@@ -683,15 +678,7 @@ def config(settings):
             return result
         s3.prep = custom_prep
 
-        attr = dict(attr)
-        def rheader(r):
-            if r.controller == "dvr":
-                return s3db.dvr_rheader(r, tabs=dvr_case_tabs)
-            else:
-                return attr.get("rheader")
-        attr["rheader"] = rheader
-
-
+        attr["rheader"] = drk_dvr_rheader
 
         return attr
 
@@ -767,9 +754,17 @@ def config(settings):
             else:
                 result = True
 
+            resource = r.resource
+
+            # Filter to current cases
+            if not r.record:
+                from s3 import FS
+                query = (FS("person_id$dvr_case.archived") == False) | \
+                        (FS("person_id$dvr_case.archived") == None)
+                resource.add_filter(query)
+
             if not r.component:
 
-                resource = r.resource
                 filter_widgets = resource.get_config("filter_widgets")
                 if filter_widgets:
                     s3db.add_components("pr_person",
@@ -825,9 +820,17 @@ def config(settings):
             else:
                 result = True
 
+            resource = r.resource
+
+            # Filter to current cases
+            if not r.record:
+                from s3 import FS
+                query = (FS("person_id$dvr_case.archived") == False) | \
+                        (FS("person_id$dvr_case.archived") == None)
+                resource.add_filter(query)
+
             if not r.component:
 
-                resource = r.resource
 
                 if r.interactive and not r.id:
                     # Custom filter widgets
@@ -898,6 +901,84 @@ def config(settings):
         return attr
 
     settings.customise_dvr_case_appointment_controller = customise_dvr_case_appointment_controller
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_allowance_controller(**attr):
+
+        s3 = current.response.s3
+        s3db = current.s3db
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            resource = r.resource
+
+            # Filter to current cases
+            if not r.record:
+                from s3 import FS
+                query = (FS("person_id$dvr_case.archived") == False) | \
+                        (FS("person_id$dvr_case.archived") == None)
+                resource.add_filter(query)
+
+            if not r.component:
+
+                if r.interactive and not r.id:
+                    # Custom filter widgets
+                    from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter, get_s3_filter_opts
+                    date_filter = S3DateFilter("date")
+                    date_filter.operator = ["eq"]
+
+                    filter_widgets = [
+                        S3TextFilter(["person_id$pe_label",
+                                      "person_id$first_name",
+                                      "person_id$last_name",
+                                      ],
+                                      label = T("Search"),
+                                      ),
+                        S3OptionsFilter("status",
+                                        default = 2,
+                                        cols = 3,
+                                        options = s3db.dvr_allowance_status_opts,
+                                        ),
+                        date_filter,
+                        ]
+                    resource.configure(filter_widgets = filter_widgets)
+
+                # Field Visibility
+                table = resource.table
+                field = table.case_id
+                field.readable = field.writable = False
+
+                # Custom list fields
+                list_fields = [(T("ID"), "person_id$pe_label"),
+                               "person_id$first_name",
+                               "person_id$last_name",
+                               "date",
+                               "amount",
+                               "currency",
+                               "status",
+                               "comments",
+                               ]
+
+                resource.configure(list_fields = list_fields,
+                                   insertable = False,
+                                   deletable = False,
+                                   updatable = False,
+                                   )
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_dvr_allowance_controller = customise_dvr_allowance_controller
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -1073,5 +1154,87 @@ def config(settings):
            module_type = None,
         )),
     ])
+
+# =============================================================================
+def drk_dvr_rheader(r, tabs=[]):
+    """ DVR custom resource headers """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    from s3 import s3_rheader_resource, S3ResourceHeader, s3_fullname, s3_yes_no_represent
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "pr_person":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Family Members"), "group_membership/"),
+                        (T("Activities"), "case_activity"),
+                        (T("Appointments"), "case_appointment"),
+                        (T("Allowance"), "allowance"),
+                        ]
+
+            case = resource.select(["dvr_case.status_id",
+                                    "dvr_case.status_id$code",
+                                    "case_flag_case.flag_id$name",
+                                    "first_name",
+                                    "last_name",
+                                    ],
+                                    represent = True,
+                                    raw_data = True,
+                                    ).rows
+            if case:
+                case = case[0]
+                case_status = lambda row: case["dvr_case.status_id"]
+                suspended = "Suspended" in case._row["dvr_case_flag.name"]
+                case_suspended = lambda row: s3_yes_no_represent(suspended)
+                eligible = lambda row: ""
+                name = lambda row: s3_fullname(row)
+            else:
+                # Target record exists, but doesn't match filters
+                return None
+
+            rheader_fields = [[(T("ID"), "pe_label"), (T("Case Status"), case_status)],
+                              [(T("Name"), name), (T("Suspended"), case_suspended)],
+                              ["date_of_birth"],
+                              ]
+
+            if r.component_name == "allowance":
+                # Rule for eligibility:
+                allowance = case["dvr_case_status.code"] in ("STATUS5", "STATUS6") and \
+                            not suspended
+                eligible = lambda row, allowance=allowance: \
+                                  s3_yes_no_represent(allowance)
+                rheader_fields[-1].append((T("Elibigle for Allowance"), eligible))
+
+        elif tablename == "dvr_case":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Activities"), "case_activity"),
+                        ]
+
+            rheader_fields = [["reference"],
+                              ["status_id"],
+                              ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                         table=resource.table,
+                                                         record=record,
+                                                         )
+
+    return rheader
 
 # END =========================================================================

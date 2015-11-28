@@ -35,6 +35,7 @@ __all__ = ("DVRCaseModel",
            "DVRCaseAppointmentModel",
            "DVRCaseBeneficiaryModel",
            "DVRCaseEconomyInformationModel",
+           "DVRCaseAllowanceModel",
            "dvr_case_default_status",
            "dvr_case_status_filter_opts",
            "dvr_rheader",
@@ -272,8 +273,9 @@ class DVRCaseModel(S3Model):
                                      represent = self.org_site_represent,
                                      updateable = True,
                                      ),
-                     Field("inactive", "boolean",
+                     Field("archived", "boolean",
                            default = False,
+                           label = T("Archived"),
                            represent = s3_yes_no_represent,
                            # Enable in template if required:
                            readable = False,
@@ -1509,6 +1511,86 @@ class DVRCaseEconomyInformationModel(S3Model):
         """ Safe defaults for names in case the module is disabled """
 
         return {}
+
+# =============================================================================
+class DVRCaseAllowanceModel(S3Model):
+    """ Model for Allowance Management """
+
+    names = ("dvr_allowance",
+             )
+
+    def model(self):
+
+        T = current.T
+        db = current.db
+
+        crud_strings = current.response.s3.crud_strings
+        define_table = self.define_table
+        configure = self.configure
+
+        # ---------------------------------------------------------------------
+        # Allowance Information
+        #
+        allowance_status_opts = {1: T("pending"),
+                                 2: T("paid"),
+                                 3: T("refused"),
+                                 }
+
+        tablename = "dvr_allowance"
+        define_table(tablename,
+                     # Beneficiary (component link):
+                     # @todo: populate from case and hide in case perspective
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     self.dvr_case_id(empty = False,
+                                      label = T("Case Number"),
+                                      ondelete = "CASCADE",
+                                      ),
+                     s3_date(default="now"),
+                     Field("amount", "double",
+                           ),
+                     s3_currency(),
+                     Field("status", "integer",
+                           requires = IS_IN_SET(allowance_status_opts,
+                                                zero = None,
+                                                ),
+                           represent = S3Represent(options=allowance_status_opts,
+                                                   ),
+                           widget = S3GroupedOptionsWidget(cols = 3,
+                                                           multiple = False,
+                                                           ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Allowance Information"),
+            title_display = T("Allowance Information"),
+            title_list = T("Allowance Information"),
+            title_update = T("Edit Allowance Information"),
+            label_list_button = T("List Allowance Information"),
+            label_delete_button = T("Delete Allowance Information"),
+            msg_record_created = T("Allowance Information added"),
+            msg_record_modified = T("Allowance Information updated"),
+            msg_record_deleted = T("Allowance Information deleted"),
+            msg_list_empty = T("No Allowance Information currently registered"),
+            )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {"dvr_allowance_status_opts": allowance_status_opts,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        return {"dvr_allowance_status_opts": {},
+                }
 
 # =============================================================================
 def dvr_case_default_status():
