@@ -1111,6 +1111,9 @@ class DVRCaseAppointmentModel(S3Model):
             msg_list_empty = T("No Appointments currently registered"),
             )
 
+        # @todo: onaccept to change status "planning" to "planned" if a date
+        #        has been entered, and vice versa
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #

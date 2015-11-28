@@ -306,7 +306,7 @@ class S3FilterWidget(object):
             values = Storage()
             for k in variable:
                 if k in defaults:
-                    values[k] = default[k]
+                    values[k] = defaults[k]
                 else:
                     values[k] = self._values(get_vars, k)
         else:

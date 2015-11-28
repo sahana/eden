@@ -7,6 +7,8 @@ except:
     # Python 2.6
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
+import datetime
+    
 from gluon import current
 from gluon.storage import Storage
 
@@ -611,6 +613,96 @@ def config(settings):
         return attr
 
     settings.customise_dvr_case_activity_controller = customise_dvr_case_activity_controller
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_appointment_controller(**attr):
+
+        s3 = current.response.s3
+        s3db = current.s3db
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if not r.component:
+
+                resource = r.resource
+
+                if r.interactive and not r.id:
+                    # Custom filter widgets
+                    s3db.add_components("pr_person",
+                                        pr_person_tag = {"name": "eo_number",
+                                                         "joinby": "person_id",
+                                                         "filterby": "tag",
+                                                         "filterfor": ("EONUMBER",),
+                                                         "multiple": False,
+                                                         },
+                                        )
+
+                    from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter, get_s3_filter_opts
+                    filter_widgets = [
+                        S3TextFilter(["person_id$pe_label",
+                                      "person_id$first_name",
+                                      "person_id$last_name",
+                                      "person_id$eo_number.value",
+                                      ],
+                                      label = T("Search"),
+                                      ),
+                        S3OptionsFilter("type_id",
+                                        options = get_s3_filter_opts("dvr_case_appointment_type"),
+                                        cols = 3,
+                                        ),
+                        S3OptionsFilter("status",
+                                        default = 2,
+                                        ),
+                        S3DateFilter("date",
+                                     ),
+                        ]
+                    resource.configure(filter_widgets = filter_widgets)
+
+                # Default filter today's and tomorrow's appointments
+                from s3 import s3_set_default_filter
+                now = current.request.utcnow
+                today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                tomorrow = today + datetime.timedelta(days=2)
+                s3_set_default_filter("~.date",
+                                      {"ge": today, "le": tomorrow},
+                                      tablename = "dvr_case_appointment",
+                                      )
+
+                # Field Visibility
+                table = resource.table
+                field = table.case_id
+                field.readable = field.writable = False
+                    
+                # Custom list fields
+                list_fields = [(T("ID"), "person_id$pe_label"),
+                               "person_id$first_name",
+                               "person_id$last_name",
+                               "type_id",
+                               "date",
+                               "status",
+                               "comments",
+                               ]
+
+                resource.configure(list_fields = list_fields,
+                                   insertable = False,
+                                   deletable = False,
+                                   update_next = r.url(method=""),
+                                   )
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_dvr_case_appointment_controller = customise_dvr_case_appointment_controller
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
