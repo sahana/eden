@@ -308,6 +308,9 @@ def config(settings):
                     query = FS("dvr_case.inactive") == False
                 r.resource.add_filter(query)
 
+            # Should not be able to delete records in this view
+            resource.configure(deletable=False)
+
             if r.controller == "security":
                 # Restricted view for Security staff
                 if r.component:
