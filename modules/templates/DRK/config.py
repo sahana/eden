@@ -1213,7 +1213,7 @@ def drk_dvr_rheader(r, tabs=[]):
 
             if r.component_name == "allowance":
                 # Rule for eligibility:
-                allowance = case["dvr_case_status.code"] in ("Status5", "Status6") and \
+                allowance = case["dvr_case_status.code"] in ("STATUS5", "STATUS6") and \
                             not suspended
                 eligible = lambda row, allowance=allowance: \
                                   s3_yes_no_represent(allowance)
