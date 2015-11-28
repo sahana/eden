@@ -273,8 +273,9 @@ class DVRCaseModel(S3Model):
                                      represent = self.org_site_represent,
                                      updateable = True,
                                      ),
-                     Field("inactive", "boolean",
+                     Field("archived", "boolean",
                            default = False,
+                           label = T("Archived"),
                            represent = s3_yes_no_represent,
                            # Enable in template if required:
                            readable = False,

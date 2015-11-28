@@ -122,7 +122,7 @@ def config(settings):
     # Not ready yet
     #settings.pr.separate_name_fields = 2
     settings.pr.name_format= "%(last_name)s %(first_name)s"
-    
+
     # -------------------------------------------------------------------------
     # Project Module Settings
     #
@@ -359,13 +359,15 @@ def config(settings):
             from s3 import FS
             resource = r.resource
 
-            # Filter to active/inactive cases
+            # Filter to current/archived cases
             if not r.record:
-                inactive = r.get_vars.get("inactive")
-                if inactive in ("1", "true", "yes"):
-                    query = FS("dvr_case.inactive") == True
+                archived = r.get_vars.get("archived")
+                if archived in ("1", "true", "yes"):
+                    query = FS("dvr_case.archived") == True
+                    s3.crud_strings["pr_person"]["title_list"] = T("Archived Cases")
                 else:
-                    query = FS("dvr_case.inactive") == False
+                    query = (FS("dvr_case.archived") == False) | \
+                            (FS("dvr_case.archived") == None)
                 resource.add_filter(query)
 
             # Should not be able to delete records in this view
@@ -451,8 +453,8 @@ def config(settings):
                 field.default = r.utcnow + relativedelta(years=5)
                 field.readable = field.writable = True
 
-                # Case can be set to inactive
-                field = ctable.inactive
+                # Case can be set to archived
+                field = ctable.archived
                 field.readable = field.writable = True
 
                 if default_organisation:
@@ -538,8 +540,8 @@ def config(settings):
                     field = table.last_name
                     field.requires = IS_NOT_EMPTY()
 
-                    # Expose "inactive"-flag?
-                    inactive_flag = "dvr_case.inactive" \
+                    # Expose "archived"-flag?
+                    archived_flag = "dvr_case.archived" \
                                     if r.record and r.method != "read" else None
 
                     # Custom CRUD form
@@ -604,7 +606,7 @@ def config(settings):
                                         label = T("Language / Communication Mode"),
                                         ),
                                 "dvr_case.comments",
-                                inactive_flag,
+                                archived_flag,
                                 )
                     resource.configure(crud_form = crud_form,
                                        )
