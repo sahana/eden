@@ -154,8 +154,10 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Shelter Module Settings
     #
+    #settings.cr.day_and_night = False
     settings.cr.shelter_population_dynamic = True
     settings.cr.shelter_housing_unit_management = True
+    settings.cr.check_out_is_final = False
 
     # -------------------------------------------------------------------------
     def profile_header(r):
@@ -857,7 +859,7 @@ def config(settings):
         cancel = False
         form_vars = form.vars
         flag_id = form_vars.flag_id
-        if status_id:
+        if flag_id:
             db = current.db
             s3db = current.s3db
             ftable = s3db.dvr_case_flag
