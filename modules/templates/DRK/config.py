@@ -337,6 +337,7 @@ def config(settings):
                      (T("Family Members"), "group_membership/"),
                      (T("Activities"), "case_activity"),
                      (T("Appointments"), "case_appointment"),
+                     (T("Allowance"), "allowance"),
                      ]
 
     # -------------------------------------------------------------------------
@@ -898,6 +899,77 @@ def config(settings):
         return attr
 
     settings.customise_dvr_case_appointment_controller = customise_dvr_case_appointment_controller
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_allowance_controller(**attr):
+
+        s3 = current.response.s3
+        s3db = current.s3db
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if not r.component:
+
+                resource = r.resource
+
+                if r.interactive and not r.id:
+                    # Custom filter widgets
+                    from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter, get_s3_filter_opts
+                    date_filter = S3DateFilter("date")
+                    date_filter.operator = ["eq"]
+
+                    filter_widgets = [
+                        S3TextFilter(["person_id$pe_label",
+                                      "person_id$first_name",
+                                      "person_id$last_name",
+                                      ],
+                                      label = T("Search"),
+                                      ),
+                        S3OptionsFilter("status",
+                                        default = 2,
+                                        cols = 3,
+                                        options = s3db.dvr_allowance_status_opts,
+                                        ),
+                        date_filter,
+                        ]
+                    resource.configure(filter_widgets = filter_widgets)
+
+                # Field Visibility
+                table = resource.table
+                field = table.case_id
+                field.readable = field.writable = False
+
+                # Custom list fields
+                list_fields = [(T("ID"), "person_id$pe_label"),
+                               "person_id$first_name",
+                               "person_id$last_name",
+                               "date",
+                               "amount",
+                               "currency",
+                               "status",
+                               "comments",
+                               ]
+
+                resource.configure(list_fields = list_fields,
+                                   insertable = False,
+                                   deletable = False,
+                                   updatable = False,
+                                   )
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_dvr_allowance_controller = customise_dvr_allowance_controller
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

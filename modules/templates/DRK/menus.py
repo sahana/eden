@@ -159,6 +159,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     M("Appointments", f="case_appointment")(
                     ),
+                    M("Allowances", f="allowance")(
+                    ),
                     #M("Case Types", f="case_type")(
                     #    M("Create", m="create"),
                     #),
