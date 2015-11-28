@@ -1919,7 +1919,8 @@ class S3GroupModel(S3Model):
 
     names = ("pr_group",
              "pr_group_id",
-             "pr_group_membership"
+             "pr_group_membership",
+             "pr_group_membership_type",
              )
 
     def model(self):
@@ -2077,6 +2078,45 @@ class S3GroupModel(S3Model):
                                                       },
                             )
 
+        # Case Appointment Type
+        #
+        tablename = "pr_group_membership_type"
+        define_table(tablename,
+                     Field("name", length=64, notnull=True, unique=True,
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("type", "integer",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Group Membership Type"),
+            title_display = T("Group Membership Type Details"),
+            title_list = T("Group Membership Types"),
+            title_update = T("Edit Group Membership Types"),
+            label_list_button = T("List Group Membership Types"),
+            label_delete_button = T("Delete Group Membership Type"),
+            msg_record_created = T("Group Membership Type added"),
+            msg_record_modified = T("Group Membership Type updated"),
+            msg_record_deleted = T("Group Membership Type deleted"),
+            msg_list_empty = T("No Group Membership Types currently registered"),
+            )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename, translate=True)
+        group_membership_type_id = S3ReusableField("type_id", "reference %s" % tablename,
+                                              label = T("Group Membership Type"),
+                                              ondelete = "RESTRICT",
+                                              represent = represent,
+                                              requires = IS_EMPTY_OR(
+                                                              IS_ONE_OF(db, "pr_group_membership_type.id",
+                                                                        represent,
+                                                                        )),
+                                              )
+        
         # ---------------------------------------------------------------------
         # Group membership
         #
@@ -2096,6 +2136,8 @@ class S3GroupModel(S3Model):
                            represent = lambda group_head: \
                                        (group_head and [T("yes")] or [""])[0]
                            ),
+                     group_membership_type_id(empty = False,
+                                             ),
                      s3_comments(),
                      *s3_meta_fields())
 

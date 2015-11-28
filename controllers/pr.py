@@ -100,6 +100,11 @@ def index():
     response.title = module_name
     return output
 
+def group_membership_type():
+    """ Group Membership Type: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
 # -----------------------------------------------------------------------------
 def person():
     """ RESTful CRUD controller """
