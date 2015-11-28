@@ -150,6 +150,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="dvr")(
                     M("Cases", c=("dvr", "pr"), f="person")(
                         M("Create", m="create"),
+                        M("Suspended Cases", vars={"case_flag.name": "Suspended"}),
                     ),
                     M("Activities", f="case_activity")(
                         M("Emergencies", vars = {"~.emergency": "True"}),

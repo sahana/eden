@@ -159,7 +159,7 @@
             </xsl:for-each>
             
             <!-- Shelters -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('type', col[@field='Shelter'])[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('shelter', col[@field='Shelter'])[1])]">
                 <xsl:call-template name="Shelter"/>
             </xsl:for-each>
 

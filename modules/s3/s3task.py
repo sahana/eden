@@ -173,7 +173,7 @@ class S3Task(object):
         field.widget = S3TimeIntervalWidget.widget
         field.requires = IS_TIME_INTERVAL_WIDGET(table.period)
         field.represent = S3TimeIntervalWidget.represent
-        field.comment = None
+        field.comment = T("seconds")
 
         table.timeout.default = 600
         table.timeout.represent = lambda opt: \
@@ -323,8 +323,8 @@ class S3Task(object):
             @param start_time: start_time for the scheduled task
             @param next_run_time: next_run_time for the the scheduled task
             @param stop_time: stop_time for the the scheduled task
-            @param repeats: number of times the task to be repeated
-            @param period: time period between two consecutive runs
+            @param repeats: number of times the task to be repeated (0=unlimited)
+            @param period: time period between two consecutive runs (seconds)
             @param timeout: set timeout for a running task
             @param enabled: enabled flag for the scheduled task
             @param group_name: group_name for the scheduled task
@@ -336,6 +336,11 @@ class S3Task(object):
             args = []
         if vars is None:
             vars = {}
+
+        if not ignore_duplicate and self._duplicate_task_exists(task, args, vars):
+            # if duplicate task exists, do not insert a new one
+            current.log.warning("Duplicate Task, Not Inserted", value=task)
+            return False
 
         kwargs = {}
 
@@ -375,11 +380,6 @@ class S3Task(object):
 
         if group_name:
             kwargs["group_name"] = group_name
-
-        if not ignore_duplicate and self._duplicate_task_exists(task, args, vars):
-            # if duplicate task exists, do not insert a new one
-            current.log.warning("Duplicate Task, Not Inserted", value=task)
-            return False
 
         if sync_output != 0:
             kwargs["sync_output"] = sync_output
