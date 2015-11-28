@@ -194,7 +194,7 @@ def config(settings):
                     TD(px_count),
                     )
             NON_PX = TR(TD(T("How many in BEA (except in PX)")),
-                        TD(px_count),
+                        TD(non_px_count),
                         )
 
         TOTAL = TR(TD(T("How many in BEA (total)")),
@@ -288,11 +288,19 @@ def config(settings):
                     return
                 ltable = s3db.dvr_case_flag_case
 
+                onaccept = s3db.get_config("dvr_case", "onaccept")
                 for person_id in missing:
                     ltable.insert(person_id = person_id,
                                   flag_id = SUSPENDED)
-                    db(ctable.person_id == person_id).update(status_id = DISAPPEARED)
-                    # @ToDo: Clear Shelter Registration?
+                cases = db(ctable.person_id.belongs(missing)).select(ctable.id,
+                                                                     # For onaccept
+                                                                     ctable.person_id,
+                                                                     )
+                for case in cases:
+                    case.update_record(status_id = DISAPPEARED)
+                    # Clear Shelter Registration
+                    form = Storage(vars=case)
+                    onaccept(form)
 
                 # @ToDo: Send notification of which people have been suspended to ADMIN_HEAD
 
@@ -774,6 +782,102 @@ def config(settings):
     settings.customise_pr_group_membership_controller = customise_pr_group_membership_controller
 
     # -------------------------------------------------------------------------
+    def dvr_case_onaccept(form):
+        """
+            If inactive or status in (DISAPPEARED, LEGALLY_DEPARTED) then
+                remove shelter_registration
+        """
+
+        cancel = False
+        form_vars = form.vars
+        inactive = form_vars.inactive
+        if inactive:
+            cancel = True
+            db = current.db
+            s3db = current.s3db
+        else:
+            status_id = form_vars.status_id
+            if status_id:
+                db = current.db
+                s3db = current.s3db
+                stable = s3db.dvr_case_status
+                status = db(stable.id == status_id).select(stable.code,
+                                                           limitby = (0, 1)
+                                                           ).first()
+                try:
+                    if status.code in ("STATUS7", "STATUS8"):
+                        cancel = True
+                except:
+                    current.log.error("Status %s not found" % status_id)
+                    return
+
+        if cancel:
+            resource = s3db.resource("cr_shelter_registration", id=form_vars.person_id)
+            resource.delete()
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_resource(r, tablename):
+
+        s3db = current.s3db
+        default_onaccept = s3db.get_config(tablename, "onaccept")
+        if default_onaccept:
+            onaccept = [default_onaccept,
+                        dvr_case_onaccept,
+                        ]
+        else:
+            onaccept = dvr_case_onaccept
+        s3db.configure(tablename,
+                       onaccept = onaccept,
+                       )
+
+    settings.customise_dvr_case_resource = customise_dvr_case_resource
+
+    # -------------------------------------------------------------------------
+    def dvr_case_flag_case_onaccept(form):
+        """
+            If flag is SUSPENDED then
+                remove shelter_registration
+        """
+
+        cancel = False
+        form_vars = form.vars
+        flag_id = form_vars.flag_id
+        if status_id:
+            db = current.db
+            s3db = current.s3db
+            ftable = s3db.dvr_case_flag
+            flag = db(ftable.id == flag_id).select(ftable.name,
+                                                   limitby = (0, 1)
+                                                   ).first()
+            try:
+                if flag.name == "Suspended":
+                    cancel = True
+            except:
+                current.log.error("Flag %s not found" % flag_id)
+                return
+
+        if cancel:
+            resource = s3db.resource("cr_shelter_registration", id=form_vars.person_id)
+            resource.delete()
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_flag_case_resource(r, tablename):
+
+        s3db = current.s3db
+        default_onaccept = s3db.get_config(tablename, "onaccept")
+        if default_onaccept:
+            onaccept = [default_onaccept,
+                        dvr_case_flag_case_onaccept,
+                        ]
+        else:
+            onaccept = dvr_case_flag_case_onaccept
+        s3db.configure(tablename,
+                       onaccept = onaccept,
+                       )
+
+    settings.customise_dvr_case_flag_case_resource = customise_dvr_case_flag_case_resource
+
+    # -------------------------------------------------------------------------
     def dvr_case_activity_onaccept(form):
         """
             Set owned_by_group
@@ -820,10 +924,17 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_dvr_case_activity_resource(r, tablename):
 
-        # @ToDo: Check for default onacccept (none right now, but may change)
-        current.s3db.configure(tablename,
-                               onaccept = dvr_case_activity_onaccept,
-                               )
+        s3db = current.s3db
+        default_onaccept = s3db.get_config(tablename, "onaccept")
+        if default_onaccept:
+            onaccept = [default_onaccept,
+                        dvr_case_activity_onaccept,
+                        ]
+        else:
+            onaccept = dvr_case_activity_onaccept
+        s3db.configure(tablename,
+                       onaccept = onaccept,
+                       )
 
     settings.customise_dvr_case_activity_resource = customise_dvr_case_activity_resource
 

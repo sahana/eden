@@ -333,7 +333,7 @@ class S3Trackable(object):
             @param location: the location (as Row or record ID)
             @param timestmp: the datetime of the presence (defaults to current time)
 
-            @return: nothing
+            @return: location
         """
 
         ptable = current.s3db[PRESENCE]
@@ -351,10 +351,11 @@ class S3Trackable(object):
             else:
                 location = location.id
 
-        if not location:
-            return
-        else:
-            data = dict(location_id=location, timestmp=timestmp)
+        # Log even a set of no location
+        #if not location:
+        #    return
+        #else:
+        data = dict(location_id=location, timestmp=timestmp)
 
         for r in self.records:
             if TRACK_ID not in r:
