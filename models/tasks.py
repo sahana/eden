@@ -59,6 +59,7 @@ def org_site_check(site_id, user_id=None):
     customise = settings.get("org_site_check")
     if customise:
         customise(site_id)
+        db.commit()
 
 tasks["org_site_check"] = org_site_check
 

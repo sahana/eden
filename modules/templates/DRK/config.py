@@ -163,13 +163,32 @@ def config(settings):
             Statistics box for Shelter Profile page
         """
 
+        from gluon.html import *
+        output = TABLE()
+
         db = current.db
         s3db = current.s3db
 
         stable = s3db.dvr_case_status
         rtable = s3db.cr_shelter_registration
+        utable = s3db.cr_shelter_unit
+        PX = db(utable.name == "PX").select(utable.id,
+                                            limitby=(0, 1)
+                                            ).first()
+        try:
+            PX = PX.id
+        except:
+            current.log.warning("No Shelter Unit called 'PX'")
+            PX = None
+        else:
+            query = (rtable.deleted == False) & \
+                    (rtable.shelter_unit_id == PX)
+            px_count = db(query).count()
+            PX = TR(TD(T("How many in PX")),
+                    TD(px_count),
+                    )
+
         # How many in BEA (total)
-        # How many in PX
         # How many in BEA (except PX)
         # How many external (POLICE/HOSPITAL)
         # How many free places
@@ -222,24 +241,25 @@ def config(settings):
                 if not check_in_date or check_in_date < row.check_out_date:
                     mappend(row.person_id)
 
-            # For these users, set Case Flag to 'Suspended' & Status to 'Disappeared'
-            ftable = s3db.dvr_case_flag
-            flag = db(ftable.name == "Suspended").select(ftable.id,
-                                                         limitby=(0, 1)
-                                                         ).first()
-            try:
-                SUSPENDED = flag.id
-            except:
-                current.log.error("Prepop of Flag Status 'Suspended' not done")
-                return
-            ltable = s3db.dvr_case_flag_case
+            if missing:
+                # For these users, set Case Flag to 'Suspended' & Status to 'Disappeared'
+                ftable = s3db.dvr_case_flag
+                flag = db(ftable.name == "Suspended").select(ftable.id,
+                                                             limitby=(0, 1)
+                                                             ).first()
+                try:
+                    SUSPENDED = flag.id
+                except:
+                    current.log.error("Prepop of Flag Status 'Suspended' not done")
+                    return
+                ltable = s3db.dvr_case_flag_case
 
-            for person_id in missing:
-                ltable.insert(person_id = person_id,
-                              flag_id = SUSPENDED)
-                db(ctable.person_id == person_id).update(status_id = DISAPPEARED)
+                for person_id in missing:
+                    ltable.insert(person_id = person_id,
+                                  flag_id = SUSPENDED)
+                    db(ctable.person_id == person_id).update(status_id = DISAPPEARED)
 
-            # @ToDo: Send notification of which people have been suspended to ADMIN_HEAD
+                # @ToDo: Send notification of which people have been suspended to ADMIN_HEAD
 
     settings.org_site_check = org_site_check
 
@@ -267,17 +287,22 @@ def config(settings):
             warning = None
             return error, warning
 
+        error = None
         if registration.registration_status == 2:
-            error = None
             warning = T("Client was already checked-in")
-            return error, warning
+        else:
+            warning = None
 
         # Update the Shelter Registration
-        registration.update_record(registration_status = 2)
+        registration.update_record(checked_in_date = current.request.utcnow,
+                                   registration_status = 2,
+                                   )
+
         onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
         if onaccept:
             onaccept(registration)
-        return None, None
+
+        return error, warning
 
     # -------------------------------------------------------------------------
     def site_check_out(site_id, person_id):
@@ -302,17 +327,21 @@ def config(settings):
             warning = None
             return error, warning
 
+        error = None
         if registration.registration_status == 3:
-            error = None
             warning = T("Client was already checked-out")
-            return error, warning
+        else:
+            warning = None
 
         # Update the Shelter Registration
-        registration.update_record(registration_status = 3)
+        registration.update_record(checked_out_date = current.request.utcnow,
+                                   registration_status = 3)
+
         onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
         if onaccept:
             onaccept(registration)
-        return None, None
+
+        return error, warning
 
     # -------------------------------------------------------------------------
     def customise_cr_shelter_controller(**attr):

@@ -90,7 +90,7 @@ def shelter():
             
             # Stats panel
             # @ToDo: Move from header to a custom panel
-            stats = setttings.get_cr_profile_stats()
+            stats = settings.get_cr_profile_stats()
             if stats:
                 stats = stats(r)
 
