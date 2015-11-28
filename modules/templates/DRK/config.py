@@ -158,12 +158,12 @@ def config(settings):
     settings.cr.shelter_housing_unit_management = True
 
     # -------------------------------------------------------------------------
-    def cr_profile_stats(r):
+    def profile_header(r):
         """
-            Statistics box for Shelter Profile page
+            Profile Header for Shelter Profile page
         """
 
-        from gluon.html import TABLE, TR, TD
+        from gluon.html import DIV, H2, P, TABLE, TR, TD, A
 
         db = current.db
         s3db = current.s3db
@@ -221,15 +221,23 @@ def config(settings):
                   TD(free),
                   )
 
-        output = TABLE(TOTAL,
-                       PX,
-                       NON_PX,
-                       EXTERNAL,
-                       FREE
-                       )
+        output = DIV(H2(r.record.name),
+                        P(r.record.comments or ""),
+                        TABLE(TOTAL,
+                               PX,
+                               NON_PX,
+                               EXTERNAL,
+                               FREE
+                               ),
+                        A("%s / %s" % (T("Check-In"), T("Check-Out")),
+                          _href=r.url(method="check-in"),
+                          _class="action-btn",
+                          ),
+                        _class="profile-header",
+                        )
         return output
 
-    settings.cr.profile_stats = cr_profile_stats
+    settings.ui.profile_header = profile_header
 
     # -------------------------------------------------------------------------
     def org_site_check(site_id):
@@ -288,10 +296,13 @@ def config(settings):
                     return
                 ltable = s3db.dvr_case_flag_case
 
-                onaccept = s3db.get_config("dvr_case", "onaccept")
+                case_onaccept = s3db.get_config("dvr_case", "onaccept")
                 for person_id in missing:
                     ltable.insert(person_id = person_id,
                                   flag_id = SUSPENDED)
+                rform = db(table.person_id == missing[0]).select(table.id,
+                                                                 limitby=(0, 1)
+                                                                 ).first()
                 cases = db(ctable.person_id.belongs(missing)).select(ctable.id,
                                                                      # For onaccept
                                                                      ctable.person_id,
@@ -300,7 +311,11 @@ def config(settings):
                     case.update_record(status_id = DISAPPEARED)
                     # Clear Shelter Registration
                     form = Storage(vars=case)
-                    onaccept(form)
+                    case_onaccept(form)
+
+                # Update Shelter Capacity
+                registration_onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
+                registration_onaccept(rform)
 
                 # @ToDo: Send notification of which people have been suspended to ADMIN_HEAD
 

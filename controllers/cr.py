@@ -88,11 +88,7 @@ def shelter():
             shelter_id = r.id
             name = r.record.name
             
-            # Stats panel
-            # @ToDo: Move from header to a custom panel
-            stats = settings.get_cr_profile_stats()
-            if stats:
-                stats = stats(r)
+            profile_header = settings.get_ui_profile_header(r)
 
             map_widget = dict(label = T("Housing Units"),
                               type = "map",
@@ -119,15 +115,7 @@ def shelter():
             profile_widgets = [map_widget,
                                ]
             s3db.configure(tablename,
-                           profile_header = DIV(H2(name),
-                                                P(r.record.comments or ""),
-                                                stats,
-                                                A(T("Check-In/Out"),
-                                                  _href=r.url(method="check-in"),
-                                                  _class="action-btn",
-                                                  ),
-                                                _class="profile-header",
-                                                ),
+                           profile_header = profile_header,
                            profile_layers = (layer,),
                            profile_title = "%s : %s" % (s3_unicode(s3.crud_strings["cr_shelter"].title_display),
                                                         name),
