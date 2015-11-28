@@ -333,14 +333,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #
-    dvr_case_tabs = [(T("Basic Details"), ""),
-                     (T("Family Members"), "group_membership/"),
-                     (T("Activities"), "case_activity"),
-                     (T("Appointments"), "case_appointment"),
-                     (T("Allowance"), "allowance"),
-                     ]
-
-    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         s3db = current.s3db
@@ -648,7 +640,7 @@ def config(settings):
         if current.request.controller == "security":
             attr["rheader"] = ""
         else:
-            attr["rheader"] = lambda r: s3db.dvr_rheader(r, tabs=dvr_case_tabs)
+            attr["rheader"] = drk_dvr_rheader
 
         return attr
 
@@ -686,15 +678,7 @@ def config(settings):
             return result
         s3.prep = custom_prep
 
-        attr = dict(attr)
-        def rheader(r):
-            if r.controller == "dvr":
-                return s3db.dvr_rheader(r, tabs=dvr_case_tabs)
-            else:
-                return attr.get("rheader")
-        attr["rheader"] = rheader
-
-
+        attr["rheader"] = drk_dvr_rheader
 
         return attr
 
@@ -1170,5 +1154,87 @@ def config(settings):
            module_type = None,
         )),
     ])
+
+# =============================================================================
+def drk_dvr_rheader(r, tabs=[]):
+    """ DVR custom resource headers """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    from s3 import s3_rheader_resource, S3ResourceHeader, s3_fullname, s3_yes_no_represent
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "pr_person":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Family Members"), "group_membership/"),
+                        (T("Activities"), "case_activity"),
+                        (T("Appointments"), "case_appointment"),
+                        (T("Allowance"), "allowance"),
+                        ]
+
+            case = resource.select(["dvr_case.status_id",
+                                    "dvr_case.status_id$code",
+                                    "case_flag_case.flag_id$name",
+                                    "first_name",
+                                    "last_name",
+                                    ],
+                                    represent = True,
+                                    raw_data = True,
+                                    ).rows
+            if case:
+                case = case[0]
+                case_status = lambda row: case["dvr_case.status_id"]
+                suspended = "Suspended" in case._row["dvr_case_flag.name"]
+                case_suspended = lambda row: s3_yes_no_represent(suspended)
+                eligible = lambda row: ""
+                name = lambda row: s3_fullname(row)
+            else:
+                # Target record exists, but doesn't match filters
+                return None
+
+            rheader_fields = [[(T("ID"), "pe_label"), (T("Case Status"), case_status)],
+                              [(T("Name"), name), (T("Suspended"), case_suspended)],
+                              ["date_of_birth"],
+                              ]
+
+            if r.component_name == "allowance":
+                # Rule for eligibility:
+                allowance = case["dvr_case_status.code"] in ("Status5", "Status6") and \
+                            not suspended
+                eligible = lambda row, allowance=allowance: \
+                                  s3_yes_no_represent(allowance)
+                rheader_fields[-1].append((T("Elibigle for Allowance"), eligible))
+
+        elif tablename == "dvr_case":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        (T("Activities"), "case_activity"),
+                        ]
+
+            rheader_fields = [["reference"],
+                              ["status_id"],
+                              ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                         table=resource.table,
+                                                         record=record,
+                                                         )
+
+    return rheader
 
 # END =========================================================================
