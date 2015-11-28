@@ -3591,6 +3591,16 @@ class S3PersonDetailsModel(S3Model):
         # Religion Options
         religion_opts = current.deployment_settings.get_L10n_religions()
 
+        # Nationality Options
+        STATELESS = T("Stateless")
+        def nationality_opts():
+            opts = gis.get_countries(key_type="code")
+            opts["XX"] = STATELESS
+            return opts
+        nationality_repr = lambda code: STATELESS if code == "XX" else \
+                                        gis.get_country(code, key_type="code") or \
+                                        UNKNOWN_OPT
+
         tablename = "pr_person_details"
         self.define_table(tablename,
                           self.pr_person_id(label = T("Person"),
@@ -3598,12 +3608,11 @@ class S3PersonDetailsModel(S3Model):
                                             ),
                           Field("nationality",
                                 label = T("Nationality"),
-                                represent = lambda code: \
-                                    gis.get_country(code, key_type="code") or UNKNOWN_OPT,
+                                represent = nationality_repr,
                                 requires = IS_EMPTY_OR(
-                                            IS_IN_SET_LAZY(lambda: \
-                                                gis.get_countries(key_type="code"),
-                                                zero = messages.SELECT_LOCATION)),
+                                                IS_IN_SET_LAZY(nationality_opts,
+                                                               zero = messages.SELECT_LOCATION,
+                                                               )),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("Nationality"),
                                                                 T("Nationality of the person."))),
