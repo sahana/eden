@@ -629,8 +629,6 @@ class S3AddPersonWidget2(FormWidget):
 
         @ToDo: get working AC/validator for human_resource_id
                - perhaps re-implement as S3SQLFormElement
-        @ToDo: provide option for entering data in 2-3 separate name fields
-               instead of all in 1 field
     """
 
     def __init__(self,
@@ -657,7 +655,8 @@ class S3AddPersonWidget2(FormWidget):
         attr["_class"] = "hide"
 
         request = current.request
-        if not value and request.env.request_method == "POST":
+        POST = request.env.request_method == "POST"
+        if not value and POST:
             # Read the POST vars:
             values = request.post_vars
             # @ToDo: Format these for Display?
@@ -722,7 +721,7 @@ class S3AddPersonWidget2(FormWidget):
 
         if year_of_birth is None:
             # Use Global deployment_setting
-            settings.get_pr_request_year_of_birth()
+            year_of_birth = settings.get_pr_request_year_of_birth()
         if year_of_birth:
             dtable = s3db.pr_person_details
             year_of_birth = dtable.year_of_birth
@@ -732,7 +731,7 @@ class S3AddPersonWidget2(FormWidget):
 
         if settings.get_pr_request_gender():
             gender = ptable.gender
-            if request.env.request_method == "POST":
+            if POST:
                 gender.requires = IS_EMPTY_OR(gender.requires)
         else:
             gender = None
@@ -944,11 +943,23 @@ class S3AddPersonWidget2(FormWidget):
                      settings.get_hrm_org_required()))
 
         if separate_name_fields:
-            fappend(("first_name", first_name_field.label, INPUT(data=data, _size=40), True))
-            if middle_name:
-                fappend(("middle_name", middle_name_field.label, INPUT(_size=40), False))
-            mandatory = settings.get_L10n_mandatory_lastname()
-            fappend(("last_name", last_name_field.label, INPUT(_size=40), mandatory))
+            mandatory_lastname = settings.get_L10n_mandatory_lastname()
+            name_format = settings.get_pr_name_format()
+            if name_format == "%(last_name)s %(middle_name)s %(first_name)s":
+                # Vietnamese Style
+                fappend(("last_name", last_name_field.label, INPUT(data=data, _size=40), mandatory_lastname))
+                if middle_name:
+                    fappend(("middle_name", middle_name_field.label, INPUT(_size=40), False))
+                fappend(("first_name", first_name_field.label, INPUT(_size=40), True))
+            elif name_format == "%(last_name)s %(first_name)s":
+                # DRK Style
+                fappend(("last_name", last_name_field.label, INPUT(data=data, _size=40), mandatory_lastname))
+                fappend(("first_name", first_name_field.label, INPUT(_size=40), True))
+            else:
+                fappend(("first_name", first_name_field.label, INPUT(data=data, _size=40), True))
+                if middle_name:
+                    fappend(("middle_name", middle_name_field.label, INPUT(_size=40), False))
+                fappend(("last_name", last_name_field.label, INPUT(_size=40), mandatory_lastname))
         else:
             # Unified Name field
             # - can search for an existing person

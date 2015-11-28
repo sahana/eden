@@ -1473,9 +1473,6 @@ class S3PersonModel(S3Model):
                 if show_orgs:
                     fields.append("human_resource.organisation_id$name")
 
-            separate_name_fields = settings.get_pr_separate_name_fields()
-            middle_name = separate_name_fields == 2
-
             name_format = settings.get_pr_name_format()
             match = re.match("\s*?%\((?P<fname>.*?)\)s.*", name_format)
             if match:
@@ -1501,22 +1498,14 @@ class S3PersonModel(S3Model):
             items = []
             iappend = items.append
             for row in rows:
-                if separate_name_fields:
-                    item = {"id"         : row["pr_person.id"],
-                            "first_name" : row["pr_person.first_name"],
-                            "last_name"  : row["pr_person.last_name"],
-                            }
-                    if middle_name:
-                        item.update(middle_name=row["pr_person.middle_name"])
-                else:
-                    name = Storage(first_name=row["pr_person.first_name"],
-                                   middle_name=row["pr_person.middle_name"],
-                                   last_name=row["pr_person.last_name"],
-                                   )
-                    name = s3_fullname(name)
-                    item = {"id"    : row["pr_person.id"],
-                            "name"  : name,
-                            }
+                name = Storage(first_name=row["pr_person.first_name"],
+                               middle_name=row["pr_person.middle_name"],
+                               last_name=row["pr_person.last_name"],
+                               )
+                name = s3_fullname(name)
+                item = {"id"    : row["pr_person.id"],
+                        "name"  : name,
+                        }
                 if show_hr:
                     job_title = row.get("hrm_job_title.name", None)
                     if job_title:
@@ -1543,8 +1532,6 @@ class S3PersonModel(S3Model):
             output = current.xml.json_message(False, 400, "No id provided!")
             raise HTTP(400, body=output)
 
-        tablename = r.tablename
-
         db = current.db
         s3db = current.s3db
         settings = current.deployment_settings
@@ -1555,15 +1542,16 @@ class S3PersonModel(S3Model):
         ptable = db.pr_person
         ctable = s3db.pr_contact
         fields = [ptable.pe_id,
-                  # We have these already from the search_ac
+                  # We have these already from the search_ac unless we separate_name_fields
                   #ptable.first_name,
                   #ptable.middle_name,
                   #ptable.last_name,
                   ]
-        if tablename == "org_site":
-            separate_name_fields = settings.get_pr_separate_name_fields()
+        separate_name_fields = settings.get_pr_separate_name_fields()
+        site_contact_person = r.tablename == "org_site" # Coming from site_contact_person()
+        if separate_name_fields or \
+           site_contact_person:
             middle_name = separate_name_fields == 2
-            # Coming from site_contact_person()
             fields.extend((ptable.first_name,
                            ptable.middle_name,
                            ptable.last_name,
@@ -1598,14 +1586,14 @@ class S3PersonModel(S3Model):
             father_name = None
             grandfather_name = None
             year_of_birth = None
-        if tablename == "org_site":
-            if separate_name_fields:
-                first_name = row.first_name
-                last_name = row.last_name
-                if middle_name:
-                    middle_name = row.middle_name
-            else:
-                name = s3_fullname(row)
+
+        if separate_name_fields:
+            first_name = row.first_name
+            last_name = row.last_name
+            if middle_name:
+                middle_name = row.middle_name
+        elif site_contact_person:
+            name = s3_fullname(row)
         if request_dob:
             date_of_birth = row.date_of_birth
         else:
@@ -1649,15 +1637,15 @@ class S3PersonModel(S3Model):
 
         # Minimal flattened structure
         item = {}
-        if tablename == "org_site":
+        if site_contact_person:
             item["id"] = id
-            if separate_name_fields:
-                item["first_name"] = first_name
-                item["last_name"] = last_name
-                if middle_name:
-                    item["middle_name"] = middle_name
-            else:
-                item["name"] = name
+        if separate_name_fields:
+            item["first_name"] = first_name
+            item["last_name"] = last_name
+            if middle_name:
+                item["middle_name"] = middle_name
+        elif site_contact_person:
+            item["name"] = name
         if email:
             item["email"] = email
         if mobile_phone:
@@ -1700,21 +1688,29 @@ class S3PersonModel(S3Model):
                 dob = dob.isoformat()
             else:
                 dob = None
-        gender = post_vars.get("sex", None)
-        father_name = post_vars.get("father_name", None)
-        grandfather_name = post_vars.get("grandfather_name", None)
-        occupation = post_vars.get("occupation", None)
-        mobile_phone = post_vars.get("mphone", None)
-        home_phone = post_vars.get("hphone", None)
-        email = post_vars.get("email", None)
+        gender = post_vars.get("sex")
+        father_name = post_vars.get("father_name")
+        grandfather_name = post_vars.get("grandfather_name")
+        occupation = post_vars.get("occupation")
+        mobile_phone = post_vars.get("mphone")
+        home_phone = post_vars.get("hphone")
+        email = post_vars.get("email")
 
-        # https://github.com/derek73/python-nameparser
-        from nameparser import HumanName
-        name = HumanName(name.lower())
-        first_name = name.first
-        middle_name = name.middle
-        last_name = name.last
-        #nick_name = name.nickname
+        separate_name_fields = settings.get_pr_separate_name_fields()
+        if separate_name_fields:
+            middle_name_field = separate_name_fields == 2
+
+            first_name = post_vars.get("first_name")
+            middle_name = post_vars.get("middle_name")
+            last_name = post_vars.get("last_name")
+        else:
+            # https://github.com/derek73/python-nameparser
+            from nameparser import HumanName
+            name = HumanName(name.lower())
+            first_name = name.first
+            middle_name = name.middle
+            last_name = name.last
+            #nick_name = name.nickname
 
         # @ToDo: Fuzzy Search
         # We need to use an Index since we can't read all values in do client-side
@@ -1861,14 +1857,22 @@ class S3PersonModel(S3Model):
         items = []
         iappend = items.append
         for row in rows:
-            name = Storage(first_name=row["pr_person.first_name"],
-                           middle_name=row["pr_person.middle_name"],
-                           last_name=row["pr_person.last_name"],
-                           )
-            name = s3_fullname(name)
-            item = {"id"     : row["pr_person.id"],
-                    "name"   : name,
+            item = {"id" : row["pr_person.id"],
                     }
+            if separate_name_fields:
+                item["first_name"] = row["pr_person.first_name"]
+                item["last_name"] = row["pr_person.last_name"]
+                if middle_name_field:
+                    middle_name = row["pr_person.middle_name"]
+                    if middle_name:
+                        item["middle_name"] = middle_name
+            else:
+                name = Storage(first_name=row["pr_person.first_name"],
+                               middle_name=row["pr_person.middle_name"],
+                               last_name=row["pr_person.last_name"],
+                               )
+                name = s3_fullname(name)
+                item["name"] = name
             date_of_birth = row.get("pr_person.date_of_birth")
             if date_of_birth:
                 item["dob"] = date_of_birth.isoformat()

@@ -1,12 +1,11 @@
 Position,Code,Status,Default,Comments
-1,STATUS0,Easy-Allocation,true,
-2,STATUS1,BEA Registration,false,
-3,STATUS2,BÜMAG Asylum Application,false,
-4,STATUS3,GU Accomodation,false,
-5,STATUS4,X-Ray,false,
-6,STATUS5,BAMF Registration,false,
-7,STATUS6,Ready for Transfer,false,
-8,STATUS7,Legally Departed,false,
-9,STATUS8,Disappeared,false,
-10,STATUS9,Hospital,false,"In Hospital, still entitled to benefits, cannot be transferred"
-11,STATUS10,AFA/UMF,false,"AFA=Without Parents pending Youth Service,UMF=Visiting pending Decision"
+1,STATUS1,BEA Registration,false,
+2,STATUS2,BÜMAG Asylum Application,false,
+3,STATUS3,GU Accomodation,false,
+4,STATUS4,X-Ray,false,
+5,STATUS5,BAMF Registration,false,
+6,STATUS6,Ready for Transfer,false,
+7,STATUS7,Legally Departed,false,
+8,STATUS8,Disappeared,false,
+9,STATUS9,Hospital,false,"In Hospital, still entitled to benefits, cannot be transferred"
+10,STATUS10,AFA/UMF,false,"AFA=Without Parents pending Youth Service,UMF=Visiting pending Decision"

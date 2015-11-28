@@ -1109,9 +1109,6 @@ class S3HRModel(S3Model):
             if show_orgs:
                 fields.append("organisation_id$name")
 
-            separate_name_fields = settings.get_pr_separate_name_fields()
-            middle_name = separate_name_fields == 2
-
             name_format = settings.get_pr_name_format()
             test = name_format % dict(first_name=1,
                                       middle_name=2,
@@ -1132,22 +1129,14 @@ class S3HRModel(S3Model):
             output = []
             iappend = output.append
             for row in rows:
-                if separate_name_fields:
-                    item = {"id"         : row["hrm_human_resource.id"],
-                            "first_name" : row["pr_person.first_name"],
-                            "last_name"  : row["pr_person.last_name"],
-                            }
-                    if middle_name:
-                        item.update(middle_name=row["pr_person.middle_name"])
-                else:
-                    name = Storage(first_name=row["pr_person.first_name"],
-                                   middle_name=row["pr_person.middle_name"],
-                                   last_name=row["pr_person.last_name"],
-                                   )
-                    name = s3_fullname(name)
-                    item = {"id"    : row["hrm_human_resource.id"],
-                            "name"  : name,
-                            }
+                name = Storage(first_name=row["pr_person.first_name"],
+                               middle_name=row["pr_person.middle_name"],
+                               last_name=row["pr_person.last_name"],
+                               )
+                name = s3_fullname(name)
+                item = {"id"    : row["hrm_human_resource.id"],
+                        "name"  : name,
+                        }
                 if show_orgs:
                     item["org"] = row["org_organisation.name"]
                 job_title = row.get("hrm_job_title.name", None)
@@ -1187,6 +1176,13 @@ class S3HRModel(S3Model):
                   #ptable.middle_name,
                   #ptable.last_name,
                   ]
+        separate_name_fields = settings.get_pr_separate_name_fields()
+        if separate_name_fields:
+            middle_name = separate_name_fields == 3
+            fields += [ptable.first_name,
+                       ptable.middle_name,
+                       ptable.last_name,
+                       ]
 
         left = None
         if request_dob:
@@ -1219,6 +1215,15 @@ class S3HRModel(S3Model):
             gender = row.gender
         else:
             gender = None
+        if separate_name_fields:
+            first_name = row.first_name
+            last_name = row.last_name
+            if middle_name:
+                middle_name = row.middle_name
+        else:
+            first_name = None
+            middle_name = None
+            last_name = None
 
         # Lookup contacts separately as we can't limitby here
         if home_phone:
@@ -1254,6 +1259,12 @@ class S3HRModel(S3Model):
 
         # Minimal flattened structure
         item = {}
+        if first_name:
+            item["first_name"] = first_name
+        if middle_name:
+            item["middle_name"] = middle_name
+        if last_name:
+            item["last_name"] = last_name
         if email:
             item["email"] = email
         if mobile_phone:
