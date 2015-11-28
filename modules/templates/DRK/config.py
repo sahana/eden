@@ -770,9 +770,17 @@ def config(settings):
             else:
                 result = True
 
+            resource = r.resource
+
+            # Filter to current cases
+            if not r.record:
+                from s3 import FS
+                query = (FS("person_id$dvr_case.archived") == False) | \
+                        (FS("person_id$dvr_case.archived") == None)
+                resource.add_filter(query)
+
             if not r.component:
 
-                resource = r.resource
                 filter_widgets = resource.get_config("filter_widgets")
                 if filter_widgets:
                     s3db.add_components("pr_person",
@@ -828,9 +836,17 @@ def config(settings):
             else:
                 result = True
 
+            resource = r.resource
+
+            # Filter to current cases
+            if not r.record:
+                from s3 import FS
+                query = (FS("person_id$dvr_case.archived") == False) | \
+                        (FS("person_id$dvr_case.archived") == None)
+                resource.add_filter(query)
+
             if not r.component:
 
-                resource = r.resource
 
                 if r.interactive and not r.id:
                     # Custom filter widgets
@@ -918,9 +934,16 @@ def config(settings):
             else:
                 result = True
 
-            if not r.component:
+            resource = r.resource
 
-                resource = r.resource
+            # Filter to current cases
+            if not r.record:
+                from s3 import FS
+                query = (FS("person_id$dvr_case.archived") == False) | \
+                        (FS("person_id$dvr_case.archived") == None)
+                resource.add_filter(query)
+
+            if not r.component:
 
                 if r.interactive and not r.id:
                     # Custom filter widgets
