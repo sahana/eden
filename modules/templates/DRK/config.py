@@ -184,7 +184,7 @@ def config(settings):
                 (stable.id == table.shelter_id) & \
                 (table.check_out_date <= THREE_DAYS_AGO) & \
                 (table.person_id == ctable.person_id) & \
-                (ctable.status_id == HOSPITAL)
+                (ctable.status_id != HOSPITAL)
         rows = db(query).select(table.person_id,
                                 table.check_in_date,
                                 table.check_out_date,
