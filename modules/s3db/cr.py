@@ -653,6 +653,7 @@ class S3ShelterModel(S3Model):
                            label = T("Housing Unit Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
+                     # @ToDo: Using site_id would be more flexible & link better to default_site/auth.user.site_id
                      shelter_id(ondelete = "CASCADE"),
                      location_id(widget = S3LocationSelector(#catalog_layers=True,
                                                              points = False,
@@ -796,7 +797,9 @@ class S3ShelterModel(S3Model):
                                                                                        tablename="cr_shelter_unit")
 
         configure(tablename,
-                  #deduplicate = self.cr_shelter_unit_duplicate,
+                  # @ToDo: Allow multiple shelters to have the same name of unit (Requires that Shelter is in dvr/person.xsl/csv)
+                  #deduplicate = S3Duplicate(primary=("shelter_id", "name")),
+                  deduplicate = S3Duplicate(),
                   list_fields = list_fields,
                   onaccept = population_onaccept,
                   ondelete = population_onaccept,
@@ -887,23 +890,6 @@ class S3ShelterModel(S3Model):
         #    query = query & (table.organisation_id == org)
         if address:
             query = query & (table.address == address)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def cr_shelter_unit_duplicate(item):
-        """
-            Shelter housing unit record duplicate detection, used for the deduplicate hook
-
-            @param item: the S3ImportItem to check
-        """
-
-        table = item.table
-        query = (table.name == item.data.name)
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
         if duplicate:
@@ -1074,16 +1060,15 @@ class S3ShelterRegistrationModel(S3Model):
             self.shelter_population_onaccept(form,
                                              tablename="cr_shelter_registration")
 
+        configure(tablename,
+                  deduplicate =  S3Duplicate(primary = ("person_id", "shelter_unit_id")),
+                  onaccept = population_onaccept,
+                  ondelete = population_onaccept,
+                  )
+
         if housing_unit:
             configure(tablename,
                       onvalidation = self.unit_onvalidation,
-                      onaccept = population_onaccept,
-                      ondelete = population_onaccept,
-                      )
-        else:
-            configure(tablename,
-                      onaccept = population_onaccept,
-                      ondelete = population_onaccept,
                       )
 
         # ---------------------------------------------------------------------

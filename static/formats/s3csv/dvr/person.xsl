@@ -18,6 +18,11 @@
          Case Type......................optional.....dvr_case.case_type_id$name @ToDo
          Registration Date..............optional.....dvr_case.date
          Status.........................optional.....dvr_case.status_id$code
+         Appointment:XX.................optional.....Appointment,Status (Type = XX in column name, Status = cell in row. Multiple allowed. Options: done, Date)
+
+         Family.........................optional.....pr_group.name
+
+         Shelter Unit...................optional.....cr_shelter_unit.name
 
          First Name.....................required.....person first name
          Middle Name....................optional.....person middle name
@@ -79,7 +84,6 @@
          Year...........................optional.....person education year
          Institute......................optional.....person education institute
          Photo..........................optional.....pr_image.image (URL to remote server to download)
-         Appointment:XX.................optional.....Appointment,Status (Type = XX in column name, Status = cell in row. Multiple allowed. Options: done, Date)
 
          Column headers looked up in labels.xml:
 
@@ -113,6 +117,9 @@
     <xsl:key name="family" match="row"
              use="col[@field='Family']"/>
 
+    <xsl:key name="shelter_unit" match="row"
+             use="col[@field='Shelter Unit']"/>
+
     <xsl:key name="status" match="row"
              use="col[@field='Status']"/>
 
@@ -143,6 +150,12 @@
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('family',
                                                                    col[@field='Family'])[1])]">
                 <xsl:call-template name="Family"/>
+            </xsl:for-each>
+
+            <!-- Shelter Units -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('shelter_unit',
+                                                                   col[@field='Shelter Unit'])[1])]">
+                <xsl:call-template name="ShelterUnit"/>
             </xsl:for-each>
 
             <!-- Education Levels -->
@@ -428,24 +441,33 @@
                 </data>
             </xsl:if>
 
-            <!-- Family -->
-            <xsl:if test="col[@field='Family']!=''">
-                <resource name="pr_group_membership">
-                    <reference field="parent" resource="pr_group">
-                        <resource name="pr_group">
-                            <xsl:attribute name="tuid">
-                                <xsl:value-of select="concat('Family:',col[@field='Family'])"/>
-                            </xsl:attribute>
-                        </resource>
-                    </reference>
-                </resource>
-            </xsl:if>
-            
             <!-- Appointments -->
             <xsl:for-each select="col[starts-with(@field, 'Appointment')]">
                 <xsl:call-template name="Appointment"/>
             </xsl:for-each>
 
+            <!-- Family -->
+            <xsl:if test="col[@field='Family']!=''">
+                <resource name="pr_group_membership">
+                    <reference field="group_id" resource="pr_group">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('Family:',col[@field='Family'])"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+            
+            <!-- Shelter Registration -->
+            <xsl:if test="col[@field='Shelter Unit']!=''">
+                <resource name="cr_shelter_registration">
+                    <reference field="shelter_unit_id" resource="cr_shelter_unit">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('ShelterUnit:',col[@field='Shelter Unit'])"/>
+                        </xsl:attribute>
+                    </reference>
+                </resource>
+            </xsl:if>
+            
             <resource name="pr_person_details">
                 <xsl:if test="$MaritalStatus!=''">
                     <data field="marital_status">
@@ -1091,20 +1113,6 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="Status">
-        <xsl:variable name="Status" select="col[@field='Status']"/>
-
-        <xsl:if test="$Status!=''">
-            <resource name="dvr_case_status">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('Status:',$Status)"/>
-                </xsl:attribute>
-                <data field="code"><xsl:value-of select="$Status"/></data>
-            </resource>
-        </xsl:if>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
     <xsl:template name="EducationLevel">
         <xsl:variable name="Level" select="col[@field='Education Level']"/>
 
@@ -1114,22 +1122,6 @@
                     <xsl:value-of select="concat('EducationLevel:',$Level)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$Level"/></data>
-            </resource>
-        </xsl:if>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="Family">
-        <xsl:variable name="Family" select="col[@field='Family']"/>
-
-        <xsl:if test="$Family!=''">
-            <resource name="pr_group">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('Family:',$Family)"/>
-                </xsl:attribute>
-                <data field="name"><xsl:value-of select="$Family"/></data>
-                <!-- Case -->
-                <data field="group_type">7</data>
             </resource>
         </xsl:if>
     </xsl:template>
@@ -1198,6 +1190,51 @@
                         </data>
                     </xsl:otherwise>
                 </xsl:choose>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Family">
+        <xsl:variable name="Family" select="col[@field='Family']"/>
+
+        <xsl:if test="$Family!=''">
+            <resource name="pr_group">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Family:',$Family)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Family"/></data>
+                <!-- Case -->
+                <data field="group_type">7</data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="ShelterUnit">
+        <xsl:variable name="ShelterUnit" select="col[@field='Shelter Unit']"/>
+
+        <xsl:if test="$ShelterUnit!=''">
+            <resource name="cr_shelter_unit">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('ShelterUnit:',$ShelterUnit)"/>
+                </xsl:attribute>
+                <!-- @ToDo: Add Shelter Name to aid uniqueness -->
+                <data field="name"><xsl:value-of select="$ShelterUnit"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Status">
+        <xsl:variable name="Status" select="col[@field='Status']"/>
+
+        <xsl:if test="$Status!=''">
+            <resource name="dvr_case_status">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Status:',$Status)"/>
+                </xsl:attribute>
+                <data field="code"><xsl:value-of select="$Status"/></data>
             </resource>
         </xsl:if>
     </xsl:template>

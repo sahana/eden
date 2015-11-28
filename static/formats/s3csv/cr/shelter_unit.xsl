@@ -3,16 +3,14 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Shelters - CSV Import Stylesheet
+         Shelter Units - CSV Import Stylesheet
 
          Column headers defined in this stylesheet:
 
-         Name...........................required.....cr_shelter.name
-         Name L10n:XX...................org_site_name.name_10n (Language = XX in column name, name_10n = cell in row. Multiple allowed)
-         Organisation...................org_organisation
-         Branch.........................org_organisation[_branch]
-         Type...........................shelter_type_id.name
-         #Service........................shelter_service_id.name
+         Shelter........................required.....cr_shelter.name
+         Unit...........................required.....cr_shelter_unit.name
+         Capacity Day...................cr_shelter_unit.capacity_day
+         Capacity Night.................cr_shelter_unit.capacity_night
          Country........................optional.....country
          L1.............................optional.....L1
          L2.............................optional.....L2
@@ -24,11 +22,7 @@
          Postcode.......................optional.....Postcode
          Lat............................optional.....Latitude
          Lon............................optional.....Longitude
-         Capacity Day...................cr_shelter.capacity_day
-         Capacity Night.................cr_shelter.capacity_night
-         Population.....................cr_shelter.population
-         Status.........................cr_shelter.status (@ToDo: Populate cr_shelter_status for historical data)
-         KV:XX..........................Key,Value (Key = XX in column name, value = cell in row)
+         Comments.......................optional.....Comments
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -103,10 +97,7 @@
                          col[@field='L4'], '/',
                          col[@field='L5'])"/>
 
-    <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
-    <xsl:key name="branch" match="row"
-             use="concat(col[@field='Organisation'], '/', col[@field='Branch'])"/>
-    <xsl:key name="type" match="row" use="col[@field='Type']"/>
+    <xsl:key name="shelter" match="row" use="col[@field='Shelter']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -166,106 +157,45 @@
                                                                           col[@field='L5']))[1])]">
                 <xsl:call-template name="L5"/>
             </xsl:for-each>
-
-            <!-- Top-level Organisations -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('organisation', col[@field='Organisation'])[1])]">
-                <xsl:call-template name="Organisation">
-                    <xsl:with-param name="OrgName">
-                        <xsl:value-of select="col[@field='Organisation']/text()"/>
-                    </xsl:with-param>
-                    <xsl:with-param name="BranchName"></xsl:with-param>
-                </xsl:call-template>
-            </xsl:for-each>
-
-            <!-- Branches -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('branch', concat(col[@field='Organisation'], '/', col[@field='Branch']))[1])]">
-                <xsl:call-template name="Organisation">
-                    <xsl:with-param name="OrgName"></xsl:with-param>
-                    <xsl:with-param name="BranchName">
-                        <xsl:value-of select="col[@field='Branch']/text()"/>
-                    </xsl:with-param>
-                </xsl:call-template>
-            </xsl:for-each>
             
-            <!-- Types -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('type', col[@field='Type'])[1])]">
-                <xsl:call-template name="Type"/>
+            <!-- Shelters -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('type', col[@field='Shelter'])[1])]">
+                <xsl:call-template name="Shelter"/>
             </xsl:for-each>
 
-            <!-- Process all table rows for shelter records -->
+            <!-- Process all table rows for shelter unit records -->
             <xsl:apply-templates select="table/row"/>
         </s3xml>
 
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- Shelter Record -->
+    <!-- Shelter Unit Record -->
     <xsl:template match="row">
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
-        <xsl:variable name="ShelterName" select="col[@field='Name']/text()"/>
-        <xsl:variable name="Type" select="col[@field='Type']/text()"/>
-        <xsl:variable name="Status" select="col[@field='Status']/text()"/>
+        <xsl:variable name="ShelterName" select="col[@field='Shelter']/text()"/>
+        <xsl:variable name="ShelterUnitName" select="col[@field='Unit']/text()"/>
 
-        <resource name="cr_shelter">
-            <data field="name"><xsl:value-of select="$ShelterName"/></data>
+        <resource name="cr_shelter_unit">
+            <data field="name"><xsl:value-of select="$ShelterUnitName"/></data>
             <data field="capacity_day"><xsl:value-of select="col[@field='Capacity Day']"/></data>
             <data field="capacity_night"><xsl:value-of select="col[@field='Capacity Night']"/></data>
-            <data field="population"><xsl:value-of select="col[@field='Population']"/></data>
+            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
 
-            <xsl:choose>
-                <xsl:when test="$Status='Closed'">
-                    <data field="status">1</data>
-                </xsl:when>
-                <xsl:when test="$Status='Open'">>
-                    <data field="status">2</data>
-                </xsl:when>
-            </xsl:choose>
+            <!-- Link to Shelter -->
+            <reference field="shelter_id" resource="cr_shelter">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="$ShelterName"/>
+                </xsl:attribute>
+            </reference>
 
             <!-- Link to Location -->
             <!-- Currently this needs to be a specific location for S3LocationSelectorWidget,
                  S3LocationSelectorWidget2 doesn't have this limitation -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat($OrgName, $ShelterName)"/>
+                    <xsl:value-of select="$ShelterUnitName"/>
                 </xsl:attribute>
             </reference>
-
-            <!-- Link to Organisation -->
-            <reference field="organisation_id" resource="org_organisation">
-                <xsl:attribute name="tuid">
-                    <xsl:choose>
-                        <xsl:when test="$BranchName!=''">
-                            <xsl:value-of select="concat($OrgName, $BranchName)"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:value-of select="$OrgName"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:attribute>
-            </reference>
-
-            <!-- Link to Shelter Type -->
-            <reference field="shelter_type_id" resource="cr_shelter_type">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$Type"/>
-                </xsl:attribute>
-            </reference>
-
-            <!-- L10n -->
-            <xsl:for-each select="col[starts-with(@field, 'Name L10n')]">
-                <xsl:variable name="Lang" select="normalize-space(substring-after(@field, ':'))"/>
-                <xsl:call-template name="L10n">
-                    <xsl:with-param name="Lang">
-                        <xsl:value-of select="$Lang"/>
-                    </xsl:with-param>
-                </xsl:call-template>
-            </xsl:for-each>
-
-            <!-- Arbitrary Tags -->
-            <xsl:for-each select="col[starts-with(@field, 'KV')]">
-                <xsl:call-template name="KeyValue"/>
-            </xsl:for-each>
 
         </resource>
 
@@ -273,86 +203,17 @@
         <xsl:call-template name="Locations"/>
     </xsl:template>
 
-
     <!-- ****************************************************************** -->
-    <xsl:template name="Organisation">
-        <xsl:param name="OrgName"/>
-        <xsl:param name="BranchName"/>
+    <xsl:template name="Shelter">
+        <xsl:variable name="shelter" select="col[@field='Shelter']/text()"/>
 
-        <!-- Create the Organisation/Branch -->
-        <resource name="org_organisation">
-            <xsl:choose>
-                <xsl:when test="$OrgName!=''">
-                    <!-- This is the Organisation -->
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="$OrgName"/>
-                    </xsl:attribute>
-                    <data field="name"><xsl:value-of select="$OrgName"/></data>
-                </xsl:when>
-                <xsl:when test="$BranchName!=''">
-                    <!-- This is the Branch -->
-                    <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat(col[@field='Organisation'],$BranchName)"/>
-                    </xsl:attribute>
-                    <data field="name"><xsl:value-of select="$BranchName"/></data>
-                </xsl:when>
-            </xsl:choose>
-
-            <xsl:if test="$BranchName!=''">
-                <!-- Nest the Top-Level -->
-                <!-- Don't create Orgs as Branches of themselves -->
-                <xsl:if test="col[@field='Organisation']!=$BranchName">
-                    <resource name="org_organisation_branch">
-                        <reference field="organisation_id">
-                            <xsl:attribute name="tuid">
-                                <xsl:value-of select="col[@field='Organisation']"/>
-                            </xsl:attribute>
-                        </reference>
-                    </resource>
-                </xsl:if>
-            </xsl:if>
-
-        </resource>
-
-    </xsl:template>
-    
-    <!-- ****************************************************************** -->
-    <xsl:template name="Type">
-        <xsl:variable name="type" select="col[@field='Type']/text()"/>
-
-        <resource name="cr_shelter_type">
+        <resource name="cr_shelter">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$type"/>
+                <xsl:value-of select="$shelter"/>
             </xsl:attribute>
-            <data field="name"><xsl:value-of select="$type"/></data>
+            <data field="name"><xsl:value-of select="$shelter"/></data>
        </resource>
 
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="KeyValue">
-        <xsl:variable name="Key" select="normalize-space(substring-after(@field, ':'))"/>
-        <xsl:variable name="Value" select="text()"/>
-
-        <xsl:if test="$Value!=''">
-            <resource name="org_site_tag">
-                <data field="tag"><xsl:value-of select="$Key"/></data>
-                <data field="value"><xsl:value-of select="$Value"/></data>
-            </resource>
-        </xsl:if>
-    </xsl:template>
-
-    <!-- ****************************************************************** -->
-    <xsl:template name="L10n">
-        <xsl:param name="Lang"/>
-        <xsl:variable name="Value" select="text()"/>
-
-        <xsl:if test="$Value!=''">
-            <resource name="org_site_name">
-                <data field="language"><xsl:value-of select="$Lang"/></data>
-                <data field="name_l10n"><xsl:value-of select="$Value"/></data>
-            </resource>
-        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -737,8 +598,7 @@
                 <xsl:with-param name="colhdrs" select="$Postcode"/>
             </xsl:call-template>
         </xsl:variable>
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
-        <xsl:variable name="ShelterName" select="col[@field='Name']/text()"/>
+        <xsl:variable name="ShelterUnitName" select="col[@field='Unit']/text()"/>
 
 
         <!-- Country Code = UUID of the L0 Location -->
@@ -772,7 +632,7 @@
         <!-- Shelter Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="concat($OrgName, $ShelterName)"/>
+                <xsl:value-of select="$ShelterUnitName"/>
             </xsl:attribute>
             <xsl:choose>
                 <xsl:when test="$l5!=''">
@@ -823,7 +683,7 @@
                     <data field="name"><xsl:value-of select="$Building"/></data>
                 </xsl:when>
                 <xsl:otherwise>
-                    <data field="name"><xsl:value-of select="$ShelterName"/></data>
+                    <data field="name"><xsl:value-of select="$ShelterUnitName"/></data>
                 </xsl:otherwise>
             </xsl:choose>
             <data field="addr_street"><xsl:value-of select="col[@field='Address']"/></data>
