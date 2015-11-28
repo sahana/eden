@@ -24,8 +24,8 @@ def config(settings):
 
     T = current.T
 
-    settings.base.system_name = T("Refugee Support Database")
-    #settings.base.system_name_short = T("Sahana")
+    settings.base.system_name = "Village"
+    settings.base.system_name_short = "Village"
 
     # PrePopulate data
     #settings.base.prepopulate = ("skeleton", "default/users")
