@@ -2025,6 +2025,33 @@ class S3Config(Storage):
         self.ui.inline_component_layout = layout
         return layout
 
+    def get_ui_profile_header(self, r):
+        """
+            What Header should be shown in the Profile page
+        """
+
+        # @ToDo: Be able to pass in r to help make the decision (r.tablename at least!)
+        #profile_header = self.__lazy("ui", "profile_header", None)
+        profile_header = self.ui.get("profile_header", None)
+        if profile_header:
+            profile_header = profile_header(r)
+        else:
+            # Default
+            from gluon import DIV, H2, P
+            try:
+                title = r.record.name
+            except:
+                title = r.record.id
+            try:
+                comments = r.record.comments or ""
+            except:
+                comments = ""
+            profile_header = DIV(H2(title),
+                                 P(comments),
+                                 _class="profile-header",
+                                 )
+        return profile_header
+
     # =========================================================================
     # Messaging
     #
@@ -2479,13 +2506,6 @@ class S3Config(Storage):
             selection during evacuees registration.
         """
         return self.cr.get("shelter_housing_unit_management", False)
-
-    def get_cr_profile_stats(self):
-        """
-            What Stats should be shown in the Profile page
-             - set to a fn, to which is passed (r)
-        """
-        return self.cr.get("profile_stats", "")
 
     def get_cr_tags(self):
         """
