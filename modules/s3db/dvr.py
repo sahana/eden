@@ -1664,8 +1664,7 @@ def dvr_due_followups():
     query = (FS("followup") == True) & \
             (FS("followup_date") <= datetime.datetime.utcnow().date()) & \
             (FS("completed") != True) & \
-            ((FS("person_id$dvr_case.archived") == None) | \
-            (FS("person_id$dvr_case.archived") == False))
+            (FS("person_id$dvr_case.archived") == False)
     resource = current.s3db.resource("dvr_case_activity", filter=query)
 
     return resource.count()
