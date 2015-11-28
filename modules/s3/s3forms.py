@@ -826,6 +826,27 @@ class S3SQLCustomForm(S3SQLForm):
         self.subtables = subtables
         self.components = components
 
+        rcomponents = resource.components
+
+        # Customise subtables
+        if subtables:
+            if not request:
+                # Create dummy S3Request
+                from s3rest import S3Request
+                r = S3Request(resource.prefix, resource.name)
+            else:
+                r = request
+            customise_resource = current.deployment_settings.customise_resource
+            for alias in subtables:
+                # Get tablename
+                if alias not in rcomponents:
+                    continue
+                tablename = rcomponents[alias].tablename
+                # Run customise_resource
+                customise = customise_resource(tablename)
+                if customise:
+                    customise(r, tablename)
+
         # Mark required fields with asterisk
         if not readonly:
             mark_required = self._config("mark_required", default=[])
@@ -860,8 +881,6 @@ class S3SQLCustomForm(S3SQLForm):
         noupdate = []
         forbidden = []
         has_permission = current.auth.s3_has_permission
-
-        rcomponents = resource.components
 
         if record is not None:
 
