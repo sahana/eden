@@ -294,6 +294,12 @@ def case_activity():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def case_flag():
+    """ Case Flags: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def case_status():
     """ Case Statuses: RESTful CRUD Controller """
 
@@ -302,6 +308,12 @@ def case_status():
 # -----------------------------------------------------------------------------
 def case_type():
     """ Case Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def case_appointment():
+    """ Appointments: RESTful CRUD Controller """
 
     return s3_rest_controller()
 

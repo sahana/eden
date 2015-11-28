@@ -155,7 +155,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Emergencies", vars = {"~.emergency": "True"}),
                         M("All Activities"),
                         M("Report", m="report"),
-                    )
+                    ),
+                    M("Appointments", f="case_appointment")(
+                    ),
                     #M("Case Types", f="case_type")(
                     #    M("Create", m="create"),
                     #),

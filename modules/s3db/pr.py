@@ -1033,6 +1033,12 @@ class S3PersonModel(S3Model):
                                    },
                        dvr_case_activity = "person_id",
                        dvr_case_appointment = "person_id",
+                       dvr_case_flag = {"link": "dvr_case_flag_case",
+                                        "joinby": "person_id",
+                                        "key": "flag_id",
+                                        "actuate": "link",
+                                        "autodelete": False,
+                                        },
                        dvr_case_language = "person_id",
                        dvr_case_service_contact = "person_id",
                        dvr_economy = {"joinby": "person_id",
@@ -1510,7 +1516,7 @@ class S3PersonModel(S3Model):
                     name = s3_fullname(name)
                     item = {"id"    : row["pr_person.id"],
                             "name"  : name,
-                            }  
+                            }
                 if show_hr:
                     job_title = row.get("hrm_job_title.name", None)
                     if job_title:
@@ -2154,7 +2160,6 @@ class S3GroupModel(S3Model):
                                  "group_head",
                                  ],
                   onaccept = self.group_membership_onaccept,
-                  ondelete = self.group_membership_onaccept,
                   realm_entity = self.group_membership_realm_entity,
                   )
 
@@ -3561,43 +3566,31 @@ class S3PersonDetailsModel(S3Model):
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
-        pr_marital_status_opts = {
+        # ---------------------------------------------------------------------
+        # Person Details
+        #
+
+        # Marital Status Options
+        marital_status_opts = {
             1: T("unknown"),
             2: T("single"),
             3: T("married"),
             4: T("separated"),
             5: T("divorced"),
             6: T("widowed"),
-            9: T("other")
+            9: T("other"),
         }
 
-        pr_marital_status = S3ReusableField("marital_status", "integer",
-                                            default = 1,
-                                            label = T("Marital Status"),
-                                            represent = lambda opt: \
-                                                pr_marital_status_opts.get(opt, UNKNOWN_OPT),
-                                            requires = IS_IN_SET(pr_marital_status_opts,
-                                                                 zero=None),
-                                            )
-
-        pr_literacy_opts = {
+        # Literacy Status Options
+        literacy_opts = {
             1: T("unknown"),
             2: T("illiterate"),
             3: T("literate"),
         }
 
-        pr_literacy_status = S3ReusableField("literacy_status", "integer",
-                                            default = 1,
-                                            label = T("Literacy Status"),
-                                            represent = lambda opt: \
-                                                pr_literacy_opts.get(opt, UNKNOWN_OPT),
-                                            requires = IS_IN_SET(pr_literacy_opts,
-                                                                 zero=None),
-                                            )
-        pr_religion_opts = current.deployment_settings.get_L10n_religions()
+        # Religion Options
+        religion_opts = current.deployment_settings.get_L10n_religions()
 
-        # ---------------------------------------------------------------------
-        # Details
         tablename = "pr_person_details"
         self.define_table(tablename,
                           self.pr_person_id(label = T("Person"),
@@ -3637,15 +3630,21 @@ class S3PersonDetailsModel(S3Model):
                                 readable = False,
                                 writable = False,
                                 ),
-                          pr_marital_status(),
+                          Field("marital_status", "integer",
+                                default = 1,
+                                label = T("Marital Status"),
+                                represent = S3Represent(options=marital_status_opts),
+                                requires = IS_IN_SET(marital_status_opts,
+                                                     zero=None,
+                                                     ),
+                                ),
                           Field("number_children", "integer",
                                 label = T("Number of Children"),
                                 ),
                           Field("religion", length=128,
                                 label = T("Religion"),
-                                represent = lambda opt: \
-                                    pr_religion_opts.get(opt, UNKNOWN_OPT),
-                                requires = IS_EMPTY_OR(IS_IN_SET(pr_religion_opts)),
+                                represent = S3Represent(options=religion_opts),
+                                requires = IS_EMPTY_OR(IS_IN_SET(religion_opts)),
                                 ),
                           # This field can either be used as a free-text version of religion, or to provide details of the 'other'
                           Field("religion_other",
@@ -3688,7 +3687,14 @@ class S3PersonDetailsModel(S3Model):
                                 label = T("Military Service"),
                                 represent = s3_yes_no_represent,
                                 ),
-                          pr_literacy_status(),
+                          Field("literacy", "integer",
+                                default = 3,
+                                label = T("Literacy"),
+                                represent = S3Represent(options = literacy_opts),
+                                requires = IS_IN_SET(literacy_opts,
+                                                     zero=None,
+                                                     ),
+                                ),
                           *s3_meta_fields())
 
         # CRUD Strings
