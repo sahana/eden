@@ -9,4 +9,5 @@ Position,Code,Status,Default,Comments
 8,STATUS7,Legally Departed,false,
 9,STATUS8,Disappeared,false,
 10,STATUS9,Hospital,false,"In Hospital, still entitled to benefits, cannot be transferred"
+10,STATUS9A,Police,false,"With the police, still entitled to benefits, cannot be transferred"
 11,STATUS10,AFA/UMF,false,"AFA=Without Parents pending Youth Service,UMF=Visiting pending Decision"
