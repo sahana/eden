@@ -3345,6 +3345,7 @@
 'Rescue and recovery': 'Rettung und Bergung (SAR)',
 'Reset Password': 'Kennwort zurücksetzen',
 'Reset': 'Zurücksetzen',
+'Residents': 'Bewohner',
 'Resolve Conflict': 'Konflikt lösen',
 'Resolve link brings up a new screen which helps to resolve these duplicate records and update the database.': 'Das verfolgen des Links lässt eine neue Anzeige erscheinen die hilft doppelte Einträge aufzulösen und die Datenbank zu aktualisieren',
 'Resolve': 'Auflösen',
