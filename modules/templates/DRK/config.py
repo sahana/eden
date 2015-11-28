@@ -200,7 +200,7 @@ def config(settings):
         TOTAL = TR(TD(T("How many in BEA (total)")),
                    TD(total),
                    )
-        
+
         stable = s3db.dvr_case_status
         statuses = db(stable.name.belongs(("Hospital", "Police"))).select(stable.name,
                                                                           stable.id,

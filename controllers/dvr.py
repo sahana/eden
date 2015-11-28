@@ -150,6 +150,12 @@ def person():
                                     ),
                     S3OptionsFilter("person_details.nationality",
                                     ),
+                    S3OptionsFilter("case_flag_case.flag_id",
+                                    label = T("Flags"),
+                                    options = get_s3_filter_opts("dvr_case_flag"),
+                                    cols = 3,
+                                    hidden = True,
+                                    ),
                     ]
 
                 resource.configure(crud_form = crud_form,
