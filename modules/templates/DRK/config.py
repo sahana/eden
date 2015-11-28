@@ -206,8 +206,8 @@ def config(settings):
                 (stable.id == table.shelter_id) & \
                 (table.check_out_date <= THREE_DAYS_AGO) & \
                 (table.person_id == ctable.person_id) & \
-                (ctable.status_id != HOSPITAL) & 
-                (ctable.status_id != POLICE) & 
+                (ctable.status_id != HOSPITAL) & \
+                (ctable.status_id != POLICE) & \
                 (ctable.status_id != DISAPPEARED)
                 (ctable.archived != True)
         rows = db(query).select(table.person_id,
