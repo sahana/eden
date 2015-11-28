@@ -810,6 +810,7 @@ class DVRNotesModel(S3Model):
         define_table(tablename,
                      Field("name", unique=True,
                            label = T("Name"),
+                           length = 256,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
