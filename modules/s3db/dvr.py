@@ -1224,6 +1224,12 @@ class DVRCaseAppointmentModel(S3Model):
             msg_list_empty = T("No Appointments currently registered"),
             )
 
+        # Custom methods
+        self.set_method("dvr", "case_appointment",
+                        method = "manage",
+                        action = dvr_ManageAppointments,
+                        )
+
         # @todo: onaccept to change status "planning" to "planned" if a date
         #        has been entered, and vice versa
 
@@ -1663,6 +1669,211 @@ def dvr_due_followups():
     resource = current.s3db.resource("dvr_case_activity", filter=query)
 
     return resource.count()
+
+# =============================================================================
+class dvr_ManageAppointments(S3Method):
+    """ Custom method to bulk-manage appointments """
+
+    def apply_method(self, r, **attr):
+
+        T = current.T
+        s3db = current.s3db
+
+        get_vars = r.get_vars
+        response = current.response
+
+        if r.http == "POST" and r.representation != "aadata":
+
+            count = 0
+
+            base_query = (FS("person_id$case.archived") == None) | \
+                         (FS("person_id$case.archived") == False)
+
+            post_vars = r.post_vars
+            if "selected" in post_vars and "mode" in post_vars and \
+               any([n in post_vars for n in ("completed", "cancelled")]):
+
+                selected = post_vars.selected
+                if selected:
+                    selected = selected.split(",")
+                else:
+                    selected = []
+
+                db = current.db
+                atable = s3db.dvr_case_appointment
+
+                # Handle exclusion filter
+                if post_vars.mode == "Exclusive":
+                    if "filterURL" in post_vars:
+                        filters = S3URLQuery.parse_url(post_vars.filterURL)
+                    else:
+                        filters = None
+                    query = ~(FS("id").belongs(selected)) & base_query
+
+                    aresource = s3db.resource("dvr_case_appointment",
+                                              filter = query,
+                                              vars =  filters,
+                                              )
+                    rows = aresource.select(["id"], as_rows=True)
+                    selected = [str(row.id) for row in rows]
+
+                if selected:
+                    query = (atable.id.belongs(selected)) & \
+                            (atable.deleted != True)
+                    if "completed" in post_vars:
+                        count = db(query).update(status=4) # Completed
+                    elif "cancelled" in post_vars:
+                        count = db(query).update(status=6) # Cancelled
+
+            current.session.confirmation = T("%(count)s Appointments updated") % \
+                                           {"count": count}
+            redirect(URL(f="case_appointment", args=["manage"], vars={}))
+
+        elif r.http == "GET" or r.representation == "aadata":
+            resource = r.resource
+
+            # Filter widgets
+            filter_widgets = resource.get_config("filter_widgets")
+
+            # List fields
+            list_fields = ["id",
+                           (T("ID"), "person_id$label"),
+                           "person_id",
+                           "type_id",
+                           "date",
+                           "status",
+                           ]
+
+            # Data table
+            totalrows = resource.count()
+            if "pageLength" in get_vars:
+                display_length = get_vars["pageLength"]
+                if display_length == "None":
+                    display_length = None
+                else:
+                    display_length = int(display_length)
+            else:
+                display_length = 25
+            if display_length:
+                limit = 4 * display_length
+            else:
+                limit = None
+
+            # Sorting by person_id requires introspection => use datatable_filter
+            if r.representation != "aadata":
+                get_vars = dict(get_vars)
+                dt_sorting = {"iSortingCols": "1",
+                              "bSortable_0": "false",
+                              "iSortCol_0": "1",
+                              "sSortDir_0": "asc",
+                              }
+                get_vars.update(dt_sorting)
+            filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+            resource.add_filter(filter)
+            data = resource.select(list_fields,
+                                   start = 0,
+                                   limit = limit,
+                                   orderby = orderby,
+                                   left = left,
+                                   count = True,
+                                   represent = True,
+                                   )
+            filteredrows = data["numrows"]
+            dt = S3DataTable(data["rfields"], data["rows"], orderby=orderby)
+            dt_id = "datatable"
+
+            # Bulk actions
+            dt_bulk_actions = [(T("Completed"), "completed"),
+                               (T("Cancelled"), "cancelled"),
+                               ]
+
+            if r.representation == "html":
+                # Page load
+                resource.configure(deletable = False)
+
+                dt.defaultActionButtons(resource)
+                response.s3.no_formats = True
+
+                # Data table (items)
+                items = dt.html(totalrows,
+                                filteredrows,
+                                dt_id,
+                                dt_pageLength=display_length,
+                                dt_ajax_url=URL(c="dvr",
+                                                f="case_appointment",
+                                                args=["manage"],
+                                                vars={},
+                                                extension="aadata",
+                                                ),
+                                dt_searching="false",
+                                dt_pagination="true",
+                                dt_bulk_actions=dt_bulk_actions,
+                                )
+
+                # Filter form
+                if filter_widgets:
+
+                    # Where to retrieve filtered data from:
+                    _vars = resource.crud._remove_filters(r.get_vars)
+                    filter_submit_url = r.url(vars=_vars)
+
+                    # Where to retrieve updated filter options from:
+                    filter_ajax_url = URL(f="case_appointment",
+                                          args=["filter.options"],
+                                          vars={},
+                                          )
+
+                    get_config = resource.get_config
+                    filter_clear = get_config("filter_clear", True)
+                    filter_formstyle = get_config("filter_formstyle", None)
+                    filter_submit = get_config("filter_submit", True)
+                    filter_form = S3FilterForm(filter_widgets,
+                                               clear = filter_clear,
+                                               formstyle = filter_formstyle,
+                                               submit = filter_submit,
+                                               ajax = True,
+                                               url = filter_submit_url,
+                                               ajaxurl = filter_ajax_url,
+                                               _class = "filter-form",
+                                               _id = "datatable-filter-form",
+                                               )
+                    fresource = current.s3db.resource(resource.tablename)
+                    alias = resource.alias if r.component else None
+                    ff = filter_form.html(fresource,
+                                          r.get_vars,
+                                          target = "datatable",
+                                          alias = alias,
+                                          )
+                else:
+                    ff = ""
+
+                output = dict(items = items,
+                              title = T("Manage Appointments"),
+                              list_filter_form = ff,
+                              )
+
+                response.view = "list_filter.html"
+                return output
+
+            elif r.representation == "aadata":
+
+                # Ajax refresh
+                if "draw" in get_vars:
+                    echo = int(get_vars["draw"])
+                else:
+                    echo = None
+                items = dt.json(totalrows,
+                                filteredrows,
+                                dt_id,
+                                echo,
+                                dt_bulk_actions=dt_bulk_actions)
+                response.headers["Content-Type"] = "application/json"
+                return items
+
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 def dvr_rheader(r, tabs=[]):
