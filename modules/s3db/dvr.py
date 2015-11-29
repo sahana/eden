@@ -842,7 +842,7 @@ class DVRNotesModel(S3Model):
                                        ondelete = "RESTRICT",
                                        represent = represent,
                                        requires = IS_EMPTY_OR(
-                                                    IS_ONE_OF(db, "note_type_id.id",
+                                                    IS_ONE_OF(db, "dvr_note_type.id",
                                                               represent)),
                                        )
 
@@ -858,7 +858,7 @@ class DVRNotesModel(S3Model):
                      self.pr_person_id(empty = False,
                                        ondelete = "CASCADE",
                                        ),
-                     note_type_id(),
+                     note_type_id(empty = False),
                      s3_date(),
                      s3_comments("note",
                                  comment=None,

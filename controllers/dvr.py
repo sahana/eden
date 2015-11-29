@@ -392,6 +392,13 @@ def need():
 def note():
     """ Notes: RESTful CRUD Controller """
 
+    # Coming from a Profile page?"
+    person_id = get_vars.get("~.person_id")
+    if person_id:
+        field = s3db.dvr_note.person_id
+        field.default = person_id
+        field.readable = field.writable = False
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------

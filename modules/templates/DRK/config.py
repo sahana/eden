@@ -514,7 +514,7 @@ def config(settings):
                 try:
                     note_type_id = note_type.id
                 except:
-                    # Prepop not done - deny access to component
+                    current.log.error("Prepop not done - deny access to dvr_note component")
                     note_type_id = None
                     atable = s3db.dvr_note
                     atable.date.readable = atable.date.writable = False
@@ -529,7 +529,7 @@ def config(settings):
                                 "person_details.nationality",
                                 "cr_shelter_registration.shelter_unit_id",
                                 S3SQLInlineComponent(
-                                        "note",
+                                        "case_note",
                                         fields = [(T("Date"), "date"),
                                                   "note",
                                                   ],
@@ -553,12 +553,26 @@ def config(settings):
                 if r.method == "profile":
                     from gluon.html import DIV, H2, P, TABLE, TR, TD, A
                     from s3 import s3_fullname
+                    db = current.db
+                    person_id = r.id
                     record = r.record
                     table = r.table
                     dtable = s3db.pr_person_details
-                    nationality = None
+                    details = db(dtable.person_id == person_id).select(dtable.nationality,
+                                                                       limitby=(0, 1)
+                                                                       ).first()
+                    try:
+                        nationality = details.nationality
+                    except:
+                        nationality = None
                     rtable = s3db.cr_shelter_registration
-                    shelter_unit_id = None
+                    reg = db(rtable.person_id == person_id).select(rtable.shelter_unit_id,
+                                                                   limitby=(0, 1)
+                                                                   ).first()
+                    try:
+                        shelter_unit_id = reg.shelter_unit_id
+                    except:
+                        shelter_unit_id = None
                     profile_header = DIV(H2(s3_fullname(record)),
                                          TABLE(TR(TD(T("ID")),
                                                   TD(record.pe_label)
@@ -585,8 +599,11 @@ def config(settings):
                                         label_create = "Add Note",
                                         type = "datatable",
                                         tablename = "dvr_note",
-                                        filter = FS("note_type_id$name") == "Security",
+                                        filter = ((FS("note_type_id$name") == "Security") & \
+                                                  (FS("person_id") == person_id)),
                                         #icon = "report",
+                                        create_controller = "dvr",
+                                        create_function = "note",
                                         )
                     profile_widgets = [notes_widget]
                 else:
@@ -1058,23 +1075,63 @@ def config(settings):
         #s3db.configure(tablename,
         #               onaccept = onaccept,
         #               )
+
         has_role = current.auth.s3_has_role
         if has_role("SECURITY") and not has_role("ADMIN"):
             # Just see Security Notes
+            table = s3db.dvr_note_type
+            security = current.db(table.name == "Security").select(table.id,
+                                                                   limitby=(0, 1)
+                                                                   ).first()
+            try:
+                SECURITY = security.id
+            except:
+                current.log.error("Prepop not completed...cannot filter dvr_note_type")
+                raise
+
+            field = s3db[tablename].note_type_id
+            field.default = SECURITY
+            field.readable = field.writable = False
             from s3 import FS
             if r.tablename  == tablename:
-                r.resource.add_filter(FS("need_type_id$name") == "Security")
+                r.resource.add_filter(FS("note_type_id") == SECURITY)
             else:
+                r.resource.add_component_filter("case_note", FS("note_type_id") == SECURITY)
                 # Look through components
-                pass
+                #components = r.resource.components
+                #for c in components:
+                #    if c == tablename:
+                #        components[c].add_filter(FS("note_type_id") == SECURITY)
+                #        break
         elif not has_role("HEAD_OF_ADMIN"):
+            # Remove Medical from list of options
+            db = current.db
+            table = s3db.dvr_note_type
+            medical = db(table.name == "Medical").select(table.id,
+                                                         limitby=(0, 1)
+                                                         ).first()
+            try:
+                MEDICAL = medical.id
+            except:
+                current.log.error("Prepop not completed...cannot filter dvr_note_type")
+                raise
+
+            field = s3db[tablename].note_type_id
+            from s3 import FS, IS_ONE_OF
+            the_set = db(table.id != MEDICAL)
+            field.requires = IS_ONE_OF(the_set, "dvr_note_type.id",
+                                       field.represent)
             # Cannot see Medical Notes
-            from s3 import FS
-            if r.tablename  == tablename:
-                r.resource.add_filter(FS("need_type_id$name") != "Medical")
+            if r.tablename == tablename:
+                r.resource.add_filter(FS("note_type_id") != MEDICAL)
             else:
+                r.resource.add_component_filter("case_note", FS("note_type_id") != MEDICAL)
                 # Look through components
-                pass
+                #components = r.resource.components
+                #for c in components:
+                #    if c == tablename:
+                #        components[c].add_filter(FS("note_type_id") != MEDICAL)
+                #        break
 
     settings.customise_dvr_note_resource = customise_dvr_note_resource
 
@@ -1553,7 +1610,7 @@ def drk_dvr_rheader(r, tabs=[]):
                         (T("Activities"), "case_activity"),
                         (T("Appointments"), "case_appointment"),
                         (T("Allowance"), "allowance"),
-                        (T("Notes"), "note"),
+                        (T("Notes"), "case_note"),
                         ]
 
             case = resource.select(["dvr_case.status_id",

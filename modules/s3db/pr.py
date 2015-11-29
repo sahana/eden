@@ -1045,6 +1045,9 @@ class S3PersonModel(S3Model):
                        dvr_economy = {"joinby": "person_id",
                                       "multiple": False,
                                       },
+                       dvr_note = {"name": "case_note",
+                                   "joinby": "person_id",
+                                   },
                        # Evacuee Registry
                        evr_case = {"joinby": "person_id",
                                    "multiple": False,
