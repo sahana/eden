@@ -1488,12 +1488,12 @@ def config(settings):
            restricted = True,
            module_type = 2,
         )),
-        #("cms", Storage(
-        # name_nice = T("Content Management"),
-        ##description = "Content Management System",
-        # restricted = True,
-        # module_type = 10,
-        #)),
+        ("cms", Storage(
+         name_nice = T("Content Management"),
+        #description = "Content Management System",
+         restricted = True,
+         module_type = 10,
+        )),
         ("doc", Storage(
            name_nice = T("Documents"),
            #description = "A library of digital resources, such as photos, documents and reports",
