@@ -197,12 +197,12 @@ def resource():
 
                 get_vars = r.get_vars
                 # Context from a Profile page?"
-                #location_id = get_vars.get("(location)", None)
+                #location_id = get_vars.get("(location)")
                 #if location_id:
                 #    field = table.location_id
                 #    field.default = location_id
                 #    field.readable = field.writable = False
-                incident_id = get_vars.get("~.(incident)", None)
+                incident_id = get_vars.get("~.(incident)")
                 if incident_id:
                     field = table.incident_id
                     field.default = incident_id
