@@ -303,6 +303,8 @@ def config(settings):
                     return
                 ltable = s3db.dvr_case_flag_case
 
+                settings.customise_dvr_case_resource(current.request, "dvr_case")
+                from gluon.tools import callback
                 case_onaccept = s3db.get_config("dvr_case", "onaccept")
                 for person_id in missing:
                     ltable.insert(person_id = person_id,
@@ -318,7 +320,7 @@ def config(settings):
                     case.update_record(status_id = DISAPPEARED)
                     # Clear Shelter Registration
                     form = Storage(vars=case)
-                    case_onaccept(form)
+                    callback(case_onaccept, form)
 
                 # Update Shelter Capacity
                 registration_onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
@@ -917,14 +919,14 @@ def config(settings):
     # -------------------------------------------------------------------------
     def dvr_case_onaccept(form):
         """
-            If inactive or status in (DISAPPEARED, LEGALLY_DEPARTED) then
+            If archived or status in (DISAPPEARED, LEGALLY_DEPARTED) then
                 remove shelter_registration
         """
 
         cancel = False
         form_vars = form.vars
-        inactive = form_vars.inactive
-        if inactive:
+        archived = form_vars.archived
+        if archived:
             cancel = True
             db = current.db
             s3db = current.s3db
