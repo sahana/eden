@@ -314,7 +314,9 @@ def config(settings):
                                                                  ).first()
                 cases = db(ctable.person_id.belongs(missing)).select(ctable.id,
                                                                      # For onaccept
+                                                                     ctable.archived,
                                                                      ctable.person_id,
+                                                                     ctable.status_id,
                                                                      )
                 for case in cases:
                     case.update_record(status_id = DISAPPEARED)
