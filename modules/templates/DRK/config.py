@@ -41,12 +41,11 @@ def config(settings):
     #settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
-    #settings.auth.registration_requests_organisation = True
-
+    settings.auth.registration_requests_organisation = True
     settings.auth.registration_link_user_to = {"staff": T("Staff"),
                                                "volunteer": T("Volunteer"),
                                                }
-    settings.auth.registration_link_user_to_default = "staff"
+    #settings.auth.registration_link_user_to_default = "staff"
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
@@ -410,6 +409,13 @@ def config(settings):
             onaccept(registration)
 
         return error, warning
+
+    # -------------------------------------------------------------------------
+    def customise_auth_user_resource(r, resource):
+
+        current.db.auth_user.organisation_id.default = settings.get_org_default_organisation()
+        
+    settings.customise_auth_user_resource = customise_auth_user_resource
 
     # -------------------------------------------------------------------------
     def customise_cr_shelter_controller(**attr):
@@ -1144,7 +1150,6 @@ def config(settings):
                 resource.add_filter(query)
 
             if not r.component:
-
 
                 if r.interactive and not r.id:
                     # Custom filter widgets
