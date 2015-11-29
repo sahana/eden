@@ -808,13 +808,20 @@ class S3ShelterModel(S3Model):
 
         list_fields = ["id",
                        "name",
-                       "status",
-                       "handicap_bath",
-                       "capacity_day",
-                       "capacity_night",
-                       "population_day",
-                       "population_night",
                        ]
+        if day_and_night:
+            list_fields += ["status", # @ToDO: Move to EVASS template
+                            "handicap_bath", # @ToDO: Move to EVASS template
+                            "capacity_day",
+                            "capacity_night",
+                            "population_day",
+                            "population_night",
+                            ]
+        else:
+            list_fields += ["available_capacity_day",
+                            "capacity_day",
+                            "population_day",
+                            ]
 
         population_onaccept = lambda form: \
                                 self.cr_shelter_population_onaccept(form,

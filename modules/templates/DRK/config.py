@@ -964,7 +964,7 @@ def config(settings):
 
         s3db = current.s3db
         default_onaccept = s3db.get_config(tablename, "onaccept")
-        if default_onaccept:
+        if default_onaccept and not isinstance(default_onaccept, list): # Catch running twice
             onaccept = [default_onaccept,
                         dvr_case_onaccept,
                         ]
@@ -1009,7 +1009,7 @@ def config(settings):
 
         s3db = current.s3db
         default_onaccept = s3db.get_config(tablename, "onaccept")
-        if default_onaccept:
+        if default_onaccept and not isinstance(default_onaccept, list): # Catch running twice
             onaccept = [default_onaccept,
                         dvr_case_flag_case_onaccept,
                         ]
