@@ -106,7 +106,7 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
     #
-    settings.security.policy = 7 # Organisation-ACLs
+    settings.security.policy = 5 # Controller, Function & Table ACLs
 
     # -------------------------------------------------------------------------
     # Inventory Module Settings
@@ -523,7 +523,7 @@ def config(settings):
                                 "person_details.nationality",
                                 "cr_shelter_registration.shelter_unit_id",
                                 S3SQLInlineComponent(
-                                        "case_activity",
+                                        "note",
                                         fields = [(T("Date"), "date"),
                                                   "note",
                                                   ],
@@ -533,6 +533,7 @@ def config(settings):
                                         label = T("Security Notes"),
                                         ),
                                 )
+
                 list_fields = [(T("ID"), "pe_label"),
                                "last_name",
                                "first_name",
@@ -541,8 +542,55 @@ def config(settings):
                                "person_details.nationality",
                                "shelter_registration.shelter_unit_id",
                                ]
+
+
+                if r.method == "profile":
+                    from gluon.html import DIV, H2, P, TABLE, TR, TD, A
+                    from s3 import s3_fullname
+                    record = r.record
+                    table = r.table
+                    dtable = s3db.pr_person_details
+                    nationality = None
+                    rtable = s3db.cr_shelter_registration
+                    shelter_unit_id = None
+                    profile_header = DIV(H2(s3_fullname(record)),
+                                         TABLE(TR(TD(T("ID")),
+                                                  TD(record.pe_label)
+                                                  ),
+                                               TR(TD(table.last_name.label),
+                                                  TD(record.last_name)
+                                                  ),
+                                               TR(TD(table.first_name.label),
+                                                  TD(record.first_name)
+                                                  ),
+                                               TR(TD(table.date_of_birth.label),
+                                                  TD(record.date_of_birth)
+                                                  ),
+                                               TR(TD(dtable.nationality.label),
+                                                  TD(nationality)
+                                                  ),
+                                               TR(TD(rtable.shelter_unit_id.label),
+                                                  TD(shelter_unit_id)
+                                                  ),
+                                               ),
+                                         _class="profile-header",
+                                         )
+                    notes_widget = dict(label = "Security Notes",
+                                        label_create = "Add Note",
+                                        type = "datatable",
+                                        tablename = "dvr_note",
+                                        filter = FS("note_type_id$name") == "Security",
+                                        #icon = "report",
+                                        )
+                    profile_widgets = [notes_widget]
+                else:
+                    profile_header = None
+                    profile_widgets = None
+
                 resource.configure(crud_form = crud_form,
                                    list_fields = list_fields,
+                                   profile_header = profile_header,
+                                   profile_widgets = profile_widgets,
                                    )
 
             elif r.controller == "dvr" and not r.component:
@@ -558,7 +606,6 @@ def config(settings):
                                     )
 
                 from gluon import IS_EMPTY_OR, IS_NOT_EMPTY
-
 
                 #default_organisation = current.auth.root_org()
                 default_organisation = settings.get_org_default_organisation()
@@ -756,6 +803,7 @@ def config(settings):
                                "dvr_case.valid_until",
                                "dvr_case.status_id",
                                ]
+
                 resource.configure(list_fields = list_fields,
                                    )
             return result
@@ -927,7 +975,7 @@ def config(settings):
     settings.customise_dvr_case_flag_case_resource = customise_dvr_case_flag_case_resource
 
     # -------------------------------------------------------------------------
-    def dvr_case_activity_onaccept(form):
+    def dvr_note_onaccept(form):
         """
             Set owned_by_group
         """
@@ -935,18 +983,18 @@ def config(settings):
         db = current.db
         s3db = current.s3db
         form_vars = form.vars
-        table = s3db.dvr_need
-        needs = db(table.name.belongs(("Medical", "Security"))).select(table.id,
+        table = s3db.dvr_note_type
+        types = db(table.name.belongs(("Medical", "Security"))).select(table.id,
                                                                        table.name).as_dict(key="name")
         try:
-            MEDICAL = needs["Medical"]["id"]
+            MEDICAL = types["Medical"]["id"]
         except:
-            current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_case_activity")
+            current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_note_type")
             return
-        SECURITY = needs["Security"]["id"]
-        need_id = form_vars.need_id
-        if need_id == str(MEDICAL):
-            table = s3db.dvr_case_activity
+        SECURITY = types["Security"]["id"]
+        note_type_id = form_vars.note_type_id
+        if note_type_id == str(MEDICAL):
+            table = s3db.dvr_note
             gtable = db.auth_group
             role = db(gtable.uuid == "MEDICAL").select(gtable.id,
                                                        limitby=(0, 1)
@@ -954,11 +1002,11 @@ def config(settings):
             try:
                 group_id = role.id
             except:
-                current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_case_activity")
+                current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_note")
                 return
             db(table.id == form_vars.id).update(owned_by_group=group_id)
-        elif need_id == str(SECURITY):
-            table = s3db.dvr_case_activity
+        elif note_type_id == str(SECURITY):
+            table = s3db.dvr_note
             gtable = db.auth_group
             role = db(gtable.uuid == "SECURITY").select(gtable.id,
                                                         limitby=(0, 1)
@@ -966,32 +1014,49 @@ def config(settings):
             try:
                 group_id = role.id
             except:
-                current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_case_activity")
+                current.log.error("Prepop not completed...cannot assign owned_by_group to dvr_note")
                 return
             db(table.id == form_vars.id).update(owned_by_group=group_id)
 
     # -------------------------------------------------------------------------
-    def customise_dvr_case_activity_resource(r, tablename):
+    def customise_dvr_note_resource(r, tablename):
 
         s3db = current.s3db
-        default_onaccept = s3db.get_config(tablename, "onaccept")
-        if default_onaccept:
-            onaccept = [default_onaccept,
-                        dvr_case_activity_onaccept,
-                        ]
-        else:
-            onaccept = dvr_case_activity_onaccept
-        s3db.configure(tablename,
-                       onaccept = onaccept,
-                       )
+        #default_onaccept = s3db.get_config(tablename, "onaccept")
+        #if default_onaccept:
+        #    onaccept = [default_onaccept,
+        #                dvr_case_activity_onaccept,
+        #                ]
+        #else:
+        #    onaccept = dvr_case_activity_onaccept
+        #s3db.configure(tablename,
+        #               onaccept = onaccept,
+        #               )
+        has_role = current.auth.s3_has_role
+        if has_role("SECURITY") and not has_role("ADMIN"):
+            # Just see Security Notes
+            from s3 import FS
+            if r.tablename  == tablename:
+                r.resource.add_filter(FS("need_type_id$name") == "Security")
+            else:
+                # Look through components
+                pass
+        elif not has_role("HEAD_OF_ADMIN"):
+            # Cannot see Medical Notes
+            from s3 import FS
+            if r.tablename  == tablename:
+                r.resource.add_filter(FS("need_type_id$name") != "Medical")
+            else:
+                # Look through components
+                pass
 
-    settings.customise_dvr_case_activity_resource = customise_dvr_case_activity_resource
+    settings.customise_dvr_note_resource = customise_dvr_note_resource
 
     # -------------------------------------------------------------------------
     def customise_dvr_case_activity_controller(**attr):
 
-        s3 = current.response.s3
         s3db = current.s3db
+        s3 = current.response.s3
 
         # Custom prep
         standard_prep = s3.prep
@@ -1463,6 +1528,7 @@ def drk_dvr_rheader(r, tabs=[]):
                         (T("Activities"), "case_activity"),
                         (T("Appointments"), "case_appointment"),
                         (T("Allowance"), "allowance"),
+                        (T("Notes"), "note"),
                         ]
 
             case = resource.select(["dvr_case.status_id",

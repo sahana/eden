@@ -389,6 +389,12 @@ def need():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def note():
+    """ Notes: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def housing():
     """ Housing: RESTful CRUD Controller for option lookups """
 
