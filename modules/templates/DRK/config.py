@@ -792,9 +792,17 @@ def config(settings):
                             if isinstance(fw, S3TextFilter):
                                 fw.field.append("eo_number.value")
                         from s3 import S3DateFilter
+
+                        # Filter by date of birth
                         dob_filter = S3DateFilter("date_of_birth")
-                        dob_filter.operator = ["eq"]
+                        #dob_filter.operator = ["eq"]
                         filter_widgets.insert(1, dob_filter)
+
+                        # Filter by registration date
+                        reg_filter = S3DateFilter("dvr_case.date",
+                                                  hidden = True,
+                                                  )
+                        filter_widgets.append(reg_filter)
 
                 # Custom list fields (must be outside of r.interactive)
                 list_fields = [#"dvr_case.reference",
@@ -842,9 +850,10 @@ def config(settings):
             else:
                 result = True
 
+            ROLE = T("Role")
+
             resource = r.resource
             if r.controller == "dvr" and r.interactive:
-                resource.configure(filter_widgets = None)
                 table = resource.table
 
                 from gluon import IS_EMPTY_OR
@@ -857,6 +866,7 @@ def config(settings):
 
                 field = table.role_id
                 field.readable = field.writable = True
+                field.label = ROLE
                 field.comment = None
                 field.requires = IS_EMPTY_OR(
                                     IS_ONE_OF(current.db, "pr_group_member_role.id",
@@ -868,6 +878,16 @@ def config(settings):
                 field = table.group_head
                 field.label = T("Head of Family")
 
+            if r.controller == "dvr":
+                list_fields = [(T("ID"), "person_id$pe_label"),
+                               "person_id",
+                               "person_id$date_of_birth",
+                               "person_id$gender",
+                               (ROLE, "role_id"),
+                               ]
+                resource.configure(filter_widgets = None,
+                                   list_fields = list_fields,
+                                   )
             return result
         s3.prep = custom_prep
 
