@@ -829,7 +829,14 @@ def config(settings):
                     return
 
         if cancel:
-            resource = s3db.resource("cr_shelter_registration", id=form_vars.person_id)
+            rtable = s3db.cr_shelter_registration
+            registration = db(rtable.person_id == form_vars.person_id).select(rtable.id,
+                                                                              limitby=(0, 1)
+                                                                              ).first()
+            try:
+                resource = s3db.resource("cr_shelter_registration", id=registration.id)
+            except:
+                pass
             resource.delete()
 
     # -------------------------------------------------------------------------
