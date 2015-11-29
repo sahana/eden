@@ -204,11 +204,11 @@ def config(settings):
                    )
 
         stable = s3db.dvr_case_status
-        statuses = db(stable.name.belongs(("Hospital", "Police"))).select(stable.name,
-                                                                          stable.id,
-                                                                          ).as_dict(key="name")
-        HOSPITAL = statuses["Hospital"]["id"]
-        POLICE = statuses["Police"]["id"]
+        statuses = db(stable.code.belongs(("STATUS9", "STATUS9A"))).select(stable.code,
+                                                                           stable.id,
+                                                                           ).as_dict(key="code")
+        HOSPITAL = statuses["STATUS9"]["id"]
+        POLICE = statuses["STATUS9A"]["id"]
         ctable = s3db.dvr_case
         query = (ctable.deleted == False) & \
                 (ctable.archived == False) & \
@@ -254,12 +254,13 @@ def config(settings):
 
         # Read the Statuses
         stable = s3db.dvr_case_status
-        statuses = db(stable.name.belongs(("Hospital", "Police", "Disappeared"))).select(stable.name,
-                                                                                         stable.id,
-                                                                                         ).as_dict(key="name")
-        DISAPPEARED = statuses["Disappeared"]["id"]
-        HOSPITAL = statuses["Hospital"]["id"]
-        POLICE = statuses["Police"]["id"]
+        statuses = db(stable.code.belongs(("STATUS7", "STATUS8", "STATUS9", "STATUS9A"))).select(stable.code,
+                                                                                                 stable.id,
+                                                                                                 ).as_dict(key="code")
+        DISAPPEARED = statuses["STATUS8"]["id"]
+        LEGALLY_DEPARTED = statuses["STATUS7"]["id"]
+        HOSPITAL = statuses["STATUS9"]["id"]
+        POLICE = statuses["STATUS9A"]["id"]
 
         THREE_DAYS_AGO = current.request.utcnow - datetime.timedelta(days=3)
         table = s3db.cr_shelter_registration
@@ -343,6 +344,7 @@ def config(settings):
                                                 limitby=(0, 1),
                                                 ).first()
         if not registration:
+            # @ToDo: Check to see if they DISAPPEARED, etc
             error = T("Registration not found")
             warning = None
             return error, warning
@@ -383,6 +385,7 @@ def config(settings):
                                                 limitby=(0, 1),
                                                 ).first()
         if not registration:
+            # @ToDo: Check to see if they DISAPPEARED, etc
             error = T("Registration not found")
             warning = None
             return error, warning

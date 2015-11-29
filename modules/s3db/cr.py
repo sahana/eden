@@ -817,8 +817,8 @@ class S3ShelterModel(S3Model):
                        ]
 
         population_onaccept = lambda form: \
-                                S3ShelterRegistrationModel.shelter_population_onaccept(form,
-                                                                                       tablename="cr_shelter_unit")
+                                self.shelter_population_onaccept(form,
+                                                                 tablename="cr_shelter_unit")
 
         configure(tablename,
                   # @ToDo: Allow multiple shelters to have the same name of unit (Requires that Shelter is in dvr/person.xsl/csv)
@@ -882,17 +882,6 @@ class S3ShelterModel(S3Model):
 
         # @ToDo: Update/Create a cr_shelter_status record
 
-        return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def cr_shelter_status_onaccept(form):
-        """
-            After DB I/O
-        """
-
-        # @ToDo: Update the cr_shelter record
-        # Status & Population
         return
 
     # -------------------------------------------------------------------------
@@ -968,6 +957,7 @@ class S3ShelterRegistrationModel(S3Model):
 
     names = ("cr_shelter_allocation",
              "cr_shelter_registration",
+             "cr_shelter_population_onaccept",
              )
 
     def model(self):
@@ -1110,7 +1100,8 @@ class S3ShelterRegistrationModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
-        return {}
+        return dict(cr_shelter_population_onaccept = self.shelter_population_onaccept,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
