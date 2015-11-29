@@ -817,8 +817,8 @@ class S3ShelterModel(S3Model):
                        ]
 
         population_onaccept = lambda form: \
-                                self.shelter_population_onaccept(form,
-                                                                 tablename="cr_shelter_unit")
+                                self.cr_shelter_population_onaccept(form,
+                                                                    tablename="cr_shelter_unit")
 
         configure(tablename,
                   # @ToDo: Allow multiple shelters to have the same name of unit (Requires that Shelter is in dvr/person.xsl/csv)
@@ -1008,8 +1008,8 @@ class S3ShelterRegistrationModel(S3Model):
                      *s3_meta_fields())
 
         population_onaccept = lambda form: \
-                                self.shelter_population_onaccept(form,
-                                                                 tablename="cr_shelter_allocation")
+                                self.cr_shelter_population_onaccept(form,
+                                                                    tablename="cr_shelter_allocation")
 
         configure(tablename,
                   onaccept = population_onaccept,
@@ -1084,8 +1084,8 @@ class S3ShelterRegistrationModel(S3Model):
                      *s3_meta_fields())
 
         population_onaccept = lambda form: \
-            self.shelter_population_onaccept(form,
-                                             tablename="cr_shelter_registration")
+            self.cr_shelter_population_onaccept(form,
+                                                tablename="cr_shelter_registration")
 
         configure(tablename,
                   deduplicate =  S3Duplicate(primary = ("person_id", "shelter_unit_id")),

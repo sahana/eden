@@ -878,9 +878,9 @@ def s3_avatar_represent(id, tablename="auth_user", gravatar=False, **attr):
             # If no Image uploaded, try Gravatar, which also provides a nice fallback identicon
             import hashlib
             hash = hashlib.md5(email).hexdigest()
-            url = "http://www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
+            url = "//www.gravatar.com/avatar/%s?s=50&d=identicon" % hash
         else:
-            url = "http://www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"
+            url = "//www.gravatar.com/avatar/00000000000000000000000000000000?d=mm"
     else:
         url = URL(c="static", f="img", args="blank-user.gif")
 
@@ -1061,7 +1061,7 @@ def s3_include_ext():
 
     if s3.cdn:
         # For Sites Hosted on the Public Internet, using a CDN may provide better performance
-        PATH = "http://cdn.sencha.com/ext/gpl/3.4.1.1"
+        PATH = "//cdn.sencha.com/ext/gpl/3.4.1.1"
     else:
         PATH = "/%s/static/scripts/ext" % appname
 
