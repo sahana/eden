@@ -3239,6 +3239,16 @@ class S3SQLInlineLink(S3SQLInlineComponent):
         self.resource = resource
         component, link = self.get_link()
 
+        # Customise resources
+        from s3rest import S3Request
+        r = S3Request(resource.prefix, resource.name)
+        customise_resource = current.deployment_settings.customise_resource
+        for tablename in (component.tablename, link.tablename):
+            customise = customise_resource(tablename)
+            if customise:
+                customise(r, tablename)
+
+        self.initialized = True
         if record_id:
             rkey = component.rkey
             rows = link.select([rkey], as_rows=True)
