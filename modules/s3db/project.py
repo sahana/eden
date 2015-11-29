@@ -8686,7 +8686,7 @@ class S3ProjectTaskModel(S3Model):
         s3db = current.s3db
 
         form_vars = form.vars
-        id = vars.id
+        id = form_vars.id
         record = form.record
 
         table = db.project_task
