@@ -43,6 +43,11 @@ def config(settings):
     #settings.auth.registration_requires_approval = True
     #settings.auth.registration_requests_organisation = True
 
+    settings.auth.registration_link_user_to = {"staff": T("Staff"),
+                                               "volunteer": T("Volunteer"),
+                                               }
+    settings.auth.registration_link_user_to_default = "staff"
+
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
 
@@ -425,7 +430,11 @@ def config(settings):
                                        site_check_in = site_check_in,
                                        site_check_out = site_check_out,
                                        )
-            return  result
+            else:
+                has_role = current.auth.s3_has_role
+                if has_role("SECURITY") and not has_role("ADMIN"):
+                   return None 
+            return result
         s3.prep = custom_prep
 
         # Custom postp
@@ -1221,6 +1230,34 @@ def config(settings):
         return attr
 
     settings.customise_dvr_allowance_controller = customise_dvr_allowance_controller
+
+    # -------------------------------------------------------------------------
+    def customise_project_task_resource(r, tablename):
+        """
+            Restrict list of assignees to just Staff/Volunteers
+        """
+
+        db = current.db
+        s3db = current.s3db
+        htable = s3db.hrm_human_resource
+        ptable = s3db.pr_person
+        query = (htable.deleted == False) & \
+                (htable.person_id == ptable.id)
+        hrs = db(query).select(ptable.pe_id)
+        hrs = [hr.pe_id for hr in hrs]
+
+        from gluon import IS_EMPTY_OR
+        from s3 import IS_ONE_OF
+        s3db.project_task.pe_id.requires = IS_EMPTY_OR(
+            IS_ONE_OF(db, "pr_pentity.pe_id",
+                      s3db.pr_PersonEntityRepresent(show_label = False,
+                                                    show_type = False),
+                      sort=True,
+                      filterby = "pe_id",
+                      filter_opts = hrs,
+                      ))
+
+    settings.customise_project_task_resource = customise_project_task_resource
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

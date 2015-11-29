@@ -13,6 +13,7 @@ AUTHENTICATED,Authenticated,,hrm,person,,,READ|UPDATE,,,,"HRM access is controll
 AUTHENTICATED,Authenticated,,hrm,staff,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
 AUTHENTICATED,Authenticated,,hrm,volunteer,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
 SECURITY,Security,,security,person,,CREATE|READ,,,,,
+SECURITY,Security,,cr,shelter,,READ,,,,,
 SECURITY,Security,,,,pr_person,READ,,,,,
 SECURITY,Security,,,,dvr_note,CREATE,CREATE|READ,,,,
 MEDICAL,Medical,,cr,,,READ,,,,,
@@ -33,5 +34,5 @@ ADMINISTRATION,Administration,,project,,,ALL,,,,,
 ADMIN_HEAD,Head of Administration,,cr,,,ALL,,,,,
 ADMIN_HEAD,Head of Administration,,dvr,,,ALL,,,,,
 ADMIN_HEAD,Head of Administration,,inv,,,ALL,,,,,
-ADMIN_HEAD,Head of Administration,,,,dvr_note,CREATE|READ,,,,,
+ADMIN_HEAD,Head of Administration,,,,dvr_note,CREATE|READ,READ,,,,
 ADMIN_HEAD,Head of Administration,,project,,,ALL,,,,,
