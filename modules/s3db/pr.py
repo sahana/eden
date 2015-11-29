@@ -1919,7 +1919,9 @@ class S3GroupModel(S3Model):
 
     names = ("pr_group",
              "pr_group_id",
-             "pr_group_membership"
+             "pr_group_membership",
+             "pr_group_member_role",
+
              )
 
     def model(self):
@@ -2078,6 +2080,57 @@ class S3GroupModel(S3Model):
                             )
 
         # ---------------------------------------------------------------------
+        # Group Member Roles
+        #
+        tablename = "pr_group_member_role"
+        define_table(tablename,
+                     Field("name", length=64,
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("group_type", "integer",
+                           default = 4,
+                           label = T("Group Type"),
+                           represent = S3Represent(options=pr_group_types),
+                           requires = IS_IN_SET(pr_group_types, zero=None),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        CREATE_ROLE = T("Create Group Member Role")
+        crud_strings[tablename] = Storage(
+            label_create = CREATE_ROLE,
+            title_display = T("Group Member Role Details"),
+            title_list = T("Group Member Roles"),
+            title_update = T("Edit Group Member Roles"),
+            label_list_button = T("List Group Member Roles"),
+            label_delete_button = T("Delete Group Member Role"),
+            msg_record_created = T("Group Member Role added"),
+            msg_record_modified = T("Group Member Role updated"),
+            msg_record_deleted = T("Group Member Role deleted"),
+            msg_list_empty = T("No Group Member Roles currently defined"),
+            )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename, translate=True)
+        role_id = S3ReusableField("role_id", "reference %s" % tablename,
+                                  comment = S3PopupLink(c = "pr",
+                                                        f = "group_member_role",
+                                                        label = CREATE_ROLE,
+                                                        title = CREATE_ROLE,
+                                                        tooltip = T("The role of the member in the group"),
+                                                        vars = {"child": "role_id"},
+                                                        ),
+                                  label = T("Group Member Role"),
+                                  ondelete = "RESTRICT",
+                                  represent = represent,
+                                  requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "pr_group_member_role.id",
+                                                          represent,
+                                                          )),
+                                  )
+
+        # ---------------------------------------------------------------------
         # Group membership
         #
         tablename = "pr_group_membership"
@@ -2090,6 +2143,10 @@ class S3GroupModel(S3Model):
                                        label = T("Person"),
                                        ondelete = "CASCADE",
                                        ),
+                     # Enable in template if required
+                     role_id(readable = False,
+                             writable = False,
+                             ),
                      Field("group_head", "boolean",
                            default = False,
                            label = T("Group Head"),

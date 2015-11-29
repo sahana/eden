@@ -779,15 +779,28 @@ def config(settings):
             resource = r.resource
             if r.controller == "dvr" and r.interactive:
                 resource.configure(filter_widgets = None)
-
                 table = resource.table
+
+                from gluon import IS_EMPTY_OR
+                from s3 import IS_ADD_PERSON_WIDGET2, S3AddPersonWidget2, IS_ONE_OF
+
                 field = table.person_id
-
-                from s3 import IS_ADD_PERSON_WIDGET2, S3AddPersonWidget2
-
                 field.represent = s3db.pr_PersonRepresent(show_link=True)
                 field.requires = IS_ADD_PERSON_WIDGET2()
                 field.widget = S3AddPersonWidget2(controller="dvr")
+
+                field = table.role_id
+                field.readable = field.writable = True
+                field.comment = None
+                field.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(current.db, "pr_group_member_role.id",
+                                              field.represent,
+                                              filterby = "group_type",
+                                              filter_opts = (7,),
+                                              ))
+
+                field = table.group_head
+                field.label = T("Head of Family")
 
             return result
         s3.prep = custom_prep
