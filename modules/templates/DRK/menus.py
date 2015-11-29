@@ -56,6 +56,7 @@ class S3MainMenu(default.S3MainMenu):
                 #homepage("req"),
                 homepage("inv"),
                 MM("Dashboard", c="cr", f="shelter", args=args),
+                MM("Housing Units", c="cr", f="shelter", args=[default_site, "shelter_unit"]), # @ToDO: Move to Dashboard Widget?
                 homepage("vol"),
                 homepage("hrm"),
             ]

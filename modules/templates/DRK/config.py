@@ -957,7 +957,8 @@ def config(settings):
                 resource = s3db.resource("cr_shelter_registration", id=registration.id)
             except:
                 pass
-            resource.delete()
+            else:
+                resource.delete()
 
     # -------------------------------------------------------------------------
     def customise_dvr_case_resource(r, tablename):
