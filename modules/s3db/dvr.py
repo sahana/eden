@@ -1495,6 +1495,11 @@ class DVRCaseEconomyInformationModel(S3Model):
                                                                   )),
                                            )
 
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(),
+                  )
+
         # ---------------------------------------------------------------------
         # Household Economy Information
         #
