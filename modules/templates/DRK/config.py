@@ -1557,7 +1557,7 @@ def config(settings):
         #    module_type = 10
         #)),
         ("dvr", Storage(
-          name_nice = T("Refugees"),
+          name_nice = T("Residents"),
           #description = "Allow affected individuals & households to register to receive compensation and distributions",
           restricted = True,
           module_type = 10,
