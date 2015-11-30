@@ -411,14 +411,20 @@ def housing():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def beneficiary_data():
+    """ Beneficiary Data: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def housing_type():
     """ Housing Types: RESTful CRUD Controller """
 
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def beneficiary_data():
-    """ Beneficiary Data: RESTful CRUD Controller """
+def income_source():
+    """ Income Sources: RESTful CRUD Controller """
 
     return s3_rest_controller()
 

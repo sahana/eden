@@ -803,6 +803,9 @@ class S3OptionsMenu(object):
                     M("Housing Types", f="housing_type")(
                       M("Create", m="create"),
                     ),
+                    M("Income Sources", f="income_source")(
+                      M("Create", m="create"),
+                    ),
                     M("Beneficiary Types", f="beneficiary_type")(
                       M("Create", m="create"),
                     ),

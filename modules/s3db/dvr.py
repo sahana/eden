@@ -1410,6 +1410,8 @@ class DVRCaseEconomyInformationModel(S3Model):
     """ Model for Household Economy Information """
 
     names = ("dvr_economy",
+             "dvr_income_source",
+             "dvr_income_source_economy",
              "dvr_housing_type",
              )
 
@@ -1446,13 +1448,52 @@ class DVRCaseEconomyInformationModel(S3Model):
             msg_record_created = T("Housing Type added"),
             msg_record_modified = T("Housing Type updated"),
             msg_record_deleted = T("Housing Type deleted"),
-            msg_list_empty = T("No Housing Types currently registered")
+            msg_list_empty = T("No Housing Types currently defined")
             )
 
         # Represent for reference
         housing_type_represent = S3Represent(lookup = "dvr_housing_type",
                                              translate = True,
                                              )
+
+        # ---------------------------------------------------------------------
+        # Income sources
+        #
+        tablename = "dvr_income_source"
+        define_table(tablename,
+                     Field("name",
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        ADD_INCOME_SOURCE = T("Create Income Source")
+        crud_strings[tablename] = Storage(
+            label_create = ADD_INCOME_SOURCE,
+            title_display = T("Income Source"),
+            title_list = T("Income Sources"),
+            title_update = T("Edit Income Source"),
+            label_list_button = T("List Income Sources"),
+            label_delete_button = T("Delete Income Source"),
+            msg_record_created = T("Income Source added"),
+            msg_record_modified = T("Income Source updated"),
+            msg_record_deleted = T("Income Source deleted"),
+            msg_list_empty = T("No Income Sources currently defined")
+            )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        income_source_id = S3ReusableField("income_source_id", "reference %s" % tablename,
+                                           label = T("Income Source"),
+                                           ondelete = "RESTRICT",
+                                           represent = represent,
+                                           requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db,
+                                                                  "dvr_income_source.id",
+                                                                  represent,
+                                                                  )),
+                                           )
 
         # ---------------------------------------------------------------------
         # Household Economy Information
@@ -1486,9 +1527,23 @@ class DVRCaseEconomyInformationModel(S3Model):
                            label = T("Monthly Costs"),
                            requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
                            ),
+                     Field("average_weekly_income", "double",
+                           label = T("Average Weekly Income"),
+                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           ),
                      s3_currency(),
                      s3_comments(),
                      *s3_meta_fields())
+
+        # Components
+        self.add_components(tablename,
+                            dvr_income_source = {"link": "dvr_income_source_economy",
+                                                 "joinby": "economy_id",
+                                                 "key": "income_source_id",
+                                                 "actuate": "link",
+                                                 "autodelete": False,
+                                                 },
+                            )
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -1504,15 +1559,46 @@ class DVRCaseEconomyInformationModel(S3Model):
             msg_list_empty = T("No Economy Information currently registered"),
             )
 
+        # CRUD Form
+        crud_form = S3SQLCustomForm("housing_type_id",
+                                    "monthly_costs",
+                                    S3SQLInlineLink("income_source",
+                                                    field = "income_source_id",
+                                                    label = T("Income Sources"),
+                                                    cols = 3,
+                                                    ),
+                                    "average_weekly_income",
+                                    "currency",
+                                    "comments",
+                                    )
+
+        # List fields
         list_fields = ["housing_type_id",
                        "monthly_costs",
+                       "income_source_economy.income_source_id",
+                       "average_weekly_income",
                        "comments",
                        ]
 
         # Table configuration
         configure(tablename,
+                  crud_form = crud_form,
                   list_fields = list_fields,
                   )
+
+        # ---------------------------------------------------------------------
+        # Link table Economy Information <=> Income Sources
+        #
+        tablename = "dvr_income_source_economy"
+        define_table(tablename,
+                     Field("economy_id", "reference dvr_economy",
+                           ondelete = "CASCADE",
+                           requires = IS_ONE_OF(db, "dvr_economy.id"),
+                           ),
+                     income_source_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
+
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
