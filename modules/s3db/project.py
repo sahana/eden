@@ -4417,11 +4417,15 @@ class S3ProjectPlanningModel(S3Model):
             if current_status is None:
                 current_status = current_weighting = 0
             else:
+                if current_status > 100:
+                    current_status = 100
                 current_status = current_status * weighting
                 current_weighting = weighting
             if overall_status is None:
                 overall_status = overall_weighting = 0
             else:
+                if overall_status > 100:
+                    overall_status = 100
                 overall_status = overall_status * weighting
                 overall_weighting = weighting
             if output_id not in outputs:
@@ -5764,7 +5768,7 @@ class project_SummaryReport(S3Method):
                         sappend(row)
 
         body = DIV(H1(T("Narrative Report")),
-                   H3("%s: %s" % (T("Date"), date_represent(date))),
+                   H3("%s: %s" % (T("Up To Date"), date_represent(date))),
                    narrative,
                    H1(T("Current Status of Project")),
                    status_table,
@@ -6005,7 +6009,10 @@ class project_IndicatorSummaryReport(S3Method):
 
         T = current.T
         s3db = current.s3db
+        response = current.response
         NONE = current.messages["NONE"]
+
+        record = r.record
 
         dates, years, goals = self._extract(r, **attr)
         colspan = (2 * len(dates)) + (2 * len(years)) + 3
@@ -6022,153 +6029,158 @@ class project_IndicatorSummaryReport(S3Method):
                            _rowspan=2,
                            ),
                         )
-        happend = header_row.append
-        represent = s3db.project_indicator_data.end_date.represent
+        if not years:
+            item = TABLE(header_row,
+                         _class="indicator_summary_report"
+                         )
+            response.warning = T("No Indicator Data available")
+        else:
+            happend = header_row.append
+            represent = s3db.project_indicator_data.end_date.represent
 
-        y = 0
-        year = years[y]
-        for d in dates:
-            if d.year != year:
-                happend(TD(year,
+            y = 0
+            year = years[y]
+            for d in dates:
+                if d.year != year:
+                    happend(TD(year,
+                               _colspan=2,
+                               ))
+                    y += 1
+                    year = years[y]
+                happend(TD(represent(d),
                            _colspan=2,
                            ))
-                y += 1
-                year = years[y]
-            happend(TD(represent(d),
+            happend(TD(year,
                        _colspan=2,
                        ))
-        happend(TD(year,
-                   _colspan=2,
-                   ))
 
-        happend(TD(T("Actual Total"),
-                   _rowspan=2,
-                   ))
-        happend(TD(T("% Achieved"),
-                   _rowspan=2,
-                   ))
-        item = TABLE(header_row,
-                     _class="indicator_summary_report"
-                     )
-        iappend = item.append
-        row_2 = TR()
-        rappend = row_2.append
-        TARGET = T("Target")
-        ACTUAL = T("Actual")
-        for d in dates:
-            rappend(TD(TARGET))
-            rappend(TD(ACTUAL))
-        for y in years:
-            rappend(TD(TARGET))
-            rappend(TD(ACTUAL))
-        iappend(row_2)
+            happend(TD(T("Actual Total"),
+                       _rowspan=2,
+                       ))
+            happend(TD(T("% Achieved"),
+                       _rowspan=2,
+                       ))
+            item = TABLE(header_row,
+                         _class="indicator_summary_report"
+                         )
+            iappend = item.append
+            row_2 = TR()
+            rappend = row_2.append
+            TARGET = T("Target")
+            ACTUAL = T("Actual")
+            for d in dates:
+                rappend(TD(TARGET))
+                rappend(TD(ACTUAL))
+            for y in years:
+                rappend(TD(TARGET))
+                rappend(TD(ACTUAL))
+            iappend(row_2)
 
-        for goal_id in goals:
-            goal = goals[goal_id]
-            row = TR(TD("%s: %s" % (T("Goal"), goal["code"]),
-                        _class="tal",
-                        ),
-                     TD(goal["name"],
-                        _class="tal",
-                        _colspan=colspan,
-                        ),
-                     TD(project_status_represent(goal["status"])),
-                     _class="project_goal",
-                     )
-            iappend(row)
-            outcomes = goal["outcomes"]
-            for outcome_id in outcomes:
-                outcome = outcomes[outcome_id]
-                row = TR(TD("%s: %s" % (T("Outcome"), outcome["code"]),
+            for goal_id in goals:
+                goal = goals[goal_id]
+                row = TR(TD("%s: %s" % (T("Goal"), goal["code"]),
                             _class="tal",
                             ),
-                         TD(outcome["name"],
+                         TD(goal["name"],
                             _class="tal",
                             _colspan=colspan,
                             ),
-                         TD(project_status_represent(outcome["status"])),
-                         _class="project_outcome",
+                         TD(project_status_represent(goal["status"])),
+                         _class="project_goal",
                          )
                 iappend(row)
-                outputs = outcome["outputs"]
-                for output_id in outputs:
-                    output = outputs[output_id]
-                    row = TR(TD("%s: %s" % (T("Output"), output["code"]),
+                outcomes = goal["outcomes"]
+                for outcome_id in outcomes:
+                    outcome = outcomes[outcome_id]
+                    row = TR(TD("%s: %s" % (T("Outcome"), outcome["code"]),
                                 _class="tal",
                                 ),
-                             TD(output["name"],
+                             TD(outcome["name"],
                                 _class="tal",
                                 _colspan=colspan,
                                 ),
-                             TD(project_status_represent(output["status"])),
-                             _class="project_output",
+                             TD(project_status_represent(outcome["status"])),
+                             _class="project_outcome",
                              )
                     iappend(row)
-                    indicators = output["indicators"]
-                    for i in indicators:
-                        indicator = indicators[i]
-                        row = TR(TD("%s: %s" % (T("Indicator"), indicator["code"]),
+                    outputs = outcome["outputs"]
+                    for output_id in outputs:
+                        output = outputs[output_id]
+                        row = TR(TD("%s: %s" % (T("Output"), output["code"]),
                                     _class="tal",
                                     ),
-                                 TD(indicator["name"],
+                                 TD(output["name"],
                                     _class="tal",
+                                    _colspan=colspan,
                                     ),
-                                 _class="project_indicator",
+                                 TD(project_status_represent(output["status"])),
+                                 _class="project_output",
                                  )
-                        rappend = row.append
-                        rappend(TD(indicator["target"]))
-                        y = 0
-                        year = years[y]
-                        for d in dates:
-                            if d.year != year:
-                                iyear = indicator["years"].get(year)
-                                if iyear:
-                                    rappend(TD(iyear["target"]))
-                                    rappend(TD(iyear["actual"]))
+                        iappend(row)
+                        indicators = output["indicators"]
+                        for i in indicators:
+                            indicator = indicators[i]
+                            row = TR(TD("%s: %s" % (T("Indicator"), indicator["code"]),
+                                        _class="tal",
+                                        ),
+                                     TD(indicator["name"],
+                                        _class="tal",
+                                        ),
+                                     _class="project_indicator",
+                                     )
+                            rappend = row.append
+                            rappend(TD(indicator["target"]))
+                            y = 0
+                            year = years[y]
+                            for d in dates:
+                                if d.year != year:
+                                    iyear = indicator["years"].get(year)
+                                    if iyear:
+                                        rappend(TD(iyear["target"]))
+                                        rappend(TD(iyear["actual"]))
+                                    else:
+                                        rappend(TD(NONE))
+                                        rappend(TD(NONE))
+                                    y += 1
+                                    year = years[y]
+                                date = indicator["dates"].get(d)
+                                if date:
+                                    rappend(TD(date["target"]))
+                                    rappend(TD(date["actual"]))
                                 else:
                                     rappend(TD(NONE))
                                     rappend(TD(NONE))
-                                y += 1
-                                year = years[y]
-                            date = indicator["dates"].get(d)
-                            if date:
-                                rappend(TD(date["target"]))
-                                rappend(TD(date["actual"]))
+                            iyear = indicator["years"].get(year)
+                            if iyear:
+                                rappend(TD(iyear["target"]))
+                                rappend(TD(iyear["actual"]))
                             else:
                                 rappend(TD(NONE))
                                 rappend(TD(NONE))
-                        iyear = indicator["years"].get(year)
-                        if iyear:
-                            rappend(TD(iyear["target"]))
-                            rappend(TD(iyear["actual"]))
-                        else:
-                            rappend(TD(NONE))
-                            rappend(TD(NONE))
-                        rappend(TD(indicator["actual"]))
-                        rappend(TD(project_status_represent(indicator["status"])))
-                        iappend(row)
+                            rappend(TD(indicator["actual"]))
+                            rappend(TD(project_status_represent(indicator["status"])))
+                            iappend(row)
 
-        record = r.record
-        iappend(TR(TD(T("Overall Project Status"),
-                      _colspan=colspan + 1,
-                      _class="tar",
-                      ),
-                   TD(project_status_represent(record.overall_status_by_indicators)),
-                   ))
+            iappend(TR(TD(T("Overall Project Status"),
+                          _colspan=colspan + 1,
+                          _class="tar",
+                          ),
+                       TD(project_status_represent(record.overall_status_by_indicators)),
+                       ))
 
-        #iappend(TR(SPAN(DIV(_title = T("Export as XLS"),
-        #                    _class = "custom-export export_xls",
-        #                    data = {"url": r.url(method = "indicator_summary_report",
-        #                                         representation = "xls",
-        #                                         #vars = r.get_vars,
-        #                                         ),
-        #                            },
-        #                    ),
-        #                _class="list_formats",
-        #                ),
-        #           _class="tar",
-        #           _colspan=colspan + 5,
-        #           ))
+            #iappend(TR(SPAN(DIV(_title = T("Export as XLS"),
+            #                    _class = "custom-export export_xls",
+            #                    data = {"url": r.url(method = "indicator_summary_report",
+            #                                         representation = "xls",
+            #                                         #vars = r.get_vars,
+            #                                         ),
+            #                            },
+            #                    ),
+            #                _class="list_formats",
+            #                ),
+            #           _class="tar",
+            #           _colspan=colspan + 5,
+            #           ))
 
         output = dict(item=item)
         output["title"] = T("Summary of Progress Indicators for Outcomes and Indicators")
@@ -6180,7 +6192,6 @@ class project_IndicatorSummaryReport(S3Method):
             if rheader:
                 output["rheader"] = rheader
 
-        response = current.response
         response.view = "simple.html"
         # Click handler for Custom export buttons
         response.s3.jquery_ready.append(
