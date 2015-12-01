@@ -1451,7 +1451,7 @@ class S3OrganisationCapacityModel(S3Model):
         #
         tablename = "org_capacity_assessment"
         define_table(tablename,
-                     self.org_organisation_id(empty=False),
+                     self.org_organisation_id( empty = False),
                      s3_date(future=0),
                      self.pr_person_id(label = T("Lead Facilitator")),
                      s3_comments(),
@@ -5131,6 +5131,8 @@ def org_organisation_requires(required = False,
                        belonging to a list of realm entities
         @param updateable: Whether the list should be filtered to just those
                            which the user has Write access to
+        @ToDo: Option to remove Branches
+        @ToDo: Option to only include Branches
     """
 
     requires = IS_ONE_OF(current.db, "org_organisation.id",
