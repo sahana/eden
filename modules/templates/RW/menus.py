@@ -31,12 +31,9 @@ class S3MainMenu(default.S3MainMenu):
             MM("News", c="cms", f="newsfeed", args="datalist",
                icon="icon-news",
                ),
-            MM("Current Needs", link=False)(
-                MM("Facility Needs", c="req", f="site_needs", m="summary"),
-                MM("Organization Needs", c="req", f="organisation_needs"),
-            ),
-            MM("Facilities", c="org", f="facility", m="summary"),
+            MM("Current Needs", c="req", f="organisation_needs"),
             MM("Organizations", c="org", f="organisation"),
+            MM("Facilities", c="org", f="facility", m="summary"),
             homepage("gis"),
             MM("More", link=False)(
                 MM("Requests", c="req", f="req", vars = {"type": "1"}),
@@ -178,7 +175,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         req_skills = lambda i: "People" in types
 
         return M(c="req")(
-                    M("Current Needs", f="site_needs", m="summary")(
+                    M("Needs at Facilities", f="site_needs", m="summary")(
                         M("Create", m="create"),
                     ),
                     M("Requests", f="req", vars=get_vars)(
