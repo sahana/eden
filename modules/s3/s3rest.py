@@ -1900,6 +1900,7 @@ class S3Method(object):
                     if link and master_id:
                         r.link_id = link.link_id(master_id, component_id)
                     r.component_id = component_id
+                    component.add_filter(table._id == component_id)
 
             if not link or r.actuate_link():
                 return component_id
