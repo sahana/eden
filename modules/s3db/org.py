@@ -677,7 +677,15 @@ class S3OrganisationModel(S3Model):
                                       "actuate": "hide",
                                       },
                        # Service Locations
-                       org_service_location = "organisation_id",
+                       org_service_location = ({"name": "service_location",
+                                                "joinby": "organisation_id",
+                                                },
+                                               {"name": "active_service_location",
+                                                "joinby": "organisation_id",
+                                                "filterby": "status",
+                                                "filterfor": "ACTIVE",
+                                                },
+                                               ),
                        # Format for filter_widget
                        org_service_organisation = "organisation_id",
                        # Assets
@@ -5656,7 +5664,7 @@ class org_SiteCheckInMethod(S3Method):
             form_rows.append(row)
 
         # @ToDo: Hide these buttons until scanned (or entered manually)
-        # @ToDo: Only show relevant button (see whether we are already checked-in via AJAX call) 
+        # @ToDo: Only show relevant button (see whether we are already checked-in via AJAX call)
         _id = "check-in"
         label = ""
         widget = INPUT(_type="submit",

@@ -505,8 +505,9 @@ def config(settings):
             needs_skills = (T("Volunteers needed"), "needs_skills")
             needs_items = (T("Supplies needed"), "needs_items")
 
+
             # Filter widgets
-            from s3 import S3TextFilter, S3OptionsFilter
+            from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
             filter_widgets = [#S3TextFilter(["organisation_id$name",
                               #              ],
                               #              label = T("Search"),
@@ -518,6 +519,8 @@ def config(settings):
                               S3OptionsFilter("organisation_needs_item.item_id",
                                               label = T("Supplies sought"),
                                               ),
+                              S3LocationFilter("organisation_id$active_service_location.site_id$location_id",
+                                               ),
                               ]
 
             # CRUD form
