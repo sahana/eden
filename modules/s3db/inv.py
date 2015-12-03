@@ -507,7 +507,7 @@ class S3InventoryModel(S3Model):
                                   ),
                           s3_date("expiry_date",
                                   label = T("Expiry Date"),
-                                  represent = self.inv_expiry_date_represent,
+                                  represent = inv_expiry_date_represent,
                                   ),
                           Field("pack_value", "double",
                                 label = T("Value per Pack"),
@@ -750,20 +750,6 @@ $.filterOptionsS3({
                     inv_remove = self.inv_remove,
                     inv_prep = self.inv_prep,
                     )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def inv_expiry_date_represent(date):
-        """
-            Show Expired Dates in Red
-        """
-
-        dtstr = S3DateTime.date_represent(date, utc=True)
-
-        if date and datetime.datetime(date.year, date.month, date.day) < current.request.now:
-            return SPAN(dtstr, _class="expired")
-        else:
-            return dtstr
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1800,6 +1786,7 @@ $.filterOptionsS3({
                      s3_currency(),
                      s3_date("expiry_date",
                              label = T("Expiry Date"),
+                             represent = inv_expiry_date_represent,
                              ),
                      # The bin at origin
                      Field("bin", length=16,
@@ -5029,6 +5016,19 @@ def inv_adj_rheader(r):
 
             return rheader
     return None
+
+# =============================================================================
+def inv_expiry_date_represent(date):
+    """
+        Show Expired Dates in Red
+    """
+
+    dtstr = S3DateTime.date_represent(date, utc=True)
+
+    if date and datetime.datetime(date.year, date.month, date.day) < current.request.now:
+        return SPAN(dtstr, _class="expired")
+    else:
+        return dtstr
 
 # =============================================================================
 class inv_InvItemRepresent(S3Represent):

@@ -946,34 +946,24 @@ def config(settings):
     settings.customise_auth_user_controller = customise_auth_user_controller
 
     # -------------------------------------------------------------------------
-    def customise_hrm_course_controller(**attr):
+    def customise_hrm_course_resource(r, tablename):
 
-        tablename = "hrm_course"
-
-        # Organisation needs to be an NS/Branch
-        ns_only(tablename,
-                required = False,
-                branches = False,
-                )
-
-        # Load standard model
-        s3db = current.s3db
-        table = s3db.hrm_course
-
-        list_fields = ["code",
+        list_fields = ["site_id",
+                       "code",
                        "name",
-                       "organisation_id",
-                       (T("Sectors"), "course_sector.sector_id"),
+                       #"organisation_id",
+                       #(T("Sectors"), "course_sector.sector_id"),
                        ]
 
         from s3 import S3SQLCustomForm, S3SQLInlineLink
-        crud_form = S3SQLCustomForm("code",
+        crud_form = S3SQLCustomForm("site_id",
+                                    "code",
                                     "name",
-                                    "organisation_id",
-                                    S3SQLInlineLink("sector",
-                                                    field = "sector_id",
-                                                    label = T("Sectors"),
-                                                    ),
+                                    #"organisation_id",
+                                    #S3SQLInlineLink("sector",
+                                    #                field = "sector_id",
+                                    #                label = T("Sectors"),
+                                    #                ),
                                     )
 
         s3db.configure(tablename,
@@ -981,9 +971,7 @@ def config(settings):
                        list_fields = list_fields,
                        )
 
-        return attr
-
-    settings.customise_hrm_course_controller = customise_hrm_course_controller
+    settings.customise_hrm_course_resource = customise_hrm_course_resource
 
     # -------------------------------------------------------------------------
     #def customise_hrm_department_controller(**attr):
@@ -1920,6 +1908,8 @@ def config(settings):
             return True
         s3.prep = custom_prep
 
+        # Common rheader for all views
+        attr["rheader"] = s3db.hrm_rheader
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller

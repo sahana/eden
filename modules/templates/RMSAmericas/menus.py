@@ -41,9 +41,15 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        T = current.T
         auth = current.auth
 
+        if len(current.session.s3.roles) <= 2:
+            # No specific Roles
+            # Just show Profile on main menu
+            return [MM("Profile", c="hrm", f="person", args=[str(auth.s3_logged_in_person())]),
+                    ]
+
+        T = current.T
         has_role = auth.s3_has_role
         root_org = auth.root_org_name()
         system_roles = current.session.s3.system_roles
@@ -79,51 +85,56 @@ class S3MainMenu(default.S3MainMenu):
             else:
                 return True
 
-        return [
-            homepage("gis")(
-            ),
-            homepage("hrm", "org", name=T("Human Talent"), check=hrm)(
-                MM("Human Talent", c="hrm", f="human_resource", m="summary"),
-                #MM("Teams", c="hrm", f="group"),
-                MM("National Societies", c="org", f="organisation",
-                   vars = red_cross_filter),
-                #MM("Offices", c="org", f="office"),
-                MM("Positions", c="hrm", f="job_title"),
-                #MM("Training Events", c="hrm", f="training_event"),
-                #MM("Training Courses", c="hrm", f="course"),
-            ),
-            homepage("hrm", name=T("Training"), check=hrm)(
-                MM("Training Centers", c="org", f="facility"),
-                MM("Training Course Catalog", c="hrm", f="course"),
-                MM("Training Events", c="hrm", f="training_event"),
-            ),
-            homepage("inv", "supply", "req", check=inv)(
-                MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
-                MM(inv_recv_list, c="inv", f="recv", check=multi_warehouse),
-                MM("Sent Shipments", c="inv", f="send", check=multi_warehouse),
-                MM("Items", c="supply", f="item", check=basic_warehouse),
-                MM("Catalogs", c="supply", f="catalog", check=basic_warehouse),
-                #MM("Item Categories", c="supply", f="item_category"),
-                M("Suppliers", c="inv", f="supplier", check=basic_warehouse)(),
-                M("Facilities", c="inv", f="facility", check=basic_warehouse)(),
-                M("Requests", c="req", f="req")(),
-                #M("Commitments", f="commit")(),
-            ),
-            #homepage("asset")(
-            #    MM("Assets", c="asset", f="asset", m="summary"),
-            #    MM("Items", c="asset", f="item", m="summary"),
-            #),
-            homepage("project", f="project", m="summary")(
-                MM("Projects", c="project", f="project", m="summary"),
-                #MM("Locations", c="project", f="location"),
-                #MM("Outreach", c="po", f="index", check=outreach),
-            ),
-            homepage("deploy", name="RIT", f="mission", m="summary",
-                     vars={"~.status__belongs": "2"})(
-                MM("Missions", c="deploy", f="mission", m="summary"),
-                MM("Members", c="deploy", f="human_resource", m="summary"),
-            ),
-        ]
+        menu= [#homepage("gis")(
+               #),
+               homepage("hrm", "org", name=T("Human Talent"), check=hrm)(
+                   MM("Human Talent", c="hrm", f="human_resource", m="summary"),
+                   #MM("Teams", c="hrm", f="group"),
+                   MM("National Societies", c="org", f="organisation",
+                      vars = red_cross_filter),
+                   #MM("Offices", c="org", f="office"),
+                   MM("Positions", c="hrm", f="job_title"),
+                   #MM("Training Events", c="hrm", f="training_event"),
+                   #MM("Training Courses", c="hrm", f="course"),
+               ),
+               homepage("hrm", name=T("Training"), check=hrm)(
+                   MM("Training Centers", c="org", f="facility"),
+                   MM("Training Course Catalog", c="hrm", f="course"),
+                   MM("Training Events", c="hrm", f="training_event"),
+               ),
+               homepage("inv", "supply", "req", check=inv)(
+                   MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
+                   MM(inv_recv_list, c="inv", f="recv", check=multi_warehouse),
+                   MM("Sent Shipments", c="inv", f="send", check=multi_warehouse),
+                   MM("Items", c="supply", f="item", check=basic_warehouse),
+                   MM("Catalogs", c="supply", f="catalog", check=basic_warehouse),
+                   #MM("Item Categories", c="supply", f="item_category"),
+                   M("Suppliers", c="inv", f="supplier", check=basic_warehouse)(),
+                   M("Facilities", c="inv", f="facility", check=basic_warehouse)(),
+                   M("Requests", c="req", f="req")(),
+                   #M("Commitments", f="commit")(),
+               ),
+               #homepage("asset")(
+               #    MM("Assets", c="asset", f="asset", m="summary"),
+               #    MM("Items", c="asset", f="item", m="summary"),
+               #),
+               homepage("project", f="project", m="summary")(
+                   MM("Projects", c="project", f="project", m="summary"),
+                   #MM("Locations", c="project", f="location"),
+                   #MM("Outreach", c="po", f="index", check=outreach),
+               ),
+               ]
+
+        # For some reason the deploy menu is displaying even if users have NONE access to deploy!
+        if has_role("surge_manager") or has_role("disaster_manager"):
+            menu.append(
+                homepage("deploy", name="RIT", f="mission", m="summary",
+                         vars={"~.status__belongs": "2"})(
+                    MM("Missions", c="deploy", f="mission", m="summary"),
+                    MM("Members", c="deploy", f="human_resource", m="summary"),
+                ))
+
+        return menu
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -183,7 +194,7 @@ class S3MainMenu(default.S3MainMenu):
                            check=s3_has_role("ADMIN")),
                         MP("Administration", c="admin", f="user",
                            check=is_org_admin),
-                        MP("Profile", c="default", f="person"),
+                        MP("Profile", c="hrm", f="person", args=[str(auth.s3_logged_in_person())]),
                         MP("Change Password", c="default", f="user",
                            m="change_password"),
                         MP("Logout", c="default", f="user",
@@ -299,7 +310,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Human Talent", c="hrm", f="human_resource", m="summary",
                           check=manager_mode)(
                             M("Create", m="create"),
-                            M("Import", f="person", m="import", p="create"),
+                            M("Import", f="person", m="import", check=[manager_mode, is_org_admin]),
                         ),
                         M("Report", c="hrm", f="human_resource", m="report",
                           check=manager_mode)(

@@ -2567,6 +2567,8 @@ class S3HRSkillModel(S3Model):
                                      readable = is_admin,
                                      writable = is_admin,
                                      ),
+                     # Not normally used: enable in template as-required
+                     self.org_site_id,
                      Field("external", "boolean",
                            default = False,
                            label = T("External"),
@@ -7234,9 +7236,10 @@ def hrm_person_controller(**attr):
     """
 
     T = current.T
-    auth = current.auth
     db = current.db
     s3db = current.s3db
+    auth = current.auth
+    request = current.request
     response = current.response
     session = current.session
     settings = current.deployment_settings
