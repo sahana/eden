@@ -2734,6 +2734,12 @@ class S3Config(Storage):
         """
         return self.hrm.get("skill_types", False)
 
+    def get_hrm_staff_departments(self):
+        """
+            Whether Staff should use Departments
+        """
+        return self.__lazy("hrm", "staff_departments", default=True)
+
     def get_hrm_staff_experience(self):
         """
             Whether to use Experience for Staff &, if so, which table to use
@@ -3427,6 +3433,10 @@ class S3Config(Storage):
     def get_pr_request_dob(self):
         """ Include Date of Birth in the AddPersonWidget[2] """
         return self.__lazy("pr", "request_dob", default=True)
+
+    def get_pr_dob_required(self):
+        """ Whether Date of Birth is Mandatory, including in the AddPersonWidget2 """
+        return self.__lazy("pr", "dob_required", default=False)
 
     def get_pr_request_email(self):
         """ Include Email in the AddPersonWidget2 """

@@ -849,6 +849,7 @@ class S3PersonModel(S3Model):
                      pr_gender(),
                      s3_date("date_of_birth",
                              label = T("Date of Birth"),
+                             empty = not settings.get_pr_dob_required(),
                              future = 0,
                              past = 1320,  # Months, so 110 years
                              ),

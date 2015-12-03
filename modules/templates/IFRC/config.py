@@ -1099,7 +1099,7 @@ def config(settings):
             return True
         return False
 
-    settings.hrm.use_certificates = hrm_use_certificates
+    settings.hrm.use_skills = hrm_use_skills
 
     def hrm_teams(default):
         """ Whether to use Teams """
@@ -4343,19 +4343,35 @@ def config(settings):
             else:
                 result = True
 
-            # Lead Organisation needs to be an NS (not a branch)
-            ns_only(tablename,
-                    required = True,
-                    branches = False,
-                    limit_filter_opts = True,
-                    )
+            if r.component:
+                if r.component_name == "organisation":
+                    component_id = r.component_id
+                    if component_id:
+                        # No r.component.record :/
+                        ctable = s3db.project_organisation
+                        crecord = current.db(ctable.id == component_id).select(ctable.role,
+                                                                               limitby=(0, 1)
+                                                                               ).first()
+                        if crecord.role == settings.get_project_organisation_lead_role():
+                            ns_only("project_organisation",
+                                    required = True,
+                                    branches = False,
+                                    updateable = True,
+                                    )
+            else:
+                # Lead Organisation needs to be an NS (not a branch)
+                ns_only(tablename,
+                        required = True,
+                        branches = False,
+                        limit_filter_opts = True,
+                        )
 
-            # Set the Host NS filter as Visible so that the default filter works
-            filter_widgets = s3db.get_config(tablename, "filter_widgets")
-            for widget in filter_widgets:
-                if widget.field == "organisation_id":
-                    widget.opts.hidden = False
-                    break
+                # Set the Host NS filter as Visible so that the default filter works
+                filter_widgets = s3db.get_config(tablename, "filter_widgets")
+                for widget in filter_widgets:
+                    if widget.field == "organisation_id":
+                        widget.opts.hidden = False
+                        break
 
             return result
         s3.prep = custom_prep

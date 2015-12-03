@@ -22,18 +22,18 @@ def config(settings):
 
     T = current.T
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # System Name
     #
     settings.base.system_name = T("Resource Management System")
     settings.base.system_name_short = T("RMS")
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Pre-Populate
     #
     settings.base.prepopulate += ("RMSAmericas", "RMSAmericas/Demo")
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)
     #
     settings.base.theme = "RMSAmericas"
@@ -51,9 +51,9 @@ def config(settings):
     #    "medical": "icon-plus-sign-alt",
     #}
 
-    # =============================================================================
+    # =========================================================================
     # System Settings
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Security Policy
     settings.security.policy = 8 # Delegations
     settings.security.map = True
@@ -255,7 +255,7 @@ def config(settings):
 
     settings.auth.realm_entity = ifrc_realm_entity
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # L10n (Localization) settings
     #
     settings.L10n.languages = OrderedDict([
@@ -287,7 +287,7 @@ def config(settings):
     # Names of Orgs with specific settings
     HNRC = "Honduran Red Cross"
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Finance settings
     #
     def currencies(default):
@@ -319,7 +319,7 @@ def config(settings):
 
     settings.fin.currency_default = currency_default
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Map Settings
 
     # Display Resources recorded to Admin-Level Locations on the map
@@ -332,17 +332,17 @@ def config(settings):
     # GeoNames username
     settings.gis.geonames_username = "rms_dev"
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Use the label 'Camp' instead of 'Shelter'
     #
     settings.ui.camp = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Filter Manager
     #
     #settings.search.filter_manager = False
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Default Summary
     #
     settings.ui.summary = ({"common": True,
@@ -363,21 +363,21 @@ def config(settings):
                             },
                            )
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Content Management
     #
     #settings.cms.hide_index = True
     settings.cms.richtext = True
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Messaging
     # Parser
     #settings.msg.parser = "IFRC"
 
-    # =============================================================================
+    # =========================================================================
     # Module Settings
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Organisation Management
     #
     # Enable the use of Organisation Branches
@@ -402,36 +402,56 @@ def config(settings):
     #     "vol_volunteer_cluster.vol_cluster_position_id" : (PRC, ),
     #     }
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Human Resource Management
     #
     # Uncomment to allow Staff & Volunteers to be registered without an email address
-    settings.hrm.email_required = False
+    settings.hrm.email_required = True
     # Uncomment to filter certificates by (root) Organisation & hence not allow Certificates from other orgs to be added to a profile (except by Admin)
     settings.hrm.filter_certificates = True
     # Uncomment to show the Organisation name in HR represents
     settings.hrm.show_organisation = True
     # Uncomment to allow HRs to have multiple Job Titles
-    settings.hrm.multiple_job_titles = True
+    #settings.hrm.multiple_job_titles = True
     # Uncomment to have each root Org use a different Job Title Catalog
-    settings.hrm.org_dependent_job_titles = True
+    #settings.hrm.org_dependent_job_titles = True
+    settings.hrm.staff_departments = False
     # Uncomment to disable the use of HR Credentials
     settings.hrm.use_credentials = False
     # Uncomment to disable the use of HR Certificates
-    settings.hrm.use_certificates = False
+    settings.hrm.use_certificates = True
     # Uncomment to enable the use of HR Education
-    #settings.hrm.use_education = True
+    settings.hrm.use_education = True
+    settings.hrm.use_skills = True
     # Custom label for Organisations in HR module
     settings.hrm.organisation_label = "National Society / Branch"
     # Uncomment to consolidate tabs into a single CV
     settings.hrm.cv_tab = True
     # Uncomment to consolidate tabs into Staff Record (set to False to hide the tab)
     settings.hrm.record_tab = "record"
+    # Training Instructors are person_ids
+    settings.hrm.training_instructors = "internal"
 
     # Uncomment to do a search for duplicates in the new AddPersonWidget2
     settings.pr.lookup_duplicates = True
+    settings.pr.separate_name_fields = 3
+    #settings.pr.name_format= "%(first_name)s %(last_name)s %(middle_name)s"
+    settings.pr.name_format= "%(first_name)s %(middle_name)s %(last_name)s"
 
-    # -----------------------------------------------------------------------------
+    def dob_required(default):
+        """ NS-specific dob_required (lazy setting) """
+
+        root_org = current.auth.root_org_name()
+        if root_org == HNRC:
+            default = False
+        else:
+            # Human Talent module
+            default = True
+        return default
+
+    settings.pr.dob_required = dob_required
+
+    # -------------------------------------------------------------------------
     # Projects
     settings.project.assign_staff_tab = False
     # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
@@ -472,7 +492,7 @@ def config(settings):
         9: T("Partner National Society"),
     }
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Inventory Management
 
     # Hide Staff Management Tabs for Facilities in Inventory Module
@@ -503,7 +523,7 @@ def config(settings):
                                }
 
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Request Management
     # Uncomment to disable Inline Forms in Requests module
     settings.req.inline_forms = False
@@ -517,7 +537,7 @@ def config(settings):
     # Uncomment to disable Recurring Request
     settings.req.recurring = False # HNRC
 
-    # =============================================================================
+    # =========================================================================
     # Template Modules
     #
     settings.modules = OrderedDict([
@@ -671,12 +691,12 @@ def config(settings):
         #       restricted = True,
         #       #module_type = 10,
         #   )),
-        #("deploy", Storage(
-        #       name_nice = T("Regional Disaster Response Teams"),
-        #       #description = "Alerting and Deployment of Disaster Response Teams",
-        #       restricted = True,
-        #       #module_type = 10,
-        #   )),
+        ("deploy", Storage(
+               name_nice = T("Regional Intervention Teams"),
+               #description = "Alerting and Deployment of Disaster Response Teams",
+               restricted = True,
+               #module_type = 10,
+           )),
         #("po", Storage(
         #       name_nice = T("Recovery Outreach"),
         #       #description = "Population Outreach",
@@ -850,7 +870,7 @@ def config(settings):
             # Not allowed to add NS/Branch
             f.comment = ""
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def user_org_default_filter(selector, tablename=None):
         """
             Default filter for organisation_id:
@@ -866,7 +886,7 @@ def config(settings):
             # no default
             return {}
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def user_org_and_children_default_filter(selector, tablename=None):
         """
             Default filter for organisation_id:
@@ -897,7 +917,7 @@ def config(settings):
             # no default
             return {}
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_auth_user_controller(**attr):
         """
             Customise admin/user() and default/user() controllers
@@ -915,7 +935,7 @@ def config(settings):
 
     settings.customise_auth_user_controller = customise_auth_user_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_hrm_course_controller(**attr):
 
         tablename = "hrm_course"
@@ -955,20 +975,20 @@ def config(settings):
 
     settings.customise_hrm_course_controller = customise_hrm_course_controller
 
-    # -----------------------------------------------------------------------------
-    def customise_hrm_department_controller(**attr):
+    # -------------------------------------------------------------------------
+    #def customise_hrm_department_controller(**attr):
 
-        # Organisation needs to be an NS/Branch
-        ns_only("hrm_department",
-                required = False,
-                branches = False,
-                )
+    #    # Organisation needs to be an NS/Branch
+    #    ns_only("hrm_department",
+    #            required = False,
+    #            branches = False,
+    #            )
 
-        return attr
+    #    return attr
 
-    settings.customise_hrm_department_controller = customise_hrm_department_controller
+    #settings.customise_hrm_department_controller = customise_hrm_department_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def emergency_contact_represent(row):
         """
             Representation of Emergency Contacts (S3Represent label renderer)
@@ -985,16 +1005,32 @@ def config(settings):
             items.append(": %s" % phone_number)
         return "".join(items)
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    def customise_hrm_home():
+
+        from gluon import URL
+        from s3 import s3_redirect_default
+
+        mode = current.session.s3.hrm.mode
+        if mode is not None:
+            # Go to Personal Profile
+            s3_redirect_default(URL(f="person"))
+        else:
+            # Bypass home page & go direct to searchable list of Staff
+            s3_redirect_default(URL(f="human_resource", args="summary"))
+
+    settings.customise_hrm_home = customise_hrm_home
+
+    # -------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
-        controller = current.request.controller
-        if controller != "deploy":
-            # Default Filter
-            from s3 import s3_set_default_filter
-            s3_set_default_filter("~.organisation_id",
-                                  user_org_and_children_default_filter,
-                                  tablename = "hrm_human_resource")
+        #controller = current.request.controller
+        #if controller != "deploy":
+        #    # Default Filter
+        #    from s3 import s3_set_default_filter
+        #    s3_set_default_filter("~.organisation_id",
+        #                          user_org_and_children_default_filter,
+        #                          tablename = "hrm_human_resource")
 
         s3db = current.s3db
         s3db.org_organisation.root_organisation.label = T("National Society")
@@ -1025,7 +1061,41 @@ def config(settings):
 
     settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    def customise_hrm_job_title_resource(r, tablename):
+
+        s3db = current.s3db
+
+        f = s3db.hrm_job_title.type
+        f.default = 3 # Both
+        f.readable  = f.writable = False
+
+        label = T("Position")
+        label_create = T("Create Position")
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = label_create,
+            title_display = T("Position Details"),
+            title_list = T("Position Catalog"),
+            title_update = T("Edit Position"),
+            label_list_button = T("List Positions"),
+            label_delete_button = T("Delete Position"),
+            msg_record_created = T("Position added"),
+            msg_record_modified = T("Position updated"),
+            msg_record_deleted = T("Position deleted"),
+            msg_list_empty = T("Currently no entries in the catalog"))
+
+        from s3layouts import S3PopupLink
+        f = s3db.hrm_job_title_id.attr
+        f.label = label
+        f.comment = S3PopupLink(c = "hrm",
+                                f = "job_title",
+                                label = label_create,
+                                title = label,
+                                )
+
+    settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
+
+    # -------------------------------------------------------------------------
     def customise_hrm_job_title_controller(**attr):
 
         # Organisation needs to be an NS/Branch
@@ -1035,17 +1105,17 @@ def config(settings):
                 )
 
         # Don't show RDRT in the list
-        from gluon import IS_IN_SET
-        current.s3db.hrm_job_title.type.requires = IS_IN_SET({1: T("Staff"),
-                                                              2: T("Volunteer"),
-                                                              3: T("Both")
-                                                              })
+        #from gluon import IS_IN_SET
+        #current.s3db.hrm_job_title.type.requires = IS_IN_SET({1: T("Staff"),
+        #                                                      2: T("Volunteer"),
+        #                                                      3: T("Both")
+        #                                                      })
 
         return attr
 
     settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_hrm_programme_controller(**attr):
 
         # Organisation needs to be an NS/Branch
@@ -1058,7 +1128,7 @@ def config(settings):
 
     settings.customise_hrm_programme_controller = customise_hrm_programme_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_hrm_programme_hours_controller(**attr):
 
         # Default Filter
@@ -1071,7 +1141,7 @@ def config(settings):
 
     settings.customise_hrm_programme_hours_controller = customise_hrm_programme_hours_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_hrm_training_controller(**attr):
 
         # Default Filter
@@ -1084,7 +1154,7 @@ def config(settings):
 
     settings.customise_hrm_training_controller = customise_hrm_training_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_inv_home():
         """
             Homepage for the Inventory module
@@ -1110,7 +1180,7 @@ def config(settings):
 
     settings.customise_inv_home = customise_inv_home
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def inv_pdf_header(r, title=None):
         """
             PDF header for Stock Reports
@@ -1156,7 +1226,7 @@ def config(settings):
 
         return output
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_inv_inv_item_resource(r, tablename):
 
         s3db = current.s3db
@@ -1272,7 +1342,7 @@ def config(settings):
 
     settings.customise_inv_inv_item_resource = customise_inv_inv_item_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_inv_send_resource(r, tablename):
 
         s3db = current.s3db
@@ -1304,7 +1374,7 @@ def config(settings):
 
     settings.customise_inv_send_resource = customise_inv_send_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_inv_recv_resource(r, tablename):
 
         s3db = current.s3db
@@ -1317,7 +1387,7 @@ def config(settings):
 
     settings.customise_inv_recv_resource = customise_inv_recv_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_inv_warehouse_resource(r, tablename):
 
         settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
@@ -1336,7 +1406,7 @@ def config(settings):
 
     settings.customise_inv_warehouse_resource = customise_inv_warehouse_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
 
         #root_org = current.auth.root_org_name()
@@ -1380,7 +1450,7 @@ def config(settings):
 
     settings.customise_org_facility_resource = customise_org_facility_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_org_office_controller(**attr):
 
         s3 = current.response.s3
@@ -1409,7 +1479,7 @@ def config(settings):
 
     settings.customise_org_office_controller = customise_org_office_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_org_organisation_controller(**attr):
 
         s3 = current.response.s3
@@ -1596,7 +1666,7 @@ def config(settings):
 
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_pr_group_controller(**attr):
 
         # Organisation needs to be an NS/Branch
@@ -1609,7 +1679,7 @@ def config(settings):
 
     settings.customise_pr_group_controller = customise_pr_group_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         s3db = current.s3db
@@ -1675,7 +1745,7 @@ def config(settings):
 
     settings.customise_pr_person_controller = customise_pr_person_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_supply_item_category_resource(r, tablename):
 
         #root_org = current.auth.root_org_name()
@@ -1756,7 +1826,7 @@ def config(settings):
                 # Start date relates to previous entry
                 start_date = d
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_project_programme_controller(**attr):
 
         # Organisation needs to be an NS/Branch
@@ -1770,7 +1840,7 @@ def config(settings):
 
     settings.customise_project_programme_controller = customise_project_programme_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_project_project_controller(**attr):
 
         tablename = "project_project"
@@ -2070,7 +2140,7 @@ def config(settings):
 
     settings.customise_project_project_controller = customise_project_project_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_project_beneficiary_resource(r, tablename):
         """
             Link Project Beneficiaries to Activity Type
@@ -2172,7 +2242,7 @@ def config(settings):
     # Only used for activity_types which aren't used by HNRC
     #settings.customise_project_beneficiary_resource = customise_project_beneficiary_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_project_indicator_resource(r, tablename):
 
         table = current.s3db.project_indicator
@@ -2181,7 +2251,7 @@ def config(settings):
 
     settings.customise_project_indicator_resource = customise_project_indicator_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_project_indicator_data_resource(r, tablename):
 
         if r.method == "update":
@@ -2214,7 +2284,7 @@ def config(settings):
 
     settings.customise_project_indicator_data_resource = customise_project_indicator_data_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_project_location_resource(r, tablename):
 
         s3db = current.s3db
@@ -2230,7 +2300,7 @@ def config(settings):
 
     settings.customise_project_location_resource = customise_project_location_resource
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_project_location_controller(**attr):
 
         s3 = current.response.s3
@@ -2316,7 +2386,7 @@ def config(settings):
 
     settings.customise_project_location_controller = customise_project_location_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_req_commit_controller(**attr):
 
         # Request is mandatory
@@ -2327,7 +2397,7 @@ def config(settings):
 
     settings.customise_req_commit_controller = customise_req_commit_controller
 
-    # -----------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     def customise_req_req_resource(r, tablename):
 
         s3db = current.s3db

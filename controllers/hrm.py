@@ -14,7 +14,17 @@ s3db.hrm_vars()
 
 # =============================================================================
 def index():
-    """ Module Home Page """
+    """ Customisable module homepage """
+
+    return settings.customise_home(module, alt_function="index_alt")
+
+# -----------------------------------------------------------------------------
+def index_alt():
+    """
+        Fallback for module homepage when not customised and
+        no CMS content found (ADMINs will see CMS edit unless
+        disabled globally via settings.cms.hide_index)
+    """
 
     mode = session.s3.hrm.mode
     if mode is not None:

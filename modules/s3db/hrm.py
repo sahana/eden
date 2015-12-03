@@ -235,7 +235,7 @@ class S3HRModel(S3Model):
             # Staff
             not_filter_opts = (2, 4)
             code_label = T("Staff ID")
-            departments = True
+            departments = settings.get_hrm_staff_departments()
             job_titles = True
 
         org_dependent_job_titles = settings.get_hrm_org_dependent_job_titles()
@@ -2576,6 +2576,9 @@ class S3HRSkillModel(S3Model):
                            readable = external_courses,
                            writable = external_courses,
                            ),
+                     s3_comments(label = T("Description"),
+                                 comment = None,
+                                 ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(

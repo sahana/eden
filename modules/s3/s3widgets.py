@@ -728,6 +728,7 @@ class S3AddPersonWidget2(FormWidget):
 
         if settings.get_pr_request_dob():
             date_of_birth = ptable.date_of_birth
+            dob_required = settings.get_pr_dob_required()
 
         if settings.get_pr_request_gender():
             gender = ptable.gender
@@ -978,7 +979,7 @@ class S3AddPersonWidget2(FormWidget):
             fappend(("date_of_birth", date_of_birth.label,
                      date_of_birth.widget(date_of_birth, values.get("date_of_birth", None),
                                           _id = "%s_date_of_birth" % fieldname),
-                     False))
+                     dob_required))
         if gender:
             fappend(("gender", gender.label,
                      OptionsWidget.widget(gender, values.get("gender", None),

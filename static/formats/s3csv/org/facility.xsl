@@ -126,6 +126,7 @@
     <xsl:template match="row">
 
         <!-- Create the variables -->
+        <!-- Facility Name field is max length 64 -->
         <xsl:variable name="FacilityName" select="substring(col[@field='Name']/text(),1,64)"/>
         <xsl:variable name="OrgName">
             <xsl:call-template name="GetColumnValue">
@@ -576,7 +577,8 @@
         <!-- Facility Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$FacilityName"/>
+                <!-- Match the name length limit in the main record --> 
+                <xsl:value-of select="substring($FacilityName,1,64)"/>
             </xsl:attribute>
             <xsl:choose>
                 <xsl:when test="$l4!=''">

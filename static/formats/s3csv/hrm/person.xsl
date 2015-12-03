@@ -613,7 +613,8 @@
                     </xsl:call-template>
                 </xsl:attribute>
 
-                <data field="name"><xsl:value-of select="$OfficeName"/></data>
+                <!-- Name field is limited to 64 chars -->
+                <data field="name"><xsl:value-of select="substring($OfficeName,1,64)"/></data>
 
                 <!-- Link to Organisation -->
                 <reference field="organisation_id" resource="org_organisation">
@@ -1092,6 +1093,7 @@
                 <data field="start_date"><xsl:value-of select="col[@field='Start Date']"/></data>
             </xsl:if>
             <xsl:if test="$type!=0 or $type!=''">
+                <!-- Will default to Staff if not defined -->
                 <data field="type"><xsl:value-of select="$type"/></data>
             </xsl:if>
             <xsl:choose>
@@ -1137,7 +1139,7 @@
                     <xsl:otherwise>org_office</xsl:otherwise>
                 </xsl:choose>
             </xsl:variable>
-            <xsl:if test="$type=1">
+            <xsl:if test="$type=1 or $type=''">
                 <reference field="site_id">
                     <xsl:attribute name="resource">
                         <xsl:value-of select="$resourcename"/>

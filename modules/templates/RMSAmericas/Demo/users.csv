@@ -1,4 +1,9 @@
 First Name,Last Name,Email,Password,Role,Organisation,Facility Type,Office,Language
+RIT,Admin,ritadmin@example.com,eden,surge_capacity_manager/0,International Federation of Red Cross and Red Crescent Societies,,,es
+Disaster,Manager,dm@example.com,eden,disaster_manager/0,International Federation of Red Cross and Red Crescent Societies,,,es
+Reference Center,Coordinator,rc@example.com,eden,training_coordinator/org_facility.code=CREEC,International Federation of Red Cross and Red Crescent Societies,Facility,Centro de Referencia para la Resiliencia Comunitaria,es
+Reference Center,Assistant,rca@example.com,eden,surge_capacity_manager/org_facility.code=CREEC,International Federation of Red Cross and Red Crescent Societies,Facility,Centro de Referencia para la Resiliencia Comunitaria,es
+End,User,volunteer@example.com,eden,,Cuban Red Cross,,,es
 Honduras,Org Admin,hn_orgadmin@example.com,eden,"ORG_ADMIN,hn_user",Honduran Red Cross,,,es
 Honduras,"M&E",hn_me@example.com,eden,"monitoring_evaluation,hn_user",Honduran Red Cross,,,es
 Honduras,Project Manager,hn_project_manager@example.com,eden,"project_manager,hn_user",Honduran Red Cross,,,es

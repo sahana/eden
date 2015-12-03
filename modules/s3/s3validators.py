@@ -2231,6 +2231,10 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                 if error:
                     return (person_id, error)
 
+            dob = post_vars["date_of_birth"]
+            if not dob and settings.get_pr_dob_required():
+                return (person_id, T("Date of Birth is Required"))
+
             #if person_id:
             #    # Filter out location_id (location selector form values
             #    # being processed only after this widget has been validated)
