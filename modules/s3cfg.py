@@ -2726,6 +2726,12 @@ class S3Config(Storage):
         """
         return self.hrm.get("show_staff", True)
 
+    def get_hrm_mix_staff(self):
+        """
+            If set to True then Staff and Volunteers are shown together
+        """
+        return self.hrm.get("mix_staff", False)
+
     def get_hrm_site_contact_unique(self):
         """
             Whether there can be multiple site contacts per site
@@ -2751,7 +2757,7 @@ class S3Config(Storage):
     def get_hrm_staff_experience(self):
         """
             Whether to use Experience for Staff &, if so, which table to use
-            - options are: False, "experience"
+            - options are: False, "experience", "missions", "both"
         """
         return self.hrm.get("staff_experience", "experience")
 
@@ -2814,6 +2820,20 @@ class S3Config(Storage):
                 False = do not show the tab (e.g. when HR record is inline)
         """
         return self.hrm.get("record_tab", True)
+
+    def get_hrm_record_label(self):
+        """
+            Label to use for the HR record tab
+        """
+        label = self.__lazy("hrm", "record_label", default=None)
+        if not label:
+            if current.request.controller == "vol":
+                label = "Volunteer Record"
+            elif self.get_hrm_mix_staff():
+                label = "Staff/Volunteer Record"
+            else:
+                label = "Staff Record"
+        return label
 
     def get_hrm_use_awards(self):
         """

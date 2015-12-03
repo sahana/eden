@@ -87,7 +87,7 @@ class S3MainMenu(default.S3MainMenu):
                 #MM("Teams", c="hrm", f="group"),
                 MM("National Societies", c="org", f="organisation",
                    vars = red_cross_filter),
-                MM("Offices", c="org", f="office"),
+                #MM("Offices", c="org", f="office"),
                 MM("Positions", c="hrm", f="job_title"),
                 #MM("Training Events", c="hrm", f="training_event"),
                 #MM("Training Courses", c="hrm", f="course"),
@@ -233,6 +233,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
             return super(S3OptionsMenu, self).gis()
 
     # -------------------------------------------------------------------------
+    def pr(self):
+        """ Person Registry """
+
+        if current.request.function == "person": 
+            # Training Center access to external Trainees (not Staff/Volunteers) 
+            return self.hrm()
+        else:
+            return super(S3OptionsMenu, self).pr()
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def hrm():
         """ HRM Human Talent """
@@ -253,8 +263,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         use_certs = lambda i: settings.get_hrm_use_certificates()
 
-        if current.request.function in ("certificate", "course", "course_certificate",
-                                        "facility", "training", "training_event"):
+        request = current.request
+        if request.function in ("certificate", "course", "course_certificate",
+                                "facility", "training", "training_event") or \
+           request.controller == "pr":
             return M()(
                         M("Report", c="hrm", f="training", m="report",
                           check=manager_mode)(),
@@ -310,11 +322,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                               ),
                             M("Import", m="import", p="create", check=is_org_admin)
                         ),
-                        M("Offices", c="org", f="office",
-                          check=manager_mode)(
-                            M("Create", m="create"),
-                            M("Import", m="import", p="create"),
-                        ),
+                        #M("Offices", c="org", f="office",
+                        #  check=manager_mode)(
+                        #    M("Create", m="create"),
+                        #    M("Import", m="import", p="create"),
+                        #),
                         #M("Department Catalog", c="hrm", f="department",
                         #  check=manager_mode)(
                         #    M("Create", m="create"),

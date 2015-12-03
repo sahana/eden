@@ -3318,8 +3318,6 @@ class S3PersonIdentityModel(S3Model):
                            99: T("other")
                            }
 
-        country_opts = current.gis.get_countries(key_type="code")
-
         tablename = "pr_identity"
         self.define_table(tablename,
                           self.pr_person_id(label = T("Person"),
@@ -3349,13 +3347,11 @@ class S3PersonIdentityModel(S3Model):
                                   start_field = "pr_identity_valid_from",
                                   default_interval = 12,
                                   ),
-                          Field("country_code", length=4, #  Why 4 not 2?
+                          Field("country_code", length=4,
                                 label = T("Country Code"),
-                                represent = S3Represent(options=country_opts),
-                                requires = IS_EMPTY_OR(
-                                            IS_IN_SET(country_opts,
-                                                      zero=messages.SELECT_LOCATION),
-                                            ),
+                                # Enable in template if-required
+                                readable = False,
+                                writable = False,
                                 ),
                           Field("place",
                                 label = T("Place of Issue"),
@@ -3438,7 +3434,8 @@ class S3PersonEducationModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
-        NONE = current.messages["NONE"]
+        messages = current.messages
+        NONE = messages["NONE"]
 
         auth = current.auth
         ADMIN = current.session.s3.system_roles.ADMIN
@@ -3506,6 +3503,8 @@ class S3PersonEducationModel(S3Model):
         # ---------------------------------------------------------------------
         # Education
         #
+        country_opts = current.gis.get_countries(key_type="code")
+
         tablename = "pr_education"
         define_table(tablename,
                      self.pr_person_id(label = T("Person"),
@@ -3522,6 +3521,17 @@ class S3PersonEducationModel(S3Model):
                      Field("award",
                            label = T("Name of Award"),
                            represent = lambda v: v or NONE,
+                           ),
+                     Field("country",
+                           label = T("Country"),
+                           represent = S3Represent(options=country_opts),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(country_opts,
+                                                  zero=messages.SELECT_LOCATION),
+                                        ),
+                           # Enable in template as-required
+                           readable = False,
+                           writable = False,
                            ),
                      Field("institute",
                            label = T("Name of Institute"),
@@ -3555,7 +3565,7 @@ class S3PersonEducationModel(S3Model):
             msg_record_created = T("Education details added"),
             msg_record_modified = T("Education details updated"),
             msg_record_deleted = T("Education details deleted"),
-            msg_list_empty = T("No education details currently registered"))
+            msg_list_empty = T("No entries currently registered"))
 
         configure("pr_education",
                   context = {"person": "person_id",

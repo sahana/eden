@@ -268,6 +268,7 @@
 "Create Service": "Hizmet Ekle",
 "Create Skill Type": "Yetkinlik Türü Ekle",
 "Create Skill": "Yetkinlik Ekle",
+"Create Staff Level": "Personel Seviyesi Ekle",
 "Create Staff Member": "Personel Üyeliği Ekle",
 "Create Status": "Durum Ekle",
 "Create Training Event": "Eğitim Etkinliği Ekle",

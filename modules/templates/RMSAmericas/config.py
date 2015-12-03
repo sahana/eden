@@ -409,6 +409,7 @@ def config(settings):
     settings.hrm.email_required = True
     # Uncomment to filter certificates by (root) Organisation & hence not allow Certificates from other orgs to be added to a profile (except by Admin)
     settings.hrm.filter_certificates = True
+    settings.hrm.mix_staff = True
     # Uncomment to show the Organisation name in HR represents
     settings.hrm.show_organisation = True
     # Uncomment to allow HRs to have multiple Job Titles
@@ -416,6 +417,7 @@ def config(settings):
     # Uncomment to have each root Org use a different Job Title Catalog
     #settings.hrm.org_dependent_job_titles = True
     settings.hrm.staff_departments = False
+    settings.hrm.teams = False
     # Uncomment to disable the use of HR Credentials
     settings.hrm.use_credentials = False
     # Uncomment to disable the use of HR Certificates
@@ -433,6 +435,9 @@ def config(settings):
     settings.hrm.record_tab = "record"
     # Training Instructors are person_ids
     settings.hrm.training_instructors = "internal"
+    settings.hrm.record_label = "National Society Information"
+    # Work History & Missions
+    settings.hrm.staff_experience = "both"
 
     # Uncomment to do a search for duplicates in the new AddPersonWidget2
     settings.pr.lookup_duplicates = True
@@ -440,18 +445,21 @@ def config(settings):
     #settings.pr.name_format= "%(first_name)s %(last_name)s %(middle_name)s"
     settings.pr.name_format= "%(first_name)s %(middle_name)s %(last_name)s"
 
-    def dob_required(default):
-        """ NS-specific dob_required (lazy setting) """
+    #def dob_required(default):
+    #    """ NS-specific dob_required (lazy setting) """
 
-        root_org = current.auth.root_org_name()
-        if root_org == HNRC:
-            default = False
-        else:
-            # Human Talent module
-            default = True
-        return default
+    #    if current.auth.override is True:
+    #        default = False
+    #    else:
+    #        root_org = current.auth.root_org_name()
+    #        if root_org == HNRC:
+    #            default = False
+    #        else:
+    #            # Human Talent module for zone
+    #            default = True
+    #    return default
 
-    settings.pr.dob_required = dob_required
+    #settings.pr.dob_required = dob_required
 
     # -------------------------------------------------------------------------
     # Projects
@@ -1024,6 +1032,23 @@ def config(settings):
     settings.customise_hrm_home = customise_hrm_home
 
     # -------------------------------------------------------------------------
+    def customise_hrm_experience_resource(r, tablename):
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Work History"),
+            title_display = T("Work History Details"),
+            title_list = T("Work History"),
+            title_update = T("Edit Work History"),
+            label_list_button = T("List Work History"),
+            label_delete_button = T("Delete Work History"),
+            msg_record_created = T("Work History added"),
+            msg_record_modified = T("Work History updated"),
+            msg_record_deleted = T("Work History deleted"),
+            msg_list_empty = T("No entries currently registered"))
+
+    settings.customise_hrm_experience_resource = customise_hrm_experience_resource
+
+    # -------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
         #controller = current.request.controller
@@ -1055,6 +1080,9 @@ def config(settings):
                     # default
                     #limit_filter_opts = True,
                     )
+
+            # For the filter
+            s3db.hrm_competency.skill_id.label = T("Language")
 
             return True
         s3.prep = custom_prep
@@ -1146,7 +1174,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_skill_resource(r, tablename):
 
-        label = T("Language")
+        #label = T("Language")
         label_create = T("Create Language")
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = label_create,
@@ -1160,15 +1188,15 @@ def config(settings):
             msg_record_deleted = T("Language deleted"),
             msg_list_empty = T("Currently no entries in the catalog"))
 
-        # @ToDo: need to ensure this gets run before the hrm_competency table is loaded
-        from s3layouts import S3PopupLink
-        f = current.s3db.hrm_skill_id.attr
-        f.label = label
-        f.comment = S3PopupLink(c = "hrm",
-                                f = "skill",
-                                label = label_create,
-                                title = label,
-                                )
+        # No use since cannot be sure this runs before hrm_competency table is loaded
+        #from s3layouts import S3PopupLink
+        #f = current.s3db.hrm_skill_id.attr
+        #f.label = label
+        #f.comment = S3PopupLink(c = "hrm",
+        #                        f = "skill",
+        #                        label = label_create,
+        #                        title = label,
+        #                        )
 
     settings.customise_hrm_skill_resource = customise_hrm_skill_resource
 
@@ -1185,7 +1213,17 @@ def config(settings):
             msg_record_created = T("Language added"),
             msg_record_modified = T("Language updated"),
             msg_record_deleted = T("Language deleted"),
-            msg_list_empty = T("Currently no entries in the catalog"))
+            msg_list_empty = T("No entries currently registered"))
+
+        label = T("Language")
+        from s3layouts import S3PopupLink
+        f = current.s3db.hrm_competency.skill_id
+        f.label = label
+        f.comment = S3PopupLink(c = "hrm",
+                                f = "skill",
+                                label = T("Create Language"),
+                                title = label,
+                                )
 
     settings.customise_hrm_competency_resource = customise_hrm_competency_resource
 
@@ -1725,6 +1763,14 @@ def config(settings):
     settings.customise_pr_contact_resource = customise_pr_contact_resource
 
     # -------------------------------------------------------------------------
+    def customise_pr_education_resource(r, tablename):
+
+        table = current.s3db[tablename]
+        table.country.readable = table.country.writable = True
+
+    settings.customise_pr_education_resource = customise_pr_education_resource
+
+    # -------------------------------------------------------------------------
     #def customise_pr_group_controller(**attr):
 
     #    # Organisation needs to be an NS/Branch
@@ -1766,6 +1812,11 @@ def config(settings):
                         required = True,
                         branches = True,
                         )
+                table = s3db.hrm_human_resource
+                f = table.essential
+                f.readable = f.writable = False
+                f = table.site_contact
+                f.readable = f.writable = False
                 if method == "record":
                     # Use default form (legacy)
                     s3db.clear_config("hrm_human_resource", "crud_form")
@@ -1809,6 +1860,10 @@ def config(settings):
                                            filter_opts = (4,),
                                            )
 
+            elif component_name == "certification":
+                ctable = r.component.table
+                ctable.organisation_id.readable = False
+
             elif component_name == "competency":
                 ctable = r.component.table
                 ctable.skill_id.label = T("Language")
@@ -1819,10 +1874,32 @@ def config(settings):
                 etable.grade.readable = etable.grade.writable = False
                 etable.major.readable = etable.major.writable = False
 
+            elif component_name == "experience":
+                # 2 options here: Work Experience & Missions
+                # These have very different views
+                # Work Experience
+                etable = r.component.table
+                etable.organisation_id.readable = etable.organisation_id.writable = False
+                etable.job_title_id.readable = etable.job_title_id.writable = False
+                etable.responsibilities.readable = etable.responsibilities.writable = False
+                etable.hours.readable = etable.hours.writable = False
+                etable.supervisor_id.readable = etable.supervisor_id.writable = False
+                etable.organisation.readable = etable.organisation.writable = True
+                etable.job_title.readable = etable.job_title.writable = True
+                from s3 import S3LocationSelector
+                etable.location_id.label = T("Country")
+                etable.location_id.widget = S3LocationSelector(levels=("L0",),
+                                                               show_map=False,
+                                                               show_postcode=False,
+                                                               )
+
             elif component_name == "identity":
-                itable = r.component.table
-                itable.country_code.readable = itable.country_code.writable = False
-                itable.ia_name.readable = itable.ia_name.writable = False
+                #itable = r.component.table
+                # Default
+                #itable.country_code.readable = itable.country_code.writable = False
+                #itable.ia_name.readable = itable.ia_name.writable = False
+                f = r.component.table.ia_name
+                f.readable = f.writable = False
                 list_fields = ["type",
                                "value",
                                "valid_until",

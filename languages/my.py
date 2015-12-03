@@ -491,6 +491,7 @@
 'Create Service': 'ဝန္ေဆာင္မႈဖန္တီးပါ',
 'Create Skill Type': 'အရည္အေသြးအမ်ဳိးအစားဖန္တီးပါ',
 'Create Skill': 'အရည္အေသြးဖန္တီးပါ',
+'Create Staff Level': 'ဝန္ထမ္းအဆင့္ကို ျဖည့္စြက္သည္',
 'Create Staff Member': 'ဝန္ထမ္းအဖဲြ႕ဝင္ဖန္တီးပါ',
 'Create Status': 'ျဖစ္ရပ္အေျခအေနကို ဖန္တီးပါ',
 'Create Team': 'အသင္းဖဲြ႕ပါ',

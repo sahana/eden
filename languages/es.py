@@ -1566,6 +1566,7 @@
 'Create Shelter': 'Crear el refugio',
 'Create Skill Type': 'Crear Tipo de Habilidad',
 'Create Skill': 'Crear Habilidad',
+'Create Staff Level': 'Crear Nivel de Personal',
 'Create Staff Member': 'Crear Miembro del Personal',
 'Create Status': 'Crear Estado',
 'Create Supplier': 'Crear Proveedor',
