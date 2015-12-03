@@ -1220,7 +1220,7 @@
 'ICBRR Staff': 'د ICBRR کارمندان',
 'ID': 'تذکره',
 'ID Tag Number': 'د تذکری شمیره',
-'ID type': 'د تذکری بڼه',
+'ID Type': 'د تذکری بڼه',
 'Identities': 'شخصیتونه',
 'Identity': 'شخصیت',
 'Identity added': 'شخصیت اضافه شوی',

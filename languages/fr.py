@@ -2190,7 +2190,7 @@
 'ID Label:': 'Libellé ID:',
 'ID Tag Number': 'Numero de balise ID',
 'ID Tag': 'Balise ID',
-'ID type': "Type d'ID",
+'ID Type': "Type d'ID",
 'Ice Pressure': 'Pression glace',
 'Ideally a full URL to the source file, otherwise just a note on where data came from.': "Idéalement une URL complète vers le fichier source, sinon juste une remarque sur l'endroit où les données proviennent.",
 'Identification Report': 'Rapport Identification',

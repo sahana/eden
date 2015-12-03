@@ -2112,7 +2112,7 @@
 'ID Label:': '識別編號或符號:',
 'ID Tag Number': 'ID標籤號碼',
 'ID Tag': 'ID標籤',
-'ID type': 'Id 類型',
+'ID Type': 'Id 類型',
 'Ice Pressure': 'ICE壓力',
 'Iceberg': '冰',
 'Ideally a full URL to the source file, otherwise just a note on where data came from.': '理想的完整URL的原始檔,否則只注意事項在資料來源。',

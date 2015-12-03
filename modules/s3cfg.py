@@ -2844,8 +2844,10 @@ class S3Config(Storage):
     def get_hrm_use_description(self):
         """
             Whether Human Resources should use Physical Description
+            and what the name of the Tab should be.
+            Set to None to disable
         """
-        return self.hrm.get("use_description", True)
+        return self.hrm.get("use_description", "Description")
 
     def get_hrm_use_education(self):
         """
@@ -2873,6 +2875,12 @@ class S3Config(Storage):
             Whether Human Resources should use Skills
         """
         return self.__lazy("hrm", "use_skills", default=True)
+
+    def get_hrm_certificate_skill(self):
+        """
+            Whether Human Resources should use Skill Equivalence for Certificates
+        """
+        return self.__lazy("hrm", "certificate_skill", default=False)
 
     def get_hrm_use_trainings(self):
         """

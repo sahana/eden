@@ -1642,7 +1642,6 @@ class S3Request(object):
             customise = current.deployment_settings.customise_resource(tablename)
             if customise:
                 customise(self, tablename)
-        return
 
 # =============================================================================
 class S3Method(object):

@@ -1223,7 +1223,7 @@
 'ICBRR Staff': 'کارمند ICBRR',
 'ID': 'هوویت',
 'ID Tag Number': 'شماره ضمیمه هوویت',
-'ID type': 'نوع هوویت',
+'ID Type': 'نوع هوویت',
 'Identities': 'هویت ها',
 'Identity': 'هویت',
 'Identity added': 'هویت اضافه گردید',

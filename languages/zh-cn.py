@@ -1607,7 +1607,7 @@
 'I am available in the following area(s)': '我提供了以下区域(S)',
 'ID Tag Number': '身份标记号码',
 'ID Tag': '身份标记',
-'ID type': '标识类型',
+'ID Type': '标识类型',
 'Ice Pressure': 'ICE压力',
 'Iceberg': '一',
 'Identification Report': '报告标识',

@@ -1254,7 +1254,7 @@
 'I am available in the following area(s)': 'estou disponível na(s) seguinte(s) área(s)',
 'ID Tag Number': 'Número de Etiqueta de Identificação',
 'ID Tag': 'ID Etiqueta',
-'ID type': 'Tipo de ID',
+'ID Type': 'Tipo de ID',
 'Ice Pressure': 'Pressão do Gelo',
 'Iceberg': 'Icebergue',
 'Identification Report': 'Relatório de Identificação',

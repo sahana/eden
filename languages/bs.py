@@ -3494,7 +3494,7 @@
 'ID Label:': 'ID oznaka:',
 'ID Tag': 'ID oznaka',
 'ID Tag Number': 'Broj identifikacijske kartice',
-'ID type': 'ID tip',
+'ID Type': 'ID tip',
 'Identificación de Víctimas de Desastres': 'Identifikacija žrtava katastrofe',
 'Identification': 'Identifikacija',
 'Identification label of the Storage bin.': 'Identifikacija korpe za smještaj',

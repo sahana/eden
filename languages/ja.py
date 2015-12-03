@@ -1869,7 +1869,7 @@
 'ID Label: ': 'IDラベル: ',
 'ID Tag Number': 'IDタグ番号',
 'ID Tag': 'ID タグ',
-'ID type': 'IDタイプ',
+'ID Type': 'IDタイプ',
 'Ice Pressure': '氷結圧力',
 'Iceberg': 'アイスバーグ',
 'Ideally a full URL to the source file, otherwise just a note on where data came from.': 'できればソースファイルの完全なURLを記載します。難しい場合はデータ入手元のメモでも構いません。',

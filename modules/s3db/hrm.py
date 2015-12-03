@@ -6163,10 +6163,9 @@ def hrm_rheader(r, tabs=[], profile=False):
         else:
             credentials_tab = None
 
-        if settings.get_hrm_use_description():
-            description_tab = (T("Description"), "physical_description")
-        else:
-            description_tab = None
+        description_tab = settings.get_hrm_use_description() or None
+        if description_tab:
+            description_tab = (T(description_tab), "physical_description")
 
         if settings.get_hrm_vol_availability_tab():
             availability_tab = (T("Availability"), "availability")
@@ -6391,7 +6390,8 @@ def hrm_rheader(r, tabs=[], profile=False):
         # Tabs
         tabs = [(T("Certificate Details"), None),
                 ]
-        if current.deployment_settings.get_hrm_use_skills():
+        settings = current.deployment_settings
+        if settings.get_hrm_use_skills() and settings.get_hrm_certificate_skill():
             tabs.append((T("Skill Equivalence"), "certificate_skill"))
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
@@ -7296,7 +7296,8 @@ def hrm_person_controller(**attr):
     table = db.pr_person
     tablename = "pr_person"
     configure(tablename,
-              deletable=False)
+              deletable = False,
+              )
 
     mode = session.s3.hrm.mode
     if mode is not None:
@@ -7797,6 +7798,7 @@ class hrm_CV(S3Method):
                     form = form(r)
                 if form is not None:
                     profile_widgets.append(form)
+
             if vol and settings.get_hrm_use_awards():
                 awards_widget = dict(# Use CRUD Strings
                                      #label = "Awards",
@@ -7811,6 +7813,7 @@ class hrm_CV(S3Method):
                                      pagesize = None, # all records
                                      )
                 profile_widgets.append(awards_widget)
+
             if settings.get_hrm_use_education():
                 education_widget = dict(label = "Education",
                                         label_create = "Add Education",
@@ -7824,6 +7827,7 @@ class hrm_CV(S3Method):
                                         pagesize = None, # all records
                                         )
                 profile_widgets.append(education_widget)
+
             if vol:
                 vol_experience = settings.get_hrm_vol_experience()
                 experience = vol_experience in ("both", "experience")
@@ -7842,6 +7846,7 @@ class hrm_CV(S3Method):
                                          pagesize = None, # all records
                                          )
                 profile_widgets.append(experience_widget)
+
             if settings.get_hrm_use_trainings():
                 if settings.get_hrm_trainings_external():
                     training_widget = dict(label = "Internal Training",
@@ -7883,12 +7888,18 @@ class hrm_CV(S3Method):
                                            pagesize = None, # all records
                                            )
                     profile_widgets.append(training_widget)
+
             if settings.get_hrm_use_skills():
-                skills_widget = dict(label = "Skills",
-                                     label_create = "Add Skill",
+                tablename = "hrm_competency"
+                # @ToDo: Prevent duplicate running of the hook
+                #r.customise_resource(tablename)
+                label = current.response.s3.crud_strings[tablename].get("title_list")
+                skills_widget = dict(label = label,
+                                     # Use CRUD string (easier to configure)
+                                     #label_create = "Add Skill",
                                      type = "datatable",
                                      actions = dt_row_actions("competency"),
-                                     tablename = "hrm_competency",
+                                     tablename = tablename,
                                      context = "person",
                                      create_controller = controller,
                                      create_function = "person",
@@ -7896,6 +7907,7 @@ class hrm_CV(S3Method):
                                      pagesize = None, # all records
                                      )
                 profile_widgets.append(skills_widget)
+
             # Person isn't a doc_id
             #if settings.has_module("doc"):
             #    docs_widget = dict(label = "Documents",

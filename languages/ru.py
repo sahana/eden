@@ -1607,7 +1607,7 @@
 'I am available in the following area(s)': 'Я доступен в следующие области (s)',
 'ID Tag Number': 'ID номер тега',
 'ID Tag': 'Тег ID',
-'ID type': 'Тип ИД',
+'ID Type': 'Тип ИД',
 'Ice Pressure': 'Ice Давление',
 'Iceberg': 'Айсберга',
 'Identification Report': 'Код Отчета',

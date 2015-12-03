@@ -349,7 +349,7 @@
 'I am a U.S. Citizen': 'Ako ay isang Mamamayan ng U.S',
 'I would like to register my corporation for donations, what is the process?': 'Gusto kong irehistro ang aking korporasyon para sa mga donasyon, ano ang proseso?',
 'ID Tag Number': 'Numero ng Tag ng ID',
-'ID type': 'Uri ng ID',
+'ID Type': 'Uri ng ID',
 'Identifier': 'Tagatukoy',
 'Identifier which the repository identifies itself with when sending synchronization requests': 'Ang tagapagpakilala na ginagamit ng imbakan upang ipakilala ang sarili nito kapag nagpapadala ng mga kahilingan sa pag-synchronize',
 'If a user verifies that they own an Email Address with this domain, the Approver field is used to determine whether & by whom further approval is required.': 'Kung ibe-verify ng isang user na nagmamay-ari sila ng isang Email Address sa domain na ito, gagamitin ang field na Taga-apruba upang matukoy kung at mula kanino kinakailangan ang higit pang pag-aapruba.',

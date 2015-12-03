@@ -3125,11 +3125,11 @@ class S3PersonImageModel(S3Model):
             others for this person.
         """
 
-        vars = form.vars
-        id = vars.id
-        profile = vars.profile
-        url = vars.url
-        newfilename = vars.image_newfilename
+        form_vars = form.vars
+        id = form_vars.id
+        profile = form_vars.profile
+        url = form_vars.url
+        newfilename = form_vars.image_newfilename
         if profile == "False":
             profile = False
 
@@ -3169,9 +3169,9 @@ class S3PersonImageModel(S3Model):
     def pr_image_onvalidation(form):
         """ Image form validation """
 
-        vars = form.vars
-        image = vars.image
-        url = vars.url
+        form_vars = form.vars
+        image = form_vars.image
+        url = form_vars.url
 
         if not hasattr(image, "file"):
             id = current.request.post_vars.id
@@ -3294,6 +3294,7 @@ class S3PersonIdentityModel(S3Model):
     def model(self):
 
         T = current.T
+        messages = current.messages
 
         # ---------------------------------------------------------------------
         # Identity
@@ -3317,6 +3318,8 @@ class S3PersonIdentityModel(S3Model):
                            99: T("other")
                            }
 
+        country_opts = current.gis.get_countries(key_type="code")
+
         tablename = "pr_identity"
         self.define_table(tablename,
                           self.pr_person_id(label = T("Person"),
@@ -3324,10 +3327,8 @@ class S3PersonIdentityModel(S3Model):
                                             ),
                           Field("type", "integer",
                                 default = 1,
-                                label = T("ID type"),
-                                represent = lambda opt: \
-                                        pr_id_type_opts.get(opt,
-                                                            current.messages.UNKNOWN_OPT),
+                                label = T("ID Type"),
+                                represent = S3Represent(options=pr_id_type_opts),
                                 requires = IS_IN_SET(pr_id_type_opts,
                                                      zero=None),
                                 ),
@@ -3348,11 +3349,17 @@ class S3PersonIdentityModel(S3Model):
                                   start_field = "pr_identity_valid_from",
                                   default_interval = 12,
                                   ),
-                          Field("country_code", length=4,
+                          Field("country_code", length=4, #  Why 4 not 2?
                                 label = T("Country Code"),
+                                represent = S3Represent(options=country_opts),
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET(country_opts,
+                                                      zero=messages.SELECT_LOCATION),
+                                            ),
                                 ),
                           Field("place",
                                 label = T("Place of Issue"),
+                                #  Enable in template if-required
                                 readable = False,
                                 writable = False,
                                 ),
@@ -3402,7 +3409,7 @@ class S3PersonIdentityModel(S3Model):
             return
 
         id_type = data.get("type")
-        # People can have 1 more than 1 'Other', or even Passport
+        # People can have more than 1 'Other', or even Passport
         # - so this cannot be used to update the Number, only update comments
         id_value = data.get("value")
         table = item.table
@@ -3676,12 +3683,26 @@ class S3PersonDetailsModel(S3Model):
                                 label = T("Nationality"),
                                 represent = nationality_repr,
                                 requires = IS_EMPTY_OR(
-                                                IS_IN_SET_LAZY(nationality_opts,
-                                                               zero = messages.SELECT_LOCATION,
-                                                               )),
+                                            IS_IN_SET_LAZY(nationality_opts,
+                                                           zero = messages.SELECT_LOCATION,
+                                                           )),
                                 comment = DIV(_class="tooltip",
                                               _title="%s|%s" % (T("Nationality"),
                                                                 T("Nationality of the person."))),
+                                ),
+                          Field("nationality2",
+                                label = T("2nd Nationality"),
+                                represent = nationality_repr,
+                                requires = IS_EMPTY_OR(
+                                            IS_IN_SET_LAZY(nationality_opts,
+                                                           zero = messages.SELECT_LOCATION,
+                                                           )),
+                                comment = DIV(_class="tooltip",
+                                              _title="%s|%s" % (T("2nd Nationality"),
+                                                                T("Second Nationality of the person (if they have one)"))),
+                                # Enable in templates as-required
+                                readable = False,
+                                writable = False,
                                 ),
                           Field("place_of_birth",
                                 label = T("Place of Birth"),
@@ -5618,7 +5639,8 @@ class pr_Contacts(S3Method):
         contents = DIV(_id = widget_id,
                        _class = "pr-contacts-wrapper medium-8 small-12 columns",
                        )
-        contacts = self.contacts(pe_id,
+        contacts = self.contacts(r,
+                                 pe_id,
                                  allow_create=allow_create,
                                  method=r.method,
                                  )
@@ -5689,20 +5711,22 @@ class pr_Contacts(S3Method):
                    )
 
     # -------------------------------------------------------------------------
-    def contacts(self, pe_id, allow_create=False, method="contacts"):
+    def contacts(self, r, pe_id, allow_create=False, method="contacts"):
         """
             Contact Information Subform
 
-            @param method: the request method ("contacts", "private_contacts"
-                           or "public_contacts")
+            @param r: the S3Request
             @param pe_id: the pe_id
             @param allow_create: allow adding of new contacts
+            @param method: the request method ("contacts", "private_contacts"
+                           or "public_contacts")
         """
 
         T = current.T
         s3db = current.s3db
 
-        resource = s3db.resource("pr_contact",
+        tablename = "pr_contact"
+        resource = s3db.resource(tablename,
                                  filter = FS("pe_id") == pe_id)
 
         # Filter by access
@@ -5726,10 +5750,10 @@ class pr_Contacts(S3Method):
         # Group by contact method and sort by priority
         from itertools import groupby
         groups = []
-        append = groups.append
+        gappend = groups.append
         method = lambda row: row["pr_contact.contact_method"]
         for key, group in groupby(rows, method):
-            groups.append((key, list(group)))
+            gappend((key, list(group)))
         PRIORITY = self.PRIORITY
         groups.sort(key = lambda item: PRIORITY.get(item[0], 99))
 
@@ -5746,6 +5770,21 @@ class pr_Contacts(S3Method):
                           )
             form.append(add_btn)
 
+        # Use field.readable to hide fields if-required
+        r.customise_resource(tablename)
+        if table.comments.readable:
+            comments_readable = True
+        else:
+            comments_readable = False
+        if table.contact_description.readable:
+            description_readable = True
+        else:
+            description_readable = False
+        if table.priority.readable:
+            priority_readable = True
+        else:
+            priority_readable = False
+
         # Contact information by contact method
         opts = current.msg.CONTACT_OPTS
         action_buttons = self.action_buttons
@@ -5758,59 +5797,69 @@ class pr_Contacts(S3Method):
             # Individual Rows
             for contact in contacts:
 
-                priority = contact["pr_contact.priority"]
-                if priority:
-                    priority_title = "%s - %s" % (T("Priority"), inline_edit_hint)
-                    priority_field = SPAN(priority,
-                                          _class = "pr-contact-priority",
-                                          _title = priority_title,
-                                          )
-                else:
-                    priority_field = ""
-
                 contact_id = contact["pr_contact.id"]
                 value = contact["pr_contact.value"]
-                description = contact["pr_contact.contact_description"] or ""
+
+                data = {"id": contact_id,
+                        "value": value,
+                        }
+
+                if priority_readable:
+                    priority = contact["pr_contact.priority"]
+                    if priority:
+                        data["priority"] = priority
+                        priority_title = "%s - %s" % (T("Priority"), inline_edit_hint)
+                        priority_field = SPAN(priority,
+                                              _class = "pr-contact-priority",
+                                              _title = priority_title,
+                                              )
+                    else:
+                        priority_field = ""
+                else:
+                    priority_field = ""
 
                 title = SPAN(value,
                              _title = inline_edit_hint,
                              _class = "pr-contact-value",
                              )
-                if description:
-                    title = TAG[""](SPAN(description,
-                                         _title = inline_edit_hint,
-                                         _class = "pr-contact-description",
-                                         ),
-                                    ", ",
-                                    title,
-                                    )
 
-                comments = contact["pr_contact.comments"] or ""
+                if description_readable:
+                    description = contact["pr_contact.contact_description"] or ""
+                    if description:
+                        data["description"] = description
+                        title = TAG[""](SPAN(description,
+                                             _title = inline_edit_hint,
+                                             _class = "pr-contact-description",
+                                             ),
+                                        ", ",
+                                        title,
+                                        )
+
+                if comments_readable:
+                    comments = contact["pr_contact.comments"] or ""
+                    data["comments"] = comments
+                    comments = DIV(SPAN(comments,
+                                        _title = inline_edit_hint,
+                                        _class = "pr-contact-comments",
+                                        ),
+                                   _class = "pr-contact-subtitle",
+                                   )
+                else:
+                    comments = DIV()
 
                 actions = action_buttons(table, contact_id)
                 form.append(DIV(DIV(priority_field,
                                     DIV(DIV(title,
                                             _class="pr-contact-title",
                                             ),
-                                        DIV(SPAN(comments,
-                                                 _title = inline_edit_hint,
-                                                 _class = "pr-contact-comments",
-                                                 ),
-                                            _class = "pr-contact-subtitle",
-                                            ),
+                                        comments,
                                         _class = "pr-contact-details",
                                         ),
                                     _class = "pr-contact-data medium-9 columns",
                                     ),
 
                                 actions,
-                                data = {
-                                    "id": contact_id,
-                                    "priority": priority,
-                                    "value": value,
-                                    "description": description,
-                                    "comments": comments,
-                                },
+                                data = data,
                                 _class="pr-contact row",
                                 ))
         return form

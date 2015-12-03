@@ -1830,7 +1830,7 @@
 'ICAO': 'ICAO',
 'ID Tag Number': 'Identifikations-Etikett-Nummer',
 'ID Tag': 'Identifikationsetikett',
-'ID type': 'ID-Typ',
+'ID Type': 'ID-Typ',
 'Ice Pressure': 'Eisdruck',
 'Iceberg': 'Eisberg',
 'Identification Report': 'Indentifizierungsbericht',

@@ -1619,7 +1619,7 @@ $.filterOptionsS3({
     # Uncomment to disable the use of HR Trainings
     settings.hrm.use_trainings = False
     # Uncomment to disable the use of HR Description
-    settings.hrm.use_description = False
+    settings.hrm.use_description = None
     # Change the label of "Teams" to "Groups"
     settings.hrm.teams = "Groups"
     # Custom label for Organisations in HR module

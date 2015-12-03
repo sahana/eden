@@ -420,6 +420,8 @@ def config(settings):
     settings.hrm.use_credentials = False
     # Uncomment to disable the use of HR Certificates
     settings.hrm.use_certificates = True
+    settings.hrm.use_code = True
+    settings.hrm.use_description = "Medical"
     # Uncomment to enable the use of HR Education
     settings.hrm.use_education = True
     settings.hrm.use_skills = True
@@ -1096,63 +1098,109 @@ def config(settings):
     settings.customise_hrm_job_title_resource = customise_hrm_job_title_resource
 
     # -------------------------------------------------------------------------
-    def customise_hrm_job_title_controller(**attr):
+    #def customise_hrm_job_title_controller(**attr):
 
-        # Organisation needs to be an NS/Branch
-        ns_only("hrm_job_title",
-                required = False,
-                branches = False,
-                )
+    #    # Organisation needs to be an NS/Branch
+    #    ns_only("hrm_job_title",
+    #            required = False,
+    #            branches = False,
+    #            )
 
-        # Don't show RDRT in the list
-        #from gluon import IS_IN_SET
-        #current.s3db.hrm_job_title.type.requires = IS_IN_SET({1: T("Staff"),
-        #                                                      2: T("Volunteer"),
-        #                                                      3: T("Both")
-        #                                                      })
+    #    # Don't show RDRT in the list
+    #    #from gluon import IS_IN_SET
+    #    #current.s3db.hrm_job_title.type.requires = IS_IN_SET({1: T("Staff"),
+    #    #                                                      2: T("Volunteer"),
+    #    #                                                      3: T("Both")
+    #    #                                                      })
 
-        return attr
+    #    return attr
 
-    settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
-
-    # -------------------------------------------------------------------------
-    def customise_hrm_programme_controller(**attr):
-
-        # Organisation needs to be an NS/Branch
-        ns_only("hrm_programme",
-                required = False,
-                branches = False,
-                )
-
-        return attr
-
-    settings.customise_hrm_programme_controller = customise_hrm_programme_controller
+    #settings.customise_hrm_job_title_controller = customise_hrm_job_title_controller
 
     # -------------------------------------------------------------------------
-    def customise_hrm_programme_hours_controller(**attr):
+    #def customise_hrm_programme_controller(**attr):
 
-        # Default Filter
-        from s3 import s3_set_default_filter
-        s3_set_default_filter("~.person_id$human_resource.organisation_id",
-                              user_org_default_filter,
-                              tablename = "hrm_programme_hours")
+    #    # Organisation needs to be an NS/Branch
+    #    ns_only("hrm_programme",
+    #            required = False,
+    #            branches = False,
+    #            )
 
-        return attr
+    #    return attr
 
-    settings.customise_hrm_programme_hours_controller = customise_hrm_programme_hours_controller
+    #settings.customise_hrm_programme_controller = customise_hrm_programme_controller
 
     # -------------------------------------------------------------------------
-    def customise_hrm_training_controller(**attr):
+    #def customise_hrm_programme_hours_controller(**attr):
 
-        # Default Filter
-        from s3 import s3_set_default_filter
-        s3_set_default_filter("~.person_id$human_resource.organisation_id",
-                              user_org_default_filter,
-                              tablename = "hrm_training")
+    #    # Default Filter
+    #    from s3 import s3_set_default_filter
+    #    s3_set_default_filter("~.person_id$human_resource.organisation_id",
+    #                          user_org_default_filter,
+    #                          tablename = "hrm_programme_hours")
 
-        return attr
+    #    return attr
 
-    settings.customise_hrm_training_controller = customise_hrm_training_controller
+    #settings.customise_hrm_programme_hours_controller = customise_hrm_programme_hours_controller
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_skill_resource(r, tablename):
+
+        label = T("Language")
+        label_create = T("Create Language")
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = label_create,
+            title_display = T("Language Details"),
+            title_list = T("Language Catalog"),
+            title_update = T("Edit Language"),
+            label_list_button = T("List Languages"),
+            label_delete_button = T("Delete Language"),
+            msg_record_created = T("Language added"),
+            msg_record_modified = T("Language updated"),
+            msg_record_deleted = T("Language deleted"),
+            msg_list_empty = T("Currently no entries in the catalog"))
+
+        # @ToDo: need to ensure this gets run before the hrm_competency table is loaded
+        from s3layouts import S3PopupLink
+        f = current.s3db.hrm_skill_id.attr
+        f.label = label
+        f.comment = S3PopupLink(c = "hrm",
+                                f = "skill",
+                                label = label_create,
+                                title = label,
+                                )
+
+    settings.customise_hrm_skill_resource = customise_hrm_skill_resource
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_competency_resource(r, tablename):
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Add Language"),
+            title_display = T("Language Details"),
+            title_list = T("Languages"),
+            title_update = T("Edit Language"),
+            label_list_button = T("List Languages"),
+            label_delete_button = T("Delete Language"),
+            msg_record_created = T("Language added"),
+            msg_record_modified = T("Language updated"),
+            msg_record_deleted = T("Language deleted"),
+            msg_list_empty = T("Currently no entries in the catalog"))
+
+    settings.customise_hrm_competency_resource = customise_hrm_competency_resource
+
+    # -------------------------------------------------------------------------
+    #def customise_hrm_training_controller(**attr):
+
+    #    # Default Filter
+    #    from s3 import s3_set_default_filter
+    #    s3_set_default_filter("~.person_id$human_resource.organisation_id",
+    #                          user_org_default_filter,
+    #                          tablename = "hrm_training")
+
+    #    return attr
+
+    #settings.customise_hrm_training_controller = customise_hrm_training_controller
 
     # -------------------------------------------------------------------------
     def customise_inv_home():
@@ -1667,17 +1715,27 @@ def config(settings):
     settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # -------------------------------------------------------------------------
-    def customise_pr_group_controller(**attr):
+    def customise_pr_contact_resource(r, tablename):
 
-        # Organisation needs to be an NS/Branch
-        ns_only("org_organisation_team",
-                required = False,
-                branches = True,
-                )
+        table = current.s3db[tablename]
+        table.comments.readable = table.comments.writable = False
+        table.contact_description.readable = table.contact_description.writable = False
+        table.priority.readable = table.priority.writable = False
 
-        return attr
+    settings.customise_pr_contact_resource = customise_pr_contact_resource
 
-    settings.customise_pr_group_controller = customise_pr_group_controller
+    # -------------------------------------------------------------------------
+    #def customise_pr_group_controller(**attr):
+
+    #    # Organisation needs to be an NS/Branch
+    #    ns_only("org_organisation_team",
+    #            required = False,
+    #            branches = True,
+    #            )
+
+    #    return attr
+
+    #settings.customise_pr_group_controller = customise_pr_group_controller
 
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
@@ -1702,7 +1760,36 @@ def config(settings):
 
             component_name = r.component_name
             method = r.method
-            if component_name == "appraisal":
+            if method =="record" or component_name == "human_resource":
+                # Organisation needs to be an NS/Branch
+                ns_only("hrm_human_resource",
+                        required = True,
+                        branches = True,
+                        )
+                if method == "record":
+                    # Use default form (legacy)
+                    s3db.clear_config("hrm_human_resource", "crud_form")
+
+            elif not component_name:
+                # Basic Details tab
+                f = s3db.pr_person_details.nationality2
+                f.readable = f.writable = True
+                from s3 import S3SQLCustomForm
+                crud_form = S3SQLCustomForm("first_name",
+                                            "middle_name",
+                                            "last_name",
+                                            "date_of_birth",
+                                            "gender",
+                                            "person_details.marital_status",
+                                            "person_details.nationality",
+                                            "person_details.nationality2",
+                                            "comments",
+                                            )
+                s3db.configure("pr_person",
+                               crud_form = crud_form,
+                               )
+
+            elif component_name == "appraisal":
                 atable = r.component.table
                 atable.organisation_id.readable = atable.organisation_id.writable = False
                 # Organisation needs to be an NS
@@ -1721,22 +1808,37 @@ def config(settings):
                                            filterby = "type",
                                            filter_opts = (4,),
                                            )
+
+            elif component_name == "competency":
+                ctable = r.component.table
+                ctable.skill_id.label = T("Language")
+                ctable.organisation_id.readable = False
+
+            elif component_name == "education":
+                etable = r.component.table
+                etable.grade.readable = etable.grade.writable = False
+                etable.major.readable = etable.major.writable = False
+
+            elif component_name == "identity":
+                itable = r.component.table
+                itable.country_code.readable = itable.country_code.writable = False
+                itable.ia_name.readable = itable.ia_name.writable = False
+                list_fields = ["type",
+                               "value",
+                               "valid_until",
+                               ]
+                s3db.configure("pr_identity",
+                               list_fields = list_fields,
+                               )
+
             elif component_name == "physical_description":
                 from gluon import DIV
                 dtable = r.component.table
                 dtable.medical_conditions.comment = DIV(_class="tooltip",
                                                         _title="%s|%s" % (T("Medical Conditions"),
                                                                           T("Chronic Illness, Disabilities, Mental/Psychological Condition etc.")))
-
-            elif method =="record" or component_name == "human_resource":
-                # Organisation needs to be an NS/Branch
-                ns_only("hrm_human_resource",
-                        required = True,
-                        branches = True,
-                        )
-                if method == "record":
-                    # Use default form (legacy)
-                    s3db.clear_config("hrm_human_resource", "crud_form")
+                dtable.ethnicity.writable = dtable.ethnicity.readable = False
+                dtable.other_details.writable = dtable.other_details.readable = False
 
             return True
         s3.prep = custom_prep

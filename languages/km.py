@@ -1176,7 +1176,7 @@
 'I agree to the %(terms_of_service)s': 'ខ្ញុំយល់ព្រមនឹង %(terms_of_service)s',
 'ICBRR Staff': 'បុគ្គលិក ICBRR ',
 'ID Tag Number': 'លេខសម្គាល់​អត្តសញ្ញាណប័ណ្ណ',
-'ID type': 'ប្រភេទ​អត្តសញ្ញាណប័ណ្ណ',
+'ID Type': 'ប្រភេទ​អត្តសញ្ញាណប័ណ្ណ',
 'ID': 'អត្តសញ្ញាណប័ណ្ណ',
 'IEC Materials': 'ឧបករណ៍ IEC',
 'IT Telecom': 'បច្ចេកវិទ្យា​ទូរគមនាគមន៍',

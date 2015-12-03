@@ -1586,7 +1586,7 @@
 'I am available in the following area(s)': '다음 영역 (s) 에서 사용 가능한 am',
 'ID Tag Number': 'ID 태그 번호',
 'ID Tag': 'ID 태그',
-'ID type': 'ID 유형',
+'ID Type': 'ID 유형',
 'Ice Pressure': 'ice 압력',
 'Identification Report': '보고서 식별',
 'Identification Reports': '보고서 식별',

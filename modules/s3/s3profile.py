@@ -1037,8 +1037,7 @@ class S3Profile(S3CRUD):
         # Card holder label and icon
         label = widget.get("label", "")
         # Activate if-required
-        #if label and isinstance(label, basestring):
-        if label:
+        if label and isinstance(label, basestring):
             label = current.T(label)
         icon = widget.get("icon", "")
         if icon:

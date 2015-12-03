@@ -638,7 +638,7 @@ def config(settings):
     # Uncomment to disable the use of HR Credentials
     #settings.hrm.use_credentials = False
     # Uncomment to disable the use of HR Description
-    #settings.hrm.use_description = False
+    #settings.hrm.use_description = None
     # Uncomment to enable the use of HR Education
     #settings.hrm.use_education = True
     # Uncomment to disable the use of HR ID Tab

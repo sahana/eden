@@ -1885,7 +1885,7 @@
 'Iceberg': 'Мөсөн уул',
 'ICONS': 'Дүрснүүд',
 'ID Tag Number': 'ID-н дугаар',
-'ID type': 'ID төрөл',
+'ID Type': 'ID төрөл',
 'Identifier account name.': 'Хэрэглэгчийн нэр',
 'Identifier Name for your Twilio Account.': 'өөрийн twilio нэрийг оруулах',
 'Identifier which the remote site uses to authenticate at this site when sending synchronization requests.': 'Синхрончлон алсын зайнаас хүсэлт илгээх',

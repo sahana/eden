@@ -1449,7 +1449,7 @@
 "Create Volunteer Cluster":"Gönüllü Kümesi Ekle",
 "Volunteer Cluster Position":"Gönüllü Kümesi Pozisyonu",
 "Create Volunteer Cluster Position":"Gönüllü Kümesi Pozisyonu Ekle",
-"ID type":"Kimlik Türü",
+"ID Type":"Kimlik Türü",
 "Number":"Sayı/Numara",
 "Issuing Authority":"Kimliği veren mercii",
 "Add Identity":"Kimlik Ekle",

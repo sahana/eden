@@ -55,7 +55,7 @@ def config(settings):
     settings.hrm.multiple_orgs = False
 
     settings.hrm.vol_experience = False
-    settings.hrm.use_description = False
+    settings.hrm.use_description = None
     settings.hrm.use_skills = False
     settings.hrm.use_awards = False
     settings.hrm.use_credentials = False

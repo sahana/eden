@@ -2415,7 +2415,7 @@
 'ID': 'Identificativo',
 'ID Tag': 'Tag ID',
 'ID Tag Number': 'Numero Tag ID',
-'ID type': 'Tipo ID',
+'ID Type': 'Tipo ID',
 'Identification': 'Identificazione',
 'Identification Report': 'Report di identificazione',
 'Identification Reports': 'Reports di identificativo',

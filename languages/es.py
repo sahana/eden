@@ -3075,7 +3075,7 @@
 'ID Label:': 'Etiqueta de ID:',
 'ID Tag Number': 'Identificación Número Tag',
 'ID Tag': 'Etiqueta de Identificación',
-'ID type': 'Tipo de Identificación',
+'ID Type': 'Tipo de Identificación',
 'ID': 'Identificación',
 'IEC Materials': 'Materiales de IEC',
 'IT Telecom': 'TI Telecom',
