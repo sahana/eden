@@ -514,10 +514,13 @@ class S3LocationModel(S3Model):
                 results = gis.geocode(addr_street, postcode, Lx_ids, geocoder)
                 if isinstance(results, basestring):
                     # Error
-                    if auth.override and not \
-                       settings.get_gis_check_within_parent_boundaries():
+                    if settings.get_gis_ignore_geocode_errors():
                         # Just Warn
-                        current.log.warning(results)
+                        current.log.warning("Geocoder: %s" % results)
+                    elif auth.override and \
+                         not settings.get_gis_check_within_parent_boundaries():
+                        # Just Warn
+                        current.log.warning("Geocoder: %s" % results)
                     else:
                         # Make this check mandatory
                         form.errors["addr_street"] = results
@@ -793,7 +796,7 @@ class S3LocationModel(S3Model):
         # Try the Name
         # @ToDo: Hook for possible duplicates vs definite?
         #query = (table.name.lower().like('%%%s%%' % name.lower()))
-        
+
         if current.deployment_settings.get_database_type() == "postgres":
             # Python lower() only works properly on Unicode strings not UTF-8 encoded strings
             # Oddity:
@@ -806,7 +809,7 @@ class S3LocationModel(S3Model):
         else :
             query = (table.name.lower() == name.lower()) & \
                 (table.level == level)
-        
+
         if parent:
             query &= (table.parent == parent)
         if end_date:

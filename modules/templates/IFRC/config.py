@@ -3991,6 +3991,10 @@ def config(settings):
             settings.msg.require_international_phone_numbers = False
             # Inject JS for household form
             household_inject_form_script(r, r.record)
+            # Geocode imported household addresses
+            if r.method == "import" and "job" in r.post_vars:
+                settings.gis.geocode_imported_addresses = True
+                settings.gis.ignore_geocode_errors = True
             return result
         s3.prep = custom_prep
 
