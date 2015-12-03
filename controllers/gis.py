@@ -3159,6 +3159,7 @@ def geocode():
             if id:
                 append(id)
         # Send request to external geocoders to get a Point
+        gis.google_geocode_retry = False
         results = gis.geocode(street, postcode, Lx_ids)
 
     else:

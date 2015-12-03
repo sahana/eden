@@ -1057,9 +1057,17 @@ class S3Config(Storage):
 
     def get_gis_geocode_imported_addresses(self):
         """
-            Should Addresses imported from CSV be passed to a Geocoder to try and automate Lat/Lon?
+            Should Addresses imported from CSV be passed to a
+            Geocoder to try and automate Lat/Lon?
         """
         return self.gis.get("geocode_imported_addresses", False)
+
+    def get_gis_ignore_geocode_errors(self):
+        """
+            Whether failure to geocode imported addresses shall
+            lead to a validation error
+        """
+        return self.gis.get("ignore_geocode_errors", False)
 
     def get_gis_geolocate_control(self):
         """

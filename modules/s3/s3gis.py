@@ -270,6 +270,8 @@ class GIS(object):
 
         self.relevant_hierarchy_levels = None
 
+        self.google_geocode_retry = True
+
     # -------------------------------------------------------------------------
     @staticmethod
     def gps_symbols():
@@ -516,11 +518,33 @@ class GIS(object):
 
         from geopy import geocoders
 
-        if geocoder == "google":
+        if geocoder == "google" or geocoder is True:
             g = geocoders.GoogleV3()
+            if current.gis.google_geocode_retry:
+                # Retry when reaching maximum requests per second
+                import time
+                from geopy.geocoders.googlev3 import GTooManyQueriesError
+                def geocode_(names, g=g, **kwargs):
+                    attempts = 0
+                    while attempts < 3:
+                        try:
+                            result = g.geocode(names, **kwargs)
+                        except GTooManyQueriesError:
+                            if attempts == 2:
+                                # Daily limit reached
+                                current.gis.google_geocode_retry = False
+                                raise
+                            time.sleep(1)
+                        else:
+                            break
+                        attempts += 1
+                    return result
+            else:
+                geocode_ = lambda names, g=g, **kwargs: g.geocode(names, **kwargs)
         elif geocoder == "yahoo":
             apikey = current.deployment_settings.get_gis_api_yahoo()
             g = geocoders.Yahoo(apikey)
+            geocode_ = lambda names, g=g, **kwargs: g.geocode(names, **kwargs)
         else:
             # @ToDo
             raise NotImplementedError
@@ -577,13 +601,13 @@ class GIS(object):
                 Lx = Lx.as_dict()
 
         try:
-            results = g.geocode(location, exactly_one=False)
+            results = geocode_(location, exactly_one=False)
             if len(results) == 1:
                 place, (lat, lon) = results[0]
                 if Lx:
                     output = None
                     # Check Results are for a specific address & not just that for the City
-                    results = g.geocode(Lx_names, exactly_one=False)
+                    results = geocode_(Lx_names, exactly_one=False)
                     if not results:
                         output = "Can't check that these results are specific enough"
                     for result in results:
