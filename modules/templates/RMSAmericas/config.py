@@ -1246,12 +1246,20 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):
 
+        db = current.db
         s3db = current.s3db
+        table = s3db.hrm_training_event
+
+         # Hours are Optional
+        from gluon import IS_EMPTY_OR
+        requires = table.hours.requires
+        table.hours.requires = IS_EMPTY_OR(table.hours)
 
         # Filter list of Venues
-        f = s3db.hrm_training_event.site_id
+        f = table.site_id
+        f.default = None
         f.label = T("Country")
-        from s3 import IS_ONE_OF, S3Represent
+        from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm
         ftable = s3db.org_facility
         ltable = s3db.org_site_facility_type
         ttable = s3db.org_facility_type
@@ -1259,10 +1267,26 @@ def config(settings):
                 (ftable.site_id == ltable.site_id) & \
                 (ltable.facility_type_id == ttable.id) & \
                 (ttable.name == "Venue")
-        the_set = current.db(query)
-        f.requires = IS_ONE_OF(the_set, "org_site.site_id",
+        rows = db(query).select(ftable.site_id)
+        filter_opts = [row.site_id for row in rows]
+        f.requires = IS_ONE_OF(db, "org_site.site_id",
                                S3Represent(lookup = "org_site"),
+                               filterby="site_id",
+                               filter_opts=filter_opts,
                                )
+
+        # Multiple Instructors
+        crud_form = S3SQLCustomForm()
+        list_fields = ["course_id",
+                       "site_id",
+                       "start_date",
+                       "training_event_instructor.person_id",
+                       "comments",
+                       ]
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       )
 
     settings.customise_hrm_training_event_resource = customise_hrm_training_event_resource
 

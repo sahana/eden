@@ -4495,7 +4495,7 @@ class S3OfficeModel(S3Model):
                                                   represent,
                                                   sort=True,
                                                   filterby="organisation_id",
-                                                  filter_opts=filter_opts
+                                                  filter_opts=filter_opts,
                                                   )),
                             sortby = "name",
                             comment = S3PopupLink(c = "org",

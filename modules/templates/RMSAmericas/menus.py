@@ -102,11 +102,11 @@ class S3MainMenu(default.S3MainMenu):
                    #MM("Training Events", c="hrm", f="training_event"),
                    #MM("Training Courses", c="hrm", f="course"),
                ),
-               homepage("hrm", f="facility", name="Training")(
+               homepage("hrm", f="facility", name="Training", check=hrm)(
                    MM("Training Centers", c="hrm", f="facility"),
                    MM("Training Course Catalog", c="hrm", f="course"),
                    MM("Training Events", c="hrm", f="training_event"),
-                   MM("External Trainees", c="pr", f="person", check=hrm),
+                   MM("External Trainees", c="pr", f="person"),
                ),
                homepage("inv", "supply", "req", check=inv)(
                    MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
