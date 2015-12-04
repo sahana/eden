@@ -4060,34 +4060,38 @@ $.filterOptionsS3({
         """
             Get the user_id for a person_id
 
-            @param person_id: the pr_person record ID
+            @param person_id: the pr_person record ID, or a user email address
             @param pe_id: the person entity ID, alternatively
         """
 
+        result = None
+
         if isinstance(person_id, basestring) and not person_id.isdigit():
+            # User email address
             utable = self.settings.table_user
             query = (utable.email == person_id)
             user = current.db(query).select(utable.id,
-                                            limitby=(0, 1)).first()
+                                            limitby=(0, 1),
+                                            ).first()
             if user:
-                return user.id
+                result = user.id
         else:
+            # Person/PE ID
             s3db = current.s3db
             ltable = s3db.pr_person_user
-            if not ltable:
-                return None
             if person_id:
                 ptable = s3db.pr_person
-                if not ptable:
-                    return None
                 query = (ptable.id == person_id) & \
                         (ptable.pe_id == ltable.pe_id)
             else:
                 query = (ltable.pe_id == pe_id)
             link = current.db(query).select(ltable.user_id,
-                                            limitby=(0, 1)).first()
+                                            limitby=(0, 1),
+                                            ).first()
             if link:
-                return link.user_id
+                result = link.user_id
+
+        return result
 
     # -------------------------------------------------------------------------
     def s3_user_pe_id(self, user_id):
@@ -4099,9 +4103,9 @@ $.filterOptionsS3({
 
         table = current.s3db.pr_person_user
         row = current.db(table.user_id == user_id).select(table.pe_id,
-                                                          limitby=(0, 1)).first()
-        if row:
-            return row.pe_id
+                                                          limitby=(0, 1),
+                                                          ).first()
+        return row.pe_id if row else None
 
     # -------------------------------------------------------------------------
     def s3_logged_in_person(self):
@@ -4109,18 +4113,21 @@ $.filterOptionsS3({
             Get the person record ID for the current logged-in user
         """
 
+        row = None
+
         if self.s3_logged_in():
             ptable = current.s3db.pr_person
             try:
                 query = (ptable.pe_id == self.user.pe_id)
             except AttributeError:
-                # Prepop
+                # Prepop (auth.override, self.user is None)
                 pass
             else:
-                record = current.db(query).select(ptable.id,
-                                                  limitby=(0, 1)).first()
-                if record:
-                    return record.id
+                row = current.db(query).select(ptable.id,
+                                               limitby=(0, 1),
+                                               ).first()
+
+        return row.id if row else None
 
     # -------------------------------------------------------------------------
     def s3_logged_in_human_resource(self):
@@ -4128,23 +4135,25 @@ $.filterOptionsS3({
             Get the first HR record ID for the current logged-in user
         """
 
+        row = None
+
         if self.s3_logged_in():
             s3db = current.s3db
             ptable = s3db.pr_person
             htable = s3db.hrm_human_resource
-
             try:
                 query = (htable.person_id == ptable.id) & \
                         (ptable.pe_id == self.user.pe_id)
             except AttributeError:
-                # Prepop
+                # Prepop (auth.override, self.user is None)
                 pass
             else:
-                record = current.db(query).select(htable.id,
-                                                  orderby =~htable.modified_on,
-                                                  limitby=(0, 1)).first()
-                if record:
-                    return record.id
+                row = current.db(query).select(htable.id,
+                                               orderby = ~htable.modified_on,
+                                               limitby = (0, 1),
+                                               ).first()
+
+        return row.id if row else None
 
     # -------------------------------------------------------------------------
     # Core Authorization Methods
@@ -5646,19 +5655,18 @@ class S3Permission(object):
                       constructed
         """
 
-        ANY = "ANY"
         OENT = "realm_entity"
 
-        if ANY in entities:
-            return None
-        elif not entities:
-            return None
-        elif OENT in table.fields:
+        query = None
+
+        if entities and "ANY" not in entities and OENT in table.fields:
             public = (table[OENT] == None)
             if len(entities) == 1:
-                return (table[OENT] == entities[0]) | public
+                query = (table[OENT] == entities[0]) | public
             else:
-                return (table[OENT].belongs(entities)) | public
+                query = (table[OENT].belongs(entities)) | public
+
+        return query
 
     # -------------------------------------------------------------------------
     def permitted_realms(self, tablename, method="read"):
