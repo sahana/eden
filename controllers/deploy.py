@@ -194,9 +194,10 @@ def application():
     settings.search.filter_manager = True
 
     def prep(r):
-        if not r.method and r.representation != "s3json":
-            r.method = "select"
-        if r.method == "select":
+        method = r.method
+        if not method and r.representation != "s3json":
+            r.method = method = "select"
+        if method == "select":
             r.custom_action = s3db.deploy_apply
         return True
     s3.prep = prep

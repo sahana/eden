@@ -106,6 +106,7 @@ class S3MainMenu(default.S3MainMenu):
                    MM("Training Centers", c="hrm", f="facility"),
                    MM("Training Course Catalog", c="hrm", f="course"),
                    MM("Training Events", c="hrm", f="training_event"),
+                   MM("External Trainees", c="pr", f="person", check=hrm),
                ),
                homepage("inv", "supply", "req", check=inv)(
                    MM("Warehouses", c="inv", f="warehouse", m="summary", check=multi_warehouse),
@@ -274,6 +275,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         has_role = current.auth.s3_has_role
         s3 = current.session.s3
         ADMIN = s3.system_roles.ADMIN
+        ORG_ADMIN = s3.system_roles.ORG_ADMIN
         settings = current.deployment_settings
 
         if "hrm" not in s3:
@@ -282,8 +284,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         manager_mode = lambda i: hrm_vars.mode is None
         personal_mode = lambda i: hrm_vars.mode is not None
-        is_org_admin = lambda i: hrm_vars.orgs and True or \
-                                 has_role(ADMIN)
 
         #use_certs = settings.get_hrm_use_certificates
 
@@ -296,7 +296,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Training Course Catalog", c="hrm", f="course")(
                             M("Create", m="create"),
                             M("Import", m="import", p="create",
-                              check=is_org_admin),
+                              restrict=[ORG_ADMIN]),
                             M("Certificates", f="certificate",
                               check=manager_mode),
                             # Just access this via Tabs of Courses & Certificates
@@ -320,7 +320,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("Certificate Catalog", c="hrm", f="certificate",
                         #  check=[manager_mode, use_certs])(
                         #    M("Create", m="create"),
-                        #    M("Import", m="import", p="create", check=is_org_admin),
+                        #    M("Import", m="import", p="create",
+                        #      restrict=[ORG_ADMIN]),
                         #    #M("Skill Equivalence", f="certificate_skill"),
                         #),
                     )
@@ -329,7 +330,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Human Talent", c="hrm", f="human_resource", m="summary",
                           check=manager_mode)(
                             M("Create", m="create"),
-                            M("Import", f="person", m="import", check=[manager_mode, is_org_admin]),
+                            M("Import", f="person", m="import",
+                              restrict=[ORG_ADMIN]),
                         ),
                         M("Report", c="hrm", f="human_resource", m="report",
                           check=manager_mode)(
@@ -350,7 +352,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Create", m="create",
                               vars=red_cross_filter
                               ),
-                            M("Import", m="import", p="create", check=is_org_admin)
+                            M("Import", m="import", p="create",
+                              restrict=[ORG_ADMIN])
                         ),
                         #M("Offices", c="org", f="office",
                         #  check=manager_mode)(
@@ -364,7 +367,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Position Catalog", c="hrm", f="job_title",
                           check=manager_mode)(
                             M("Create", m="create"),
-                            M("Import", m="import", p="create", check=is_org_admin),
+                            M("Import", m="import", p="create",
+                              restrict=[ORG_ADMIN]),
                         ),
                         #M("Organization Types", c="org", f="organisation_type",
                         #  restrict=[ADMIN],
@@ -384,8 +388,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("My Profile", c="hrm", f="person",
                         #  check=personal_mode, vars=dict(access="personal")),
                         # This provides the link to switch to the manager mode:
-                        M("Human Resources", c="hrm", f="index",
-                          check=[personal_mode, is_org_admin]),
+                        #M("Human Resources", c="hrm", f="index",
+                        #  check=[personal_mode, is_org_admin]),
                         # This provides the link to switch to the personal mode:
                         #M("Personal Profile", c="hrm", f="person",
                         #  check=manager_mode, vars=dict(access="personal"))

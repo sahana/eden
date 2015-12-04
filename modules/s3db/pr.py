@@ -740,9 +740,7 @@ class S3PersonModel(S3Model):
         NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
-        define_table = self.define_table
         super_link = self.super_link
-        add_components = self.add_components
 
         # ---------------------------------------------------------------------
         # Person
@@ -787,86 +785,90 @@ class S3PersonModel(S3Model):
         show_opt_in = settings.get_auth_opt_in_to_email()
 
         tablename = "pr_person"
-        define_table(tablename,
-                     # Instances
-                     super_link("pe_id", "pr_pentity"),
-                     super_link("track_id", "sit_trackable"),
-                     # Base location
-                     self.gis_location_id(readable=False,
-                                          writable=False),
-                     self.pr_pe_label(
-                          comment = DIV(_class="tooltip",
-                                        _title="%s|%s" % (T("ID Tag Number"),
-                                                          T("Number or Label on the identification tag this person is wearing (if any)."),
-                                                          ),
-                                        ),
-                          requires = IS_EMPTY_OR(IS_NOT_ONE_OF(db, "pr_person.pe_label")),
-                          ),
-                     # @ToDo: Remove this field from this core table
-                     # - remove refs to writing this from this module
-                     # - update read refs in controllers/dvi.py & controllers/mpr.py
-                     Field("missing", "boolean",
-                           readable=False,
-                           writable=False,
-                           default=False,
-                           represent = lambda missing: \
-                                       (missing and ["missing"] or [""])[0]),
-                     Field("first_name", notnull=True,
-                           length=64, # Mayon Compatibility
-                           #default = "?" if current.auth.permission.format != "html" else "",
-                           label = T("First Name"),
-                           # NB Not possible to have an IS_NAME() validator here
-                           # http://eden.sahanafoundation.org/ticket/834
-                           requires = IS_NOT_EMPTY(error_message = T("Please enter a first name")),
-                           comment =  DIV(_class="tooltip",
-                                          _title="%s|%s" % (T("First Name"),
-                                                        T("The first or only name of the person (mandatory)."))),
-                           ),
-                     Field("middle_name", length=64, # Mayon Compatibility
-                           label = T("Middle Name"),
-                           represent = lambda v: v or NONE,
-                           ),
-                     Field("last_name", length=64, # Mayon Compatibility
-                           label = T("Last Name"),
-                           represent = lambda v: v or NONE,
-                           requires = last_name_validate,
-                           ),
-                     Field("initials", length=8,
-                           label = T("Initials"),
-                           ),
-                     Field("preferred_name", length=64, # Mayon Compatibility
-                           label = T("Preferred Name"),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Preferred Name"),
-                                                           T("The name to be used when calling for or directly addressing the person (optional)."))),
-                           ),
-                     Field("local_name",
-                           label = T("Local Name"),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Local Name"),
-                                                           T("Name of the person in local language and script (optional)."))),
-                           ),
-                     pr_gender(),
-                     s3_date("date_of_birth",
-                             label = T("Date of Birth"),
-                             empty = not settings.get_pr_dob_required(),
-                             future = 0,
-                             past = 1320,  # Months, so 110 years
-                             ),
-                     # @ToDo: Move this field from this core table (should be using Saved Searches/Subscription)
-                     Field("opt_in", "string", # list of mailing lists which link to teams
-                           default=False,
-                           readable = show_opt_in,
-                           writable = show_opt_in,
-                           label = T("Receive updates"),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Mailing list"),
-                                                           T("By selecting this you agree that we may contact you."))),
-                           ),
-                     Field.Method("age", self.pr_person_age),
-                     Field.Method("age_group", self.pr_person_age_group),
-                     s3_comments(),
-                     *s3_meta_fields())
+        self.define_table(
+            tablename,
+            # Instances
+            super_link("pe_id", "pr_pentity"),
+            super_link("track_id", "sit_trackable"),
+            # Base location
+            self.gis_location_id(readable=False,
+                                 writable=False),
+            self.pr_pe_label(
+                comment = DIV(_class="tooltip",
+                              _title="%s|%s" % (T("ID Tag Number"),
+                                                T("Number or Label on the identification tag this person is wearing (if any)."),
+                                                ),
+                              ),
+                requires = IS_EMPTY_OR(IS_NOT_ONE_OF(db, "pr_person.pe_label")),
+                ),
+            # @ToDo: Remove this field from this core table
+            # - remove refs to writing this from this module
+            # - update read refs in controllers/dvi.py & controllers/mpr.py
+            Field("missing", "boolean",
+                  readable=False,
+                  writable=False,
+                  default=False,
+                  represent = lambda missing: \
+                              (missing and ["missing"] or [""])[0]),
+            Field("first_name", notnull=True,
+                  length=64, # Mayon Compatibility
+                  #default = "?" if current.auth.permission.format != "html" else "",
+                  label = T("First Name"),
+                  # NB Not possible to have an IS_NAME() validator here
+                  # http://eden.sahanafoundation.org/ticket/834
+                  requires = IS_NOT_EMPTY(error_message = T("Please enter a first name")),
+                  comment =  DIV(_class="tooltip",
+                                 _title="%s|%s" % (T("First Name"),
+                                                   T("The first or only name of the person (mandatory)."))),
+                  ),
+            Field("middle_name", length=64, # Mayon Compatibility
+                  label = T("Middle Name"),
+                  represent = lambda v: v or NONE,
+                  ),
+            Field("last_name", length=64, # Mayon Compatibility
+                  label = T("Last Name"),
+                  represent = lambda v: v or NONE,
+                  requires = last_name_validate,
+                  ),
+            # @ToDo: Move to person_details & hide by default
+            Field("initials", length=8,
+                  label = T("Initials"),
+                  ),
+            # @ToDo: Move to person_details & hide by default
+            Field("preferred_name", length=64, # Mayon Compatibility
+                  label = T("Preferred Name"),
+                  comment = DIV(_class="tooltip",
+                                _title="%s|%s" % (T("Preferred Name"),
+                                                  T("The name to be used when calling for or directly addressing the person (optional)."))),
+                  ),
+            # @ToDo: Move to person_details & hide by default
+            Field("local_name",
+                  label = T("Local Name"),
+                  comment = DIV(_class="tooltip",
+                                _title="%s|%s" % (T("Local Name"),
+                                                  T("Name of the person in local language and script (optional)."))),
+                  ),
+            pr_gender(),
+            s3_date("date_of_birth",
+                    label = T("Date of Birth"),
+                    empty = not settings.get_pr_dob_required(),
+                    future = 0,
+                    past = 1320,  # Months, so 110 years
+                    ),
+            # @ToDo: Move this field from this core table (should be using Saved Searches/Subscription)
+            Field("opt_in", "string", # list of mailing lists which link to teams
+                  default=False,
+                  readable = show_opt_in,
+                  writable = show_opt_in,
+                  label = T("Receive updates"),
+                  comment = DIV(_class="tooltip",
+                                _title="%s|%s" % (T("Mailing list"),
+                                                  T("By selecting this you agree that we may contact you."))),
+                  ),
+            Field.Method("age", self.pr_person_age),
+            Field.Method("age_group", self.pr_person_age_group),
+            s3_comments(),
+            *s3_meta_fields())
 
         # CRUD Strings
         current.response.s3.crud_strings[tablename] = Storage(
@@ -896,7 +898,7 @@ class S3PersonModel(S3Model):
                                    "number of a person, separated by spaces. "
                                    "You may use % as wildcard."),
                         ),
-        ]
+            ]
 
         # Custom Form
         crud_form = S3SQLCustomForm("first_name",
@@ -904,9 +906,9 @@ class S3PersonModel(S3Model):
                                     "last_name",
                                     "person_details.year_of_birth",
                                     "date_of_birth",
-                                    "initials",
-                                    "preferred_name",
-                                    "local_name",
+                                    #"initials",
+                                    #"preferred_name",
+                                    #"local_name",
                                     "gender",
                                     "person_details.marital_status",
                                     "person_details.nationality",
@@ -1009,119 +1011,119 @@ class S3PersonModel(S3Model):
                    action = self.pr_person_check_duplicates)
 
         # Components
-        add_components(tablename,
-                       # Assets
-                       asset_asset = "assigned_to_id",
-                       # User account
-                       auth_user = {"link": "pr_person_user",
-                                    "joinby": "pe_id",
-                                    "key": "user_id",
-                                    "fkey": "id",
-                                    "pkey": "pe_id",
-                                    },
-                       # Shelter (Camp) Registry
-                       cr_shelter_registration = {"joinby": "person_id",
-                                                  # A person can be assigned to only one shelter
-                                                  # @todo: when fully implemented this needs to allow
-                                                  # multiple instances for tracking reasons
-                                                  "multiple": False,
-                                                  },
-                       # Case Management  (Disaster Victim Registry)
-                       dvr_allowance = "person_id",
-                       dvr_beneficiary_data = "person_id",
-                       dvr_case = {"name": "dvr_case",
-                                   "joinby": "person_id",
-                                   "multiple": False,
-                                   },
-                       dvr_case_activity = "person_id",
-                       dvr_case_appointment = "person_id",
-                       dvr_case_flag = {"link": "dvr_case_flag_case",
+        self.add_components(tablename,
+                            # Assets
+                            asset_asset = "assigned_to_id",
+                            # User account
+                            auth_user = {"link": "pr_person_user",
+                                         "joinby": "pe_id",
+                                         "key": "user_id",
+                                         "fkey": "id",
+                                         "pkey": "pe_id",
+                                         },
+                            # Shelter (Camp) Registry
+                            cr_shelter_registration = {"joinby": "person_id",
+                                                       # A person can be assigned to only one shelter
+                                                       # @todo: when fully implemented this needs to allow
+                                                       # multiple instances for tracking reasons
+                                                       "multiple": False,
+                                                       },
+                            # Case Management  (Disaster Victim Registry)
+                            dvr_allowance = "person_id",
+                            dvr_beneficiary_data = "person_id",
+                            dvr_case = {"name": "dvr_case",
                                         "joinby": "person_id",
-                                        "key": "flag_id",
-                                        "actuate": "link",
-                                        "autodelete": False,
+                                        "multiple": False,
                                         },
-                       dvr_case_language = "person_id",
-                       dvr_case_service_contact = "person_id",
-                       dvr_economy = {"joinby": "person_id",
-                                      "multiple": False,
-                                      },
-                       dvr_note = {"name": "case_note",
-                                   "joinby": "person_id",
-                                   },
-                       # Evacuee Registry
-                       evr_case = {"joinby": "person_id",
-                                   "multiple": False,
-                                   },
-                       evr_medical_details = {"joinby": "person_id",
+                            dvr_case_activity = "person_id",
+                            dvr_case_appointment = "person_id",
+                            dvr_case_flag = {"link": "dvr_case_flag_case",
+                                             "joinby": "person_id",
+                                             "key": "flag_id",
+                                             "actuate": "link",
+                                             "autodelete": False,
+                                             },
+                            dvr_case_language = "person_id",
+                            dvr_case_service_contact = "person_id",
+                            dvr_economy = {"joinby": "person_id",
+                                           "multiple": False,
+                                           },
+                            dvr_note = {"name": "case_note",
+                                        "joinby": "person_id",
+                                        },
+                            # Evacuee Registry
+                            evr_case = {"joinby": "person_id",
+                                        "multiple": False,
+                                        },
+                            evr_medical_details = {"joinby": "person_id",
+                                                   "multiple": False,
+                                                   },
+                            evr_background = {"joinby": "person_id",
                                               "multiple": False,
                                               },
-                       evr_background = {"joinby": "person_id",
-                                         "multiple": False,
+ 
+                            # HR Records
+                            hrm_human_resource = "person_id",
+                            # Skills
+                            hrm_certification = "person_id",
+                            hrm_competency = "person_id",
+                            hrm_credential = "person_id",
+                            hrm_training = "person_id",
+                            # Facilitated Trainings (Instructor)
+                            hrm_training_event = "person_id",
+                            # Experience
+                            hrm_experience = "person_id",
+                            hrm_programme_hours = {"name": "hours",
+                                                   "joinby": "person_id",
+                                                   },
+                            vol_activity_hours = "person_id",
+                            # Appraisals
+                            hrm_appraisal = "person_id",
+                            # Availability
+                            pr_person_availability = {"name": "availability",
+                                                      "joinby": "person_id",
+                                                      # Will need tochange in future
+                                                      "multiple": False,
+                                                      },
+                            # Awards
+                            hrm_award = {"name": "staff_award",
+                                         "joinby": "person_id",
                                          },
-
-                       # HR Records
-                       hrm_human_resource = "person_id",
-                       # Skills
-                       hrm_certification = "person_id",
-                       hrm_competency = "person_id",
-                       hrm_credential = "person_id",
-                       hrm_training = "person_id",
-                       # Facilitated Trainings (Instructor)
-                       hrm_training_event = "person_id",
-                       # Experience
-                       hrm_experience = "person_id",
-                       hrm_programme_hours = {"name": "hours",
-                                              "joinby": "person_id",
-                                              },
-                       vol_activity_hours = "person_id",
-                       # Appraisals
-                       hrm_appraisal = "person_id",
-                       # Availability
-                       pr_person_availability = {"name": "availability",
-                                                 "joinby": "person_id",
-                                                 # Will need tochange in future
+                            # Disciplinary Record
+                            hrm_disciplinary_action = "person_id",
+                            # Salary Information
+                            hrm_salary = "person_id",
+                            # Organisation Memberships
+                            member_membership = "person_id",
+                            # Organisation Group Association
+                            org_group_person = "person_id",
+                            # Education history
+                            pr_education = "person_id",
+                            # Group Memberships
+                            pr_group_membership = "person_id",
+                            # Identity Documents
+                            pr_identity = (# All Identity Documents
+                                           {"name": "identity",
+                                            "joinby": "person_id",
+                                            },
+                                           # Passports in particular
+                                           {"name": "passport",
+                                            "joinby": "person_id",
+                                            "filterby": "type",
+                                            "filterfor": (1,),
+                                            },
+                                           ),
+                            # Personal Details
+                            pr_person_details = {"joinby": "person_id",
                                                  "multiple": False,
                                                  },
-                       # Awards
-                       hrm_award = {"name": "staff_award",
-                                    "joinby": "person_id",
-                                    },
-                       # Disciplinary Record
-                       hrm_disciplinary_action = "person_id",
-                       # Salary Information
-                       hrm_salary = "person_id",
-                       # Organisation Memberships
-                       member_membership = "person_id",
-                       # Organisation Group Association
-                       org_group_person = "person_id",
-                       # Education history
-                       pr_education = "person_id",
-                       # Group Memberships
-                       pr_group_membership = "person_id",
-                       # Identity Documents
-                       pr_identity = (# All Identity Documents
-                                      {"name": "identity",
-                                       "joinby": "person_id",
-                                       },
-                                      # Passports in particular
-                                      {"name": "passport",
-                                       "joinby": "person_id",
-                                       "filterby": "type",
-                                       "filterfor": (1,),
-                                       },
-                                      ),
-                       # Personal Details
-                       pr_person_details = {"joinby": "person_id",
-                                            "multiple": False,
-                                            },
-                       # Tags
-                       pr_person_tag = "person_id",
-                       # Volunteer Awards
-                       vol_volunteer_award = {"name": "award",
-                                              "joinby": "person_id",
-                                              },
-                       )
+                            # Tags
+                            pr_person_tag = "person_id",
+                            # Volunteer Awards
+                            vol_volunteer_award = {"name": "award",
+                                                   "joinby": "person_id",
+                                                   },
+                            )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)

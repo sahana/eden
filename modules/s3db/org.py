@@ -196,8 +196,7 @@ class S3OrganisationModel(S3Model):
             ondelete = "SET NULL",
             represent = type_represent,
             requires = IS_EMPTY_OR(
-                        IS_ONE_OF(db,
-                                  "org_organisation_type.id",
+                        IS_ONE_OF(db, "org_organisation_type.id",
                                   type_represent,
                                   sort = True
                                   )),
@@ -6474,6 +6473,7 @@ def org_facility_controller():
         multiple controllers for unified menus
     """
 
+    db = current.db
     s3db = current.s3db
     s3 = current.response.s3
 
@@ -6483,7 +6483,74 @@ def org_facility_controller():
         s3db.gis_location_filter(r)
 
         if r.interactive:
-            if r.component:
+            if not r.component:
+                method = r.method
+                get_vars = r.get_vars
+                type_filter = get_vars.get("facility_type.name", None)
+                if type_filter:
+                    type_names = [name.lower().strip()
+                                  for name in type_filter.split(",")]
+                    field = s3db.org_site_facility_type.facility_type_id
+                    field.comment = None # Don't want to create new types here
+                    if len(type_names) == 1:
+                        # Strip Type from list_fields
+                        list_fields = s3db.get_config("org_facility",
+                                                      "list_fields")
+                        try:
+                            list_fields.remove("site_facility_type.facility_type_id")
+                        except ValueError:
+                            # Already removed
+                            pass
+                        if not method or method == "create":
+                            # Default the Type
+                            type_table = s3db.org_facility_type
+                            query = (type_table.name == type_filter)
+                            row = db(query).select(type_table.id,
+                                                   limitby=(0, 1)).first()
+                            type_id = row and row.id
+                            if type_id:
+                                field.default = type_id
+                                field.writable = False
+                                crud_form = s3db.get_config("org_facility",
+                                                            "crud_form")
+                                for e in crud_form.elements:
+                                    if e.selector == "facility_type":
+                                        e.options.label = ""
+
+                if r.id:
+                    table = r.table
+                    field = table.obsolete
+                    field.readable = field.writable = True
+                    if method == "update" and \
+                       r.representation == "popup" and \
+                       get_vars.get("profile") == "org_organisation":
+                            # Coming from organisation profile
+                            # Don't allow change of organisation_id in this case
+                            field = table.organisation_id
+                            field.writable = False
+                            field.readable = False
+
+                elif method == "create":
+                    table = r.table
+                    name = get_vars.get("name")
+                    if name:
+                        table.name.default = name
+                    if r.representation == "popup" and \
+                       get_vars.get("profile") == "org_organisation":
+                        # Coming from organisation profile
+                        organisation_id = None
+                        for k in ("~.organisation_id", "(organisation)", "~.(organisation)"):
+                            if k in get_vars:
+                                organisation_id = get_vars[k]
+                                break
+                        if organisation_id is not None:
+                            # Don't allow change of organisation_id in this case
+                            field = table.organisation_id
+                            field.default = organisation_id
+                            field.writable = False
+                            field.readable = False
+
+            else:
                 cname = r.component_name
                 if cname in ("inv_item", "recv", "send"):
                     # Filter out items which are already in this inventory
@@ -6520,40 +6587,6 @@ def org_facility_controller():
                                    create_next = None,
                                    )
 
-            elif r.id:
-                table = r.table
-                field = table.obsolete
-                field.readable = field.writable = True
-                if r.method == "update" and \
-                   r.representation == "popup" and \
-                   r.get_vars.get("profile") == "org_organisation":
-                        # Coming from organisation profile
-                        # Don't allow change of organisation_id in this case
-                        field = table.organisation_id
-                        field.writable = False
-                        field.readable = False
-
-            elif r.method == "create":
-                table = r.table
-                get_vars = r.get_vars
-                name = get_vars.get("name")
-                if name:
-                    table.name.default = name
-                if r.representation == "popup" and \
-                   get_vars.get("profile") == "org_organisation":
-                    # Coming from organisation profile
-                    organisation_id = None
-                    for k in ("~.organisation_id", "(organisation)", "~.(organisation)"):
-                        if k in get_vars:
-                            organisation_id = get_vars[k]
-                            break
-                    if organisation_id is not None:
-                        # Don't allow change of organisation_id in this case
-                        field = table.organisation_id
-                        field.default = organisation_id
-                        field.writable = False
-                        field.readable = False
-
         elif r.representation == "geojson":
             # Load these models now as they'll be needed when we encode
             mtable = s3db.gis_marker
@@ -6581,7 +6614,6 @@ def org_facility_controller():
             site_id = record.site_id
 
             # Type(s)
-            db = current.db
             ttable = db.org_facility_type
             ltable = db.org_site_facility_type
             query = (ltable.site_id == site_id) & \

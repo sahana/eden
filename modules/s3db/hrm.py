@@ -2577,6 +2577,9 @@ class S3HRSkillModel(S3Model):
                            readable = external_courses,
                            writable = external_courses,
                            ),
+                     Field("hours", "integer",
+                           label = T("Hours"),
+                           ),
                      s3_comments(label = T("Description"),
                                  comment = None,
                                  ),
@@ -2706,6 +2709,7 @@ class S3HRSkillModel(S3Model):
                                  min = datetime.datetime(2000, 1, 1),
                                  set_max = "#hrm_training_event_start_date",
                                  ),
+                     # @ToDo: Auto-populate from course
                      Field("hours", "integer",
                            label = T("Hours"),
                            requires = IS_INT_IN_RANGE(1, 1000),
@@ -3043,7 +3047,7 @@ class S3HRSkillModel(S3Model):
                                ),
                      certificate_id(empty = False,
                                     ),
-                     # @ToDo: Option to auto-generate (like Waybills: TrainingCenterCode/CourseCode/Unique/Suffix for attendance/pass)
+                     # @ToDo: Option to auto-generate (like Waybills: SiteCode-CourseCode-UniqueNumber)
                      Field("number",
                            label = T("License Number"),
                            ),
