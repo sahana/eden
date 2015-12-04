@@ -40,7 +40,7 @@ __all__ = ("S3DateFilter",
            "S3RangeFilter",
            "S3SliderFilter",
            "S3TextFilter",
-           "get_s3_filter_opts",
+           "s3_get_filter_opts",
            )
 
 import datetime
@@ -80,60 +80,6 @@ from s3widgets import ICON, \
 
 # Compact JSON encoding
 SEPARATORS = (",", ":")
-
-# =============================================================================
-def get_s3_filter_opts(tablename,
-                       fieldname = "name",
-                       location_filter = False,
-                       org_filter = False,
-                       none = False,
-                       translate = False,
-                       ):
-    """
-        Lazy options getter
-        - this is useful when the expected number of options is significantly smaller than the number of records to iterate through
-            NB This reason is no longer required with S3Filter, but is a legacy from S3Search: S3Filter already does an efficient Reverse-Query
-            @ToDo: Deprecate
-        - note this doesn't check if options are actually in-use
-
-        @param tablename: the name of the lookup table
-        @param fieldname: the name of the field to represent options with
-        @param location_filter: whether to filter the values by location
-        @param org_filter: whether to filter the values by root_org
-        @param none: whether to include an option for None
-        @param translate: whether to translate the values
-    """
-
-    auth = current.auth
-    table = current.s3db.table(tablename)
-    if auth.s3_has_permission("read", table):
-        query = auth.s3_accessible_query("read", table)
-        if location_filter:
-            location = current.session.s3.location_filter
-            if location:
-                query &= (table.location_id == location)
-        if org_filter:
-            root_org = auth.root_org()
-            if root_org:
-                query &= ((table.organisation_id == root_org) | \
-                          (table.organisation_id == None))
-            #else:
-            #    query &= (table.organisation_id == None)
-        rows = current.db(query).select(table.id,
-                                        table[fieldname],
-                                        # Options are sorted later
-                                        #orderby = table[fieldname]
-                                        )
-        if translate:
-            T = current.T
-            opts = dict((row.id, T(row[fieldname])) for row in rows)
-        else:
-            opts = dict((row.id, row[fieldname]) for row in rows)
-        if none:
-            opts[None] = current.messages["NONE"]
-    else:
-        opts = {}
-    return opts
 
 # =============================================================================
 class S3FilterWidget(object):
@@ -220,46 +166,14 @@ class S3FilterWidget(object):
             @param field: the selector(s) for the field(s) to filter by
             @param attr: configuration options for this widget
 
-            Configuration options:
+            Common configuration options:
+
             @keyword label: label for the widget
             @keyword comment: comment for the widget
-            @keyword hidden: render widget initially hidden (="advanced"
-                             option)
-            @keyword levels: list of location hierarchy levels
-                             (L{S3LocationFilter})
-            @keyword widget: widget to use (L{S3OptionsFilter}),
-                             "select", "multiselect" (default),
-                             or "groupedopts"
-            @keyword cols: number of columns of checkboxes (L{S3OptionsFilter}
-                           and L{S3LocationFilter} with "groupedopts" widget)
-            @keyword filter: show filter for options (L{S3OptionsFilter},
-                             L{S3LocationFilter} with "multiselect" widget)
-            @keyword header: show header in widget (L{S3OptionsFilter},
-                             L{S3LocationFilter} with "multiselect" widget)
-            @keyword selectedList: number of selected items to show before
-                                   collapsing into number of items
-                                   (L{S3OptionsFilter}, L{S3LocationFilter}
-                                   with "multiselect" widget)
-            @keyword no_opts: text to show if no options available
-                              (L{S3OptionsFilter}, L{S3LocationFilter})
-            @keyword resource: alternative resource to look up options
-                               (L{S3LocationFilter}, L{S3OptionsFilter})
-            @keyword lookup: field in the alternative resource to look up
-                             options (L{S3LocationFilter})
-            @keyword options: fixed set of options (L{S3OptionsFilter}: dict
-                              of {value: label} or a callable that returns one,
-                              L{S3LocationFilter}: list of gis_location IDs)
-            @keyword size: maximum size of multi-letter options groups
-                           (L{S3OptionsFilter} with "groupedopts" widget)
-            @keyword help_field: field in the referenced table to display on
-                                 hovering over a foreign key option
-                                 (L{S3OptionsFilter} with "groupedopts" widget)
-            @keyword none: label for explicit None-option in many-to-many
-                           fields (L{S3OptionsFilter})
-            @keyword fieldtype: explicit field type "date" or "datetime" to
-                                use for context or virtual fields
-                                (L{S3DateFilter})
-            @keyword hide_time: don't show time selector (L{S3DateFilter})
+            @keyword hidden: render widget initially hidden
+                             (="advanced" option)
+
+            - other options see subclasses
         """
 
         self.field = field
@@ -499,7 +413,16 @@ class S3FilterWidget(object):
 
 # =============================================================================
 class S3TextFilter(S3FilterWidget):
-    """ Text filter widget """
+    """
+        Text filter widget
+
+        Configuration options:
+
+        @keyword label: label for the widget
+        @keyword comment: comment for the widget
+        @keyword hidden: render widget initially hidden (="advanced" option)
+        @keyword any: match any of the strings
+    """
 
     _class = "text-filter"
 
@@ -525,6 +448,11 @@ class S3TextFilter(S3FilterWidget):
         attr["_class"] = _class
         attr["_type"] = "text"
 
+        # Match any or all of the strings entered?
+        data = attr.get("data", {})
+        data["match"] = "any" if self.opts.get("any") else "all"
+        attr["data"] = data
+
         values = [v.strip("*") for v in values if v is not None]
         if values:
             attr["_value"] = " ".join(values)
@@ -533,7 +461,15 @@ class S3TextFilter(S3FilterWidget):
 
 # =============================================================================
 class S3RangeFilter(S3FilterWidget):
-    """ Numerical Range Filter Widget """
+    """
+        Numerical Range Filter Widget
+
+        Configuration options:
+
+        @keyword label: label for the widget
+        @keyword comment: comment for the widget
+        @keyword hidden: render widget initially hidden (="advanced" option)
+    """
 
     # Overall class
     _class = "range-filter"
@@ -641,7 +577,16 @@ class S3RangeFilter(S3FilterWidget):
 class S3DateFilter(S3RangeFilter):
     """
         Date Range Filter Widget
-        @see: L{Configuration Options<S3FilterWidget.__init__>}
+
+        Configuration options:
+
+        @keyword label: label for the widget
+        @keyword comment: comment for the widget
+        @keyword hidden: render widget initially hidden (="advanced" option)
+
+        @keyword fieldtype: explicit field type "date" or "datetime" to
+                            use for context or virtual fields
+        @keyword hide_time: don't show time selector
     """
 
     _class = "date-filter"
@@ -792,6 +737,12 @@ class S3SliderFilter(S3RangeFilter):
     """
         Filter widget for Ranges which is controlled by a Slider instead of
         INPUTs
+
+        Configuration options:
+
+        @keyword label: label for the widget
+        @keyword comment: comment for the widget
+        @keyword hidden: render widget initially hidden (="advanced" option)
     """
 
     _class = "slider-filter"
@@ -896,9 +847,25 @@ class S3SliderFilter(S3RangeFilter):
 class S3LocationFilter(S3FilterWidget):
     """
         Hierarchical Location Filter Widget
-        @see: L{Configuration Options<S3FilterWidget.__init__>}
 
         NB This will show records linked to all child locations of the Lx
+
+        Configuration options:
+
+        @keyword label: label for the widget
+        @keyword comment: comment for the widget
+        @keyword hidden: render widget initially hidden (="advanced" option)
+
+        @keyword levels: list of location hierarchy levels
+        @keyword filter: show filter for options (with "multiselect" widget)
+        @keyword header: show header in widget (with "multiselect" widget)
+        @keyword selectedList: number of selected items to show before
+                               collapsing into number of items
+                               (with "multiselect" widget)
+        @keyword no_opts: text to show if no options available
+        @keyword resource: alternative resource to look up options
+        @keyword lookup: field in the alternative resource to look up
+        @keyword options: fixed set of options (list of gis_location IDs)
     """
 
     _class = "location-filter"
@@ -1454,7 +1421,35 @@ class S3LocationFilter(S3FilterWidget):
 class S3OptionsFilter(S3FilterWidget):
     """
         Options filter widget
-        @see: L{Configuration Options<S3FilterWidget.__init__>}
+
+        Configuration options:
+
+        @keyword label: label for the widget
+        @keyword comment: comment for the widget
+        @keyword hidden: render widget initially hidden (="advanced" option)
+
+        @keyword widget: widget to use:
+                         "select", "multiselect" (default), or "groupedopts"
+        @keyword cols: number of columns of checkboxes
+                       (with "groupedopts" widget)
+        @keyword filter: show filter for options
+                         (with "multiselect" widget)
+        @keyword header: show header in widget
+                         (with "multiselect" widget)
+        @keyword selectedList: number of selected items to show before
+                                collapsing into number of items
+                                (with "multiselect" widget)
+        @keyword no_opts: text to show if no options available
+        @keyword resource: alternative resource to look up options
+        @keyword lookup: field in the alternative resource to look up
+        @keyword options: fixed set of options (of {value: label} or
+                          a callable that returns one)
+        @keyword size: maximum size of multi-letter options groups
+                       (with "groupedopts" widget)
+        @keyword help_field: field in the referenced table to display on
+                             hovering over a foreign key option
+                             (with "groupedopts" widget)
+        @keyword none: label for explicit None-option in many-to-many fields
     """
 
     _class = "options-filter"
@@ -1917,16 +1912,15 @@ class S3HierarchyFilter(S3FilterWidget):
     """
         Filter widget for hierarchical types
 
-        Specific options (see also: S3HierarchyWidget):
+        Configuration Options (see also: S3HierarchyWidget):
 
-            lookup              name of the lookup table
-            represent           representation method for the key
-            multiple            allow selection of multiple options
-            leafonly            only lead nodes can be selected
-            cascade             automatically select child nodes when
-                                selecting a parent node
-            bulk_select         provide an option to select/deselect all
-                                nodes
+        @keyword lookup: name of the lookup table
+        @keyword represent: representation method for the key
+        @keyword multiple: allow selection of multiple options
+        @keyword leafonly: only leaf nodes can be selected
+        @keyword cascade: automatically select child nodes when
+                          selecting a parent node
+        @keyword bulk_select: provide an option to select/deselect all nodes
     """
 
     _class = "hierarchy-filter"
@@ -3183,5 +3177,62 @@ class S3FilterString(object):
             # Fallback to simple representation
             # FIXME: resource not defined here!
             return query.represent(resource)
+
+# =============================================================================
+def s3_get_filter_opts(tablename,
+                       fieldname = "name",
+                       location_filter = False,
+                       org_filter = False,
+                       none = False,
+                       translate = False,
+                       ):
+    """
+        Lazy options getter - this is useful when the expected number
+        of options is significantly smaller than the number of records
+        to iterate through
+
+        @note: unlike the built-in reverse lookup in S3OptionsFilter, this
+               function does *not* check whether the options are actually
+               in use - so it can be used to enforce filter options to be
+               shown even if there are no records matching them.
+
+        @param tablename: the name of the lookup table
+        @param fieldname: the name of the field to represent options with
+        @param location_filter: whether to filter the values by location
+        @param org_filter: whether to filter the values by root_org
+        @param none: whether to include an option for None
+        @param translate: whether to translate the values
+    """
+
+    auth = current.auth
+    table = current.s3db.table(tablename)
+    if auth.s3_has_permission("read", table):
+        query = auth.s3_accessible_query("read", table)
+        if location_filter:
+            location = current.session.s3.location_filter
+            if location:
+                query &= (table.location_id == location)
+        if org_filter:
+            root_org = auth.root_org()
+            if root_org:
+                query &= ((table.organisation_id == root_org) | \
+                          (table.organisation_id == None))
+            #else:
+            #    query &= (table.organisation_id == None)
+        rows = current.db(query).select(table.id,
+                                        table[fieldname],
+                                        # Options are sorted later
+                                        #orderby = table[fieldname]
+                                        )
+        if translate:
+            T = current.T
+            opts = dict((row.id, T(row[fieldname])) for row in rows)
+        else:
+            opts = dict((row.id, row[fieldname]) for row in rows)
+        if none:
+            opts[None] = current.messages["NONE"]
+    else:
+        opts = {}
+    return opts
 
 # END =========================================================================

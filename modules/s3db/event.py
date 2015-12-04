@@ -279,7 +279,7 @@ class S3EventModel(S3Model):
                                               label = T("Type"),
                                               multiple = False,
                                               #options = lambda: \
-                                              #  get_s3_filter_opts("event_event_type",
+                                              #  s3_get_filter_opts("event_event_type",
                                               #                     translate = True)
                                               ),
                               ]

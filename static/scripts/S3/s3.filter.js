@@ -377,31 +377,44 @@ S3.search = {};
      */
     var getCurrentFilters = function(form) {
 
-        form = typeof form !== 'undefined' ? form : $('body').find('form.filter-form').first();
+        // Fall back to first filter form in page
+        if (typeof form == 'undefined') {
+            form = $('body').find('form.filter-form').first();
+        }
 
         var i,
             id,
             queries = [],
             $this,
-            url_var,
+            urlVar,
             value,
-            values;
+            values,
+            operator;
 
         // Text widgets
         form.find('.text-filter:visible').each(function() {
             $this = $(this);
             id = $this.attr('id');
-            url_var = $('#' + id + '-data').val();
+            urlVar = $('#' + id + '-data').val();
             value = $this.val();
             if (value) {
                 values = value.split(' ');
-                var v;
+                var match = $this.data('match'),
+                    quoted,
+                    anyValue = [];
                 for (i=0; i < values.length; i++) {
-                    v = '*' + values[i] + '*';
-                    queries.push([url_var, quoteValue(v)]);
+                    quoted = quoteValue('*' + values[i] + '*');
+                    if (match == "any") {
+                        anyValue.push(quoted);
+                    } else {
+                        queries.push([urlVar, quoted]);
+                    }
+                }
+                if (match == "any") {
+                    queries.push([urlVar, anyValue.join(',')])
                 }
             } else {
-                queries.push([url_var, null]);
+                queries.push([urlVar, null]);
             }
         });
 
@@ -418,14 +431,15 @@ S3.search = {};
         .each(function() {
             $this = $(this);
             id = $this.attr('id');
-            url_var = $('#' + id + '-data').val();
-            var operator = $("input:radio[name='" + id + "_filter']:checked").val();
+            urlVar = $('#' + id + '-data').val();
+            operator = $("input:radio[name='" + id + "_filter']:checked").val();
+
             var contains = /__contains$/;
             var anyof = /__anyof$/;
-            if (operator == 'any' && url_var.match(contains)) {
-                url_var = url_var.replace(contains, '__anyof');
-            } else if (operator == 'all' && url_var.match(anyof)) {
-                url_var = url_var.replace(anyof, '__contains');
+            if (operator == 'any' && urlVar.match(contains)) {
+                urlVar = urlVar.replace(contains, '__anyof');
+            } else if (operator == 'all' && urlVar.match(anyof)) {
+                urlVar = urlVar.replace(anyof, '__contains');
             }
             if (this.tagName.toLowerCase() == 'select') {
                 // Standard SELECT
@@ -458,32 +472,36 @@ S3.search = {};
                 });
             }
             if ((value === '') || (value == '*')) {
-                queries.push([url_var, null]);
+                queries.push([urlVar, null]);
             } else {
-                queries.push([url_var, value]);
+                queries.push([urlVar, value]);
             }
         });
 
         // Numerical range widgets -- each widget has two inputs.
         form.find('.range-filter-input:visible').each(function() {
-            $this = $(this);
+
+            $this = $(this),
             id = $this.attr('id');
-            url_var = $('#' + id + '-data').val();
+            urlVar = $('#' + id + '-data').val();
             value = $this.val();
+
             if (value) {
-                queries.push([url_var, value]);
+                queries.push([urlVar, value]);
             } else {
-                queries.push([url_var, null]);
+                queries.push([urlVar, null]);
             }
         });
 
         // Date(time) range widgets -- each widget has two inputs.
         form.find('.date-filter-input:visible').each(function() {
 
-            var $this = $(this),
-                id = $this.attr('id'),
-                operator = id.split('-').pop(),
-                urlVariable = $('#' + id + '-data').val();
+            $this = $(this),
+            id = $this.attr('id'),
+            urlVar = $('#' + id + '-data').val();
+            value = $this.val();
+
+            operator = id.split('-').pop();
 
             // Helper to convert a JS Date into an ISO format string
             var isoFormat;
@@ -504,7 +522,6 @@ S3.search = {};
                 };
             }
 
-            var value = $this.val();
             if (value) {
                 var end = false;
                 if (operator == 'le') {
@@ -512,10 +529,10 @@ S3.search = {};
                 }
                 var jsDate = $this.calendarWidget('getJSDate', end),
                     urlValue = isoFormat(jsDate);
-                queries.push([urlVariable, urlValue]);
+                queries.push([urlVar, urlValue]);
             } else {
                 // Remove the filter (explicit null)
-                queries.push([urlValue, null]);
+                queries.push([urlVar, null]);
             }
         });
 
@@ -530,12 +547,16 @@ S3.search = {};
                   '.location-filter.multiselect-filter-widget.active' /*+
           ',.location-filter.multiselect-filter-bootstrap.active'*/)))
         .each(function() {
-            id = $(this).attr('id');
-            url_var = $('#' + id + '-data').val();
-            var operator = $("input:radio[name='" + id + "_filter']:checked").val();
+
+            $this = $(this);
+            id = $this.attr('id');
+            urlVar = $('#' + id + '-data').val();
+            value = '';
+
+            operator = $("input:radio[name='" + id + "_filter']:checked").val();
+
             if (this.tagName.toLowerCase() == 'select') {
                 // Standard SELECT
-                value = '';
                 values = $(this).val();
                 var v;
                 if (values) {
@@ -550,7 +571,6 @@ S3.search = {};
                 }
             } else {
                 // Checkboxes widget
-                value = '';
                 $("input[name='" + id + "']:checked").each(function() {
                     if (value === '') {
                         value = quoteValue($(this).val());
@@ -560,19 +580,21 @@ S3.search = {};
                 });
             }
             if (value === '') {
-                queries.push([url_var, null]);
+                queries.push([urlVar, null]);
             } else {
-                queries.push([url_var, value]);
+                queries.push([urlVar, value]);
             }
         });
 
         // Hierarchy filter (experimental)
         form.find('.hierarchy-filter:visible').each(function() {
+
             $this = $(this);
             id = $this.attr('id');
-            url_var = $('#' + id + '-data').val();
-            values = $this.hierarchicalopts('get');
+            urlVar = $('#' + id + '-data').val();
             value = '';
+
+            values = $this.hierarchicalopts('get');
             if (values) {
                 for (i=0; i < values.length; i++) {
                     if (value === '') {
@@ -583,9 +605,9 @@ S3.search = {};
                 }
             }
             if (value === '') {
-                queries.push([url_var, null]);
+                queries.push([urlVar, null]);
             } else {
-                queries.push([url_var, value]);
+                queries.push([urlVar, value]);
             }
         });
 

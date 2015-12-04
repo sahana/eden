@@ -3295,7 +3295,7 @@ class S3ProjectLocationModel(S3Model):
             fappend(S3OptionsFilter("project_id$theme_project.theme_id",
                                     label = T("Theme"),
                                     options = lambda: \
-                                        get_s3_filter_opts("project_theme",
+                                        s3_get_filter_opts("project_theme",
                                                            translate=True),
                                     hidden = True,
                                     ))
@@ -5314,7 +5314,7 @@ class project_SummaryReport(S3Method):
             Extract the Data
         """
 
-        
+
         db = current.db
         s3db = current.s3db
 
@@ -5841,7 +5841,7 @@ class project_IndicatorSummaryReport(S3Method):
             Extract the Data
         """
 
-        
+
         db = current.db
         s3db = current.s3db
 

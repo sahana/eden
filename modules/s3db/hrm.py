@@ -6481,12 +6481,12 @@ def hrm_competency_controller():
                 S3OptionsFilter("skill_id",
                                 label = T("Skills"),
                                 options = lambda: \
-                                    get_s3_filter_opts("hrm_skill", translate=True),
+                                    s3_get_filter_opts("hrm_skill", translate=True),
                                 ),
                 S3OptionsFilter("competency_id",
                                 label = T("Competency"),
                                 options = lambda: \
-                                    get_s3_filter_opts("hrm_competency_rating", translate=True),
+                                    s3_get_filter_opts("hrm_competency_rating", translate=True),
                                 ),
                 ]
             s3db.configure("hrm_competency",
@@ -9050,7 +9050,7 @@ def hrm_human_resource_filters(resource_type=None,
             append_filter(S3OptionsFilter("person_id$hours.programme_id",
                                           label = T("Program"),
                                           #options = lambda: \
-                                          #  get_s3_filter_opts("hrm_programme",
+                                          #  s3_get_filter_opts("hrm_programme",
                                           #                     org_filter=True),
                                           hidden = True,
                                           ))

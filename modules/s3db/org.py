@@ -545,7 +545,7 @@ class S3OrganisationModel(S3Model):
             if use_sector:
                 append(S3OptionsFilter("sector_organisation.sector_id",
                                        options = lambda: \
-                                           get_s3_filter_opts("org_sector",
+                                           s3_get_filter_opts("org_sector",
                                                               location_filter=True,
                                                               none=True,
                                                               translate=True),

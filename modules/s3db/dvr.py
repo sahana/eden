@@ -1013,7 +1013,7 @@ class DVRCaseActivityModel(S3Model):
                                           cols = 2,
                                           ),
                           S3OptionsFilter("need_id",
-                                          options = lambda: get_s3_filter_opts("dvr_need",
+                                          options = lambda: s3_get_filter_opts("dvr_need",
                                                                                translate = True,
                                                                                ),
                                           ),
