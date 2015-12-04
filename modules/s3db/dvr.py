@@ -162,7 +162,7 @@ class DVRCaseModel(S3Model):
                   )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         status_id = S3ReusableField("status_id", "reference %s" % tablename,
                                     label = T("Status"),
                                     ondelete = "RESTRICT",
@@ -1013,7 +1013,7 @@ class DVRCaseActivityModel(S3Model):
                                           cols = 2,
                                           ),
                           S3OptionsFilter("need_id",
-                                          options = lambda: get_s3_filter_opts("dvr_need",
+                                          options = lambda: s3_get_filter_opts("dvr_need",
                                                                                translate = True,
                                                                                ),
                                           ),

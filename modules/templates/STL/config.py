@@ -411,13 +411,13 @@ def config(settings):
                     # Extend filter widgets
                     filter_widgets = resource.get_config("filter_widgets")
                     if filter_widgets is not None:
-                        from s3 import get_s3_filter_opts, S3OptionsFilter
+                        from s3 import s3_get_filter_opts, S3OptionsFilter
                         filter_widgets.extend([
                             S3OptionsFilter("dvr_case.case_type_id",
-                                            options = lambda: get_s3_filter_opts("dvr_case_type"),
+                                            options = lambda: s3_get_filter_opts("dvr_case_type"),
                                             ),
                             S3OptionsFilter("dvr_case_activity.need_id",
-                                            options = lambda: get_s3_filter_opts("dvr_need"),
+                                            options = lambda: s3_get_filter_opts("dvr_need"),
                                             hidden = True,
                                             ),
                             ])

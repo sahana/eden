@@ -128,7 +128,7 @@ def person():
                                 )
 
                 # Module-specific filter widgets
-                from s3 import get_s3_filter_opts, S3TextFilter, S3OptionsFilter
+                from s3 import s3_get_filter_opts, S3TextFilter, S3OptionsFilter
                 filter_widgets = [
                     S3TextFilter(["pe_label",
                                   "first_name",
@@ -152,7 +152,7 @@ def person():
                                     ),
                     S3OptionsFilter("case_flag_case.flag_id",
                                     label = T("Flags"),
-                                    options = get_s3_filter_opts("dvr_case_flag",
+                                    options = s3_get_filter_opts("dvr_case_flag",
                                                                  translate = True,
                                                                  ),
                                     cols = 3,

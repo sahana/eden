@@ -417,7 +417,7 @@ def config(settings):
     def customise_auth_user_resource(r, resource):
 
         current.db.auth_user.organisation_id.default = settings.get_org_default_organisation()
-        
+
     settings.customise_auth_user_resource = customise_auth_user_resource
 
     # -------------------------------------------------------------------------
@@ -442,7 +442,7 @@ def config(settings):
             else:
                 has_role = current.auth.s3_has_role
                 if has_role("SECURITY") and not has_role("ADMIN"):
-                   return None 
+                   return None
             return result
         s3.prep = custom_prep
 
@@ -805,18 +805,28 @@ def config(settings):
                     # Remove filter default for case status
                     filter_widgets = resource.get_config("filter_widgets")
                     if filter_widgets:
-                        from s3 import S3TextFilter
+
+                        from s3 import S3TextFilter, S3DateFilter
+
                         for fw in filter_widgets:
                             if fw.field == "dvr_case.status_id":
                                 fw.opts.default = None
                             if isinstance(fw, S3TextFilter):
                                 fw.field.append("eo_number.value")
-                        from s3 import S3DateFilter
 
                         # Filter by date of birth
                         dob_filter = S3DateFilter("date_of_birth")
                         #dob_filter.operator = ["eq"]
                         filter_widgets.insert(1, dob_filter)
+
+                        # Filter for IDs
+                        id_filter = S3TextFilter(["pe_label"],
+                                                 label = T("IDs"),
+                                                 match_any = True,
+                                                 hidden = True,
+                                                 comment = T("Search for multiple IDs (separated by blanks)"),
+                                                 )
+                        filter_widgets.append(id_filter)
 
                         # Filter by registration date
                         reg_filter = S3DateFilter("dvr_case.date",
@@ -1243,7 +1253,7 @@ def config(settings):
                                                          },
                                         )
 
-                    from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter, get_s3_filter_opts
+                    from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter, s3_get_filter_opts
                     filter_widgets = [
                         S3TextFilter(["person_id$pe_label",
                                       "person_id$first_name",
@@ -1253,7 +1263,7 @@ def config(settings):
                                       label = T("Search"),
                                       ),
                         S3OptionsFilter("type_id",
-                                        options = get_s3_filter_opts("dvr_case_appointment_type",
+                                        options = s3_get_filter_opts("dvr_case_appointment_type",
                                                                      translate = True,
                                                                      ),
                                         cols = 3,
@@ -1333,7 +1343,7 @@ def config(settings):
 
                 if r.interactive and not r.id:
                     # Custom filter widgets
-                    from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter, get_s3_filter_opts
+                    from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter, s3_get_filter_opts
                     date_filter = S3DateFilter("date")
                     date_filter.operator = ["eq"]
 

@@ -431,7 +431,7 @@ def config(settings):
                 #jnap_options[None] = NONE # to search NO JNAP
 
                 # Filter widgets
-                from s3 import S3TextFilter, S3OptionsFilter, get_s3_filter_opts
+                from s3 import S3TextFilter, S3OptionsFilter, s3_get_filter_opts
                 filter_widgets = [
                     S3TextFilter(["name",
                                   "code",
@@ -460,7 +460,7 @@ def config(settings):
                     S3OptionsFilter("hazard.id",
                                     label = T("Hazard"),
                                     options = lambda: \
-                                        get_s3_filter_opts("project_hazard",
+                                        s3_get_filter_opts("project_hazard",
                                                            translate=True),
                                     help_field = s3db.project_hazard_help_fields,
                                     cols = 4,
@@ -469,7 +469,7 @@ def config(settings):
                     S3OptionsFilter("theme.id",
                                     label = T("Theme"),
                                     options = lambda: \
-                                        get_s3_filter_opts("project_theme",
+                                        s3_get_filter_opts("project_theme",
                                                            translate=True),
                                     help_field = s3db.project_theme_help_fields,
                                     cols = 4,
