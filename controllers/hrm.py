@@ -542,6 +542,41 @@ def certificate_skill():
     return output
 
 # -----------------------------------------------------------------------------
+def facility():
+    """
+        Filtered version of the facility() REST controller
+    """
+
+    get_vars["facility_type.name"] = "Training Center"
+
+    # Load model (including normal CRUD strings)
+    table = s3db.org_facility
+
+    # Modify CRUD Strings
+    s3.crud_strings.org_organisation = Storage(
+        label_create = T("Create Training Center"),
+        title_display = T("Training Center Details"),
+        title_list = T("Training Centers"),
+        title_update = T("Edit Training Center"),
+        title_upload = T("Import Training Centers"),
+        label_list_button = T("List Training Centers"),
+        label_delete_button = T("Delete Training Center"),
+        msg_record_created = T("Training Center added"),
+        msg_record_modified = T("Training Center updated"),
+        msg_record_deleted = T("Training Center deleted"),
+        msg_list_empty = T("No Training Centers currently registered")
+        )
+
+
+    # Open record in this controller after creation
+    s3db.configure("org_facility",
+                   create_next = URL(c="hrm", f="facility",
+                                     args = ["[id]", "read"]),
+                   )
+
+    return s3db.org_facility_controller()
+
+# -----------------------------------------------------------------------------
 def training():
     """ Training Controller - used for Searching for Participants """
 

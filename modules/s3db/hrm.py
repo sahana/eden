@@ -2567,6 +2567,7 @@ class S3HRSkillModel(S3Model):
                                      readable = is_admin,
                                      writable = is_admin,
                                      ),
+                     # Training Center
                      # Not normally used: enable in template as-required
                      self.org_site_id,
                      Field("external", "boolean",
@@ -2840,6 +2841,7 @@ class S3HRSkillModel(S3Model):
                            ),
                      # This field can only be filled-out by specific roles
                      # Once this has been filled-out then the other fields are locked
+                     # @ToDo: Grades vary by Course
                      Field("grade", "integer",
                            label = T("Grade"),
                            represent = lambda opt: \
@@ -3041,6 +3043,7 @@ class S3HRSkillModel(S3Model):
                                ),
                      certificate_id(empty = False,
                                     ),
+                     # @ToDo: Option to auto-generate (like Waybills: TrainingCenterCode/CourseCode/Unique/Suffix for attendance/pass)
                      Field("number",
                            label = T("License Number"),
                            ),

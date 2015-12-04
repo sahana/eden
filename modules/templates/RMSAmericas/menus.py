@@ -46,12 +46,14 @@ class S3MainMenu(default.S3MainMenu):
         if len(current.session.s3.roles) <= 2:
             # No specific Roles
             # Just show Profile on main menu
-            return [MM("Profile", c="hrm", f="person", args=[str(auth.s3_logged_in_person())]),
+            return [MM("Profile", c="hrm", f="person",
+                       args=[str(auth.s3_logged_in_person())],
+                       vars={"profile":1},
+                       ),
                     ]
 
-        T = current.T
         has_role = auth.s3_has_role
-        root_org = auth.root_org_name()
+        #root_org = auth.root_org_name()
         system_roles = current.session.s3.system_roles
         ADMIN = system_roles.ADMIN
         ORG_ADMIN = system_roles.ORG_ADMIN
@@ -61,16 +63,19 @@ class S3MainMenu(default.S3MainMenu):
         inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
 
         def hrm(item):
-            return root_org != "Honduran Red Cross" or \
-                   has_role(ORG_ADMIN)
+            return has_role(ORG_ADMIN) or \
+                   has_role("training_coordinator") or \
+                   has_role("training_assistant") or \
+                   has_role("surge_manager") or \
+                   has_role("disaster_manager")
 
         def inv(item):
-            return has_role("hn_wh_manager") or \
-                   has_role("hn_national_wh_manager") or \
+            return has_role("wh_manager") or \
+                   has_role("national_wh_manager") or \
                    has_role(ORG_ADMIN)
 
         def basic_warehouse(i):
-            if not (has_role("hn_national_wh_manager") or \
+            if not (has_role("national_wh_manager") or \
                     has_role(ORG_ADMIN)):
                 # Hide menu entries which user shouldn't need access to
                 return False
@@ -78,7 +83,7 @@ class S3MainMenu(default.S3MainMenu):
                 return True
 
         def multi_warehouse(i):
-            if not (has_role("hn_national_wh_manager") or \
+            if not (has_role("national_wh_manager") or \
                     has_role(ORG_ADMIN)):
                 # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
                 return False
@@ -87,7 +92,7 @@ class S3MainMenu(default.S3MainMenu):
 
         menu= [#homepage("gis")(
                #),
-               homepage("hrm", "org", name=T("Human Talent"), check=hrm)(
+               homepage("hrm", "org", name="Human Talent", check=hrm)(
                    MM("Human Talent", c="hrm", f="human_resource", m="summary"),
                    #MM("Teams", c="hrm", f="group"),
                    MM("National Societies", c="org", f="organisation",
@@ -97,8 +102,8 @@ class S3MainMenu(default.S3MainMenu):
                    #MM("Training Events", c="hrm", f="training_event"),
                    #MM("Training Courses", c="hrm", f="course"),
                ),
-               homepage("hrm", name=T("Training"), check=hrm)(
-                   MM("Training Centers", c="org", f="facility"),
+               homepage("hrm", f="facility", name="Training")(
+                   MM("Training Centers", c="hrm", f="facility"),
                    MM("Training Course Catalog", c="hrm", f="course"),
                    MM("Training Events", c="hrm", f="training_event"),
                ),
@@ -126,6 +131,7 @@ class S3MainMenu(default.S3MainMenu):
                ]
 
         # For some reason the deploy menu is displaying even if users have NONE access to deploy!
+        # @ToDo: We will need to allow RIT members some basic access to the module
         if has_role("surge_manager") or has_role("disaster_manager"):
             menu.append(
                 homepage("deploy", name="RIT", f="mission", m="summary",
@@ -186,15 +192,18 @@ class S3MainMenu(default.S3MainMenu):
                            m="retrieve_password"),
             )
         else:
-            s3_has_role = auth.s3_has_role
-            is_org_admin = lambda i: s3_has_role("ORG_ADMIN") and \
-                                     not s3_has_role("ADMIN")
+            has_role = auth.s3_has_role
+            is_org_admin = lambda i: has_role("ORG_ADMIN") and \
+                                     not has_role("ADMIN")
             menu_personal = MP()(
                         MP("Administration", c="admin", f="index",
-                           check=s3_has_role("ADMIN")),
+                           check=has_role("ADMIN")),
                         MP("Administration", c="admin", f="user",
                            check=is_org_admin),
-                        MP("Profile", c="hrm", f="person", args=[str(auth.s3_logged_in_person())]),
+                        MP("Profile", c="hrm", f="person",
+                           args=[str(auth.s3_logged_in_person())],
+                           vars={"profile":1},
+                           ),
                         MP("Change Password", c="default", f="user",
                            m="change_password"),
                         MP("Logout", c="default", f="user",
@@ -258,6 +267,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def hrm():
         """ HRM Human Talent """
 
+        if "profile" in current.request.get_vars:
+            # No Side Menu
+            return
+
         has_role = current.auth.s3_has_role
         s3 = current.session.s3
         ADMIN = s3.system_roles.ADMIN
@@ -272,31 +285,37 @@ class S3OptionsMenu(default.S3OptionsMenu):
         is_org_admin = lambda i: hrm_vars.orgs and True or \
                                  has_role(ADMIN)
 
-        use_certs = lambda i: settings.get_hrm_use_certificates()
+        #use_certs = settings.get_hrm_use_certificates
 
         request = current.request
         if request.function in ("certificate", "course", "course_certificate",
                                 "facility", "training", "training_event") or \
            request.controller == "pr":
-            return M()(
-                        M("Report", c="hrm", f="training", m="report",
-                          check=manager_mode)(),
-                        M("Training Centers", c="org", f="facility",
-                          check=manager_mode)(
+            return M()( M("Training Centers", c="hrm", f="facility")(
                         ),
-                        M("Training Course Catalog", c="hrm", f="course",
-                          check=manager_mode)(
+                        M("Training Course Catalog", c="hrm", f="course")(
                             M("Create", m="create"),
-                            M("Import", m="import", p="create", check=is_org_admin),
-                            M("Certificates", f="certificate"),
+                            M("Import", m="import", p="create",
+                              check=is_org_admin),
+                            M("Certificates", f="certificate",
+                              check=manager_mode),
                             # Just access this via Tabs of Courses & Certificates
                             #M("Course Certificates", f="course_certificate"),
                         ),
-                        M("Training Events", c="hrm", f="training_event",
+                        M("Training Events", c="hrm", f="training_event")(
+                            M("Create", m="create",
+                              check=manager_mode),
+                            M("Search Training Participants", f="training",
+                              check=manager_mode),
+                            M("Import Participant List", f="training", m="import",
+                              check=manager_mode),
+                        ),
+                        M("External Trainees", c="pr", f="person",
                           check=manager_mode)(
                             M("Create", m="create"),
-                            M("Search Training Participants", f="training"),
-                            M("Import Participant List", f="training", m="import"),
+                        ),
+                        M("Report", c="hrm", f="training", m="report",
+                          check=manager_mode)(
                         ),
                         #M("Certificate Catalog", c="hrm", f="certificate",
                         #  check=[manager_mode, use_certs])(
@@ -384,8 +403,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def inv():
         """ INV / Inventory """
 
-        auth = current.auth
-        has_role = auth.s3_has_role
+        #auth = current.auth
+        has_role = current.auth.s3_has_role
         system_roles = current.session.s3.system_roles
         ADMIN = system_roles.ADMIN
         ORG_ADMIN = system_roles.ORG_ADMIN
@@ -396,14 +415,14 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         settings = current.deployment_settings
         #use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
-        root_org = auth.root_org_name()
-        def use_adjust(i):
-            if root_org in ("Australian Red Cross", "Honduran Red Cross"):
-                # Australian & Honduran RC use proper Logistics workflow
-                return True
-            else:
-                # Others use simplified version
-                return False
+        #root_org = auth.root_org_name()
+        #def use_adjust(i):
+        #    if root_org in ("Australian Red Cross", "Honduran Red Cross"):
+        #        # Australian & Honduran RC use proper Logistics workflow
+        #        return True
+        #    else:
+        #        # Others use simplified version
+        #        return False
         #def use_facilities(i):
         #    if root_org == "Honduran Red Cross":
         #        # Honduran RC don't use Facilities
@@ -411,34 +430,32 @@ class S3OptionsMenu(default.S3OptionsMenu):
         #    else:
         #        return True
         def basic_warehouse(i):
-            if root_org == "Honduran Red Cross"  and \
-               not (has_role("hn_national_wh_manager") or \
+            if not (has_role("national_wh_manager") or \
                     has_role(ORG_ADMIN)):
                 # Hide menu entries which user shouldn't need access to
                 return False
             else:
                 return True
         def multi_warehouse(i):
-            if root_org == "Honduran Red Cross"  and \
-               not (has_role("hn_national_wh_manager") or \
+            if not (has_role("national_wh_manager") or \
                     has_role(ORG_ADMIN)):
                 # Only responsible for 1 warehouse so hide menu entries which should be accessed via Tabs on their warehouse
                 # & other things that HNRC
                 return False
             else:
                 return True
-        def use_kits(i):
-            if root_org == "Honduran Red Cross":
-                # Honduran RC use Kits
-                return True
-            else:
-                return False
-        def use_types(i):
-            if root_org == "Nepal Red Cross Society":
-                # Nepal RC use Warehouse Types
-                return True
-            else:
-                return False
+        #def use_kits(i):
+        #    if root_org == "Honduran Red Cross":
+        #        # Honduran RC use Kits
+        #        return True
+        #    else:
+        #        return False
+        #def use_types(i):
+        #    if root_org == "Nepal Red Cross Society":
+        #        # Nepal RC use Warehouse Types
+        #        return True
+        #    else:
+        #        return False
         use_commit = lambda i: settings.get_req_use_commit()
 
         return M()(
@@ -449,8 +466,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     ),
                     M("Warehouse Stock", c="inv", f="inv_item", args="summary")(
                         M("Search Shipped Items", f="track_item"),
-                        M("Adjust Stock Levels", f="adj", check=use_adjust),
-                        M("Kitting", f="kitting", check=use_kits),
+                        M("Adjust Stock Levels", f="adj"#, check=use_adjust
+                          ),
+                        M("Kitting", f="kitting"#, check=use_kits
+                          ),
                         M("Import", f="inv_item", m="import", p="create"),
                     ),
                     M("Reports", c="inv", f="inv_item")(
@@ -512,10 +531,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       restrict=[ADMIN])(
                         M("Create", m="create"),
                     ),
-                    M("Warehouse Types", c="inv", f="warehouse_type", check=use_types,
-                      restrict=[ADMIN])(
-                        M("Create", m="create"),
-                    ),
+                    #M("Warehouse Types", c="inv", f="warehouse_type", check=use_types,
+                    #  restrict=[ADMIN])(
+                    #    M("Create", m="create"),
+                    #),
                     M("Requests", c="req", f="req")(
                         M("Create", m="create"),
                         M("Requested Items", f="req_item"),

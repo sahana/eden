@@ -966,10 +966,10 @@ def config(settings):
                                     #                ),
                                     )
 
-        s3db.configure(tablename,
-                       crud_form = crud_form,
-                       list_fields = list_fields,
-                       )
+        current.s3db.configure(tablename,
+                               crud_form = crud_form,
+                               list_fields = list_fields,
+                               )
 
     settings.customise_hrm_course_resource = customise_hrm_course_resource
 
