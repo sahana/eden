@@ -1320,12 +1320,7 @@ class S3LocationFilter(S3FilterWidget):
             # Get IDs via Path to lookup name_l10n
             ids = set()
             if joined:
-                if "$" in selector:
-                    selector = "%s.%s" % (rfield.field.tablename, selector.split("$", 1)[1])
-                elif "." in selector:
-                    selector = "%s.%s" % (rfield.field.tablename, selector.split(".", 1)[1])
-                else:
-                    selector = "%s.%s" % (resource.tablename, selector)
+                selector = rfield.colname
             for row in rows:
                 _row = getattr(row, "gis_location") if joined else row
                 path = _row.path
