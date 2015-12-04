@@ -162,7 +162,7 @@ class DVRCaseModel(S3Model):
                   )
 
         # Reusable field
-        represent = S3Represent(lookup=tablename)
+        represent = S3Represent(lookup=tablename, translate=True)
         status_id = S3ReusableField("status_id", "reference %s" % tablename,
                                     label = T("Status"),
                                     ondelete = "RESTRICT",

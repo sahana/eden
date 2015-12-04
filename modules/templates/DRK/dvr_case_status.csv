@@ -1,6 +1,6 @@
 Position,Code,Status,Default,Comments
 1,STATUS1,BEA Registration,true,
-2,STATUS2,BÜMAG Asylum Application,false,
+2,STATUS2,BÜMA,false,
 3,STATUS3,GU Done,false,
 4,STATUS4,X-Ray Done,false,
 5,STATUS5,BAMF Registration,false,
