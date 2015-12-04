@@ -822,7 +822,7 @@ def config(settings):
                         # Filter for IDs
                         id_filter = S3TextFilter(["pe_label"],
                                                  label = T("IDs"),
-                                                 any = True,
+                                                 match_any = True,
                                                  hidden = True,
                                                  comment = T("Search for multiple IDs (separated by blanks)"),
                                                  )

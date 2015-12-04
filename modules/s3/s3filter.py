@@ -421,7 +421,7 @@ class S3TextFilter(S3FilterWidget):
         @keyword label: label for the widget
         @keyword comment: comment for the widget
         @keyword hidden: render widget initially hidden (="advanced" option)
-        @keyword any: match any of the strings
+        @keyword match_any: match any of the strings
     """
 
     _class = "text-filter"
@@ -450,7 +450,7 @@ class S3TextFilter(S3FilterWidget):
 
         # Match any or all of the strings entered?
         data = attr.get("data", {})
-        data["match"] = "any" if self.opts.get("any") else "all"
+        data["match"] = "any" if self.opts.get("match_any") else "all"
         attr["data"] = data
 
         values = [v.strip("*") for v in values if v is not None]
