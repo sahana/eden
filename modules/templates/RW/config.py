@@ -435,7 +435,7 @@ def config(settings):
                        (T("Adresse"), "main_facility.location_id"),
                        (T("Phone #"), "main_facility.phone1"),
                        (T("Email"), "main_facility.email"),
-                       (T("Facebook"), "main_facility.facebook"),
+                       (T("Facebook"), "facebook.value"),
                        "website",
                        (T("Last Updated"), "modified_on"),
                        ]
