@@ -3386,8 +3386,9 @@ class S3PersonIdentityModel(S3Model):
                        list_fields = ["id",
                                       "type",
                                       "value",
-                                      "country_code",
-                                      "ia_name"
+                                      "valid_until",
+                                      #"country_code",
+                                      #"ia_name"
                                       ],
                        )
 

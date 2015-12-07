@@ -7764,7 +7764,8 @@ def hrm_training_event_controller():
     #s3.postp = postp
 
     output = current.rest_controller("hrm", "training_event",
-                                     rheader = hrm_rheader)
+                                     rheader = hrm_rheader,
+                                     )
     return output
 
 # =============================================================================

@@ -1250,7 +1250,10 @@ def config(settings):
         s3db = current.s3db
         table = s3db.hrm_training_event
 
-         # Hours are Optional
+        # 
+        
+
+        # Hours are Optional
         from gluon import IS_EMPTY_OR
         requires = table.hours.requires
         table.hours.requires = IS_EMPTY_OR(table.hours)
@@ -1259,7 +1262,7 @@ def config(settings):
         f = table.site_id
         f.default = None
         f.label = T("Country")
-        from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm
+        from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm, S3SQLInlineComponent
         ftable = s3db.org_facility
         ltable = s3db.org_site_facility_type
         ttable = s3db.org_facility_type
@@ -1276,7 +1279,20 @@ def config(settings):
                                )
 
         # Multiple Instructors
-        crud_form = S3SQLCustomForm()
+        crud_form = S3SQLCustomForm("course_id",
+                                    "site_id",
+                                    "start_date",
+                                    "end_date",
+                                    S3SQLInlineComponent("training_event_instructor"
+                                                         label = T("Instructor"),
+                                                         fields = ["person_id"],
+                                                         # @ToDo: Filter to HRMs (this should be done through AC?)
+                                                         #filterby = ({"field": "type",
+                                                         #             "options": 3,
+                                                         #             },),
+                                                         ),
+                                    "comments",
+                                    )
         list_fields = ["course_id",
                        "site_id",
                        "start_date",
@@ -1661,7 +1677,6 @@ def config(settings):
                         if r.interactive:
                             from s3 import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent
                             # Filter inline address for type "office address", also sets default
-                            OFFICE = {"field": "type", "options": 3}
                             crud_form = S3SQLCustomForm(
                                             "name",
                                             "acronym",
@@ -1673,7 +1688,9 @@ def config(settings):
                                             S3SQLInlineComponent("address",
                                                                  fields = [("", "location_id")],
                                                                  multiple = False,
-                                                                 filterby = (OFFICE,),
+                                                                 filterby = ({"field": "type",
+                                                                              "options": 3,
+                                                                              },),
                                                                  ),
                                             "phone",
                                             "website",
