@@ -2567,6 +2567,7 @@ class S3HRSkillModel(S3Model):
                                      readable = is_admin,
                                      writable = is_admin,
                                      ),
+                     # Training Center
                      # Not normally used: enable in template as-required
                      self.org_site_id,
                      Field("external", "boolean",
@@ -2575,6 +2576,9 @@ class S3HRSkillModel(S3Model):
                            represent = s3_yes_no_represent,
                            readable = external_courses,
                            writable = external_courses,
+                           ),
+                     Field("hours", "integer",
+                           label = T("Hours"),
                            ),
                      s3_comments(label = T("Description"),
                                  comment = None,
@@ -2705,6 +2709,7 @@ class S3HRSkillModel(S3Model):
                                  min = datetime.datetime(2000, 1, 1),
                                  set_max = "#hrm_training_event_start_date",
                                  ),
+                     # @ToDo: Auto-populate from course
                      Field("hours", "integer",
                            label = T("Hours"),
                            requires = IS_INT_IN_RANGE(1, 1000),
@@ -2797,17 +2802,46 @@ class S3HRSkillModel(S3Model):
 
         # Components
         add_components(tablename,
-                       # Participants
-                       pr_person = {"name": "participant",
+                       pr_person = [# Instructors
+                                    {"name": "instructor",
                                     "link": "hrm_training",
                                     "joinby": "training_event_id",
                                     "key": "person_id",
                                     "actuate": "hide",
                                     },
+                                    # Participants
+                                    {"name": "participant",
+                                    "link": "hrm_training",
+                                    "joinby": "training_event_id",
+                                    "key": "person_id",
+                                    "actuate": "hide",
+                                    },
+                                    ],
+                       # Format for list_fields
+                       hrm_training_event_instructor = "training_event_id",
                        )
 
         # =====================================================================
-        # Training Participations
+        # Training Intructors
+        #
+
+        tablename = "hrm_training_event_instructor"
+        define_table(tablename,
+                     person_id(comment = self.pr_person_comment(INSTRUCTOR,
+                                                                AUTOCOMPLETE_HELP,
+                                                                child="person_id"),
+                               empty = False,
+                               label = INSTRUCTOR,
+                               ondelete = "CASCADE",
+                               ),
+                     training_event_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     #s3_comments(),
+                     *s3_meta_fields())
+
+        # =====================================================================
+        # Training Participations (Trainees)
         #
         # These are an element of credentials:
         # - a minimum number of hours of training need to be done each year
@@ -2840,6 +2874,7 @@ class S3HRSkillModel(S3Model):
                            ),
                      # This field can only be filled-out by specific roles
                      # Once this has been filled-out then the other fields are locked
+                     # @ToDo: Grades vary by Course
                      Field("grade", "integer",
                            label = T("Grade"),
                            represent = lambda opt: \
@@ -3041,6 +3076,7 @@ class S3HRSkillModel(S3Model):
                                ),
                      certificate_id(empty = False,
                                     ),
+                     # @ToDo: Option to auto-generate (like Waybills: SiteCode-CourseCode-UniqueNumber)
                      Field("number",
                            label = T("License Number"),
                            ),

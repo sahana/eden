@@ -12,6 +12,8 @@ from gluon.storage import Storage
 
 from s3 import S3Method
 
+RED_CROSS = "Red Cross / Red Crescent"
+
 def config(settings):
     """
         Template settings for IFRC's Resource Management System
@@ -207,7 +209,7 @@ def config(settings):
                     (ltable.organisation_type_id == ottable.id)
             otype = db(query).select(ottable.name,
                                      limitby=(0, 1)).first()
-            if not otype or otype.name != "Red Cross / Red Crescent":
+            if not otype or otype.name != RED_CROSS:
                 use_user_organisation = True
 
         # Facilities & Requisitions are owned by the user's organisation
@@ -331,6 +333,10 @@ def config(settings):
 
     # GeoNames username
     settings.gis.geonames_username = "rms_dev"
+
+    # @ToDo: Lazy fn once we have NS to enable this for
+    # (off for HN & off by default)
+    settings.gis.postcode_selector = False
 
     # -------------------------------------------------------------------------
     # Use the label 'Camp' instead of 'Shelter'
@@ -755,9 +761,9 @@ def config(settings):
         s3db = current.s3db
         ttable = s3db.org_organisation_type
         try:
-            type_id = db(ttable.name == "Red Cross / Red Crescent").select(ttable.id,
-                                                                           limitby=(0, 1),
-                                                                           ).first().id
+            type_id = db(ttable.name == RED_CROSS).select(ttable.id,
+                                                          limitby=(0, 1),
+                                                          ).first().id
         except:
             # No IFRC prepop done - skip (e.g. testing impacts of CSS changes in this theme)
             return
@@ -864,7 +870,7 @@ def config(settings):
             from s3 import S3ScriptItem
             add_link = S3PopupLink(c = "org",
                                    f = "organisation",
-                                   vars = {"organisation_type.name":"Red Cross / Red Crescent"},
+                                   vars = {"organisation_type.name": RED_CROSS},
                                    label = T("Create National Society"),
                                    title = T("National Society"),
                                    )
@@ -966,10 +972,10 @@ def config(settings):
                                     #                ),
                                     )
 
-        s3db.configure(tablename,
-                       crud_form = crud_form,
-                       list_fields = list_fields,
-                       )
+        current.s3db.configure(tablename,
+                               crud_form = crud_form,
+                               list_fields = list_fields,
+                               )
 
     settings.customise_hrm_course_resource = customise_hrm_course_resource
 
@@ -1060,6 +1066,15 @@ def config(settings):
                 result = standard_prep(r)
                 if not result:
                     return False
+
+            #if "profile" not in request.get_vars:
+            if not r.id:
+                # Filter to just RC people
+                from s3 import FS
+                r.resource.add_filter(FS("organisation_id$organisation_type.name") == RED_CROSS)
+
+            # Default to Volunteers
+            r.table.type.default = 2
 
             # Organisation needs to be an NS/Branch
             ns_only("hrm_human_resource",
@@ -1227,6 +1242,53 @@ def config(settings):
     #    return attr
 
     #settings.customise_hrm_training_controller = customise_hrm_training_controller
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_training_event_resource(r, tablename):
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db.hrm_training_event
+
+         # Hours are Optional
+        from gluon import IS_EMPTY_OR
+        requires = table.hours.requires
+        table.hours.requires = IS_EMPTY_OR(table.hours)
+
+        # Filter list of Venues
+        f = table.site_id
+        f.default = None
+        f.label = T("Country")
+        from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm
+        ftable = s3db.org_facility
+        ltable = s3db.org_site_facility_type
+        ttable = s3db.org_facility_type
+        query = (ftable.deleted == False) & \
+                (ftable.site_id == ltable.site_id) & \
+                (ltable.facility_type_id == ttable.id) & \
+                (ttable.name == "Venue")
+        rows = db(query).select(ftable.site_id)
+        filter_opts = [row.site_id for row in rows]
+        f.requires = IS_ONE_OF(db, "org_site.site_id",
+                               S3Represent(lookup = "org_site"),
+                               filterby="site_id",
+                               filter_opts=filter_opts,
+                               )
+
+        # Multiple Instructors
+        crud_form = S3SQLCustomForm()
+        list_fields = ["course_id",
+                       "site_id",
+                       "start_date",
+                       "training_event_instructor.person_id",
+                       "comments",
+                       ]
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_hrm_training_event_resource = customise_hrm_training_event_resource
 
     # -------------------------------------------------------------------------
     def customise_inv_home():
@@ -1442,29 +1504,26 @@ def config(settings):
 
         # Custom Waybill
         s3db.set_method("inv", "send",
-                       method = "form",
-                       action = PrintableShipmentForm,
-                       )
+                        method = "form",
+                        action = PrintableShipmentForm,
+                        )
 
     settings.customise_inv_send_resource = customise_inv_send_resource
 
     # -------------------------------------------------------------------------
     def customise_inv_recv_resource(r, tablename):
 
-        s3db = current.s3db
-
         # Custom GRN
-        s3db.set_method("inv", "recv",
-                       method = "form",
-                       action = PrintableShipmentForm,
-                       )
+        current.s3db.set_method("inv", "recv",
+                                method = "form",
+                                action = PrintableShipmentForm,
+                                )
 
     settings.customise_inv_recv_resource = customise_inv_recv_resource
 
     # -------------------------------------------------------------------------
     def customise_inv_warehouse_resource(r, tablename):
 
-        settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
         settings.inv.recv_tab_label = "Received/Incoming Shipments"
         settings.inv.send_tab_label = "Sent Shipments"
         # Only Nepal RC use Warehouse Types
@@ -1486,7 +1545,7 @@ def config(settings):
         #root_org = current.auth.root_org_name()
         #if root_org != HNRC:
         #    return
-        settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
+
         # Simplify Form
         s3db = current.s3db
         table = s3db.org_facility
@@ -1647,7 +1706,7 @@ def config(settings):
                                 list_fields.remove("organisation_organisation_type.organisation_type_id")
                                 type_label = ""
 
-                            if type_filter == "Red Cross / Red Crescent":
+                            if type_filter == RED_CROSS:
                                 # Modify filter_widgets
                                 filter_widgets = resource.get_config("filter_widgets")
                                 # Remove type (always 'RC')
@@ -1775,13 +1834,17 @@ def config(settings):
     def customise_pr_person_controller(**attr):
 
         s3db = current.s3db
-
-        # Special cases for different NS
-        root_org = current.auth.root_org_name()
-        if root_org == HNRC:
-            settings.gis.postcode_selector = False # Needs to be done before prep as read during model load
-
+        request = current.request
         s3 = current.response.s3
+
+        # @ToDo: This will cause issues with opening up profiles from mixed lists of trainees
+        if request.controller == "pr" and \
+           not current.auth.s3_has_role("ADMIN"):
+            # Filter to just External Trainees
+            # People without an HR record or whose HR record isn't RC
+            from s3 import FS
+            s3.filter = (FS("human_resource.organisation_id") == None) | \
+                        (FS("human_resource.organisation_id$organisation_type.name") != RED_CROSS)
 
         # Custom prep
         standard_prep = s3.prep
@@ -2061,7 +2124,7 @@ def config(settings):
         # not_rc = []
         # nappend = not_rc.append
         # for row in rows:
-            # if row.name == "Red Cross / Red Crescent":
+            # if row.name == RED_CROSS:
                 # rc.append(row.id)
             # elif row.name == "Supplier":
                 # pass
