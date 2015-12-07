@@ -7932,6 +7932,7 @@ class S3ProjectTaskModel(S3Model):
             msg_record_deleted = T("Task deleted"),
             msg_list_empty = T("No tasks currently registered"))
 
+        # Basic list fields, filter widgets and CRUD fields for tasks
         list_fields = ["id",
                        (T("ID"), "task_id"),
                        "priority",
@@ -7953,8 +7954,11 @@ class S3ProjectTaskModel(S3Model):
 
         crud_fields = []
         cappend = crud_fields.append
+        cextend = crud_fields.extend
+
         jquery_ready_append = s3.jquery_ready.append
 
+        # Category fields (project, activity, tags)
         use_projects = settings.get_project_projects()
         if use_projects and current.request.function != "project":
             jquery_ready_append = s3.jquery_ready.append
@@ -8003,14 +8007,16 @@ class S3ProjectTaskModel(S3Model):
                                          fields = [("", "tag_id")],
                                          ))
 
-        crud_fields.extend(("name",
-                            "description",
-                            "source",
-                            "priority",
-                            "pe_id",
-                            "date_due",
-                            ))
+        # Basic workflow fields
+        cextend(("name",
+                 "description",
+                 "source",
+                 "priority",
+                 "pe_id",
+                 "date_due",
+                 ))
 
+        # Additional fields when using milestones
         if settings.get_project_milestones():
             # Use the field in this format to get the custom represent
             lappend("task_milestone.milestone_id")
@@ -8038,16 +8044,7 @@ class S3ProjectTaskModel(S3Model):
                 jquery_ready_append('''$.filterOptionsS3(%s)''' % \
                                     json.dumps(options, separators=SEPARATORS))
 
-        list_fields.extend(("name",
-                            "pe_id",
-                            "date_due",
-                            "time_estimated",
-                            "time_actual",
-                            "created_on",
-                            "status",
-                            #"site_id"
-                            ))
-
+        # Remaining standard filter widgets for tasks
         filter_widgets.extend((S3OptionsFilter("pe_id",
                                                label = T("Assigned To"),
                                                none = T("Unassigned"),
@@ -8075,19 +8072,44 @@ class S3ProjectTaskModel(S3Model):
                                             ),
                                ))
 
-        crud_fields.extend(("time_estimated",
-                            "status",
-                            S3SQLInlineComponent("time",
-                                                 label = T("Time Log"),
-                                                 fields = ["date",
-                                                           "person_id",
-                                                           "hours",
-                                                           "comments"
-                                                           ],
-                                                 orderby = "date"
-                                                 ),
-                            "time_actual",
-                            ))
+        # Additional fields for time logging and workflow
+        task_time = settings.get_project_task_time()
+        if task_time:
+            workflow_fields = ("name",
+                               "pe_id",
+                               "date_due",
+                               "time_estimated",
+                               "time_actual",
+                               (T("Created On"), "created_on"),
+                               "status",
+                               )
+        else:
+            workflow_fields = ("name",
+                               "pe_id",
+                               "date_due",
+                               (T("Created On"), "created_on"),
+                               "status",
+                               )
+
+        list_fields.extend(workflow_fields)
+
+        # CRUD fields for hours logging
+        if task_time:
+            cextend(("time_estimated",
+                     "status",
+                     S3SQLInlineComponent("time",
+                                          label = T("Time Log"),
+                                          fields = ["date",
+                                                    "person_id",
+                                                    "hours",
+                                                    "comments"
+                                                    ],
+                                          orderby = "date"
+                                          ),
+                     "time_actual",
+                     ))
+        else:
+            cappend("status")
 
         # Custom Form
         crud_form = S3SQLCustomForm(*crud_fields)

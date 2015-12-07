@@ -3695,12 +3695,6 @@ class S3Config(Storage):
         """
         return self.project.get("planning_ondelete", "CASCADE")
 
-    def get_project_task_tag(self):
-        """
-            Use Tags in Tasks
-        """
-        return self.project.get("task_tag", False)
-
     def get_project_projects(self):
         """
             Link Activities & Tasks to Projects
@@ -3744,6 +3738,9 @@ class S3Config(Storage):
         return self.project.get("multiple_organisations", False)
 
     def get_project_organisation_roles(self):
+        """
+            Organisation roles within projects
+        """
         T = current.T
         return self.project.get("organisation_roles", {
                 1: T("Lead Implementer"), # T("Host National Society")
@@ -3754,7 +3751,16 @@ class S3Config(Storage):
             })
 
     def get_project_organisation_lead_role(self):
+        """
+            The lead role of organisations within projects
+        """
         return self.project.get("organisation_lead_role", 1)
+
+    def get_project_task_tag(self):
+        """
+            Use Tags in Tasks
+        """
+        return self.project.get("task_tag", False)
 
     def get_project_task_status_opts(self):
         """
@@ -3799,6 +3805,12 @@ class S3Config(Storage):
                                                        3: T("Normal"),
                                                        4: T("Low")
                                                        })
+
+    def get_project_task_time(self):
+        """
+            Whether to use hours logging for tasks
+        """
+        return self.project.get("task_time", True)
 
     # -------------------------------------------------------------------------
     # Requests Management Settings

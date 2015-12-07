@@ -147,6 +147,8 @@ def config(settings):
                                          12: T("Completed"),
                                          }
 
+    settings.project.task_time = False
+
     # -------------------------------------------------------------------------
     # Requests Module Settings
     #
