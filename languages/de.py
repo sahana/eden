@@ -3726,7 +3726,7 @@
 'Service profile updated': 'Leistungsprofil aktualisiert',
 'Service': 'Leistung',
 'Services Available': 'Verfügbare Leistungen',
-'Services': 'Services (XDS; Exchange-Verzeichnisdienst)',
+'Services': 'Leistungen',
 'Set Base Site': 'Basisstandort festlegen',
 'Set By': 'Definiert durch',
 'Set True to allow editing this level of the location hierarchy by users who are not MapAdmins.': "Wählen sie 'Wahr' um Benutzern, die nicht Karten-Admins sind, zu erlauben dieses Level der Gebietshierachie zu verändern.",
