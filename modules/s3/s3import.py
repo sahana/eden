@@ -2711,7 +2711,7 @@ class S3ImportItem(object):
             @param value: the value of the foreign key
         """
 
-        MTIME = xml.mtime
+        MTIME = current.xml.MTIME
 
         table = self.table
         record_id = self.id

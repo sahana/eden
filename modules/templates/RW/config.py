@@ -936,7 +936,8 @@ def organisation_needs(row, need_type=None):
         if demand not in needs:
             continue
         title = "%s:" % T(demand_options[demand])
-        items = UL([LI(T(skill)) for skill in needs[demand]])
+        items = UL([LI(T(need))
+                    for need in needs[demand] if need is not None])
         output.append(TAG[""](title, items))
     return output
 

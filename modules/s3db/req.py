@@ -2180,7 +2180,8 @@ class S3RequestSummaryModel(S3Model):
                                                    tooltip = None,
                                                    vars = {"prefix": "req"},
                                                    ),
-                              widget = None,
+                             empty = None,
+                             widget = None,
                              ),
                      demand(),
                      s3_comments(),
@@ -2201,6 +2202,7 @@ class S3RequestSummaryModel(S3Model):
                                                     tooltip = None,
                                                     vars = {"prefix": "req"},
                                                     ),
+                              empty=None
                               ),
                      demand(),
                      s3_comments(),
