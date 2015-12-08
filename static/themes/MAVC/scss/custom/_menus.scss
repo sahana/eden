@@ -49,6 +49,16 @@
             margin-top: -10px;
         }
     }
+    form.language-selector {
+        margin-left: 1rem;
+    }
+    li.has-dropdown.not-click.label-icon > a {
+        padding-bottom: 0.5rem !important;
+        padding-top: 0.3rem !important;
+        i {
+            font-size: 1.1rem;
+        }
+    }
 }
 
 .row.main-navigation {

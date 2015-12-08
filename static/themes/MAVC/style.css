@@ -657,21 +657,34 @@ div.tabs span.tab_other a:hover {
 .top-bar-section > ul li > .dropdown {
   margin-top: -10px;
 }
+/* line 52, ../scss/custom/_menus.scss */
+.top-bar-section form.language-selector {
+  margin-left: 1rem;
+}
+/* line 55, ../scss/custom/_menus.scss */
+.top-bar-section li.has-dropdown.not-click.label-icon > a {
+  padding-bottom: 0.5rem !important;
+  padding-top: 0.3rem !important;
+}
+/* line 58, ../scss/custom/_menus.scss */
+.top-bar-section li.has-dropdown.not-click.label-icon > a i {
+  font-size: 1.1rem;
+}
 
-/* line 54, ../scss/custom/_menus.scss */
+/* line 64, ../scss/custom/_menus.scss */
 .row.main-navigation {
   border-bottom: 1px solid #F6F6F6;
 }
 
 /* Side Menu */
-/* line 59, ../scss/custom/_menus.scss */
+/* line 69, ../scss/custom/_menus.scss */
 .sidebar {
   background: none repeat scroll 0 0 #F3F3F3;
   margin-top: 10px;
   padding-top: 0.25rem;
 }
 
-/* line 65, ../scss/custom/_menus.scss */
+/* line 75, ../scss/custom/_menus.scss */
 .side-nav li {
   line-height: 1.2;
   list-style-type: none;
@@ -680,17 +693,17 @@ div.tabs span.tab_other a:hover {
   padding: 0;
 }
 
-/* line 72, ../scss/custom/_menus.scss */
+/* line 82, ../scss/custom/_menus.scss */
 .side-nav li.heading:not(:first-child) {
   border-top: 1px solid #EAEAEA;
 }
 
-/* line 75, ../scss/custom/_menus.scss */
+/* line 85, ../scss/custom/_menus.scss */
 .side-nav li.heading {
   margin-top: 0.125rem;
 }
 
-/* line 78, ../scss/custom/_menus.scss */
+/* line 88, ../scss/custom/_menus.scss */
 .side-nav li.active > a:first-child:not(.button) {
   font-weight: bold;
   color: #444444;

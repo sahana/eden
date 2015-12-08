@@ -42,19 +42,27 @@ class S3MainMenuLayout(S3NavigationItem):
                     classes.append("has-dropdown not-click")
                     if item.selected:
                         classes.append("active")
+                    if item.opts.icon:
+                        classes.append("label-icon")
+                        title = item.label
+                        item.label = ICON(item.opts.icon)
+                    else:
+                        title = None
                     _class = " ".join(classes)
+
                     # Menu item with Dropdown
                     if item.get_first(enabled=True):
                         _href = item.url()
                         return LI(A(item.label,
-                                    _href=_href,
-                                    _id=item.attr._id
+                                    _href = _href,
+                                    _id = item.attr._id,
+                                    _title = title,
                                     ),
-                                    UL(items,
-                                        _class="dropdown"
-                                        ),
-                                    _class=_class,
-                                    )
+                                  UL(items,
+                                     _class="dropdown"
+                                     ),
+                                  _class=_class,
+                                  )
                 else:
                     # Menu item without Drop-Down
                     if toplevel:
@@ -68,8 +76,8 @@ class S3MainMenuLayout(S3NavigationItem):
                                     _href=item_url,
                                     _id=item.attr._id,
                                     ),
-                                    _class=_class,
-                                    )
+                                  _class=_class,
+                                  )
                     else:
                         # Submenu item
                         if isinstance(item.label, dict):
@@ -158,121 +166,56 @@ class S3MainMenuLayout(S3NavigationItem):
                   )
 
 # =============================================================================
-class S3PersonalMenuLayout(S3NavigationItem):
-
-    @staticmethod
-    def layout(item):
-
-        if item.parent is None:
-            # The menu
-            items = item.render_components()
-            if items:
-                return TAG["ul"](items, _class="sub-nav personal-menu")
-            else:
-                return "" # menu is empty
-        else:
-            # A menu item
-            if item.enabled and item.authorized:
-                return TAG["li"](A(item.label, _href=item.url()))
-            else:
-                return None
-
-# -----------------------------------------------------------------------------
-# Shortcut
-MP = S3PersonalMenuLayout
-
-# =============================================================================
-class S3AboutMenuLayout(S3NavigationItem):
-
-    @staticmethod
-    def layout(item):
-
-        if item.parent is None:
-            # The menu
-            items = item.render_components()
-            if items:
-                return TAG["ul"](items, _class="sub-nav about-menu left")
-            else:
-                return "" # menu is empty
-        else:
-            # A menu item
-            if item.enabled and item.authorized:
-                return TAG["li"](A(item.label, _href=item.url()))
-            else:
-                return None
-
-# -----------------------------------------------------------------------------
-# Shortcut
-MA = S3AboutMenuLayout
-
-# =============================================================================
 class S3LanguageMenuLayout(S3NavigationItem):
+    """ Custom Language Menu (Dropdown) """
 
     @staticmethod
     def layout(item):
-        """ Language menu layout
+        """
+            Language menu layout
 
             options for each entry:
                 - lang_code: the language code
                 - lang_name: the language name
-            option for the menu
-                - current_language: code of the current language
         """
 
         if item.enabled:
             if item.components:
                 # The language menu itself
-                current_language = current.T.accepted_language
+                T = current.T
                 items = item.render_components()
-                select = SELECT(items, value=current_language,
-                                    _name="_language",
-                                    # @ToDo T:
-                                    _title="Language Selection",
-                                    _onchange="S3.reloadWithQueryStringVars({'_language':$(this).val()});")
-                form = FORM(select, _class="language-selector",
-                                    _name="_language",
-                                    _action="",
-                                    _method="get")
+                select = SELECT(items,
+                                _name = "_language",
+                                _title = T("Language Selection"),
+                                _onchange = '''S3.reloadWithQueryStringVars({'_language':$(this).val()})''',
+                                value = T.accepted_language,
+                                )
+                form = FORM(select,
+                            _class = "language-selector",
+                            _name = "_language",
+                            _action = "",
+                            _method = "get",
+                            )
                 return form
             else:
                 # A language entry
                 return OPTION(item.opts.lang_name,
-                              _value=item.opts.lang_code)
+                              _value=item.opts.lang_code,
+                              )
         else:
             return None
 
     # -------------------------------------------------------------------------
     def check_enabled(self):
-        """ Check whether the language menu is enabled """
+       """ Check whether the language menu is enabled """
 
-        if current.deployment_settings.get_L10n_display_toolbar():
-            return True
-        else:
-            return False
+       if current.deployment_settings.get_L10n_display_toolbar():
+           return True
+       else:
+           return False
 
 # -----------------------------------------------------------------------------
 # Shortcut
 ML = S3LanguageMenuLayout
-
-# =============================================================================
-class S3OrgMenuLayout(S3NavigationItem):
-    """ Layout for the organisation-specific menu """
-
-    @staticmethod
-    def layout(item):
-
-        name = "Deutsches Rotes Kreuz"
-        logo = IMG(_src = "/%s/static/themes/DRK/img/logo_small.png" %
-                          current.request.application,
-                   _alt = "Deutsches Rotes Kreuz",
-                   _width=40,
-                   )
-
-        # Note: render using current.menu.org.render()[0] + current.menu.org.render()[1]
-        return (name, logo)
-
-# -----------------------------------------------------------------------------
-# Shortcut
-OM = S3OrgMenuLayout
 
 # END =========================================================================

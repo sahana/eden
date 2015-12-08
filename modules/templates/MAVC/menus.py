@@ -11,42 +11,26 @@ import s3menus as default
 
 # =============================================================================
 class S3MainMenu(default.S3MainMenu):
-    """
-        Custom Application Main Menu:
+    """ Custom Application Main Menu """
 
-        The main menu consists of several sub-menus, each of which can
-        be customised separately as a method of this class. The overall
-        composition of the menu is defined in the menu() method, which can
-        be customised as well:
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu(cls):
+        """ Compose Menu """
 
-        Function        Sub-Menu                Access to (standard)
+        # Modules menus
+        main_menu = MM()(
+            cls.menu_modules(),
+            cls.menu_personal(),
+            cls.menu_lang(),
+        )
 
-        menu_modules()  the modules menu        the Eden modules
-        menu_admin()    the Admin menu          System/User Administration
-        menu_lang()     the Language menu       Selection of the GUI locale
-        menu_auth()     the User menu           Login, Logout, User Profile
-        menu_help()     the Help menu           Contact page, About page
-
-        The standard uses the MM layout class for main menu items - but you
-        can of course use a custom layout class which you define in layouts.py.
-
-        Additional sub-menus can simply be defined as additional functions in
-        this class, and then be included in the menu() method.
-
-        Each sub-menu function returns a list of menu items, only the menu()
-        function must return a layout class instance.
-    """
+        return main_menu
 
     # -------------------------------------------------------------------------
     @classmethod
     def menu_modules(cls):
         """ Custom Modules Menu """
-
-        system_roles = current.session.s3.system_roles
-        AUTHENTICATED = system_roles.AUTHENTICATED
-        VALIDATOR = system_roles.VALIDATOR
-
-        INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
 
         return [
             homepage(name = "&nbsp;",
@@ -54,133 +38,92 @@ class S3MainMenu(default.S3MainMenu):
                      icon = "%s/static/themes/img/logo-small.png" % \
                             current.request.application,
                      ),
+            # @todo:
+            MM("Newsfeed", link=False),
             MM("Organizations", c="org", f="organisation"),
-            #MM("Dashboard", c="default", f="index",
-            #   args=["dashboard"],
-            #   restrict=[AUTHENTICATED],
-            #   ),
-            #MM("Stakeholder Network", link=False)(
-            #    #MM("Networks", c="org", f="group"),
-            #    #MM("Groups", c="hrm", f="group"),
-            #    MM("Organizations", c="org", f="organisation", m="summary"),
-            #    MM(INDIVIDUALS, c="hrm", f="staff", m="summary",
-            #       restrict=[AUTHENTICATED]),
-            #),
-            #MM("Requests for Aid", link=False)(
-            #    MM("Requests", c="req", f="req", m="summary"),
-            #),
-            #MM("Aid Delivery", link=False)(
-            #    MM("Shipments", c="inv", f="send", m="summary"),
-            #),
-            #MM("Map", c="gis", f="index",
-            #   icon="icon-map",
-            #   #restrict=[AUTHENTICATED],
-            #   ),
-            #MM("Validation", link=False, restrict=[VALIDATOR])(
-            #        MM("Organizations", c="org", f="organisation", m="review"),
-            #        MM("Requests", c="req", f="req", m="review"),
-            #        MM("Shipments", c="inv", f="send", m="review"),
-            #   ),
+            # @todo:
+            MM("Activities", link=False),
+            # @todo:
+            MM("Aid Requests", link=False),
+            # @todo:
+            #MM("Aid Deliveries", link=False),
+            MM("Map", c="gis", f="index"),
         ]
 
     # -------------------------------------------------------------------------
     @classmethod
-    def menu_help(cls, **attr):
-        """ Help Menu """
-
-        ADMIN = current.auth.get_system_roles().ADMIN
-
-        menu_help = MM("Help", c="default", f="help", link=False, **attr)(
-            MM("User Guide", f="help"),
-            MM("Contact us", f="contact"),
-            #MM("About", f="about", restrict=[ADMIN]),
-        )
-
-        return menu_help
-
-    # -------------------------------------------------------------------------
-    @classmethod
-    def menu_auth(cls, **attr):
-        """ Auth Menu """
+    def menu_personal(cls):
+        """ Custom Personal Menu """
 
         auth = current.auth
-        logged_in = auth.is_logged_in()
+        s3 = current.response.s3
+        settings = current.deployment_settings
 
-        if not logged_in:
+        if not auth.is_logged_in():
+
             request = current.request
+
             login_next = URL(args=request.args, vars=request.vars)
             if request.controller == "default" and \
                request.function == "user" and \
                "_next" in request.get_vars:
                 login_next = request.get_vars["_next"]
 
-            self_registration = current.deployment_settings.get_security_registration_visible()
-            if self_registration == "index":
-                register = MM("Register", c="default", f="index", m="register",
-                               vars=dict(_next=login_next),
-                               check=self_registration)
-            else:
-                register = MM("Register", m="register",
-                               vars=dict(_next=login_next),
-                               check=self_registration)
-
-            menu_auth = MM("Login", c="default", f="user", m="login",
-                           _id="auth_menu_login",
-                           vars=dict(_next=login_next), **attr)(
-                            MM("Login", m="login",
-                               vars=dict(_next=login_next)),
-                            register,
-                            MM("Lost Password", m="retrieve_password")
+            self_registration = settings.get_security_self_registration()
+            menu_personal = MM(icon="user", link=False)(
+                        MM("Register", c="default", f="user",
+                           m="register",
+                           check = self_registration,
+                           ),
+                        MM("Login", c="default", f="user",
+                           m="login",
+                           vars = {"_next": login_next},
+                           ),
+                        MM("Lost Password", c="default", f="user",
+                           m="retrieve_password",
+                           ),
                         )
+
         else:
-            # Logged-in
-            menu_auth = MM(auth.user.email, c="default", f="user",
-                           translate=False,
-                           link=False,
-                           _id="auth_menu_email",
-                           **attr)(
-                            MM("Logout", m="logout", _id="auth_menu_logout"),
-                            #MM("User Profile", m="profile"),
-                            MM("Personal Profile", c="default", f="person", m="update"),
-                            #MM("Contact Details", c="pr", f="person",
-                            #    args="contact",
-                            #    vars={"person.pe_id" : auth.user.pe_id}),
-                            #MM("Subscriptions", c="pr", f="person",
-                            #    args="pe_subscription",
-                            #    vars={"person.pe_id" : auth.user.pe_id}),
-                            MM("Change Password", m="change_password"),
-                            #SEP(),
-                            #MM({"name": current.T("Rapid Data Entry"),
-                            #    "id": "rapid_toggle",
-                            #    "value": current.session.s3.rapid_data_entry is True,
-                            #    },
-                            #   f="rapid",
-                            #   ),
+            s3_has_role = auth.s3_has_role
+            is_org_admin = lambda i: s3_has_role("ORG_ADMIN") and \
+                                     not s3_has_role("ADMIN")
+
+            menu_personal = MM(icon="user", link=False)(
+                        MM("Administration", c="admin", f="index",
+                           restrict = "ADMIN",
+                           ),
+                        MM("Administration", c="admin", f="user",
+                           check = is_org_admin,
+                           ),
+                        MM("Change Password", c="default", f="user",
+                           m = "change_password",
+                           ),
+                        MM("Logout", c="default", f="user",
+                           m = "logout",
+                           ),
                         )
 
-        return menu_auth
+        return menu_personal
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_lang(cls):
+        """ Language Selector """
+
+        s3 = current.response.s3
+
+        menu_lang = ML("Language", right=True)
+        for language in s3.l10n_languages.items():
+            code, name = language
+            menu_lang(
+                ML(name, translate=False, lang_code=code, lang_name=name)
+            )
+        return menu_lang
 
 # =============================================================================
 class S3OptionsMenu(default.S3OptionsMenu):
-    """
-        Custom Controller Menus
-
-        The options menu (left-hand options menu) is individual for each
-        controller, so each controller has its own options menu function
-        in this class.
-
-        Each of these option menu functions can be customised separately,
-        by simply overriding (re-defining) the default function. The
-        options menu function must return an instance of the item layout.
-
-        The standard menu uses the M item layout class, but you can of
-        course also use any other layout class which you define in
-        layouts.py (can also be mixed).
-
-        Make sure additional helper functions in this class don't match
-        any current or future controller prefix (e.g. by using an
-        underscore prefix).
-    """
+    """ Custom Controller Menus """
 
     # -------------------------------------------------------------------------
     @staticmethod
