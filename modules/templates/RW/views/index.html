@@ -57,11 +57,14 @@
   <div id='intro' class='callout panel'>
    <h4>Sahana #RefugeesWelcome</h4>
    <p>{{=T("This is a coordination system for organizations and facilities providing support for refugees in Europe.")}}</p>
+   <p class="alert-info">
+    {{=T("Registered users can use the contact form below to request permission to add or edit information. Remember to include your username, organisation and the type of permission you need.")}}
+   </p>
    {{=H4("%s:" % T("Fill in the form below for more information"))}}
-    {{=contact_form}}
-    {{if AUTHENTICATED not in session.s3.roles:}}
-    {{=login_buttons}}
-    {{pass}}
+   {{=contact_form}}
+   {{if AUTHENTICATED not in session.s3.roles:}}
+   {{=login_buttons}}
+   {{pass}}
   </div>
   {{if AUTHENTICATED not in session.s3.roles:}}
   <div id='login_box' class='panel' style='display:none'>
