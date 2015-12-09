@@ -1533,6 +1533,7 @@ class S3OptionsFilter(S3FilterWidget):
                                        size = opts["size"] or 12,
                                        help_field = opts["help_field"],
                                        sort = opts.get("sort", True),
+                                       orientation = opts.get("orientation"),
                                        )
         else:
             # Default widget_type = "multiselect"

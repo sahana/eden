@@ -2567,7 +2567,8 @@ class S3GroupedOptionsWidget(FormWidget):
                  cols=None,
                  help_field=None,
                  none=None,
-                 sort=True):
+                 sort=True,
+                 orientation=None):
         """
             Constructor
 
@@ -2583,6 +2584,7 @@ class S3GroupedOptionsWidget(FormWidget):
                                a tooltip text from (for foreign keys only)
             @param none: True to render "None" as normal option
             @param sort: sort the options (only effective if size==None)
+            @param orientation: the ordering orientation, "columns"|"rows"
         """
 
         self.options = options
@@ -2592,6 +2594,7 @@ class S3GroupedOptionsWidget(FormWidget):
         self.help_field = help_field
         self.none = none
         self.sort = sort
+        self.orientation = orientation
 
     # -------------------------------------------------------------------------
     def __call__(self, field, value, **attributes):
@@ -2630,7 +2633,7 @@ class S3GroupedOptionsWidget(FormWidget):
         widget.add_class("groupedopts-widget")
         widget_opts = {"columns": self.cols,
                        "emptyText": str(current.T("No options available")),
-                       "order": "columns",
+                       "orientation": self.orientation or "columns",
                        "sort": self.sort,
                        }
         script = '''$('#%s').groupedopts(%s)''' % \

@@ -183,10 +183,11 @@ def config(settings):
 
         # Simplify form
         table = s3db.org_organisation
-        field = table.year
-        field.readable = field.writable = False
-        field = table.country
-        field.readable = field.writable = False
+        field = table.comments
+        from gluon import DIV
+        field.comment = DIV(_class="tooltip",
+                            _title="%s|%s" % (T("About"),
+                                              T("Describe the organisation, e.g. mission, history and other relevant details")))
 
         if not current.auth.is_logged_in():
             field = table.logo
@@ -208,20 +209,43 @@ def config(settings):
                          label = T("Search"),
                          comment = T("Search by organization name or acronym. You can use * as wildcard."),
                          ),
-            S3OptionsFilter("sector_organisation.sector_id",
-                            ),
+            #S3OptionsFilter("sector_organisation.sector_id",
+            #                ),
             S3OptionsFilter("organisation_organisation_type.organisation_type_id",
                             label = T("Type"),
                             ),
-            S3LocationFilter("organisation_location.location_id",
-                             label = T("Areas Served"),
-                             levels = ("L1", "L2", "L3", "L4"),
-                             #hidden = True,
-                             ),
+            #S3LocationFilter("organisation_location.location_id",
+            #                 label = T("Areas Served"),
+            #                 levels = ("L1", "L2", "L3", "L4"),
+            #                 #hidden = True,
+            #                 ),
             ]
+
+        # CRUD Form
+        from s3 import S3SQLCustomForm, S3SQLInlineLink
+        multitype = settings.get_org_organisation_types_multiple()
+        crud_form = S3SQLCustomForm("name",
+                                    "acronym",
+                                    S3SQLInlineLink(
+                                            "organisation_type",
+                                            field = "organisation_type_id",
+                                            filter = False,
+                                            label = T("Type"),
+                                            multiple = multitype,
+                                            ),
+                                    "country",
+                                    S3SQLInlineLink("sector",
+                                            cols = 3,
+                                            label = T("Sectors"),
+                                            field = "sector_id",
+                                            ),
+                                    (T("About"), "comments"),
+                                    "website",
+                                    )
 
         s3db.configure("org_organisation",
                        filter_widgets = filter_widgets,
+                       crud_form = crud_form,
                        )
 
     settings.customise_org_organisation_resource = customise_org_organisation_resource

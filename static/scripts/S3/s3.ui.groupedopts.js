@@ -1,6 +1,6 @@
 /**
  * jQuery UI GroupedOpts Widget for S3GroupedOptionsWidget
- * 
+ *
  * @copyright 2013-14 (c) Sahana Software Foundation
  * @license MIT
  *
@@ -24,14 +24,15 @@
          *
          * @prop {number} columns - the number of columns
          * @prop {string} emptyText - message to show when no options are available
-         * @prop {string} order - the ordering direction, 
-         *                        'columns' (columns=>rows) or 'rows' (rows=>columns)
+         * @prop {string} orientation - the ordering orientation,
+         *                              'columns' (columns=>rows), or
+         *                              'rows' (rows=>columns)
          * @prop {bool} sort - alpha-sort the options
          */
         options: {
             columns: 3,
             emptyText: 'No options available',
-            order: 'columns',
+            orientation: 'columns',
             sort: true
         },
 
@@ -134,7 +135,7 @@
 
         /**
          * Render a group
-         * 
+         *
          * @param {jQuery} optgroup - the optgroup element
          */
         _renderGroup: function(optgroup) {
@@ -154,7 +155,7 @@
 
         /**
          * Render all rows in a group
-         * 
+         *
          * @param {jQuery} items - the option elements in the group
          * @param {jQuery} group - the target table element
          */
@@ -174,7 +175,7 @@
             }
 
             var rows = [], i, j;
-            if (this.options.order == 'columns') {
+            if (this.options.orientation == 'columns') {
                 // Order items as columns=>rows
                 var numrows = Math.ceil(tail.length / numcols);
                 for (i = 0; i < numcols; i++) {
@@ -190,7 +191,7 @@
             } else {
                 // Order items as rows=>columns
                 while(tail.length) {
-                    row = [];
+                    var row = [];
                     for (i=0; i<numcols; i++) {
                         if (!tail.length) {
                             break;
@@ -212,7 +213,7 @@
 
         /**
          * Render one checkbox/radio item
-         * 
+         *
          * @param {jQuery} item - the option element
          * @param {jQuery} row - the target tr element
          */
@@ -308,7 +309,7 @@
 
             // Apply cluetip (from S3.js)
             self.menu.find('label[title]').cluetip({splitTitle: '|', showTitle:false});
-            
+
             self.menu.find('.s3-groupedopts-label').click(function() {
                 var div = $(this);
                 div.next('table').toggle();

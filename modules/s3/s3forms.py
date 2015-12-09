@@ -3335,6 +3335,7 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                                   "help_field",
                                   "multiple",
                                   "sort",
+                                  "orientation",
                                   ))
             w = S3GroupedOptionsWidget(**w_opts)
         elif widget == "hierarchy":
