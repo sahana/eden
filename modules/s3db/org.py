@@ -2478,7 +2478,8 @@ class S3OrganisationServiceModel(S3Model):
         tablename = "org_service"
         define_table(tablename,
                      Field("name", length=128, notnull=True,
-                           # Comment this if we need to support the same service at different locations in hierarchy
+                           # Comment this if we need to support the same
+                           # service at different locations in hierarchy
                            unique = True,
                            label = T("Name"),
                            ),
@@ -2539,8 +2540,12 @@ class S3OrganisationServiceModel(S3Model):
                                      )
 
         configure(tablename,
-                  # If we need to support the same service at different locations in hierarchy
-                  #deduplicate = self.org_service_deduplicate,
+                  # Currently deduplicated by unique names, switch to
+                  # S3Duplicate if we need to support the same service
+                  # at different locations in hierarchy:
+                  #deduplicate = S3Duplicate(primary = ("name",),
+                  #                          secondary = ("parent",),
+                  #                          ),
                   hierarchy = hierarchy,
                   )
 
@@ -2567,7 +2572,9 @@ class S3OrganisationServiceModel(S3Model):
             msg_list_empty = T("No Services found for this Organization"))
 
         configure(tablename,
-                  deduplicate = self.org_service_organisation_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("organisation_id",
+                                                       "service_id",
+                                                       )),
                   )
 
         # ---------------------------------------------------------------------
@@ -2678,6 +2685,7 @@ class S3OrganisationServiceModel(S3Model):
         # Table configuration
         configure(tablename,
                   crud_form = crud_form,
+                  deduplicate = self.org_service_location_deduplicate,
                   list_fields = list_fields,
                   super_entity = "doc_entity",
                   )
@@ -2714,6 +2722,12 @@ class S3OrganisationServiceModel(S3Model):
                      *s3_meta_fields()
                      )
 
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("service_location_id",
+                                                       "service_id",
+                                                       )),
+                  )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -2721,39 +2735,34 @@ class S3OrganisationServiceModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def org_service_deduplicate(item):
+    def org_service_location_deduplicate(item):
         """ Import item de-duplication """
 
+        table = item.table
         data = item.data
-        name = data.get("name")
-        if name:
-            table = item.table
-            query = (table.name == name)
-            parent = data.get("parent")
-            if parent:
-                query &= (table.parent == parent)
+
+        organisation_id = data.organisation_id
+        if organisation_id:
+
+            query = (table.organisation_id == organisation_id)
+
+            site_id = data.site_id
+            location_id = data.location_id
+            location = data.location
+
+            if site_id:
+                query &= (table.site_id == site_id)
+            elif location_id:
+                query &= (table.location_id == location_id)
+            elif location:
+                query &= (table.location == location)
+            else:
+                query &= (table.site_id == None) & \
+                         (table.location_id == None) & \
+                         (table.location == None)
+
             duplicate = current.db(query).select(table.id,
                                                  limitby=(0, 1)).first()
-
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_service_organisation_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        organisation_id = data.get("organisation_id")
-        service_id = data.get("service_id")
-        if organisation_id and service_id:
-            table = item.table
-            query = (table.organisation_id == organisation_id) & \
-                    (table.service_id == service_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-
             if duplicate:
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE

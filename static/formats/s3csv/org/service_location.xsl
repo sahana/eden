@@ -557,6 +557,7 @@
         </xsl:variable>
 
         <xsl:variable name="resource">
+            <!-- @todo: add other site types (warehouses, hospitals) -->
             <xsl:choose>
                 <xsl:when test="$SiteType='OFFICE'">org_office</xsl:when>
                 <xsl:when test="$SiteType='SHELTER'">cr_shelter</xsl:when>
@@ -600,6 +601,10 @@
                             <xsl:value-of select="concat('LOCATION:', $SiteName)"/>
                         </xsl:attribute>
                     </reference>
+                </xsl:if>
+                <xsl:if test="$resource='org_office'">
+                    <!-- Organisation is required for offices -->
+                    <xsl:call-template name="OrganisationLink"/>
                 </xsl:if>
             </resource>
         </xsl:if>
