@@ -5893,10 +5893,10 @@ def org_rheader(r, tabs=[]):
 
     T = current.T
     s3db = current.s3db
+
     # These 2 needed for req_match
     r.record = record
-    r.table = \
-    table = s3db[tablename]
+    r.table = table = s3db[tablename]
     settings = current.deployment_settings
 
     if tablename == "org_organisation":

@@ -1,0 +1,30 @@
+<div class='row'>
+ <div id='rheader' class='small-12 columns'>
+  {{try:}}{{=XML(rheader)}}
+ </div>
+</div>
+<div id='component' class='row'>
+{{except:}}
+ </div>
+</div>
+<div class='row'>
+{{pass}}
+ <div class='small-12 columns'>
+  {{try:}}{{=buttons["delete_btn"]}}{{except:}}{{pass}}
+  {{try:}}{{=deduplicate}}{{except:}}{{pass}}
+ </div>
+ <div id='map' class='small-12 columns'></div>
+ <div class='small-12 columns'>
+  {{include "last_update.html"}}
+  {{include "key.html"}}
+  <div class='form-container'>
+   {{try:}}{{=form}}{{except:}}{{pass}}
+  </div>
+ </div>
+</div>
+{{if s3.rfooter:}}
+<div class='row'>
+ <div id='rfooter' class='small-12 columns'>
+  {{=XML(s3.rfooter)}}
+ </div>
+</div>{{pass}}

@@ -14,6 +14,24 @@
             background: none;
         }
     }
+    .rheader-details {
+        text-align: center;
+        padding-top: 1.0rem;
+        padding-bottom: 1.0rem;
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.1rem;
+        }
+        h2 {
+            font-size: 1.2rem;
+            font-weight: normal;
+            color: $iron;
+            margin-top: 0.1rem;
+        }
+        a {
+            font-size: 85%;
+        }
+    }
 }
 
 /* RHeader Tabs */

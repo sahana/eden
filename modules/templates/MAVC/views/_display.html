@@ -1,0 +1,38 @@
+<div class='row'>
+ <div id='rheader' class='small-12 columns'>
+  {{try:}}{{=XML(rheader)}}
+ </div>
+</div>
+<div id='component' class='row'>
+{{except:}}
+ </div>
+</div>
+<div class='row'>
+{{pass}}
+ <div class='small-12 columns'>
+  {{try:}}{{=buttons["edit_btn"]}}{{except:}}{{pass}}
+  {{try:}}{{=buttons["delete_btn"]}}{{except:}}{{pass}}
+  {{try:}}{{=deduplicate}}{{except:}}{{pass}}
+  {{include "last_update.html"}}
+ </div>
+ <div class='small-12 columns'>
+  {{try:}}
+  {{include}}
+  {{except:}}{{pass}}
+ </div>
+ <div id='map' class='small-12 columns'></div>
+ <div class='small-12 columns'>
+  <div class='item-container'>
+  {{try:}}{{=item}}{{except:}}{{pass}}
+  </div>
+ </div>
+ <div class='small-12 columns'>
+  {{try:}}{{=buttons["list_btn"]}}{{except:}}{{pass}}
+ </div>
+</div>
+{{if s3.rfooter:}}
+<div class='row'>
+ <div id='rfooter' class='small-12 columns'>
+ {{=XML(s3.rfooter)}}
+ </div>
+</div>{{pass}}

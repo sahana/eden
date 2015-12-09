@@ -243,20 +243,10 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_org_organisation_controller(**attr):
 
-        INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
-
-        # Custom tabs for organisations
-        tabs = [(T("Basic Details"), None),
-               (T("Areas Served"), "organisation_location"),
-               (INDIVIDUALS, "human_resource"),
-               (T("Offices"), "office"),
-               (T("Warehouses"), "warehouse"),
-               (T("Facilities"), "facility"),
-               ]
-
+        # Custom rheader and tabs
         attr = dict(attr)
-        attr["rheader"] = lambda r, tabs=tabs: \
-                          current.s3db.org_rheader(r, tabs=tabs)
+        attr["rheader"] = mavc_rheader
+
         return attr
 
     settings.customise_org_organisation_controller = customise_org_organisation_controller
@@ -394,5 +384,73 @@ def config(settings):
            module_type = None,
         )),
     ])
+
+# =============================================================================
+def mavc_rheader(r, tabs=None):
+    """ Custom rheaders """
+
+    if r.representation != "html":
+        return None
+
+    from s3 import s3_rheader_resource, s3_rheader_tabs
+    from gluon import A, DIV, H1, H2, TAG
+
+    tablename, record = s3_rheader_resource(r)
+    if record is None:
+        return None
+
+    T = current.T
+    s3db = current.s3db
+
+    if tablename != r.tablename:
+        resource = s3db.resource(tablename,
+                                 id = record.id if record else None,
+                                 )
+    else:
+        resource = r.resource
+
+    rheader = ""
+
+    if tablename == "org_organisation":
+
+        # Tabs
+        if not tabs:
+            INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
+
+            tabs = [(T("About"), None),
+                    (INDIVIDUALS, "human_resource"),
+                    (T("Service Locations"), "service_location"),
+                    # @todo: activities
+                    ]
+
+        # Use OrganisationRepresent for title to get L10n name if available
+        represent = s3db.org_OrganisationRepresent(acronym=False,
+                                                   parent=False,
+                                                   )
+        title = represent(record.id)
+
+        # Retrieve other details for the rheader
+        data = resource.select(["organisation_organisation_type.organisation_type_id",
+                                "website",
+                                ],
+                               represent = True,
+                               )
+        row = data.rows[0]
+        subtitle = row["org_organisation_organisation_type.organisation_type_id"]
+        website = row["org_organisation.website"]
+
+        # Compile the rheader
+        rheader = DIV(DIV(H1(title),
+                          H2(subtitle),
+                          website if record.website else "",
+                          _class="rheader-details",
+                          ),
+                      )
+
+    if tabs:
+        rheader_tabs = s3_rheader_tabs(r, tabs)
+        rheader.append(rheader_tabs)
+
+    return rheader
 
 # END =========================================================================
