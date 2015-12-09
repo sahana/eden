@@ -160,16 +160,13 @@ $('#mailform').validate({
             script = '''
 $('#show-mailform').click(function(e){
  e.preventDefault()
- $('#intro').slideDown(400, function() {
-   $('#login_box').hide()
- });
+ $('#login_box').fadeOut(function(){$('#intro').fadeIn()})
 })
 $('#show-login').click(function(e){
  e.preventDefault()
  $('#login_form').show()
  $('#register_form').hide()
- $('#login_box').show()
- $('#intro').slideUp()
+ $('#intro').fadeOut(function(){$('#login_box').fadeIn()})
 })'''
             s3.jquery_ready.append(script)
 
@@ -189,8 +186,7 @@ $('#show-register').click(function(e){
  e.preventDefault()
  $('#login_form').hide()
  $('#register_form').show()
- $('#login_box').show()
- $('#intro').slideUp()
+ $('#intro').fadeOut(function(){$('#login_box').fadeIn()})
 })'''
                 s3.jquery_ready.append(script)
 
@@ -202,13 +198,11 @@ $('#show-register').click(function(e){
                 register_script = '''
 $('#register-btn').click(function(e){
  e.preventDefault()
- $('#register_form').show()
- $('#login_form').hide()
+ $('#login_form').fadeOut(function(){$('#register_form').fadeIn()})
 })
 $('#login-btn').click(function(e){
  e.preventDefault()
- $('#register_form').hide()
- $('#login_form').show()
+ $('#register_form').fadeOut(function(){$('#login_form').fadeIn()})
 })'''
                 s3.jquery_ready.append(register_script)
 
@@ -222,31 +216,77 @@ $('#login-btn').click(function(e){
         else:
             login_buttons = ""
 
-        output["login_buttons"] = login_buttons
-        output["self_registration"] = self_registration
-        output["registered"] = registered
-        output["login_div"] = login_div
-        output["login_form"] = login_form
-        output["register_div"] = register_div
-        output["register_form"] = register_form
-        output["contact_form"] = contact_form
+        # Create output dict
+        output = {"login_buttons": login_buttons,
+                  "self_registration": self_registration,
+                  "registered": registered,
+                  "login_div": login_div,
+                  "login_form": login_form,
+                  "register_div": register_div,
+                  "register_form": register_form,
+                  "contact_form": contact_form,
+                  }
 
-        # Slick slider
-        if s3.debug:
-            s3.scripts.append("/%s/static/scripts/slick.js" % request.application)
-        else:
-            s3.scripts.append("/%s/static/scripts/slick.min.js" % request.application)
-        script = '''
-$(document).ready(function(){
- $('#title-image').slick({
-  autoplay:true,
-  autoplaySpeed:5000,
-  speed:1000,
-  fade:true,
-  cssEase:'linear'
- });
-});'''
-        s3.jquery_ready.append(script)
+        # Count records (@todo: provide total/updated counters?)
+        s3db = current.s3db
+        db = current.db
+
+        # Organisations
+        table = s3db.org_organisation
+        query = (table.deleted != True)
+        count = table.id.count()
+        row = db(query).select(count).first()
+        output["total_organisations"] = row[count]
+
+        # Service Locations (@todo)
+        #table = s3db.org_service_location
+        #query = (table.deleted != True)
+        #count = table.id.count()
+        #row = db(query).select(count).first()
+        output["total_services"] = 0 #row[count]
+
+        # Needs lists
+        table = s3db.req_organisation_needs
+        query = (table.deleted != True)
+        count = table.id.count()
+        row = db(query).select(count).first()
+        output["total_needs"] = row[count]
+
+        # Frontpage Feed Control
+        if settings.frontpage.rss:
+            s3.external_stylesheets.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")
+            s3.scripts.append("http://www.google.com/jsapi?key=notsupplied-wizard")
+            s3.scripts.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js")
+            counter = 0
+            feeds = ""
+            for feed in settings.frontpage.rss:
+                counter += 1
+                feeds = "".join((feeds,
+                                 "{title:'%s',\n" % feed["title"],
+                                 "url:'%s'}" % feed["url"]))
+                # Don't add a trailing comma for old IEs
+                if counter != len(settings.frontpage.rss):
+                    feeds += ",\n"
+            # feedCycleTime: milliseconds before feed is reloaded (5 minutes)
+            feed_control = "".join(('''
+function LoadDynamicFeedControl(){
+ var feeds=[
+  ''', feeds, '''
+ ]
+ var options={
+  feedCycleTime:300000,
+  numResults:5,
+  stacked:true,
+  horizontal:false,
+  title:"''', str(T("News")), '''"
+ }
+ new GFdynamicFeedControl(feeds,'feed-control',options)
+}
+google.load('feeds','1')
+google.setOnLoadCallback(LoadDynamicFeedControl)'''))
+
+        s3.js_global.append(feed_control)
+        s3.stylesheets.append("../themes/RW/homepage.css")
 
         self._view(TEMPLATE, "index.html")
         return output
