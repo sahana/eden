@@ -18,6 +18,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,FI,"Regional State Administrative Agency",Region,Sub-region,Municipality,,
 ,GE,"Region / Republic",District,,,,
 ,GN,Region,Prefecture,Sub-prefecture,,,
+,GR,Region,Regional Unit,Municipality,,,
 ,HN,Department,Municipality,Village,,,
 ,HR,County,"Town / Municipality",,,,
 ,HU,County,District,,,,
