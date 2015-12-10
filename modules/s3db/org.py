@@ -7495,7 +7495,7 @@ class org_CapacityReport(S3Method):
                     if rheader:
                         output["rheader"] = rheader
 
-                data = self._read_data(r)
+                data = self._extract(r)
                 if data is None:
                     output["items"] = current.response.s3.crud_strings["org_capacity_assessment"].msg_list_empty
                     return output
@@ -7546,7 +7546,7 @@ class org_CapacityReport(S3Method):
                 return output
 
             elif r.representation == "xls":
-                data = self._read_data(r)
+                data = self._extract(r)
                 if data is None:
                     current.session.error = current.response.s3.crud_strings["org_capacity_assessment"].msg_list_empty
                     redirect(URL(f="capacity_assessment", extension=""))
@@ -7559,7 +7559,7 @@ class org_CapacityReport(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def _read_data(r):
+    def _extract(r):
         """
             Method to read the data
 

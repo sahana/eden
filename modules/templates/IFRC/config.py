@@ -114,6 +114,7 @@ def config(settings):
                                 inv_track_item = "track_org_id",
                                 inv_adj_item = "adj_id",
                                 req_req_item = "req_id",
+                                org_capacity_assessment_data = "assessment_id",
                                 po_household = "area_id",
                                 po_organisation_area = "area_id",
                                 )
