@@ -291,4 +291,28 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
         self._view(TEMPLATE, "index.html")
         return output
 
+# =============================================================================
+class docs(S3CustomController):
+    """
+        Custom controller to display online documentation, accessible
+        for anonymous users (e.g. information how to register/login)
+    """
+
+    def __call__(self):
+
+        response = current.response
+
+        def prep(r):
+            default_url = URL(f="index", args=[], vars={})
+            return current.s3db.cms_documentation(r, "HELP", default_url)
+        response.s3.prep = prep
+        output = current.rest_controller("cms", "post")
+
+        # Custom view
+        self._view("RW", "docs.html")
+
+        current.menu.dashboard = None
+
+        return output
+
 # END =========================================================================
