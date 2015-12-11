@@ -153,6 +153,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                        due_followups,
                                        )
 
+        ADMIN = current.auth.get_system_roles().ADMIN
+
         return M(c="dvr")(
                     M("Cases", c=("dvr", "pr"), f="person")(
                         M("Create", m="create"),
@@ -169,6 +171,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Bulk Status Update", m="manage"),
                     ),
                     M("Allowances", f="allowance")(
+                    ),
+                    M("Administration", restrict=ADMIN)(
+                        M("Flags", f="case_flag"),
+                        M("Case Status", f="case_status"),
                     ),
                 )
 

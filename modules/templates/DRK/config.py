@@ -633,7 +633,7 @@ def config(settings):
                                                      },
                                     )
 
-                from gluon import IS_EMPTY_OR, IS_NOT_EMPTY
+                from gluon import IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY
 
                 #default_organisation = current.auth.root_org()
                 default_organisation = settings.get_org_default_organisation()
@@ -705,29 +705,23 @@ def config(settings):
                 resource = r.resource
                 if r.interactive and r.method != "import":
 
-                    # Set mandatory case fields
+                    # Configure person_details fields
                     ctable = s3db.pr_person_details
-                    for fn in (#"nationality",
-                               "marital_status",
-                               ):
-                        field = ctable[fn]
-                        requires = field.requires
-                        if not requires:
-                            field.requires = IS_NOT_EMPTY
-                        elif isinstance(requires, IS_EMPTY_OR):
-                            field.requires = requires.other
 
-                    # Set mandatory person fields
+                    field = ctable.marital_status
+                    options = dict(s3db.pr_marital_status_opts)
+                    del options[9] # Remove "other"
+                    field.requires = IS_IN_SET(options, zero=None)
+
+                    # Configure person fields
                     table = resource.table
-                    from s3 import IS_PERSON_GENDER
-                    gender_opts = dict(s3db.pr_gender_opts)
 
                     field = table.gender
                     field.default = None
-                    del gender_opts[1] # "unknown" option not allowed
-                    field.requires = IS_PERSON_GENDER(gender_opts,
-                                                      sort = True,
-                                                      )
+                    from s3 import IS_PERSON_GENDER
+                    options = dict(s3db.pr_gender_opts)
+                    del options[1] # Remove "unknown"
+                    field.requires = IS_PERSON_GENDER(options, sort = True)
 
                     # Last name is required
                     field = table.last_name
@@ -837,8 +831,7 @@ def config(settings):
                         filter_widgets.append(reg_filter)
 
                 # Custom list fields (must be outside of r.interactive)
-                list_fields = [#"dvr_case.reference",
-                               (T("ID"), "pe_label"),
+                list_fields = [(T("ID"), "pe_label"),
                                (T("EasyOpt No."), "eo_number.value"),
                                "last_name",
                                "first_name",

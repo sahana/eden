@@ -1061,7 +1061,7 @@ class S3PersonModel(S3Model):
                             evr_background = {"joinby": "person_id",
                                               "multiple": False,
                                               },
- 
+
                             # HR Records
                             hrm_human_resource = "person_id",
                             # Skills
@@ -3643,6 +3643,7 @@ class S3PersonDetailsModel(S3Model):
     """ Extra optional details for People """
 
     names = ("pr_person_details",
+             "pr_marital_status_opts",
              )
 
     def model(self):
@@ -3825,7 +3826,8 @@ class S3PersonDetailsModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"pr_marital_status_opts": marital_status_opts,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

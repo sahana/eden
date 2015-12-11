@@ -1588,6 +1588,7 @@
 'First Name': 'Vorname',
 'First name': 'Vorname',
 'Fishing': 'Fischerei',
+'Flags': 'Flaggen',
 'Flash Flood': 'Sturzflut',
 'Flash Freeze': 'Schockfrost',
 'Flexible Impact Assessments': 'Flexible Folgenabschätzungen',
