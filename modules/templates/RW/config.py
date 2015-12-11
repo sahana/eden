@@ -473,15 +473,17 @@ def config(settings):
     def customise_req_organisation_needs_resource(r, tablename):
 
         s3db = current.s3db
+        table = current.s3db.req_organisation_needs
 
         CASH = T("Cash Donations needed")
 
         if r.tablename == "req_organisation_needs":
+
+            from s3 import IS_ONE_OF, S3DateTime
+
             # Allow only organisations which do not have a needs record
             # yet (single component):
-            table = r.table
             field = table.organisation_id
-            from s3 import IS_ONE_OF
             dbset = current.db(table.id == None)
             left = table.on(table.organisation_id == current.s3db.org_organisation.id)
             field.requires = IS_ONE_OF(dbset, "org_organisation.id",
@@ -491,11 +493,14 @@ def config(settings):
                                        sort = True,
                                        )
 
+            # Format modified_on as date
+            field = table.modified_on
+            field.represent = lambda d: S3DateTime.date_represent(d, utc=True)
+
         if r.representation in ("html", "aadata", "iframe"):
 
             # Structured lists for interactive views
             from gluon import Field
-            table = current.s3db.req_organisation_needs
             table.needs_skills = Field.Method(lambda row: \
                                     organisation_needs(row, need_type="skills"))
             table.needs_items = Field.Method(lambda row: \
@@ -504,7 +509,6 @@ def config(settings):
 
             needs_skills = (T("Volunteers needed"), "needs_skills")
             needs_items = (T("Supplies needed"), "needs_items")
-
 
             # Filter widgets
             from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
@@ -569,6 +573,7 @@ def config(settings):
                        needs_items,
                        (CASH, "money"),
                        (T("Cash Donation Details"), "money_details"),
+                       (T("Last Update"), "modified_on"),
                        ]
 
         s3db.configure("req_organisation_needs",
