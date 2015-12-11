@@ -2362,7 +2362,7 @@ class IS_ADD_PERSON_WIDGET2(Validator):
                     if name_format == "%(last_name)s %(middle_name)s %(first_name)s":
                         # Viet Nam style
                         last_name, middle_name, first_name = name_split(fullname)
-                    #elif name_format == "%(last_name)s %(first_name)s":
+                    #elif name_format == "%(last_name)s, %(first_name)s":
                     #    # DRK style (deprecated once we complete separation of widget fields)
                     #    last_name, middle_name, first_name = name_split(fullname)
                     else:

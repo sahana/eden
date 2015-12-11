@@ -1273,9 +1273,13 @@ class S3PersonModel(S3Model):
         if initials:
             initials = initials.lower()
 
+        # @ToDo: Allow each name to be split into words in a different order
         if fname and lname:
             query = (ptable.first_name.lower() == fname) & \
                     (ptable.last_name.lower() == lname)
+        elif fname and mname:
+            query = (ptable.first_name.lower() == fname) & \
+                    (ptable.middle_name.lower() == mname)
         elif initials:
             query = (ptable.initials.lower() == initials)
         else:
@@ -1350,7 +1354,7 @@ class S3PersonModel(S3Model):
 
         email_required = current.deployment_settings.get_pr_import_update_requires_email()
         for row in candidates:
-            if fname and lname:
+            if fname and (lname or mname):
                 row_fname = row[ptable.first_name]
                 row_mname = row[ptable.middle_name]
                 row_lname = row[ptable.last_name]
@@ -1443,22 +1447,50 @@ class S3PersonModel(S3Model):
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
         value = value.lower()
+        value = value.strip()
 
+        settings = current.deployment_settings
+        name_format = settings.get_pr_name_format()
+        middle_name = "middle_name" in name_format
+
+        # Names could be in the wrong order
+        # Multiple Names could be in a single field
+        # Each name field could be split into words in a different order
+        # @ToDo: deployment_setting for stricter matching? (& not |)
+        query = (FS("first_name").lower().like(value + "%")) | \
+                (FS("last_name").lower().like(value + "%"))
+        if middle_name:
+            query != (FS("middle_name").lower().like(value + "%"))
         if " " in value:
             value1, value2 = value.split(" ", 1)
-            value2 = value2.strip()
-            query = (FS("first_name").lower().like(value1 + "%")) & \
-                    ((FS("middle_name").lower().like(value2 + "%")) | \
-                     (FS("last_name").lower().like(value2 + "%")))
-        else:
-            value = value.strip()
-            query = ((FS("first_name").lower().like(value + "%")) | \
-                    (FS("middle_name").lower().like(value + "%")) | \
-                    (FS("last_name").lower().like(value + "%")))
+            query |= (FS("first_name").lower().like(value1 + "%")) | \
+                     (FS("first_name").lower().like(value2 + "%")) | \
+                     (FS("last_name").lower().like(value1 + "%")) | \
+                     (FS("last_name").lower().like(value2 + "%"))
+            if middle_name:
+                query |= (FS("middle_name").lower().like(value1 + "%")) | \
+                         (FS("middle_name").lower().like(value2 + "%"))
+            if " " in value2:
+                value2, value3 = value2.split(" ", 1)
+                query |= (FS("first_name").lower().like(value2 + "%")) | \
+                         (FS("first_name").lower().like(value3 + "%")) | \
+                         (FS("last_name").lower().like(value2 + "%")) | \
+                         (FS("last_name").lower().like(value3 + "%"))
+                if middle_name:
+                    query |= (FS("middle_name").lower().like(value2 + "%")) | \
+                             (FS("middle_name").lower().like(value3 + "%"))
+                if " " in value3:
+                    value3, value4 = value3.split(" ", 1)
+                    query |= (FS("first_name").lower().like(value3 + "%")) | \
+                             (FS("first_name").lower().like(value4 + "%")) | \
+                             (FS("last_name").lower().like(value3 + "%")) | \
+                             (FS("last_name").lower().like(value4 + "%"))
+                    if middle_name:
+                        query |= (FS("middle_name").lower().like(value3 + "%")) | \
+                                 (FS("middle_name").lower().like(value4 + "%"))
 
         resource.add_filter(query)
 
-        settings = current.deployment_settings
         limit = int(_vars.limit or 0)
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
         if (not limit or limit > MAX_SEARCH_RESULTS) and resource.count() > MAX_SEARCH_RESULTS:
@@ -1735,6 +1767,7 @@ class S3PersonModel(S3Model):
 
         # Perform Search
         # Names could be in the wrong order
+        # @ToDo: Allow each name to be split into words in a different order
         query = (FS("first_name").lower().like(first_name + "%")) | \
                 (FS("middle_name").lower().like(first_name + "%")) | \
                 (FS("last_name").lower().like(first_name + "%"))
