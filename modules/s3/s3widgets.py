@@ -945,21 +945,22 @@ class S3AddPersonWidget2(FormWidget):
 
         if separate_name_fields:
             mandatory_lastname = settings.get_L10n_mandatory_lastname()
+            mandatory_middlename = settings.get_L10n_mandatory_middlename()
             name_format = settings.get_pr_name_format()
             if name_format == "%(last_name)s %(middle_name)s %(first_name)s":
                 # Vietnamese Style
                 fappend(("last_name", last_name_field.label, INPUT(data=data, _size=40), mandatory_lastname))
                 if middle_name:
-                    fappend(("middle_name", middle_name_field.label, INPUT(_size=40), False))
+                    fappend(("middle_name", middle_name_field.label, INPUT(_size=40), mandatory_middlename))
                 fappend(("first_name", first_name_field.label, INPUT(_size=40), True))
-            elif name_format == "%(last_name)s %(first_name)s":
+            elif name_format == "%(last_name)s, %(first_name)s":
                 # DRK Style
                 fappend(("last_name", last_name_field.label, INPUT(data=data, _size=40), mandatory_lastname))
                 fappend(("first_name", first_name_field.label, INPUT(_size=40), True))
             else:
                 fappend(("first_name", first_name_field.label, INPUT(data=data, _size=40), True))
                 if middle_name:
-                    fappend(("middle_name", middle_name_field.label, INPUT(_size=40), False))
+                    fappend(("middle_name", middle_name_field.label, INPUT(_size=40), mandatory_middlename))
                 fappend(("last_name", last_name_field.label, INPUT(_size=40), mandatory_lastname))
         else:
             # Unified Name field

@@ -7,7 +7,7 @@
 
          CSV fields:
          First Name..............auth_user.first_name
-         Last Name...............auth_user.last_name
+         Last Name...............auth_user.last_name (Can also call the column Middle Name to allow Hispanic names to be used across both hrm/person & auth_user)
          Email...................auth_user.email
          Password................auth_user.password
          Language................auth_user.language
@@ -52,7 +52,14 @@
         <!-- Create the User -->
         <resource name="auth_user">
             <data field="first_name"><xsl:value-of select="col[@field='First Name']"/></data>
-            <data field="last_name"><xsl:value-of select="col[@field='Last Name']"/></data>
+            <xsl:choose>
+                <xsl:when test="col[@field='Last Name']!=''">
+                    <data field="last_name"><xsl:value-of select="col[@field='Last Name']"/></data>
+                </xsl:when>
+                <xsl:when test="col[@field='Middle Name']!=''">
+                    <data field="last_name"><xsl:value-of select="col[@field='Middle Name']"/></data>
+                </xsl:when>
+            </xsl:choose>
             <data field="email"><xsl:value-of select="col[@field='Email']"/></data>
             <data field="password">
                 <xsl:attribute name="value">

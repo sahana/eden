@@ -276,7 +276,8 @@ def config(settings):
     # Unsortable 'pretty' date format (for use in English)
     settings.L10n.date_format = "%d-%b-%Y"
     # Make last name in person/user records mandatory
-    #settings.L10n.mandatory_lastname = True
+    #settings.L10n.mandatory_lastname = True # mother's surname
+    settings.L10n.mandatory_middlename = True # father's surname
     # Uncomment this to Translate Layer Names
     settings.L10n.translate_gis_layer = True
     # Translate Location Names
@@ -448,8 +449,6 @@ def config(settings):
     # Uncomment to do a search for duplicates in the new AddPersonWidget2
     settings.pr.lookup_duplicates = True
     settings.pr.separate_name_fields = 3
-    #settings.pr.name_format= "%(first_name)s %(last_name)s %(middle_name)s"
-    settings.pr.name_format= "%(first_name)s %(middle_name)s %(last_name)s"
 
     #def dob_required(default):
     #    """ NS-specific dob_required (lazy setting) """
@@ -947,6 +946,8 @@ def config(settings):
                 updateable = False, # Need to see all Orgs in Registration screens
                 )
 
+        current.db.auth_user.last_name.label = T("Father's Surname")
+
         return attr
 
     settings.customise_auth_user_controller = customise_auth_user_controller
@@ -1283,7 +1284,7 @@ def config(settings):
                                     "site_id",
                                     "start_date",
                                     "end_date",
-                                    S3SQLInlineComponent("training_event_instructor"
+                                    S3SQLInlineComponent("training_event_instructor",
                                                          label = T("Instructor"),
                                                          fields = ["person_id"],
                                                          # @ToDo: Filter to HRMs (this should be done through AC?)
@@ -1662,54 +1663,10 @@ def config(settings):
                                                     "phone",
                                                     "comments",
                                                     )
-                        resource.configure(crud_form=crud_form,
+                        resource.configure(crud_form = crud_form,
                                            )
-                    elif r.controller == "po":
-                        # Referral Agencies in PO module
-                        list_fields = ("name",
-                                       "acronym",
-                                       "organisation_organisation_type.organisation_type_id",
-                                       "website",
-                                       )
-                        resource.configure(list_fields=list_fields)
 
-                        # Custom CRUD form
-                        if r.interactive:
-                            from s3 import S3SQLCustomForm, S3SQLInlineLink, S3SQLInlineComponent
-                            # Filter inline address for type "office address", also sets default
-                            crud_form = S3SQLCustomForm(
-                                            "name",
-                                            "acronym",
-                                            S3SQLInlineLink("organisation_type",
-                                                            field = "organisation_type_id",
-                                                            label = type_label,
-                                                            multiple = False,
-                                                            ),
-                                            S3SQLInlineComponent("address",
-                                                                 fields = [("", "location_id")],
-                                                                 multiple = False,
-                                                                 filterby = ({"field": "type",
-                                                                              "options": 3,
-                                                                              },),
-                                                                 ),
-                                            "phone",
-                                            "website",
-                                            "logo",
-                                            "comments",
-                                            )
-                            # Remove unwanted filters
-                            # @todo: add a location filter for office address
-                            unwanted_filters = ("sector_organisation.sector_id",
-                                                "country",
-                                                )
-                            filter_widgets = [widget
-                                              for widget in resource.get_config("filter_widgets")
-                                              if widget.field not in unwanted_filters]
-                            resource.configure(crud_form = crud_form,
-                                               filter_widgets = filter_widgets,
-                                               )
                     else:
-                        # Organisations in other modules (org, inv etc.)
                         list_fields = ["name",
                                        "acronym",
                                        "organisation_organisation_type.organisation_type_id",
@@ -1846,6 +1803,16 @@ def config(settings):
     #    return attr
 
     #settings.customise_pr_group_controller = customise_pr_group_controller
+
+    # -------------------------------------------------------------------------
+    def customise_pr_person_resource(r, tablename):
+
+        table = current.s3db[tablename]
+        table.first_name.label = T("Forenames")
+        table.middle_name.label = T("Father's Surname")
+        table.last_name.label = T("Mother's Surname")
+
+    settings.customise_pr_person_resource = customise_pr_person_resource
 
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
