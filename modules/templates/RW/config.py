@@ -109,6 +109,9 @@ def config(settings):
     #
     settings.security.policy = 7 # Organisation-ACLs
 
+    # Represent user IDs by names rather than email
+    settings.ui.auth_user_represent = "name"
+    
     # -------------------------------------------------------------------------
     # Custom icon classes
     settings.ui.custom_icons = {
