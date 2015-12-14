@@ -788,6 +788,7 @@ class S3OptionsMenu(object):
         return M(c="dvr")(
                     M("Cases", f="person")(
                         M("Create", m="create"),
+                        M("Archived Cases", vars={"archived": "1"}),
                     ),
                     #M("Activities", f="case_activity")(
                     #    M("Emergencies", vars = {"~.emergency": "True"}),

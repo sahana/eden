@@ -278,7 +278,7 @@ class DVRCaseModel(S3Model):
                            default = False,
                            label = T("Archived"),
                            represent = s3_yes_no_represent,
-                           # Enable in template if required:
+                           # Enabled in controller:
                            readable = False,
                            writable = False,
                            ),

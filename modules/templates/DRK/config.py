@@ -485,23 +485,6 @@ def config(settings):
             else:
                 result = True
 
-            from s3 import FS
-            resource = r.resource
-
-            # Filter to current/archived cases
-            if not r.record:
-                archived = r.get_vars.get("archived")
-                if archived in ("1", "true", "yes"):
-                    query = FS("dvr_case.archived") == True
-                    s3.crud_strings["pr_person"]["title_list"] = T("Archived Cases")
-                else:
-                    query = (FS("dvr_case.archived") == False) | \
-                            (FS("dvr_case.archived") == None)
-                resource.add_filter(query)
-
-            # Should not be able to delete records in this view
-            resource.configure(deletable = False)
-
             if r.controller == "security":
                 # Restricted view for Security staff
                 if r.component:
@@ -646,10 +629,6 @@ def config(settings):
                 field.default = r.utcnow + relativedelta(years=5)
                 field.readable = field.writable = True
 
-                # Case can be set to archived
-                field = ctable.archived
-                field.readable = field.writable = True
-
                 if default_organisation:
                     # Set default for organisation_id and hide the field
                     # (already done in core model)
@@ -727,10 +706,6 @@ def config(settings):
                     field = table.last_name
                     field.requires = IS_NOT_EMPTY()
 
-                    # Expose "archived"-flag?
-                    archived_flag = "dvr_case.archived" \
-                                    if r.record and r.method != "read" else None
-
                     # Custom CRUD form
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
                     crud_form = S3SQLCustomForm(
@@ -793,7 +768,7 @@ def config(settings):
                                         label = T("Language / Communication Mode"),
                                         ),
                                 "dvr_case.comments",
-                                archived_flag,
+                                "dvr_case.archived",
                                 )
                     resource.configure(crud_form = crud_form,
                                        )

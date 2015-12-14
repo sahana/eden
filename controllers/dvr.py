@@ -34,6 +34,21 @@ def person():
         resource = r.resource
         resource.add_filter(FS("dvr_case.id") != None)
 
+        # Filter to current/archived cases
+        if not r.record:
+            archived = r.get_vars.get("archived")
+            if archived in ("1", "true", "yes"):
+                archived = True
+                query = FS("dvr_case.archived") == True
+            else:
+                archived = False
+                query = (FS("dvr_case.archived") == False) | \
+                        (FS("dvr_case.archived") == None)
+            resource.add_filter(query)
+
+        # Should not be able to delete records in this view
+        resource.configure(deletable = False)
+
         if r.component and r.id:
             ctable = r.component.table
             if "case_id" in ctable.fields and \
@@ -61,10 +76,11 @@ def person():
         if r.interactive:
 
             # Adapt CRUD strings to context
+            CASES = T("Archived Cases") if archived else T("Cases")
             s3.crud_strings["pr_person"] = Storage(
                 label_create = T("Create Case"),
                 title_display = T("Case Details"),
-                title_list = T("Cases"),
+                title_list = CASES,
                 title_update = T("Edit Case Details"),
                 label_list_button = T("List Cases"),
                 label_delete_button = T("Delete Case"),
@@ -75,6 +91,13 @@ def person():
                 )
 
             if not r.component:
+
+                # Expose the "archived"-flag? (update forms only)
+                if r.record and r.method != "read":
+                    ctable = s3db.dvr_case
+                    field = ctable.archived
+                    field.readable = field.writable = True
+
                 # Module-specific CRUD form
                 # NB: this assumes single case per person, must use
                 #     case perspective (dvr/case) for multiple cases
@@ -125,6 +148,7 @@ def person():
                                         multiple = False,
                                         ),
                                 "dvr_case.comments",
+                                "dvr_case.archived",
                                 )
 
                 # Module-specific filter widgets

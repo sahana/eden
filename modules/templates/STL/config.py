@@ -325,6 +325,7 @@ def config(settings):
 
                 resource = r.resource
                 if r.interactive:
+
                     # Custom CRUD form
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent
                     crud_form = S3SQLCustomForm(
@@ -406,6 +407,7 @@ def config(settings):
                                 "dvr_case.hoh_gender",
                                 "dvr_case.hoh_relationship",
                                 "dvr_case.comments",
+                                "dvr_case.archived",
                                 )
 
                     # Extend filter widgets

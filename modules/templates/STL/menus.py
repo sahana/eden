@@ -50,6 +50,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="dvr")(
                     M("Cases", c=("dvr", "pr"), f="person")(
                         M("Create", m="create"),
+                        M("Archived Cases", vars={"archived": "1"}),
                     ),
                     M("Case Types", f="case_type")(
                         M("Create", m="create"),
