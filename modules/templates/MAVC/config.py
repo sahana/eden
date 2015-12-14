@@ -8,7 +8,10 @@ except:
     from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import current
+from gluon.html import A, DIV, LI, URL, TAG, TD, TR, UL
 from gluon.storage import Storage
+
+from s3 import S3SQLSubFormLayout
 
 def config(settings):
     """
@@ -177,6 +180,45 @@ def config(settings):
     settings.req.requester_to_site = True
 
     # -------------------------------------------------------------------------
+    def customise_org_facility_resource(r, tablename):
+
+        from s3 import S3LocationFilter, S3OptionsFilter, S3TextFilter
+
+        filter_widgets = [
+            S3TextFilter(["name"],
+                         label = T("Search"),
+                         comment = T("Search by facility name. You can use * as wildcard."),
+                         ),
+            S3OptionsFilter("site_facility_type.facility_type_id",
+                            ),
+            S3OptionsFilter("organisation_id",
+                            ),
+            S3LocationFilter("location_id",
+                             ),
+            ]
+
+        s3db = current.s3db
+
+        s3db.configure(tablename,
+                       filter_widgets = filter_widgets,
+                       )
+
+        # Customize fields
+        table = s3db.org_facility
+
+        # Main facility flag visible and in custom crud form
+        field = table.main_facility
+        field.readable = field.writable = True
+        crud_form = s3db.get_config(tablename, "crud_form")
+        crud_form.insert(-2, "main_facility")
+
+        # "Obsolete" labeled as "inactive"
+        field = table.obsolete
+        field.label = T("Inactive")
+
+    settings.customise_org_facility_resource = customise_org_facility_resource
+
+    # -------------------------------------------------------------------------
     def customise_org_organisation_resource(r, tablename):
 
         s3db = current.s3db
@@ -222,7 +264,7 @@ def config(settings):
             ]
 
         # CRUD Form
-        from s3 import S3SQLCustomForm, S3SQLInlineLink
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
         multitype = settings.get_org_organisation_types_multiple()
         crud_form = S3SQLCustomForm("name",
                                     "acronym",
@@ -241,6 +283,21 @@ def config(settings):
                                             ),
                                     (T("About"), "comments"),
                                     "website",
+                                    S3SQLInlineComponent(
+                                            "facility",
+                                            label = T("Main Facility"),
+                                            fields = ["name",
+                                                      "phone1",
+                                                      "phone2",
+                                                      "email",
+                                                      "location_id",
+                                                      ],
+                                            layout = FacilitySubFormLayout,
+                                            filterby = {"field": "main_facility",
+                                                        "options": True,
+                                                        },
+                                            multiple = False,
+                                            ),
                                     )
 
         s3db.configure("org_organisation",
@@ -389,12 +446,12 @@ def config(settings):
             restricted = True,
             module_type = 2,
         )),
-        #("project", Storage(
-        #    name_nice = T("Projects"),
-        #    #description = "Tracking of Projects, Activities and Tasks",
-        #    restricted = True,
-        #    module_type = 2
-        #)),
+        ("project", Storage(
+           name_nice = T("Projects"),
+           #description = "Tracking of Projects, Activities and Tasks",
+           restricted = True,
+           module_type = 2
+        )),
         #("event", Storage(
         #    name_nice = T("Events"),
         #    #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
@@ -443,8 +500,9 @@ def mavc_rheader(r, tabs=None):
 
             tabs = [(T("About"), None),
                     (INDIVIDUALS, "human_resource"),
-                    (T("Service Locations"), "service_location"),
-                    # @todo: activities
+                    (T("Services"), "service_location"),
+                    (T("Facilities"), "facility"),
+                    (T("Projects"), "project"),
                     ]
 
         # Use OrganisationRepresent for title to get L10n name if available
@@ -476,5 +534,65 @@ def mavc_rheader(r, tabs=None):
         rheader.append(rheader_tabs)
 
     return rheader
+
+# =============================================================================
+class FacilitySubFormLayout(S3SQLSubFormLayout):
+    """
+        Custom layout for facility inline-component in org/organisation
+
+        - allows embedding of multiple fields besides the location selector
+        - renders an vertical layout for edit-rows
+        - standard horizontal layout for read-rows
+        - hiding header row if there are no visible read-rows
+    """
+
+    # -------------------------------------------------------------------------
+    def headers(self, data, readonly=False):
+        """
+            Header-row layout: same as default, but non-static (i.e. hiding
+            if there are no visible read-rows, because edit-rows have their
+            own labels)
+        """
+
+        headers = super(FacilitySubFormLayout, self).headers
+
+        header_row = headers(data, readonly = readonly)
+        element = header_row.element('tr');
+        if hasattr(element, "remove_class"):
+            element.remove_class("static")
+        return header_row
+
+    # -------------------------------------------------------------------------
+    def rowstyle_read(self, form, fields, *args, **kwargs):
+        """
+            Formstyle for subform read-rows, same as standard
+            horizontal layout.
+        """
+
+        rowstyle = super(FacilitySubFormLayout, self).rowstyle
+        return rowstyle(form, fields, *args, **kwargs)
+
+    # -------------------------------------------------------------------------
+    def rowstyle(self, form, fields, *args, **kwargs):
+        """
+            Formstyle for subform edit-rows, using a vertical
+            formstyle because multiple fields combined with
+            location-selector are too complex for horizontal
+            layout.
+        """
+
+        # Use standard foundation formstyle
+        from s3theme import formstyle_foundation as formstyle
+        if args:
+            col_id = form
+            label = fields
+            widget, comment = args
+            hidden = kwargs.get("hidden", False)
+            return formstyle(col_id, label, widget, comment, hidden)
+        else:
+            parent = TD(_colspan = len(fields))
+            for col_id, label, widget, comment in fields:
+                parent.append(formstyle(col_id, label, widget, comment))
+            return TR(parent)
 
 # END =========================================================================

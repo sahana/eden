@@ -41,8 +41,7 @@ class S3MainMenu(default.S3MainMenu):
             # @todo:
             MM("Newsfeed", link=False),
             MM("Organizations", c="org", f="organisation"),
-            # @todo:
-            MM("Activities", link=False),
+            MM("Projects", c="project", f="project"),
             # @todo:
             MM("Aid Requests", link=False),
             # @todo:
