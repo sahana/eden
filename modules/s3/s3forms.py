@@ -1235,8 +1235,9 @@ class S3SQLCustomForm(S3SQLForm):
         for item in self.components:
             if hasattr(item, "accept"):
                 item.accept(form,
-                            master_id=master_id,
-                            format=format)
+                            master_id = master_id,
+                            format = format,
+                            )
 
         # Update form with master form_vars
         form_vars = form.vars
@@ -1267,7 +1268,6 @@ class S3SQLCustomForm(S3SQLForm):
             form_vars = form.vars
             for k in form_vars:
                 if k[:4] == "sub_" and \
-                   form_vars[k] != None and \
                    k[4:4 + alias_length + 1] == "%s_" % alias:
                     fn = k[4 + alias_length + 1:]
                     subform[fn] = form_vars[k]
@@ -1294,13 +1294,16 @@ class S3SQLCustomForm(S3SQLForm):
             @param undelete: reinstate a previously deleted record
         """
 
-        if not data:
-            if alias is not None:
-                # Component, no data to create or update => skip
+        if alias is not None:
+            # Subtable
+            if not data or \
+               not record_id and all(value is None for value in data.values()):
+                # No data => skip
                 return None, Storage()
-            elif record_id:
-                # Existing master record, no data to update => skip
-                return record_id, Storage()
+        elif record_id and not data:
+            # Existing master record, no data => skip, but return
+            # record_id to allow update of inline-components:
+            return record_id, Storage()
 
         s3db = current.s3db
 
@@ -1385,7 +1388,8 @@ class S3SQLCustomForm(S3SQLForm):
                 update_realm = get_config(table, "update_realm")
                 if update_realm:
                     current.auth.set_realm_entity(table, form_vars,
-                                                  force_update=True)
+                                                  force_update = True,
+                                                  )
 
             # Store session vars
             component.lastid = str(accept_id)
