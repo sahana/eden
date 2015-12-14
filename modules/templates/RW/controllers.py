@@ -15,7 +15,7 @@ from gluon.html import *
 from gluon.storage import Storage
 from gluon.http import redirect
 
-from s3 import FS, S3CustomController
+from s3 import FS, ICON, S3CustomController
 from s3theme import formstyle_foundation_inline
 
 TEMPLATE = "RW"
@@ -41,12 +41,37 @@ class index(S3CustomController):
         AUTHENTICATED = system_roles.AUTHENTICATED
 
         # Login/Registration forms
-        self_registration = current.deployment_settings.get_security_registration_visible()
+        self_registration = settings.get_security_registration_visible()
         registered = False
         login_form = None
         login_div = None
         register_form = None
         register_div = None
+
+        # Project Links
+        project_links = DIV(_class="title-links hide-for-small")
+        project_description = settings.get_frontpage("project_description")
+        if project_description:
+            project_links.append(A(ICON("link"), T("Project Description"),
+                                   _class = "action-lnk",
+                                   _href = project_description,
+                                   _target = "_blank",
+                                   ))
+        project_links.append(A(ICON("link"), T("User Manual"),
+                               _class = "action-lnk",
+                               _href = URL(c="default", f="index",
+                                           args = ["docs"],
+                                           vars = {"name": "UserManual"},
+                                           ),
+                               _target = "_blank",
+                               ))
+        mailing_list = settings.get_frontpage("mailing_list")
+        if mailing_list:
+            project_links.append(A(ICON("link"), T("Mailing List"),
+                                   _class = "action-lnk",
+                                   _href = mailing_list,
+                                   _target = "_blank",
+                                   ))
 
         # Contact Form
         request_email = settings.get_frontpage("request_email")
@@ -225,6 +250,7 @@ $('#login-btn').click(function(e){
                   "register_div": register_div,
                   "register_form": register_form,
                   "contact_form": contact_form,
+                  "project_links": project_links,
                   }
 
         # Count records (@todo: provide total/updated counters?)

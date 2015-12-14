@@ -12,6 +12,13 @@
 #title .intro-text {
     font-size: 85%;
     color: silver;
+    margin-bottom: 0.5rem;
+}
+#title .title-links {
+    margin-bottom: 1rem;
+}
+#title .title-links a {
+    margin-right: 1rem;
 }
 #contact_message {
     height: 7rem;

@@ -6,6 +6,7 @@
     <!-- Title and Intro -->
     <h1>refugees.sahana.io<span class="S3menulogo"></span></h1>
     {{=P(T("Humanitarian Aid Information Management System for the European Refugee Crisis"), _class="intro-text hide-for-small")}}
+    {{try:}}{{=project_links}}{{except:}}{{pass}}
    </div>
   </div>
   <div class='row homepage-menu-box' style='padding-top:1rem'>
