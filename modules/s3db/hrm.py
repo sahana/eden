@@ -2563,13 +2563,11 @@ class S3HRSkillModel(S3Model):
                            ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately
+                     # @ToDo: Option to see multiple Training Centers even as non_admin
                      organisation_id(default = root_org,
                                      readable = is_admin,
                                      writable = is_admin,
                                      ),
-                     # Training Center
-                     # Not normally used: enable in template as-required
-                     self.org_site_id,
                      Field("external", "boolean",
                            default = False,
                            label = T("External"),

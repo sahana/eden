@@ -6121,7 +6121,9 @@ def org_organisation_controller():
             r.table.pe_id.readable = True
             list_fields = s3db.get_config(r.tablename,
                                           "list_fields") or []
-            s3db.configure(r.tablename, list_fields=list_fields + ["pe_id"])
+            s3db.configure(r.tablename,
+                           list_fields=list_fields + ["pe_id"]
+                           )
 
         elif r.representation == "xls" and r.component_name == "branch":
             # Improve XLS export of Branches
@@ -6138,12 +6140,17 @@ def org_organisation_controller():
                            )
 
         elif r.interactive or r.representation == "aadata":
+            component = r.component
             gis = current.gis
-            r.table.country.default = gis.get_default_country("code")
+            otable = r.table
+            otable.country.default = gis.get_default_country("code")
+            type_filter = r.get_vars.get("organisation_type.name", None)
 
             method = r.method
             use_branches = settings.get_org_branches()
-            if use_branches and not r.component and not r.record:
+            if use_branches and not component and \
+               (not type_filter or type_filter != "Training Center") and \
+               not r.record:
                 # Filter out branches from multi-record views
                 branch_filter = (FS("parent.id") == None)
                 # Filter Locations
@@ -6171,8 +6178,7 @@ def org_organisation_controller():
                                          (FS("parent.country") == None)
                 r.resource.add_filter(branch_filter)
 
-            if not r.component or r.component_name == "branch":
-                type_filter = r.get_vars.get("organisation_type.name", None)
+            if not component or r.component_name == "branch":
                 if type_filter:
                     type_names = [name.lower().strip()
                                   for name in type_filter.split(",")]
@@ -6211,7 +6217,7 @@ def org_organisation_controller():
                                                    label=field.represent,
                                                    error_message=T("Please choose a type"),
                                                    sort=True)
-            if r.component:
+            if component:
                 cname = r.component_name
                 if cname == "human_resource" and r.component_id:
                     # Workaround until widget is fixed:
@@ -6221,7 +6227,6 @@ def org_organisation_controller():
 
                 elif cname == "branch":
                     # Branches default to the same type/country as the parent
-                    otable = r.table
                     record = r.record
                     otable.region_id.default = record.region_id
                     otable.country.default = record.country
@@ -6247,7 +6252,7 @@ def org_organisation_controller():
                 elif cname == "task" and \
                      method != "update" and method != "read":
                     # Create or ListCreate
-                    ttable = r.component.table
+                    ttable = component.table
                     ttable.organisation_id.default = r.id
                     ttable.status.writable = False
                     ttable.status.readable = False

@@ -35,6 +35,7 @@ AUTHENTICATED,Authenticated,,hrm,course,,,READ,,,,,,
 AUTHENTICATED,Authenticated,,hrm,facility,,,READ,,,,,,
 AUTHENTICATED,Authenticated,,hrm,job_title,,,CREATE|READ,,,,,,
 AUTHENTICATED,Authenticated,,hrm,person,,,,CREATE|READ|UPDATE|DELETE,,,,,Manage own Profile through consistent UI
+AUTHENTICATED,Authenticated,,hrm,training_center,,,READ,,,,,,
 AUTHENTICATED,Authenticated,,hrm,training_event,,,READ,,,,,,
 AUTHENTICATED,Authenticated,,,,hrm_human_resource,,,READ|UPDATE,,,,No HR Manager so user needs to manage this themselves,
 AUTHENTICATED,Authenticated,,,,hrm_certification,,,READ,,,,,Managed by Reference Centers
@@ -149,6 +150,7 @@ training_coordinator,Training Center Coordinator,Manages a Training Center,deplo
 training_coordinator,Training Center Coordinator,Manages a Training Center,hrm,,,any,READ,,,,,,
 training_coordinator,Training Center Coordinator,Manages a Training Center,hrm,certificate,,,CREATE|READ,ALL,,,,,
 training_coordinator,Training Center Coordinator,Manages a Training Center,hrm,course,,,CREATE|READ,ALL,,,,,
+training_coordinator,Training Center Coordinator,Manages a Training Center,hrm,training_center,,,CREATE|READ,ALL,,,,,
 training_coordinator,Training Center Coordinator,Manages a Training Center,hrm,training_event,,,CREATE|READ,ALL,,,,,
 training_coordinator,Training Center Coordinator,Manages a Training Center,,,hrm_human_resource,any,READ,,,,,,
 training_coordinator,Training Center Coordinator,Manages a Training Center,,,hrm_certification,any,CREATE|READ,ALL,,,,,
@@ -169,6 +171,7 @@ training_coordinator,Training Center Coordinator,Manages a Training Center,,,pr_
 training_coordinator,Training Center Coordinator,Manages a Training Center,,,pr_physical_description,any,READ,,,,,,
 training_assistant,Training Center Assistant,Helps Manage a Training Center,deploy,,,any,NONE,,,,,,
 training_assistant,Training Center Assistant,Helps Manage a Training Center,hrm,,,any,READ,,,,,,
+training_assistant,Training Center Assistant,Helps Manage a Training Center,hrm,training_center,,,CREATE|READ,ALL,,,,,
 training_assistant,Training Center Assistant,Helps Manage a Training Center,hrm,training_event,,,CREATE|READ,ALL,,,,,
 training_assistant,Training Center Assistant,Helps Manage a Training Center,,,hrm_human_resource,any,READ,,,,,,
 training_assistant,Training Center Assistant,Helps Manage a Training Center,,,hrm_certification,any,CREATE|READ,ALL,,,,,

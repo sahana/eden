@@ -938,7 +938,6 @@ def config(settings):
             Customise admin/user() and default/user() controllers
         """
 
-        #if "arg" in attr and attr["arg"] == "register":
         # Organisation needs to be an NS/Branch
         ns_only("auth_user",
                 required = True,
@@ -946,7 +945,9 @@ def config(settings):
                 updateable = False, # Need to see all Orgs in Registration screens
                 )
 
-        current.db.auth_user.last_name.label = T("Father's Surname")
+        table = current.db.auth_user
+        table.first_name.label = T("Forenames")
+        table.last_name.label = T("Father's Surname")
 
         return attr
 
@@ -955,28 +956,57 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_course_resource(r, tablename):
 
-        list_fields = ["site_id",
+        from s3 import IS_ONE_OF, S3SQLCustomForm#, S3SQLInlineLink
+
+        db = current.db
+        s3db = current.s3db
+        table = s3db[tablename]
+
+        f = table.organisation_id
+        f.readable = f.writable = True
+        f.label = T("Training Center")
+        f.comment = False # Don't create here
+
+        ttable = s3db.org_organisation_type
+        try:
+            type_id = db(ttable.name == "Training Center").select(ttable.id,
+                                                                  limitby=(0, 1),
+                                                                  ).first().id
+        except:
+            # No/incorrect prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+            pass
+        else:
+            ltable = s3db.org_organisation_organisation_type
+            rows = db(ltable.organisation_type_id == type_id).select(ltable.organisation_id)
+            filter_opts = [row.organisation_id for row in rows]
+
+            f.requires = IS_ONE_OF(db, "org_organisation.id",
+                                   s3db.org_OrganisationRepresent(parent=False),
+                                   orderby = "org_organisation.name",
+                                   sort = True,
+                                   filterby = "id",
+                                   filter_opts = filter_opts,
+                                   )
+
+        list_fields = ["organisation_id",
                        "code",
                        "name",
-                       #"organisation_id",
                        #(T("Sectors"), "course_sector.sector_id"),
                        ]
 
-        from s3 import S3SQLCustomForm, S3SQLInlineLink
-        crud_form = S3SQLCustomForm("site_id",
+        crud_form = S3SQLCustomForm("organisation_id",
                                     "code",
                                     "name",
-                                    #"organisation_id",
                                     #S3SQLInlineLink("sector",
                                     #                field = "sector_id",
                                     #                label = T("Sectors"),
                                     #                ),
                                     )
 
-        current.s3db.configure(tablename,
-                               crud_form = crud_form,
-                               list_fields = list_fields,
-                               )
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       )
 
     settings.customise_hrm_course_resource = customise_hrm_course_resource
 
@@ -1247,12 +1277,39 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):
 
+        from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm, S3SQLInlineComponent
+
         db = current.db
         s3db = current.s3db
         table = s3db.hrm_training_event
 
-        # 
-        
+        # @ToDo: Default Filter for Training Center staff
+
+        f = table.organisation_id
+        f.readable = f.writable = True
+        f.label = T("Training Center")
+        f.comment = False # Don't create here
+
+        ttable = s3db.org_organisation_type
+        try:
+            type_id = db(ttable.name == "Training Center").select(ttable.id,
+                                                                  limitby=(0, 1),
+                                                                  ).first().id
+        except:
+            # No/incorrect prepop done - skip (e.g. testing impacts of CSS changes in this theme)
+            pass
+        else:
+            ltable = s3db.org_organisation_organisation_type
+            rows = db(ltable.organisation_type_id == type_id).select(ltable.organisation_id)
+            filter_opts = [row.organisation_id for row in rows]
+
+            f.requires = IS_ONE_OF(db, "org_organisation.id",
+                                   s3db.org_OrganisationRepresent(parent=False),
+                                   orderby = "org_organisation.name",
+                                   sort = True,
+                                   filterby = "id",
+                                   filter_opts = filter_opts,
+                                   )
 
         # Hours are Optional
         from gluon import IS_EMPTY_OR
@@ -1263,7 +1320,6 @@ def config(settings):
         f = table.site_id
         f.default = None
         f.label = T("Country")
-        from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm, S3SQLInlineComponent
         ftable = s3db.org_facility
         ltable = s3db.org_site_facility_type
         ttable = s3db.org_facility_type
@@ -1280,13 +1336,15 @@ def config(settings):
                                )
 
         # Multiple Instructors
-        crud_form = S3SQLCustomForm("course_id",
+        crud_form = S3SQLCustomForm("organisation_id",
+                                    # @ToDo: Filter Courses by Training Center
+                                    "course_id",
                                     "site_id",
                                     "start_date",
                                     "end_date",
                                     S3SQLInlineComponent("training_event_instructor",
                                                          label = T("Instructor"),
-                                                         fields = ["person_id"],
+                                                         fields = [("", "person_id")],
                                                          # @ToDo: Filter to HRMs (this should be done through AC?)
                                                          #filterby = ({"field": "type",
                                                          #             "options": 3,
@@ -1294,12 +1352,14 @@ def config(settings):
                                                          ),
                                     "comments",
                                     )
-        list_fields = ["course_id",
+        list_fields = ["organisation_id",
+                       "course_id",
                        "site_id",
                        "start_date",
                        "training_event_instructor.person_id",
                        "comments",
                        ]
+
         s3db.configure(tablename,
                        crud_form = crud_form,
                        list_fields = list_fields,

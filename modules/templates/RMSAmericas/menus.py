@@ -102,8 +102,8 @@ class S3MainMenu(default.S3MainMenu):
                    #MM("Training Events", c="hrm", f="training_event"),
                    #MM("Training Courses", c="hrm", f="course"),
                ),
-               homepage("hrm", f="facility", name="Training", check=hrm)(
-                   MM("Training Centers", c="hrm", f="facility"),
+               homepage("hrm", f="training_event", name="Training", check=hrm)(
+                   MM("Training Centers", c="hrm", f="training_center"),
                    MM("Training Course Catalog", c="hrm", f="course"),
                    MM("Training Events", c="hrm", f="training_event"),
                    MM("External Trainees", c="pr", f="person"),
@@ -289,9 +289,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         request = current.request
         if request.function in ("certificate", "course", "course_certificate",
-                                "facility", "training", "training_event") or \
+                                "facility", "training", "training_center",
+                                "training_event") or \
            request.controller == "pr":
-            return M()( M("Training Centers", c="hrm", f="facility")(
+            return M()( M("Training Centers", c="hrm", f="training_center")(
                         ),
                         M("Training Course Catalog", c="hrm", f="course")(
                             M("Create", m="create"),
