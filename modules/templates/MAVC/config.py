@@ -283,6 +283,7 @@ def config(settings):
                                             cols = 3,
                                             label = T("Sectors"),
                                             field = "sector_id",
+                                            #required = True,
                                             ),
                                     (T("About"), "comments"),
                                     "website",

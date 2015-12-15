@@ -5,6 +5,7 @@ from unit_tests.s3.s3datatable import *
 from unit_tests.s3.s3datetime import *
 from unit_tests.s3.s3fields import *
 from unit_tests.s3.s3filter import *
+from unit_tests.s3.s3forms import *
 from unit_tests.s3.s3gis import *
 from unit_tests.s3.s3grouped import *
 from unit_tests.s3.s3hierarchy import *

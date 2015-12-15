@@ -1323,8 +1323,7 @@ ul.x-tree-root-ct {
 /* Vertical arrangement of multi-button multi-select filter widgets such as S3LocationFilter */
 .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all,
 .form-container .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
-    clear: left;
-    float: left;
+    display: block;
     min-width: 220px;
 }
 
@@ -1341,11 +1340,6 @@ ul.x-tree-root-ct {
 /* Don't display the default widget, only the multiselect generated widget is displayed */
 select.multiselect-filter-widget {
     display: none;
-}
-
-body.rtl .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
-    clear: right;
-    float: right;
 }
 
 .filter-advanced {

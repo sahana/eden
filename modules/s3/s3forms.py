@@ -1145,6 +1145,11 @@ class S3SQLCustomForm(S3SQLForm):
                     dummy = "sub_%s_%s" % (alias, fn)
                     form.errors[dummy] = subform.errors[fn]
 
+        # Validate components (e.g. Inline-Forms)
+        for component in self.components:
+            if hasattr(component, "validate"):
+                component.validate(form)
+
         return
 
     # -------------------------------------------------------------------------
@@ -3442,6 +3447,27 @@ class S3SQLInlineLink(S3SQLInlineComponent):
             current.response.s3.jquery_ready.append(script)
 
         return widget
+
+    # -------------------------------------------------------------------------
+    def validate(self, form):
+        """
+            Validate this link, currently only checking whether it has
+            a value when required=True
+
+            @param form: the form
+        """
+
+        required = self.options.required
+        if not required:
+            return
+
+        fname = self._formname(separator="_")
+        values = form.vars.get(fname)
+
+        if not values:
+            error = current.T("Value Required") \
+                    if required is True else required
+            form.errors[fname] = error
 
     # -------------------------------------------------------------------------
     def accept(self, form, master_id=None, format=None):
