@@ -181,6 +181,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
         req_skills = lambda i: "People" in types
 
         return M(c="req")(
+                    M("Current Needs", f="organisation_needs")(
+                        M("Create", m="create"),
+                    ),
                     M("Needs at Facilities", f="site_needs", m="summary")(
                         M("Create", m="create"),
                     ),
