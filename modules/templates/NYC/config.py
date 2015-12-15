@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import A, URL, TR, TD
 from gluon.storage import Storage
 
-from s3 import s3_fullname, S3Represent, S3SQLInlineLink, S3SQLSubFormLayout
+from s3 import s3_fullname, S3Represent, S3SQLInlineLink
 
 def config(settings):
     """
@@ -580,9 +580,9 @@ def config(settings):
                        S3LocationSelector, \
                        S3MultiSelectWidget, \
                        S3SQLCustomForm, \
-                       S3SQLInlineLink, \
                        S3SQLInlineComponent, \
-                       S3SQLInlineComponentMultiSelectWidget
+                       S3SQLInlineComponentMultiSelectWidget, \
+                       S3SQLVerticalSubFormLayout
 
         s3db = current.s3db
 
@@ -710,7 +710,7 @@ def config(settings):
                                       "email",
                                       "location_id",
                                       ],
-                            layout = FacilitySubFormLayout,
+                            layout = S3SQLVerticalSubFormLayout,
                             filterby = {"field": "main_facility",
                                         "options": True,
                                         },
@@ -785,7 +785,7 @@ def config(settings):
                                       "email",
                                       "location_id",
                                       ],
-                            layout = FacilitySubFormLayout,
+                            layout = S3SQLVerticalSubFormLayout,
                             filterby = {"field": "main_facility",
                                         "options": False,
                                         },
@@ -2554,65 +2554,5 @@ class S3SQLHRPersonLink(S3SQLInlineLink):
                                                      master_id = person_id,
                                                      format = format,
                                                      )
-
-# =============================================================================
-class FacilitySubFormLayout(S3SQLSubFormLayout):
-    """
-        Custom layout for facility inline-component in org/organisation
-
-        - allows embedding of multiple fields besides the location selector
-        - renders an vertical layout for edit-rows
-        - standard horizontal layout for read-rows
-        - hiding header row if there are no visible read-rows
-    """
-
-    # -------------------------------------------------------------------------
-    def headers(self, data, readonly=False):
-        """
-            Header-row layout: same as default, but non-static (i.e. hiding
-            if there are no visible read-rows, because edit-rows have their
-            own labels)
-        """
-
-        headers = super(FacilitySubFormLayout, self).headers
-
-        header_row = headers(data, readonly = readonly)
-        element = header_row.element('tr');
-        if hasattr(element, "remove_class"):
-            element.remove_class("static")
-        return header_row
-
-    # -------------------------------------------------------------------------
-    def rowstyle_read(self, form, fields, *args, **kwargs):
-        """
-            Formstyle for subform read-rows, same as standard
-            horizontal layout.
-        """
-
-        rowstyle = super(FacilitySubFormLayout, self).rowstyle
-        return rowstyle(form, fields, *args, **kwargs)
-
-    # -------------------------------------------------------------------------
-    def rowstyle(self, form, fields, *args, **kwargs):
-        """
-            Formstyle for subform edit-rows, using a vertical
-            formstyle because multiple fields combined with
-            location-selector are too complex for horizontal
-            layout.
-        """
-
-        # Use standard foundation formstyle
-        from s3theme import formstyle_foundation as formstyle
-        if args:
-            col_id = form
-            label = fields
-            widget, comment = args
-            hidden = kwargs.get("hidden", False)
-            return formstyle(col_id, label, widget, comment, hidden)
-        else:
-            parent = TD(_colspan = len(fields))
-            for col_id, label, widget, comment in fields:
-                parent.append(formstyle(col_id, label, widget, comment))
-            return TR(parent)
 
 # END =========================================================================

@@ -150,24 +150,33 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           restrict=[AUTHENTICATED]),
                     ),
                     M(INDIVIDUALS, c="hrm", f="staff", t="hrm_human_resource")(
-                        M("Search"),
+                        #M("Search"),
                         M("Create", m="create"),
+                    ),
+                    M("Service Locations", c="org", f="service_location", m="summary")(
+                        M("Search", m="summary"),
                     ),
                     #M("Your Personal Profile", c="default", f="person",
                     #  m="update")(
                     #),
-                    M("Import", link=False,
-                      restrict=[ADMIN])(
-                        M("Import Contacts", c="hrm", f="person", m="import",
-                          vars={"group":"staff"}),
-                        M("Import Organizations", c="org", f="organisation",
-                          m="import"),
-                        #M("Import Groups", c="hrm", f="group", m="import"),
-                    ),
-                    M("Organization Types", c="org", f="organisation_type",
-                      restrict=[ADMIN])(
-                        M("View"),
-                        M("Create", m="create"),
+                    #M("Import", link=False,
+                    #  restrict=[ADMIN])(
+                    #    M("Import Contacts", c="hrm", f="person", m="import",
+                    #      vars={"group":"staff"}),
+                    #   M("Import Organizations", c="org", f="organisation",
+                    #      m="import"),
+                    #    #M("Import Groups", c="hrm", f="group", m="import"),
+                    #),
+                    #M("Organization Types", c="org", f="organisation_type",
+                    #  restrict=[ADMIN])(
+                    #    M("View"),
+                    #    M("Create", m="create"),
+                    #),
+                    M("Administration", c=("org", "hrm"),
+                      link = False, restrict = [ADMIN])(
+                        M("Organisation Types", c="org", f="organisation_type"),
+                        M("Sectors", c="org", f="sector"),
+                        M("Service Types", c="org", f="service"),
                     ),
                     #M("Job Title Catalog", c="hrm", f="job_title",
                     #  restrict=[ADMIN])(

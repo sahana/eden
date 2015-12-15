@@ -11,7 +11,7 @@ from gluon import current
 from gluon.html import A, DIV, LI, URL, TAG, TD, TR, UL
 from gluon.storage import Storage
 
-from s3 import S3SQLSubFormLayout
+from s3 import S3SQLSubFormLayout, s3_unicode
 
 def config(settings):
     """
@@ -264,7 +264,10 @@ def config(settings):
             ]
 
         # CRUD Form
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+        from s3 import S3SQLCustomForm, \
+                       S3SQLInlineComponent, \
+                       S3SQLInlineLink, \
+                       S3SQLVerticalSubFormLayout
         multitype = settings.get_org_organisation_types_multiple()
         crud_form = S3SQLCustomForm("name",
                                     "acronym",
@@ -292,7 +295,7 @@ def config(settings):
                                                       "email",
                                                       "location_id",
                                                       ],
-                                            layout = FacilitySubFormLayout,
+                                            layout = S3SQLVerticalSubFormLayout,
                                             filterby = {"field": "main_facility",
                                                         "options": True,
                                                         },
@@ -322,6 +325,58 @@ def config(settings):
 
     settings.customise_org_organisation_location_resource = customise_org_organisation_location_resource
     # -------------------------------------------------------------------------
+    def customise_org_service_location_resource(r, tablename):
+
+        table = current.s3db.org_service_location
+
+        # Hide site_id
+        field = table.site_id
+        field.readable = field.writable = False
+
+        # Enable location_id
+        from s3 import S3LocationSelector
+        field = table.location_id
+        field.readable = field.writable = True
+        #field.widget = S3LocationSelector(levels = ["L1", "L2", "L3", "L4"],
+        #                                  show_postcode = False,
+        #                                  show_map = False,
+        #                                  )
+
+        # Custom CRUD form
+        from s3 import S3SQLCustomForm, S3SQLInlineLink
+        crud_form = S3SQLCustomForm(
+                        "organisation_id",
+                        "location_id",
+                        S3SQLInlineLink("service",
+                                        label = T("Services"),
+                                        field = "service_id",
+                                        ),
+                        #"description",
+                        "status",
+                        "start_date",
+                        #"end_date",
+                        "comments",
+                        )
+
+        # List fields
+        list_fields = ["organisation_id",
+                       "location_id",
+                       "service_location_service.service_id",
+                       #"description",
+                       "status",
+                       "start_date",
+                       #"end_date",
+                       "comments",
+                       ]
+
+        # Configure
+        current.s3db.configure("org_service_location",
+                               crud_form = crud_form,
+                               list_fields = list_fields,
+                               )
+
+    settings.customise_org_service_location_resource = customise_org_service_location_resource
+    # -------------------------------------------------------------------------
     def customise_org_organisation_controller(**attr):
 
         # Custom rheader and tabs
@@ -331,6 +386,130 @@ def config(settings):
         return attr
 
     settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # -------------------------------------------------------------------------
+    # Contacts
+    #
+    settings.pr.request_dob = False
+    settings.pr.contacts_tabs = None
+
+    settings.hrm.use_id = False
+    settings.hrm.use_description = None
+    settings.hrm.use_address = False
+    settings.hrm.use_trainings = False
+    settings.hrm.use_certificates = False
+    settings.hrm.record_tab = False
+
+    settings.hrm.compose_button = False
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_human_resource_resource(r, tablename):
+
+        s3db = current.s3db
+
+        if r.interactive:
+            # Custom CRUD form
+            from s3 import S3SQLCustomForm
+            crud_form = S3SQLCustomForm("organisation_id",
+                                        "person_id",
+                                        "job_title_id",
+                                        "department_id",
+                                        )
+            s3db.configure("hrm_human_resource",
+                           crud_form = crud_form,
+                           )
+
+        # Custom list fields
+        list_fields = ["person_id",
+                       "job_title_id",
+                       "department_id",
+                       (T("Email"), "person_id$email.value"),
+                       (T("Mobile Phone"), "person_id$phone.value"),
+                       ]
+
+        # Configure table
+        s3db.configure("hrm_human_resource",
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_person_controller(**attr):
+
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        settings = current.deployment_settings
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            resource = r.resource
+
+            if r.controller == "hrm":
+
+                if r.interactive and not r.component:
+
+                    MOBILE = settings.get_ui_label_mobile_phone()
+
+                    # Custom form for contacts
+                    from s3 import S3SQLCustomForm, \
+                                   S3SQLInlineComponent, \
+                                   S3SQLVerticalSubFormLayout
+                    crud_form = S3SQLCustomForm(
+                                    "first_name",
+                                    "last_name",
+                                    S3SQLInlineComponent(
+                                            "human_resource",
+                                            name = "human_resource",
+                                            label = "",
+                                            multiple = False,
+                                            fields = ["organisation_id",
+                                                      "job_title_id",
+                                                      "department_id",
+                                                      ],
+                                            layout = S3SQLVerticalSubFormLayout,
+                                            ),
+                                    S3SQLInlineComponent(
+                                            "contact",
+                                            name = "email",
+                                            label = T("Email"),
+                                            multiple = False,
+                                            fields = [("", "value"),
+                                                      ],
+                                            filterby = [{"field": "contact_method",
+                                                         "options": "EMAIL",
+                                                         },
+                                                        ],
+                                            ),
+                                    S3SQLInlineComponent(
+                                            "contact",
+                                            name = "phone",
+                                            label = MOBILE,
+                                            multiple = False,
+                                            fields = [("", "value"),
+                                                      ],
+                                            filterby = [{"field": "contact_method",
+                                                         "options": "SMS",
+                                                         },
+                                                        ],
+                                            ),
+                                    )
+                    resource.configure(crud_form = crud_form)
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_pr_person_controller = customise_pr_person_controller
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -511,14 +690,28 @@ def mavc_rheader(r, tabs=None):
                                                    )
         title = represent(record.id)
 
-        # Retrieve other details for the rheader
+        # Retrieve details for the rheader
         data = resource.select(["organisation_organisation_type.organisation_type_id",
+                                "country",
                                 "website",
                                 ],
+                               raw_data = True,
                                represent = True,
                                )
         row = data.rows[0]
-        subtitle = row["org_organisation_organisation_type.organisation_type_id"]
+        raw = row["_row"]
+
+        # Construct subtitle
+        subtitle_fields = ("org_organisation_organisation_type.organisation_type_id",
+                           "org_organisation.country",
+                           )
+        items = []
+        for fname in subtitle_fields:
+            if raw[fname]:
+                items.append(s3_unicode(row[fname]))
+        subtitle = ", ".join(items)
+
+        # Website
         website = row["org_organisation.website"]
 
         # Compile the rheader
@@ -534,65 +727,5 @@ def mavc_rheader(r, tabs=None):
         rheader.append(rheader_tabs)
 
     return rheader
-
-# =============================================================================
-class FacilitySubFormLayout(S3SQLSubFormLayout):
-    """
-        Custom layout for facility inline-component in org/organisation
-
-        - allows embedding of multiple fields besides the location selector
-        - renders an vertical layout for edit-rows
-        - standard horizontal layout for read-rows
-        - hiding header row if there are no visible read-rows
-    """
-
-    # -------------------------------------------------------------------------
-    def headers(self, data, readonly=False):
-        """
-            Header-row layout: same as default, but non-static (i.e. hiding
-            if there are no visible read-rows, because edit-rows have their
-            own labels)
-        """
-
-        headers = super(FacilitySubFormLayout, self).headers
-
-        header_row = headers(data, readonly = readonly)
-        element = header_row.element('tr');
-        if hasattr(element, "remove_class"):
-            element.remove_class("static")
-        return header_row
-
-    # -------------------------------------------------------------------------
-    def rowstyle_read(self, form, fields, *args, **kwargs):
-        """
-            Formstyle for subform read-rows, same as standard
-            horizontal layout.
-        """
-
-        rowstyle = super(FacilitySubFormLayout, self).rowstyle
-        return rowstyle(form, fields, *args, **kwargs)
-
-    # -------------------------------------------------------------------------
-    def rowstyle(self, form, fields, *args, **kwargs):
-        """
-            Formstyle for subform edit-rows, using a vertical
-            formstyle because multiple fields combined with
-            location-selector are too complex for horizontal
-            layout.
-        """
-
-        # Use standard foundation formstyle
-        from s3theme import formstyle_foundation as formstyle
-        if args:
-            col_id = form
-            label = fields
-            widget, comment = args
-            hidden = kwargs.get("hidden", False)
-            return formstyle(col_id, label, widget, comment, hidden)
-        else:
-            parent = TD(_colspan = len(fields))
-            for col_id, label, widget, comment in fields:
-                parent.append(formstyle(col_id, label, widget, comment))
-            return TR(parent)
 
 # END =========================================================================

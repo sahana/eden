@@ -180,7 +180,7 @@ S3.search = {};
         ).done(function(data, status) {
             S3.hideAlerts();
             this.tryCount = 0;
-            if (data.message) {
+            if (data && data.message) {
                 S3.showAlert(data.message, 'success');
             }
             // Call done/success callback:

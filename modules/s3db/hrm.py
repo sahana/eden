@@ -6250,11 +6250,11 @@ def hrm_rheader(r, tabs=[], profile=False):
             record_method = None
         elif record_tab == "record":
             record_method = "record"
-            record_label = settings.get_hrm_record_label()
         else:
             # Default
             record_method = "human_resource"
-            record_label = settings.get_hrm_record_label()
+
+        record_label = settings.get_hrm_record_label()
 
         if profile:
             # Configure for personal mode
