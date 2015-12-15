@@ -1192,8 +1192,9 @@ def recv_process():
     """ Receive a Shipment """
 
     try:
-        recv_id = request.args[0]
-    except:
+        recv_id = long(request.args[0])
+    except (IndexError, ValueError):
+        # recv_id missing from URL or invalid
         redirect(URL(f="recv"))
 
     rtable = s3db.inv_recv
@@ -1205,9 +1206,11 @@ def recv_process():
     recv_record = db(rtable.id == recv_id).select(rtable.date,
                                                   rtable.status,
                                                   rtable.site_id,
-                                                  limitby=(0, 1)
+                                                  rtable.recv_ref,
+                                                  limitby=(0, 1),
                                                   ).first()
 
+    # Check status
     status = recv_record.status
     inv_ship_status = s3db.inv_ship_status
     if status == inv_ship_status["RECEIVED"]:
@@ -1219,21 +1222,28 @@ def recv_process():
         redirect(URL(c="inv", f="recv", args=[recv_id]))
 
     # Update Receive record & lock for editing
-    code = s3db.supply_get_shipping_code(settings.get_inv_recv_shortname(),
-                                         recv_record.site_id,
-                                         s3db.inv_recv.recv_ref)
-    data = dict(recv_ref = code,
-                status = inv_ship_status["RECEIVED"],
-                owned_by_user = None,
-                owned_by_group = ADMIN,
-                )
+    data = {"status": inv_ship_status["RECEIVED"],
+            "owned_by_user": None,
+            "owned_by_group": ADMIN,
+            }
+
+    if not recv_record.recv_ref:
+        # No recv_ref yet? => add one now
+        code = s3db.supply_get_shipping_code(settings.get_inv_recv_shortname(),
+                                             recv_record.site_id,
+                                             s3db.inv_recv.recv_ref,
+                                             )
+        data["recv_ref"] = code
+
     if not recv_record.date:
+        # Date not set? => set to now
         data["date"] = request.utcnow
+
     db(rtable.id == recv_id).update(**data)
 
+    # Update the Send record & lock for editing
     stable = db.inv_send
     tracktable = db.inv_track_item
-
     send_row = db(tracktable.recv_id == recv_id).select(tracktable.send_id,
                                                         limitby=(0, 1)).first()
     if send_row:
@@ -1242,21 +1252,23 @@ def recv_process():
                                         owned_by_user = None,
                                         owned_by_group = ADMIN,
                                         )
+
     # Change the status for all track items in this shipment to Unloading
-    # the onaccept will then move the values into the site update any request
+    # the onaccept will then move the values into the site, update any request
     # record, create any adjustment if needed and change the status to Arrived
     db(tracktable.recv_id == recv_id).update(status = 3)
+
     # Move each item to the site
     track_rows = db(tracktable.recv_id == recv_id).select()
     for track_item in track_rows:
         row = Storage(track_item)
-        s3db.inv_track_item_onaccept(Storage(vars=Storage(id=row.id),
+        s3db.inv_track_item_onaccept(Storage(vars = Storage(id=row.id),
                                              record = row,
                                              ))
 
+    # Done => confirmation message, open the record
     session.confirmation = T("Shipment Items Received")
-    redirect(URL(c="inv", f="recv",
-                 args=[recv_id]))
+    redirect(URL(c="inv", f="recv", args=[recv_id]))
 
 # -----------------------------------------------------------------------------
 def recv_cancel():
