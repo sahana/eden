@@ -45,6 +45,8 @@ def person():
                 query = (FS("dvr_case.archived") == False) | \
                         (FS("dvr_case.archived") == None)
             resource.add_filter(query)
+        else:
+            archived = False
 
         # Should not be able to delete records in this view
         resource.configure(deletable = False)
