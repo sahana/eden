@@ -2027,9 +2027,11 @@ class S3ImportItem(object):
             Validate this item (=record onvalidation), sets self.accepted
         """
 
+        data = self.data
+
         if self.accepted is not None:
             return self.accepted
-        if self.data is None or not self.table:
+        if data is None or not self.table:
             self.accepted = False
             return False
 
@@ -2054,12 +2056,12 @@ class S3ImportItem(object):
 
         # Set dynamic defaults for new records
         if not self.id:
-            self._dynamic_defaults(self.data)
+            self._dynamic_defaults(data)
 
         # Check for mandatory fields
         required_fields = self._mandatory_fields()
 
-        all_fields = self.data.keys()
+        all_fields = data.keys()
 
         failed_references = []
         items = self.job.items
@@ -2097,8 +2099,8 @@ class S3ImportItem(object):
         missing = [fname for fname in required_fields
                          if fname not in all_fields]
 
+        original = self.original
         if missing:
-            original = self.original
             if original:
                 missing = [fname for fname in missing
                                  if fname not in original]
@@ -2120,8 +2122,10 @@ class S3ImportItem(object):
 
         # Run onvalidation
         form = Storage(method = self.method,
-                       vars = self.data,
-                       request_vars = self.data)
+                       vars = data,
+                       request_vars = data,
+                       record = original,
+                       )
         if self.id:
             form.vars.id = self.id
 

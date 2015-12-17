@@ -484,18 +484,19 @@ class S3LocationModel(S3Model):
         response = current.response
         settings = current.deployment_settings
 
-        MAP_ADMIN = auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
-
         form_vars = form.vars
         vars_get = form_vars.get
+
         level = vars_get("level", None)
         parent = vars_get("parent", None)
         lat = vars_get("lat", None)
         lon = vars_get("lon", None)
         addr_street = vars_get("addr_street", None)
 
-        if addr_street and lat is None and lon is None and \
-           response.s3.bulk:
+        bulk = response.s3.bulk
+
+        if addr_street and lat is None and lon is None and bulk:
+
             geocoder = settings.get_gis_geocode_imported_addresses()
             if geocoder:
                 # Geocode imported addresses
@@ -539,6 +540,7 @@ class S3LocationModel(S3Model):
 
         # 'MapAdmin' has permission to edit hierarchy locations, no matter what
         # 000_config or the ancestor country's gis_config has.
+        MAP_ADMIN = auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
         if not MAP_ADMIN:
             if level:
                 editable = level != "L0"
@@ -686,13 +688,26 @@ class S3LocationModel(S3Model):
         # Add the WKT, bounds (& Centroid for Polygons)
         gis.wkt_centroid(form)
 
-        if form_vars.wkt and not form_vars.wkt.startswith("POI"):
-            # Polygon cannot be inherited
+        # The original record
+        record = form.record
+
+        if form_vars.wkt and not form_vars.wkt[:3] == "POI":
+            # Only POINTs can be inherited (but not POLYGONs)
             form_vars.inherited = False
-        elif form.record and form.record.inherited:
-            # Have we provided more accurate data?
-            if form_vars.wkt != form.record.wkt:
+
+        elif bulk:
+            # Bulk import: can not check for wkt change here because
+            # wkt not loaded during imports for better performance =>
+            # instead, check whether import item has lat and lon:
+            if form_vars.lat not in (None, "") and \
+               form_vars.lon not in (None, ""):
                 form_vars.inherited = False
+
+        elif record and hasattr(record, "inherited") and record.inherited:
+            # Have we provided more accurate data?
+            if hasattr(record, "wkt") and form_vars.wkt != record.wkt:
+                form_vars.inherited = False
+
         return
 
     # -------------------------------------------------------------------------
