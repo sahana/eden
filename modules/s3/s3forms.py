@@ -2984,6 +2984,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
             @param deletable: whether the record can be deleted
             @param multiple: whether multiple records can be added
             @param index: the row index
+            @param layout: the subform layout (S3SQLSubFormLayout)
             @param attributes: HTML attributes for the row
         """
 
@@ -2992,13 +2993,17 @@ class S3SQLInlineComponent(S3SQLSubForm):
         rowtype = readonly and "read" or "edit"
         pkey = table._id.name
 
-        data = dict()
+        data = {}
         formfields = []
         formname = self._formname()
         widgets = self.widgets
         for f in fields:
+
+            # Construct a row-specific field name
             fname = f["name"]
             idxname = "%s_i_%s_%s_%s" % (formname, fname, rowtype, index)
+
+            # Parent and caller for add-popup
             if not readonly:
                 parent = table._tablename.split("_", 1)[1]
                 caller = "sub_%s_%s" % (formname, idxname)
@@ -3006,16 +3011,22 @@ class S3SQLInlineComponent(S3SQLSubForm):
             else:
                 popup = None
 
+            # Custom label and widget
+            label = f.get("label", DEFAULT)
+            widget = widgets.get(fname, DEFAULT)
+
+            # Get a Field instance for SQLFORM.factory
             formfield = self._rename_field(table[fname],
                                            idxname,
-                                           comments=False,
-                                           popup=popup,
-                                           skip_post_validation=True,
-                                           widget=widgets.get(fname, DEFAULT),
+                                           comments = False,
+                                           label = label,
+                                           popup = popup,
+                                           skip_post_validation = True,
+                                           widget = widget,
                                            )
 
+            # Reduced options set?
             if "filterby" in self.options:
-                # Get reduced options set
                 options = self._filterby_options(fname)
                 if options:
                     if len(options) < 2:
@@ -3030,6 +3041,7 @@ class S3SQLInlineComponent(S3SQLSubForm):
                 default = defaults[fname]["value"]
                 formfield.default = default
 
+            # Add the data for this field (for existing rows)
             if index is not None and item and fname in item:
                 if formfield.type == "upload":
                     filename = item[fname]["value"]
