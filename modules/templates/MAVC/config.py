@@ -403,6 +403,13 @@ def config(settings):
 
     settings.hrm.compose_button = False
 
+    human_resource_list_fields = ["person_id",
+                                  "job_title_id",
+                                  "department_id",
+                                  (T("Email"), "person_id$email.value"),
+                                  (T("Mobile Phone"), "person_id$phone.value"),
+                                  ]
+
     # -------------------------------------------------------------------------
     def customise_hrm_human_resource_resource(r, tablename):
 
@@ -420,20 +427,43 @@ def config(settings):
                            crud_form = crud_form,
                            )
 
-        # Custom list fields
-        list_fields = ["person_id",
-                       "job_title_id",
-                       "department_id",
-                       (T("Email"), "person_id$email.value"),
-                       (T("Mobile Phone"), "person_id$phone.value"),
-                       ]
-
         # Configure table
         s3db.configure("hrm_human_resource",
-                       list_fields = list_fields,
+                       list_fields = human_resource_list_fields,
                        )
 
     settings.customise_hrm_human_resource_resource = customise_hrm_human_resource_resource
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_human_resource_controller(**attr):
+
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            # @todo: customise filter widgets
+
+            list_fields = ["organisation_id"] + human_resource_list_fields
+
+            s3db.configure("hrm_human_resource",
+                           list_fields = list_fields,
+                           )
+
+            return True
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
