@@ -2124,7 +2124,8 @@ class S3ImportItem(object):
         form = Storage(method = self.method,
                        vars = data,
                        request_vars = data,
-                       record = original,
+                       # Useless since always incomplete:
+                       #record = original,
                        )
         if self.id:
             form.vars.id = self.id
