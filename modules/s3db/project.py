@@ -140,7 +140,6 @@ class S3ProjectModel(S3Model):
         programmes = settings.get_project_programmes()
         use_codes = settings.get_project_codes()
         use_indicators = settings.get_project_indicators()
-        use_sectors = settings.get_project_sectors()
 
         add_components = self.add_components
         configure = self.configure
@@ -316,12 +315,13 @@ class S3ProjectModel(S3Model):
             append((T("Locations"), "location.location_id"))
         if programmes:
             append((T("Program"), "programme.name"))
-        if use_sectors:
+        if settings.get_project_sectors():
             append((T("Sectors"), "sector.name"))
-        if mode_drr:
+        if mode_drr and settings.get_project_hazards():
             append((T("Hazards"), "hazard.name"))
             #append("drr.hfa")
-        append((T("Themes"), "theme.name"))
+        if settings.get_project_themes():
+            append((T("Themes"), "theme.name"))
         if multi_orgs:
             append((T("Total Funding Amount"), "total_organisation_amount"))
         if budget_monitoring:
@@ -10261,7 +10261,7 @@ def project_project_filters(org_label):
         )
 
     mode_drr = settings.get_project_mode_drr()
-    if mode_drr:
+    if mode_drr and settings.get_project_hazards():
         append_filter(
             S3OptionsFilter("hazard_project.hazard_id",
                             label = T("Hazard"),
@@ -10271,7 +10271,8 @@ def project_project_filters(org_label):
                             )
         )
 
-    if settings.get_project_mode_3w():
+    if settings.get_project_mode_3w() and \
+       settings.get_project_themes():
         append_filter(
             S3OptionsFilter("theme_project.theme_id",
                             label = T("Theme"),
@@ -10281,7 +10282,7 @@ def project_project_filters(org_label):
                             )
         )
 
-    if mode_drr:
+    if mode_drr and settings.get_project_hfa():
         hfa_opts = project_hfa_opts()
         options = dict((key, "HFA %s" % key) for key in hfa_opts)
         #options[None] = current.messages["NONE"] # to search NO HFA

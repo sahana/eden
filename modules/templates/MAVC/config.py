@@ -144,6 +144,11 @@ def config(settings):
     #                                              )
 
     # =========================================================================
+    # UI settings
+    #
+    settings.search.filter_manager = False
+
+    # =========================================================================
     # Organisations
     #
     settings.org.sector = True
@@ -402,6 +407,7 @@ def config(settings):
     #
     settings.pr.request_dob = False
     settings.pr.contacts_tabs = None
+    settings.pr.hide_third_gender = False
 
     # Uncomment to change the label for 'Staff'
     settings.hrm.staff_label = "Contacts"
@@ -568,8 +574,100 @@ def config(settings):
 
     # =========================================================================
     # Projects
-    # Uncomment this to use multiple Organisations per project
-    #settings.project.multiple_organisations = True
+    #
+    settings.project.mode_3w = True
+    settings.project.mode_drr = True
+    settings.project.hazards = True
+    settings.project.themes = False
+    settings.project.hfa = False
+
+    # Custom label for project organisation
+    settings.project.organisation_roles = {1: T("Organization"),
+                                           2: T("Partner Organization"),
+                                           3: T("Donor"),
+                                           }
+
+    # -------------------------------------------------------------------------
+    def customise_project_project_resource(r, tablename):
+
+        s3db = current.s3db
+
+        table = s3db.project_project
+
+        # Make project description mandatory
+        field = table.description
+        from gluon import IS_NOT_EMPTY
+        field.requires = IS_NOT_EMPTY(
+                            error_message = T("Enter a project description"),
+                            )
+
+        if r.interactive:
+
+            # Custom filter widgets
+            LEAD_ROLE = settings.get_project_organisation_lead_role()
+            org_label = settings.get_project_organisation_roles()[LEAD_ROLE]
+            from s3 import S3DateFilter, \
+                           S3LocationFilter, \
+                           S3OptionsFilter, \
+                           S3TextFilter
+            filter_widgets = [
+                S3TextFilter(["name",
+                              "description",
+                              ],
+                              label = T("Search"),
+                              comment = T("Search for a Project by name or description."),
+                              ),
+                S3LocationFilter("location.location_id",
+                                 ),
+                S3OptionsFilter("sector_project.sector_id",
+                                label = T("Sector"),
+                                location_filter = True,
+                                none = True,
+                                ),
+                S3OptionsFilter("hazard_project.hazard_id",
+                                label = T("Hazard"),
+                                help_field = s3db.project_hazard_help_fields,
+                                cols = 4,
+                                hidden = True,
+                                ),
+                S3OptionsFilter("status_id",
+                                label = T("Status"),
+                                cols = 4,
+                                hidden = True,
+                                ),
+                S3DateFilter("start_date",
+                             hidden = True,
+                             ),
+                S3DateFilter("end_date",
+                             hidden = True,
+                             ),
+                S3OptionsFilter("organisation_id",
+                                label = org_label,
+                                hidden = True,
+                                ),
+                ]
+
+            s3db.configure("project_project",
+                           filter_widgets = filter_widgets,
+                           )
+
+        # Custom list fields
+        list_fields = ["name",
+                       "location.location_id",
+                       "organisation_id",
+                       (T("Sectors"), "sector_project.sector_id"),
+                       (T("Hazards"), "hazard_project.hazard_id"),
+                       "status_id",
+                       "start_date",
+                       "end_date",
+                       ]
+
+        s3db.configure("project_project",
+                       list_fields = list_fields,
+                       )
+
+
+    settings.customise_project_project_resource = customise_project_project_resource
 
     # =========================================================================
     # Requests

@@ -3659,9 +3659,25 @@ class S3Config(Storage):
 
     def get_project_hazards(self):
         """
-            Use Hazards in 3W Projects
+            Use Hazards in DRR Projects
         """
-        return self.project.get("hazards", False)
+        use_hazards = self.project.get("hazards")
+        if use_hazards is None:
+            # Default to True if mode_drr
+            use_hazards = self.get_project_mode_drr()
+
+        return use_hazards
+
+    def get_project_hfa(self):
+        """
+            Use HFA Priorities in DRR Projects
+        """
+        use_hfa = self.project.get("hfa")
+        if use_hfa is None:
+            # Default to True if mode_drr
+            use_hfa = self.get_project_mode_drr()
+
+        return use_hfa
 
     def get_project_indicators(self):
         """
