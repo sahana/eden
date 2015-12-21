@@ -183,6 +183,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="req")(
                     M("Current Needs", f="organisation_needs")(
                         M("Create", m="create"),
+                        M("Import", m="import", restrict=[ADMIN]),
                     ),
                     M("Needs at Facilities", f="site_needs", m="summary")(
                         M("Create", m="create"),

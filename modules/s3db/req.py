@@ -2130,6 +2130,7 @@ class S3RequestSummaryModel(S3Model):
         configure(tablename,
                   context = {"organisation": "organisation_id",
                              },
+                  deduplicate = self.organisation_needs_deduplicate,
                   )
 
         # Components
@@ -2187,6 +2188,13 @@ class S3RequestSummaryModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary=("organisation_needs_id",
+                                                     "item_id",
+                                                     ),
+                                            ),
+                  )
+
         # -----------------------------------------------------------------
         # Linktable Needs <=> Skills
         #
@@ -2207,6 +2215,13 @@ class S3RequestSummaryModel(S3Model):
                      demand(),
                      s3_comments(),
                      *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary=("organisation_needs_id",
+                                                     "skill_id",
+                                                     ),
+                                            ),
+                  )
 
         # -----------------------------------------------------------------
         # Summary of Needs for a site
@@ -2268,6 +2283,29 @@ class S3RequestSummaryModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def organisation_needs_deduplicate(item):
+        """
+            Deduplication method for req_organisation_needs: replace
+            existing records rather than updating them
+
+            @param item: the S3ImportItem
+        """
+
+        data = item.data
+
+        organisation_id = data.get("organisation_id")
+        if organisation_id:
+
+            from s3 import FS
+            query = FS("organisation_id") == organisation_id
+
+            resource = current.s3db.resource("req_organisation_needs",
+                                             filter = query,
+                                             )
+            resource.delete(cascade=True)
 
 # =============================================================================
 class S3RequestTaskModel(S3Model):
