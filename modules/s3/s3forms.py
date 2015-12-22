@@ -3052,6 +3052,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     data[idxname] = filename
                 else:
                     value = item[fname]["value"]
+                    if type(value) is unicode:
+                        value = value.encode("utf-8")
                     widget = formfield.widget
                     if isinstance(widget, S3Selector):
                         # Use the widget parser to get at the selected ID
