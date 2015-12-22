@@ -147,6 +147,7 @@ def config(settings):
     # UI settings
     #
     settings.search.filter_manager = False
+    settings.ui.label_postcode = "Postal Code"
 
     # =========================================================================
     # Organisations
@@ -158,7 +159,7 @@ def config(settings):
 
         s3db = current.s3db
 
-        # Simplify form
+        # Use comments field for org description
         table = s3db.org_organisation
         field = table.comments
         from gluon import DIV
@@ -232,7 +233,7 @@ def config(settings):
                                     "website",
                                     S3SQLInlineComponent(
                                             "facility",
-                                            label = T("Main Facility"),
+                                            label = T("Main Office"),
                                             fields = ["name",
                                                       (T("Phone"), "phone1"),
                                                       #"phone2",
@@ -647,7 +648,39 @@ def config(settings):
                                 ),
                 ]
 
+            # Custom CRUD form
+            from s3 import S3SQLCustomForm, S3SQLInlineLink
+            crud_form = S3SQLCustomForm(
+                "organisation_id",
+                "name",
+                "description",
+                "status_id",
+                "start_date",
+                "end_date",
+                "budget",
+                "currency",
+                S3SQLInlineLink(
+                    "hazard",
+                    label = T("Hazards"),
+                    field = "hazard_id",
+                    help_field = s3db.project_hazard_help_fields,
+                    cols = 4,
+                    translate = True,
+                ),
+                S3SQLInlineLink(
+                    "sector",
+                    label = T("Sectors"),
+                    field = "sector_id",
+                    cols = 4,
+                    translate = True,
+                ),
+                "objectives",
+                "human_resource_id",
+                "comments",
+                )
+
             s3db.configure("project_project",
+                           crud_form = crud_form,
                            filter_widgets = filter_widgets,
                            )
 
