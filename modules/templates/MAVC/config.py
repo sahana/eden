@@ -702,6 +702,61 @@ def config(settings):
 
     settings.customise_project_project_resource = customise_project_project_resource
 
+    # -------------------------------------------------------------------------
+    def customise_project_project_controller(**attr):
+
+        # Label document name as "Title"
+        table = current.s3db.doc_document
+        field = table.name
+        field.label = T("Title")
+
+        # Custom rheader and tabs
+        attr = dict(attr)
+        attr["rheader"] = mavc_rheader
+
+        return attr
+
+    settings.customise_project_project_controller = customise_project_project_controller
+
+    # -------------------------------------------------------------------------
+    def customise_project_location_resource(r, tablename):
+
+        s3db = current.s3db
+        table = s3db.project_location
+
+        # Hide name in create-form
+        field = table.name
+        if r.tablename == tablename and not r.id or \
+           r.component.tablename == tablename and not r.component_id:
+            field.readable = False
+
+        # Hide budget percentage
+        field = table.percentage
+        field.readable = field.writable = False
+
+        # Use location selector
+        field = table.location_id
+        from s3 import S3LocationSelector
+        field.widget = S3LocationSelector(show_address = False,
+                                          show_postcode = False,
+                                          show_map = False,
+                                          )
+
+        # Custom list fields
+        list_fields = ["project_id",
+                       "location_id",
+                       "comments",
+                       ]
+
+        s3db.configure("project_location",
+                       # Don't redirect to beneficiaries after create:
+                       create_next = None,
+                       list_fields = list_fields,
+                       )
+
+
+    settings.customise_project_location_resource = customise_project_location_resource
+
     # =========================================================================
     # Requests
     settings.req.req_type = ["Stock"]
@@ -922,10 +977,37 @@ def mavc_rheader(r, tabs=None):
         # Website
         website = row["org_organisation.website"]
 
-        # Compile the rheader
+        # Compose the rheader
         rheader = DIV(DIV(H1(title),
                           H2(subtitle),
                           website if record.website else "",
+                          _class="rheader-details",
+                          ),
+                      )
+
+    elif tablename == "project_project":
+
+        if not tabs:
+            tabs = [(T("About"), None),
+                    (T("Locations"), "location"),
+                    (T("Attachments"), "document"),
+                    ]
+
+        # Retrieve details for the rheader
+        data = resource.select(["name",
+                                "organisation_id",
+                                ],
+                               represent = True,
+                               )
+        row = data.rows[0]
+
+        # Title and Subtitle
+        title = row["project_project.name"]
+        subtitle = row["project_project.organisation_id"]
+
+        # Compose the rheader
+        rheader = DIV(DIV(H1(title),
+                          H2(subtitle),
                           _class="rheader-details",
                           ),
                       )
