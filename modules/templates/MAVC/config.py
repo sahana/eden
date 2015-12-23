@@ -150,6 +150,47 @@ def config(settings):
     settings.ui.label_postcode = "Postal Code"
 
     # =========================================================================
+    # Documents
+    #
+    def customise_doc_document_resource(r, tablename):
+
+        s3db = current.s3db
+        table = s3db.doc_document
+
+        # Document date defaults to today
+        field = table.date
+        field.default = current.request.utcnow.date()
+
+        # Label name as "Title"
+        field = table.name
+        field.label = T("Title")
+
+        # CRUD Form
+        if r.interactive:
+            from s3 import S3SQLCustomForm
+            crud_form = S3SQLCustomForm("name",
+                                        "file",
+                                        "url",
+                                        "date",
+                                        "comments",
+                                        )
+        else:
+            crud_form = None
+
+        list_fields = ["name",
+                       "file",
+                       "url",
+                       "date",
+                       "comments",
+                       ]
+        s3db.configure("doc_document",
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_doc_document_resource = customise_doc_document_resource
+
+    # =========================================================================
     # Organisations
     #
     settings.org.sector = True
@@ -649,7 +690,9 @@ def config(settings):
                 ]
 
             # Custom CRUD form
-            from s3 import S3SQLCustomForm, S3SQLInlineLink
+            from s3 import S3SQLCustomForm, \
+                           S3SQLInlineComponent, \
+                           S3SQLInlineLink
             crud_form = S3SQLCustomForm(
                 "organisation_id",
                 "name",
@@ -676,6 +719,30 @@ def config(settings):
                 ),
                 "objectives",
                 "human_resource_id",
+                S3SQLInlineComponent(
+                    "document",
+                    fields = [(T("Title"), "name"),
+                              "file",
+                              ],
+                    filterby = {"field": "file",
+                                "options": "",
+                                "invert": True,
+                                },
+                    label = T("Files"),
+                    name = "file",
+                    ),
+                S3SQLInlineComponent(
+                    "document",
+                    fields = [(T("Title"), "name"),
+                              "url",
+                              ],
+                    filterby = {"field": "url",
+                                "options": None,
+                                "invert": True,
+                                },
+                    label = T("Links"),
+                    name = "url",
+                    ),
                 "comments",
                 )
 
@@ -704,11 +771,6 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def customise_project_project_controller(**attr):
-
-        # Label document name as "Title"
-        table = current.s3db.doc_document
-        field = table.name
-        field.label = T("Title")
 
         # Custom rheader and tabs
         attr = dict(attr)
