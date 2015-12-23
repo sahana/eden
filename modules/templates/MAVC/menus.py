@@ -126,267 +126,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def hrm():
-        """ HRM / Human Resources Management """
-
-        s3 = current.session.s3
-        ADMIN = s3.system_roles.ADMIN
-        AUTHENTICATED = s3.system_roles.AUTHENTICATED
-
-        INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
-
-        return M()(
-                    M("Organizations", c="org", f="organisation")(
-                        #M("Search", m="summary"),
-                        M("Create", m="create",
-                          restrict=[AUTHENTICATED]),
-                    ),
-                    M(INDIVIDUALS, c="hrm", f=("staff", "person"), t="hrm_human_resource")(
-                        #M("Search"),
-                        M("Create", m="create"),
-                    ),
-                    M("Service Locations", c="org", f="service_location", m="summary")(
-                        M("Search", m="summary"),
-                    ),
-                    M("Administration", c=("org", "hrm"),
-                      link = False, restrict = [ADMIN])(
-                        M("Organisation Types", c="org", f="organisation_type"),
-                        M("Sectors", c="org", f="sector"),
-                        M("Service Types", c="org", f="service"),
-                    ),
-                    #M("Import", link=False,
-                    #  restrict=[ADMIN])(
-                    #    M("Import Contacts", c="hrm", f="person", m="import",
-                    #      vars={"group":"staff"}),
-                    #   M("Import Organizations", c="org", f="organisation",
-                    #      m="import"),
-                    #    #M("Import Groups", c="hrm", f="group", m="import"),
-                    #),
-                    #M("Organization Types", c="org", f="organisation_type",
-                    #  restrict=[ADMIN])(
-                    #    M("View"),
-                    #    M("Create", m="create"),
-                    #),
-                    #M("Job Title Catalog", c="hrm", f="job_title",
-                    #  restrict=[ADMIN])(
-                    #    M("View"),
-                    #    M("Create", m="create"),
-                    #),
-                    #M("Skills Catalog", c="hrm", f="skill",
-                    #  restrict=[ADMIN])(
-                    #    M("View"),
-                    #    M("Create", m="create"),
-                    #),
-                    #M("Organization Approval", c="org", f="organisation",
-                    #  m="review", restrict=[ADMIN])(
-                    #),
-                )
-
-    # -------------------------------------------------------------------------
-    def org(self):
-        """ ORG / Organization Registry """
-
-        if not current.auth.is_logged_in():
-            # No Side Menu
-            return None
-        else:
-            request = current.request
-            function = request.function
-            if function in ("facility", "facility_type"):
-                ADMIN = current.session.s3.system_roles.ADMIN
-                if function == "facility" and request.args(0) == "summary":
-                    LIST = M("List", _onclick="$('#ui-id-1').click()")
-                    MAP = M("Map", _onclick="$('#ui-id-3').click()")
-                    REPORT = M("Report", _onclick="$('#ui-id-2').click()")
-                else:
-                    LIST = M("List", m="summary")
-                    MAP = M("Map", m="summary", vars={"t":2})
-                    REPORT = M("Report", m="summary", vars={"t":1})
-                return M()(
-                        M("Create a Facility", c="org", f="facility", m="create")(
-                        ),
-                        M("View Facilities", c="org", f="facility", m="summary")(
-                            LIST,
-                            MAP,
-                            REPORT,
-                        ),
-                        M("Import Facilities", c="org", f="facility", m="import",
-                          restrict=[ADMIN])(
-                        ),
-                        M("Facility Types", c="org", f="facility_type",
-                          restrict=[ADMIN])(
-                            M("View"),
-                            M("Create", m="create"),
-                        ),
-                    )
-            else:
-                # organisation, organisation_type or hrm
-                return self.hrm()
-
-    # -------------------------------------------------------------------------
-    def pr(self):
-        """ Person Registry """
-
-        if not current.auth.is_logged_in():
-            # No Side Menu
-            return None
-        else:
-            return self.hrm()
-
-    # -------------------------------------------------------------------------
-    def inv(self):
-        """ Aid Delivery """
-
-        if not current.auth.is_logged_in():
-            # No Side Menu
-            return None
-
-        ADMIN = current.session.s3.system_roles.ADMIN
-
-        #current.s3db.inv_recv_crud_strings()
-        #inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
-
-        #settings = current.deployment_settings
-        #use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
-        #use_commit = lambda i: settings.get_req_use_commit()
-
-        return M()(
-                    #M("Home", f="index"),
-                    #M("Warehouses", c="inv", f="warehouse")(
-                    #    M("Create", m="create"),
-                    #    M("Import", m="import", p="create"),
-                    #),
-                    #M("Warehouse Stock", c="inv", f="inv_item")(
-                    #    M("Adjust Stock Levels", f="adj", check=use_adjust),
-                    #    M("Kitting", f="kitting"),
-                    #    M("Import", f="inv_item", m="import", p="create"),
-                    #),
-                    #M("Reports", c="inv", f="inv_item")(
-                    #    M("Warehouse Stock", f="inv_item", m="report"),
-                    #    M("Expiration Report", c="inv", f="track_item",
-                    #      vars=dict(report="exp")),
-                    #    M("Monetization Report", c="inv", f="inv_item",
-                    #      vars=dict(report="mon")),
-                    #    M("Utilization Report", c="inv", f="track_item",
-                    #      vars=dict(report="util")),
-                    #    M("Summary of Incoming Supplies", c="inv", f="track_item",
-                    #      vars=dict(report="inc")),
-                    #    M("Summary of Releases", c="inv", f="track_item",
-                    #      vars=dict(report="rel")),
-                    #),
-                    #M(inv_recv_list, c="inv", f="recv", translate=False)( # Already T()
-                    #    M("Create", m="create"),
-                    #    M("Timeline", args="timeline"),
-                    #),
-                    M("Shipments", c="inv", f="send")(
-                        M("Create", m="create"),
-                        M("Search Shipped Items", f="track_item"),
-                        M("Timeline", args="timeline"),
-                    ),
-                    M("Items", c="supply", f="item", m="summary")(
-                        M("Create", m="create"),
-                        M("Import", f="catalog_item", m="import", p="create"),
-                    ),
-                    # Catalog Items moved to be next to the Item Categories
-                    #M("Catalog Items", c="supply", f="catalog_item")(
-                       #M("Create", m="create"),
-                    #),
-                    #M("Brands", c="supply", f="brand",
-                    #  restrict=[ADMIN])(
-                    #    M("Create", m="create"),
-                    #),
-                    M("Catalogs", c="supply", f="catalog")(
-                        M("Create", m="create"),
-                    ),
-                    M("Item Categories", c="supply", f="item_category",
-                      restrict=[ADMIN])(
-                        M("Create", m="create"),
-                    ),
-                    M("Suppliers", c="inv", f="supplier")(
-                        M("Create", m="create"),
-                        M("Import", m="import", p="create"),
-                    ),
-                    #M("Facilities", c="inv", f="facility")(
-                    #    M("Create", m="create", t="org_facility"),
-                    #),
-                    #M("Facility Types", c="inv", f="facility_type",
-                    #  restrict=[ADMIN])(
-                    #    M("Create", m="create"),
-                    #),
-                    #M("Warehouse Types", c="inv", f="warehouse_type",
-                    #  restrict=[ADMIN])(
-                    #    M("Create", m="create"),
-                    #),
-                    #M("Requests", c="req", f="req")(
-                    #    M("Create", m="create"),
-                    #    M("Requested Items", f="req_item"),
-                    #),
-                    #M("Commitments", c="req", f="commit", check=use_commit)(
-                    #),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req():
-        """ REQ / Request Management """
-
-        if not current.auth.is_logged_in():
-            # No Side Menu
-            return None
-
-        ADMIN = current.session.s3.system_roles.ADMIN
-        #settings = current.deployment_settings
-        #types = settings.get_req_req_type()
-        #if len(types) == 1:
-        #    t = types[0]
-        #    if t == "Stock":
-        #        create_menu = M("Create", m="create", vars={"type": 1})
-        #    elif t == "People":
-        #        create_menu = M("Create", m="create", vars={"type": 2})
-        #    else:
-        #        create_menu = M("Create", m="create")
-        #else:
-        #    create_menu = M("Create", m="create")
-
-        #recurring = lambda i: settings.get_req_recurring()
-        #use_commit = lambda i: settings.get_req_use_commit()
-        #req_items = lambda i: "Stock" in types
-        #req_skills = lambda i: "People" in types
-
-        return M(c="req")(
-                    M("Requests", f="req")(
-                        M("Create", m="create", vars={"type": 1}),
-                        #M("List Recurring Requests", f="req_template", check=recurring),
-                        #M("Map", m="map"),
-                        #M("Report", m="report"),
-                        M("Search All Requested Items", f="req_item",
-                          #check=req_items
-                          ),
-                        #M("Search All Requested Skills", f="req_skill",
-                        #  check=req_skills),
-                    ),
-                    #M("Commitments", f="commit", check=use_commit)(
-                    #),
-                    M("Items", c="supply", f="item")(
-                        M("Create", m="create"),
-                        M("Report", m="report"),
-                        M("Import", m="import", p="create"),
-                    ),
-                    # Catalog Items moved to be next to the Item Categories
-                    #M("Catalog Items", c="supply", f="catalog_item")(
-                       #M("Create", m="create"),
-                    #),
-                    M("Catalogs", c="supply", f="catalog")(
-                        M("Create", m="create"),
-                    ),
-                    M("Item Categories", c="supply", f="item_category",
-                      restrict=[ADMIN])(
-                        M("Create", m="create"),
-                    ),
-                )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def gis():
         """ GIS / GIS Controllers """
 
@@ -481,6 +220,285 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Projections", f="projection"),
                         M("Styles", f="style"),
                     )
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm():
+        """ HRM / Human Resources Management """
+
+        s3 = current.session.s3
+        ADMIN = s3.system_roles.ADMIN
+        AUTHENTICATED = s3.system_roles.AUTHENTICATED
+
+        INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
+
+        return M()(
+                    M("Organizations", c="org", f="organisation")(
+                        #M("Search", m="summary"),
+                        M("Create", m="create",
+                          restrict=[AUTHENTICATED]),
+                    ),
+                    M(INDIVIDUALS, c="hrm", f=("staff", "person"), t="hrm_human_resource")(
+                        #M("Search"),
+                        M("Create", m="create"),
+                    ),
+                    M("Service Locations", c="org", f="service_location", m="summary")(
+                        M("Search", m="summary"),
+                    ),
+                    M("Administration", c=("org", "hrm"),
+                      link = False, restrict = [ADMIN])(
+                        M("Organisation Types", c="org", f="organisation_type"),
+                        M("Sectors", c="org", f="sector"),
+                        M("Service Types", c="org", f="service"),
+                    ),
+                    #M("Import", link=False,
+                    #  restrict=[ADMIN])(
+                    #    M("Import Contacts", c="hrm", f="person", m="import",
+                    #      vars={"group":"staff"}),
+                    #   M("Import Organizations", c="org", f="organisation",
+                    #      m="import"),
+                    #    #M("Import Groups", c="hrm", f="group", m="import"),
+                    #),
+                    #M("Organization Types", c="org", f="organisation_type",
+                    #  restrict=[ADMIN])(
+                    #    M("View"),
+                    #    M("Create", m="create"),
+                    #),
+                    #M("Job Title Catalog", c="hrm", f="job_title",
+                    #  restrict=[ADMIN])(
+                    #    M("View"),
+                    #    M("Create", m="create"),
+                    #),
+                    #M("Skills Catalog", c="hrm", f="skill",
+                    #  restrict=[ADMIN])(
+                    #    M("View"),
+                    #    M("Create", m="create"),
+                    #),
+                    #M("Organization Approval", c="org", f="organisation",
+                    #  m="review", restrict=[ADMIN])(
+                    #),
+                )
+
+    # -------------------------------------------------------------------------
+    def inv(self):
+        """ Aid Delivery """
+
+        if not current.auth.is_logged_in():
+            # No Side Menu
+            return None
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        #current.s3db.inv_recv_crud_strings()
+        #inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
+
+        #settings = current.deployment_settings
+        #use_adjust = lambda i: not settings.get_inv_direct_stock_edits()
+        #use_commit = lambda i: settings.get_req_use_commit()
+
+        return M()(
+                    #M("Home", f="index"),
+                    #M("Warehouses", c="inv", f="warehouse")(
+                    #    M("Create", m="create"),
+                    #    M("Import", m="import", p="create"),
+                    #),
+                    #M("Warehouse Stock", c="inv", f="inv_item")(
+                    #    M("Adjust Stock Levels", f="adj", check=use_adjust),
+                    #    M("Kitting", f="kitting"),
+                    #    M("Import", f="inv_item", m="import", p="create"),
+                    #),
+                    #M("Reports", c="inv", f="inv_item")(
+                    #    M("Warehouse Stock", f="inv_item", m="report"),
+                    #    M("Expiration Report", c="inv", f="track_item",
+                    #      vars=dict(report="exp")),
+                    #    M("Monetization Report", c="inv", f="inv_item",
+                    #      vars=dict(report="mon")),
+                    #    M("Utilization Report", c="inv", f="track_item",
+                    #      vars=dict(report="util")),
+                    #    M("Summary of Incoming Supplies", c="inv", f="track_item",
+                    #      vars=dict(report="inc")),
+                    #    M("Summary of Releases", c="inv", f="track_item",
+                    #      vars=dict(report="rel")),
+                    #),
+                    #M(inv_recv_list, c="inv", f="recv", translate=False)( # Already T()
+                    #    M("Create", m="create"),
+                    #    M("Timeline", args="timeline"),
+                    #),
+                    M("Shipments", c="inv", f="send")(
+                        M("Create", m="create"),
+                        M("Search Shipped Items", f="track_item"),
+                        M("Timeline", args="timeline"),
+                    ),
+                    M("Items", c="supply", f="item", m="summary")(
+                        M("Create", m="create"),
+                        M("Import", f="catalog_item", m="import", p="create"),
+                    ),
+                    # Catalog Items moved to be next to the Item Categories
+                    #M("Catalog Items", c="supply", f="catalog_item")(
+                       #M("Create", m="create"),
+                    #),
+                    #M("Brands", c="supply", f="brand",
+                    #  restrict=[ADMIN])(
+                    #    M("Create", m="create"),
+                    #),
+                    M("Catalogs", c="supply", f="catalog")(
+                        M("Create", m="create"),
+                    ),
+                    M("Item Categories", c="supply", f="item_category",
+                      restrict=[ADMIN])(
+                        M("Create", m="create"),
+                    ),
+                    M("Suppliers", c="inv", f="supplier")(
+                        M("Create", m="create"),
+                        M("Import", m="import", p="create"),
+                    ),
+                    #M("Facilities", c="inv", f="facility")(
+                    #    M("Create", m="create", t="org_facility"),
+                    #),
+                    #M("Facility Types", c="inv", f="facility_type",
+                    #  restrict=[ADMIN])(
+                    #    M("Create", m="create"),
+                    #),
+                    #M("Warehouse Types", c="inv", f="warehouse_type",
+                    #  restrict=[ADMIN])(
+                    #    M("Create", m="create"),
+                    #),
+                    #M("Requests", c="req", f="req")(
+                    #    M("Create", m="create"),
+                    #    M("Requested Items", f="req_item"),
+                    #),
+                    #M("Commitments", c="req", f="commit", check=use_commit)(
+                    #),
+                )
+
+    # -------------------------------------------------------------------------
+    def org(self):
+        """ ORG / Organization Registry """
+
+        if not current.auth.is_logged_in():
+            # No Side Menu
+            return None
+        else:
+            request = current.request
+            function = request.function
+            if function in ("facility", "facility_type"):
+                ADMIN = current.session.s3.system_roles.ADMIN
+                if function == "facility" and request.args(0) == "summary":
+                    LIST = M("List", _onclick="$('#ui-id-1').click()")
+                    MAP = M("Map", _onclick="$('#ui-id-3').click()")
+                    REPORT = M("Report", _onclick="$('#ui-id-2').click()")
+                else:
+                    LIST = M("List", m="summary")
+                    MAP = M("Map", m="summary", vars={"t":2})
+                    REPORT = M("Report", m="summary", vars={"t":1})
+                return M()(
+                        M("Create a Facility", c="org", f="facility", m="create")(
+                        ),
+                        M("View Facilities", c="org", f="facility", m="summary")(
+                            LIST,
+                            MAP,
+                            REPORT,
+                        ),
+                        M("Import Facilities", c="org", f="facility", m="import",
+                          restrict=[ADMIN])(
+                        ),
+                        M("Facility Types", c="org", f="facility_type",
+                          restrict=[ADMIN])(
+                            M("View"),
+                            M("Create", m="create"),
+                        ),
+                    )
+            else:
+                # organisation, organisation_type or hrm
+                return self.hrm()
+
+    # -------------------------------------------------------------------------
+    def pr(self):
+        """ Person Registry """
+
+        if not current.auth.is_logged_in():
+            # No Side Menu
+            return None
+        else:
+            return self.hrm()
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project():
+        """ Project Management """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        return M(c="project")(
+                    M("Projects", f="project")(
+                        M("Create", m="create"),
+                        M("Map", f="location", m="map"),
+                        ),
+                    M("Administration", link=False, restrict=ADMIN)(
+                        M("Hazards", f="hazard"),
+                        M("Status", f="status"),
+                        ),
+                    )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def req():
+        """ REQ / Request Management """
+
+        if not current.auth.is_logged_in():
+            # No Side Menu
+            return None
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+        #settings = current.deployment_settings
+        #types = settings.get_req_req_type()
+        #if len(types) == 1:
+        #    t = types[0]
+        #    if t == "Stock":
+        #        create_menu = M("Create", m="create", vars={"type": 1})
+        #    elif t == "People":
+        #        create_menu = M("Create", m="create", vars={"type": 2})
+        #    else:
+        #        create_menu = M("Create", m="create")
+        #else:
+        #    create_menu = M("Create", m="create")
+
+        #recurring = lambda i: settings.get_req_recurring()
+        #use_commit = lambda i: settings.get_req_use_commit()
+        #req_items = lambda i: "Stock" in types
+        #req_skills = lambda i: "People" in types
+
+        return M(c="req")(
+                    M("Requests", f="req")(
+                        M("Create", m="create", vars={"type": 1}),
+                        #M("List Recurring Requests", f="req_template", check=recurring),
+                        #M("Map", m="map"),
+                        #M("Report", m="report"),
+                        M("Search All Requested Items", f="req_item",
+                          #check=req_items
+                          ),
+                        #M("Search All Requested Skills", f="req_skill",
+                        #  check=req_skills),
+                    ),
+                    #M("Commitments", f="commit", check=use_commit)(
+                    #),
+                    M("Items", c="supply", f="item")(
+                        M("Create", m="create"),
+                        M("Report", m="report"),
+                        M("Import", m="import", p="create"),
+                    ),
+                    # Catalog Items moved to be next to the Item Categories
+                    #M("Catalog Items", c="supply", f="catalog_item")(
+                       #M("Create", m="create"),
+                    #),
+                    M("Catalogs", c="supply", f="catalog")(
+                        M("Create", m="create"),
+                    ),
+                    M("Item Categories", c="supply", f="item_category",
+                      restrict=[ADMIN])(
+                        M("Create", m="create"),
+                    ),
                 )
 
 # END =========================================================================
