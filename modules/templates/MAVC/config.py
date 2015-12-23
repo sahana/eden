@@ -287,6 +287,30 @@ def config(settings):
                                                         },
                                             multiple = False,
                                             ),
+                                    S3SQLInlineComponent(
+                                        "document",
+                                        fields = [(T("Title"), "name"),
+                                                  "file",
+                                                  ],
+                                        filterby = {"field": "file",
+                                                    "options": "",
+                                                    "invert": True,
+                                                    },
+                                        label = T("Files"),
+                                        name = "file",
+                                        ),
+                                    S3SQLInlineComponent(
+                                        "document",
+                                        fields = [(T("Title"), "name"),
+                                                  "url",
+                                                  ],
+                                        filterby = {"field": "url",
+                                                    "options": None,
+                                                    "invert": True,
+                                                    },
+                                        label = T("Links"),
+                                        name = "url",
+                                        ),
                                     )
 
         s3db.configure("org_organisation",
@@ -1007,6 +1031,7 @@ def mavc_rheader(r, tabs=None):
                     (T("Services"), "service_location"),
                     (T("Facilities"), "facility"),
                     (T("Projects"), "project"),
+                    (T("Attachments"), "document"),
                     ]
 
         # Use OrganisationRepresent for title to get L10n name if available

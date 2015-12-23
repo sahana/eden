@@ -14,7 +14,9 @@
          SubType.................org_facility.facility_type_id (can be comma-sep list. Use ; between different parents) or org_facility_type.parent
          SubSubType..............org_facility.facility_type_id
          Organisation............org_organisation.name
-         Organisation Group......org_site_org_group.group_id  
+         Organisation Group......org_site_org_group.group_id
+         Main Facility...........org_facility.main_facility
+                                 true|false (also accepts yes|no)
          Building................gis_location.name
          Address.................gis_location.addr_street
          Postcode................gis_location.addr_postcode
@@ -33,9 +35,8 @@
          Opening Times...........org_facility.opening_times
          Obsolete................org_facility.obsolete
          Comments................org_facility.comments
-         Urgently Needed.........req_site_needs.urgently_needed
-         Needed..................req_site_needs.needed
-         Not Needed..............req_site_needs.not_needed
+         Supplies Needed.........req_site_needs.goods_details
+         Volunteers Needed.......req_site_needs.vol_details
          KV:XX...................Key,Value (Key = XX in column name, value = cell in row)
 
     *********************************************************************** -->
@@ -142,6 +143,7 @@
                     <xsl:value-of select="$FacilityName"/>
                 </xsl:attribute>
             </reference>
+
             <!-- Link to Organisation -->
             <xsl:if test="$OrgName!=''">
                 <reference field="organisation_id" resource="org_organisation">
@@ -150,6 +152,17 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
+
+            <!-- Main Facility? -->
+            <xsl:variable name="MainFacility" select="col[@field='Main Facility']/text()"/>
+            <xsl:choose>
+                <xsl:when test="$MainFacility='true' or $MainFacility='yes'">
+                    <data field="main_facility" value="true"/>
+                </xsl:when>
+                <xsl:when test="$MainFacility='false' or $MainFacility='no'">
+                    <data field="main_facility" value="false"/>
+                </xsl:when>
+            </xsl:choose>
 
             <!-- Link to Facility Type(s) -->
             <xsl:call-template name="splitMultiList">
@@ -171,14 +184,35 @@
                 </resource>
             </xsl:if>
 
-            <!-- Site Needs -->
-            <xsl:if test="col[@field='Urgently Needed']!='' or 
-                          col[@field='Needed']!='' or
-                          col[@field='Not Needed']!=''">
-                <resource name="req_site_needs">
-                    <data field="urgently_needed"><xsl:value-of select="col[@field='Urgently Needed']"/></data>
-                    <data field="needed"><xsl:value-of select="col[@field='Needed']"/></data>
-                    <data field="not_needed"><xsl:value-of select="col[@field='Not Needed']"/></data>
+            <!-- Site Needs (include if any of the columns exists) -->
+            <xsl:if test="col[@field='Supplies Needed'] or col[@field='Volunteers Needed']">
+
+               <resource name="req_site_needs">
+
+                    <!-- Volunteers -->
+                    <xsl:variable name="Volunteers" select="col[@field='Volunteers Needed']/text()"/>
+                    <data field="vol">
+                        <xsl:choose>
+                            <xsl:when test="$Volunteers!=''">True</xsl:when>
+                            <xsl:otherwise>False</xsl:otherwise>
+                        </xsl:choose>
+                    </data>
+                    <data field="vol_details">
+                        <xsl:value-of select="$Volunteers"/>
+                    </data>
+
+                    <!-- Supplies -->
+                    <xsl:variable name="Supplies" select="col[@field='Supplies Needed']/text()"/>
+                    <data field="goods">
+                        <xsl:choose>
+                            <xsl:when test="$Supplies!=''">True</xsl:when>
+                            <xsl:otherwise>False</xsl:otherwise>
+                        </xsl:choose>
+                    </data>
+                    <data field="goods_details">
+                        <xsl:value-of select="$Supplies"/>
+                    </data>
+
                 </resource>
             </xsl:if>
 
@@ -577,7 +611,7 @@
         <!-- Facility Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
-                <!-- Match the name length limit in the main record --> 
+                <!-- Match the name length limit in the main record -->
                 <xsl:value-of select="substring($FacilityName,1,64)"/>
             </xsl:attribute>
             <xsl:choose>
