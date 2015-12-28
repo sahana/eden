@@ -25,6 +25,8 @@ class S3MainMenu(default.S3MainMenu):
             cls.menu_lang(),
         )
 
+        current.menu.footer = cls.menu_footer()
+
         return main_menu
 
     # -------------------------------------------------------------------------
@@ -38,8 +40,7 @@ class S3MainMenu(default.S3MainMenu):
                      icon = "%s/static/themes/img/logo-small.png" % \
                             current.request.application,
                      ),
-            # @todo:
-            MM("Newsfeed", link=False),
+            MM("Newsfeed", c="cms", f="newsfeed", m="datalist"),
             MM("Organizations", c="org", f="organisation"),
             MM("Projects", c="project", f="project"),
             # @todo:
@@ -48,6 +49,20 @@ class S3MainMenu(default.S3MainMenu):
             #MM("Aid Deliveries", link=False),
             MM("Map", c="gis", f="index"),
         ]
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_footer(cls):
+        """ Footer menu """
+
+        return MF()(
+                MF("Newsfeed", c="cms", f="newsfeed", m="datalist"),
+                MF("Organizations", c="org", f="organisation"),
+                MF("Projects", c="project", f="project"),
+                MF("Aid Requests", link=False),
+                #MM("Aid Deliveries", link=False),
+                MF("Map", c="gis", f="index"),
+                )
 
     # -------------------------------------------------------------------------
     @classmethod

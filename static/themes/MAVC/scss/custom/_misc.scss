@@ -34,7 +34,6 @@
     }
 }
 .language-selector {
-    float: right;
     display: block;
     margin-top: 0.625rem;
     margin-bottom: 0.125rem;
@@ -68,9 +67,6 @@
 body.rtl {
     .personal-menu {
         clear: left;
-        float: left;
-    }
-    .language-selector {
         float: left;
     }
     .username {

@@ -113,8 +113,8 @@ class S3MainMenuLayout(S3NavigationItem):
                                  ),
                               _class="title-area",
                               ),
-                           SECTION(UL(right, _class="right"),
-                                   UL(left, _class="left"),
+                           SECTION(UL(left, _class="left"),
+                                   UL(right, _class="right"),
                                    _class="top-bar-section",
                                    ),
                            _class = "top-bar",
@@ -164,6 +164,45 @@ class S3MainMenuLayout(S3NavigationItem):
                     ),
                   _class="menu-toggle",
                   )
+
+# =============================================================================
+class S3FooterMenuLayout(S3NavigationItem):
+    """ MAVC Footer Menu Layout """
+
+    @staticmethod
+    def layout(item):
+        """ Custom Layout Method """
+
+        if not item.authorized:
+            item.enabled = item.visible = False
+        elif item.enabled is None or item.enabled:
+            item.enabled = item.visible = True
+
+        if item.enabled and item.visible:
+
+            if item.parent is not None:
+
+                return LI(A(item.label,
+                            _href = item.url(),
+                            _id = item.attr._id,
+                            _class = "footer-menu-item",
+                            ))
+
+            else:
+                # The menu itself
+                items = item.render_components()
+
+                return UL(items,
+                          _class = "footer-menu",
+                          )
+
+        else:
+            return None
+
+# -----------------------------------------------------------------------------
+# Shortcut
+#
+MF = S3FooterMenuLayout
 
 # =============================================================================
 class S3LanguageMenuLayout(S3NavigationItem):
@@ -216,6 +255,7 @@ class S3LanguageMenuLayout(S3NavigationItem):
 
 # -----------------------------------------------------------------------------
 # Shortcut
+#
 ML = S3LanguageMenuLayout
 
 # END =========================================================================

@@ -5335,7 +5335,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
   font-weight: normal;
   font-style: normal;
-  color: #393939;
+  color: #3A4450;
   text-rendering: optimizeLegibility;
   margin-top: 0.2rem;
   margin-bottom: 0.5rem;
@@ -5344,7 +5344,7 @@ h1, h2, h3, h4, h5, h6 {
 /* line 262, ../../foundation/scss/components/_type.scss */
 h1 small, h2 small, h3 small, h4 small, h5 small, h6 small {
   font-size: 60%;
-  color: #7e7e7e;
+  color: #738499;
   line-height: 0;
 }
 
@@ -5381,7 +5381,7 @@ h6 {
 /* line 276, ../../foundation/scss/components/_type.scss */
 .subheader {
   line-height: 1.4;
-  color: #7e7e7e;
+  color: #738499;
   font-weight: normal;
   margin-top: 0.2rem;
   margin-bottom: 0.5rem;
@@ -5541,7 +5541,7 @@ blockquote {
 blockquote cite {
   display: block;
   font-size: 0.8125rem;
-  color: #676767;
+  color: #5e6e82;
 }
 /* line 408, ../../foundation/scss/components/_type.scss */
 blockquote cite:before {
@@ -5550,14 +5550,14 @@ blockquote cite:before {
 /* line 412, ../../foundation/scss/components/_type.scss */
 blockquote cite a,
 blockquote cite a:visited {
-  color: #676767;
+  color: #5e6e82;
 }
 
 /* line 418, ../../foundation/scss/components/_type.scss */
 blockquote,
 blockquote p {
   line-height: 1.6;
-  color: #7e7e7e;
+  color: #738499;
 }
 
 /* Microformats */
@@ -6074,7 +6074,7 @@ meta.foundation-mq-topbar {
 /* line 197, ../../foundation/scss/components/_top-bar.scss */
 .top-bar .name h1 a {
   font-weight: normal;
-  color: #393939;
+  color: #3A4450;
   width: 75%;
   display: block;
   padding: 0 16px;
@@ -6087,7 +6087,7 @@ meta.foundation-mq-topbar {
 }
 /* line 213, ../../foundation/scss/components/_top-bar.scss */
 .top-bar .toggle-topbar a {
-  color: #393939;
+  color: #3A4450;
   text-transform: uppercase;
   font-size: 0.8125rem;
   font-weight: bold;
@@ -6107,7 +6107,7 @@ meta.foundation-mq-topbar {
   height: 34px;
   line-height: 33px;
   padding: 0 41px 0 16px;
-  color: #393939;
+  color: #3A4450;
   position: relative;
 }
 /* line 129, ../../foundation/scss/components/_global.scss */
@@ -6119,12 +6119,12 @@ meta.foundation-mq-topbar {
   top: 50%;
   margin-top: -8px;
   right: 16px;
-  box-shadow: 0 0px 0 1px #393939, 0 7px 0 1px #393939, 0 14px 0 1px #393939;
+  box-shadow: 0 0px 0 1px #3A4450, 0 7px 0 1px #3A4450, 0 14px 0 1px #3A4450;
   width: 16px;
 }
 /* line 162, ../../foundation/scss/components/_global.scss */
 .top-bar .toggle-topbar.menu-icon a span:hover:after {
-  box-shadow: 0 0px 0 1px #393939, 0 7px 0 1px #393939, 0 14px 0 1px #393939;
+  box-shadow: 0 0px 0 1px #3A4450, 0 7px 0 1px #3A4450, 0 14px 0 1px #3A4450;
 }
 /* line 259, ../../foundation/scss/components/_top-bar.scss */
 .top-bar.expanded {
@@ -6137,11 +6137,11 @@ meta.foundation-mq-topbar {
 }
 /* line 266, ../../foundation/scss/components/_top-bar.scss */
 .top-bar.expanded .toggle-topbar a {
-  color: #393939;
+  color: #3A4450;
 }
 /* line 267, ../../foundation/scss/components/_top-bar.scss */
 .top-bar.expanded .toggle-topbar a::after {
-  box-shadow: 0 10px 0 1px #393939, 0 16px 0 1px #393939, 0 22px 0 1px #393939;
+  box-shadow: 0 10px 0 1px #3A4450, 0 16px 0 1px #3A4450, 0 22px 0 1px #3A4450;
 }
 
 /* line 279, ../../foundation/scss/components/_top-bar.scss */
@@ -6176,7 +6176,7 @@ meta.foundation-mq-topbar {
 .top-bar-section ul li > a {
   display: block;
   width: 100%;
-  color: #393939;
+  color: #3A4450;
   padding: 12px 0 12px 0;
   padding-left: 16px;
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
@@ -6333,7 +6333,7 @@ meta.foundation-mq-topbar {
   width: 0;
   height: 0;
   border: inset 5px;
-  border-color: transparent transparent transparent rgba(57, 57, 57, 0.4);
+  border-color: transparent transparent transparent rgba(58, 68, 80, 0.4);
   border-left-style: solid;
   margin-right: 16px;
   margin-top: -4.5px;
@@ -6396,7 +6396,7 @@ meta.foundation-mq-topbar {
 }
 /* line 416, ../../foundation/scss/components/_top-bar.scss */
 .top-bar-section .dropdown li.title h5 a, .top-bar-section .dropdown li.parent-link a {
-  color: #393939;
+  color: #3A4450;
   display: block;
 }
 /* line 420, ../../foundation/scss/components/_top-bar.scss */
@@ -6532,7 +6532,7 @@ meta.foundation-mq-topbar {
     width: 0;
     height: 0;
     border: inset 5px;
-    border-color: rgba(57, 57, 57, 0.4) transparent transparent transparent;
+    border-color: rgba(58, 68, 80, 0.4) transparent transparent transparent;
     border-top-style: solid;
     margin-top: -2.5px;
     top: 24px;
@@ -6588,7 +6588,7 @@ meta.foundation-mq-topbar {
   }
   /* line 574, ../../foundation/scss/components/_top-bar.scss */
   .top-bar-section .dropdown li a {
-    color: #393939;
+    color: #3A4450;
     line-height: 48px;
     white-space: nowrap;
     padding: 12px 16px;
@@ -6596,7 +6596,7 @@ meta.foundation-mq-topbar {
   }
   /* line 583, ../../foundation/scss/components/_top-bar.scss */
   .top-bar-section .dropdown li:not(.has-form):not(.active) > a:not(.button) {
-    color: #393939;
+    color: #3A4450;
     background: #F5F5F5;
   }
   /* line 588, ../../foundation/scss/components/_top-bar.scss */

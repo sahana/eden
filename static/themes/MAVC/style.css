@@ -63,7 +63,7 @@ meta.foundation-data-attribute-namespace {
   padding: 8px 35px 8px 14px;
   position: relative;
   width: auto;
-  z-index: 999;
+  z-index: 98;
   border-radius: 4px;
 }
 
@@ -95,34 +95,47 @@ meta.foundation-data-attribute-namespace {
   top: 1.0rem;
 }
 
+@media only screen and (min-width: 40.063em) {
+  /* line 53, ../scss/custom/_page.scss */
+  .row.main-content {
+    display: flex;
+  }
+}
 /* Links should ALWAYS be unvisited */
-/* line 55, ../scss/custom/_page.scss */
+/* line 59, ../scss/custom/_page.scss */
+#content {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+/* line 63, ../scss/custom/_page.scss */
 #content a.help:link {
   color: #fff;
   text-decoration: none;
   margin-right: 10px;
 }
-/* line 60, ../scss/custom/_page.scss */
+/* line 68, ../scss/custom/_page.scss */
 #content a.help:hover {
   background-color: #336699;
   text-decoration: underline;
 }
-/* line 64, ../scss/custom/_page.scss */
+/* line 72, ../scss/custom/_page.scss */
 #content a.help:visited {
   font-weight: normal;
   color: #666;
 }
-/* line 69, ../scss/custom/_page.scss */
+/* line 77, ../scss/custom/_page.scss */
 #content h1,
 #content h2 {
-  font-size: 1.3em;
+  font-size: 1.8rem;
   font-weight: bolder;
+  text-align: center;
 }
-/* line 74, ../scss/custom/_page.scss */
+/* line 83, ../scss/custom/_page.scss */
 #content h2 {
-  margin-top: 10px;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
 }
-/* line 77, ../scss/custom/_page.scss */
+/* line 87, ../scss/custom/_page.scss */
 #content h3 {
   font-size: 1.1em;
   padding-bottom: 5px;
@@ -414,7 +427,7 @@ div.tabs span {
 }
 /* line 54, ../scss/custom/_rheader.scss */
 div.tabs span a {
-  color: #393939 !important;
+  color: #3A4450 !important;
   text-decoration: none !important;
   background: transparent !important;
 }
@@ -469,12 +482,12 @@ div.tabs span.tab_other:hover {
 /* line 114, ../scss/custom/_rheader.scss */
 div.tabs span.tab_last a,
 div.tabs span.tab_other a {
-  color: #393939 !important;
+  color: #3A4450 !important;
 }
 /* line 118, ../scss/custom/_rheader.scss */
 div.tabs span.tab_last a:hover,
 div.tabs span.tab_other a:hover {
-  color: #393939 !important;
+  color: #3A4450 !important;
 }
 
 /* Action buttons */
@@ -590,11 +603,10 @@ div.tabs span.tab_other a:hover {
 /* Footer */
 /* line 2, ../scss/custom/_footer.scss */
 #footer {
-  text-align: right;
-  padding-top: 20px;
-  border-top: #f0f0f0 1px solid;
-  margin-top: 20px;
-  margin-bottom: 1rem;
+  text-align: center;
+  padding-top: 1.75rem;
+  padding-bottom: 1.75rem;
+  background-color: #FDC334;
 }
 /* line 10, ../scss/custom/_footer.scss */
 #footer button.btn {
@@ -608,20 +620,40 @@ div.tabs span.tab_other a:hover {
   display: inline-block;
   margin-left: 2px;
   margin-right: 2px;
-  color: #ffffff;
-  background: #dddddd;
+  color: #bbbbbb;
+  background: transparent;
 }
 /* line 17, ../scss/custom/_footer.scss */
 #footer button.btn:hover {
-  color: #ffffff;
-  background: #a0a0a0;
+  color: #dddddd;
+  background: #909090;
 }
 
 /* line 22, ../scss/custom/_footer.scss */
+.footer-menu {
+  list-style: none;
+}
+/* line 25, ../scss/custom/_footer.scss */
+.footer-menu > li {
+  display: inline;
+  padding: 1.75rem;
+}
+/* line 28, ../scss/custom/_footer.scss */
+.footer-menu > li > a {
+  font-size: 0.8125rem;
+  font-weight: bold;
+  color: white;
+}
+/* line 32, ../scss/custom/_footer.scss */
+.footer-menu > li > a:hover {
+  color: #e0e0e0;
+}
+
+/* line 39, ../scss/custom/_footer.scss */
 #poweredby {
   margin-right: 0.5rem;
 }
-/* line 24, ../scss/custom/_footer.scss */
+/* line 41, ../scss/custom/_footer.scss */
 #poweredby a {
   color: #999999;
   text-decoration: none;
@@ -632,7 +664,7 @@ div.tabs span.tab_other a:hover {
 /* Top bar */
 /* line 2, ../scss/custom/_menus.scss */
 .top-bar {
-  z-index: 1000;
+  z-index: 99;
 }
 /* line 4, ../scss/custom/_menus.scss */
 .top-bar .menu-toggle input {
@@ -682,31 +714,39 @@ div.tabs span.tab_other a:hover {
 /* line 52, ../scss/custom/_menus.scss */
 .top-bar-section form.language-selector {
   margin-left: 1rem;
+  padding-bottom: 0.5rem !important;
 }
-/* line 55, ../scss/custom/_menus.scss */
+/* line 56, ../scss/custom/_menus.scss */
 .top-bar-section li.has-dropdown.not-click.label-icon > a {
   padding-bottom: 0.5rem !important;
   padding-top: 0.3rem !important;
 }
-/* line 58, ../scss/custom/_menus.scss */
+/* line 59, ../scss/custom/_menus.scss */
 .top-bar-section li.has-dropdown.not-click.label-icon > a i {
   font-size: 1.1rem;
 }
 
-/* line 64, ../scss/custom/_menus.scss */
+/* line 65, ../scss/custom/_menus.scss */
 .row.main-navigation {
-  border-bottom: 1px solid #393939;
+  margin-top: 0.625rem;
+  border-bottom: 1px solid #3A4450;
+}
+
+/* line 69, ../scss/custom/_menus.scss */
+#menu-options {
+  background-color: #3A4450;
+  padding-bottom: 1.75rem;
 }
 
 /* Side Menu */
-/* line 69, ../scss/custom/_menus.scss */
+/* line 75, ../scss/custom/_menus.scss */
 .sidebar {
-  background: none repeat scroll 0 0 #F3F3F3;
+  background: none repeat scroll 0 0 #3A4450;
   margin-top: 10px;
   padding-top: 0.25rem;
 }
 
-/* line 75, ../scss/custom/_menus.scss */
+/* line 81, ../scss/custom/_menus.scss */
 .side-nav li {
   line-height: 1.2;
   list-style-type: none;
@@ -715,21 +755,24 @@ div.tabs span.tab_other a:hover {
   padding: 0;
 }
 
-/* line 82, ../scss/custom/_menus.scss */
-.side-nav li.heading:not(:first-child) {
-  border-top: 1px solid #EAEAEA;
-}
-
-/* line 85, ../scss/custom/_menus.scss */
+/* line 88, ../scss/custom/_menus.scss */
 .side-nav li.heading {
   margin-top: 0.125rem;
 }
 
-/* line 88, ../scss/custom/_menus.scss */
+/* line 91, ../scss/custom/_menus.scss */
+.side-nav li > a:first-child:not(.button) {
+  color: #939CA2;
+}
+
+/* line 94, ../scss/custom/_menus.scss */
+.side-nav li:hover > a:first-child:not(.button) {
+  color: #F0F0F0;
+}
+
+/* line 97, ../scss/custom/_menus.scss */
 .side-nav li.active > a:first-child:not(.button) {
   font-weight: bold;
-  color: #444444;
-  background-color: #E0E0E0;
 }
 
 /* Datatables */
@@ -1143,35 +1186,34 @@ h4.profile-sub-header {
 
 /* line 36, ../scss/custom/_misc.scss */
 .language-selector {
-  float: right;
   display: block;
   margin-top: 0.625rem;
   margin-bottom: 0.125rem;
 }
 
-/* line 42, ../scss/custom/_misc.scss */
+/* line 41, ../scss/custom/_misc.scss */
 .sub-nav.about-menu {
   margin-left: 0;
   margin-right: 0;
 }
 
-/* line 46, ../scss/custom/_misc.scss */
+/* line 45, ../scss/custom/_misc.scss */
 #dashboard > li {
   display: inline-block;
 }
 
-/* line 49, ../scss/custom/_misc.scss */
+/* line 48, ../scss/custom/_misc.scss */
 .home-map,
 .home-cms {
   margin: 1rem 0;
 }
 
-/* line 53, ../scss/custom/_misc.scss */
+/* line 52, ../scss/custom/_misc.scss */
 .home-map {
   border: 1px solid #999999;
 }
 
-/* line 56, ../scss/custom/_misc.scss */
+/* line 55, ../scss/custom/_misc.scss */
 .username {
   color: #666666;
   padding: 0.5rem 0;
@@ -1179,28 +1221,24 @@ h4.profile-sub-header {
   font-size: 0.7rem;
   float: right;
 }
-/* line 61, ../scss/custom/_misc.scss */
+/* line 60, ../scss/custom/_misc.scss */
 .username i.icon {
   padding-left: 0.2rem;
   padding-right: 0;
 }
 
-/* line 69, ../scss/custom/_misc.scss */
+/* line 68, ../scss/custom/_misc.scss */
 body.rtl .personal-menu {
   clear: left;
   float: left;
 }
-/* line 73, ../scss/custom/_misc.scss */
-body.rtl .language-selector {
-  float: left;
-}
-/* line 76, ../scss/custom/_misc.scss */
+/* line 72, ../scss/custom/_misc.scss */
 body.rtl .username {
   padding-left: 0.5rem;
   padding-right: 0;
   float: left;
 }
-/* line 79, ../scss/custom/_misc.scss */
+/* line 75, ../scss/custom/_misc.scss */
 body.rtl .username i.icon {
   padding-left: 0;
   padding-right: 0.2rem;
