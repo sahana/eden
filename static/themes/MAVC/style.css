@@ -681,72 +681,77 @@ div.tabs span.tab_other a:hover {
   padding: 0.5rem;
 }
 
-/* line 25, ../scss/custom/_menus.scss */
+/* line 24, ../scss/custom/_menus.scss */
+.top-bar-section > ul > li {
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+}
+/* line 29, ../scss/custom/_menus.scss */
 .top-bar-section > ul li.menu-home a {
   font-size: 0 !important;
   height: 48px;
   border-radius: 0 !important;
   margin-top: 0.25rem !important;
 }
-/* line 26, ../scss/custom/_menus.scss */
+/* line 30, ../scss/custom/_menus.scss */
 .top-bar-section > ul li.menu-home a:before {
   content: url(img/logo-small.png);
 }
-/* line 35, ../scss/custom/_menus.scss */
+/* line 39, ../scss/custom/_menus.scss */
 .top-bar-section > ul li.menu-home:hover {
   background: white !important;
 }
-/* line 37, ../scss/custom/_menus.scss */
+/* line 41, ../scss/custom/_menus.scss */
 .top-bar-section > ul li.menu-home:hover > a {
   background: white !important;
 }
-/* line 41, ../scss/custom/_menus.scss */
+/* line 45, ../scss/custom/_menus.scss */
 .top-bar-section > ul > li.active:not(.has-form) > a:not(.button), .top-bar-section > ul > li:not(.has-form) > a:not(.button) {
   margin-top: 8px;
   margin-bottom: 8px;
   line-height: 32px;
   border-radius: 1000px;
 }
-/* line 48, ../scss/custom/_menus.scss */
+/* line 52, ../scss/custom/_menus.scss */
 .top-bar-section > ul li > .dropdown {
   margin-top: -10px;
 }
-/* line 52, ../scss/custom/_menus.scss */
+/* line 56, ../scss/custom/_menus.scss */
 .top-bar-section form.language-selector {
   margin-left: 1rem;
   padding-bottom: 0.5rem !important;
 }
-/* line 56, ../scss/custom/_menus.scss */
+/* line 60, ../scss/custom/_menus.scss */
 .top-bar-section li.has-dropdown.not-click.label-icon > a {
   padding-bottom: 0.5rem !important;
   padding-top: 0.3rem !important;
 }
-/* line 59, ../scss/custom/_menus.scss */
+/* line 63, ../scss/custom/_menus.scss */
 .top-bar-section li.has-dropdown.not-click.label-icon > a i {
   font-size: 1.1rem;
 }
 
-/* line 65, ../scss/custom/_menus.scss */
+/* line 69, ../scss/custom/_menus.scss */
 .row.main-navigation {
   margin-top: 0.625rem;
   border-bottom: 1px solid #3A4450;
 }
 
-/* line 69, ../scss/custom/_menus.scss */
+/* line 73, ../scss/custom/_menus.scss */
 #menu-options {
   background-color: #3A4450;
   padding-bottom: 1.75rem;
 }
 
 /* Side Menu */
-/* line 75, ../scss/custom/_menus.scss */
+/* line 79, ../scss/custom/_menus.scss */
 .sidebar {
   background: none repeat scroll 0 0 #3A4450;
   margin-top: 10px;
   padding-top: 0.25rem;
 }
 
-/* line 81, ../scss/custom/_menus.scss */
+/* line 85, ../scss/custom/_menus.scss */
 .side-nav li {
   line-height: 1.2;
   list-style-type: none;
@@ -755,22 +760,22 @@ div.tabs span.tab_other a:hover {
   padding: 0;
 }
 
-/* line 88, ../scss/custom/_menus.scss */
+/* line 92, ../scss/custom/_menus.scss */
 .side-nav li.heading {
   margin-top: 0.125rem;
 }
 
-/* line 91, ../scss/custom/_menus.scss */
+/* line 95, ../scss/custom/_menus.scss */
 .side-nav li > a:first-child:not(.button) {
   color: #939CA2;
 }
 
-/* line 94, ../scss/custom/_menus.scss */
+/* line 98, ../scss/custom/_menus.scss */
 .side-nav li:hover > a:first-child:not(.button) {
   color: #F0F0F0;
 }
 
-/* line 97, ../scss/custom/_menus.scss */
+/* line 101, ../scss/custom/_menus.scss */
 .side-nav li.active > a:first-child:not(.button) {
   font-weight: bold;
 }
