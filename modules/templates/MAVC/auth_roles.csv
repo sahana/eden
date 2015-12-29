@@ -1,9 +1,8 @@
 uid,role,description,controller,function,table,entity,uacl,oacl,hidden,system,protected,Notes
-ANONYMOUS,Anonymous,,org,,,,READ,,,,,
-ANONYMOUS,Anonymous,,org,organisation,,,READ|CREATE,,,,,Allow new users to create orgs during registration
-ANONYMOUS,Anonymous,,,,org_organisation,,READ|CREATE,,,,,Allow new users to create orgs during registration
-ANONYMOUS,Anonymous,,inv,,,,READ,,,,,
-ANONYMOUS,Anonymous,,req,,,,READ,,,,,
+ANONYMOUS,Anonymous,,cms,newsfeed,,,READ,,,,,
+ANONYMOUS,Anonymous,,cms,page,,,READ,,,,,
+ANONYMOUS,Anonymous,,,,cms_post,,READ,,,,,
+ANONYMOUS,Anonymous,,,,doc_document,,READ,,,,,
 ANONYMOUS,Anonymous,,gis,index,,,READ,,,,,
 ANONYMOUS,Anonymous,,gis,location,,,READ,,,,,
 ANONYMOUS,Anonymous,,gis,proxy,,,READ,,,,,
@@ -23,6 +22,12 @@ ANONYMOUS,Anonymous,,,,gis_layer_tms,,READ,,,,,
 ANONYMOUS,Anonymous,,,,gis_layer_wfs,,READ,,,,,
 ANONYMOUS,Anonymous,,,,gis_layer_wms,,READ,,,,,
 ANONYMOUS,Anonymous,,,,gis_layer_xyz,,READ,,,,,
+ANONYMOUS,Anonymous,,inv,,,,READ,,,,,
+ANONYMOUS,Anonymous,,org,,,,READ,,,,,
+ANONYMOUS,Anonymous,,org,organisation,,,READ|CREATE,,,,,Allow new users to create orgs during registration
+ANONYMOUS,Anonymous,,,,org_organisation,,READ|CREATE,,,,,Allow new users to create orgs during registration
+ANONYMOUS,Anonymous,,project,,,,READ,,,,,
+ANONYMOUS,Anonymous,,req,,,,READ,,,,,
 AUTHENTICATED,Authenticated,Can Create records and Edit their own,org,,,,READ|CREATE,READ|CREATE|UPDATE,,,,
 AUTHENTICATED,Authenticated,,org,organisation,,,READ|CREATE,READ|CREATE|UPDATE,,,,
 AUTHENTICATED,Authenticated,,,,org_organisation,,READ|CREATE,READ|CREATE|UPDATE,,,,

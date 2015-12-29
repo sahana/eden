@@ -104,38 +104,41 @@ meta.foundation-data-attribute-namespace {
 /* Links should ALWAYS be unvisited */
 /* line 59, ../scss/custom/_page.scss */
 #content {
-  padding-left: 1.5rem;
   margin-bottom: 1rem;
 }
-/* line 63, ../scss/custom/_page.scss */
+/* line 60, ../scss/custom/_page.scss */
+#content.medium-9 {
+  padding-left: 1.5rem;
+}
+/* line 65, ../scss/custom/_page.scss */
 #content a.help:link {
   color: #fff;
   text-decoration: none;
   margin-right: 10px;
 }
-/* line 68, ../scss/custom/_page.scss */
+/* line 70, ../scss/custom/_page.scss */
 #content a.help:hover {
   background-color: #336699;
   text-decoration: underline;
 }
-/* line 72, ../scss/custom/_page.scss */
+/* line 74, ../scss/custom/_page.scss */
 #content a.help:visited {
   font-weight: normal;
   color: #666;
 }
-/* line 77, ../scss/custom/_page.scss */
+/* line 79, ../scss/custom/_page.scss */
 #content h1,
 #content h2 {
   font-size: 1.8rem;
   font-weight: bolder;
   text-align: center;
 }
-/* line 83, ../scss/custom/_page.scss */
+/* line 85, ../scss/custom/_page.scss */
 #content h2 {
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
 }
-/* line 87, ../scss/custom/_page.scss */
+/* line 89, ../scss/custom/_page.scss */
 #content h3 {
   font-size: 1.1em;
   padding-bottom: 5px;

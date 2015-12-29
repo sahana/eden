@@ -148,6 +148,31 @@ def config(settings):
     #
     settings.search.filter_manager = False
     settings.ui.label_postcode = "Postal Code"
+    settings.ui.summary = ({"common": True,
+                            "name": "add",
+                            "widgets": [{"method": "create"}],
+                            },
+                           {"name": "table",
+                            "label": "Table",
+                            "widgets": [{"method": "datatable"}],
+                            },
+                           {"name": "charts",
+                            "label": "Report",
+                            "widgets": [{"method": "report", "ajax_init": True}],
+                            },
+                           {"name": "map",
+                            "label": "Map",
+                            "widgets": [{"method": "map", "ajax_init": True}],
+                            },
+                           )
+
+    # =========================================================================
+    # CMS Options
+    #
+    settings.cms.filter_open = True
+    settings.cms.location_click_filters = True
+
+    settings.cms.hide_index = True
 
     # =========================================================================
     # Documents
