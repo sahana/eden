@@ -540,8 +540,31 @@ def config(settings):
                                         "job_title_id",
                                         "department_id",
                                         )
+
+            # Custom filter widgets
+            from s3 import S3TextFilter, S3OptionsFilter, s3_get_filter_opts
+            filter_widgets = [
+                S3TextFilter(["person_id$first_name",
+                              "person_id$middle_name",
+                              "person_id$last_name",
+                              "person_id$email.value",
+                              ],
+                              label = T("Search"),
+                              comment = T("You can search by name or email address."),
+                             ),
+                S3OptionsFilter("organisation_id",
+                                filter = True,
+                                header = "",
+                                ),
+                S3OptionsFilter("job_title_id",
+                                options = s3_get_filter_opts("hrm_job_title"),
+                                hidden = True,
+                                ),
+                ]
+
             s3db.configure("hrm_human_resource",
                            crud_form = crud_form,
+                           filter_widgets = filter_widgets,
                            )
 
         # Configure table
@@ -566,8 +589,6 @@ def config(settings):
                 result = standard_prep(r)
             else:
                 result = True
-
-            # @todo: customise filter widgets
 
             list_fields = ["organisation_id"] + human_resource_list_fields
 

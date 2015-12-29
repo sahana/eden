@@ -266,6 +266,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Organisation Types", c="org", f="organisation_type"),
                         M("Sectors", c="org", f="sector"),
                         M("Service Types", c="org", f="service"),
+                        M("Job Titles", c="hrm", f="job_title"),
                     ),
                     #M("Import", link=False,
                     #  restrict=[ADMIN])(
