@@ -43,9 +43,7 @@ class S3MainMenu(default.S3MainMenu):
             MM("Newsfeed", c="cms", f="newsfeed", m="datalist"),
             MM("Organizations", c="org", f="organisation"),
             MM("Projects", c="project", f="project"),
-            # @todo:
-            MM("Aid Requests", link=False),
-            # @todo:
+            #MM("Aid Requests", link=False),
             #MM("Aid Deliveries", link=False),
             MM("Map", c="gis", f="index"),
         ]
@@ -59,7 +57,7 @@ class S3MainMenu(default.S3MainMenu):
                 MF("Newsfeed", c="cms", f="newsfeed", m="datalist"),
                 MF("Organizations", c="org", f="organisation"),
                 MF("Projects", c="project", f="project"),
-                MF("Aid Requests", link=False),
+                #MF("Aid Requests", link=False),
                 #MM("Aid Deliveries", link=False),
                 MF("Map", c="gis", f="index"),
                 )
@@ -238,63 +236,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def hrm():
+    @classmethod
+    def hrm(cls):
         """ HRM / Human Resources Management """
 
-        s3 = current.session.s3
-        ADMIN = s3.system_roles.ADMIN
-        AUTHENTICATED = s3.system_roles.AUTHENTICATED
-
-        INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
-
-        return M()(
-                    M("Organizations", c="org", f="organisation")(
-                        #M("Search", m="summary"),
-                        M("Create", m="create",
-                          restrict=[AUTHENTICATED]),
-                    ),
-                    M(INDIVIDUALS, c="hrm", f=("staff", "person"), t="hrm_human_resource")(
-                        #M("Search"),
-                        M("Create", m="create"),
-                    ),
-                    M("Service Locations", c="org", f="service_location", m="summary")(
-                        M("Search", m="summary"),
-                    ),
-                    M("Administration", c=("org", "hrm"),
-                      link = False, restrict = [ADMIN])(
-                        M("Organisation Types", c="org", f="organisation_type"),
-                        M("Sectors", c="org", f="sector"),
-                        M("Service Types", c="org", f="service"),
-                        M("Job Titles", c="hrm", f="job_title"),
-                    ),
-                    #M("Import", link=False,
-                    #  restrict=[ADMIN])(
-                    #    M("Import Contacts", c="hrm", f="person", m="import",
-                    #      vars={"group":"staff"}),
-                    #   M("Import Organizations", c="org", f="organisation",
-                    #      m="import"),
-                    #    #M("Import Groups", c="hrm", f="group", m="import"),
-                    #),
-                    #M("Organization Types", c="org", f="organisation_type",
-                    #  restrict=[ADMIN])(
-                    #    M("View"),
-                    #    M("Create", m="create"),
-                    #),
-                    #M("Job Title Catalog", c="hrm", f="job_title",
-                    #  restrict=[ADMIN])(
-                    #    M("View"),
-                    #    M("Create", m="create"),
-                    #),
-                    #M("Skills Catalog", c="hrm", f="skill",
-                    #  restrict=[ADMIN])(
-                    #    M("View"),
-                    #    M("Create", m="create"),
-                    #),
-                    #M("Organization Approval", c="org", f="organisation",
-                    #  m="review", restrict=[ADMIN])(
-                    #),
-                )
+        return cls.org()
 
     # -------------------------------------------------------------------------
     def inv(self):
@@ -389,55 +335,55 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
-    def org(self):
+    @staticmethod
+    def org():
         """ ORG / Organization Registry """
 
         if not current.auth.is_logged_in():
             # No Side Menu
             return None
         else:
-            request = current.request
-            function = request.function
-            if function in ("facility", "facility_type"):
-                ADMIN = current.session.s3.system_roles.ADMIN
-                if function == "facility" and request.args(0) == "summary":
-                    LIST = M("List", _onclick="$('#ui-id-1').click()")
-                    MAP = M("Map", _onclick="$('#ui-id-3').click()")
-                    REPORT = M("Report", _onclick="$('#ui-id-2').click()")
-                else:
-                    LIST = M("List", m="summary")
-                    MAP = M("Map", m="summary", vars={"t":2})
-                    REPORT = M("Report", m="summary", vars={"t":1})
-                return M()(
-                        M("Create a Facility", c="org", f="facility", m="create")(
+            system_roles = current.session.s3.system_roles
+
+            ADMIN = system_roles.ADMIN
+            AUTHENTICATED = system_roles.AUTHENTICATED
+
+            INDIVIDUALS = current.deployment_settings.get_hrm_staff_label()
+
+            return M()(
+                        M("Organizations", c="org", f="organisation")(
+                            M("Create", m="create",
+                              restrict=AUTHENTICATED),
                         ),
-                        M("View Facilities", c="org", f="facility", m="summary")(
-                            LIST,
-                            MAP,
-                            REPORT,
-                        ),
-                        M("Import Facilities", c="org", f="facility", m="import",
-                          restrict=[ADMIN])(
-                        ),
-                        M("Facility Types", c="org", f="facility_type",
-                          restrict=[ADMIN])(
-                            M("View"),
+                        M(INDIVIDUALS, c="hrm", f=("staff", "person"),
+                          t="hrm_human_resource")(
+                            #M("Search"),
                             M("Create", m="create"),
                         ),
-                    )
-            else:
-                # organisation, organisation_type or hrm
-                return self.hrm()
+                        M("Service Locations", c="org", f="service_location",
+                          m="summary")(
+                            M("Search", m="summary"),
+                        ),
+                        M("Administration", c=("org", "hrm"),
+                          link=False, restrict=ADMIN)(
+                            M("Organisation Types", c="org", f="organisation_type"),
+                            M("Sectors", c="org", f="sector"),
+                            M("Service Types", c="org", f="service"),
+                            M("Facility Types", c="org", f="facility_type"),
+                            M("Job Title Catalog", c="hrm", f="job_title"),
+                        ),
+                       )
 
     # -------------------------------------------------------------------------
-    def pr(self):
+    @classmethod
+    def pr(cls):
         """ Person Registry """
 
         if not current.auth.is_logged_in():
             # No Side Menu
             return None
         else:
-            return self.hrm()
+            return cls.org()
 
     # -------------------------------------------------------------------------
     @staticmethod

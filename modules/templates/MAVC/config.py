@@ -651,7 +651,7 @@ def config(settings):
                                             "contact",
                                             name = "email",
                                             label = T("Email"),
-                                            multiple = False,
+                                            #multiple = False,
                                             fields = [("", "value"),
                                                       ],
                                             filterby = [{"field": "contact_method",
@@ -663,7 +663,7 @@ def config(settings):
                                             "contact",
                                             name = "phone",
                                             label = MOBILE,
-                                            multiple = False,
+                                            #multiple = False,
                                             fields = [("", "value"),
                                                       ],
                                             filterby = [{"field": "contact_method",
@@ -675,6 +675,10 @@ def config(settings):
                     resource.configure(crud_form = crud_form)
             return result
         s3.prep = custom_prep
+
+        # Custom rheader and tabs
+        attr = dict(attr)
+        attr["rheader"] = mavc_rheader
 
         return attr
 
@@ -1137,6 +1141,53 @@ def mavc_rheader(r, tabs=None):
         # Title and Subtitle
         title = row["project_project.name"]
         subtitle = row["project_project.organisation_id"]
+
+        # Compose the rheader
+        rheader = DIV(DIV(H1(title),
+                          H2(subtitle),
+                          _class="rheader-details",
+                          ),
+                      )
+
+    elif tablename == "pr_person":
+
+        if not tabs:
+            tabs = [(T("Person Details"), None),
+                    ]
+
+        from s3 import s3_fullname
+        title = s3_fullname(record)
+
+        # Link organisation_id representation to staff tab
+        linkto = URL(c = "org",
+                     f = "organisation",
+                     args = ["[id]", "human_resource"],
+                     )
+        htable = s3db.hrm_human_resource
+        field = htable.organisation_id
+        field.represent = s3db.org_OrganisationRepresent(show_link = True,
+                                                         linkto = linkto,
+                                                         )
+
+        # Retrieve details for the rheader
+        data = resource.select(["human_resource.job_title_id",
+                                "human_resource.organisation_id",
+                                ],
+                               raw_data = True,
+                               represent = True,
+                               )
+        row = data.rows[0]
+        raw = row["_row"]
+
+        # Construct subtitle
+        organisation_id = raw["hrm_human_resource.organisation_id"]
+        if organisation_id:
+            subtitle = row["hrm_human_resource.organisation_id"]
+            job_title_id = raw["hrm_human_resource.job_title_id"]
+            if job_title_id:
+                subtitle = TAG[""]("%s, " % row["hrm_human_resource.job_title_id"],
+                                   subtitle,
+                                   )
 
         # Compose the rheader
         rheader = DIV(DIV(H1(title),

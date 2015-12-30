@@ -192,10 +192,18 @@ class S3FooterMenuLayout(S3NavigationItem):
                 # The menu itself
                 items = item.render_components()
 
-                return UL(items,
-                          _class = "footer-menu",
-                          )
+                # Homepage link
+                logo = "/%s/static/themes/MAVC/img/footer-logo.png" % \
+                       current.request.application
 
+                return TAG[""](UL(items,
+                                  _class = "footer-menu",
+                                  ),
+                               A(IMG(_src=logo),
+                                 _href = URL("default", "index"),
+                                 _class = "footer-home",
+                                 ),
+                               )
         else:
             return None
 

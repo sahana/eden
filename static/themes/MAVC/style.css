@@ -652,11 +652,21 @@ div.tabs span.tab_other a:hover {
   color: #e0e0e0;
 }
 
-/* line 39, ../scss/custom/_footer.scss */
+/* line 38, ../scss/custom/_footer.scss */
+.footer-home {
+  display: block;
+  margin: 3rem;
+}
+/* line 41, ../scss/custom/_footer.scss */
+.footer-home img {
+  width: 24px;
+}
+
+/* line 46, ../scss/custom/_footer.scss */
 #poweredby {
   margin-right: 0.5rem;
 }
-/* line 41, ../scss/custom/_footer.scss */
+/* line 48, ../scss/custom/_footer.scss */
 #poweredby a {
   color: #999999;
   text-decoration: none;
