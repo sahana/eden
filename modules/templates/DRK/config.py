@@ -485,12 +485,15 @@ def config(settings):
             else:
                 result = True
 
+            resource = r.resource
+
             if r.controller == "security":
                 # Restricted view for Security staff
                 if r.component:
                     redirect(r.url(method=""))
 
                 # Filter to persons who have a case registered
+                from s3 import FS
                 resource.add_filter(FS("dvr_case.id") != None)
 
                 current.menu.options = None
@@ -681,7 +684,6 @@ def config(settings):
                                 query = (stable.organisation_id == default_organisation)
                                 requires.dbset = current.db(query)
 
-                resource = r.resource
                 if r.interactive and r.method != "import":
 
                     # Configure person_details fields
