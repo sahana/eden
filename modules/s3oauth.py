@@ -73,10 +73,10 @@ class FaceBookAccount(OAuthAccount):
         self.GraphAPI = GraphAPI
         self.GraphAPIError = GraphAPIError
 
-        scope="email,user_about_me," \
-              "user_location,user_photos," \
-              "user_relationships,user_birthday,user_website," \
-              "create_event,user_events,publish_stream"
+        scope = "email,user_about_me," \
+                "user_location,user_photos," \
+                "user_relationships,user_birthday,user_website," \
+                "create_event,user_events,publish_stream"
 
         # Set the redirect URI to the default/facebook controller
         redirect_uri = "%s/%s/default/facebook/login" % \

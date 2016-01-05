@@ -412,10 +412,13 @@ class S3Config(Storage):
             - if configured, then it is assumed that Google Authentication
               is enabled
         """
-        id = self.auth.get("google_id", False)
-        secret = self.auth.get("google_secret", False)
-        if id and secret:
-            return dict(id=id, secret=secret)
+        auth_get = self.auth.get
+
+        client_id = auth_get("google_id", False)
+        client_secret = auth_get("google_secret", False)
+
+        if client_id and client_secret:
+            return {"id": client_id, "secret": client_secret}
         else:
             return False
 
@@ -425,10 +428,13 @@ class S3Config(Storage):
             - if configured, then it is assumed that Humanitarian.ID
               Authentication is enabled
         """
-        id = self.auth.get("humanitarian_id_client_id", False)
-        secret = self.auth.get("humanitarian_id_client_secret", False)
-        if id and secret:
-            return dict(id=id, secret=secret)
+        auth_get = self.auth.get
+
+        client_id = auth_get("humanitarian_id_client_id", False)
+        client_secret = auth_get("humanitarian_id_client_secret", False)
+
+        if client_id and client_secret:
+            return {"id": client_id, "secret": client_secret}
         else:
             return False
 
