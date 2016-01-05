@@ -361,16 +361,17 @@ textarea {
 /* line 179, ../scss/custom/_forms.scss */
 .zocial-login .zocial {
   margin-top: 0.125rem;
+  margin-right: 0.25rem;
 }
 
 /* Help Popup */
-/* line 185, ../scss/custom/_forms.scss */
+/* line 186, ../scss/custom/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 189, ../scss/custom/_forms.scss */
+/* line 190, ../scss/custom/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -379,7 +380,7 @@ textarea {
   padding: 0;
   width: 60px;
 }
-/* line 197, ../scss/custom/_forms.scss */
+/* line 198, ../scss/custom/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;

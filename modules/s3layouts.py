@@ -34,6 +34,8 @@ __all__ = ("S3MainMenuDefaultLayout",
            "MM",
            "S3OptionsMenuDefaultLayout",
            "M",
+           "S3OAuthMenuDefaultLayout",
+           "MOA",
            "S3MenuSeparatorDefaultLayout",
            "SEP",
            "S3BreadcrumbsLayout",
@@ -287,6 +289,38 @@ class S3OptionsMenuDefaultLayout(S3NavigationItem):
             return None
 
 # =============================================================================
+class S3OAuthMenuDefaultLayout(S3NavigationItem):
+    """ OAuth Menu Layout """
+
+    # Use the layout method of this class in templates/<theme>/layouts.py
+    # if it is available at runtime (otherwise fallback to this layout):
+    OVERRIDE = "S3OAuthMenuLayout"
+
+    @staticmethod
+    def layout(item):
+        """ Layout Method (Item Renderer) """
+
+        if item.enabled:
+            if item.parent is not None:
+                output = A(SPAN(item.label),
+                        _class = "zocial %s" % item.opts.api,
+                        _href = item.url(),
+                        _title = item.opts.get("title", item.label),
+                        )
+            else:
+                items = item.render_components()
+                if items:
+                    output = DIV(items, _class="zocial-login")
+                else:
+                    # Hide if empty
+                    output = None
+        else:
+            # Hide if disabled
+            output = None
+
+        return output
+
+# =============================================================================
 class S3MenuSeparatorDefaultLayout(S3NavigationItem):
     """ Simple menu separator """
 
@@ -308,6 +342,7 @@ class S3MenuSeparatorDefaultLayout(S3NavigationItem):
 #
 MM = S3MainMenuDefaultLayout
 M = S3OptionsMenuDefaultLayout
+MOA = S3OAuthMenuDefaultLayout
 SEP = S3MenuSeparatorDefaultLayout
 
 # =============================================================================
@@ -455,7 +490,7 @@ class S3PopupLink(S3NavigationItem):
                 # Fall back to label_create
                 label = S3CRUD.crud_string(t, "label_create")
             elif m == "update":
-                # Fall back to label_update                
+                # Fall back to label_update
                 label = S3CRUD.crud_string(t, "label_update")
 
         return super(S3PopupLink, self).__init__(label,
@@ -519,7 +554,7 @@ class S3PopupLink(S3NavigationItem):
 
 # =============================================================================
 # Maintained for backward compatibility
-#    
+#
 S3AddResourceLink = S3PopupLink
 
 # =============================================================================

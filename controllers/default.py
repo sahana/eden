@@ -585,11 +585,13 @@ def user():
                 else:
                     break
 
-    return dict(title=title,
-                form=form,
-                login_form=login_form,
-                register_form=register_form,
-                self_registration=self_registration)
+    return dict(title = title,
+                form = form,
+                login_form = login_form,
+                register_form = register_form,
+                oauth_menu = S3MainMenu.menu_oauth(),
+                self_registration = self_registration,
+                )
 
 # -----------------------------------------------------------------------------
 def person():

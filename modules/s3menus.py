@@ -59,6 +59,7 @@ class S3MainMenu(object):
             cls.menu_auth(right=True),
             cls.menu_admin(right=True),
         )
+
         return main_menu
 
     # -------------------------------------------------------------------------
@@ -357,6 +358,38 @@ class S3MainMenu(object):
                     )
                 )
         return gis_menu
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_oauth(cls, **attr):
+        """
+            Menu for authentication with external services
+            - used in default/user controller
+        """
+
+        T = current.T
+        settings = current.deployment_settings
+
+        return MOA(c="default")(
+                MOA("Login with Facebook", f="facebook",
+                    args=["login"],
+                    api = "facebook",
+                    check = lambda item: current.s3db.msg_facebook_login(),
+                    title = T("Login using Facebook account"),
+                    ),
+                MOA("Login with Google", f="google",
+                    args=["login"],
+                    api = "google",
+                    check = lambda item: settings.get_auth_google(),
+                    title = T("Login using Google account"),
+                    ),
+                MOA("Login with Humanitarian.ID", f="humanitarian_id",
+                    args=["login"],
+                    api = "humanitarianid",
+                    check = lambda item: settings.get_auth_humanitarian_id(),
+                    title = T("Login using Humanitarian.ID account"),
+                    ),
+                )
 
 # =============================================================================
 class S3OptionsMenu(object):

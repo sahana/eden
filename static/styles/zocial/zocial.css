@@ -373,7 +373,7 @@ Credit to @guillermovs for suggesting
 
 /* Humanitarian.ID Button (added for Sahana) */
 
-.zocial.humanitarianid > span:before {content: url(humanitarianid.png); padding-top: 3px;}
+.zocial.humanitarianid > span:before {content: url(humanitarianid.png); height:24px; padding-top: 3px;}
 .zocial.humanitarianid {background: ##e2e2e2; color: #2a5d81 !important;}
 .zocial.humanitarianid {
         border: 1px solid rgba(0,0,0,0.3);

@@ -1,17 +1,4 @@
 <div class='form-container'>
 {{=login_form}}
-<div class='zocial-login'>
-{{if s3db.msg_facebook_login():}}
-<a class='zocial facebook' href='{{=URL(f="facebook", args="login")}}' title='{{=T("Login using Facebook account")}}'>
-<span>{{=T("Login with Facebook")}}</span>
-</a>{{pass}}
-{{if settings.get_auth_google():}}
-<a class='zocial google' href='{{=URL(f="google", args="login")}}' title='{{=T("Login using Google account")}}'>
-<span>{{=T("Login with Google")}}</span>
-</a>{{pass}}
-{{if settings.get_auth_humanitarian_id():}}
-<a class='zocial humanitarianid' href='{{=URL(f="humanitarian_id", args="login")}}' title='{{=T("Login using Humanitarian.ID")}}'>
-<span>{{=T("Login with Humanitarian.ID")}}</span>
-</a>{{pass}}
-</div>
+{{=oauth_menu}}
 </div>
