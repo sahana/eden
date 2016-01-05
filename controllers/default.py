@@ -921,7 +921,7 @@ def facebook():
     auth.settings.login_form = FaceBookAccount(channel)
     form = auth()
 
-    return dict(form=form)
+    return {"form": form}
 
 # -----------------------------------------------------------------------------
 def google():
@@ -936,7 +936,22 @@ def google():
     auth.settings.login_form = GooglePlusAccount(channel)
     form = auth()
 
-    return dict(form=form)
+    return {"form": form}
+
+# -----------------------------------------------------------------------------
+def humanitarian_id():
+    """ Login using Humanitarian.ID """
+
+    channel = settings.get_auth_humanitarian_id()
+
+    if not channel:
+        redirect(URL(f="user", args=request.args, vars=get_vars))
+
+    from s3oauth import HumanitarianIDAccount
+    auth.settings.login_form = HumanitarianIDAccount(channel)
+    form = auth()
+
+    return {"form": form}
 
 # -----------------------------------------------------------------------------
 # About Sahana

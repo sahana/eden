@@ -3100,6 +3100,9 @@ $.filterOptionsS3({
             Send a welcome mail to newly-registered users
             - especially suitable for users from Facebook/Google who don't
               verify their emails
+
+            @param user: the user dict, must contain "email", and can
+                         contain "language" for translation of the message
         """
 
         messages = self.messages
@@ -3108,33 +3111,36 @@ $.filterOptionsS3({
             current.response.error = messages.unable_send_email
             return
 
-        #if "name" in user:
-        #    user["first_name"] = user["name"]
-        #if "family_name" in user:
-        #    # Facebook
-        #    user["last_name"] = user["family_name"]
-
-        # Ensure that we send out the mails in the language that the recipient wants
+        # Ensure that we send out the mails in the language that
+        # the recipient wants (if we know it)
         T = current.T
-        T.force(user["language"])
+        if "language" in user:
+            T.force(user["language"])
+
+        # Compose the message
         system_name = settings.get_system_name()
         subject = messages.welcome_email_subject % \
-            dict(system_name=system_name)
+                        {"system_name": system_name}
         message = messages.welcome_email % \
-            dict(system_name = system_name,
-                 url = settings.get_base_public_url(),
-                 profile = URL("default", "user", args=["profile"])
-                 )
+                        {"system_name": system_name,
+                         "url": settings.get_base_public_url(),
+                         "profile": URL("default", "user", args=["profile"])
+                         }
 
         # Restore language for UI
         T.force(current.session.s3.language)
 
-        to = user["email"]
+        recipient = user["email"]
         if settings.has_module("msg"):
-            results = current.msg.send_email(to, subject=subject,
-                                             message=message)
+            results = current.msg.send_email(recipient,
+                                             subject = subject,
+                                             message = message,
+                                             )
         else:
-            results = current.mail.send(to, subject=subject, message=message)
+            results = current.mail.send(recipient,
+                                        subject = subject,
+                                        message = message,
+                                        )
         if not results:
             current.response.error = messages.unable_send_email
 

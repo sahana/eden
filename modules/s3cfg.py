@@ -409,10 +409,24 @@ class S3Config(Storage):
     def get_auth_google(self):
         """
             Read the Google OAuth settings
-            - if configured, then it is assumed that Google Authentication is enabled
+            - if configured, then it is assumed that Google Authentication
+              is enabled
         """
         id = self.auth.get("google_id", False)
         secret = self.auth.get("google_secret", False)
+        if id and secret:
+            return dict(id=id, secret=secret)
+        else:
+            return False
+
+    def get_auth_humanitarian_id(self):
+        """
+            Read the Humanitarian.ID OAuth settings
+            - if configured, then it is assumed that Humanitarian.ID
+              Authentication is enabled
+        """
+        id = self.auth.get("humanitarian_id_client_id", False)
+        secret = self.auth.get("humanitarian_id_client_secret", False)
         if id and secret:
             return dict(id=id, secret=secret)
         else:

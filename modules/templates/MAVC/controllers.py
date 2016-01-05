@@ -16,50 +16,33 @@ class index(S3CustomController):
         output = {}
 
         s3 = response.s3
-        # Slick slider
-        # Only 1 image currently, so enable if/when we need this
-        if s3.debug:
-            s3.scripts.append("/%s/static/scripts/slick.js" % current.request.application)
-        else:
-            s3.scripts.append("/%s/static/scripts/slick.min.js" % current.request.application)
-        script = '''
-$(document).ready(function(){
- $('#title-image').slick({
-  autoplay:true,
-  autoplaySpeed:5000,
-  speed:1000,
-  fade:true,
-  cssEase:'linear'
- });
-});'''
-        s3.jquery_ready.append(script)
 
         # Latest 4 Requests
-        s3db = current.s3db
-        list_id = "latest_reqs"
-        layout = s3db.req_req_list_layout
-        limit = 4
-        resource = s3db.resource("req_req")
-        s3db.req_customise_req_fields()
-        list_fields = s3db.get_config("req_req", "list_fields")
-        from s3 import FS
-        resource.add_filter(FS("cancel") != True)
-        # Order with most recent first
-        orderby = "date desc"
-        output["latest_reqs"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
-
-        # Latest 4 Offers
-        list_id = "latest_offers"
-        layout = s3db.req_commit_list_layout
+        #s3db = current.s3db
+        #list_id = "latest_reqs"
+        #layout = s3db.req_req_list_layout
         #limit = 4
-
-        resource = s3db.resource("req_commit")
-        s3db.req_customise_commit_fields()
-        list_fields = s3db.get_config("req_commit", "list_fields")
-        resource.add_filter(FS("cancel") != True)
+        #resource = s3db.resource("req_req")
+        #s3db.req_customise_req_fields()
+        #list_fields = s3db.get_config("req_req", "list_fields")
+        #from s3 import FS
+        #resource.add_filter(FS("cancel") != True)
         # Order with most recent first
         #orderby = "date desc"
-        output["latest_offers"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
+        #output["latest_reqs"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
+
+        # Latest 4 Offers
+        #list_id = "latest_offers"
+        #layout = s3db.req_commit_list_layout
+        #limit = 4
+
+        #resource = s3db.resource("req_commit")
+        #s3db.req_customise_commit_fields()
+        #list_fields = s3db.get_config("req_commit", "list_fields")
+        #resource.add_filter(FS("cancel") != True)
+        # Order with most recent first
+        #orderby = "date desc"
+        #output["latest_offers"] = latest_records(resource, layout, list_id, limit, list_fields, orderby)
 
         # What We Do
         #table = s3db.cms_post
@@ -102,8 +85,11 @@ $(document).ready(function(){
 
         #output["what_we_do"] = what_we_do
 
+        # Inject custom styles for homepage
         s3.stylesheets.append("../themes/MAVC/homepage.css")
+
         self._view(THEME, "index.html")
+
         return output
 
 # =============================================================================

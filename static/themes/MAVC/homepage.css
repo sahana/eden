@@ -131,6 +131,7 @@ p.quote.mb4 {
     margin-bottom: 10px;
     text-rendering: optimizelegibility;
     color: #4e4e4d;
+    text-align: left!important;
 }
 
 #what-they-do .icon-bookmark-empty {

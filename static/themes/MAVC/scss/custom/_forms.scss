@@ -172,9 +172,13 @@ textarea {
     clear: none !important;
 }
 
+/* SSO Buttons (Zocial) */
 .zocial-login {
-  padding-top: 0.75rem;
-  padding-bottom: 1.5rem;
+    padding-top: 0.75rem;
+    padding-bottom: 1.5rem;
+    .zocial {
+        margin-top: 0.125rem;
+    }
 }
 
 /* Help Popup */

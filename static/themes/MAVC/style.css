@@ -134,11 +134,15 @@ meta.foundation-data-attribute-namespace {
   text-align: center;
 }
 /* line 85, ../scss/custom/_page.scss */
+#content .image-caption h1 {
+  text-align: left;
+}
+/* line 88, ../scss/custom/_page.scss */
 #content h2 {
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
 }
-/* line 89, ../scss/custom/_page.scss */
+/* line 92, ../scss/custom/_page.scss */
 #content h3 {
   font-size: 1.1em;
   padding-bottom: 5px;
@@ -348,20 +352,25 @@ textarea {
   clear: none !important;
 }
 
-/* line 175, ../scss/custom/_forms.scss */
+/* SSO Buttons (Zocial) */
+/* line 176, ../scss/custom/_forms.scss */
 .zocial-login {
   padding-top: 0.75rem;
   padding-bottom: 1.5rem;
 }
+/* line 179, ../scss/custom/_forms.scss */
+.zocial-login .zocial {
+  margin-top: 0.125rem;
+}
 
 /* Help Popup */
-/* line 181, ../scss/custom/_forms.scss */
+/* line 185, ../scss/custom/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 185, ../scss/custom/_forms.scss */
+/* line 189, ../scss/custom/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -370,7 +379,7 @@ textarea {
   padding: 0;
   width: 60px;
 }
-/* line 193, ../scss/custom/_forms.scss */
+/* line 197, ../scss/custom/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;
