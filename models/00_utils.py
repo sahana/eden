@@ -56,7 +56,7 @@ import s3menus as default_menus
 S3MainMenu = default_menus.S3MainMenu
 S3OptionsMenu = default_menus.S3OptionsMenu
 
-current.menu = Storage(options=None, override={})
+current.menu = Storage(oauth="", options=None, override={})
 if auth.permission.format in ("html"):
 
     theme = settings.get_theme()

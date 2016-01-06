@@ -68,6 +68,8 @@ def index():
     auth.settings.register_onvalidation = register_validation
     auth.configure_user_fields()
 
+    current.menu.oauth = S3MainMenu.menu_oauth()
+
     page = None
     if len(request.args):
         # Use the first non-numeric argument as page name
@@ -359,7 +361,7 @@ google.setOnLoadCallback(LoadDynamicFeedControl)'''))
                   login_form=login_form,
                   login_div=login_div,
                   register_form=register_form,
-                  register_div=register_div
+                  register_div=register_div,
                   )
 
     if get_vars.tour:
@@ -509,6 +511,8 @@ def user():
     self_registration = settings.get_security_self_registration()
     login_form = register_form = None
 
+    current.menu.oauth = S3MainMenu.menu_oauth()
+
     # Check for template-specific customisations
     customise = settings.customise_auth_user_controller
     if customise:
@@ -589,7 +593,6 @@ def user():
                 form = form,
                 login_form = login_form,
                 register_form = register_form,
-                oauth_menu = S3MainMenu.menu_oauth(),
                 self_registration = self_registration,
                 )
 
