@@ -310,11 +310,10 @@ class WorkJobModel(S3Model):
         )
 
         # Table configuration
-        # @todo: add onvalidation to check that the same person has not
-        #        yet been assigned to the same job
         configure(tablename,
                   onaccept = self.assignment_onaccept,
                   ondelete = self.assignment_ondelete,
+                  onvalidation = self.assignment_onvalidation,
                   )
 
         # ---------------------------------------------------------------------
@@ -334,6 +333,70 @@ class WorkJobModel(S3Model):
 
         return {"work_job_id": lambda **attr: dummy("job_id"),
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def assignment_onvalidation(form):
+        """
+            Validation callback for work assignments:
+            - a worker can only be assigned once to the same job
+
+            @param form: the FORM
+        """
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.work_assignment
+
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        # Get job_id and person_id
+        try:
+            job_id = form_vars.job_id
+        except AttributeError:
+            job_id = None
+        try:
+            person_id = form_vars.person_id
+        except AttributeError:
+            person_id = None
+
+        if (job_id is None or person_id is None):
+            if record_id:
+                # Reload the record
+                query = (table.id == record_id) & \
+                        (table.deleted != True)
+                record = db(query).select(table.job_id,
+                                          table.person_id,
+                                          limitby = (0, 1)).first()
+                if record:
+                    job_id = record.job_id
+                    person_id = record.person_id
+            else:
+                # Check for defaults (e.g. component link)
+                if job_id is None:
+                    job_id = table.job_id.default
+                if person_id is None:
+                    person_id = table.person_id.default
+
+        if job_id and person_id:
+            # Verify this person is not already assigned to this job
+            query = (table.job_id == job_id) & \
+                    (table.person_id == person_id) & \
+                    (table.deleted != True)
+            if record_id:
+                query = (table.id != record_id) & query
+
+            duplicate = db(query).select(table.id, limitby=(0, 1)).first()
+            if duplicate:
+                msg = current.T("This person is already assigned to the job")
+                form.errors["person_id"] = msg
 
     # -------------------------------------------------------------------------
     @classmethod
