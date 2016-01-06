@@ -188,17 +188,17 @@ class WorkJobModel(S3Model):
                            ),
                      Field("workers_min", "integer",
                            default = 1,
-                           label = T("Workers needed"),
+                           label = T("Helpers needed"),
                            requires = IS_INT_IN_RANGE(1, None),
                            ),
                      # @todo: onvalidation to check max>=min
                      Field("workers_max", "integer",
-                           label = T("Workers needed (max)"),
+                           label = T("Helpers needed (max)"),
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, None)),
                            ),
                      Field("workers_assigned", "integer",
                            default = 0,
-                           label = T("Workers assigned"),
+                           label = T("Helpers assigned"),
                            requires = IS_INT_IN_RANGE(0, None),
                            writable = False,
                            ),
@@ -845,17 +845,29 @@ class work_JobListLayout(S3DataListLayout):
                                _class="delete-btn-ajax job-cancel",
                                )
                 elif status != "ONHOLD":
-                    workers_needed = raw["work_job.workers_max"]
-                    if not workers_needed:
-                        workers_needed = raw["work_job.workers_min"]
-                    workers_assigned = raw["work_job.workers_assigned"]
-                    if workers_assigned < workers_needed:
-                        button = A(T("Sign me up"),
-                                   _class="action-btn job-signup",
-                                   )
-                    else:
-                        actionable = False
-                        button_text = T("No more workers needed")
+                    start_date = raw["work_job.start_date"]
+                    duration = raw["work_job.duration"]
+                    if start_date:
+                        # Calculate hours before end of planned time window
+                        delta = (start_date - current.request.utcnow)
+                        hours = (delta.days * 86400 + delta.seconds) / 3600
+                        hours += duration if duration else 1
+                        if hours < 0:
+                            # Can no longer sign up
+                            actionable = False
+                            button_text = T("Job date has passed")
+                    if actionable:
+                        workers_needed = raw["work_job.workers_max"]
+                        if not workers_needed:
+                            workers_needed = raw["work_job.workers_min"]
+                        workers_assigned = raw["work_job.workers_assigned"]
+                        if workers_assigned < workers_needed:
+                            button = A(T("Sign me up"),
+                                       _class="action-btn job-signup",
+                                       )
+                        else:
+                            actionable = False
+                            button_text = T("No more helpers needed")
                 else:
                     actionable = False
                     button_text = T("Job is on hold")
