@@ -292,8 +292,7 @@ class WorkJobModel(S3Model):
         tablename = "work_assignment"
         define_table(tablename,
                      job_id(),
-                     # @todo: move default into job controller
-                     self.pr_person_id(default = auth.s3_logged_in_person()),
+                     self.pr_person_id(),
                      *s3_meta_fields())
 
         # CRUD strings

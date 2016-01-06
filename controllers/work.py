@@ -33,11 +33,6 @@ def job():
     """ Jobs - RESTful controller """
 
     def prep(r):
-        # @todo: for assigments, filter person_id to persons not
-        #        currently assigned to this job
-
-        # @todo: for assigments, set default to current user if
-        #        not assigned to this job yet
 
         if r.method == "datalist":
             # Filter to open jobs by default
@@ -54,9 +49,27 @@ def job():
                                )
 
         if not r.component:
+            # Return to list after create/update
             r.resource.configure(create_next = r.url(method=""),
                                  update_next = r.url(method=""),
                                  )
+
+        elif r.component_name == "assignment":
+            ctable = r.component.table
+            field = ctable.person_id
+
+            # Set default to current user if not assigned yet
+            logged_in_person = auth.s3_logged_in_person()
+            if logged_in_person:
+                query = (ctable.job_id == r.id) & \
+                        (ctable.person_id == logged_in_person) & \
+                        (ctable.deleted != True)
+                existing = db(query).select(ctable.id, limitby=(0, 1)).first()
+                if not existing:
+                    field.default = logged_in_person
+                else:
+                    field.default = None
+
         return True
     s3.prep = prep
 
@@ -68,13 +81,14 @@ def job():
             path = "/%s/static/scripts/S3/%s" % (appname, script)
             if path not in s3.scripts:
                 s3.scripts.append(path)
+
             # Hide options menu
             current.menu.options = None
 
         return output
     s3.postp = postp
 
-    return s3_rest_controller(rheader = s3db.work_rheader)
+    return s3_rest_controller(rheader=s3db.work_rheader)
 
 # -----------------------------------------------------------------------------
 def assignment():
