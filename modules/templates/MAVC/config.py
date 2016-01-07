@@ -298,12 +298,24 @@ def config(settings):
                                     (T("About"), "comments"),
                                     "website",
                                     S3SQLInlineComponent(
+                                            "contact",
+                                            name = "email",
+                                            label = T("Email"),
+                                            #multiple = False,
+                                            fields = [("", "value"),
+                                                      ],
+                                            filterby = [{"field": "contact_method",
+                                                         "options": "EMAIL",
+                                                         },
+                                                        ],
+                                            ),
+                                    S3SQLInlineComponent(
                                             "facility",
                                             label = T("Main Office"),
                                             fields = ["name",
-                                                      (T("Phone"), "phone1"),
-                                                      #"phone2",
-                                                      "email",
+                                                      "phone1",
+                                                      "phone2",
+                                                      #"email",
                                                       "location_id",
                                                       ],
                                             layout = S3SQLVerticalSubFormLayout,
@@ -384,7 +396,7 @@ def config(settings):
                        "opening_times",
                        "contact",
                        "phone1",
-                       #"phone2",
+                       "phone2",
                        "email",
                        #"website",
                        "obsolete",
@@ -414,14 +426,6 @@ def config(settings):
 
         # Not using facility code
         field = table.code
-        field.readable = field.writable = False
-
-        # Relabel "Phone 1" as just "Phone"
-        field = table.phone1
-        field.label = T("Phone")
-
-        # Not using phone2
-        field = table.phone2
         field.readable = field.writable = False
 
     settings.customise_org_facility_resource = customise_org_facility_resource
