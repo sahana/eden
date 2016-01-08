@@ -44,15 +44,6 @@ from s3validators import IS_ONE_OF
 
 DEFAULT = lambda: None
 
-DEBUG = False
-if DEBUG:
-    import sys
-    print >> sys.stderr, "S3MODEL: DEBUG MODE"
-    def _debug(m):
-        print >> sys.stderr, m
-else:
-    _debug = lambda m: None
-
 ogetattr = object.__getattribute__
 
 # =============================================================================

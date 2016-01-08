@@ -76,14 +76,6 @@ from s3utils import s3_has_foreign_key, s3_get_foreign_key, s3_unicode, s3_get_l
 from s3validators import IS_ONE_OF
 from s3xml import S3XMLFormat
 
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3Resource: DEBUG MODE"
-    def _debug(m):
-        print >> sys.stderr, m
-else:
-    _debug = lambda m: None
-
 osetattr = object.__setattr__
 ogetattr = object.__getattribute__
 
@@ -787,6 +779,7 @@ class S3Resource(object):
                     if not cascade:
                         db.rollback()
                     continue
+
                 else:
                     # Auto-delete linked records if this was the last link
                     linked = self.linked
@@ -808,15 +801,20 @@ class S3Resource(object):
                                 linked_table = s3db.table(linked.tablename)
                                 query = (linked_table[fkey] == this[rkey])
                                 linked = define_resource(linked_table,
-                                                         filter=query,
-                                                         unapproved=True)
+                                                         filter = query,
+                                                         unapproved = True,
+                                                         )
                                 linked.delete(cascade=True)
+
                     # Pull back prior error status
                     self.error = error
                     error = None
+
+                    data = {"deleted": True}
+                    record = None
+
                     # "Park" foreign keys to resolve constraints, "un-delete"
                     # would then restore any still-valid FKs from this field!
-                    fields = dict(deleted=True)
                     if "deleted_fk" in table:
                         record = table[record_id]
                         fk = {}
@@ -824,29 +822,42 @@ class S3Resource(object):
                             if record[f] is not None and \
                                s3_has_foreign_key(table[f]):
                                 fk[f] = record[f]
-                                fields[f] = None
+                                data[f] = None
                             else:
                                 continue
                         if fk:
-                            fields.update(deleted_fk=json.dumps(fk))
+                            data["deleted_fk"] =json.dumps(fk)
+
+                    # If the record is self-owned, reset the realm:
+                    if "realm_entity" in table and "pe_id" in table:
+                        if record is None:
+                            record = table[record_id]
+                        if record.pe_id == record.realm_entity:
+                            data["realm_entity"] = None
+
                     # Annotate the replacement record
                     idstr = str(record_id)
                     if replaced_by and idstr in replaced_by and \
                        "deleted_rb" in table.fields:
-                        fields.update(deleted_rb=replaced_by[idstr])
+                        data["deleted_rb"] = replaced_by[idstr]
+
                     # Update the row, finally
-                    db(table._id == record_id).update(**fields)
+                    db(table._id == record_id).update(**data)
                     numrows += 1
+
                     # Clear session
                     if s3_get_last_record_id(tablename) == record_id:
                         s3_remove_last_record_id(tablename)
+
                     # Audit
                     audit("delete", prefix, name,
                           record=record_id, representation=format)
+
                     # On-delete hook
                     ondelete = get_config("ondelete")
                     if ondelete:
                         callback(ondelete, row)
+
                     # Commit after each row to not have it rolled back by
                     # subsequent cascade errors
                     if not cascade:
@@ -1740,10 +1751,6 @@ class S3Resource(object):
         xmlformat = S3XMLFormat(stylesheet) if stylesheet else None
 
         # Export as element tree
-        #if DEBUG:
-            #_start = datetime.datetime.now()
-            #tablename = self.tablename
-            #_debug("export_tree of %s starting" % tablename)
         tree = self.export_tree(start=start,
                                 limit=limit,
                                 msince=msince,
@@ -1759,17 +1766,9 @@ class S3Resource(object):
                                 location_data=location_data,
                                 map_data=map_data,
                                 target=target)
-        #if DEBUG:
-            #end = datetime.datetime.now()
-            #duration = end - _start
-            #duration = '{:.2f}'.format(duration.total_seconds())
-            #_debug("export_tree of %s completed in %s seconds" % \
-                    #(tablename, duration))
 
         # XSLT transformation
         if tree and xmlformat is not None:
-            #if DEBUG:
-            #    _start = datetime.datetime.now()
             import uuid
             args.update(domain=xml.domain,
                         base_url=current.response.s3.base_url,
@@ -1778,12 +1777,6 @@ class S3Resource(object):
                         utcnow=s3_format_datetime(),
                         msguid=uuid.uuid4().urn)
             tree = xmlformat.transform(tree, **args)
-            #if DEBUG:
-                #end = datetime.datetime.now()
-                #duration = end - _start
-                #duration = '{:.2f}'.format(duration.total_seconds())
-                #_debug("transform of %s using %s completed in %s seconds" % \
-                        #(tablename, stylesheet, duration))
 
         # Convert into the requested format
         # (Content Headers are set by the calling function)
@@ -1791,15 +1784,7 @@ class S3Resource(object):
             if as_tree:
                 output = tree
             elif as_json:
-                #if DEBUG:
-                    #_start = datetime.datetime.now()
                 output = xml.tree2json(tree, pretty_print=pretty_print)
-                #if DEBUG:
-                    #end = datetime.datetime.now()
-                    #duration = end - _start
-                    #duration = '{:.2f}'.format(duration.total_seconds())
-                    #_debug("tree2json of %s completed in %s seconds" % \
-                            #(tablename, duration))
             else:
                 output = xml.tostring(tree, pretty_print=pretty_print)
 
@@ -1903,9 +1888,6 @@ class S3Resource(object):
             location_data = current.gis.get_location_data(self, count=results) or {}
 
         # Build the tree
-        #if DEBUG:
-        #    _start = datetime.datetime.now()
-
         root = etree.Element(xml.TAG.root)
 
         if map_data:
@@ -1957,17 +1939,7 @@ class S3Resource(object):
         if reference_map:
             all_references.extend(reference_map)
 
-        #if DEBUG:
-        #    end = datetime.datetime.now()
-        #    duration = end - _start
-        #    duration = '{:.2f}'.format(duration.total_seconds())
-        #    _debug("export_resource of primary resource and components completed in %s seconds" % \
-        #        duration)
-
         # Add referenced resources to the tree
-        #if DEBUG:
-        #    _start = datetime.datetime.now()
-
         define_resource = current.s3db.resource
 
         # Iteratively resolve all references
@@ -2056,13 +2028,6 @@ class S3Resource(object):
                         element.set(REF, "True")
                 if reference_map:
                     all_references.extend(reference_map)
-
-        #if DEBUG:
-        #    end = datetime.datetime.now()
-        #    duration = end - _start
-        #    duration = '{:.2f}'.format(duration.total_seconds())
-        #    _debug("export_resource of referenced resources and their components completed in %s seconds" % \
-        #           duration)
 
         # Render all pending lazy representations
         if lazy:
@@ -2498,7 +2463,6 @@ class S3Resource(object):
 
                 if stylesheet is not None:
                     t = xml.transform(t, stylesheet, **args)
-                    _debug(t)
                     if not t:
                         raise SyntaxError(xml.error)
 
@@ -2651,7 +2615,7 @@ class S3Resource(object):
                          tablename=tablename)
                 # Skip import?
                 if self.skip_import:
-                    _debug("Skipping import to %s" % self.tablename)
+                    current.log.debug("Skipping import to %s" % self.tablename)
                     self.skip_import = False
                     return True
 
@@ -2680,7 +2644,7 @@ class S3Resource(object):
                          tablename=tablename)
                 # Skip import?
                 if self.skip_import:
-                    _debug("Skipping import to %s" % self.tablename)
+                    current.log.debug("Skipping import to %s" % self.tablename)
                     self.skip_import = False
                     return True
 
@@ -5457,7 +5421,7 @@ class S3ResourceData(object):
                     try:
                         value = getval[idx](row)
                     except AttributeError:
-                        _debug("Warning S3Resource.extract: column %s not in row" % col)
+                        current.log.warning("Warning S3Resource.extract: column %s not in row" % col)
                         value = None
                     if lazy or callable(value):
                         # Lazy virtual field

@@ -146,6 +146,8 @@ class OutreachAreaModel(S3Model):
         self.configure(tablename,
                        deduplicate = S3Duplicate(),
                        filter_widgets = filter_widgets,
+                       onaccept = self.area_onaccept,
+                       ondelete = self.area_ondelete,
                        summary = ({"common": True,
                                    "name": "add",
                                    "widgets": [{"method": "create"}],
@@ -161,8 +163,6 @@ class OutreachAreaModel(S3Model):
                                    },
                                   ),
                        super_entity = ("doc_entity", "pr_pentity"),
-                       onaccept = self.area_onaccept,
-                       ondelete = self.area_ondelete,
                        )
 
         # ---------------------------------------------------------------------
@@ -230,18 +230,22 @@ class OutreachAreaModel(S3Model):
         if not row:
             return
 
+        area_pe_id = row.pe_id
+        if not area_pe_id:
+            return
+
         # Get the organisation_id
         if row.deleted:
             try:
                 fk = json.loads(row.deleted_fk)
-                organisation_id = fk["organisation_id"]
             except ValueError:
                 organisation_id = None
+            else:
+                organisation_id = fk.get("organisation_id")
         else:
             organisation_id = row.organisation_id
 
         # Get the PE ids
-        area_pe_id = row.pe_id
         organisation_pe_id = s3db.pr_get_pe_id("org_organisation",
                                                organisation_id,
                                                )

@@ -34,15 +34,6 @@ from gluon import *
 
 from ..s3sync import S3SyncBaseAdapter
 
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3SYNC: DEBUG MODE"
-
-    def _debug(m):
-        print >> sys.stderr, m
-else:
-    _debug = lambda m: None
-
 # =============================================================================
 class S3SyncAdapter(S3SyncBaseAdapter):
     """

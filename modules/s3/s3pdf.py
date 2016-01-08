@@ -120,14 +120,6 @@ except ImportError:
     print >> sys.stderr, "S3 Debug: S3PDF: Reportlab not installed"
     reportLabImported = False
 
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3PDF: DEBUG MODE"
-    def _debug(m):
-        print >> sys.stderr, "S3PDF: %s" % m
-else:
-    _debug = lambda m: None
-
 # Maximum number of options a field can have
 MAX_FORM_OPTIONS_LIMIT = 12
 
@@ -3931,8 +3923,6 @@ class S3OCRImageParser(object):
 
         # Transform each image
         for each_img_index in raw_images.keys():
-            _debug("Transforming Page %s/%s" % (each_img_index,
-                                                pages))
             images[each_img_index] = {}
             images[each_img_index]["image"] =\
                 self.__convertImage2binary(raw_images[each_img_index])
@@ -4592,7 +4582,6 @@ class S3OCRImageParser(object):
         markers.extend(l2)
         markers.extend(l3)
         #markers.sort(key=lambda x: (x[0], x[1]))
-        #_debug(markers)
         return markers
 
     # =========================================================================

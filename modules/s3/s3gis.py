@@ -84,15 +84,14 @@ from s3datetime import s3_format_datetime, s3_parse_datetime
 from s3fields import s3_all_meta_field_names
 from s3rest import S3Method
 from s3track import S3Trackable
-from s3utils import s3_include_ext, s3_unicode
+from s3utils import s3_include_ext, s3_unicode #, S3ModuleDebug
 
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3GIS: DEBUG MODE"
-    def _debug(m):
-        print >> sys.stderr, m
-else:
-    _debug = lambda m: None
+#DEBUG = False
+#if DEBUG:
+#    print >> sys.stderr, "S3GIS: DEBUG MODE"
+#    _debug = S3ModuleDebug.on
+#else:
+#    _debug = S3ModuleDebug.off
 
 # Map WKT types to db types
 GEOM_TYPES = {"point": 1,
@@ -2578,8 +2577,10 @@ class GIS(object):
                 #                                                      ).first().name
                 #    else:
                 #        layer_name = "Unknown"
-                #    _debug("Attributes lookup of layer %s completed in %s seconds" % \
-                #            (layer_name, duration))
+                #    _debug("Attributes lookup of layer %s completed in %s seconds",
+                #           layer_name,
+                #           duration,
+                #           )
 
             _markers = get_vars.get("markers", None)
             if _markers:
@@ -2738,8 +2739,10 @@ class GIS(object):
         #    end = datetime.datetime.now()
         #    duration = end - start
         #    duration = "{:.2f}".format(duration.total_seconds())
-        #    _debug("latlons lookup of layer %s completed in %s seconds" % \
-        #            (layer_name, duration))
+        #    _debug("latlons lookup of layer %s completed in %s seconds",
+        #           layer_name,
+        #           duration,
+        #           )
 
         # Used by S3XML's gis_encode()
         return dict(geojsons = geojsons,

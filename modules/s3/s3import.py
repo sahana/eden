@@ -68,16 +68,15 @@ from gluon.tools import callback, fetch
 from s3datetime import s3_utc
 from s3rest import S3Method, S3Request
 from s3resource import S3Resource
-from s3utils import s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
+from s3utils import S3ModuleDebug, s3_mark_required, s3_has_foreign_key, s3_get_foreign_key, s3_unicode
 from s3xml import S3XML
 
 DEBUG = False
 if DEBUG:
     print >> sys.stderr, "S3IMPORTER: DEBUG MODE"
-    def _debug(m):
-        print >> sys.stderr, m
+    _debug = S3ModuleDebug.on
 else:
-    _debug = lambda m: None
+    _debug = S3ModuleDebug.off
 
 # =============================================================================
 class S3Importer(S3Method):
@@ -158,7 +157,7 @@ class S3Importer(S3Method):
 
         """
 
-        _debug("S3Importer.apply_method(%s)" % r)
+        _debug("S3Importer.apply_method(%s)", r)
 
         # Messages
         T = current.T
@@ -517,7 +516,7 @@ class S3Importer(S3Method):
             @todo: docstring?
         """
 
-        _debug("S3Importer.commit(%s, %s)" % (source, transform))
+        _debug("S3Importer.commit(%s, %s)", source, transform)
 
         session = current.session
 
@@ -593,7 +592,7 @@ class S3Importer(S3Method):
             @todo: docstring?
         """
 
-        _debug("S3Importer.commit_items(%s, %s)" % (upload_id, items))
+        _debug("S3Importer.commit_items(%s, %s)", upload_id, items)
         # Save the import items
         self._commit_import_job(upload_id, items)
         # Update the upload table
@@ -615,7 +614,7 @@ class S3Importer(S3Method):
             @param upload_id: the upload ID
         """
 
-        _debug("S3Importer.delete_job(%s)" % (upload_id))
+        _debug("S3Importer.delete_job(%s)", upload_id)
 
         db = current.db
 
@@ -927,12 +926,12 @@ class S3Importer(S3Method):
             @todo: complete parameter descriptions
         """
 
-        _debug("S3Importer._generate_import_job(%s, %s, %s, %s)" % (upload_id,
-                                                                    openFile,
-                                                                    fileFormat,
-                                                                    stylesheet
-                                                                    )
-              )
+        _debug("S3Importer._generate_import_job(%s, %s, %s, %s)",
+               upload_id,
+               openFile,
+               fileFormat,
+               stylesheet,
+               )
 
         # ---------------------------------------------------------------------
         # CSV
@@ -1073,7 +1072,7 @@ class S3Importer(S3Method):
             @todo: parameter descriptions?
         """
 
-        _debug("S3Importer._commit_import_job(%s, %s)" % (upload_id, items))
+        _debug("S3Importer._commit_import_job(%s, %s)", upload_id, items)
 
         db = current.db
         resource = self.request.resource
@@ -1107,7 +1106,7 @@ class S3Importer(S3Method):
             for _id in rows:
                 if str(_id) not in items:
                     # @todo: replace with a helper method from the API
-                    _debug("Deleting item.id = %s" % _id)
+                    _debug("Deleting item.id = %s", _id)
                     db(itemTable.id == _id).delete()
 
             #****************************************************************
@@ -1134,7 +1133,7 @@ class S3Importer(S3Method):
             @todo: parameter descriptions?
         """
 
-        _debug("S3Importer._store_import_details(%s, %s)" % (job_id, key))
+        _debug("S3Importer._store_import_details(%s, %s)", job_id, key)
 
         itemTable = S3ImportJob.define_item_table()
 
@@ -1155,7 +1154,7 @@ class S3Importer(S3Method):
             @todo: report errors in referenced records, too
         """
 
-        _debug("S3Importer._update_upload_job(%s)" % (upload_id))
+        _debug("S3Importer._update_upload_job(%s)", upload_id)
 
         resource = self.request.resource
         db = current.db
@@ -1872,7 +1871,7 @@ class S3ImportItem(object):
         if MCI in data:
             self.mci = data[MCI]
 
-        _debug("New item: %s" % self)
+        _debug("New item: %s", self)
         return True
 
     # -------------------------------------------------------------------------
@@ -2180,9 +2179,10 @@ class S3ImportItem(object):
 
         # Globals
         db = current.db
+        s3db = current.s3db
+
         xml = current.xml
         ATTRIBUTE = xml.ATTRIBUTE
-        s3db = current.s3db
 
         # Methods
         METHOD = self.METHOD
@@ -2206,16 +2206,14 @@ class S3ImportItem(object):
         # Make item mtime TZ-aware
         self.mtime = s3_utc(self.mtime)
 
-        _debug("Committing item %s" % self)
+        _debug("Committing item %s", self)
 
         # Resolve references
         self._resolve_references()
 
         # Deduplicate and validate
         if not self.validate():
-            _debug("Validation error: %s (%s)" %
-                    (self.error,
-                     xml.tostring(self.element, pretty_print=True)))
+            _debug("Validation error: %s", self.error)
             self.skip = True
 
             # Notify the error in the parent to have reported in the
@@ -2276,30 +2274,33 @@ class S3ImportItem(object):
 
         # Check mtime and mci
         table = self.table
-        this = self.original
-        this_mtime = None
-        this_mci = 0
-        if this:
+        original = self.original
+        original_mtime = None
+        original_mci = 0
+        if original:
             if hasattr(table, MTIME):
-                this_mtime = s3_utc(this[MTIME])
+                original_mtime = s3_utc(original[MTIME])
             if hasattr(table, MCI):
-                this_mci = this[MCI]
+                original_mci = original[MCI]
+            original_deleted = "deleted" in original and original.deleted
+        else:
+            original_deleted = False
 
         # Detect conflicts
         job = self.job
-        this_modified = True
+        original_modified = True
         self.modified = True
         self.conflict = False
         last_sync = s3_utc(job.last_sync)
         if last_sync:
-            if this_mtime and this_mtime < last_sync:
-                this_modified = False
+            if original_mtime and original_mtime < last_sync:
+                original_modified = False
             if self.mtime and self.mtime < last_sync:
                 self.modified = False
-            if self.modified and this_modified:
+            if self.modified and original_modified:
                 self.conflict = True
         if self.conflict and method in (UPDATE, DELETE, MERGE):
-            _debug("Conflict: %s" % self)
+            _debug("Conflict: %s", self)
             if job.onconflict:
                 job.onconflict(self)
 
@@ -2329,29 +2330,31 @@ class S3ImportItem(object):
             job.log(self)
 
         tablename = self.tablename
+        enforce_realm_update = False
 
         # Update existing record
         if method == UPDATE:
 
-            if this:
-                if "deleted" in this and this.deleted:
+            if original:
+                if original_deleted:
                     policy = update_policy(None)
                     if policy == NEWER and \
-                       this_mtime and this_mtime > self.mtime or \
+                       original_mtime and original_mtime > self.mtime or \
                        policy == MASTER and \
-                       (this_mci == 0 or self.mci != 1):
+                       (original_mci == 0 or self.mci != 1):
                         self.skip = True
                         return True
+
                 fields = data.keys()
                 for f in fields:
-                    if f in this:
+                    if f in original:
                         # Check if unchanged
-                        if type(this[f]) is datetime:
-                            if s3_utc(data[f]) == s3_utc(this[f]):
+                        if type(original[f]) is datetime:
+                            if s3_utc(data[f]) == s3_utc(original[f]):
                                 del data[f]
                                 continue
                         else:
-                            if data[f] == this[f]:
+                            if data[f] == original[f]:
                                 del data[f]
                                 continue
                     remove = False
@@ -2359,22 +2362,37 @@ class S3ImportItem(object):
                     if policy == THIS:
                         remove = True
                     elif policy == NEWER:
-                        if this_mtime and this_mtime > self.mtime:
+                        if original_mtime and original_mtime > self.mtime:
                             remove = True
                     elif policy == MASTER:
-                        if this_mci == 0 or self.mci != 1:
+                        if original_mci == 0 or self.mci != 1:
                             remove = True
                     if remove:
                         del data[f]
-                if "deleted" in this and this.deleted:
-                    # Undelete re-imported records:
+
+                if original_deleted:
+                    # Undelete re-imported records
                     data["deleted"] = False
                     if hasattr(table, "deleted_fk"):
                         data["deleted_fk"] = ""
+
+                    # Set new author stamp
                     if hasattr(table, "created_by"):
                         data["created_by"] = table.created_by.default
                     if hasattr(table, "modified_by"):
                         data["modified_by"] = table.modified_by.default
+
+                    # Restore defaults for foreign keys
+                    for fieldname in table.fields:
+                        field = table[fieldname]
+                        default = field.default
+                        if str(field.type)[:9] == "reference" and \
+                           fieldname not in data and \
+                           default is not None:
+                            data[fieldname] = default
+
+                    # Enforce update of realm entity
+                    enforce_realm_update = True
 
             if not self.skip and not self.conflict and \
                (len(data) or self.components or self.references):
@@ -2438,17 +2456,17 @@ class S3ImportItem(object):
         # Delete local record
         elif method == DELETE:
 
-            if this:
-                if this.deleted:
+            if original:
+                if original_deleted:
                     self.skip = True
                 policy = update_policy(None)
                 if policy == THIS:
                     self.skip = True
                 elif policy == NEWER and \
-                     (this_mtime and this_mtime > self.mtime):
+                     (original_mtime and original_mtime > self.mtime):
                     self.skip = True
                 elif policy == MASTER and \
-                     (this_mci == 0 or self.mci != 1):
+                     (original_mci == 0 or self.mci != 1):
                     self.skip = True
             else:
                 self.skip = True
@@ -2464,9 +2482,12 @@ class S3ImportItem(object):
                     self.skip = True
                     return ignore_errors
 
-            _debug("Success: %s, id=%s %sd" % (tablename, self.id,
-                                               self.skip and "skippe" or \
-                                               method))
+            _debug("Success: %s, id=%s %sd",
+                   tablename,
+                   self.id,
+                   self.skip and "skippe" or method,
+                   )
+
             return True
 
         # Merge records
@@ -2474,17 +2495,17 @@ class S3ImportItem(object):
 
             if UID not in table.fields:
                 self.skip = True
-            elif this:
-                if this.deleted:
+            elif original:
+                if original_deleted:
                     self.skip = True
                 policy = update_policy(None)
                 if policy == THIS:
                     self.skip = True
                 elif policy == NEWER and \
-                     (this_mtime and this_mtime > self.mtime):
+                     (original_mtime and original_mtime > self.mtime):
                     self.skip = True
                 elif policy == MASTER and \
-                     (this_mci == 0 or self.mci != 1):
+                     (original_mci == 0 or self.mci != 1):
                     self.skip = True
             else:
                 self.skip = True
@@ -2497,7 +2518,8 @@ class S3ImportItem(object):
                 if row:
                     original_id = row[table._id]
                     resource = s3db.resource(tablename,
-                                             id = [original_id, self.id])
+                                             id = [original_id, self.id],
+                                             )
                     try:
                         success = resource.merge(original_id, self.id)
                     except:
@@ -2509,9 +2531,12 @@ class S3ImportItem(object):
                 else:
                     self.skip = True
 
-            _debug("Success: %s, id=%s %sd" % (tablename, self.id,
-                                               self.skip and "skippe" or \
-                                               method))
+            _debug("Success: %s, id=%s %sd",
+                   tablename,
+                   self.id,
+                   self.skip and "skippe" or method,
+                   )
+
             return True
 
         else:
@@ -2530,9 +2555,10 @@ class S3ImportItem(object):
 
             # Audit
             current.audit(method, prefix, name,
-                          form=form,
-                          record=self.id,
-                          representation="xml")
+                          form = form,
+                          record = self.id,
+                          representation = "xml",
+                          )
 
             # Prevent that record post-processing breaks time-delayed
             # synchronization by implicitly updating "modified_on"
@@ -2550,10 +2576,12 @@ class S3ImportItem(object):
                 current.auth.s3_set_record_owner(table, self.id)
             elif method == UPDATE:
                 # Update realm
-                update_realm = s3db.get_config(table, "update_realm")
+                update_realm = enforce_realm_update or \
+                               s3db.get_config(table, "update_realm")
                 if update_realm:
                     current.auth.set_realm_entity(table, self.id,
-                                                  force_update=True)
+                                                  force_update = True,
+                                                  )
             # Onaccept
             key = "%s_onaccept" % method
             onaccept = current.deployment_settings.get_import_callback(tablename, key)
@@ -2581,9 +2609,12 @@ class S3ImportItem(object):
                 else:
                     item._update_reference(field, self.id)
 
-        _debug("Success: %s, id=%s %sd" % (tablename, self.id,
-                                           self.skip and "skippe" or \
-                                           method))
+        _debug("Success: %s, id=%s %sd",
+               tablename,
+               self.id,
+               self.skip and "skippe" or method,
+               )
+
         return True
 
     # -------------------------------------------------------------------------
@@ -2679,7 +2710,13 @@ class S3ImportItem(object):
             if entry.item_id:
                 item = items[entry.item_id]
                 if item:
-                    fk = item.id
+                    if item.original and \
+                       item.original.get("deleted") and \
+                       not item.committed:
+                        # Original is deleted and has not been updated
+                        fk = None
+                    else:
+                        fk = item.id
             if fk and pkey != "id":
                 row = db(ktable._id == fk).select(ktable[pkey],
                                                   limitby=(0, 1)).first()
@@ -2757,7 +2794,8 @@ class S3ImportItem(object):
             Store this item in the DB
         """
 
-        _debug("Storing item %s" % self)
+        _debug("Storing item %s", self)
+
         if item_table is None:
             return None
         db = current.db
@@ -2815,7 +2853,9 @@ class S3ImportItem(object):
             db(item_table.id == record_id).update(**record)
         else:
             record_id = item_table.insert(**record)
-        _debug("Record ID=%s" % record_id)
+
+        _debug("Record ID=%s", record_id)
+
         return record_id
 
     # -------------------------------------------------------------------------
@@ -3537,7 +3577,8 @@ class S3ImportJob():
 
         db = current.db
 
-        _debug("Storing Job ID=%s" % self.job_id)
+        _debug("Storing Job ID=%s", self.job_id)
+
         self.__define_tables()
         jobtable = self.job_table
         query = jobtable.job_id == self.job_id
@@ -3559,7 +3600,9 @@ class S3ImportJob():
             db(jobtable.id == record_id).update(**record)
         else:
             record_id = jobtable.insert(**record)
-        _debug("Job record ID=%s" % record_id)
+
+        _debug("Job record ID=%s", record_id)
+
         return record_id
 
     # -------------------------------------------------------------------------
@@ -3592,7 +3635,8 @@ class S3ImportJob():
 
         db = current.db
 
-        _debug("Deleting job ID=%s" % self.job_id)
+        _debug("Deleting job ID=%s", self.job_id)
+
         self.__define_tables()
         item_table = self.item_table
         query = item_table.job_id == self.job_id
@@ -3668,7 +3712,11 @@ class S3ImportJob():
 class S3Duplicate(object):
     """ Standard deduplicator method """
 
-    def __init__(self, primary=None, secondary=None, ignore_case=True):
+    def __init__(self,
+                 primary=None,
+                 secondary=None,
+                 ignore_case=True,
+                 ignore_deleted=False):
         """
             Constructor
 
@@ -3679,6 +3727,7 @@ class S3Duplicate(object):
                               find a match, must match if values are
                               present in the import item
             @param ignore_case: ignore case for string/text fields
+            @param ignore_deleted: do not match deleted records
         """
 
         if not primary:
@@ -3691,6 +3740,7 @@ class S3Duplicate(object):
             self.secondary = set(secondary)
 
         self.ignore_case = ignore_case
+        self.ignore_deleted = ignore_deleted
 
     # -------------------------------------------------------------------------
     def __call__(self, item):
@@ -3736,6 +3786,10 @@ class S3Duplicate(object):
             value = data.get(fname)
             if value:
                 query &= self.match(field, value)
+
+        # Ignore deleted records?
+        if self.ignore_deleted and "deleted" in table.fields:
+            query &= (table.deleted != True)
 
         # Find a match
         duplicate = current.db(query).select(table._id,
@@ -3866,15 +3920,15 @@ class S3BulkImporter(object):
                                        "s3csv")
             # Try the module directory in the templates directory first
             xsl = os.path.join(templateDir, mod, xslFileName)
-            _debug("%s %s" % (xslFileName, xsl))
+            _debug("%s %s", xslFileName, xsl)
             if os.path.exists(xsl) == False:
                 # Now try the templates directory
                 xsl = os.path.join(templateDir, xslFileName)
-                _debug ("%s %s" % (xslFileName, xsl))
+                _debug("%s %s", xslFileName, xsl)
                 if os.path.exists(xsl) == False:
                     # Use the same directory as the csv file
                     xsl = os.path.join(path, xslFileName)
-                    _debug ("%s %s" % (xslFileName, xsl))
+                    _debug("%s %s", xslFileName, xsl)
                     if os.path.exists(xsl) == False:
                         self.errorList.append(
                         "Failed to find a transform file %s, Giving up." % xslFileName)
@@ -3937,7 +3991,13 @@ class S3BulkImporter(object):
             # Store the view
             view = response.view
 
-            _debug ("Running job %s %s (filename=%s transform=%s)" % (task[1], task[2], task[3], task[4]))
+            _debug("Running job %s %s (filename=%s transform=%s)",
+                   task[1],
+                   task[2],
+                   task[3],
+                   task[4],
+                   )
+
             prefix = task[1]
             name = task[2]
             tablename = "%s_%s" % (prefix, name)

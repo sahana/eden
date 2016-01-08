@@ -3975,6 +3975,16 @@ def config(settings):
         return
 
     # -------------------------------------------------------------------------
+    def customise_po_household_resource(r, tablename):
+
+        # Must update realm because inheriting from area (which can change)
+        current.s3db.configure("po_household",
+                               update_realm = True,
+                               )
+
+    settings.customise_po_household_resource = customise_po_household_resource
+
+    # -------------------------------------------------------------------------
     def customise_po_household_controller(**attr):
 
         s3 = current.response.s3

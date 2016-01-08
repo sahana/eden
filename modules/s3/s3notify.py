@@ -54,16 +54,14 @@ from gluon.storage import Storage
 from gluon.tools import fetch
 
 from s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
-from s3utils import s3_truncate, s3_unicode
+from s3utils import S3ModuleDebug, s3_truncate, s3_unicode
 
 DEBUG = False
 if DEBUG:
     print >> sys.stderr, "S3NOTIFY: DEBUG MODE"
-
-    def _debug(m):
-        print >> sys.stderr, m
+    _debug = S3ModuleDebug.on
 else:
-    _debug = lambda m: None
+    _debug = S3ModuleDebug.off
 
 # =============================================================================
 class S3Notifications(object):
@@ -79,7 +77,7 @@ class S3Notifications(object):
 
         now = datetime.datetime.utcnow()
 
-        _debug("S3Notifications.check_subscriptions(now=%s)" % now)
+        _debug("S3Notifications.check_subscriptions(now=%s)", now)
 
         subscriptions = cls._subscriptions(now)
         if subscriptions:
@@ -108,7 +106,7 @@ class S3Notifications(object):
             @param resource_id: the pr_subscription_resource record ID
         """
 
-        _debug("S3Notifications.notify(resource_id=%s)" % resource_id)
+        _debug("S3Notifications.notify(resource_id=%s)", resource_id)
 
         db = current.db
         s3db = current.s3db
@@ -212,7 +210,7 @@ class S3Notifications(object):
                            })
 
         # Send the request
-        _debug("Requesting %s" % page_url)
+        _debug("Requesting %s", page_url)
         req = urllib2.Request(page_url, data=data)
         req.add_header("Content-Type", "application/json")
         success = False
@@ -268,12 +266,13 @@ class S3Notifications(object):
         data = source.read()
         subscription = json.loads(data)
 
-        #_debug("Notify PE #%s by %s on %s of %s since %s" % (
-                    #subscription["pe_id"],
-                    #str(subscription["method"]),
-                    #str(subscription["notify_on"]),
-                    #subscription["resource"],
-                    #subscription["last_check_time"]))
+        #_debug("Notify PE #%s by %s on %s of %s since %s",
+        #       subscription["pe_id"],
+        #       str(subscription["method"]),
+        #       str(subscription["notify_on"]),
+        #       subscription["resource"],
+        #      subscription["last_check_time"],
+        #       )
 
         # Check notification settings
         notify_on = subscription["notify_on"]
@@ -304,7 +303,7 @@ class S3Notifications(object):
         if not numrows:
             return json_message(message="No records found")
 
-        #_debug("%s rows:" % numrows)
+        #_debug("%s rows:", numrows)
 
         # Prepare meta-data
         get_config = resource.get_config
@@ -423,7 +422,7 @@ class S3Notifications(object):
                 continue
 
             # Send the message
-            #_debug("Sending message per %s" % method)
+            #_debug("Sending message per %s", method)
             #_debug(message)
             try:
                 sent = send(pe_id,

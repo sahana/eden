@@ -42,15 +42,14 @@ from s3datetime import s3_parse_datetime, s3_utc
 from s3rest import S3Method
 from s3import import S3ImportItem
 from s3query import S3URLQuery
+from s3utils import S3ModuleDebug
 
 DEBUG = False
 if DEBUG:
     print >> sys.stderr, "S3SYNC: DEBUG MODE"
-
-    def _debug(m):
-        print >> sys.stderr, m
+    _debug = S3ModuleDebug.on
 else:
-    _debug = lambda m: None
+    _debug = S3ModuleDebug.off
 
 # =============================================================================
 class S3Sync(S3Method):
@@ -490,10 +489,10 @@ class S3Sync(S3Method):
         tablename = resource.tablename
         resolver = s3db.get_config(tablename, "onconflict")
 
-        _debug("Resolving conflict in %s" % resource.tablename)
-        _debug("Repository: %s" % repository.name)
-        _debug("Conflicting item: %s" % item)
-        _debug("Method: %s" % item.method)
+        _debug("Resolving conflict in %s", resource.tablename)
+        _debug("Repository: %s", repository.name)
+        _debug("Conflicting item: %s", item)
+        _debug("Method: %s", item.method)
 
         if resolver:
             _debug("Applying custom rule")

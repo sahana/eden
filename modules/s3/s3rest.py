@@ -64,14 +64,6 @@ from s3utils import s3_get_extension, s3_remove_last_record_id, s3_store_last_re
 
 REGEX_FILTER = re.compile(".+\..+|.*\(.+\).*")
 
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3REST: DEBUG MODE"
-    def _debug(m):
-        print >> sys.stderr, m
-else:
-    _debug = lambda m: None
-
 # =============================================================================
 class S3Request(object):
     """

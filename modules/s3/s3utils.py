@@ -62,18 +62,26 @@ from gluon.tools import addrow
 from s3dal import Expression, Row
 from s3datetime import ISOFORMAT, s3_decode_iso_datetime
 
-DEBUG = False
-if DEBUG:
-    print >> sys.stderr, "S3Utils: DEBUG MODE"
-    def _debug(m):
-        print >> sys.stderr, m
-else:
-    _debug = lambda m: None
-
 URLSCHEMA = re.compile("((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
                        "(//([^/?#\s]*)))([^?#\s]*)(\?([^#\s]*))?(#([^\s]*))?)")
 
 RCVARS = "rcvars"
+
+class S3ModuleDebug(object):
+    """ Helper class to debug modules """
+
+    @staticmethod
+    def on(msg, *args):
+        print >> sys.stderr, msg % args if args else msg
+
+    off = staticmethod(lambda msg, *args: None)
+
+DEBUG = False
+if DEBUG:
+    print >> sys.stderr, "S3UTILS: DEBUG MODE"
+    _debug = S3ModuleDebug.on
+else:
+    _debug = S3ModuleDebug.off
 
 # =============================================================================
 def s3_debug(message, value=None):

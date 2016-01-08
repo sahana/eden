@@ -41,15 +41,6 @@ from gluon.storage import Storage
 from s3dal import Expression
 from s3utils import s3_orderby_fields, s3_unicode, s3_set_extension
 
-DEBUG = False
-if DEBUG:
-    import sys
-    print >> sys.stderr, "S3 Data Representations: DEBUG MODE"
-    def _debug(m):
-        print >> sys.stderr, m
-else:
-    _debug = lambda m: None
-
 # =============================================================================
 class S3DataTable(object):
     """ Class representing a data table """
