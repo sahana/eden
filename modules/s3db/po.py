@@ -144,7 +144,7 @@ class OutreachAreaModel(S3Model):
 
         # Table Configuration
         self.configure(tablename,
-                       deduplicate = S3Duplicate(),
+                       deduplicate = S3Duplicate(ignore_deleted=True),
                        filter_widgets = filter_widgets,
                        onaccept = self.area_onaccept,
                        ondelete = self.area_ondelete,

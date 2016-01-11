@@ -615,6 +615,8 @@ class S3Resource(object):
         permission_error = False
 
         table = self.table
+        table_fields = table.fields
+
         get_config = self.get_config
         pkey = self._id.name
 
@@ -632,9 +634,9 @@ class S3Resource(object):
                 if stable is None:
                     continue
                 key = stable._id.name
-                if key in table.fields:
+                if key in table_fields:
                     add_field(key)
-        if "uuid" in table.fields:
+        if "uuid" in table_fields:
             add_field("uuid")
 
         # Get all rows
@@ -815,10 +817,10 @@ class S3Resource(object):
 
                     # "Park" foreign keys to resolve constraints, "un-delete"
                     # would then restore any still-valid FKs from this field!
-                    if "deleted_fk" in table:
+                    if "deleted_fk" in table_fields:
                         record = table[record_id]
                         fk = {}
-                        for f in table.fields:
+                        for f in table_fields:
                             if record[f] is not None and \
                                s3_has_foreign_key(table[f]):
                                 fk[f] = record[f]
@@ -828,17 +830,10 @@ class S3Resource(object):
                         if fk:
                             data["deleted_fk"] =json.dumps(fk)
 
-                    # If the record is self-owned, reset the realm:
-                    if "realm_entity" in table and "pe_id" in table:
-                        if record is None:
-                            record = table[record_id]
-                        if record.pe_id == record.realm_entity:
-                            data["realm_entity"] = None
-
                     # Annotate the replacement record
                     idstr = str(record_id)
                     if replaced_by and idstr in replaced_by and \
-                       "deleted_rb" in table.fields:
+                       "deleted_rb" in table_fields:
                         data["deleted_rb"] = replaced_by[idstr]
 
                     # Update the row, finally
