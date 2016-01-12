@@ -716,7 +716,7 @@ def config(settings):
                                 "dvr_case.organisation_id",
                                 # Will always default & be hidden
                                 "dvr_case.site_id",
-                                "dvr_case.date",
+                                (T("BFV Arrival"), "dvr_case.date"),
                                 (T("Case Status"), "dvr_case.status_id"),
                                 # Will always default & be hidden
                                 #"cr_shelter_registration.site_id",

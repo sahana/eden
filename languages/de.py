@@ -492,6 +492,7 @@
 'Beneficiaries': 'Begünstigte',
 'Beneficiary': 'Begünstigter',
 'Beneficiary Type': 'Typ des Begünstigten',
+'BFV Arrival': 'BFV Ankunft',
 'Biological Hazard': 'Biologische Gefahr',
 'Bin': 'Lagerbehälter',
 'Biscuits': 'Kekse',
