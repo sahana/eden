@@ -326,7 +326,7 @@
                 </xsl:if>
 
                 <!-- Link to Region -->
-                <xsl:variable name="Region" select="col[@field='Region']/text()">
+                <xsl:variable name="Region" select="col[@field='Region']/text()"/>
                 <xsl:if test="$Region!=''">
                     <reference field="region_id" resource="org_region">
                         <xsl:attribute name="tuid">
@@ -336,7 +336,7 @@
                 </xsl:if>
 
                 <!-- Website -->
-                <xsl:variable name="Website" select="col[@field='Website']/text()">
+                <xsl:variable name="Website" select="col[@field='Website']/text()"/>
                 <xsl:if test="$Website!=''">
                     <data field="website">
                         <xsl:value-of select="$Website"/>
@@ -349,7 +349,7 @@
                 </xsl:call-template>
 
                 <!-- Main Phone Number -->
-                <xsl:variable name="Phone" select="col[@field='Phone']/text()">
+                <xsl:variable name="Phone" select="col[@field='Phone']/text()"/>
                 <xsl:if test="$Phone!=''">
                     <data field="phone">
                         <xsl:value-of select="$Phone"/>
@@ -357,7 +357,7 @@
                 </xsl:if>
 
                 <!-- Alternative Phone Number -->
-                <xsl:variable name="Phone2" select="col[@field='Phone2']/text()">
+                <xsl:variable name="Phone2" select="col[@field='Phone2']/text()"/>
                 <xsl:if test="$Phone2!=''">
                     <resource name="pr_contact">
                         <data field="contact_method">WORK_PHONE</data>
@@ -368,7 +368,7 @@
                 </xsl:if>
 
                 <!-- Facebook -->
-                <xsl:variable name="Facebook" select="col[@field='Facebook']/text()">
+                <xsl:variable name="Facebook" select="col[@field='Facebook']/text()"/>
                 <xsl:if test="$Facebook!=''">
                     <resource name="pr_contact">
                         <data field="contact_method">FACEBOOK</data>
@@ -379,7 +379,7 @@
                 </xsl:if>
 
                 <!-- Twitter -->
-                <xsl:variable name="Twitter" select="col[@field='Twitter']/text()">
+                <xsl:variable name="Twitter" select="col[@field='Twitter']/text()"/>
                 <xsl:if test="$Twitter!=''">
                     <resource name="pr_contact">
                         <data field="contact_method">TWITTER</data>
@@ -390,7 +390,7 @@
                 </xsl:if>
 
                 <!-- Comments -->
-                <xsl:variable name="Comments" select="col[@field='Comments']/text()">
+                <xsl:variable name="Comments" select="col[@field='Comments']/text()"/>
                 <xsl:if test="$Comments!=''">
                     <data field="comments">
                         <xsl:value-of select="$Comments"/>

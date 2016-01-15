@@ -5867,8 +5867,6 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             # Also populate the spatial field
             form_vars.the_geom = form_vars.wkt
 
-        return
-
     # -------------------------------------------------------------------------
     @staticmethod
     def query_features_by_bbox(lon_min, lat_min, lon_max, lat_max):

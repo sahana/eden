@@ -455,6 +455,7 @@ survey_super,"Assessment Super Editor",,org,capacity_assessment,,,"READ|CREATE|U
 survey_super,"Assessment Super Editor",,,,org_capacity_assessment_data,,"READ|CREATE|UPDATE|DELETE",,,,,
 survey_super,"Assessment Super Editor",,survey,,,,"READ|CREATE|UPDATE|DELETE",,,,,
 survey_super,"Assessment Super Editor",,org,,,,"READ|CREATE|UPDATE",,,,,
+survey_super,"Assessment Super Editor",,,,org_organisation,,"READ",,,,,
 survey_super,"Assessment Super Editor",,pr,,,,READ,,,,,
 survey_super,"Assessment Super Editor",,hrm,hr_search,,,READ,,,,,
 vol_reader,"Volunteer Reader",,hrm,human_resource,,,NONE,,,,,
