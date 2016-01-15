@@ -45,6 +45,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,PG,Province,District,LLG,Village,,
 ,PH,Region,Province,"City / Municipality",Barangay,,
 ,RS,District,"Municipality / City",,,,
+,SE,County,Municipality,,,,
 ,SL,Province,District,Chiefdom,,,
 ,TD,Region,Department,Sub-Prefecture,Canton,
 ,TJ,Province,District,Jamoat,Village,,
