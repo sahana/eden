@@ -1458,7 +1458,7 @@ class S3OrganisationCapacityModel(S3Model):
         #
         tablename = "org_capacity_assessment"
         define_table(tablename,
-                     self.org_organisation_id( empty = False),
+                     self.org_organisation_id(empty = False),
                      s3_date(future=0),
                      self.pr_person_id(label = T("Lead Facilitator")),
                      s3_comments(),

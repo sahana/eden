@@ -484,6 +484,8 @@ class S3LocationModel(S3Model):
         response = current.response
         settings = current.deployment_settings
 
+        MAP_ADMIN = auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
+
         form_vars = form.vars
         vars_get = form_vars.get
 
@@ -692,8 +694,10 @@ class S3LocationModel(S3Model):
         record = form.record
 
         if form_vars.wkt and not form_vars.wkt[:3] == "POI":
+
             # Only POINTs can be inherited (but not POLYGONs)
             form_vars.inherited = False
+
 
         elif bulk:
             # Bulk import: can not check for wkt change here because
@@ -707,8 +711,6 @@ class S3LocationModel(S3Model):
             # Have we provided more accurate data?
             if hasattr(record, "wkt") and form_vars.wkt != record.wkt:
                 form_vars.inherited = False
-
-        return
 
     # -------------------------------------------------------------------------
     @staticmethod
