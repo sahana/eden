@@ -2,7 +2,7 @@
 
 """ Sahana Eden Test Framework
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -337,12 +337,12 @@ class SeleniumUnitTest(Web2UnitTest):
 
         @param results_expected: Are results expected?
 
-        @param fields: See the `fields` function. 
+        @param fields: See the `fields` function.
                        For search.simple_form, an empty list [] can be pass. The field will be taken from s3resource.
 
         @param row_count: Expected row count
-                       For search.simple_form, 
-                               {"tablename":tablename, "key":key, "filters":[(field,value),...]} 
+                       For search.simple_form,
+                               {"tablename":tablename, "key":key, "filters":[(field,value),...]}
                                  can be pass to get the resource and eventually the DB row count.
 
         Keyword arguments:
@@ -455,8 +455,8 @@ class SeleniumUnitTest(Web2UnitTest):
         # We"re done entering and submitting data; now we need to check if the
         # results produced are valid.
         htmlRowCount = self.dt_row_cnt()[2]
-        successMsg = "DB row count (" + str(row_count) + ") matches the HTML datatable row count (" + str(htmlRowCount) + ")." 
-        failMsg = "DB row count (" + str(row_count) + ") does not match the HTML datatable row count (" + str(htmlRowCount) + ")." 
+        successMsg = "DB row count (" + str(row_count) + ") matches the HTML datatable row count (" + str(htmlRowCount) + ")."
+        failMsg = "DB row count (" + str(row_count) + ") does not match the HTML datatable row count (" + str(htmlRowCount) + ")."
         self.assertTrue(row_count == htmlRowCount, failMsg)
         self.reporter(successMsg)
 
@@ -825,7 +825,7 @@ class SeleniumUnitTest(Web2UnitTest):
                     xpath += "contains(text(), '" + word + "') and "
                 xpath = xpath + "contains(text(), '" + splitted_label[-1] + "')]"
                 field = browser.find_element_by_xpath(xpath)
-                    
+
 
             if isinstance(value, basestring):  # Text inputs
                 field.send_keys(value)
@@ -929,7 +929,7 @@ class SeleniumUnitTest(Web2UnitTest):
             results_xpath = "/li[@class='ui-menu-item']/a"
             autocomplete_results = browser.find_elements_by_xpath(autocomplete_xpath + results_xpath)
             for j in range(len(autocomplete_results)):
-                # If the value is in the result - might not be a match as AC may be a represent 
+                # If the value is in the result - might not be a match as AC may be a represent
                 if value in autocomplete_results[j].text:
                     autocomplete_results[j].click()
                     time.sleep(3)
@@ -939,7 +939,7 @@ class SeleniumUnitTest(Web2UnitTest):
                         return int(id)
                     else:
                         return False
-            
+
             time.sleep(sleeptime)
 
     # -------------------------------------------------------------------------
@@ -963,7 +963,7 @@ class SeleniumUnitTest(Web2UnitTest):
             raise NoSuchElementException("%s option could not be found in %s" % (item_repr, el_id))
         option.click()
         raw_value = int(option.get_attribute("value"))
-        
+
         # Now wait for the pack_item to be populated
         el_id = "%s_%s" % (tablename, "item_pack_id")
         _autocomple_finish(el_id, browser)

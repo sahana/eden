@@ -2,7 +2,7 @@
 
 """ Sahana Eden Staff Module Automated Tests
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -34,8 +34,7 @@ class Staff(SeleniumUnitTest):
         """
             @case: asset001
             @description: Create a Staff Member - IN PROGRESS
-            
+
             * RENE: Insert instructions
         """
         print "\n"
-        

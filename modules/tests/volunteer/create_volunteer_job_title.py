@@ -1,6 +1,6 @@
 """ Sahana Eden Automated Test - HRM001 Create Job Title
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -32,7 +32,7 @@ class CreateVolunteerJobTitle(SeleniumUnitTest):
         """
             @case: HRM001
             @description: Create a Job Title
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -40,7 +40,7 @@ class CreateVolunteerJobTitle(SeleniumUnitTest):
 
         self.login(account="admin", nexturl="vol/job_title/create")
 
-        self.create("hrm_job_title", 
+        self.create("hrm_job_title",
                     [( "name",
                        "Facility Manager"
                        ),
@@ -48,4 +48,3 @@ class CreateVolunteerJobTitle(SeleniumUnitTest):
                        "Comment/Description of the role goes here."),
                      ]
                      )
-        

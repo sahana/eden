@@ -1,6 +1,6 @@
 """ Sahana Eden Automated Test - HRM001 Create Volunteer Certificate
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -38,10 +38,10 @@ class CreateVolunteerCertificate(SeleniumUnitTest):
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
         print "\n"
-       
+
         if not current.deployment_settings.get_hrm_use_certificates():
             return
-        
+
         # To check if required database is prepopulated
         # If not prepopulate it with a test value
         if current.deployment_settings.get_hrm_use_skills():
@@ -52,12 +52,12 @@ class CreateVolunteerCertificate(SeleniumUnitTest):
                                    limitby=(0, 1)).first()
             if row:
                 name=row.name
-            
+
             else:
                 skill_table.insert(name="Test")
                 db.commit()
                 name="Test"
-        
+
         # Start the test
         self.login(account="admin", nexturl="vol/certificate/create")
 
@@ -77,14 +77,14 @@ class CreateVolunteerCertificate(SeleniumUnitTest):
         # Find the current URL of the browser
         current_url = str(self.browser.current_url)
         current_form = str(current_url.split('/')[-1])
-        
+
         # Check if the form we arrived on is right or not
         if current_form == "certificate_skill":
             # Check if add button is present on the page. Click it if found.
             add_btn = self.browser.find_elements_by_id("show-add-btn")
             if len(add_btn) > 0:
                 add_btn[0].click()
-                
+
                 self.create("hrm_certificate_skill",
                            [("skill_id",
                               name),

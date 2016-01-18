@@ -3,7 +3,7 @@
     Sahana Eden Volunteers Management
     (Extends modules/eden/hrm.py)
 
-    @copyright: 2012-15 (c) Sahana Software Foundation
+    @copyright: 2012-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -228,7 +228,7 @@ class S3VolunteerActivityModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Volunteer Activity Types <> Sectors
-        # Choice of Sector filters the list of Activity Types 
+        # Choice of Sector filters the list of Activity Types
         #
         tablename = "vol_activity_type_sector"
         define_table(tablename,
@@ -1201,7 +1201,7 @@ def vol_service_record(r, **attr):
 
             if total > 0:
                 programme.append(TR("", "", "", TD("Total"), TD("%d" % total)))
-            
+
         elif vol_experience in ("programme", "both"):
             # Programme Hours
             # - grouped by Programme/Role

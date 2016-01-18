@@ -2,7 +2,7 @@
 
 """ Sahana Eden Staff Module Automated Tests
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -40,7 +40,7 @@ class StaffReport(SeleniumUnitTest):
         super(StaffReport, self).setUp()
         print "\n"
         self.login(account="admin", nexturl="hrm/staff/report")
-        self.settings = current.deployment_settings 
+        self.settings = current.deployment_settings
 
     def test_staff_report_simple(self):
         self.report(None,
@@ -58,7 +58,7 @@ class StaffReport(SeleniumUnitTest):
                 "label": "Timor-Leste Red Cross Society (CVTL)",
                 "value": True
             },), self.settings.get_hrm_organisation_label(),
-                "County / District", 
+                "County / District",
                  self.settings.get_hrm_organisation_label() + " (Count)",
             row_count=1)
 
@@ -74,15 +74,15 @@ class StaffReport(SeleniumUnitTest):
                 "label": "Ainaro",
                 "value": True
             }),
-            "County / District", 
+            "County / District",
             self.settings.get_hrm_organisation_label(),
             self.settings.get_hrm_organisation_label() + " (Count)",
             row_count=1)
 
     def test_staff_report_person(self):
-        self.report(None, 
+        self.report(None,
             self.settings.get_hrm_organisation_label(),
-            "State / Province", 
+            "State / Province",
             "Person (List)",
             ("Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste) (CVTL)", "Dili",
                 ("Duarte Botelheiro",

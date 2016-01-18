@@ -2,7 +2,7 @@
 
 """ Sahana Eden Common Alerting Protocol (CAP) Model
 
-    @copyright: 2009-2015 (c) Sahana Software Foundation
+    @copyright: 2009-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -533,7 +533,7 @@ class S3CAPModel(S3Model):
         self.set_method("cap", "alert",
                         method = "assign",
                         action = self.cap_AssignArea())
-        
+
         self.set_method("cap", "alert",
                         method = "clone",
                         action = self.cap_CloneAlert())
@@ -1791,7 +1791,7 @@ def cap_rheader(r):
                                                _class = "action-btn",
                                                )
 
-                        if record.approved_by is not None:                            
+                        if record.approved_by is not None:
                             if current.auth.s3_has_permission("create", "cap_alert"):
                                 msg_type_buttons = TAG[""](
                                         TR(TD(A(T("Update Alert"),
@@ -2826,7 +2826,7 @@ class cap_CloneAlert(S3Method):
     """
         Clone the cap_alert
     """
-    
+
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
@@ -2834,7 +2834,7 @@ class cap_CloneAlert(S3Method):
             @param r: the S3Request
             @param attr: controller options for this request
         """
-        
+
         output = {}
         if r.http == "POST":
             if r.method == "clone":
@@ -2844,7 +2844,7 @@ class cap_CloneAlert(S3Method):
         else:
             r.error(405, current.ERROR.BAD_METHOD)
         return output
-    
+
     # -------------------------------------------------------------------------
     def clone(self, r, **attr):
         """
@@ -2853,9 +2853,9 @@ class cap_CloneAlert(S3Method):
             @param r: the S3Request instance
             @param attr: controller attributes
         """
-        
+
         s3db = current.s3db
-        
+
         # Get the alert ID
         alert_id = self.record_id
         if not alert_id:
@@ -2868,13 +2868,13 @@ class cap_CloneAlert(S3Method):
         person_id = auth.s3_logged_in_person()
         if not person_id or not auth.s3_has_permission("create", alert_table):
             auth.permission.fail()
-        
+
         msg_type_options = ["Update", "Cancel", "Error"]
         msg_type = current.request._get_vars["msg_type"]
-        
+
         if msg_type is None or msg_type not in msg_type_options:
             r.error(400, current.ERROR.BAD_REQUEST)
-        
+
         # Start of clone
         db = current.db
         info_table = s3db.cap_info
@@ -2890,13 +2890,13 @@ class cap_CloneAlert(S3Method):
         audit = current.audit
         set_record_owner = auth.s3_set_record_owner
         onaccept = s3db.onaccept
-        
+
         # Copy the alert segment
         alert_fields = [alert_table[f] for f in alert_table.fields
                         if f not in unwanted_fields]
         alert_query = (alert_table.id == alert_id) & \
                       accessible_query("read", alert_table)
-        alert_row = db(alert_query).select(*alert_fields, limitby=(0, 1)).first()  
+        alert_row = db(alert_query).select(*alert_fields, limitby=(0, 1)).first()
         alert_row_clone = alert_row.as_dict()
         del alert_row_clone["identifier"]
         alert_row_clone["msg_type"] = msg_type
@@ -2911,7 +2911,7 @@ class cap_CloneAlert(S3Method):
         audit("create", "cap", "alert", record=new_alert_id)
         set_record_owner(alert_table, new_alert_id)
         onaccept(alert_table, alert_row_clone)
-        
+
         if has_permission("create", info_table):
             # Copy the info segment
             unwanted_fields_ = list(unwanted_fields)
@@ -2938,7 +2938,7 @@ class cap_CloneAlert(S3Method):
                 location_accessible = accessible_query("read", location_table)
                 tag_accessible = accessible_query("read", tag_table)
                 resource_accessible = accessible_query("read", resource_table)
-                
+
                 for info_row in info_rows:
                     info_id = info_row.id
                     info_row_clone = info_row.as_dict()
@@ -2950,28 +2950,28 @@ class cap_CloneAlert(S3Method):
                     audit("create", "cap", "info", record=new_info_id)
                     set_record_owner(info_table, new_info_id)
                     onaccept(info_table, info_row_clone)
-                    
+
                     if has_area_permission:
                         # Copy the area segment
                         area_query = (area_table.info_id == info_id) &\
                                      (area_table.alert_id == alert_id) & \
                                      area_accessible
                         area_rows = db(area_query).select(*area_fields)
-                        if area_rows:   
+                        if area_rows:
                             for area_row in area_rows:
                                 area_id = area_row.id
                                 area_row_clone = area_row.as_dict()
                                 del area_row_clone["id"]
                                 area_row_clone["alert_id"] = new_alert_id
                                 area_row_clone["info_id"] = new_info_id
-                                
+
                                 new_area_id = area_table.insert(**area_row_clone)
                                 # Post-process create
                                 area_row_clone["id"] = new_area_id
                                 audit("create", "cap", "area", record=new_area_id)
                                 set_record_owner(area_table, new_area_id)
                                 onaccept(area_table, area_row_clone)
-                                
+
                                 if has_location_permission:
                                     # Copy the area_location
                                     location_query = (location_table.area_id == area_id) &\
@@ -2995,8 +2995,8 @@ class cap_CloneAlert(S3Method):
                                                              new_location_id)
                                             onaccept(location_table,
                                                      location_row_clone)
-                                
-                                if has_tag_permission:        
+
+                                if has_tag_permission:
                                     # Copy the area_tag
                                     tag_query = (tag_table.area_id == area_id) &\
                                                 tag_accessible
@@ -3006,7 +3006,7 @@ class cap_CloneAlert(S3Method):
                                             tag_row_clone = tag_row.as_dict()
                                             tag_row_clone["alert_id"] = new_alert_id
                                             tag_row_clone["area_id"] = new_area_id
-                                            
+
                                             new_tag_id = tag_table.insert(**tag_row_clone)
                                             # Post-process create
                                             tag_row_clone["id"] = new_tag_id
@@ -3014,12 +3014,12 @@ class cap_CloneAlert(S3Method):
                                                   record=new_tag_id)
                                             set_record_owner(tag_table, new_tag_id)
                                             onaccept(tag_table, tag_row_clone)
-                        
+
                         if has_resource_permission:
                             # Copy the resource segment
                             resource_query = (resource_table.info_id == info_id) &\
                                         (resource_table.alert_id == alert_id) &\
-                                        resource_accessible    
+                                        resource_accessible
                             resource_rows = db(resource_query).\
                                                         select(*resource_fields)
                             if resource_rows:
@@ -3037,7 +3037,7 @@ class cap_CloneAlert(S3Method):
                                     onaccept(resource_table, resource_row_clone)
 
         output = current.xml.json_message(message=new_alert_id)
-        current.response.headers["Content-Type"] = "application/json"      
+        current.response.headers["Content-Type"] = "application/json"
         return output
 
 # -----------------------------------------------------------------------------

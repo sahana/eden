@@ -2,7 +2,7 @@
 
 """ Sahana Eden Warehouse Search Module Automated Tests
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -38,7 +38,7 @@ def _kwsearch(instance, column, items, keyword):
     return True
 
 class SearchWarehouse(SeleniumUnitTest):
-    
+
     def setUp(self):
         super(SeleniumUnitTest, self).setUp()
         print "\n"
@@ -60,7 +60,7 @@ class SearchWarehouse(SeleniumUnitTest):
                 "value": key
             },), dbRowCount,
             manual_check=functools.partial(_kwsearch, keyword=key, items=dbRowCount, column=2)
-        )    
+        )
 
     def test_warehouse_02_search_by_Organization(self):
         """
@@ -79,7 +79,7 @@ class SearchWarehouse(SeleniumUnitTest):
                 "value": True
             },), dbRowCount,
             manual_check=functools.partial(_kwsearch, keyword=key, items=dbRowCount, column=3)
-        )    
+        )
 
     def test_warehouse_03_search_by_District(self):
         """
@@ -98,4 +98,4 @@ class SearchWarehouse(SeleniumUnitTest):
                 "value": True
             },), dbRowCount,
             manual_check=functools.partial(_kwsearch, keyword=key, items=dbRowCount, column=5)
-        )    
+        )

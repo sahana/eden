@@ -1,6 +1,6 @@
 """ Sahana Eden Automated Test - ORG004 Delete Organisation
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -32,7 +32,7 @@ class DeleteOrganisation(SeleniumUnitTest):
         """
             @case: HRM004
             @description: Delete a prepop Organisation. Organisation ID: 40 (org/organisation/40/)
-            
+
             @Test Doc: https://docs.google.com/a/aidiq.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE#gid=2
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """

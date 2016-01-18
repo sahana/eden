@@ -1,6 +1,6 @@
 """ Sahana Eden Automated Test - HRM004 Create Volunteer Training
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -34,18 +34,18 @@ class CreateVolunteerTraining(SeleniumUnitTest):
             @description: Create a Volunteer Training
             * Create Course
             * Create Training Event
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
-            
-            @ToDo: 
+
+            @ToDo:
             * Add Volunteer Participants
         """
-        
+
         browser = self.browser
         self.login(account="admin", nexturl="vol/course/create")
 
-        self.create("hrm_course", 
+        self.create("hrm_course",
                     [( "code",
                        "32329408",),
                      ( "name",
@@ -53,7 +53,7 @@ class CreateVolunteerTraining(SeleniumUnitTest):
                      ]
                      )
         self.login(account="admin", nexturl="vol/training_event/create")
-        self.create("hrm_training_event", 
+        self.create("hrm_training_event",
                     [( "course_id",
                        "Emergency First Aid"),
                      ( "site_id",

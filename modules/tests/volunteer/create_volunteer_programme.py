@@ -1,6 +1,6 @@
 """ Sahana Eden Automated Test - HRM001 Create a Volunteer Programme
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -32,7 +32,7 @@ class CreateVolunteerProgramme(SeleniumUnitTest):
         """
             @case: HRM001
             @description: Create a Volunteer Programme
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -40,7 +40,7 @@ class CreateVolunteerProgramme(SeleniumUnitTest):
 
         self.login(account="admin", nexturl="vol/programme/create")
 
-        self.create("hrm_programme", 
+        self.create("hrm_programme",
                     [( "name",
                        "SAR"
                        ),
@@ -48,4 +48,3 @@ class CreateVolunteerProgramme(SeleniumUnitTest):
                        "Comment/Description of the vol programme goes here."),
                      ]
                      )
-        

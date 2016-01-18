@@ -2,7 +2,7 @@
 
 """ Sahana Eden Module Automated Tests - PROJECT001 Create Project
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -38,12 +38,12 @@ class CreateProject(SeleniumUnitTest):
         """
             @case: Project001
             @description:
-            
+
             * Create Project
-            * Create Project Organisation 
+            * Create Project Organisation
             * Create Project Community
             * Create Project Beneficiary
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -51,9 +51,9 @@ class CreateProject(SeleniumUnitTest):
 
         # Login, if not-already done so
         self.login(account="admin", nexturl="project/project/create")
-        
-        self.create("project_project", 
-                    [("organisation_id", 
+
+        self.create("project_project",
+                    [("organisation_id",
                       "International Federation of Red Cross and Red Crescent Societies"),
                      ( "name",
                        "Community Strengthening through Dancing" ),
@@ -64,8 +64,8 @@ class CreateProject(SeleniumUnitTest):
 
 #        # Show Add Form
 #        self.browser.find_element_by_id("show-add-btn").click()
-#        
-#        self.create("project_organisation", 
+#
+#        self.create("project_organisation",
 #                    [( "organisation_id",
 #                       "New Zealand Red Cross",
 #                       "autocomplete"),
@@ -141,7 +141,7 @@ class CreateProject(SeleniumUnitTest):
             time.sleep(2)
             add_button = self.browser.find_element_by_id("show-add-btn")
             if add_button.is_displayed():
-                add_button.click()            
+                add_button.click()
 
             self.create("project_beneficiary",
                         [( "parameter_id",

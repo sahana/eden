@@ -1,7 +1,7 @@
 /**
  * jQuery UI DataList Widget for "lists of data cards"
  *
- * @copyright 2013-15 (c) Sahana Software Foundation
+ * @copyright 2013-2016 (c) Sahana Software Foundation
  * @license MIT
  *
  * requires jQuery 1.9.1+

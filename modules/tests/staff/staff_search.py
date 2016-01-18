@@ -2,7 +2,7 @@
 
 """ Sahana Eden Member Search Module Automated Tests
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -100,7 +100,7 @@ class SearchStaff(SeleniumUnitTest):
             manual_check=functools.partial(_kwsearch, keyword="(Office)", items=1, column=6)
         )
 
-      
+
     def test_hrm002_04_hrm_search_advance_by_Training(self):
         """
             @case: hrm002-04
@@ -119,4 +119,3 @@ class SearchStaff(SeleniumUnitTest):
             manual_check=functools.partial(_kwsearch, keyword="Basics of Fir", items=1, column=9)
         )
 
-           

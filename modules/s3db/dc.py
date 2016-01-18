@@ -2,7 +2,7 @@
 
 """ Sahana Eden Data Collection Models
 
-    @copyright: 2014-2015 (c) Sahana Software Foundation
+    @copyright: 2014-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person

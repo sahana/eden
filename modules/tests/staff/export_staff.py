@@ -2,7 +2,7 @@
 
 """ Sahana Eden Volunteer Module Automated Tests
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -39,7 +39,7 @@ class ExportStaff(SeleniumUnitTest):
 
         browser = self.browser
         browser.find_element_by_xpath("//img[@src='/eden/static/img/pdficon_small.gif']").click()
-        
+
         #@ToDo: 1) Perform some sort of check to test the export works
         #       2) Integrate this with the search test helper function so that the export is working for EVERY search
         #       3) Extend the export to include xls, csv, xml

@@ -2,7 +2,7 @@
 
 """ Sahana Eden Volunteer Module Automated Tests
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -34,7 +34,7 @@ class Volunteer(SeleniumUnitTest):
         """
             @case: asset001
             @description: Create a Volunteer - IN PROGRESS
-            
+
             * RENE: Insert instructions
         """
 
@@ -43,7 +43,7 @@ class Volunteer(SeleniumUnitTest):
         # Login, if not-already done so
         self.login(account="normal", nexturl="hrm/volunteer/create")
 
-        self.create("hrm_human_resource", 
+        self.create("hrm_human_resource",
                     [("Timor-Leste Red Cross Society",
                       "organisation_id",
                       "autocomplete"

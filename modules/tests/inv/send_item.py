@@ -1,6 +1,6 @@
 """ Sahana Eden Module Automated Tests - INV001 Send Items
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -30,12 +30,12 @@ from helper import InvTestFunctions
 class SendItem(InvTestFunctions):
     """
             Inventory Test - Send Workflow (Send items)
-            
+
             @param items: This test sends a specific item to another party.
         This test assume that test/inv-mngt has been added to prepop
         - e.g. via demo/IFRC_Train
             @Case: INV001
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
     """

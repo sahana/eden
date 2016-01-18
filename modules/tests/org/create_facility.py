@@ -1,6 +1,6 @@
 """ Sahana Eden Automated Test - INV023 Create Facilty
 
-    @copyright: 2011-2012 (c) Sahana Software Foundation
+    @copyright: 2011-2016 (c) Sahana Software Foundation
     @license: MIT
 
     Permission is hereby granted, free of charge, to any person
@@ -32,7 +32,7 @@ class CreateFacility(SeleniumUnitTest):
         """
             @case:INV023
             @description: Create a Facility
-            
+
             @TestDoc: https://docs.google.com/spreadsheet/ccc?key=0AmB3hMcgB-3idG1XNGhhRG9QWF81dUlKLXpJaFlCMFE
             @Test Wiki: http://eden.sahanafoundation.org/wiki/DeveloperGuidelines/Testing
         """
@@ -40,7 +40,7 @@ class CreateFacility(SeleniumUnitTest):
 
         self.login(account="admin", nexturl="org/facility/create")
 
-        self.create("org_facility", 
+        self.create("org_facility",
                     [( "name",
                        "International Federation of Red Cross and Red Crescent Societies"),
                      ( "organisation_id",
