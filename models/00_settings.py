@@ -258,10 +258,12 @@ if s3.debug:
 # CRUD
 
 s3_formstyle = settings.get_ui_formstyle()
+s3_formstyle_read = settings.get_ui_formstyle_read()
 s3_formstyle_mobile = s3_formstyle
 submit_button = T("Save")
 _crud = s3.crud
 _crud.formstyle = s3_formstyle
+_crud.formstyle_read = s3_formstyle_read
 _crud.submit_button = submit_button
 # Optional class for Submit buttons
 #_crud.submit_style = "submit-button"

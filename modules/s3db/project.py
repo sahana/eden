@@ -186,6 +186,7 @@ class S3ProjectModel(S3Model):
                            ),
                      Field("description", "text",
                            label = T("Description"),
+                           represent = lambda v: s3_text_represent(v, lines=8),
                            ),
                      self.project_status_id(),
                      # NB There is additional client-side validation for start/end date in the Controller
@@ -228,7 +229,7 @@ class S3ProjectModel(S3Model):
                                  ),
                      Field("objectives", "text",
                            label = T("Objectives"),
-                           represent = lambda v: v or NONE,
+                           represent = lambda v: s3_text_represent(v, lines=8),
                            readable = mode_3w,
                            writable = mode_3w,
                            ),

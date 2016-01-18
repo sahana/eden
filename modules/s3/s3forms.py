@@ -397,6 +397,8 @@ class S3SQLDefaultForm(S3SQLForm):
         if format == "plain":
             # Default formstyle works best when we have no formatting
             formstyle = "table3cols"
+        elif readonly:
+            formstyle = settings.formstyle_read
         else:
             formstyle = settings.formstyle
 
@@ -871,6 +873,8 @@ class S3SQLCustomForm(S3SQLForm):
         if format == "plain":
             # Simple formstyle works best when we have no formatting
             formstyle = "table3cols"
+        elif readonly:
+            formstyle = settings.formstyle_read
         else:
             formstyle = settings.formstyle
 

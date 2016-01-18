@@ -1643,42 +1643,51 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # UI Settings
     #
+
+    def _get_formstyle(cls, setting):
+        """ Helper function to identify a formstyle """
+
+        formstyles = cls.FORMSTYLE
+
+        if callable(setting):
+            # A custom formstyle defined in the template
+            formstyle = setting
+        if setting in formstyles:
+            # One of the standard supported formstyles
+            formstyle = formstyles[setting]
+        else:
+            # A default web2py formstyle
+            formstyle = setting
+        return formstyle
+
     def get_ui_formstyle(self):
         """ Get the current form style """
 
         setting = self.ui.get("formstyle", "default")
-        if setting in self.FORMSTYLE:
-            # One of the standard supported formstyles
-            return self.FORMSTYLE[setting]
-        elif callable(setting):
-            # A custom formstyle defined in the template
-            return setting
+        return self._get_formstyle(setting)
+
+    def get_ui_formstyle_read(self):
+        """ Get the current form style for read views """
+
+        setting = self.ui.get("formstyle_read")
+        if setting is not None:
+            formstyle = self._get_formstyle(setting)
         else:
-            # A default web2py formstyle
-            return setting
+            # Fall back to default formstyle
+            formstyle = self.get_ui_formstyle()
+        return formstyle
 
     def get_ui_filter_formstyle(self):
         """ Get the current filter form style """
 
         setting = self.ui.get("filter_formstyle", "default_inline")
-        if callable(setting):
-            return setting
-        elif setting in self.FORMSTYLE:
-            return self.FORMSTYLE[setting]
-        else:
-            return setting
+        return self._get_formstyle(setting)
 
     def get_ui_report_formstyle(self):
         """ Get the current report form style """
 
         setting = self.ui.get("report_formstyle")
-        formstyles = self.FORMSTYLE
-        if callable(setting):
-            return setting
-        elif setting in formstyles:
-            return formstyles[setting]
-        else:
-            return setting
+        return self._get_formstyle(setting)
 
     def get_ui_inline_formstyle(self):
         """ Get the _inline formstyle for the current formstyle """
@@ -1688,12 +1697,17 @@ class S3Config(Storage):
         formstyles = self.FORMSTYLE
 
         if isinstance(setting, basestring):
+            # Try to find the corresponding _inline formstyle
             inline_formstyle_name = "%s_inline" % setting
-            if inline_formstyle_name in formstyles:
-                return formstyles[inline_formstyle_name]
-            elif setting in formstyles:
-                return formstyles[setting]
-        return setting
+            formstyle = formstyles.get(inline_formstyle_name)
+        else:
+            formstyle = None
+
+        if formstyle is None:
+            # Fall back to default formstyle
+            formstyle = self._get_formstyle(setting)
+
+        return formstyle
 
     def get_ui_datatables_dom(self):
         """

@@ -652,7 +652,7 @@ def s3_text_represent(text, truncate=True, lines=5, _class=None):
     """
 
     if not text:
-        text = ""
+        text = current.messages["NONE"]
     if _class is None:
         selector = ".text-body"
         _class = "text-body"

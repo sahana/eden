@@ -146,6 +146,8 @@ def config(settings):
     # =========================================================================
     # UI settings
     #
+    settings.ui.formstyle_read = "default_inline"
+
     settings.search.filter_manager = False
     settings.ui.label_postcode = "Postal Code"
     settings.ui.summary = ({"common": True,
