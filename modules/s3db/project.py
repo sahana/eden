@@ -520,6 +520,11 @@ class S3ProjectModel(S3Model):
                                             },
                        # Format needed by S3Filter
                        project_theme_project = "project_id",
+
+                       # Project Needs (e.g. Funding, Volunteers)
+                       req_project_needs = {"joinby": "project_id",
+                                            "multiple": False,
+                                            },
                        )
 
         if multi_orgs:

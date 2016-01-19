@@ -780,8 +780,6 @@ def config(settings):
                 "status_id",
                 "start_date",
                 "end_date",
-                "budget",
-                "currency",
                 S3SQLInlineLink(
                     "hazard",
                     label = T("Hazards"),
@@ -798,6 +796,12 @@ def config(settings):
                     translate = True,
                 ),
                 "objectives",
+                (T("Funds available"), "budget"),
+                "project_needs.funding",
+                "currency",
+                "project_needs.funding_details",
+                #"project_needs.vol",
+                #"project_needs.vol_details",
                 "human_resource_id",
                 S3SQLInlineComponent(
                     "document",

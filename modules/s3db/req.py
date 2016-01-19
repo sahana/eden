@@ -2072,6 +2072,7 @@ class S3RequestSummaryModel(S3Model):
              "req_organisation_needs_item",
              "req_organisation_needs_skill",
              "req_site_needs",
+             "req_project_needs",
              )
 
     def model(self):
@@ -2278,6 +2279,48 @@ class S3RequestSummaryModel(S3Model):
                              "site": "site_id",
                              },
                   )
+
+        # -----------------------------------------------------------------
+        # Summary of Needs for a Project
+        #
+        represent_amount = lambda v: IS_FLOAT_AMOUNT.represent(v, precision=2)
+
+        tablename = "req_project_needs"
+        define_table(tablename,
+                     self.project_project_id(),
+                     Field("funding", "double",
+                           label = T("Funds needed"),
+                           represent = represent_amount,
+                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(minimum=0)),
+                           comment = T("The total amount of funding required for this project"),
+                           ),
+                     Field("funding_details", "text",
+                           label = T("Funding Details"),
+                           represent = lambda v: s3_text_represent(v, lines=8),
+                           comment = T("Describe what the funds will be used for"),
+                           ),
+                     Field("vol", "integer",
+                           label = T("Volunteers needed"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(minimum=0)),
+                           ),
+                     Field("vol_details", "text",
+                           label = T("Volunteers Details"),
+                           represent = lambda v: s3_text_represent(v, lines=8),
+                           comment = T("Describe the tasks helpers are needed for"),
+                           ),
+                     *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            title_display = T("Project Needs"),
+            title_list = T("Project Needs"),
+            title_update = T("Edit Project Needs"),
+            label_create = T("Add Project Needs"),
+            label_list_button = T("List Project Needs"),
+            label_delete_button = T("Delete Project Needs"),
+            msg_record_created = T("Project Needs added"),
+            msg_record_modified = T("Project Needs updated"),
+            msg_record_deleted = T("Project Needs deleted"))
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
