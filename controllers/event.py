@@ -73,6 +73,14 @@ def event_type():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def checklist():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller(rheader = s3db.event_rheader)
+
+# -----------------------------------------------------------------------------
 def incident_type():
     """
         RESTful CRUD controller

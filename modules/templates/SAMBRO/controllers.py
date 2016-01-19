@@ -214,6 +214,7 @@ class subscriptions(S3CustomController):
         if not auth.s3_logged_in():
             auth.permission.fail()
 
+        has_role = auth.s3_has_role
         # Available resources
         resources = [dict(resource="cap_alert",
                           url="cap/alert",
@@ -226,15 +227,15 @@ class subscriptions(S3CustomController):
         #        for filter widgets which need it.
         filters = [S3OptionsFilter("event_type_id",
                                    label = T("Event Type"),
-                                   options=self._options("event_type_id"),
-                                   widget="multiselect",
+                                   options = self._options("event_type_id"),
+                                   widget = "multiselect",
                                    resource = "cap_info",
                                    _name = "event-filter",
                                    ),
                    S3OptionsFilter("priority",
                                    label = T("Priority"),
-                                   options=self._options("priority"),
-                                   widget="multiselect",
+                                   options = self._options("priority"),
+                                   widget = "multiselect",
                                    resource = "cap_info",
                                    _name = "priority-filter",
                                    ),
@@ -253,6 +254,38 @@ class subscriptions(S3CustomController):
                                    ),
                    ]
 
+        if has_role("ALERT_EDITOR") or \
+           has_role("ALERT_APPROVER"):
+            from s3 import S3Represent
+            recipient_filters = [S3OptionsFilter("id",
+                                       label = T("Person"),
+                                       represent = S3Represent(lookup="auth_user",
+                                            fields = ["first_name", "last_name"],
+                                            field_sep = " ",
+                                            ),
+                                       widget = "multiselect",
+                                       resource = "auth_user",
+                                       _name = "person-filter",
+                                       ),
+                                 ]
+            group_filters = [S3OptionsFilter("id",
+                                       label = T("Group"),
+                                       represent = S3Represent(lookup="pr_group",
+                                                               fields = ["name"],
+                                                               ),
+                                       widget = "multiselect",
+                                       resource = "pr_group",
+                                       _name = "group-filter",
+                                       ),
+                             ]
+            # Title
+            title = T("Manage Recipients")
+        else:
+            recipient_filters = None
+            group_filters = None
+            # Title
+            title = T("Subscriptions")
+
         filter_script = '''$.filterOptionsS3({
                              'trigger':'event-filter',
                              'target':'priority-filter',
@@ -262,13 +295,12 @@ class subscriptions(S3CustomController):
                              'showEmptyField': 'false'
                              })'''
         current.response.s3.jquery_ready.append(filter_script)
-        
-        # Title and view
-        title = T("Subscriptions")
+
+        # View
         self._view(THEME, "subscriptions.html")
 
         # Form
-        form = self._manage_subscriptions(resources, filters)
+        form = self._manage_subscriptions(resources, filters, recipient_filters, group_filters)
 
         return dict(title = title,
                     form = form,
@@ -308,25 +340,36 @@ class subscriptions(S3CustomController):
         return options
 
     # -------------------------------------------------------------------------
-    def _manage_subscriptions(self, resources, filters):
+    def _manage_subscriptions(self, resources, filters, recipient_filters, group_filters):
         """
             Custom form to manage subscriptions
 
             @param resources: available resources config
-            @param filters: filter widgets
+            @param filters: subscription filter widgets
+            @param recipient_filters: recipient filter widgets
+            @param group_filters: pr_group filter widgets
         """
 
-        # Uses Default Eden formstyle
-        from s3theme import formstyle_foundation as formstyle
+        from gluon.http import redirect
         from gluon.validators import IS_IN_SET
+        from s3.s3utils import s3_unicode
         from s3.s3widgets import S3GroupedOptionsWidget, S3MultiSelectWidget
         from s3layouts import S3PopupLink
+        # Uses Default Eden formstyle
+        from s3theme import formstyle_foundation as formstyle
 
         # L10n
         T = current.T
         db = current.db
         s3db = current.s3db
+        auth = current.auth
+        auth_user = auth.user
+        gtable = db.auth_group
+        has_role = auth.s3_has_role
+        request = current.request
         response = current.response
+        stable = s3db.pr_subscription
+
         labels = Storage(
             #RESOURCES = T("Subscribe To"),
             #NOTIFY_ON = T("Notify On"),
@@ -339,24 +382,69 @@ class subscriptions(S3CustomController):
             ERROR = T("Error: could not update notification settings"),
             SUCCESS = T("Notification settings updated"),
         )
-
-        # Get current subscription settings resp. form defaults
-        subscription = self._get_subscription()
-
         # Initialize form
         form = FORM(_id="subscription-form",
                     hidden={"subscription-filters": ""})
 
-        # Filters
-        filter_form = S3FilterForm(filters, clear=False)
-        fieldset = FIELDSET(filter_form.fields(None,
-                                               subscription["get_vars"]),
-                            _id="subscription-filter-form")
-        form.append(fieldset)
+        row = db(gtable.role == "Alert Editor").select(gtable.id,
+                                                       limitby=(0, 1)).first()
+
+        ae_id = row.id # Alert Editor role as the owned_by_group to distinguish Admin-controlled subscriptions
+        if recipient_filters is not None:
+            subscription_id = request.get_vars.get("subscription_id")
+            if subscription_id:
+                # Update form from pr_subscription
+                pr_row = db(stable.id == subscription_id).select(stable.pe_id,
+                                                        limitby=(0, 1)).first()
+                pe_id = pr_row.pe_id
+                subscription = self._get_admin_subscription(\
+                                                subscription_id=subscription_id,
+                                                pe_id=pe_id,
+                                                )
+                recipient_subscription = self._get_recipients_and_groups(\
+                                                subscription_id=subscription_id,
+                                                pe_id=pe_id,
+                                                caller="recipients",
+                                                )
+                group_subscription = self._get_recipients_and_groups(\
+                                                subscription_id=subscription_id,
+                                                pe_id=pe_id,
+                                                caller="groups",
+                                                )
+            else:
+                # Create form
+                subscription = self._get_admin_subscription()
+                recipient_subscription = self._get_recipients_and_groups()
+                group_subscription = self._get_recipients_and_groups()
+            filter_form = S3FilterForm(filters, clear=False)
+            fieldset = FIELDSET(filter_form.fields(None,
+                                                   subscription["get_vars"]),
+                                _id="subscription-filter-form")
+            recipient_filter_form = S3FilterForm(recipient_filters, clear=False)
+            recipient_fieldset = FIELDSET(recipient_filter_form.fields(None,
+                                            recipient_subscription["get_vars"]),
+                                          _id="recipient-filter-form")
+            group_filter_form = S3FilterForm(group_filters, clear=False)
+            group_fieldset = FIELDSET(group_filter_form.fields(None,
+                                                group_subscription["get_vars"]),
+                                      _id="group-filter-form")
+            form.append(recipient_fieldset)
+            form.append(group_fieldset)
+            form.append(fieldset)
+        else:
+            # Get current subscription settings resp. form defaults
+            # Normal User
+            subscription = self._get_subscription()
+
+            # Filters
+            filter_form = S3FilterForm(filters, clear=False)
+            fieldset = FIELDSET(filter_form.fields(None,
+                                                   subscription["get_vars"]),
+                                _id="subscription-filter-form")
+            form.append(fieldset)
 
         # Notification options
         rows = []
-        stable = s3db.pr_subscription
 
         selector = S3GroupedOptionsWidget(cols=1)
         # Deactivated trigger selector
@@ -390,64 +478,67 @@ class subscriptions(S3CustomController):
                               _id="method_selector"),
                      ""))
 
-        # Sync Row
-        properties = subscription["comments"]
-        if properties:
-            properties = json.loads(properties)
-
-        synctable = s3db.sync_repository
-        query = (synctable.apitype == "ftp") & \
-                (synctable.deleted != True) & \
-                (synctable.owned_by_user == current.auth.user.id)
-
-        ftp_rows = db(query).select(synctable.id,
-                                    synctable.name,
-                                    orderby = synctable.id)
-
-        multiselect = S3MultiSelectWidget(header = False,
-                                          multiple = False,
-                                          create = {"c": "sync",
-                                                    "f": "repository",
-                                                    "label": "Create Repository",
-                                                    },
-                                          )
-        if ftp_rows:
+        if not (has_role("ALERT_EDITOR") or \
+                has_role("ALERT_APPROVER")):
+            # Normal User
+            # Sync Row
+            properties = subscription["comments"]
             if properties:
-                user_repository_id = properties["repository_id"]
+                properties = json.loads(properties)
+
+            synctable = s3db.sync_repository
+            query = (synctable.apitype == "ftp") & \
+                    (synctable.deleted != True) & \
+                    (synctable.owned_by_user == auth_user.id)
+
+            ftp_rows = db(query).select(synctable.id,
+                                        synctable.name,
+                                        orderby = synctable.id)
+
+            multiselect = S3MultiSelectWidget(header = False,
+                                              multiple = False,
+                                              create = {"c": "sync",
+                                                        "f": "repository",
+                                                        "label": "Create Repository",
+                                                        },
+                                              )
+            if ftp_rows:
+                if properties:
+                    user_repository_id = properties["repository_id"]
+                else:
+                    user_repository_id = ftp_rows.first().id
+
+                if auth.s3_has_permission("update", "sync_repository",
+                                          record_id = user_repository_id):
+                    repository_comment = S3PopupLink(c = "sync",
+                                                     f = "repository",
+                                                     m = "update",
+                                                     args = [user_repository_id],
+                                                     title = T("Update Repository"),
+                                                     tooltip = T("You can edit your FTP repository here"),
+                                                     )
+                field = s3db.sync_task.repository_id
+                ftp_ids = [(r.id, s3_unicode(T(r.name))) for r in ftp_rows]
+                field.requires = IS_IN_SET(ftp_ids)
+
+                rows.append(("sync_task_repository_id__row",
+                             "",
+                             multiselect(field,
+                                         user_repository_id,
+                                         _id="sync_task_repository_id"),
+                             repository_comment))
             else:
-                user_repository_id = ftp_rows.first().id
+                if auth.s3_has_permission("create", "sync_repository"):
+                    repository_comment = S3PopupLink(c = "sync",
+                                                     f = "repository",
+                                                     title = T("Create Repository"),
+                                                     tooltip = T("Click on the link to begin creating your FTP repository"),
+                                                     )
 
-            if current.auth.s3_has_permission("update", "sync_repository",
-                                              record_id = user_repository_id):
-                repository_comment = S3PopupLink(c = "sync",
-                                                 f = "repository",
-                                                 m = "update",
-                                                 args = [user_repository_id],
-                                                 title = T("Update Repository"),
-                                                 tooltip = T("You can edit your FTP repository here"),
-                                                 )
-            field = s3db.sync_task.repository_id
-            ftp_ids = [(r.id, T(r.name)) for r in ftp_rows]
-            field.requires = IS_IN_SET(ftp_ids)
-
-            rows.append(("sync_task_repository_id__row",
-                         "",
-                         multiselect(field,
-                                     user_repository_id,
-                                     _id="sync_task_repository_id"),
-                         repository_comment))
-        else:
-            if current.auth.s3_has_permission("create", "sync_repository"):
-                repository_comment = S3PopupLink(c = "sync",
-                                                 f = "repository",
-                                                 title = T("Create Repository"),
-                                                 tooltip = T("Click on the link to begin creating your FTP repository"),
-                                                 )
-
-            rows.append(("sync_task_repository_id__row",
-                         "",
-                         "",
-                         repository_comment))
+                rows.append(("sync_task_repository_id__row",
+                             "",
+                             "",
+                             repository_comment))
 
         parent = FIELDSET()
 
@@ -495,14 +586,14 @@ $('#method_selector').change(function(){
         response.s3.jquery_ready.append(repository_script)
 
         # Accept form
-        if form.accepts(current.request.post_vars,
+        if form.accepts(request.post_vars,
                         current.session,
                         formname="subscription",
                         keepvalues=True):
 
             formvars = form.vars
 
-            listify = lambda x: None if not x else x if type(x) is list else [x]
+            #listify = lambda x: None if not x else x if type(x) is list else [x]
 
             # Fixed resource selection:
             subscription["subscribe"] = [resources[0]]
@@ -515,28 +606,287 @@ $('#method_selector').change(function(){
 
             subscription["filters"] = form.request_vars \
                                       .get("subscription-filters", None)
-
             # Fixed method
             subscription["method"] = formvars.method
             # Fixed Notify On and Frequency
             subscription["notify_on"] = ["new"]
             subscription["frequency"] = "immediately"
             # Alternatively, with notify and frequency selector
-            #subscription["notify_on"] = listify(formvars.notify_on
+            #subscription["notify_on"] = listify(formvars.notify_on)
             #subscription["frequency"] = formvars.frequency
+            # Group IDs
+            group_ids = formvars["group-filter"]
+            # Recipient IDs
+            user_ids = formvars["person-filter"]
 
-            success_subscription = self._update_subscription(subscription)
+            update_admin_subscription = self._update_admin_subscription
+            bulk_user_pe_id = auth.s3_bulk_user_pe_id
+            pr_group_table = s3db.pr_group
+            define_resource = s3db.resource
+            base_query = (stable.deleted != True)
+            if user_ids is not None:
+                # Admin Subscriptions
+                if group_ids is not None and \
+                   len(group_ids) > 0 and \
+                   len(user_ids) > 0:
+                    # Both Individuals & Groups selected
+                    pe_ids = bulk_user_pe_id(user_ids) # Current Selection
+                    subscription_id = request.get_vars.get("subscription_id")
+                    if subscription_id:
+                        query = base_query & (stable.id == subscription_id)
+                        row = db(query).select(stable.pe_id,
+                                               stable.filter_id,
+                                               stable.comments,
+                                               limitby=(0, 1)).first()
+                        pe_id = row.pe_id
+                        comments = json.loads(row.comments)
+                        if "pr_group.id" in comments and \
+                           str(comments["pr_group.id"]) in group_ids:
+                            # Update
+                            success_subscription = update_admin_subscription(\
+                                                subscription,
+                                                pe_id,
+                                                ae_id,
+                                                group_id=comments["pr_group.id"],
+                                                filter_id=row.filter_id,
+                                                subscription_id=subscription_id,
+                                                )
+                            group_ids.remove(str(comments["pr_group.id"]))
+                        elif pe_id in pe_ids.values():
+                            user_id = [key for key, value in pe_ids.iteritems()
+                                       if value == pe_id][0]
+                            # Update
+                            success_subscription = update_admin_subscription(\
+                                                subscription,
+                                                pe_id,
+                                                ae_id,
+                                                user_id=int(user_id),
+                                                filter_id=row.filter_id,
+                                                subscription_id=subscription_id,
+                                                )
+                            del pe_ids[user_id]
+                        else:
+                            # Removed from subscriptions
+                            define_resource("pr_subscription",
+                                            id=subscription_id).delete()
+                            define_resource("pr_filter",
+                                            id=row.filter_id).delete()
+                    if len(group_ids) > 0:
+                        query = base_query & (stable.owned_by_group != None)
+                        # Get all the rows for the group subscription
+                        rows = db(query).select(stable.comments)
+                        subscribed_group_ids = [int(json.loads(row.comments)["pr_group.id"]) for row in rows
+                                                if "pr_group.id" in json.loads(row.comments)]    
+                        for group_id in group_ids:
+                            if int(group_id) in subscribed_group_ids:
+                                comments = json.dumps({"pr_group.id": "%s" % group_id})
+                                row = db(stable.comments == comments).\
+                                                select(stable.id,
+                                                       stable.pe_id,
+                                                       stable.filter_id,
+                                                       limitby=(0, 1)).first()
+                                # Update
+                                success_subscription = update_admin_subscription(\
+                                                    subscription,
+                                                    row.pe_id,
+                                                    ae_id,
+                                                    group_id=group_id,
+                                                    filter_id=row.filter_id,
+                                                    subscription_id=row.id,
+                                                    )
+                            else:
+                                row = db(pr_group_table.id == group_id).\
+                                                select(pr_group_table.pe_id,
+                                                       limitby=(0, 1)).first()
+                                # Create
+                                success_subscription = update_admin_subscription(\
+                                                            subscription,
+                                                            row.pe_id,
+                                                            ae_id,
+                                                            group_id=group_id,
+                                                            )
 
-            if "Sync" in subscription["method"] and formvars.repository_id:
-                properties = self._update_sync(subscription["subscribe"][0]['resource'],
-                                               subscription.get("filters"),
-                                               int(formvars.repository_id),
-                                               properties)
-                properties = json.dumps(properties)
-                db(stable.pe_id == current.auth.user.pe_id).update(comments=properties)
+                    if len(pe_ids.keys()) > 0:
+                        query_ = base_query & (stable.owned_by_group != None)
+                        for pe_id in pe_ids.values():
+                            user_id = [key for key, value in pe_ids.iteritems()
+                                       if value == pe_id][0]
+                            query = query_ & (stable.pe_id == pe_id)
+                            row = db(query).select(stable.id,
+                                                   stable.filter_id,
+                                                   limitby=(0, 1)).first()
+                            if row:
+                                # Update
+                                success_subscription = update_admin_subscription(\
+                                                        subscription,
+                                                        pe_id,
+                                                        ae_id,
+                                                        user_id=int(user_id),
+                                                        filter_id=row.filter_id,
+                                                        subscription_id=row.id,
+                                                        )
+                            else:
+                                # Create record in pr_subscription
+                                success_subscription = update_admin_subscription(\
+                                                            subscription,
+                                                            pe_id,
+                                                            ae_id,
+                                                            user_id=int(user_id),
+                                                            )
+
+                elif group_ids is not None and len(group_ids) > 0:
+                    subscription_id = request.get_vars.get("subscription_id")
+                    if subscription_id:
+                        query = base_query & (stable.id == subscription_id)
+                        row = db(query).select(stable.pe_id,
+                                               stable.filter_id,
+                                               stable.comments,
+                                               limitby=(0, 1)).first()
+                        comments = json.loads(row.comments)
+                        if "pr_group.id" in comments and \
+                           str(comments["pr_group.id"]) in group_ids:
+                            # Update
+                            success_subscription = update_admin_subscription(\
+                                                subscription,
+                                                row.pe_id,
+                                                ae_id,
+                                                group_id=comments["pr_group.id"],
+                                                filter_id=row.filter_id,
+                                                subscription_id=subscription_id,
+                                                )
+                            group_ids.remove(str(comments["pr_group.id"]))
+                        else:
+                            # Removed from subscriptions
+                            define_resource("pr_subscription",
+                                            id=subscription_id).delete()
+                            define_resource("pr_filter",
+                                            id=row.filter_id).delete()
+
+                    if len(group_ids) > 0:
+                        query = base_query & (stable.owned_by_group != None)
+                        # Get all the rows for the group subscription
+                        rows = db(query).select(stable.comments)
+                        subscribed_group_ids = [int(json.loads(row.comments)["pr_group.id"]) for row in rows
+                                                if "pr_group.id" in json.loads(row.comments)]
+                        for group_id in group_ids:
+                            if int(group_id) in subscribed_group_ids:
+                                comments = json.dumps({"pr_group.id": "%s" % group_id})
+                                row = db(stable.comments == comments).\
+                                                select(stable.id,
+                                                       stable.pe_id,
+                                                       stable.filter_id,
+                                                       limitby=(0, 1)).first()
+                                # Update
+                                success_subscription = update_admin_subscription(\
+                                                        subscription,
+                                                        row.pe_id,
+                                                        ae_id,
+                                                        group_id=group_id,
+                                                        filter_id=row.filter_id,
+                                                        subscription_id=row.id,
+                                                        )
+                            else:
+                                row = db(pr_group_table.id == group_id).\
+                                                select(pr_group_table.pe_id,
+                                                       limitby=(0, 1)).first()
+                                # Create
+                                success_subscription = update_admin_subscription(\
+                                                            subscription,
+                                                            row.pe_id,
+                                                            ae_id,
+                                                            group_id=group_id,
+                                                            )
+                elif user_ids is not None and len(user_ids) > 0:
+                    pe_ids = bulk_user_pe_id(user_ids) # Current selection
+                    subscription_id = request.get_vars.get("subscription_id")
+                    if subscription_id:
+                        query = base_query & (stable.id == subscription_id)
+                        row = db(query).select(stable.pe_id,
+                                               stable.filter_id,
+                                               stable.comments,
+                                               limitby=(0, 1)).first()
+                        pe_id = row.pe_id
+                        if pe_id in pe_ids.values():
+                            user_id = [key for key, value in pe_ids.iteritems()
+                                       if value == pe_id][0]
+                            # Update
+                            success_subscription = update_admin_subscription(\
+                                                subscription,
+                                                row.pe_id,
+                                                ae_id,
+                                                user_id=int(user_id),
+                                                filter_id=row.filter_id,
+                                                subscription_id=subscription_id,
+                                                )
+                            del pe_ids[user_id]
+                        else:
+                            # Removed from subscriptions
+                            define_resource("pr_subscription",
+                                            id=subscription_id).delete()
+                            define_resource("pr_filter",
+                                            id=row.filter_id).delete()
+
+                    if len(pe_ids.keys()) > 0:
+                        base_query &= (stable.owned_by_group != None)
+                        for pe_id in pe_ids.values():
+                            user_id = [key for key, value in pe_ids.iteritems()
+                                       if value == pe_id][0]
+                            query = base_query & (stable.pe_id == pe_id)
+                            row = db(query).select(stable.id,
+                                                   stable.filter_id,
+                                                   limitby=(0, 1)).first()
+                            if row:
+                                # Update
+                                success_subscription = update_admin_subscription(\
+                                                        subscription,
+                                                        pe_id,
+                                                        ae_id,
+                                                        user_id=int(user_id),
+                                                        filter_id=row.filter_id,
+                                                        subscription_id=row.id,
+                                                        )
+                            else:
+                                # Insert
+                                success_subscription = update_admin_subscription(\
+                                                            subscription,
+                                                            pe_id,
+                                                            ae_id,
+                                                            user_id=int(user_id),
+                                                            )
+                else:
+                    # Removed from subscription
+                    subscription_id = request.get_vars.get("subscription_id")
+                    if subscription_id:
+                        row = db(stable.id == subscription_id).select(\
+                                                        stable.filter_id,
+                                                        limitby=(0, 1)).first()
+                        define_resource("pr_subscription",
+                                        id=subscription_id).delete()
+                        define_resource("pr_filter",
+                                        id=row.filter_id).delete()
+                redirect(URL(c="pr", f="subscription"))
             else:
-                self._remove_sync(properties)
-                db(stable.pe_id == current.auth.user.pe_id).update(comments=None)
+                # Normal user
+                success_subscription = self._update_subscription(subscription)
+                # Process Sync FTP Subscription
+                if "Sync" in subscription["method"] and formvars.repository_id:
+                    properties = self._update_sync(subscription["subscribe"][0]['resource'],
+                                                   subscription.get("filters"),
+                                                   int(formvars.repository_id),
+                                                   properties)
+                    properties = json.dumps(properties)
+                    query = (stable.deleted != True) & \
+                            (stable.pe_id == auth_user.pe_id) & \
+                            (stable.owned_by_group == None) & \
+                            (stable.owned_by_user == auth_user.id)
+                    db(query).update(comments=properties)
+                else:
+                    self._remove_sync(properties)
+                    query = (stable.deleted != True) & \
+                            (stable.pe_id == auth_user.pe_id) & \
+                            (stable.owned_by_group == None) & \
+                            (stable.owned_by_user == auth_user.id)
+                    db(query).update(comments=None)
 
             if success_subscription:
                 response.confirmation = messages.SUCCESS
@@ -556,15 +906,16 @@ $('#method_selector').change(function(){
 
         stable = s3db.pr_subscription
         ftable = s3db.pr_filter
-        query = (stable.pe_id == pe_id) & \
-                (stable.deleted != True)
+        query = (stable.deleted != True) & \
+                (stable.pe_id == pe_id) & \
+                (stable.owned_by_group == None) & \
+                (stable.owned_by_user == current.auth.user.id)
+
         left = ftable.on(ftable.id == stable.filter_id)
         row = db(query).select(stable.id,
                                #stable.notify_on,
                                #stable.frequency,
                                stable.method,
-                               #stable.repository_id,
-                               #stable.representation,
                                stable.comments,
                                ftable.id,
                                ftable.query,
@@ -623,6 +974,89 @@ $('#method_selector').change(function(){
                            "comments": None,
                            })
 
+        return output
+
+    # -------------------------------------------------------------------------
+    def _get_admin_subscription(self, subscription_id=None, pe_id=None):
+        """ Get current admin subscription settings """
+
+        s3db = current.s3db
+        stable = s3db.pr_subscription
+        ftable = s3db.pr_filter
+        output = {}
+        get_vars = {}
+        if pe_id is not None and subscription_id is not None:
+            query = (stable.id == subscription_id) & \
+                    (stable.deleted != True) & \
+                    (stable.pe_id == pe_id)
+            left = ftable.on(ftable.id == stable.filter_id)
+            row = current.db(query).select(stable.method,
+                                           ftable.query,
+                                           left=left,
+                                           limitby=(0, 1)).first()
+
+            if row:
+                s = getattr(row, "pr_subscription")
+                f = getattr(row, "pr_filter")
+
+                if f.query:
+                    filters = json.loads(f.query)
+                    for k, v in filters:
+                        if v is None:
+                            continue
+                        if k in get_vars:
+                            if type(get_vars[k]) is list:
+                                get_vars[k].append(v)
+                            else:
+                                get_vars[k] = [get_vars[k], v]
+                        else:
+                            get_vars[k] = v
+                output.update({"get_vars": get_vars,
+                               "method": s.method,
+                               })
+        else:
+            # Form defaults
+            output.update({"get_vars": get_vars,
+                           "method": stable.method.default,
+                           })
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def _get_recipients_and_groups(self, subscription_id=None, pe_id=None, caller=None):
+        """ Get current recipient and the current group settings"""
+
+        stable = current.s3db.pr_subscription
+        output = {}
+        get_vars = {}
+        if pe_id is not None and subscription_id is not None:
+            query = (stable.id == subscription_id) & \
+                    (stable.deleted != True) & \
+                    (stable.pe_id == pe_id)
+            row = current.db(query).select(stable.comments,
+                                           limitby=(0, 1)).first()
+            comments = json.loads(row.comments)
+            if row is not None and comments is not None:
+                if caller == "recipients" and "auth_user.id" in comments:
+                    filters = [["id__belongs", "%s" % str(comments["auth_user.id"])]]
+                elif caller == "groups" and "pr_group.id" in comments:
+                    filters = [["id__belongs", "%s" % str(comments["pr_group.id"])]]
+                else:
+                    filters = None
+                if filters is not None:
+                    for k, v in filters:
+                        if v is None:
+                            continue
+                        if k in get_vars:
+                            if type(get_vars[k]) is list:
+                                get_vars[k].append(v)
+                            else:
+                                get_vars[k] = [get_vars[k], v]
+                        else:
+                            get_vars[k] = v
+
+        output.update({"get_vars": get_vars,
+                       })
         return output
 
     # -------------------------------------------------------------------------
@@ -698,7 +1132,8 @@ $('#method_selector').change(function(){
                     unsubscribed = {"deleted": True,
                                     "deleted_fk": fk,
                                     "resource": resource,
-                                    "url": url}
+                                    "url": url,
+                                    }
                     rtable.update_or_insert(_key=unsubscribed,
                                             deleted=False,
                                             deleted_fk=None,
@@ -730,6 +1165,146 @@ $('#method_selector').change(function(){
             db(rtable.id.belongs(unsubscribe)).update(deleted=True,
                                                       deleted_fk=fk,
                                                       subscription_id=None)
+
+        # Update subscription
+        subscription["id"] = subscription_id
+        subscription["filter_id"] = filter_id
+        return subscription
+
+    # -------------------------------------------------------------------------
+    def _update_admin_subscription(self,
+                                   subscription,
+                                   pe_id,
+                                   alert_editor_id,
+                                   user_id=None,
+                                   group_id=None,
+                                   filter_id=None,
+                                   subscription_id=None,
+                                   ):
+        """ Update Admin subscription """
+
+        db = current.db
+        s3db = current.s3db
+        stable = s3db.pr_subscription
+        # Save filters
+        filters = subscription.get("filters")
+
+        if user_id is not None:
+            comment_filter = {"auth_user.id": str(user_id)}
+        elif group_id is not None:
+            comment_filter = {"pr_group.id": str(group_id)}
+        else:
+            comment_filter = None
+
+        if filters:
+            ftable = s3db.pr_filter
+            filters_ = json.loads(filters)
+            filters_ = [filter_ for filter_ in filters_
+                        if filter_[0] != "id__belongs"]
+            filters_ = json.dumps(filters_)
+            if filter_id is None:
+                success = ftable.insert(pe_id=pe_id, query=filters_)
+                filter_id = success
+            else:
+                success = db(ftable.id == filter_id).update(query=filters_)
+            if not success:
+                return None
+        # Save subscription settings
+        frequency = subscription["frequency"]
+        if subscription_id is None:
+            if comment_filter is not None:
+                comment_filter = json.dumps(comment_filter)
+                success = stable.insert(pe_id=pe_id,
+                                        filter_id=filter_id,
+                                        notify_on=subscription["notify_on"],
+                                        frequency=frequency,
+                                        method=subscription["method"],
+                                        comments=comment_filter,
+                                        owned_by_group=alert_editor_id,
+                                        )
+            else:
+                success = stable.insert(pe_id=pe_id,
+                                        filter_id=filter_id,
+                                        notify_on=subscription["notify_on"],
+                                        frequency=frequency,
+                                        method=subscription["method"],
+                                        owned_by_group=alert_editor_id,
+                                        )
+            subscription_id = success
+        else:
+            if comment_filter is not None:
+                comment_filter = json.dumps(comment_filter)
+                success = db(stable.id == subscription_id).update(pe_id=pe_id,
+                                            filter_id=filter_id,
+                                            notify_on=subscription["notify_on"],
+                                            frequency=frequency,
+                                            method=subscription["method"],
+                                            comments=comment_filter,
+                                            owned_by_group=alert_editor_id,
+                                            )
+            else:
+                success = db(stable.id == subscription_id).update(pe_id=pe_id,
+                                            filter_id=filter_id,
+                                            notify_on=subscription["notify_on"],
+                                            frequency=frequency,
+                                            method=subscription["method"],
+                                            owned_by_group=alert_editor_id,
+                                            )
+        if not success:
+            return None
+
+        # Save subscription
+        rtable = s3db.pr_subscription_resource
+        subscribe = subscription.get("subscribe")
+        if subscribe:
+            subscribed = {}
+            timestamps = {}
+            intervals = s3db.pr_subscription_check_intervals
+            interval = timedelta(minutes=intervals.get(frequency, 0))
+            now = datetime.utcnow()
+            row = db(rtable.subscription_id == subscription_id).select(\
+                                                        limitby=(0,1)).first()
+            if row:
+                subscribed[(row.resource, row.url)] = row.id
+                timestamps[row.id] = (row.last_check_time,
+                                      row.next_check_time)
+
+            fk = '''{"subscription_id": %s}''' % subscription_id
+            for new in subscribe:
+                resource, url = new["resource"], new["url"]
+                if (resource, url) not in subscribed:
+                    # Restore subscription if previously unsubscribed, else
+                    # insert new record
+                    unsubscribed = {"deleted": True,
+                                    "deleted_fk": fk,
+                                    "resource": resource,
+                                    "url": url,
+                                    }
+
+                    rtable.update_or_insert(_key=unsubscribed,
+                                            deleted=False,
+                                            deleted_fk=None,
+                                            subscription_id=subscription_id,
+                                            resource=resource,
+                                            url=url,
+                                            last_check_time=now,
+                                            next_check_time=None)
+                else:
+                    # Keep it
+                    record_id = subscribed[(resource, url)]
+                    last_check_time, next_check_time = timestamps[record_id]
+                    data = {}
+                    if not last_check_time:
+                        # Someone has tampered with the timestamps, so
+                        # we need to reset them and start over
+                        last_check_time = now
+                        data["last_check_time"] = last_check_time
+                    due = last_check_time + interval
+                    if next_check_time != due:
+                        # Time interval has changed
+                        data["next_check_time"] = due
+                    if data:
+                        db(rtable.id == record_id).update(**data)
 
         # Update subscription
         subscription["id"] = subscription_id
