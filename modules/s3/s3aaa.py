@@ -4141,6 +4141,24 @@ $.filterOptionsS3({
         return row.pe_id if row else None
 
     # -------------------------------------------------------------------------
+    def s3_bulk_user_pe_id(self, user_ids):
+        """
+            Get the list of person pe_id for list of user_ids
+
+            @param user_id: list of user IDs
+        """
+
+        table = current.s3db.pr_person_user
+        if not isinstance(user_ids, list):
+            user_ids = [user_ids]
+        rows = current.db(table.user_id.belongs([user_id for user_id in user_ids])).\
+                                                            select(table.pe_id,
+                                                                   table.user_id)
+        if rows:
+            return {row.user_id: row.pe_id for row in rows}
+        return None
+
+    # -------------------------------------------------------------------------
     def s3_logged_in_person(self):
         """
             Get the person record ID for the current logged-in user
