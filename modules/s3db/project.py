@@ -5588,7 +5588,7 @@ class project_SummaryReport(S3Method):
             beneficiaries = benefs
 
         report_title = s3_unicode(T("Project Summary Report")).encode("utf8")
-        filename = "%s_%s.pdf" % (report_title, project_title)
+        filename = "%s_%s.pdf" % (report_title, s3_unicode(project_title).encode("utf8"))
 
         header = DIV(s3db.org_organisation_logo(organisation_id),
                      date_represent(r.utcnow),

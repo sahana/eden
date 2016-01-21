@@ -3633,6 +3633,9 @@ class S3SQLInlineLink(S3SQLInlineComponent):
                 opts = validator.options()
             except:
                 pass
+            #else:
+            #    import pydevd;pydevd.settrace()
+            #    opts = [(opt[0], opt[1].encode("utf-8")) for opt in opts]
 
         # Filter these options?
         widget_opts = self.options

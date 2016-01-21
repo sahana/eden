@@ -329,6 +329,7 @@ class S3Represent(object):
         """
 
         labels = self.labels
+        values = None
 
         if self.slabels:
             # String Template
@@ -341,10 +342,14 @@ class S3Represent(object):
             values = [row[f] for f in self.fields if row[f] not in (None, "")]
             if values:
                 sep = self.field_sep
-                v = sep.join([s3_unicode(v).encode('utf-8') for v in values])
+                if self.translate and not type(values[0]) is lazyT:
+                    T = current.T
+                    v = sep.join([s3_unicode(T(v)).encode("utf-8") for v in values])
+                else:
+                    v = sep.join([s3_unicode(v).encode("utf-8") for v in values])
             else:
                 v = self.none
-        if self.translate and not type(v) is lazyT:
+        if not values and self.translate and not type(v) is lazyT:
             output = current.T(v)
         else:
             output = v
