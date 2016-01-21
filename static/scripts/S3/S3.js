@@ -1112,6 +1112,16 @@ S3.openPopup = function(url, center) {
             }
         }
 
+        // Represent options unless settings.represent is falsy
+        var represent = settings.represent;
+        if (represent || typeof represent == 'undefined') {
+            if (url.indexOf('?') != -1) {
+                url = url.concat('&represent=1');
+            } else {
+                url = url.concat('?represent=1');
+            }
+        }
+
         var request = null;
         if (!settings.getWidgetHTML) {
 

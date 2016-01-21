@@ -341,7 +341,7 @@ class S3Represent(object):
             values = [row[f] for f in self.fields if row[f] not in (None, "")]
             if values:
                 sep = self.field_sep
-                v = sep.join([s3_unicode(v) for v in values])
+                v = sep.join([s3_unicode(v).encode('utf-8') for v in values])
             else:
                 v = self.none
         if self.translate and not type(v) is lazyT:

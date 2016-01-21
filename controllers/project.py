@@ -358,7 +358,7 @@ def project():
                 #    field.readable = field.writable = True
                 #    field.requires = S3Represent(lookup="budget_budget", key="budget_entity_id")
                 #    field.requires = IS_ONE_OF()
-                #    
+                #
                 #    crud_form = S3SQLCustomForm("project_id",
                 #                                "human_resource_id",
                 #                                "status",
@@ -487,15 +487,16 @@ def set_theme_requires(sector_ids):
     theme_ids = [row.project_theme.id for row in rows
                  if not row.project_theme_sector.sector_id or
                     row.project_theme_sector.sector_id in sector_ids]
+
     table = s3db.project_theme_project
-    table.theme_id.requires = IS_EMPTY_OR(
-                                IS_ONE_OF(db, "project_theme.id",
-                                          s3base.S3Represent(lookup="project_theme"),
-                                          filterby="id",
-                                          filter_opts=theme_ids,
-                                          sort=True,
-                                          )
-                                )
+    field = table.theme_id
+    field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "project_theme.id",
+                                           field.represent,
+                                           filterby="id",
+                                           filter_opts=theme_ids,
+                                           sort=True,
+                                           )
+                                 )
 
 # -----------------------------------------------------------------------------
 def set_activity_type_requires(tablename, sector_ids):
