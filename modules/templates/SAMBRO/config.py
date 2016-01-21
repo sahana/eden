@@ -71,7 +71,7 @@ def config(settings):
     # CAP Settings
     # Uncomment this according to country profile
     #settings.cap.restrict_fields = True
-    
+
     # -------------------------------------------------------------------------
     # Notifications
 
@@ -269,6 +269,42 @@ def config(settings):
         return attr
 
     settings.customise_sync_repository_controller = customise_sync_repository_controller
+
+    # -------------------------------------------------------------------------
+    def customise_pr_subscription_controller(**attr):
+
+        from gluon.html import URL, A
+        from s3 import S3CRUD
+        s3 = current.response.s3
+
+        # Filter admin based subscription
+        s3.filter = (current.s3db.pr_subscription.owned_by_group != None)
+        # Custom postp
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive and isinstance(output, dict):
+                # Modify Update Button
+                update_url = URL(c="default", f="index", args=["subscriptions"],
+                                 vars={"subscription_id": "[id]"})
+                S3CRUD.action_buttons(r, update_url=update_url)
+                # Modify Add Button
+                if "form" in output:
+                    add_btn = A(T("Create Subscription"),
+                                _class="action-btn",
+                                _href=URL(c="default", f="index", args=["subscriptions"])
+                                )
+                    output["showadd_btn"] = add_btn
+
+            return output
+        s3.postp = custom_postp
+
+        return attr
+
+    settings.customise_pr_subscription_controller = customise_pr_subscription_controller
 
     # -------------------------------------------------------------------------
     def customise_cap_warning_priority_resource(r, tablename):

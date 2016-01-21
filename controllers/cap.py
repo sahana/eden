@@ -161,6 +161,7 @@ def alert():
                 s3db.configure(tablename,
                                editable=False,
                                deletable=False,
+                               insertable=False,
                                )
             if settings.get_cap_restrict_fields():
                 if r.record.msg_type in ("Update", "Cancel", "Error"):
@@ -547,7 +548,7 @@ def alert():
                                    )
 
                     response.s3.stylesheets.append("../themes/default/cap.css")
-                    
+
                 elif r.method == "assign":
                     translate = settings.get_L10n_translate_cap_area()
                     if translate:
@@ -582,6 +583,7 @@ def alert():
                     s3db.configure("cap_info",
                                    editable = False,
                                    deletable = False,
+                                   insertable=False,
                                    )
                 if settings.get_cap_restrict_fields():
                     if r.record.msg_type in ("Update", "Cancel", "Error"):
@@ -635,6 +637,7 @@ def alert():
                     s3db.configure("cap_area",
                                    editable = False,
                                    deletable = False,
+                                   insertable=False,
                                    )
 
             elif r.component_name == "resource":
@@ -661,6 +664,7 @@ def alert():
                     s3db.configure("cap_resource",
                                    editable = False,
                                    deletable = False,
+                                   insertable=False,
                                    )
 
             # @ToDo: Move inside correct component context (None?)
@@ -1051,7 +1055,8 @@ def set_priority_js():
                               )
 
     from gluon.serializers import json as jsons
-    p_settings = [(T(r.name), r.urgency, r.severity, r.certainty, r.color_code)\
+    from s3 import s3_unicode
+    p_settings = [(s3_unicode(T(r.name)), r.urgency, r.severity, r.certainty, r.color_code)\
                  for r in rows]
 
     priority_conf = '''S3.cap_priorities=%s''' % jsons(p_settings)
@@ -1063,18 +1068,18 @@ def set_priority_js():
 
 # -----------------------------------------------------------------------------
 def cap_AreaRowOptionsBuilder(alert_id, caller=None):
-    """ 
+    """
         Build the options for the cap_area associated with alert_id
         with the translated name (if available)
         @param caller: currently used by assign method
     """
-          
+
     atable = s3db.cap_area
-    
+
     if caller:
         assign = caller == "assign"
     else:
-        assign = None        
+        assign = None
     if assign:
         query = (atable.is_template == True) & (atable.deleted != True)
     else:
@@ -1091,7 +1096,7 @@ def cap_AreaRowOptionsBuilder(alert_id, caller=None):
             query_ = (atable.id == values[0])
         else:
             query_ = (atable.id.belongs(values))
-                                
+
         ltable = s3db.cap_area_name
         if assign:
             left = [ltable.on((ltable.area_id == atable.id) & \
@@ -1101,20 +1106,20 @@ def cap_AreaRowOptionsBuilder(alert_id, caller=None):
             left = [ltable.on((ltable.area_id == atable.template_area_id) & \
                               (ltable.language == session.s3.language)),
                     ]
-            
+
         fields = [atable.name,
                   ltable.name_l10n,
-                  ]                
+                  ]
         rows_ = db(query_).select(left=left,
                                   limitby=(0, count),
                                   *fields)
-        
+
         cap_area_options = {}
         for row_ in rows_:
                 cap_area_options[row_["cap_area.name"]] = \
                             s3_unicode(row_["cap_area_name.name_l10n"] or \
                                        row_["cap_area.name"])
-                            
+
         return cap_area_options
 
 # END =========================================================================

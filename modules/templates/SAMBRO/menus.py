@@ -59,8 +59,9 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         auth = current.auth
+        has_role = auth.s3_has_role
         if auth.s3_logged_in():
-            if auth.s3_has_role("ADMIN"):
+            if has_role("ADMIN"):
                 # Full set
                 # @ToDo: Add menu entries for "Create RSS Feed for CAP" & "Create RSS Feed for CMS"
                 return super(S3MainMenu, cls).menu_modules()
@@ -69,12 +70,12 @@ class S3MainMenu(default.S3MainMenu):
                 menus_ = [homepage(),
                           ]
 
-                if auth.s3_has_role("MAP_ADMIN"):
+                if has_role("MAP_ADMIN"):
                     menus_.extend([homepage("cap"),
                                   homepage("gis"),
                                   ])
-                elif auth.s3_has_role("ALERT_EDITOR") or \
-                     auth.s3_has_role("ALERT_APPROVER"):
+                elif has_role("ALERT_EDITOR") or \
+                     has_role("ALERT_APPROVER"):
                     menus_.append(homepage("cap"),
                                   )
                 else:
@@ -103,11 +104,19 @@ class S3MainMenu(default.S3MainMenu):
         else:
             # Logged-in
             user_id = auth.s3_logged_in_person()
+            has_role = auth.s3_has_role
+            if not (has_role("ALERT_EDITOR") or \
+                    has_role("ALERT_APPROVER") or \
+                    has_role("ADMIN")):
+                notification_settings = MM("Subscription Settings", c="default", f="index",
+                                           m="subscriptions")
+            else:
+                notification_settings = None
+                
             menu_auth = MM(auth.user.email, link=False, right=True)(
+                           notification_settings,
                            MM("Edit Profile", c="pr", f="person", args=[user_id]),
                            MM("Details", c="default", f="user", m="profile"),
-                           MM("Notification Settings", c="default", f="index",
-                              m="subscriptions"),
                            MM("Change Password", c="default", f="user",
                               m="change_password"),
                            MM("Logout", c="default", f="user", m="logout"),
@@ -165,6 +174,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                 s3_has_role("ALERT_APPROVER")
 
         return M(c="cap")(
+                    M("Manage Recipients",
+                      c="pr",
+                      f="subscription",
+                      check=cap_editors,
+                      ),
+                    M("Manage Recipient Groups",
+                      c="pr",
+                      f="group",
+                      check=cap_editors,
+                      ),
                     M("Alerts", f="alert",
                       check=cap_editors)(
                         M("Create", m="create"),
