@@ -1616,7 +1616,8 @@ class S3HRSalaryModel(S3Model):
                              ),
                      Field("monthly_amount", "double",
                            requires = IS_EMPTY_OR(
-                                        IS_FLOAT_IN_RANGE(minimum=0.0)),
+                                        IS_FLOAT_IN_RANGE(minimum=0.0)
+                                        ),
                            default = 0.0,
                            ),
                      *s3_meta_fields())
@@ -2710,7 +2711,9 @@ class S3HRSkillModel(S3Model):
                      # @ToDo: Auto-populate from course
                      Field("hours", "integer",
                            label = T("Hours"),
-                           requires = IS_INT_IN_RANGE(1, 1000),
+                           requires = IS_EMPTY_OR(
+                                        IS_INT_IN_RANGE(1, 1000),
+                                        ),
                            ),
                      person_id(label = INSTRUCTOR,
                                comment = int_instructor_tooltip,
@@ -2846,6 +2849,7 @@ class S3HRSkillModel(S3Model):
         #
         # Users can add their own but these are confirmed only by specific roles
         #
+        course_grade_opts = settings.get_hrm_course_grades()
 
         tablename = "hrm_training"
         define_table(tablename,
@@ -2876,11 +2880,20 @@ class S3HRSkillModel(S3Model):
                      Field("grade", "integer",
                            label = T("Grade"),
                            represent = lambda opt: \
-                                       hrm_performance_opts.get(opt, NONE),
-                           # Default to pass/fail (can override to 5-levels in Controller)
+                                       course_grade_opts.get(opt, NONE),
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET(hrm_pass_fail_opts,
+                                        IS_IN_SET(course_grade_opts,
                                                   zero=None)),
+                           readable = False,
+                           writable = False,
+                           ),
+                     # Can store specific test result here
+                     Field("grade_details", "float",
+                           default = 0.0,
+                           label = T("Grade Details"),
+                           requires = IS_EMPTY_OR(
+                                        IS_FLOAT_IN_RANGE(minimum=0.0)
+                                        ),
                            readable = False,
                            writable = False,
                            ),
@@ -4142,7 +4155,7 @@ class S3HRExperienceModel(S3Model):
                                   start_field = "hrm_experience_start_date",
                                   default_interval = 12,
                                   ),
-                          Field("hours", "double",
+                          Field("hours", "float",
                                 label = T("Hours"),
                                 ),
                           #Field("place",
@@ -4497,11 +4510,11 @@ class S3HRProgrammeModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
-                     s3_date(future=0),
+                     s3_date(future = 0),
                      s3_date("end_date",
                              label = T("End Date"),
                              ),
-                     Field("hours", "double",
+                     Field("hours", "float",
                            label = T("Hours"),
                            ),
                      # Training records are auto-populated

@@ -2656,13 +2656,15 @@ class S3Config(Storage):
 
     # -------------------------------------------------------------------------
     # Human Resource Management
-    #
-    #def get_hrm_human_resource_label(self):
-    #    """
-    #        Label for 'Human Resources'
-    #        e.g. 'Contacts'
-    #    """
-    #    return current.T(self.hrm.get("human_resource_label", "Staff"))
+
+    def get_hrm_course_grades(self):
+        """
+            Grade options for Courses
+        """
+        T = current.T
+        return self.__lazy("hrm", "course_grades", default={8: T("Pass"),
+                                                            9: T("Fail"),
+                                                            })
 
     def get_hrm_staff_label(self):
         """

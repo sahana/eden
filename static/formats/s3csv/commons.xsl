@@ -278,7 +278,9 @@
 
     <xsl:template name="Organisation">
 
-        <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+        <xsl:param name="Field">Organisation</xsl:param>
+
+        <xsl:variable name="OrgName" select="col[@field=$Field]/text()"/>
 
         <resource name="org_organisation">
             <xsl:attribute name="tuid">

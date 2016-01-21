@@ -1028,7 +1028,7 @@ class S3PersonModel(S3Model):
                                                        # multiple instances for tracking reasons
                                                        "multiple": False,
                                                        },
-                            # Case Management  (Disaster Victim Registry)
+                            # Case Management (Disaster Victim Registry)
                             dvr_allowance = "person_id",
                             dvr_beneficiary_data = "person_id",
                             dvr_case = {"name": "dvr_case",

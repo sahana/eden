@@ -466,6 +466,20 @@ def config(settings):
 
     #settings.pr.dob_required = dob_required
 
+    def hrm_course_grades(default):
+        """ Course Grades """
+
+        default = {0: T("No Show"),
+                   1: T("Left Early"),
+                   2: T("Attendance"),
+                   8: T("Pass"),
+                   9: T("Fail"),
+                   }
+
+        return default
+
+    settings.hrm.course_grades = hrm_course_grades
+
     # -------------------------------------------------------------------------
     # Projects
     settings.project.assign_staff_tab = False
@@ -966,6 +980,8 @@ def config(settings):
         f.readable = f.writable = True
         f.label = T("Training Center")
         f.comment = False # Don't create here
+        org_represent = s3db.org_OrganisationRepresent(parent=False)
+        f.represent = org_represent
 
         ttable = s3db.org_organisation_type
         try:
@@ -981,7 +997,7 @@ def config(settings):
             filter_opts = [row.organisation_id for row in rows]
 
             f.requires = IS_ONE_OF(db, "org_organisation.id",
-                                   s3db.org_OrganisationRepresent(parent=False),
+                                   org_represent,
                                    orderby = "org_organisation.name",
                                    sort = True,
                                    filterby = "id",
@@ -1006,6 +1022,7 @@ def config(settings):
         s3db.configure(tablename,
                        crud_form = crud_form,
                        list_fields = list_fields,
+                       orderby = "hrm_course.code",
                        )
 
     settings.customise_hrm_course_resource = customise_hrm_course_resource
@@ -1275,6 +1292,38 @@ def config(settings):
     #settings.customise_hrm_training_controller = customise_hrm_training_controller
 
     # -------------------------------------------------------------------------
+    def hrm_training_onaccept(form):
+        """
+            Populate Grade from Grade Details
+        """
+
+        # @ToDo: Lookup Pass mark from Courses
+        return
+
+    # -------------------------------------------------------------------------
+    def customise_hrm_training_resource(r, tablename):
+
+        s3db = current.s3db
+        table = s3db.hrm_training
+        f = table.grade
+        f.readable = f.writable = True
+        f = table.grade_details
+        f.readable = f.writable = True
+
+        #default_onaccept = s3db.get_config(tablename, "onaccept")
+        #if default_onaccept and not isinstance(default_onaccept, list): # Catch running twice
+        #    onaccept = [default_onaccept,
+        #                hrm_training_onaccept,
+        #                ]
+        #else:
+        #    onaccept = hrm_training_onaccept
+        #s3db.configure(tablename,
+        #               onaccept = onaccept,
+        #               )
+
+    settings.customise_hrm_training_resource = customise_hrm_training_resource
+
+    # -------------------------------------------------------------------------
     def customise_hrm_training_event_resource(r, tablename):
 
         from s3 import IS_ONE_OF, S3Represent, S3SQLCustomForm, S3SQLInlineComponent
@@ -1285,10 +1334,13 @@ def config(settings):
 
         # @ToDo: Default Filter for Training Center staff
 
+        org_represent = s3db.org_OrganisationRepresent(parent=False)
+
         f = table.organisation_id
         f.readable = f.writable = True
         f.label = T("Training Center")
         f.comment = False # Don't create here
+        f.represent = org_represent
 
         ttable = s3db.org_organisation_type
         try:
@@ -1304,7 +1356,7 @@ def config(settings):
             filter_opts = [row.organisation_id for row in rows]
 
             f.requires = IS_ONE_OF(db, "org_organisation.id",
-                                   s3db.org_OrganisationRepresent(parent=False),
+                                   org_represent,
                                    orderby = "org_organisation.name",
                                    sort = True,
                                    filterby = "id",
@@ -1316,10 +1368,14 @@ def config(settings):
         requires = table.hours.requires
         table.hours.requires = IS_EMPTY_OR(table.hours)
 
+        site_represent = S3Represent(lookup = "org_site")
+
         # Filter list of Venues
         f = table.site_id
         f.default = None
         f.label = T("Country")
+        f.represent = site_represent
+
         ftable = s3db.org_facility
         ltable = s3db.org_site_facility_type
         ttable = s3db.org_facility_type
@@ -1330,7 +1386,7 @@ def config(settings):
         rows = db(query).select(ftable.site_id)
         filter_opts = [row.site_id for row in rows]
         f.requires = IS_ONE_OF(db, "org_site.site_id",
-                               S3Represent(lookup = "org_site"),
+                               site_represent,
                                filterby="site_id",
                                filter_opts=filter_opts,
                                )
