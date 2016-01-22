@@ -346,6 +346,7 @@ class S3Represent(object):
                 # Multiple values => concatenate with separator
                 if self.translate:
                     # Translate items individually before concatenating
+                    T = current.T
                     values = [T(v) if not type(v) is lazyT else v for v in values]
                     translated = True
                 sep = self.field_sep
