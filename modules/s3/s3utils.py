@@ -1300,7 +1300,7 @@ def s3_get_foreign_key(field, m2m=True):
 def s3_unicode(s, encoding="utf-8"):
     """
         Convert an object into an unicode instance, to be used instead of
-        unicode(s) (Note: user data should never be converted into str).
+        unicode(s)
 
         @param s: the object
         @param encoding: the character encoding
@@ -1324,9 +1324,25 @@ def s3_unicode(s, encoding="utf-8"):
     except UnicodeDecodeError:
         if not isinstance(s, Exception):
             raise
-        else:
-            s = " ".join([s3_unicode(arg, encoding) for arg in s])
+        s = " ".join([s3_unicode(arg, encoding) for arg in s])
     return s
+
+def s3_str(s, encoding="utf-8"):
+    """
+        Unicode-safe conversion of an object s into a str, to be used
+        instead of str(s)
+
+        @param s: the object
+        @param encoding: the desired character encoding for the str
+    """
+
+    if type(s) is str:
+        if encoding == "utf-8":
+            return s
+        else:
+            return s3.decode("utf-8", "strict").encode(encoding, "strict")
+    else:
+        return s3_unicode(s).encode(encoding, "strict")
 
 # =============================================================================
 def s3_flatlist(nested):

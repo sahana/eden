@@ -45,7 +45,7 @@ from gluon.languages import lazyT
 from s3dal import Query, SQLCustomType
 from s3datetime import S3DateTime
 from s3navigation import S3ScriptItem
-from s3utils import s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, S3MarkupStripper
+from s3utils import s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, s3_str, S3MarkupStripper
 from s3validators import IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
 from s3widgets import S3CalendarWidget, S3DateWidget, S3DateTimeWidget
 
@@ -329,7 +329,8 @@ class S3Represent(object):
         """
 
         labels = self.labels
-        values = None
+
+        translated = False
 
         if self.slabels:
             # String Template
@@ -340,16 +341,21 @@ class S3Represent(object):
         else:
             # Default
             values = [row[f] for f in self.fields if row[f] not in (None, "")]
-            if values:
+
+            if len(values) > 1:
+                # Multiple values => concatenate with separator
+                if self.translate:
+                    # Translate items individually before concatenating
+                    values = [T(v) if not type(v) is lazyT else v for v in values]
+                    translated = True
                 sep = self.field_sep
-                if self.translate and not type(values[0]) is lazyT:
-                    T = current.T
-                    v = sep.join([s3_unicode(T(v)).encode("utf-8") for v in values])
-                else:
-                    v = sep.join([s3_unicode(v).encode("utf-8") for v in values])
+                v = sep.join([s3_str(v) for v in values])
+            elif values:
+                v = s3_str(values[0])
             else:
                 v = self.none
-        if not values and self.translate and not type(v) is lazyT:
+
+        if not translated and self.translate and not type(v) is lazyT:
             output = current.T(v)
         else:
             output = v
@@ -377,7 +383,7 @@ class S3Represent(object):
         """
 
         if self.linkto:
-            k = s3_unicode(k)
+            k = s3_str(k)
             return A(v, _href=self.linkto.replace("[id]", k) \
                                          .replace("%5Bid%5D", k))
         else:
@@ -457,7 +463,7 @@ class S3Represent(object):
             if show_link:
                 link = self.link
                 rows = self.rows
-                labels = [[link(k, s3_unicode(items[k]), row=rows.get(k)), ", "]
+                labels = [[link(k, s3_str(items[k]), row=rows.get(k)), ", "]
                           if k in items else [default, ", "]
                           for k in values]
                 if labels:
@@ -465,7 +471,7 @@ class S3Represent(object):
                 else:
                     return ""
             else:
-                labels = [s3_unicode(items[k])
+                labels = [s3_str(items[k])
                           if k in items else default for k in values]
                 if labels:
                     return ", ".join(labels)
@@ -553,7 +559,7 @@ class S3Represent(object):
             else:
                 return ""
         else:
-            return ", ".join([s3_unicode(labels[v])
+            return ", ".join([s3_str(labels[v])
                               if v in labels else self.default
                               for v in value])
 
@@ -569,7 +575,7 @@ class S3Represent(object):
         # Default representations
         messages = current.messages
         if self.default is None:
-            self.default = s3_unicode(messages.UNKNOWN_OPT)
+            self.default = s3_str(messages.UNKNOWN_OPT)
         if self.none is None:
             self.none = messages["NONE"]
 
@@ -784,7 +790,7 @@ class S3RepresentLazy(object):
     # -------------------------------------------------------------------------
     def __repr__(self):
 
-        return s3_unicode(self.represent())
+        return s3_str(self.represent())
 
     # -------------------------------------------------------------------------
     def represent(self):
@@ -846,7 +852,7 @@ class S3RepresentLazy(object):
 
         # Render value
         text = self.represent()
-        text = s3_unicode(text)
+        text = s3_str(text)
 
         # Strip markup + XML-escape
         if text and "<" in text:
