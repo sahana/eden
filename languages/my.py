@@ -1852,7 +1852,7 @@
 'Post Harvest Storage and Management': 'ထြန္ယက္ခ်ိန္လြန္သိုေလွာင္ျခင္းႏွင့္စီမံခန္႔ခြဲမႈ',
 'Posts': 'ရာထူးမ်ား',
 'Power Supply Type': 'စြမ္းအားေထာက္ပံ့မႈအမ်ိဳးအစား',
-'Powered by Sahana Eden': 'Sahana Eden ကအာဏာအပ္ႏွင္းသည္',
+'Powered by Sahana': 'Sahana ကအာဏာအပ္ႏွင္းသည္',
 'Powered by': 'ကအာဏာအပ္ႏွင္းသည္',
 'Preferred Name': 'စိတ္ႀကိဳက္အမည္',
 'Presence Condition': 'လက္ရွိအေျခအေန',

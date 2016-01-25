@@ -2850,7 +2850,7 @@
 'Poultry': 'Aves',
 'Pounds': 'Libras',
 'Power Failure': 'Falha de Energia',
-'Powered by Sahana Eden': 'Desenvolvido pela Sahana Eden',
+'Powered by Sahana': 'Desenvolvido pela Sahana',
 'Pre-cast connections': 'Conexões-cast pré',
 'Preferred Name': 'Nome Preferido',
 'Pregnant women': 'Mulheres grávidas',

@@ -3106,7 +3106,7 @@
 'Pounds': 'Pfund',
 'Power Failure': 'Netzausfall',
 'Power': 'Stromversorgung',
-'Powered by Sahana Eden': 'Powered by Sahana Eden',
+'Powered by Sahana': 'Powered by Sahana',
 'Pre-cast connections': 'Beton Verbindungen',
 'Preferred Name': 'Bevorzugter Name',
 'Pregnant women': 'Schwangere Frauen',

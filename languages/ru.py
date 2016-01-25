@@ -2722,7 +2722,7 @@
 'Poultry': 'домашняя птица',
 'Pounds': 'фунты',
 'Power Failure': 'отключение электричества',
-'Powered by Sahana Eden': 'Поддержано Sahana Eden',
+'Powered by Sahana': 'Поддерживается Sahana',
 'Pre-cast connections': 'Pre - cast соединений',
 'Preferred Name': 'Предпочтительное имя',
 'Pregnant women': 'Беременные женщины',

@@ -2285,7 +2285,7 @@
 'Postcode': 'पोष्ट कोड',
 'Power Supply Type': 'शक्ति निर्यात प्रकार',
 'Powered by': 'प्रायोजन',
-'Powered by Sahana Eden': 'साहाना इडेन प्रायोजन',
+'Powered by Sahana': 'साहाना इडेन प्रायोजन',
 'Preferred Name': 'रूचिको नाम',
 'Presence': 'उपस्थिति',
 'Presence Condition': 'उपस्थिति अवस्था',

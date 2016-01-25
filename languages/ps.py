@@ -2188,7 +2188,7 @@
 'Postcode': 'د پوست کود',
 'Power Supply Type': 'د برق تولیدونکی بڼه',
 'Powered by': 'برقی شوی په واسطه د',
-'Powered by Sahana Eden': 'برقی شوی په واسطه د ساحانا ایډن',
+'Powered by Sahana': 'برقی شوی په واسطه د ساحانا',
 'Preferred Name': 'ترجیع شوی نوم',
 'Presence': 'حضور',
 'Presence Condition': 'د حضور حالت',

@@ -1405,7 +1405,7 @@
 'Postcode': 'الرمز البريدي',
 'postponed': 'مؤجل',
 'Power Failure': 'إنقطاع التيار الكهربائي',
-'Powered by Sahana Eden': 'بدعم من عدن ساهانا',
+'Powered by Sahana': 'بدعم من ساهانا',
 'Precipitation forecast': 'توقع الامطار',
 'Presence': 'تواجد',
 'Priority': 'الأولوية',

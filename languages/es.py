@@ -4729,7 +4729,7 @@
 'Poultry': 'Aves de corral',
 'Pounds': 'Libras',
 'Power Failure': 'Fallo de alimentación',
-'Powered by Sahana Eden': 'Desarrollado por Eden Sahana',
+'Powered by Sahana': 'Desarrollado por Sahana',
 'Pre-Hospital Treatment': 'Prehospitalario',
 'Pre-cast connections': 'Conexiones Pre-cast',
 'Preferred Name': 'Nombre preferido',

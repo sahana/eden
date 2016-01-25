@@ -2191,7 +2191,7 @@
 'Postcode': 'کود پست',
 'Power Supply Type': 'نوع تهیه کننده برق',
 'Powered by': 'طراحی شد توسط',
-'Powered by Sahana Eden': 'توسط Sahana Eden طراحی شد',
+'Powered by Sahana': 'توسط Sahana طراحی شد',
 'Preferred Name': 'نام ترجیحی',
 'Presence': 'حاضر',
 'Presence Condition': 'حالات فعلی',

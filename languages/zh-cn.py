@@ -2727,7 +2727,7 @@
 'Poultry': '家禽',
 'Pounds': '磅',
 'Power Failure': '电源故障',
-'Powered by Sahana Eden': '採用瑟哈纳伊登',
+'Powered by Sahana': '採用瑟哈纳',
 'Pre-cast connections': '预先转换连接',
 'Preferred Name': '昵称',
 'Pregnant women': '怀孕妇女',

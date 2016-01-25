@@ -2081,7 +2081,7 @@
 'Post Harvest Storage and Management': 'ការគ្រប់គ្រង និង​ការ​ប្រមូល​ផល​ភ្លាមៗ',
 'Postcode': 'កូដ​ប្រៃសណីយ៍',
 'Power Supply Type': 'ប្រភេទ​ផ្គត់ផ្គង់​ថាមពល',
-'Powered by Sahana Eden': 'ផ្ដល់ដោយ Sahana Eden',
+'Powered by Sahana': 'ផ្ដល់ដោយ Sahana',
 'Powered by': 'ផ្ដល់​ដោយ',
 'Preferred Name': 'ឈ្មោះ​ដែល​ពេញចិត្ត',
 'Presence Condition': 'លក្ខណៈ​វត្តមាន',

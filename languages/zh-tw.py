@@ -3593,7 +3593,7 @@
 'Poultry restocking, Rank': 'Poultry簽有,等級',
 'Pounds': '英鎊',
 'Power Failure': '電源故障',
-'Powered by Sahana Eden': '採用Sahana Eden',
+'Powered by Sahana': '採用Sahana',
 'Pre-cast connections': '預先强制轉型連线',
 'Preferred Name': '暱稱',
 'Pregnant women': 'Pregnant婦女',

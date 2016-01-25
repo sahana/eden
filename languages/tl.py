@@ -550,7 +550,7 @@
 'Portal at': 'Portal sa',
 'Power Failure': 'Pagkawala ng Kuryente',
 'Powered by ': 'Pinapagana ng ',
-'Powered by Sahana Eden': 'Pinapagana ng Sahana Eden',
+'Powered by Sahana': 'Pinapagana ng Sahana',
 'Preferred Name': 'Gustong Pangalan',
 'Presence Condition': 'Kundisyon ng Presensya',
 'Priority from 1 to 9. 1 is most preferred.': 'Priyoridad mula 1 hanggang 9. Pinakagusto ang 1.',

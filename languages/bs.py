@@ -6085,7 +6085,7 @@
 'Power Failure': 'Nestanak struje',
 'Power Outage': 'Nestanak napajanja',
 'Power Supply Type': 'Vrsta napajanja',
-'Powered by Sahana Eden': 'Omogućeno od strane Sahana Eden',
+'Powered by Sahana': 'Omogućeno od strane Sahana',
 'Pre-cast connections': 'Konekcije prije emitovanja',
 'Preferred Name': 'Preferirano ime',
 'Pregnant women': 'Trudnica',

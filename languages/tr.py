@@ -910,7 +910,7 @@
 "Positions": "Pozisyonlar",
 "Postcode": "Posta Kodu",
 "Power Supply Type": "Güç Kaynağı Türü",
-"Powered by Sahana Eden": "Sahana Eden tarafından desteklenmektedir",
+"Powered by Sahana": "Sahana tarafından desteklenmektedir",
 "Previous": "Önceki",
 "Priority from 1 to 9. 1 is most preferred.": "1 den 9 a kadar Öncelik. 1 en çok tercih edilendir",
 "Priority": "Öncelik",
