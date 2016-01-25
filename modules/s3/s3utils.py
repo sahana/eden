@@ -1327,22 +1327,22 @@ def s3_unicode(s, encoding="utf-8"):
         s = " ".join([s3_unicode(arg, encoding) for arg in s])
     return s
 
-def s3_str(s, encoding="utf-8"):
+def s3_str(s):
     """
-        Unicode-safe conversion of an object s into a str, to be used
-        instead of str(s)
+        Unicode-safe conversion of an object s into a utf-8 encoded str,
+        to be used instead of str(s)
 
         @param s: the object
-        @param encoding: the desired character encoding for the str
+
+        @note: assumes utf-8, for other character encodings use explicit:
+
+                - s3_unicode(s, encoding=<in>).encode(<out>)
     """
 
     if type(s) is str:
-        if encoding == "utf-8":
-            return s
-        else:
-            return s3.decode("utf-8", "strict").encode(encoding, "strict")
+        return s
     else:
-        return s3_unicode(s).encode(encoding, "strict")
+        return s3_unicode(s).encode("utf-8", "strict")
 
 # =============================================================================
 def s3_flatlist(nested):
