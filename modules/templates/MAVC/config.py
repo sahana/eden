@@ -703,8 +703,10 @@ def config(settings):
     settings.project.themes = False
     settings.project.hfa = False
 
+    settings.project.multiple_organisations = True
+
     # Custom label for project organisation
-    settings.project.organisation_roles = {1: T("Organization"),
+    settings.project.organisation_roles = {1: T("Implementing Organization"),
                                            2: T("Partner Organization"),
                                            3: T("Donor"),
                                            }
@@ -1137,6 +1139,7 @@ def mavc_rheader(r, tabs=None):
         if not tabs:
             tabs = [(T("About"), None),
                     (T("Locations"), "location"),
+                    (T("Partners and Donors"), "organisation"),
                     (T("Attachments"), "document"),
                     ]
 
