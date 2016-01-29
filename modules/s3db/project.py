@@ -9282,14 +9282,14 @@ class project_LocationRepresent(S3Represent):
             location = ", ".join(locations)
 
         if community:
-            return s3_unicode(location)
+            return s3_str(location)
         else:
             if self.use_codes and prow.code:
                 project =  "%s: %s" % (prow.code, prow.name)
             else:
                 project = prow.name
             name = "%s (%s)" % (project, location)
-            return s3_unicode(name)
+            return s3_str(name)
 
 # =============================================================================
 def task_notify(form):
@@ -9418,7 +9418,7 @@ class project_TaskRepresent(S3Represent):
                 else:
                     strfmt = "%(task)s"
 
-            output = strfmt % {"task": s3_unicode(output),
+            output = strfmt % {"task": s3_str(output),
                                "project": self.project_represent(project_id),
                                }
 
@@ -9508,7 +9508,7 @@ class project_ActivityRepresent(S3Represent):
 
         if self.code and code:
             name = "%s > %s" % (code, name)
-        return s3_unicode(name)
+        return s3_str(name)
 
 # =============================================================================
 def project_activity_year_options():

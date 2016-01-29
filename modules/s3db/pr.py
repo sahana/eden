@@ -5561,7 +5561,7 @@ class pr_ContactRepresent(S3Represent):
         if not value:
             return self.default
 
-        return s3_unicode(value)
+        return s3_str(value)
 
 # =============================================================================
 def pr_person_comment(title=None, comment=None, caller=None, child=None):

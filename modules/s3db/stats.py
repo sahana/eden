@@ -1842,6 +1842,6 @@ class stats_SourceRepresent(S3Represent):
         if not name:
             return self.default
 
-        return s3_unicode(name)
+        return s3_str(name)
 
 # END =========================================================================

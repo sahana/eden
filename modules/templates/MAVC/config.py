@@ -905,6 +905,49 @@ def config(settings):
 
     settings.customise_project_location_resource = customise_project_location_resource
 
+    # -------------------------------------------------------------------------
+    def customise_project_activity_resource(r, tablename):
+
+        s3db = current.s3db
+        table = s3db.project_activity
+
+        # Hide unwanted fields
+        field = table.person_id
+        field.readable = field.writable = False
+
+        # Custom CRUD form
+        from s3 import S3SQLCustomForm, S3SQLInlineLink
+        crud_form = S3SQLCustomForm("project_id",
+                                    S3SQLInlineLink("organisation",
+                                                    field = "organisation_id",
+                                                    multiple = False,
+                                                    ),
+                                    "name",
+                                    "location_id",
+                                    "date",
+                                    "end_date",
+                                    "status_id",
+                                    "comments",
+                                    )
+
+        # Custom list fields
+        list_fields = ["project_id",
+                       "activity_organisation.organisation_id",
+                       "name",
+                       "location_id",
+                       "date",
+                       "end_date",
+                       "status_id",
+                       ]
+
+        s3db.configure("project_activity",
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       )
+
+
+    settings.customise_project_activity_resource = customise_project_activity_resource
+
     # =========================================================================
     # Requests
     settings.req.req_type = ["Stock"]
@@ -1140,6 +1183,7 @@ def mavc_rheader(r, tabs=None):
             tabs = [(T("About"), None),
                     (T("Locations"), "location"),
                     (T("Partners and Donors"), "organisation"),
+                    (T("Activities"), "activity"),
                     (T("Attachments"), "document"),
                     ]
 

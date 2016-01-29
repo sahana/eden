@@ -5723,7 +5723,7 @@ class gis_LocationRepresent(S3Represent):
                                      )
                     return represent
 
-        return s3_unicode(represent)
+        return s3_str(represent)
 
 # =============================================================================
 def gis_layer_represent(id, row=None, show_link=True):

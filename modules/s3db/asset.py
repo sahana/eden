@@ -1396,7 +1396,7 @@ class asset_AssetRepresent(S3Represent):
             represent = "%s, %s)" % (represent, brand)
         else:
             represent = "%s)" % represent
-        return s3_unicode(represent)
+        return s3_str(represent)
 
     # -------------------------------------------------------------------------
     def link(self, k, v, row=None):

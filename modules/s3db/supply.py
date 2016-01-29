@@ -1672,7 +1672,7 @@ class supply_ItemRepresent(S3Represent):
             um = row["supply_item.um"]
             if um:
                 name = "%s (%s)" % (name, um)
-        return s3_unicode(name)
+        return s3_str(name)
 
 # =============================================================================
 class supply_ItemPackRepresent(S3Represent):
@@ -1882,7 +1882,7 @@ class supply_ItemCategoryRepresent(S3Represent):
         if catalog:
             name = "%s > %s" % (catalog, name)
 
-        return s3_unicode(name)
+        return s3_str(name)
 
 # =============================================================================
 def item_um_from_name(name):

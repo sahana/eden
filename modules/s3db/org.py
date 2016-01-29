@@ -5330,7 +5330,7 @@ class org_OrganisationRepresent(S3Represent):
         if show_parent and parent:
             name = "%s > %s" % (parent, name)
 
-        return s3_unicode(name)
+        return s3_str(name)
 
     # -------------------------------------------------------------------------
     def dt_orderby(self, field, direction, orderby, left):
@@ -5587,7 +5587,7 @@ class org_SiteRepresent(S3Represent):
                 if instance_type:
                     name = "%s (%s)" % (name, instance_type)
 
-        return s3_unicode(name)
+        return s3_str(name)
 
 # =============================================================================
 class org_SiteCheckInMethod(S3Method):
