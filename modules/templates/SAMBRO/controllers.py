@@ -531,8 +531,8 @@ class subscriptions(S3CustomController):
                 if auth.s3_has_permission("create", "sync_repository"):
                     repository_comment = S3PopupLink(c = "sync",
                                                      f = "repository",
-                                                     title = T("Create Repository"),
-                                                     tooltip = T("Click on the link to begin creating your FTP repository"),
+                                                     title = T("Add FTP Directory and Authentication Details"),
+                                                     tooltip = T("Click on the link to begin creating your FTP repository and setting authentication details"),
                                                      )
 
                 rows.append(("sync_task_repository_id__row",

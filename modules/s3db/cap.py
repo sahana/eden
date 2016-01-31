@@ -314,6 +314,21 @@ class S3CAPModel(S3Model):
                                          _title="%s|%s" % (T("A unique identifier of the alert message"),
                                                            T("A number or string uniquely identifying this message, assigned by the sender. Must notnclude spaces, commas or restricted characters (< and &)."))),
                            ),
+                     # @ToDo: Switch to using event_incident_type_id
+                     Field("incidents", "list:string",
+                           label = T("Incidents"),
+                           represent = S3Represent(options = cap_incident_type_opts,
+                                                   multiple = True),
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(cap_incident_type_opts,
+                                                  multiple = True,
+                                                  sort = True,
+                                                  )),
+                           widget = S3MultiSelectWidget(selectedList = 10),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("A list of incident(s) referenced by the alert message"),
+                                                           T("Used to collate multiple messages referring to different aspects of the same incident. If multiple incident identifiers are referenced, they SHALL be separated by whitespace.  Incident names including whitespace SHALL be surrounded by double-quotes."))),
+                           ),
                      Field("sender",
                            label = T("Sender"),
                            default = self.generate_sender,
@@ -417,21 +432,6 @@ class S3CAPModel(S3Model):
                            #                           one_to_many=True,
                            #                           allow_create=False),
                            ),
-                     # @ToDo: Switch to using event_incident_type_id
-                     Field("incidents", "list:string",
-                           label = T("Incidents"),
-                           represent = S3Represent(options = cap_incident_type_opts,
-                                                   multiple = True),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(cap_incident_type_opts,
-                                                  multiple = True,
-                                                  sort = True,
-                                                  )),
-                           widget = S3MultiSelectWidget(selectedList = 10),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("A list of incident(s) referenced by the alert message"),
-                                                           T("Used to collate multiple messages referring to different aspects of the same incident. If multiple incident identifiers are referenced, they SHALL be separated by whitespace.  Incident names including whitespace SHALL be surrounded by double-quotes."))),
-                           ),
                      # approved_on field for recording when the alert was approved
                      s3_datetime("approved_on",
                                  readable = False,
@@ -485,17 +485,22 @@ class S3CAPModel(S3Model):
             S3OptionsFilter("info.category",
                             label = T("Category"),
                             options = cap_info_category_opts,
+                            hidden = True,
                             ),
             S3OptionsFilter("info.event_type_id",
+                            hidden = True,
                             ),
             S3OptionsFilter("info.priority",
+                            hidden = True,
                             ),
             S3LocationFilter("location.location_id",
                              label = T("Location(s)"),
                              # options = gis.get_countries().keys(),
+                             hidden = True,
                              ),
             S3OptionsFilter("info.language",
                             label = T("Language"),
+                            hidden = True,
                             ),
             ]
 
@@ -586,18 +591,18 @@ class S3CAPModel(S3Model):
         ])
 
         cap_info_urgency_opts = OrderedDict([
-            ("Immediate", T("Response action should be taken immediately")),
-            ("Expected", T("Response action should be taken soon (within next hour)")),
-            ("Future", T("Responsive action should be taken in the near future")),
-            ("Past", T("Responsive action is no longer required")),
+            ("Immediate", T("Immediate - Response action should be taken immediately")),
+            ("Expected", T("Expected - Response action should be taken soon (within next hour)")),
+            ("Future", T("Future - Responsive action should be taken in the near future")),
+            ("Past", T("Past - Responsive action is no longer required")),
             ("Unknown", T("Unknown")),
         ])
 
         cap_info_severity_opts = OrderedDict([
-            ("Extreme", T("Extraordinary threat to life or property")),
-            ("Severe", T("Significant threat to life or property")),
-            ("Moderate", T("Possible threat to life or property")),
-            ("Minor", T("Minimal to no known threat to life or property")),
+            ("Extreme", T("Extreme - Extraordinary threat to life or property")),
+            ("Severe", T("Severe - Significant threat to life or property")),
+            ("Moderate", T("Moderate - Possible threat to life or property")),
+            ("Minor", T("Minor - Minimal to no known threat to life or property")),
             ("Unknown", T("Severity unknown")),
         ])
 
@@ -605,7 +610,7 @@ class S3CAPModel(S3Model):
             ("Observed", T("Observed: determined to have occurred or to be ongoing")),
             ("Likely", T("Likely (p > ~50%)")),
             ("Possible", T("Possible but not likely (p <= ~50%)")),
-            ("Unlikely", T("Not expected to occur (p ~ 0)")),
+            ("Unlikely", T("Unlikely - Not expected to occur (p ~ 0)")),
             ("Unknown", T("Certainty unknown")),
         ])
 

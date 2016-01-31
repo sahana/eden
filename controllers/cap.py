@@ -748,9 +748,10 @@ def alert():
                     rtable.insert(**row_clone)
 
             itable = s3db.cap_info
-            row = db(itable.alert_id == lastid).select(itable.id,
-                                                       limitby=(0, 1)).first()
-            if row:
+            rows = db(itable.alert_id == lastid).select(itable.id)
+            if len(rows) == 1:
+                r.next = URL(c="cap", f="alert", args=[lastid, "info", rows.first().id, "update"])
+            elif len(rows) > 1:
                 r.next = URL(c="cap", f="alert", args=[lastid, "info"])
             else:
                 r.next = URL(c="cap", f="alert", args=[lastid, "info", "create"])
