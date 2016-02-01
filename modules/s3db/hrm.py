@@ -5177,7 +5177,7 @@ class hrm_HumanResourceRepresent(S3Represent):
         """
 
         # Start with the person name
-        representation = [s3_unicode(s3_fullname(row.pr_person))]
+        representation = [s3_str(s3_fullname(row.pr_person))]
         append = representation.append
 
         hr = row.hrm_human_resource

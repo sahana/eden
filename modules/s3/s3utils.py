@@ -549,6 +549,7 @@ def s3_truncate(text, length=48, nice=True):
         @param nice: do not truncate words
     """
 
+    # Make sure text is multi-byte-aware before truncating it
     text = s3_unicode(text)
     if len(text) > length:
         if nice:
@@ -574,6 +575,7 @@ def s3_datatable_truncate(string, maxlength=40):
         @note: the JS click-event will be attached by S3.datatables.js
     """
 
+    # Make sure text is multi-byte-aware before truncating it
     string = s3_unicode(string)
     if string and len(string) > maxlength:
         _class = "dt-truncate"
@@ -687,7 +689,7 @@ def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
         if truncate:
             fname = "%s" % s3_truncate(fname, 24)
             mname = "%s" % s3_truncate(mname, 24)
-            lname = "%s" % s3_truncate(lname, 24, nice = False)
+            lname = "%s" % s3_truncate(lname, 24, nice=False)
         name_format = current.deployment_settings.get_pr_name_format()
         name = name_format % dict(first_name=fname,
                                   middle_name=mname,
@@ -695,7 +697,7 @@ def s3_format_fullname(fname=None, mname=None, lname=None, truncate=True):
                                   )
         name = name.replace("  ", " ").rstrip()
         if truncate:
-            name = s3_truncate(name, 24, nice = False)
+            name = s3_truncate(name, 24, nice=False)
     return name
 
 # =============================================================================
