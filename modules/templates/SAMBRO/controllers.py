@@ -1425,4 +1425,62 @@ $('#method_selector').change(function(){
             current.s3db.resource("sync_repository",
                                   id=properties["repository_id"]).delete()
 
+# =============================================================================
+class user_info(S3CustomController):
+    """
+        User Info API
+        Used by Mobile Client
+    """
+
+    def __call__(self):
+
+        from gluon.http import HTTP
+        auth = current.auth
+        user = auth.user
+        if not user:
+            raise HTTP(401, body = auth.permission.fail())
+        else:
+            db = current.db
+            s3db = current.s3db
+            atable = s3db.cap_alert
+            gtable = s3db.auth_group
+            group_ids = auth.s3_get_roles(user["id"])
+            rows = db(gtable.id.belongs(group_ids)).select(gtable.uuid)
+            
+            # See the organisation of the auth.user
+            organisation = None
+            if user["organisation_id"] is not None:
+                otable = s3db.org_organisation
+                org_row = db(otable.id==user["organisation_id"]).select(\
+                                                        otable.name,
+                                                        limitby=(0, 1)).first()
+                organisation = org_row.name
+            
+            # Check the permission
+            has_permission = auth.s3_has_permission
+            permission = "0"
+            if has_permission("create", atable):
+                permission = "1"
+            if has_permission("read", atable):
+                permission += "2"
+            if has_permission("update", atable):
+                permission += "4"
+            if has_permission("delete", atable):
+                permission += "8"
+            
+            # Find the roles
+            roles = []
+            for row in rows:
+                role = {"rolename": str(row.uuid)}
+                roles.append(role)
+
+            response = {"fname": user["first_name"],
+                        "lname": user["last_name"],
+                        "organisation": organisation,
+                        "permissions": int(permission),
+                        "roles": roles
+                        }
+            current.response.headers["Content-Type"] = "application/json"
+            return json.dumps(response)
+
 # END =========================================================================
