@@ -1425,4 +1425,39 @@ $('#method_selector').change(function(){
             current.s3db.resource("sync_repository",
                                   id=properties["repository_id"]).delete()
 
+# =============================================================================
+class user_info(S3CustomController):
+    """
+        User Info API
+        Used by Mobile Client
+    """
+
+    def __call__(self):
+
+        from gluon.http import HTTP
+        auth = current.auth
+        user = auth.user
+        if not user:
+            raise HTTP(401, body = auth.permission.fail())
+        else:
+            s3db = current.s3db
+            gtable = s3db.auth_group
+            mtable = s3db.auth_membership
+            query = (mtable.deleted != True) & \
+                    (mtable.group_id == gtable.id) & \
+                    (mtable.user_id == user["id"])
+            rows = current.db(query).select(gtable.uuid)
+            # Find the roles
+            roles = []
+            for row in rows:
+                if row.uuid == "ALERT_EDITOR":
+                    roles.append("e")
+                if row.uuid == "ALERT_APPROVER":
+                    roles.append("a")
+
+            response = {"r": roles,
+                        }
+            current.response.headers["Content-Type"] = "application/json"
+            return json.dumps(response)
+
 # END =========================================================================

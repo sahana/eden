@@ -130,12 +130,21 @@ def alert():
 
         elif r.representation == "json":
             # @ToDo: fix JSON representation's ability to use component list_fields
-            list_fields = ["info.headline",
-                           "area.name",
-                           "info.priority",
+            list_fields = ["id",
+                           "identifier",
+                           "sender",
+                           "sent",
                            "status",
+                           "msg_type",
                            "scope",
-                           "info.event_type_id",
+                           "info.category",
+                           "info.event_type_id$name",
+                           "info.priority",
+                           "info.urgency",
+                           "info.severity",
+                           "info.certainty",
+                           "info.headline",
+                           "area.name",
                            ]
 
             s3db.configure(tablename,
@@ -694,12 +703,20 @@ def alert():
         lastid = r.resource.lastid
         if lastid and request.post_vars.get("edit_info", False):
             table = db.cap_alert
+            itable = s3db.cap_info
             alert = db(table.id == lastid).select(table.template_id,
                                                   limitby=(0, 1)).first()
+            iquery = (itable.alert_id == alert.template_id) & \
+                     (itable.deleted != True)
+            irows = db(iquery).select(itable.id)
+            iquery_ = (itable.alert_id == lastid) & \
+                      (itable.deleted != True)
+            irows_ = db(iquery_).select(itable.template_info_id)
 
-            if alert:
+            if alert and not \
+               (set([irow.id for irow in irows]) == set([irow_.template_info_id for irow_ in irows_])):
                 # Clone all cap_info entries from the alert template
-                itable = s3db.cap_info
+                # If already created dont copy again
                 unwanted_fields = set(("deleted_rb",
                                        "owned_by_user",
                                        "approved_by",
@@ -727,7 +744,6 @@ def alert():
 
                 # Clone all cap_resource entries from the alert template
                 # First get the info_id
-                itable = s3db.cap_info
                 rows = db(itable.alert_id == lastid).select(itable.id)
 
                 rtable = s3db.cap_resource
@@ -747,7 +763,6 @@ def alert():
                         del row_clone["info_id"]
                     rtable.insert(**row_clone)
 
-            itable = s3db.cap_info
             rows = db(itable.alert_id == lastid).select(itable.id)
             if len(rows) == 1:
                 r.next = URL(c="cap", f="alert", args=[lastid, "info", rows.first().id, "update"])
