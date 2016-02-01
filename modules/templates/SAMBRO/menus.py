@@ -108,7 +108,7 @@ class S3MainMenu(default.S3MainMenu):
             if not (has_role("ALERT_EDITOR") or \
                     has_role("ALERT_APPROVER") or \
                     has_role("ADMIN")):
-                notification_settings = MM("Subscription Settings", c="default", f="index",
+                notification_settings = MM("Subscription", c="default", f="index",
                                            m="subscriptions")
             else:
                 notification_settings = None
@@ -116,7 +116,6 @@ class S3MainMenu(default.S3MainMenu):
             menu_auth = MM(auth.user.email, link=False, right=True)(
                            notification_settings,
                            MM("Edit Profile", c="pr", f="person", args=[user_id]),
-                           MM("Details", c="default", f="user", m="profile"),
                            MM("Change Password", c="default", f="user",
                               m="change_password"),
                            MM("Logout", c="default", f="user", m="logout"),
@@ -203,14 +202,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       restrict=["ADMIN"])(
                         M("Create", m="create"),
                         M("Import from CSV", m="import", p="create"),
-                    ),
-                    M("RSS Channels", c="msg", f="rss_channel",
-                      restrict=["ADMIN"])(
-                        M("Create", m="create"),
-                    ),
-                    M("Twitter Channels", c="msg", f="twitter_channel",
-                      restrict=["ADMIN"])(
-                        M("Create", m="create"),
                     ),
                 )
 
