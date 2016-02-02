@@ -6268,7 +6268,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         else:
             text = represent(record)
 
-        return s3_unicode(text)
+        return s3_str(text)
 
     # -------------------------------------------------------------------------
     def validate(self, value, requires=None):
@@ -6299,32 +6299,32 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
         # Check for valid Lat/Lon/WKT (if any)
         lat = values.get("lat")
-        if lat == "":
-            lat = None
         if lat:
             try:
                 lat = float(lat)
             except ValueError:
                 errors["lat"] = current.T("Latitude is Invalid!")
+        elif lat == "":
+            lat = None 
 
         lon = values.get("lon")
-        if lon == "":
-            lon = None
         if lon:
             try:
                 lon = float(lon)
             except ValueError:
                 errors["lon"] = current.T("Longitude is Invalid!")
+        elif lon == "":
+            lon = None
 
         wkt = values.get("wkt")
-        if wkt == "":
-            wkt = None
         if wkt:
             try:
                 from shapely.wkt import loads as wkt_loads
                 wkt_loads(wkt)
             except:
                 errors["wkt"] = current.T("WKT is Invalid!")
+        elif wkt == "":
+            wkt = None
 
         if errors:
             error = "\n".join(errors[fn] for fn in errors)
@@ -6570,6 +6570,10 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         # Read the values
         lat = values.get("lat")
         lon = values.get("lon")
+        lat_min = values.get("lat_min") # Values brought in by onvalidation
+        lon_min = values.get("lon_min")
+        lat_max = values.get("lat_max")
+        lon_max = values.get("lon_max")
         wkt = values.get("wkt")
         the_geom = values.get("the_geom")
         address = values.get("address")
@@ -6586,6 +6590,10 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
             feature = Storage(lat=lat,
                               lon=lon,
+                              lat_min=lat_min,
+                              lon_min=lon_min,
+                              lat_max=lat_max,
+                              lon_max=lon_max,
                               wkt=wkt,
                               inherited=inherited,
                               addr_street=address,
@@ -6609,13 +6617,17 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             # specific is None for Lx locations
             if specific and specific == location_id:
                 # Update specific location
-                feature = Storage(addr_street=values.get("address"),
-                                  addr_postcode=values.get("postcode"),
-                                  parent=values.get("parent"),
+                feature = Storage(addr_street=address,
+                                  addr_postcode=postcode,
+                                  parent=parent,
                                   )
                 if any(detail is not None for detail in (lat, lon, wkt)):
                     feature.lat = lat
                     feature.lon = lon
+                    feature.lat_min = lat_min
+                    feature.lon_min = lon_min
+                    feature.lat_max = lat_max
+                    feature.lon_max = lon_max
                     feature.wkt = wkt
                     feature.inherited = False
 

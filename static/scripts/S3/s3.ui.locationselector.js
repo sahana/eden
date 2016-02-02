@@ -1196,7 +1196,7 @@
                                 data.lon = centerPoint.lon;
 
                                 // Reverse Geocode the Point
-                                if (!data.address && this.useGeocoder) {
+                                if (!data.address && self.useGeocoder) {
                                     self._geocodeReverse();
                                 }
                             } else {
@@ -1218,6 +1218,11 @@
                             self._collectData();
                             // Remove all errors
                             self._removeErrors();
+
+                            if (fieldname.substring(0, 4) == 'sub_') {
+                                // Inline form needs marking that field has changed
+                                realInput.parent().find('div.map_wrapper').trigger('change');
+                            }
                         };
                         //control.events.register('featureadded', null, pointPlaced);
                     }

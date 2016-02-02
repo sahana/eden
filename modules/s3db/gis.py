@@ -484,8 +484,6 @@ class S3LocationModel(S3Model):
         response = current.response
         settings = current.deployment_settings
 
-        MAP_ADMIN = auth.s3_has_role(current.session.s3.system_roles.MAP_ADMIN)
-
         form_vars = form.vars
         vars_get = form_vars.get
 

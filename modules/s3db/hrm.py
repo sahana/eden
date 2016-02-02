@@ -3117,10 +3117,13 @@ class S3HRSkillModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
+                  context = {"person": "person_id",
+                             },
                   list_fields = ["id",
                                  "certificate_id",
+                                 "number",
                                  "date",
-                                 "comments",
+                                 #"comments",
                                  ],
                   onaccept = self.hrm_certification_onaccept,
                   ondelete = self.hrm_certification_onaccept,

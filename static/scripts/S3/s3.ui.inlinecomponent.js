@@ -1427,6 +1427,12 @@
 
             el.find('.add-row,.edit-row').each(function() {
                 var $this = $(this);
+                // Event to be triggered to force recollection of data (used by LocationSelector when modifying Point/Polygon on map)
+                $this.find('div.map_wrapper').bind('change' + ns, function() {
+                    self._markChanged(this);
+                    self._catchSubmit(this);
+                });
+
                 $this.find(textInputs).bind('input' + ns, function() {
                     self._markChanged(this);
                     self._catchSubmit(this);
