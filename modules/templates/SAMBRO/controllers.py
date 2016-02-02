@@ -676,7 +676,7 @@ $('#method_selector').change(function(){
                         # Get all the rows for the group subscription
                         rows = db(query).select(stable.comments)
                         subscribed_group_ids = [int(json.loads(row.comments)["pr_group.id"]) for row in rows
-                                                if "pr_group.id" in json.loads(row.comments)]    
+                                                if "pr_group.id" in json.loads(row.comments)]
                         for group_id in group_ids:
                             if int(group_id) in subscribed_group_ids:
                                 comments = json.dumps({"pr_group.id": "%s" % group_id})
@@ -1428,17 +1428,19 @@ $('#method_selector').change(function(){
 # =============================================================================
 class user_info(S3CustomController):
     """
-        User Info API
-        Used by Mobile Client
+        User Info API, used by Mobile Client
     """
 
     def __call__(self):
 
-        from gluon.http import HTTP
         auth = current.auth
+
+        # Enforce non-interactive response
+        auth.permission.format = "json"
+
         user = auth.user
         if not user:
-            raise HTTP(401, body = auth.permission.fail())
+            auth.permission.fail()
         else:
             s3db = current.s3db
             gtable = s3db.auth_group
@@ -1452,7 +1454,7 @@ class user_info(S3CustomController):
             for row in rows:
                 if row.uuid == "ALERT_EDITOR":
                     roles.append("e")
-                if row.uuid == "ALERT_APPROVER":
+                elif row.uuid == "ALERT_APPROVER":
                     roles.append("a")
 
             response = {"r": roles,
