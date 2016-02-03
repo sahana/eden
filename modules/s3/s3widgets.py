@@ -8086,7 +8086,7 @@ def s3_richtext_widget(field, value):
                                                   "jquery.js"])
     s3.scripts.append(adapter)
 
-    # Toolbar options: http://docs.cksource.com/CKEditor_3.x/Developers_Guide/Toolbar
+    # Toolbar options: http://docs.ckeditor.com/#!/guide/dev_toolbar
     js = '''var ck_config={toolbar:[['Format','Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Image','Table','-','PasteFromWord','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'}'''
     s3.js_global.append(js)
 
