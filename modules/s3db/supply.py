@@ -1179,17 +1179,21 @@ class S3SupplyDistributionModel(S3Model):
         super_link = self.super_link
 
         # ---------------------------------------------------------------------
-        # Distribution Item
+        # Distribution Item: supply items which can be distributed
         #
         tablename = "supply_distribution_item"
         define_table(tablename,
                      super_link("parameter_id", "stats_parameter"),
                      self.supply_item_entity_id,
                      self.supply_item_id(ondelete = "RESTRICT",
-                                         required = True),
+                                         required = True,
+                                         ),
                      Field("name", length=128, unique=True,
+                           label = T("Distribution Item Name"),
                            requires = IS_NOT_IN_DB(db,
-                                                   "supply_distribution_item.name")),
+                                                   "supply_distribution_item.name",
+                                                   ),
+                           ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -1213,7 +1217,7 @@ class S3SupplyDistributionModel(S3Model):
                   )
 
         # ---------------------------------------------------------------------
-        # Distribution
+        # Distribution: actual distribution of a supply item
         #
         tablename = "supply_distribution"
         define_table(tablename,
@@ -1234,16 +1238,17 @@ class S3SupplyDistributionModel(S3Model):
                                 empty = False,
                                 comment = S3PopupLink(c = "supply",
                                                       f = "distribution_item",
-                                                      vars = {"child": "parameter_id"},
+                                                      vars = {"prefix": "supply",
+                                                              "child": "parameter_id"},
                                                       title=ADD_ITEM,
                                                       ),
                                 ),
                      self.gis_location_id(),
                      Field("value", "integer",
                            label = T("Quantity"),
-                           requires = IS_INT_IN_RANGE(0, 99999999),
+                           requires = IS_INT_IN_RANGE(0, None),
                            represent = lambda v: \
-                           IS_INT_AMOUNT.represent(v),
+                                       IS_INT_AMOUNT.represent(v),
                            ),
                      s3_date("date",
                              #empty = False,
@@ -1469,10 +1474,12 @@ class S3SupplyDistributionModel(S3Model):
         record_id = form.vars.id
         query = (dtable.id == record_id) & \
                 (ltable.id == dtable.item_id)
-        item = db(query).select(ltable.name,
+        item = db(query).select(dtable.name,
+                                ltable.name,
                                 limitby=(0, 1)).first()
-        if item:
-            db(dtable.id == record_id).update(name = item.name)
+
+        if item and not item[dtable.name]:
+            db(dtable.id == record_id).update(name = item[ltable.name])
         return
 
     # ---------------------------------------------------------------------

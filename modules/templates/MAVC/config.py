@@ -916,13 +916,24 @@ def config(settings):
         field.readable = field.writable = False
 
         # Custom CRUD form
-        from s3 import S3SQLCustomForm, S3SQLInlineLink
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
         crud_form = S3SQLCustomForm("project_id",
                                     S3SQLInlineLink("organisation",
                                                     field = "organisation_id",
                                                     multiple = False,
                                                     ),
                                     "name",
+                                    #S3SQLInlineLink("activity_type",
+                                    #                field = "activity_type_id",
+                                    #                label = T("Activity Types"),
+                                    #                ),
+                                    S3SQLInlineComponent("distribution",
+                                                         fields = ["parameter_id",
+                                                                   "value",
+                                                                   "comments",
+                                                                   ],
+                                                         label = T("Distributed Supplies"),
+                                                         ),
                                     "location_id",
                                     "date",
                                     "end_date",
