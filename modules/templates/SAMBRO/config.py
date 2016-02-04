@@ -83,6 +83,9 @@ def config(settings):
     # https://en.wikipedia.org/wiki/Filename
     # http://docs.attachmate.com/reflection/ftp/15.6/guide/en/index.htm?toc.htm?6503.htm
     settings.sync.upload_filename = "$s-%s" % ("recent_alert")
+    
+    # Whether to tweet alerts
+    settings.cap.post_to_twitter = True
 
     # -------------------------------------------------------------------------
     # L10n (Localization) settings
@@ -233,6 +236,49 @@ def config(settings):
 
             # Sync FTP Repository
             current.s3task.async("cap_ftp_sync")
+            
+            alert_id = int(record["id"])
+
+            # Twitter Post
+            if settings.get_cap_post_to_twitter():
+                try:
+                    import tweepy
+                except ImportError:
+                    current.log.debug("tweepy module needed for sending tweets")
+                else:
+                    T = current.T
+                    db = current.db
+                    atable = s3db.cap_alert
+                    itable = s3db.cap_info
+                    send_tweet = current.msg.send_tweet
+        
+                    arow = db(atable.id == alert_id).select(atable.status,
+                                                            atable.sender,
+                                                            atable.sent,
+                                                            limitby=(0, 1)).first()
+                    # Using English Info Segment for now
+                    # Because tweet has Info Headline
+                    iquery = (itable.alert_id == alert_id) & \
+                             (itable.language == "en-US")
+                    irow = db(iquery).select(itable.headline,
+                                             itable.web,
+                                             limitby=(0, 1)).first()
+                    twitter_text = \
+("""%(Status)s: %(Headline)s
+%(SENDER)s: %(SenderName)s
+%(WEBSITE)s: %(Website)s""") % dict(Status = arow.status,
+                                    Headline = irow.headline,
+                                    SENDER = T("Sender"),
+                                    SenderName = arow.sender,
+                                    WEBSITE = T("Website"),
+                                    Website = irow.web)
+                    try:
+                        #Currently using the messaging module for multi-tweet
+                        # @ToDo: Split the message ourselves?
+                        # @ToDo: Send static maps with tweet
+                        send_tweet(text=twitter_text)
+                    except tweepy.error.TweepError, e:
+                        current.log.debug("Sending tweets failed: %s" % e)
 
         s3db.configure(tablename,
                        onapprove = onapprove,
