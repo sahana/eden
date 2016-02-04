@@ -1717,6 +1717,19 @@ def cap_rheader(r):
                     else:
                         error = ""
 
+                    if r.component_name == "info" and r.component_id:
+                        # Display "Copy" Button to copy record from the opened info
+                        copy_btn = A(T("Copy Info Segment"),
+                                     _href = URL(f = "template",
+                                                 args = [r.id, "info", "create",],
+                                                 vars = {"from_record": r.component_id,
+                                                         },
+                                                 ),
+                                     _class = "action-btn"
+                                     )
+                    else:
+                        copy_btn = None
+
                     tabs = [(T("Alert Details"), None),
                             (T("Information"), "info"),
                             #(T("Area"), "area"),
@@ -1734,6 +1747,8 @@ def cap_rheader(r):
                                   rheader_tabs,
                                   error
                                   )
+                    if copy_btn is not None:
+                        rheader.insert(1, TR(TD(copy_btn)))
                 else:
                     action_btn = None
                     msg_type_buttons = None
@@ -1835,22 +1850,6 @@ def cap_rheader(r):
                         if template_area_rows:
                             tabs.insert(2, (T("Predefined Areas"), "assign"))
 
-                        # Display "Copy" Button to copy record from the opened info
-                        if r.component_name == "info" and \
-                           r.component_id:
-                            copy_btn = A(T("Copy"),
-                                         _href = URL(f = "alert",
-                                                     args = [r.id, "info", "create",],
-                                                     vars = {"from_record": r.component_id,
-                                                             },
-                                                     ),
-                                         _class = "action-btn"
-                                         )
-                        else:
-                            copy_btn = None
-                    else:
-                        copy_btn = None
-
                     rheader_tabs = s3_rheader_tabs(r, tabs)
 
                     rheader = DIV(TABLE(TR(TH("%s: " % T("Alert")),
@@ -1863,8 +1862,6 @@ def cap_rheader(r):
                                   rheader_tabs,
                                   error
                                   )
-                    if copy_btn:
-                        rheader.insert(1, TR(TD(copy_btn)))
 
                     if action_btn:
                         rheader.insert(1, TR(TD(action_btn)))

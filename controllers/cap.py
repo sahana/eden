@@ -337,7 +337,7 @@ def alert():
                                    DIV(SPAN("%s :: " % T("Response Type"),
                                             _class="cap-label upper"
                                             ),
-                                       SPAN(info.response_type,
+                                       SPAN(" ".join(info.response_type),
                                             _class="cap-strong"
                                             ),
                                        ),

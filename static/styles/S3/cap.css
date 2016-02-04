@@ -1,6 +1,9 @@
 .cap_alert_form tr {display:none;}
 .cap_alert_form.template_loaded tr {display:block;}
 .cap_alert_form #cap_alert_note__row #cap_alert_note {height: 4em;}
+.cap_template_form #cap_alert_restriction__row #cap_alert_restriction,
+.cap_alert_form #cap_alert_restriction__row #cap_alert_restriction,
+.cap_alert_form.template_loaded #cap_alert_restriction__row #cap_alert_restriction {height: 4em;}
 #cap_info_audience__row #cap_info_audience,
 #cap_info_contact__row #cap_info_contact {height: 4em;}
 .cap_template_form #cap_alert_note__row #cap_alert_note {height: 4em;}
