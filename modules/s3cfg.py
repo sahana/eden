@@ -2423,6 +2423,13 @@ class S3Config(Storage):
         """
 
         return self.cap.get("restrict_fields", False)
+    
+    def get_cap_post_to_twitter(self):
+        """
+            Whether to post the alerts in twitter
+        """
+        
+        return self.cap.get("post_to_twitter", False)
 
     # -------------------------------------------------------------------------
     # CMS: Content Management System

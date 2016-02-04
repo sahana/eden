@@ -262,6 +262,18 @@
                     <xsl:with-param name="arg">parameter</xsl:with-param>
                 </xsl:call-template>
             </xsl:if>
+
+            <parameter>
+                <valueName>tweet</valueName>
+                <value>
+                    <xsl:value-of select="translate(../data[@field='status']/@value, '&quot;', '')"/><xsl:text>: </xsl:text><xsl:value-of select="data[@field='headline']"/>
+                    <xsl:text>&#x0A;</xsl:text>
+                    <xsl:text>Sender: </xsl:text><xsl:value-of select="../data[@field='sender']"/>
+                    <xsl:text>&#x0A;</xsl:text>
+                    <xsl:text>Website: </xsl:text><xsl:value-of select="data[@field='web']"/>
+                </value>
+            </parameter>
+
             <xsl:variable name="uuid" select="@uuid"/>
 
             <!-- Resources -->
