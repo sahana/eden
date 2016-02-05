@@ -1117,10 +1117,7 @@ class S3ShelterRegistrationModel(S3Model):
         tablename = "cr_shelter_registration_history"
         define_table(tablename,
                      person_id(),
-                     Field("registration_id", "reference cr_shelter_registration",
-                           readable = False,
-                           writable = False,
-                           ),
+                     self.cr_shelter_id(),
                      s3_datetime(default = "now",
                                  ),
                      reg_status("previous_status",
@@ -1132,7 +1129,7 @@ class S3ShelterRegistrationModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  list_fields = ["registration_id$shelter_id",
+                  list_fields = ["shelter_id",
                                  "date",
                                  (T("Status"), "status"),
                                  (T("Modified by"), "modified_by"),
@@ -1221,27 +1218,12 @@ class S3ShelterRegistrationModel(S3Model):
                 s3db = current.s3db
                 db = current.db
 
-                # Get the previous status
-                htable = s3db.cr_shelter_registration_history
-                query = (htable.registration_id == registration_id) & \
-                        (htable.deleted != True)
-                row = db(query).select(htable.status,
-                                       htable.date,
-                                       orderby = ~htable.created_on,
-                                       limitby = (0, 1),
-                                       ).first()
-                if row:
-                    previous_status = row.status
-                    previous_date = row.date
-                else:
-                    previous_status = None
-                    previous_date = None
-
                 # Get the current status
                 rtable = s3db.cr_shelter_registration
                 query = (rtable.id == registration_id) & \
                         (rtable.deleted != True)
-                row = db(query).select(rtable.id,
+                reg = db(query).select(rtable.id,
+                                       rtable.shelter_id,
                                        rtable.registration_status,
                                        rtable.check_in_date,
                                        rtable.check_out_date,
@@ -1250,10 +1232,26 @@ class S3ShelterRegistrationModel(S3Model):
                                        limitby = (0, 1),
                                        ).first()
 
-                # If registration status has changed, then create a
-                # new history entry
-                if row:
-                    current_status = row.registration_status
+                if reg:
+                    # Get the previous status
+                    htable = s3db.cr_shelter_registration_history
+                    query = (htable.shelter_id == reg.shelter_id) & \
+                            (htable.deleted != True)
+                    row = db(query).select(htable.status,
+                                        htable.date,
+                                        orderby = ~htable.created_on,
+                                        limitby = (0, 1),
+                                        ).first()
+                    if row:
+                        previous_status = row.status
+                        previous_date = row.date
+                    else:
+                        previous_status = None
+                        previous_date = None
+
+                    # If registration status has changed, then create a
+                    # new history entry
+                    current_status = reg.registration_status
                     if current_status != previous_status:
 
                         # Get the effective date
@@ -1266,7 +1264,7 @@ class S3ShelterRegistrationModel(S3Model):
 
                         if effective_date_field:
                             # Read from registration
-                            effective_date = row[effective_date_field]
+                            effective_date = reg[effective_date_field]
 
                             # Validate and correct if necessary
                             if effective_date_field not in formvars or \
@@ -1274,19 +1272,19 @@ class S3ShelterRegistrationModel(S3Model):
                                previous_date and effective_date < previous_date:
                                 # Correct to now
                                 effective_date = current.request.utcnow
-                                row.update_record(**{
+                                reg.update_record(**{
                                     effective_date_field: effective_date,
                                     })
                         else:
                             # Just accept as-is
-                            effective_date = row.modified_on
+                            effective_date = reg.modified_on
 
                         # Insert new history entry
                         htable.insert(previous_status = previous_status,
                                       status = current_status,
                                       date = effective_date,
-                                      person_id = row.person_id,
-                                      registration_id = registration_id,
+                                      person_id = reg.person_id,
+                                      shelter_id = reg.shelter_id,
                                       )
 
         cls.shelter_population_onaccept(form,

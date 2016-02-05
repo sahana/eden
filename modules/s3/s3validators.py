@@ -85,7 +85,7 @@ from gluon.storage import Storage
 from gluon.validators import Validator
 
 from s3datetime import S3DateTime
-from s3utils import s3_orderby_fields, s3_unicode, s3_validate
+from s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_validate
 
 def translate(text):
     if text is None:
@@ -399,7 +399,7 @@ class IS_INT_AMOUNT(IS_INT_IN_RANGE):
     def __call__(self, value):
 
         thousands_sep = ","
-        value = str(value).replace(thousands_sep, "")
+        value = s3_str(value).replace(thousands_sep, "")
         return IS_INT_IN_RANGE.__call__(self, value)
 
     # -------------------------------------------------------------------------
@@ -476,7 +476,7 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
     def __call__(self, value):
 
         thousands_sep = ","
-        value = str(value).replace(thousands_sep, "")
+        value = s3_str(value).replace(thousands_sep, "")
         return IS_FLOAT_IN_RANGE.__call__(self, value)
 
     # -------------------------------------------------------------------------
@@ -3234,7 +3234,7 @@ class IS_PHONE_NUMBER(Validator):
         T = current.T
         error_message = self.error_message
 
-        number = str(value).strip()
+        number = s3_str(value).strip()
         number, error = s3_single_phone_requires(number)
         if not error:
             if self.international and \

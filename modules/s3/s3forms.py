@@ -1337,19 +1337,31 @@ class S3SQLCustomForm(S3SQLForm):
             db = current.db
             onaccept = get_config(tablename, "update_onaccept",
                        get_config(tablename, "onaccept", None))
+
+            table_fields = table.fields
+            query = (table._id == record_id)
             if onaccept:
-                # Get oldrecord to save in form
-                oldrecord = db(table._id == record_id).select(limitby=(0, 1)
-                                                              ).first()
+                # Get oldrecord in full to save in form
+                oldrecord = db(query).select(limitby=(0, 1)).first()
+            elif "deleted" in table_fields:
+                oldrecord = db(query).select(table.deleted,
+                                             limitby=(0, 1)).first()
+            else:
+                oldrecord = None
+
             if undelete:
-                # Re-instating a previously deleted record
-                table_fields = table.fields
+                # Restoring a previously deleted record
                 if "deleted" in table_fields:
                     data["deleted"] = False
                 if "created_by" in table_fields and current.auth.user:
                     data["created_by"] = current.auth.user.id
                 if "created_on" in table_fields:
                     data["created_on"] = current.request.utcnow
+            elif oldrecord and "deleted" in oldrecord and oldrecord.deleted:
+                # Do not (ever) update a deleted record that we don't
+                # want to restore, otherwise this may set foreign keys
+                # in a deleted record!
+                return accept_id
             db(table._id == record_id).update(**data)
         else:
             # Insert new record

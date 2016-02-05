@@ -84,3 +84,12 @@ body.rtl {
     }
 }
 
+.overdue {
+    color: red;
+}
+.archived-case {
+    color: red;
+    font-weight: bold;
+    font-size: 1.25rem;
+    text-transform: uppercase;
+}

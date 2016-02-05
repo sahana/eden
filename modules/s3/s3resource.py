@@ -828,7 +828,7 @@ class S3Resource(object):
                             else:
                                 continue
                         if fk:
-                            data["deleted_fk"] =json.dumps(fk)
+                            data["deleted_fk"] = json.dumps(fk)
 
                     # Annotate the replacement record
                     idstr = str(record_id)

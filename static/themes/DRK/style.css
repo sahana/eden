@@ -1040,7 +1040,7 @@ h4.profile-sub-header {
   font-size: 1.2rem;
 }
 
-/* Added to ../scss/custom/_widgets.scss */
+/* line 176, ../scss/custom/_widgets.scss */
 .profile-widget .icon-fullscreen {
   float: right;
   position: relative;
@@ -1048,19 +1048,19 @@ h4.profile-sub-header {
   top: 10px;
 }
 
-/* line 175, ../scss/custom/_widgets.scss */
+/* line 183, ../scss/custom/_widgets.scss */
 .profile .dl-header {
   display: none;
 }
 
 /* Comment feeds */
-/* line 180, ../scss/custom/_widgets.scss */
+/* line 188, ../scss/custom/_widgets.scss */
 .comment-box {
   background: none repeat scroll 0 0 #f5f5f5;
 }
 
 /* Iframe Map (Location Represent links) */
-/* line 185, ../scss/custom/_widgets.scss */
+/* line 193, ../scss/custom/_widgets.scss */
 #close-iframe-map {
   padding: 7px;
   margin-top: 5px;
@@ -1180,4 +1180,17 @@ body.rtl .username {
 body.rtl .username i.icon {
   padding-left: 0;
   padding-right: 0.2rem;
+}
+
+/* line 87, ../scss/custom/_misc.scss */
+.overdue {
+  color: red;
+}
+
+/* line 90, ../scss/custom/_misc.scss */
+.archived-case {
+  color: red;
+  font-weight: bold;
+  font-size: 1.25rem;
+  text-transform: uppercase;
 }

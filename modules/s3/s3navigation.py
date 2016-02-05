@@ -1780,20 +1780,24 @@ class S3ResourceHeader:
                             fn = f
                             if "." in fn:
                                 fn = f.split(".", 1)[1]
-                                if fn not in table.fields or \
-                                   fn not in record:
-                                    continue
+                            if fn not in record or fn not in table:
+                                continue
                             field = table[fn]
                             value = record[fn]
+                            # Field.Method?
+                            if callable(value):
+                                value = value()
                         elif isinstance(f, Field) and f.name in record:
                             field = f
                             value = record[f.name]
                     if field is not None:
                         if not label:
                             label = field.label
-                        if field.represent is not None:
+                        if hasattr(field, "represent") and \
+                           field.represent is not None:
                             value = field.represent(value)
-                    tr.append(TH("%s: " % label))
+                    if label is not None:
+                        tr.append(TH("%s: " % label))
                     v = value
                     if not isinstance(v, basestring) and \
                        not isinstance(value, DIV):
