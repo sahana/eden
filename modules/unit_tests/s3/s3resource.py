@@ -508,7 +508,7 @@ class ResourceExportTests(unittest.TestCase):
             resource = s3db.resource(resource,
                                      uid=["SFO1", "SFO2", "SFO3"])
 
-            filters = {"org_organisation": {"organisation.name__like": "Sync1%"}}
+            filters = {"org_organisation": {"organisation.name__like": "Sync1*"}}
 
             xmlexport = resource.export_xml(filters=filters,
                                             mcomponents=["org_office"],
@@ -527,7 +527,7 @@ class ResourceExportTests(unittest.TestCase):
             resource = s3db.resource(resource,
                                      uid=["SFO1", "SFO2", "SFO3"])
 
-            filters = {"org_organisation": {"office.name__like": "Sync2%"}}
+            filters = {"org_organisation": {"office.name__like": "Sync2*"}}
 
             xmlexport = resource.export_xml(filters=filters,
                                             mcomponents=["org_office"],
@@ -546,7 +546,7 @@ class ResourceExportTests(unittest.TestCase):
             resource = s3db.resource(resource,
                                      uid=["SFO1", "SFO2", "SFO3"])
 
-            filters = {"org_office": {"office.name__like": "Sync1%"}}
+            filters = {"org_office": {"office.name__like": "Sync1*"}}
 
             xmlexport = resource.export_xml(filters=filters,
                                             mcomponents=["org_office"],
@@ -585,7 +585,7 @@ class ResourceExportTests(unittest.TestCase):
             resource = s3db.resource(resource,
                                      uid=["SFO1", "SFO2"])
 
-            filters = {"org_office_type": {"office_type.name__like": "SFT1%"}}
+            filters = {"org_office_type": {"office_type.name__like": "SFT1*"}}
 
             xmlexport = resource.export_xml(filters=filters,
                                             mcomponents=["org_office"])

@@ -2438,7 +2438,7 @@ class S3AIRegex(object):
 
         string = cls.translate(r)
         if string:
-            return l.lower().regexp("^%s$" % string.replace("%", ".*"))
+            return l.lower().regexp("^%s$" % string)
         else:
             return l.like(r)
 
@@ -2461,18 +2461,40 @@ class S3AIRegex(object):
 
         GROUPS = cls.GROUPS
         ESCAPE = cls.ESCAPE
+
+        escaped = False
         for character in s3_unicode(string).lower():
 
-            if character in ESCAPE:
-                result = "\%s" % character
-            else:
-                result = character
-                for group in GROUPS:
-                    if character in group:
-                        match = True
-                        result = "[%s%s]{1}" % (group, group.upper())
-                        break
+            result = None
+
+            # Translate any unescaped wildcard characters
+            if not escaped:
+                if character == "\\":
+                    escaped = True
+                    continue
+                elif character == "%":
+                    result = ".*"
+                elif character == "_":
+                    result = "."
+
+            if result is None:
+                if character in ESCAPE:
+                    result = "\\%s" % character
+                else:
+                    result = character
+                    for group in GROUPS:
+                        if character in group:
+                            match = True
+                            result = "[%s%s]{1}" % (group, group.upper())
+                            break
+
+            # Don't swallow backslashes that do not escape wildcards
+            if escaped and character not in ("%", "_"):
+                result = "\\%s" % result
+
+            escaped = False
             append(result)
+
         return "".join(output) if match else None
 
 # =============================================================================
