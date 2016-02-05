@@ -964,6 +964,7 @@ class S3ShelterRegistrationModel(S3Model):
 
     names = ("cr_shelter_allocation",
              "cr_shelter_registration",
+             "cr_shelter_registration_history",
              "cr_shelter_population_onaccept",
              )
 
@@ -974,7 +975,9 @@ class S3ShelterRegistrationModel(S3Model):
         configure = self.configure
         define_table = self.define_table
         settings = current.deployment_settings
+
         shelter_id = self.cr_shelter_id
+        person_id = self.pr_person_id
 
         day_and_night = settings.get_cr_day_and_night()
 
@@ -1030,10 +1033,21 @@ class S3ShelterRegistrationModel(S3Model):
                                 DAY_AND_NIGHT: T("Day and Night")
                                 }
 
-        cr_registration_status_opts = {1: T("Planned"),
-                                       2: T("Checked-in"),
-                                       3: T("Checked-out"),
-                                       }
+        # Registration status
+        reg_status_opts = {1: T("Planned"),
+                           2: T("Checked-in"),
+                           3: T("Checked-out"),
+                           }
+
+        reg_status = S3ReusableField("registration_status", "integer",
+                                     label = T("Status"),
+                                     represent = S3Represent(
+                                                    options=reg_status_opts,
+                                                    ),
+                                     requires = IS_IN_SET(reg_status_opts,
+                                                          zero=None
+                                                          ),
+                                     )
 
         housing_unit = settings.get_cr_shelter_housing_unit_management()
 
@@ -1045,7 +1059,7 @@ class S3ShelterRegistrationModel(S3Model):
                                 ),
                      # The comment explains how to register a new person
                      # it should not be done in a popup
-                     self.pr_person_id(
+                     person_id(
                          comment = DIV(_class="tooltip",
                                        _title="%s|%s" % (T("Person"),
                                                          #  @ToDo: Generalise (this is EVASS-specific)
@@ -1069,15 +1083,7 @@ class S3ShelterRegistrationModel(S3Model):
                            readable = day_and_night,
                            writable = day_and_night,
                            ),
-                     Field("registration_status", "integer",
-                           label = T("Status"),
-                           represent = S3Represent(
-                                            options=cr_registration_status_opts,
-                                            ),
-                           requires = IS_IN_SET(cr_registration_status_opts,
-                                                zero=None
-                                                ),
-                           ),
+                     reg_status(),
                      s3_datetime("check_in_date",
                                  label = T("Check-in date"),
                                  default = "now",
@@ -1090,20 +1096,52 @@ class S3ShelterRegistrationModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        population_onaccept = lambda form: \
-            self.cr_shelter_population_onaccept(form,
-                                                tablename="cr_shelter_registration")
-
+        registration_onaccept = self.shelter_registration_onaccept
         configure(tablename,
-                  deduplicate =  S3Duplicate(primary = ("person_id", "shelter_unit_id")),
-                  onaccept = population_onaccept,
-                  ondelete = population_onaccept,
+                  deduplicate = S3Duplicate(primary = ("person_id",
+                                                       "shelter_unit_id",
+                                                       ),
+                                            ),
+                  onaccept = registration_onaccept,
+                  ondelete = registration_onaccept,
                   )
 
         if housing_unit:
             configure(tablename,
                       onvalidation = self.unit_onvalidation,
                       )
+
+        # ---------------------------------------------------------------------
+        # Shelter Registration History: history of status changes
+        #
+        tablename = "cr_shelter_registration_history"
+        define_table(tablename,
+                     person_id(),
+                     Field("registration_id", "reference cr_shelter_registration",
+                           readable = False,
+                           writable = False,
+                           ),
+                     s3_datetime(default = "now",
+                                 ),
+                     reg_status("previous_status",
+                                label = T("Old Status"),
+                                ),
+                     reg_status("status",
+                                label = T("New Status"),
+                                ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  list_fields = ["registration_id$shelter_id",
+                                 "date",
+                                 (T("Status"), "status"),
+                                 (T("Modified by"), "modified_by"),
+                                 ],
+                  insertable = False,
+                  editable = False,
+                  deletable = False,
+                  orderby = "%s.date desc" % tablename,
+                  )
 
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
@@ -1160,6 +1198,102 @@ class S3ShelterRegistrationModel(S3Model):
                 current.response.error = error
 
     # -------------------------------------------------------------------------
+    @classmethod
+    def shelter_registration_onaccept(cls, form):
+        """
+            Registration onaccept: track status changes, update
+            shelter population
+
+            @param form: the FORM (also accepts Row)
+        """
+
+        try:
+            if type(form) is Row:
+                formvars = form
+            else:
+                formvars = form.vars
+            registration_id = formvars.id
+        except AttributeError:
+            pass
+        else:
+            if registration_id:
+
+                s3db = current.s3db
+                db = current.db
+
+                # Get the previous status
+                htable = s3db.cr_shelter_registration_history
+                query = (htable.registration_id == registration_id) & \
+                        (htable.deleted != True)
+                row = db(query).select(htable.status,
+                                       htable.date,
+                                       orderby = ~htable.created_on,
+                                       limitby = (0, 1),
+                                       ).first()
+                if row:
+                    previous_status = row.status
+                    previous_date = row.date
+                else:
+                    previous_status = None
+                    previous_date = None
+
+                # Get the current status
+                rtable = s3db.cr_shelter_registration
+                query = (rtable.id == registration_id) & \
+                        (rtable.deleted != True)
+                row = db(query).select(rtable.id,
+                                       rtable.registration_status,
+                                       rtable.check_in_date,
+                                       rtable.check_out_date,
+                                       rtable.modified_on,
+                                       rtable.person_id,
+                                       limitby = (0, 1),
+                                       ).first()
+
+                # If registration status has changed, then create a
+                # new history entry
+                if row:
+                    current_status = row.registration_status
+                    if current_status != previous_status:
+
+                        # Get the effective date
+                        if current_status == 2:
+                            effective_date_field = "check_in_date"
+                        elif current_status == 3:
+                            effective_date_field = "check_out_date"
+                        else:
+                            effective_date_field = None
+
+                        if effective_date_field:
+                            # Read from registration
+                            effective_date = row[effective_date_field]
+
+                            # Validate and correct if necessary
+                            if effective_date_field not in formvars or \
+                               not effective_date or \
+                               previous_date and effective_date < previous_date:
+                                # Correct to now
+                                effective_date = current.request.utcnow
+                                row.update_record(**{
+                                    effective_date_field: effective_date,
+                                    })
+                        else:
+                            # Just accept as-is
+                            effective_date = row.modified_on
+
+                        # Insert new history entry
+                        htable.insert(previous_status = previous_status,
+                                      status = current_status,
+                                      date = effective_date,
+                                      person_id = row.person_id,
+                                      registration_id = registration_id,
+                                      )
+
+        cls.shelter_population_onaccept(form,
+                                        tablename = "cr_shelter_registration",
+                                        )
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def shelter_population_onaccept(form, tablename=None):
 
@@ -1174,7 +1308,7 @@ class S3ShelterRegistrationModel(S3Model):
                 record_id = form.id
             else:
                 record_id = form.vars.id
-        except:
+        except AttributeError:
             # Nothing we can do
             return
 

@@ -624,9 +624,8 @@ def config(settings):
                 #default_organisation = current.auth.root_org()
                 default_organisation = settings.get_org_default_organisation()
 
-                ctable = s3db.dvr_case
-
                 # Case is valid for 5 years
+                ctable = s3db.dvr_case
                 field = ctable.valid_until
                 from dateutil.relativedelta import relativedelta
                 field.default = r.utcnow + relativedelta(years=5)
@@ -686,6 +685,16 @@ def config(settings):
 
                 if r.interactive and r.method != "import":
 
+                    # Registration status effective dates not manually updateable
+                    if r.id:
+                        rtable = s3db.cr_shelter_registration
+                        field = rtable.check_in_date
+                        field.writable = False
+                        field.label = T("Last Check-in")
+                        field = rtable.check_out_date
+                        field.writable = False
+                        field.label = T("Last Check-out")
+
                     # Configure person_details fields
                     ctable = s3db.pr_person_details
 
@@ -725,6 +734,7 @@ def config(settings):
                                 (T("Shelter Registration Status"), "cr_shelter_registration.registration_status"),
                                 "cr_shelter_registration.shelter_unit_id",
                                 "cr_shelter_registration.check_in_date",
+                                "cr_shelter_registration.check_out_date",
                                 (T("ID"), "pe_label"),
                                 S3SQLInlineComponent(
                                         "eo_number",
@@ -1596,6 +1606,7 @@ def drk_dvr_rheader(r, tabs=[]):
                         (T("Activities"), "case_activity"),
                         (T("Appointments"), "case_appointment"),
                         (T("Allowance"), "allowance"),
+                        (T("Presence"), "shelter_registration_history"),
                         (T("Notes"), "case_note"),
                         ]
 
