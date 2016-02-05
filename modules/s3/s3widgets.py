@@ -8073,21 +8073,34 @@ def s3_comments_widget(field, value, **attr):
 # =============================================================================
 def s3_richtext_widget(field, value):
     """
-        A larger-than-normal textarea to be used by the CMS Post Body field
+        A Rich Text field to be used by the CMS Post Body, etc
+        - uses CKEditor
+        - requires doc module loaded to be able to upload/browse Images
     """
 
     s3 = current.response.s3
     id = "%s_%s" % (field._tablename, field.name)
 
     # Load the scripts
+    sappend = s3.scripts.append
     ckeditor = URL(c="static", f="ckeditor", args="ckeditor.js")
-    s3.scripts.append(ckeditor)
+    sappend(ckeditor)
     adapter = URL(c="static", f="ckeditor", args=["adapters",
                                                   "jquery.js"])
-    s3.scripts.append(adapter)
+    sappend(adapter)
+
+    table = current.s3db.table("doc_ckeditor")
+    if table:
+        # Doc module enabled: can upload/browse images
+        url = '''filebrowserUploadUrl:'/%(appname)s/doc/ck_upload',filebrowserBrowseUrl:'/%(appname)s/doc/ck_browse',''' \
+                % dict(appname=current.request.application)
+    else:
+        # Doc module not enabled: cannot upload/browse images
+        url = ""
 
     # Toolbar options: http://docs.ckeditor.com/#!/guide/dev_toolbar
-    js = '''var ck_config={toolbar:[['Format','Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Image','Table','-','PasteFromWord','-','Source','Maximize']],toolbarCanCollapse:false,removePlugins:'elementspath'}'''
+    js = '''var ck_config={toolbar:[['Format','Bold','Italic','-','NumberedList','BulletedList','-','Link','Unlink','-','Image','Table','-','PasteFromWord','-','Source','Maximize']],toolbarCanCollapse:false,%sremovePlugins:'elementspath'}''' \
+            % url
     s3.js_global.append(js)
 
     js = '''$('#%s').ckeditor(ck_config)''' % id
