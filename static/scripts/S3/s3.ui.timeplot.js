@@ -638,6 +638,7 @@
 
             var update = {},
                 remove = {},
+                subquery,
                 i, len, k, v, q;
 
             // Check filters to update/remove
@@ -654,10 +655,11 @@
                         if (remove[k]) {
                             remove[k] = false;
                         }
+                        subquery = k + '=' + encodeURIComponent(v);
                         if (update[k]) {
-                            update[k].push(k + '=' + v);
+                            update[k].push(subquery);
                         } else {
-                            update[k] = [k + '=' + v];
+                            update[k] = [subquery];
                         }
                     }
                 }

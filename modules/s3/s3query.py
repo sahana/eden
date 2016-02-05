@@ -2337,16 +2337,29 @@ class S3URLQuery(object):
 
         v = cls.parse_value(value)
 
+        # Auto-lowercase, escape, and replace wildcards
+        like = lambda s: s3_unicode(s).lower() \
+                                      .replace("%", "\\%") \
+                                      .replace("_", "\\_") \
+                                      .replace("?", "_") \
+                                      .replace("*", "%") \
+                                      .encode("utf-8")
+
         q = None
+
+        # Don't repeat LIKE-escaping for multiple selectors
+        escaped = False
+
         for fs in selectors:
 
             if op == S3ResourceQuery.LIKE:
-                # Auto-lowercase and replace wildcard
                 f = S3FieldSelector(fs).lower()
-                if isinstance(v, basestring):
-                    v = v.replace("*", "%").lower()
-                elif isinstance(v, list):
-                    v = [x.replace("*", "%").lower() for x in v if x is not None]
+                if not escaped:
+                    if isinstance(v, basestring):
+                        v = like(v)
+                    elif isinstance(v, list):
+                        v = [like(s) for s in v if s is not None]
+                    escaped = True
             else:
                 f = S3FieldSelector(fs)
 
