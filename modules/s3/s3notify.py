@@ -271,7 +271,7 @@ class S3Notifications(object):
         #       str(subscription["method"]),
         #       str(subscription["notify_on"]),
         #       subscription["resource"],
-        #      subscription["last_check_time"],
+        #       subscription["last_check_time"],
         #       )
 
         # Check notification settings
@@ -333,7 +333,7 @@ class S3Notifications(object):
                      "last_check_time": last_check_time,
                      "filter_query": filter_query,
                      "total_rows": numrows,
-                    }
+                     }
 
         # Render contents for the message template(s)
         renderer = get_config("notify_renderer")
@@ -474,7 +474,6 @@ class S3Notifications(object):
 
         stable = s3db.pr_subscription
         rtable = db.pr_subscription_resource
-        ftable = s3db.pr_filter
 
         # Find all resources with due suscriptions
         query = ((rtable.next_check_time == None) |
