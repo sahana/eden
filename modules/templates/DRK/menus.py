@@ -50,16 +50,27 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Check-In / Check-Out", c="cr", f="shelter", args=[default_site, "check-in"]),
             ]
         else:
-            return [
-                MM("Residents", c=("dvr", "pr")),
-                MM("ToDo", c="project", f="task"),
-                #homepage("req"),
-                homepage("inv"),
-                MM("Dashboard", c="cr", f="shelter", args=args),
-                MM("Housing Units", c="cr", f="shelter", args=[default_site, "shelter_unit"]), # @ToDO: Move to Dashboard Widget?
-                homepage("vol"),
-                homepage("hrm"),
-            ]
+            if default_site is None:
+                return [
+                    MM("Residents", c=("dvr", "pr")),
+                    MM("ToDo", c="project", f="task"),
+                    #homepage("req"),
+                    homepage("inv"),
+                    MM("Dashboard", c="cr", f="shelter", args=args),
+                    homepage("vol"),
+                    homepage("hrm"),
+                ]
+            else:
+                return [
+                    MM("Residents", c=("dvr", "pr")),
+                    MM("ToDo", c="project", f="task"),
+                    #homepage("req"),
+                    homepage("inv"),
+                    MM("Dashboard", c="cr", f="shelter", args=args),
+                    MM("Housing Units", c="cr", f="shelter", args=[default_site, "shelter_unit"]), # @ToDO: Move to Dashboard Widget?
+                    homepage("vol"),
+                    homepage("hrm"),
+                ]
 
     # -------------------------------------------------------------------------
     @classmethod
