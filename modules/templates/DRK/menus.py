@@ -37,40 +37,33 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         default_site = current.deployment_settings.get_org_default_site()
-        if default_site:
-            args = [default_site, "profile"]
-        else:
-            args = None
 
         has_role = current.auth.s3_has_role
         if has_role("SECURITY") and not has_role("ADMIN"):
             return [
                 MM("Residents", c="security", f="person"),
                 #MM("ToDo", c="project", f="task"),
-                MM("Check-In / Check-Out", c="cr", f="shelter", args=[default_site, "check-in"]),
+                MM("Check-In / Check-Out", c="cr", f="shelter",
+                   args = [default_site, "check-in"],
+                   ),
             ]
         else:
-            if default_site is None:
-                return [
-                    MM("Residents", c=("dvr", "pr")),
-                    MM("ToDo", c="project", f="task"),
-                    #homepage("req"),
-                    homepage("inv"),
-                    MM("Dashboard", c="cr", f="shelter", args=args),
-                    homepage("vol"),
-                    homepage("hrm"),
-                ]
-            else:
-                return [
-                    MM("Residents", c=("dvr", "pr")),
-                    MM("ToDo", c="project", f="task"),
-                    #homepage("req"),
-                    homepage("inv"),
-                    MM("Dashboard", c="cr", f="shelter", args=args),
-                    MM("Housing Units", c="cr", f="shelter", args=[default_site, "shelter_unit"]), # @ToDO: Move to Dashboard Widget?
-                    homepage("vol"),
-                    homepage("hrm"),
-                ]
+            return [
+                MM("Residents", c=("dvr", "pr")),
+                MM("ToDo", c="project", f="task"),
+                #homepage("req"),
+                homepage("inv"),
+                MM("Dashboard", c="cr", f="shelter",
+                   args = [default_site, "profile"],
+                   ),
+                # @ToDO: Move to Dashboard Widget?
+                MM("Housing Units", c="cr", f="shelter",
+                   args = [default_site, "shelter_unit"],
+                   check = default_site is not None,
+                   ),
+                homepage("vol"),
+                homepage("hrm"),
+            ]
 
     # -------------------------------------------------------------------------
     @classmethod
