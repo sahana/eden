@@ -45,6 +45,7 @@ class S3MainMenu(default.S3MainMenu):
                 #MM("ToDo", c="project", f="task"),
                 MM("Check-In / Check-Out", c="cr", f="shelter",
                    args = [default_site, "check-in"],
+                   check = default_site is not None,
                    ),
             ]
         else:
@@ -55,6 +56,7 @@ class S3MainMenu(default.S3MainMenu):
                 homepage("inv"),
                 MM("Dashboard", c="cr", f="shelter",
                    args = [default_site, "profile"],
+                   check = default_site is not None,
                    ),
                 # @ToDO: Move to Dashboard Widget?
                 MM("Housing Units", c="cr", f="shelter",
