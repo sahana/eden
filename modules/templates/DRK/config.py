@@ -340,29 +340,45 @@ def config(settings):
             (We assume they are checked-in during initial registration)
         """
 
+        from s3 import s3_str
+
         s3db = current.s3db
+        db = current.db
+
+        warnings = []
+        wappend = warnings.append
+
+        # Check the case status
+        ctable = s3db.dvr_case
+        cstable = s3db.dvr_case_status
+        query = (ctable.person_id == person_id) & \
+                (cstable.id == ctable.status_id)
+        status = db(query).select(cstable.code,
+                                  limitby = (0, 1),
+                                  ).first()
+
+        if status and status.code in ("STATUS7", "STATUS8"):
+            wappend(T("Not currently a resident"))
 
         # Find the Registration
         stable = s3db.cr_shelter
         rtable = s3db.cr_shelter_registration
+
         query = (stable.site_id == site_id) & \
                 (stable.id == rtable.shelter_id) & \
                 (rtable.person_id == person_id)
-        registration = current.db(query).select(rtable.id,
-                                                rtable.registration_status,
-                                                limitby=(0, 1),
-                                                ).first()
+        registration = db(query).select(rtable.id,
+                                        rtable.registration_status,
+                                        limitby=(0, 1),
+                                        ).first()
         if not registration:
-            # @ToDo: Check to see if they DISAPPEARED, etc
             error = T("Registration not found")
-            warning = None
-            return error, warning
+            return error, ", ".join(s3_str(w) for w in warnings)
 
         error = None
+
         if registration.registration_status == 2:
-            warning = T("Client was already checked-in")
-        else:
-            warning = None
+            wappend(T("Client was already checked-in"))
 
         # Update the Shelter Registration
         registration.update_record(check_in_date = current.request.utcnow,
@@ -373,7 +389,7 @@ def config(settings):
         if onaccept:
             onaccept(registration)
 
-        return error, warning
+        return error, ", ".join(s3_str(w) for w in warnings)
 
     # -------------------------------------------------------------------------
     def site_check_out(site_id, person_id):
@@ -913,10 +929,10 @@ def config(settings):
 
         # Custom rheader tabs
         attr = dict(attr)
-        if current.request.controller == "security":
-            attr["rheader"] = ""
-        else:
-            attr["rheader"] = drk_dvr_rheader
+        #if current.request.controller == "security":
+            #attr["rheader"] = drk_dvr_rheader
+        #else:
+        attr["rheader"] = drk_dvr_rheader
 
         return attr
 
@@ -1723,7 +1739,11 @@ def drk_dvr_rheader(r, tabs=[]):
         # Resource headers only used in interactive views
         return None
 
-    from s3 import s3_rheader_resource, S3ResourceHeader, s3_fullname, s3_yes_no_represent
+    from s3 import s3_rheader_resource, \
+                   S3ResourceHeader, \
+                   s3_fullname, \
+                   s3_yes_no_represent
+
     tablename, record = s3_rheader_resource(r)
     if tablename != r.tablename:
         resource = current.s3db.resource(tablename, id=record.id)
@@ -1738,61 +1758,77 @@ def drk_dvr_rheader(r, tabs=[]):
 
         if tablename == "pr_person":
 
-            if not tabs:
-                tabs = [(T("Basic Details"), None),
-                        (T("Family Members"), "group_membership/"),
-                        (T("Activities"), "case_activity"),
-                        (T("Appointments"), "case_appointment"),
-                        (T("Allowance"), "allowance"),
-                        (T("Presence"), "shelter_registration_history"),
-                        (T("Notes"), "case_note"),
-                        ]
+            # "Case Archived" hint
+            hint = lambda record: SPAN(T("Case Archived"),
+                                       _class="archived-case",
+                                       )
 
-            case = resource.select(["dvr_case.status_id",
-                                    "dvr_case.status_id$code",
-                                    "dvr_case.archived",
-                                    "case_flag_case.flag_id$name",
-                                    "first_name",
-                                    "last_name",
-                                    ],
-                                    represent = True,
-                                    raw_data = True,
-                                    ).rows
+            if current.request.controller == "security":
 
-            if case:
-                case = case[0]
-                archived = case["_row"]["dvr_case.archived"]
-                case_status = lambda row: case["dvr_case.status_id"]
-                flags = case._row["dvr_case_flag.name"]
-                if flags:
-                    if type(flags) is not list:
-                        flags = [flags]
-                    suspended = "Suspended" in flags
+                # No rheader except archived-hint
+                case = resource.select(["dvr_case.archived"], as_rows=True)
+                if case and case[0]["dvr_case.archived"]:
+                    rheader_fields = [[(None, hint)]]
+                    tabs = None
                 else:
-                    suspended = False
-                case_suspended = lambda row: s3_yes_no_represent(suspended)
-                eligible = lambda row: ""
-                name = lambda row: s3_fullname(row)
+                    return None
+
             else:
-                # Target record exists, but doesn't match filters
-                return None
 
-            rheader_fields = [[(T("ID"), "pe_label"), (T("Case Status"), case_status)],
-                              [(T("Name"), name), (T("Suspended"), case_suspended)],
-                              ["date_of_birth", (T("Checked-out"), "absence")],
-                              ]
+                if not tabs:
+                    tabs = [(T("Basic Details"), None),
+                            (T("Family Members"), "group_membership/"),
+                            (T("Activities"), "case_activity"),
+                            (T("Appointments"), "case_appointment"),
+                            (T("Allowance"), "allowance"),
+                            (T("Presence"), "shelter_registration_history"),
+                            (T("Notes"), "case_note"),
+                            ]
 
-            if archived:
-                hint = lambda record: SPAN(T("Case Archived"), _class="archived-case")
-                rheader_fields.insert(0, [(None, hint)])
+                case = resource.select(["dvr_case.status_id",
+                                        "dvr_case.status_id$code",
+                                        "dvr_case.archived",
+                                        "case_flag_case.flag_id$name",
+                                        "first_name",
+                                        "last_name",
+                                        ],
+                                        represent = True,
+                                        raw_data = True,
+                                        ).rows
 
-            if r.component_name == "allowance":
-                # Rule for eligibility:
-                allowance = case["dvr_case_status.code"] in ("STATUS5", "STATUS6") and \
-                            not suspended
-                eligible = lambda row, allowance=allowance: \
-                                  s3_yes_no_represent(allowance)
-                rheader_fields[-1].append((T("Eligible for Allowance"), eligible))
+                if case:
+                    case = case[0]
+                    archived = case["_row"]["dvr_case.archived"]
+                    case_status = lambda row: case["dvr_case.status_id"]
+                    flags = case._row["dvr_case_flag.name"]
+                    if flags:
+                        if type(flags) is not list:
+                            flags = [flags]
+                        suspended = "Suspended" in flags
+                    else:
+                        suspended = False
+                    case_suspended = lambda row: s3_yes_no_represent(suspended)
+                    eligible = lambda row: ""
+                    name = lambda row: s3_fullname(row)
+                else:
+                    # Target record exists, but doesn't match filters
+                    return None
+
+                rheader_fields = [[(T("ID"), "pe_label"), (T("Case Status"), case_status)],
+                                  [(T("Name"), name), (T("Suspended"), case_suspended)],
+                                  ["date_of_birth", (T("Checked-out"), "absence")],
+                                  ]
+
+                if archived:
+                    rheader_fields.insert(0, [(None, hint)])
+
+                if r.component_name == "allowance":
+                    # Rule for eligibility:
+                    allowance = case["dvr_case_status.code"] in ("STATUS5", "STATUS6") and \
+                                not suspended
+                    eligible = lambda row, allowance=allowance: \
+                                    s3_yes_no_represent(allowance)
+                    rheader_fields[-1].append((T("Eligible for Allowance"), eligible))
 
         elif tablename == "dvr_case":
 

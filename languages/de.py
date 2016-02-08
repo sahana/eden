@@ -2826,6 +2826,7 @@
 'Not Applicable': 'Nicht zutreffend',
 'Not Authorised!': 'Nicht berechtigt!',
 'Not Available': 'Nicht verfügbar/vorhanden',
+'Not currently a resident': 'Kein aktueller Bewohner',
 'Not Possible': 'Nicht möglich',
 'Not Set': 'Nicht festgelegt',
 'Not Authorized': 'Nicht berechtigt',
