@@ -3338,6 +3338,7 @@
 'Registration added': 'Registrierung hinzugefügt',
 'Registration entry deleted': 'Anmeldungseintrag gelöscht',
 'Registration is still pending approval from Approver (%s) - please wait until confirmation received.': 'Die Registrierung wartet noch auf die Genehmigung von der Qualifizierenden Stelle (%s) - bitte warten Sie bis Sie eine Bestätigung erhalten',
+'Registration not found': 'Registrierung nicht gefunden',
 'Registration updated': 'Anmeldung aktualisiert',
 'Registration': 'Registrierung',
 'Rehabilitation/Long Term Care': 'Rehabilitation/Langfristige Pflege',
