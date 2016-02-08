@@ -366,7 +366,8 @@ def config(settings):
 
         query = (stable.site_id == site_id) & \
                 (stable.id == rtable.shelter_id) & \
-                (rtable.person_id == person_id)
+                (rtable.person_id == person_id) & \
+                (rtable.deleted != True)
         registration = db(query).select(rtable.id,
                                         rtable.registration_status,
                                         limitby=(0, 1),
@@ -404,7 +405,8 @@ def config(settings):
         rtable = s3db.cr_shelter_registration
         query = (stable.site_id == site_id) & \
                 (stable.id == rtable.shelter_id) & \
-                (rtable.person_id == person_id)
+                (rtable.person_id == person_id) & \
+                (rtable.deleted != True)
         registration = current.db(query).select(rtable.id,
                                                 rtable.registration_status,
                                                 limitby=(0, 1),
