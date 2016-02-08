@@ -756,6 +756,16 @@ class S3OrganisationModel(S3Model):
                            project_project = "organisation_id",
                            )
 
+        if settings.get_project_activities():
+            add_components(tablename,
+                           project_activity = {"link": "project_activity_organisation",
+                                               "joinby": "organisation_id",
+                                               "key": "activity_id",
+                                               "actuate": "replace",
+                                               "autodelete": False,
+                                               },
+                           )
+
         # Organisation Summary data
         if settings.get_org_summary():
             add_components(tablename,

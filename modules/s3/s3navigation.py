@@ -745,6 +745,7 @@ class S3NavigationItem(object):
         # Args and vars
         # Match levels (=order of preference):
         #   0 = args mismatch
+        #   1 = last arg mismatch (numeric instead of method)
         #   2 = no args in item and vars mismatch
         #   3 = no args and no vars in item
         #   4 = no args in item but vars match
@@ -767,7 +768,12 @@ class S3NavigationItem(object):
                        all([args[i] == largs[i] for i in xrange(len(args))]):
                         level = 5
                     else:
-                        return 0
+                        if len(rargs) >= len(args) > 0 and \
+                           rargs[len(args)-1].isdigit() and \
+                           not args[-1].isdigit():
+                            level = 1
+                        else:
+                            return 0
                 else:
                     level = 3
             elif args:

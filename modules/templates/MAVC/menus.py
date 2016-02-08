@@ -42,6 +42,7 @@ class S3MainMenu(default.S3MainMenu):
                      ),
             MM("Newsfeed", c="cms", f="newsfeed", m="datalist"),
             MM("Organizations", c="org", f="organisation"),
+            MM("Activities", c="project", f="activity", m="summary"),
             MM("Projects", c="project", f="project"),
             #MM("Aid Requests", link=False),
             #MM("Aid Deliveries", link=False),
@@ -393,6 +394,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="project")(
+                    M("Activities (4W)", f="activity", m="summary")(
+                        M("Create", m="create"),
+                        M("Map", m="summary", vars={"t": "2"}),
+                    ),
                     M("Projects", f="project")(
                         M("Create", m="create"),
                         M("Map", f="location", m="map"),
