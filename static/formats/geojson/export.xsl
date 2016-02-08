@@ -6,7 +6,7 @@
     <!-- **********************************************************************
          GeoJSON Export Templates for Sahana Eden
 
-         Copyright (c) 2012-15 Sahana Software Foundation
+         Copyright (c) 2012-16 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -50,7 +50,7 @@
     <s3:fields tables="hms_status" select="hospital_id"/>
     <s3:fields tables="project_activity_activity_type" select="activity_id"/>
     <s3:fields tables="project_activity_group" select="activity_id"/>
-    <s3:fields tables="project_activity_organisation" select="activity_id"/>
+    <s3:fields tables="project_activity_organisation" select="activity_id,organisation_id"/>
     <s3:fields tables="project_beneficiary_activity" select="activity_id"/>
     <s3:fields tables="project_sector_activity" select="activity_id"/>
     <s3:fields tables="stats_people_group" select="people_id"/>
