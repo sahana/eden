@@ -55,7 +55,7 @@
             <data field="is_closed">
                 <xsl:attribute name="value">
                     <xsl:choose>
-                        <xsl:when test="$is_default='true'">
+                        <xsl:when test="$is_closed='true'">
                             <xsl:value-of select="'true'"/>
                         </xsl:when>
                         <xsl:otherwise>
