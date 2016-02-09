@@ -108,8 +108,7 @@ class S3MainMenu(default.S3MainMenu):
             if not (has_role("ALERT_EDITOR") or \
                     has_role("ALERT_APPROVER") or \
                     has_role("ADMIN")):
-                notification_settings = MM("Subscription", c="default", f="index",
-                                           m="subscriptions")
+                notification_settings = MM("Subscription", c="pr", f="subscription")
             else:
                 notification_settings = None
                 

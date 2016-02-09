@@ -432,9 +432,14 @@ class subscriptions(S3CustomController):
             form.append(group_fieldset)
             form.append(fieldset)
         else:
-            # Get current subscription settings resp. form defaults
-            # Normal User
-            subscription = self._get_subscription()
+            subscription_id = request.get_vars.get("subscription_id")
+            if subscription_id:
+                # Get current subscription settings resp. form defaults
+                # Normal User
+                subscription = self._get_subscription(subscription_id=subscription_id)
+            else:
+                # Create Form
+                subscription = self._get_subscription()
 
             # Filters
             filter_form = S3FilterForm(filters, clear=False)
@@ -887,6 +892,8 @@ $('#method_selector').change(function(){
                             (stable.owned_by_group == None) & \
                             (stable.owned_by_user == auth_user.id)
                     db(query).update(comments=None)
+                
+                redirect(URL(c="pr", f="subscription"))
 
             if success_subscription:
                 response.confirmation = messages.SUCCESS
@@ -896,7 +903,7 @@ $('#method_selector').change(function(){
         return form
 
     # -------------------------------------------------------------------------
-    def _get_subscription(self):
+    def _get_subscription(self, subscription_id = None):
         """ Get current subscription settings """
 
         db = current.db
@@ -905,27 +912,32 @@ $('#method_selector').change(function(){
         pe_id = current.auth.user.pe_id
 
         stable = s3db.pr_subscription
-        ftable = s3db.pr_filter
-        query = (stable.deleted != True) & \
-                (stable.pe_id == pe_id) & \
-                (stable.owned_by_group == None) & \
-                (stable.owned_by_user == current.auth.user.id)
-
-        left = ftable.on(ftable.id == stable.filter_id)
-        row = db(query).select(stable.id,
-                               #stable.notify_on,
-                               #stable.frequency,
-                               stable.method,
-                               stable.comments,
-                               ftable.id,
-                               ftable.query,
-                               left=left,
-                               limitby=(0, 1)).first()
+        if subscription_id is not None:
+            ftable = s3db.pr_filter
+            rows = db(stable).select()
+            query = (stable.deleted != True) & \
+                    (stable.id == subscription_id) & \
+                    (stable.pe_id == pe_id) & \
+                    (stable.owned_by_group == None) & \
+                    (stable.owned_by_user == current.auth.user.id)
+    
+            left = ftable.on(ftable.id == stable.filter_id)
+            row = db(query).select(stable.id,
+                                   #stable.notify_on,
+                                   #stable.frequency,
+                                   stable.method,
+                                   stable.comments,
+                                   ftable.id,
+                                   ftable.query,
+                                   left=left,
+                                   limitby=(0, 1)).first()
+        else:
+            row = None
 
         output = {"pe_id": pe_id}
 
         get_vars = {}
-        if row:
+        if row and row is not None:
             # Existing settings
             s = getattr(row, "pr_subscription")
             f = getattr(row, "pr_filter")
@@ -963,17 +975,20 @@ $('#method_selector').change(function(){
                            })
 
         else:
-            # Form defaults
-            output.update({"id": None,
-                           "filter_id": None,
-                           "get_vars" : get_vars,
-                           "resources": None,
-                           "notify_on": ["new"],#stable.notify_on.default,
-                           "frequency": "immediately",#stable.frequency.default,
-                           "method": stable.method.default,
-                           "comments": None,
-                           })
-
+            if subscription_id is not None:
+                from gluon.http import redirect
+                redirect(URL(c="default", f="index", args=["subscriptions"]))
+            else:
+                # Form defaults
+                output.update({"id": None,
+                               "filter_id": None,
+                               "get_vars" : get_vars,
+                               "resources": None,
+                               "notify_on": ["new"],#stable.notify_on.default,
+                               "frequency": "immediately",#stable.frequency.default,
+                               "method": stable.method.default,
+                               "comments": None,
+                               })
         return output
 
     # -------------------------------------------------------------------------
