@@ -252,6 +252,8 @@ def config(settings):
             Hook for tasks["org_site_check"]:
                 Check site_id & see which persons have checked-out over 3 days ago
                 without checking back in (but are not in Hospital)
+
+            @deprecated
         """
 
         db = current.db
@@ -331,7 +333,7 @@ def config(settings):
 
                 # @ToDo: Send notification of which people have been suspended to ADMIN_HEAD
 
-    settings.org_site_check = org_site_check
+    #settings.org_site_check = org_site_check
 
     # -------------------------------------------------------------------------
     def site_check_in(site_id, person_id):
@@ -353,11 +355,11 @@ def config(settings):
         cstable = s3db.dvr_case_status
         query = (ctable.person_id == person_id) & \
                 (cstable.id == ctable.status_id)
-        status = db(query).select(cstable.code,
+        status = db(query).select(cstable.is_closed,
                                   limitby = (0, 1),
                                   ).first()
 
-        if status and status.code in ("STATUS7", "STATUS8"):
+        if status and status.is_closed:
             wappend(T("Not currently a resident"))
 
         # Find the Registration
@@ -771,11 +773,11 @@ def config(settings):
                                 cancel = True
                             if not cancel and status_id:
                                 stable = s3db.dvr_case_status
-                                status = db(stable.id == status_id).select(stable.code,
+                                status = db(stable.id == status_id).select(stable.is_closed,
                                                                            limitby = (0, 1),
                                                                            ).first()
                                 try:
-                                    if status.code in ("STATUS7", "STATUS8"):
+                                    if status.is_closed:
                                         cancel = True
                                 except:
                                     pass
@@ -1023,11 +1025,11 @@ def config(settings):
                 db = current.db
                 s3db = current.s3db
                 stable = s3db.dvr_case_status
-                status = db(stable.id == status_id).select(stable.code,
+                status = db(stable.id == status_id).select(stable.is_closed,
                                                            limitby = (0, 1)
                                                            ).first()
                 try:
-                    if status.code in ("STATUS7", "STATUS8"):
+                    if status.is_closed:
                         cancel = True
                 except:
                     current.log.error("Status %s not found" % status_id)
