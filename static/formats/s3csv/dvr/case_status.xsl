@@ -12,6 +12,8 @@
          Status...............string..........Status Name
          Default..............string..........is default status
                                               true|false
+         Closed...............string..........cases with this status are closed
+                                              true|false
          Comments.............string..........Comments
 
     *********************************************************************** -->
@@ -38,6 +40,19 @@
             </data>
             <xsl:variable name="is_default" select="col[@field='Default']/text()"/>
             <data field="is_default">
+                <xsl:attribute name="value">
+                    <xsl:choose>
+                        <xsl:when test="$is_default='true'">
+                            <xsl:value-of select="'true'"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="'false'"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:attribute>
+            </data>
+            <xsl:variable name="is_closed" select="col[@field='Closed']/text()"/>
+            <data field="is_closed">
                 <xsl:attribute name="value">
                     <xsl:choose>
                         <xsl:when test="$is_default='true'">
