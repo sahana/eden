@@ -4803,7 +4803,7 @@ class S3LocationSelector(S3Selector):
     """
 
     keys = ("L0", "L1", "L2", "L3", "L4", "L5",
-            "address", "postcode", "lat", "lon", "wkt", "specific", "id")
+            "address", "postcode", "lat", "lon", "wkt", "specific", "id", "radius")
 
     def __init__(self,
                  levels = None,
@@ -4821,6 +4821,7 @@ class S3LocationSelector(S3Selector):
                  lines = False,
                  points = True,
                  polygons = False,
+                 circles = False,
                  color_picker = False,
                  catalog_layers = False,
                  min_bbox = None,
@@ -4852,6 +4853,7 @@ class S3LocationSelector(S3Selector):
             @param lines: use a line draw tool
             @param points: use a point draw tool
             @param polygons: use a polygon draw tool
+            @param circles: use a circle draw tool
             @param color_picker: display a color-picker to set per-feature styling
                                  (also need to enable in the feature layer to show on map)
             @param catalog_layers: display catalogue layers or just the default base layer
@@ -4890,9 +4892,9 @@ class S3LocationSelector(S3Selector):
 
         if feature_required:
             show_map = True
-            if not any((points,lines, polygons)):
+            if not any((points,lines, polygons, circles)):
                 points = True
-            if lines or polygons:
+            if lines or polygons or circles:
                 required = "wkt" if not points else "any"
             else:
                 required = "latlon"
@@ -4907,6 +4909,7 @@ class S3LocationSelector(S3Selector):
         self.lines = lines
         self.points = points
         self.polygons = polygons
+        self.circles = circles
 
         self.color_picker = color_picker
         self.catalog_layers = catalog_layers
@@ -5196,6 +5199,7 @@ class S3LocationSelector(S3Selector):
         # then we need to launch the client-side JS as a callback to the
         # MapJS loader
         wkt = values.get("wkt")
+        radius = values.get("radius")
         if lat is not None or lon is not None or wkt is not None:
             use_callback = True
         else:
@@ -5246,6 +5250,7 @@ class S3LocationSelector(S3Selector):
                                  lat,
                                  lon,
                                  wkt,
+                                 radius,
                                  callback = callback,
                                  geocoder = geocoder,
                                  tablename = field.tablename,
@@ -5772,6 +5777,7 @@ class S3LocationSelector(S3Selector):
              lat,
              lon,
              wkt,
+             radius,
              callback = None,
              geocoder = False,
              tablename = None):
@@ -5782,6 +5788,7 @@ class S3LocationSelector(S3Selector):
             @param lat: the Latitude of the current point location
             @param lon: the Longitude of the current point location
             @param wkt: the WKT
+            @param radius: the radius of the location
             @param callback: the script to initialize the widget, if to be
                              initialized as callback of the MapJS loader
             @param geocoder: use a geocoder
@@ -5798,7 +5805,8 @@ class S3LocationSelector(S3Selector):
         lines = self.lines
         points = self.points
         polygons = self.polygons
-        use_wkt = polygons or lines
+        circles = self.circles
+        use_wkt = polygons or lines or circles
 
         db = current.db
         gis = current.gis
@@ -5812,7 +5820,7 @@ class S3LocationSelector(S3Selector):
         settings = current.deployment_settings
 
         # Toolbar options
-        add_points_active = add_polygon_active = add_line_active = False
+        add_points_active = add_polygon_active = add_line_active = add_circle_active = False
         if points and lines:
             # Allow selection between drawing a point or a line
             toolbar = True
@@ -5832,6 +5840,13 @@ class S3LocationSelector(S3Selector):
                 add_polygon_active = True
             else:
                 add_points_active = True
+        elif points and circles:
+            # Allow selection between drawing a point or a circle
+            toolbar = True
+            if wkt:
+                add_circle_active = True
+            else:
+                add_points_active = True
         elif points:
             # No toolbar needed => always drawing points
             toolbar = False
@@ -5846,14 +5861,38 @@ class S3LocationSelector(S3Selector):
                     add_polygon_active = True
             else:
                 add_polygon_active = True
+        elif lines and circles:
+            # Allow selection between drawing a line or a circle
+            toolbar = True
+            if wkt:
+                if wkt.startswith("LINE"):
+                    add_line_active = True
+                else:
+                    add_circle_active = True
+            else:
+                add_circle_active = True
         elif lines:
             # No toolbar needed => always drawing lines
             toolbar = False
             add_line_active = True
+        elif polygons and circles:
+            # Allow selection between drawing a polygon or a circle
+            toolbar = True
+            if wkt:
+                if radius is not None:
+                    add_circle_active = True
+                else:
+                    add_polygon_active = True
+            else:
+                add_polygon_active = True
         elif polygons:
             # No toolbar needed => always drawing polygons
             toolbar = False
             add_polygon_active = True
+        elif circles:
+            # No toolbar needed => always drawing circles
+            toolbar = False
+            add_circle_active = True
         else:
             # No Valid options!
             raise SyntaxError
@@ -5910,6 +5949,8 @@ class S3LocationSelector(S3Selector):
                             add_line_active = add_line_active,
                             add_polygon = polygons,
                             add_polygon_active = add_polygon_active,
+                            add_circle = circles,
+                            add_circle_active = add_circle_active,
                             catalogue_layers = self.catalog_layers,
                             color_picker = colorpicker,
                             toolbar = toolbar,
@@ -6038,7 +6079,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         # Initialize the values dict
         if values is None:
             values = {}
-        for key in ("L0", "L1", "L2", "L3", "L4", "L5", "specific", "parent"):
+        for key in ("L0", "L1", "L2", "L3", "L4", "L5", "specific", "parent", "radius"):
             if key not in values:
                 values[key] = None
 
@@ -6055,6 +6096,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         lat = values.get("lat")
         lon = values.get("lon")
         wkt = values.get("wkt")
+        radius = values.get("radius")
         address = values.get("address")
         postcode = values.get("postcode")
 
@@ -6068,6 +6110,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                                   table.lat,
                                                   table.lon,
                                                   table.wkt,
+                                                  table.radius,
                                                   table.addr_street,
                                                   table.addr_postcode,
                                                   limitby=(0, 1)).first()
@@ -6123,11 +6166,13 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                 else:
                     lat = None
                     lon = None
-                if self.lines or self.polygons:
+                if self.lines or self.polygons or self.circles:
                     if not wkt:
                         if record.gis_feature_type != 1:
                             # Only use WKT for non-Points
                             wkt = record.wkt
+                            if record.radius is not None:
+                                radius = record.radius
                         else:
                             wkt = None
                 else:
@@ -6154,10 +6199,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         values["address"] = address
         values["postcode"] = postcode
 
-        # Lat/Lon/WKT
+        # Lat/Lon/WKT/Radius
         values["lat"] = lat
         values["lon"] = lon
         values["wkt"] = wkt
+        values["radius"] = radius
 
         return values
 
@@ -6185,6 +6231,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         lat = value.get("lat")
         lon = value.get("lon")
         wkt = value.get("wkt")
+        radius = value.get("radius")
         address = value.get("address")
         postcode = value.get("postcode")
 
@@ -6297,7 +6344,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
 
         msg = self.error_message
 
-        # Check for valid Lat/Lon/WKT (if any)
+        # Check for valid Lat/Lon/WKT/Radius (if any)
         lat = values.get("lat")
         if lat:
             try:
@@ -6326,6 +6373,15 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         elif wkt == "":
             wkt = None
 
+        radius = values.get("radius")
+        if radius:
+            try:
+                radius = float(radius)
+            except ValueError:
+                errors["radius"] = current.T("Radius is Invalid!")
+        elif radius == "":
+            radius = None
+
         if errors:
             error = "\n".join(errors[fn] for fn in errors)
             return (values, error)
@@ -6338,7 +6394,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             # Currently not possible
             #   => widget always retains specific
             #   => must take care of orphaned specific locations otherwise
-            lat = lon = wkt = None
+            lat = lon = wkt = radius = None
         else:
             # Read other details
             parent = values.get("parent")
@@ -6348,7 +6404,8 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         if parent or address or postcode or \
            wkt is not None or \
            lat is not None or \
-           lon is not None:
+           lon is not None or \
+           radius is not None:
 
             # Specific location with details
             if specific:
@@ -6422,10 +6479,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                       addr_postcode=postcode,
                                       parent=parent,
                                       )
-                    if any(detail is not None for detail in (lat, lon, wkt)):
+                    if any(detail is not None for detail in (lat, lon, wkt, radius)):
                         feature.lat = lat
                         feature.lon = lon
                         feature.wkt = wkt
+                        feature.radius = radius
                         feature.inherited = False
                     onvalidation = current.s3db.gis_location_onvalidation
 
@@ -6458,10 +6516,11 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                   parent=parent,
                                   inherited=True,
                                   )
-                if any(detail is not None for detail in (lat, lon, wkt)):
+                if any(detail is not None for detail in (lat, lon, wkt, radius)):
                     feature.lat = lat
                     feature.lon = lon
                     feature.wkt = wkt
+                    feature.radius = radius
                     feature.inherited = False
                 onvalidation = current.s3db.gis_location_onvalidation
 
@@ -6575,6 +6634,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
         lat_max = values.get("lat_max")
         lon_max = values.get("lon_max")
         wkt = values.get("wkt")
+        radius = values.get("radius")
         the_geom = values.get("the_geom")
         address = values.get("address")
         postcode = values.get("postcode")
@@ -6595,6 +6655,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                               lat_max=lat_max,
                               lon_max=lon_max,
                               wkt=wkt,
+                              radius=radius,
                               inherited=inherited,
                               addr_street=address,
                               addr_postcode=postcode,
@@ -6621,7 +6682,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                                   addr_postcode=postcode,
                                   parent=parent,
                                   )
-                if any(detail is not None for detail in (lat, lon, wkt)):
+                if any(detail is not None for detail in (lat, lon, wkt, radius)):
                     feature.lat = lat
                     feature.lon = lon
                     feature.lat_min = lat_min
@@ -6629,6 +6690,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
                     feature.lat_max = lat_max
                     feature.lon_max = lon_max
                     feature.wkt = wkt
+                    feature.radius = radius
                     feature.inherited = False
 
                 # These could have been added during validate:

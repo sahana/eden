@@ -6116,6 +6116,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                  add_line_active = False,
                  add_polygon = False,
                  add_polygon_active = False,
+                 add_circle = False,
+                 add_circle_active = False,
                  features = None,
                  feature_queries = None,
                  feature_resources = None,
@@ -6169,6 +6171,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             @param add_feature_active: Whether the DrawFeature control should be active by default
             @param add_polygon: Whether to include a DrawFeature control to allow drawing a polygon over the map
             @param add_polygon_active: Whether the DrawFeature control should be active by default
+            @param add_circle: Whether to include a DrawFeature control to allow drawing a circle over the map
+            @param add_circle_active: Whether the DrawFeature control should be active by default
             @param features: Simple Features to overlay on Map (no control over appearance & not interactive)
                 [wkt]
             @param feature_queries: Feature Queries to overlay onto the map & their options (List of Dicts):
@@ -6253,6 +6257,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                    add_line_active = add_line_active,
                    add_polygon = add_polygon,
                    add_polygon_active = add_polygon_active,
+                   add_circle = add_circle,
+                   add_circle_active = add_circle_active,
                    features = features,
                    feature_queries = feature_queries,
                    feature_resources = feature_resources,
@@ -6747,6 +6753,13 @@ class MAP(DIV):
                 options["draw_polygon"] = "active"
             else:
                 options["draw_polygon"] = "inactive"
+
+        if opts.get("add_circle", False):
+            i18n["gis_draw_circle"] = T("Add Circle")
+            if opts.get("add_circle_active", False):
+                options["draw_circle"] = "active"
+            else:
+                options["draw_circle"] = "inactive"
 
         # Clear Layers
         clear_layers = opts.get("clear_layers") is not False and settings.get_gis_clear_layers()

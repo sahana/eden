@@ -1290,6 +1290,7 @@ class S3CAPModel(S3Model):
                      self.gis_location_id(
                         widget = S3LocationSelector(points = False,
                                                     polygons = True,
+                                                    circles = True,
                                                     show_map = True,
                                                     catalog_layers = True,
                                                     show_address = False,

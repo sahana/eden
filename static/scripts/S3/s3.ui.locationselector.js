@@ -597,6 +597,9 @@
                 var lat = data.lat,
                     lon = data.lon,
                     wkt = data.wkt;
+                if ('radius' in data) {
+                    var radius = data.radius;
+                }
                 if (!address && !postcode && !lat && !lon && !wkt) {
                     // No specific data, so point directly to the Lowest-set Lx
                     data.id = parent;
@@ -1205,8 +1208,34 @@
                                     'internalProjection': map.getProjectionObject(),
                                     'externalProjection': gis.proj4326
                                     };
-                                wkt = new OpenLayers.Format.WKT(out_options).write(feature);
+                                    
+                                var linearRing = new OpenLayers.Geometry.LinearRing(feature.geometry.components[0].components);
+                                var polygon = new OpenLayers.Geometry.Polygon([linearRing]);
+                                if (polygon.getVertices().length == 1000) {
+                                    // Circle
+                                    var polygonFeature = new OpenLayers.Feature.Vector(polygon, null);
+                                    var polygonBounds = polygonFeature.geometry.getBounds();
+                                    var minX = polygonBounds.left;
+                                    var minY = polygonBounds.bottom;
+                                    var maxX = polygonBounds.right;
+                                    var maxY = polygonBounds.top;
 
+                                    // Calculate the center coordinates
+                                    var startX = (minX + maxX) / 2;
+                                    var startY = (minY + maxY) / 2;
+
+                                    // Calculate Radius
+                                    var startPoint = new OpenLayers.Geometry.Point(startX, startY);
+                                    var endPoint = new OpenLayers.Geometry.Point(maxX, startY);
+                                    var radius = new OpenLayers.Geometry.LineString([startPoint, endPoint]);
+                                    //var length = Math.round(radius.getLength()).toString();
+                                    var lengthMeter = parseFloat(radius.getGeodesicLength());
+
+                                    // Store radius
+                                    data.radius = lengthMeter;
+                                }
+
+                                wkt = new OpenLayers.Format.WKT(out_options).write(feature);
                                 // Store the data
                                 data.wkt = wkt;
                                 data.lat = null;

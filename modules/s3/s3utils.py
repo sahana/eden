@@ -447,7 +447,7 @@ def s3_mark_required(fields,
         mark_required = ()
 
     if label_html is None:
-        # @ToDo: DRY this setting with s3.locationselector.widget2.js
+        # @ToDo: DRY this setting with s3.ui.locationselector.js
         label_html = s3_required_label
 
     labels = dict()
