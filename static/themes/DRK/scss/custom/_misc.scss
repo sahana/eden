@@ -87,9 +87,13 @@ body.rtl {
 .overdue {
     color: red;
 }
-.archived-case {
+.invalid-case {
+    border: 1px solid red;
     color: red;
-    font-weight: bold;
     font-size: 1.25rem;
+    font-weight: bold;
+    line-height: 1.6rem;
+    margin-bottom: 0.25rem;
+    padding: 0.2rem;
     text-transform: uppercase;
 }

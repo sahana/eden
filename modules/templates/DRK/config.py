@@ -505,6 +505,11 @@ def config(settings):
             else:
                 result = True
 
+            archived = r.get_vars.get("archived")
+            if archived in ("1", "true", "yes"):
+                crud_strings = s3.crud_strings["pr_person"]
+                crud_strings["title_list"] = T("Invalid Cases")
+
             resource = r.resource
 
             if r.controller == "security":
@@ -873,7 +878,7 @@ def config(settings):
                                                 label = T("Language / Communication Mode"),
                                                 ),
                                         "dvr_case.comments",
-                                        "dvr_case.archived",
+                                        (T("Invalid"), "dvr_case.archived"),
                                         )
                         configure(crud_form = crud_form,
                                   )
@@ -1763,8 +1768,8 @@ def drk_dvr_rheader(r, tabs=[]):
         if tablename == "pr_person":
 
             # "Case Archived" hint
-            hint = lambda record: SPAN(T("Case Archived"),
-                                       _class="archived-case",
+            hint = lambda record: SPAN(T("Invalid Case"),
+                                       _class="invalid-case",
                                        )
 
             if current.request.controller == "security":

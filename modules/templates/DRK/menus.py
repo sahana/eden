@@ -164,25 +164,36 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="dvr")(
                     M("Cases", c=("dvr", "pr"), f="person")(
                         M("Create", m="create"),
-                        M("Suspended Cases", vars={"case_flag.name": "Suspended"}),
-                        M("Archived Cases", vars={"archived": "1"}),
-                    ),
+                        M("Suspended Cases",
+                          vars = {"case_flag.name": "Suspended"},
+                          ),
+                        ),
+                    #M("Reports", link=False)(
+                    #    # @todo
+                    #    ),
                     M("Activities", f="case_activity")(
-                        M("Emergencies", vars = {"~.emergency": "True"}),
+                        M("Emergencies",
+                          vars = {"~.emergency": "True"},
+                          ),
                         M(follow_up_label, f="due_followups"),
                         M("All Activities"),
                         M("Report", m="report"),
-                    ),
+                        ),
                     M("Appointments", f="case_appointment")(
                         M("Bulk Status Update", m="manage"),
-                    ),
+                        ),
                     M("Allowances", f="allowance")(
-                    ),
+                        ),
+                    M("Archive", link=False)(
+                        M("Invalid Cases", f="person",
+                          vars={"archived": "1"},
+                          ),
+                        ),
                     M("Administration", restrict=ADMIN)(
                         M("Flags", f="case_flag"),
                         M("Case Status", f="case_status"),
-                    ),
-                )
+                        ),
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
