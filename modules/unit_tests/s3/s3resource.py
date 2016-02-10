@@ -2903,6 +2903,64 @@ class ResourceDeleteTests(unittest.TestCase):
             component.drop()
             del current.model.components["del_super"]["component"]
 
+    # -------------------------------------------------------------------------
+    def testArchiveWithJoinedExtraFields(self):
+        """
+            Test archiving if there are mandatory extra fields
+            which require a join
+        """
+
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+        assertTrue = self.assertTrue
+
+        s3db = current.s3db
+
+        master_id = self.master_id
+
+        # Define component table
+        # @note: not really a component relationship here, but
+        #        using component table for its foreign key in
+        #        order to construct an extra_fields join
+        s3db.define_table("del_component",
+                          Field("del_master_id",
+                                s3db.del_master,
+                                ondelete="CASCADE"),
+                          *s3_meta_fields())
+        component = s3db["del_component"]
+
+        # Define joined extra fields
+        s3db.configure("del_component",
+                       extra_fields = ["del_master_id$id"],
+                       )
+
+        try:
+            # Create a component record
+            component_id = component.insert(del_master_id=master_id)
+            component_record = component[component_id]
+            assertNotEqual(component_record, None)
+            current.db.commit()
+
+            # Delete the component record
+            # => this crashes if delete doesn't catch joined Rows
+            resource = s3db.resource("del_component", id=component_id)
+            success = resource.delete()
+            assertEqual(success, 1)
+            assertEqual(resource.error, None)
+
+            # Component record is deleted and unlinked
+            component_record = component[component_id]
+            assertTrue(component_record.deleted)
+            assertEqual(component_record.del_master_id, None)
+
+            # Check callbacks
+            # => this fails if the callback doesn't receive
+            #    the correct sub-Row (...instead of the joined Row)
+            assertEqual(self.component_deleted, component_id)
+
+        finally:
+            component.drop()
+
     ## -------------------------------------------------------------------------
     #def testDeleteSimple(self):
         #""" Test hard deletion of a record """

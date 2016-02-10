@@ -614,6 +614,7 @@ class S3Resource(object):
         self.error = None
         permission_error = False
 
+        tablename = self.tablename
         table = self.table
         table_fields = table.fields
 
@@ -647,6 +648,13 @@ class S3Resource(object):
             #self.error = current.ERROR.BAD_RECORD
             return 0
 
+        first = rows[0]
+        if hasattr(first, tablename) and isinstance(first[tablename], Row):
+            # Rows are the result of a join (due to extra_fields)
+            joined = True
+        else:
+            joined = False
+
         numrows = 0
 
         db = current.db
@@ -661,8 +669,6 @@ class S3Resource(object):
 
         DELETED = current.xml.DELETED
         INTEGRITY_ERROR = current.ERROR.INTEGRITY_ERROR
-
-        tablename = self.tablename
 
         if current.deployment_settings.get_security_archive_not_delete() and \
            DELETED in table:
@@ -684,7 +690,8 @@ class S3Resource(object):
                 rfields = [f for f in references if f.ondelete == "RESTRICT"]
 
             # Determine deletable rows
-            deletable = set(row[pkey] for row in rows)
+            pkey_ = str(self._id) if joined else pkey
+            deletable = set(row[pkey_] for row in rows)
             for rfield in rfields:
                 if deletable:
                     fn, tn = rfield.name, rfield.tablename
@@ -702,6 +709,9 @@ class S3Resource(object):
             ondelete_cascade = get_config("ondelete_cascade")
 
             for row in rows:
+
+                if joined:
+                    row = getattr(row, tablename)
                 record_id = row[pkey]
 
                 # Check permission to delete this record
@@ -860,7 +870,11 @@ class S3Resource(object):
         else:
             # Hard delete
             for row in rows:
+
+                if joined:
+                    row = getattr(row, tablename)
                 record_id = row[pkey]
+
                 # Check permission to delete this row
                 if not has_permission("delete", table, record_id=record_id):
                     permission_error = True
