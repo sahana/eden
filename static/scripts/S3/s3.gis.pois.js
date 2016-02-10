@@ -40,7 +40,7 @@
         var current_projection = feature.layer.map.getProjectionObject();
         var geometry = feature.geometry;
         if (geometry.CLASS_NAME != 'OpenLayers.Geometry.Point') {
-            // Line or Polygon: pass WKT
+            // Line or Polygon or Circle: pass WKT
             geometry.transform(current_projection, proj4326);
             var wkt = geometry.toString();
             // Build URL for create form
