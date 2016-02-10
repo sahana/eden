@@ -1209,6 +1209,7 @@
                                     'externalProjection': gis.proj4326
                                     };
                                     
+                                data.radius = null;
                                 var linearRing = new OpenLayers.Geometry.LinearRing(feature.geometry.components[0].components);
                                 var polygon = new OpenLayers.Geometry.Polygon([linearRing]);
                                 if (polygon.getVertices().length == 1000) {
@@ -1228,8 +1229,8 @@
                                     var startPoint = new OpenLayers.Geometry.Point(startX, startY);
                                     var endPoint = new OpenLayers.Geometry.Point(maxX, startY);
                                     var radius = new OpenLayers.Geometry.LineString([startPoint, endPoint]);
-                                    //var length = Math.round(radius.getLength()).toString();
-                                    var lengthMeter = parseFloat(radius.getGeodesicLength());
+                                    var lengthMeter = parseFloat(radius.getLength());
+                                    //var lengthMeter = parseFloat(radius.getGeodesicLength());
 
                                     // Store radius
                                     data.radius = lengthMeter;
