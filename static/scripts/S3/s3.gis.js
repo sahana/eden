@@ -5086,8 +5086,6 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
     // Circle Control to draw circles on the Map
     var addCircleControl = function(map, toolbar, active, config) {
         var draftLayer = map.s3.draftLayer;
-        var radiusLayer = map.s3.draftLayer;
-        console.log(radiusLayer);
         var control = new OpenLayers.Control.DrawFeature(draftLayer, OpenLayers.Handler.RegularPolygon, {
                 handlerOptions: {
                      sides: 1000,
