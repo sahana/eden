@@ -938,9 +938,6 @@ def config(settings):
 
         # Custom rheader tabs
         attr = dict(attr)
-        #if current.request.controller == "security":
-            #attr["rheader"] = drk_dvr_rheader
-        #else:
         attr["rheader"] = drk_dvr_rheader
 
         return attr
@@ -1013,8 +1010,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def dvr_case_onaccept(form):
         """
-            If archived or status in (DISAPPEARED, LEGALLY_DEPARTED) then
-                remove shelter_registration
+            If case is archived or closed then remove shelter_registration
         """
 
         cancel = False
@@ -1254,7 +1250,7 @@ def config(settings):
 
             resource = r.resource
 
-            # Filter to current cases
+            # Filter to active cases
             if not r.record:
                 from s3 import FS
                 query = (FS("person_id$dvr_case.archived") == False) | \
@@ -1320,7 +1316,7 @@ def config(settings):
 
             resource = r.resource
 
-            # Filter to current cases
+            # Filter to active cases
             if not r.record:
                 from s3 import FS
                 query = (FS("person_id$dvr_case.archived") == False) | \
@@ -1419,7 +1415,7 @@ def config(settings):
 
             resource = r.resource
 
-            # Filter to current cases
+            # Filter to active cases
             if not r.record:
                 from s3 import FS
                 query = (FS("person_id$dvr_case.archived") == False) | \
