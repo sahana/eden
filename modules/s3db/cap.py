@@ -1008,20 +1008,40 @@ class S3CAPModel(S3Model):
                                          _title="%s|%s" % (T("The type and content of the resource file"),
                                                            T("The human-readable text describing the type and content, such as 'map' or 'photo', of the resource file."))),
                            ),
+                     Field("image", "upload",
+                           label = T("Image"),
+                           length = current.MAX_FILENAME_LENGTH,
+                           represent = self.doc_image_represent,
+                           requires = IS_EMPTY_OR(IS_IMAGE(maxsize=(800, 800),
+                                                           error_message=\
+T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
+                           uploadfolder = os.path.join(current.request.folder,
+                                                       "uploads", "images"),
+                           widget = S3ImageCropWidget((800, 800)),
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Image"),
+                                                           T("Attach an image that provides extra information about the event"))),
+                           ),
                      Field("mime_type",
                            requires = IS_NOT_EMPTY(),
+                           readable = False,
+                           writable = False,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The identifier of the MIME content type and sub-type describing the resource file"),
                                                            T("MIME content type and sub-type as described in [RFC 2046]. (As of this document, the current IANA registered MIME types are listed at http://www.iana.org/assignments/media-types/)"))),
                            ),
                      Field("size", "integer",
+                           label = T("Size in Bytes"),
+                           readable = False,
                            writable = False,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The integer indicating the size of the resource file"),
                                                            T("Approximate size of the resource file in bytes."))),
                            ),
                      Field("uri",
-                           # needs a special validation
+                           label = T("Link to any resources"),
+                           requires = IS_EMPTY_OR(IS_URL()),
+                           readable = False,
                            writable = False,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The identifier of the hyperlink for the resource file"),
@@ -1062,27 +1082,37 @@ class S3CAPModel(S3Model):
                                     "info_id",
                                     "is_template",
                                     "resource_desc",
-                                    S3SQLInlineComponent("image",
-                                                         label = T("Image"),
-                                                         fields = ["file",
-                                                                  ],
-                                                         comment = DIV(_class="tooltip",
-                                                                       _title="%s|%s" % (T("Image"),
-                                                                                         T("Attach an image that provides extra information about the event."))),
-                                                         ),
+                                    "image",
+                                    "mime_type",
+                                    "size",
+                                    # The CropWidget doesn't work in inline forms
+                                    #S3SQLInlineComponent("image",
+                                    #                     label = T("Image"),
+                                    #                     fields = [("", "file")],
+                                    #                     comment = DIV(_class="tooltip",
+                                    #                                   _title="%s|%s" % (T("Image"),
+                                    #                                                     T("Attach an image that provides extra information about the event."))),
+                                    #                     ),
                                     S3SQLInlineComponent("document",
                                                          label = T("Document"),
-                                                         fields = ["file",
-                                                                   ],
+                                                         fields = [("", "file")],
                                                          comment = DIV(_class="tooltip",
                                                                        _title="%s|%s" % (T("Document"),
                                                                                          T("Attach document that provides extra information about the event."))),
                                                          ),
                                     )
+
+        list_fields = ["resource_desc",
+                       "image",
+                       "document",
+                       ]
+
         configure(tablename,
                   # Shouldn't be required if all UI actions go through alert controller & XSLT configured appropriately
                   create_onaccept = update_alert_id(tablename),
                   crud_form = crud_form,
+                  list_fields = list_fields,
+                  onvalidation = self.cap_resource_onvalidation,
                   super_entity = "doc_entity",
                   )
 
@@ -1615,6 +1645,44 @@ class S3CAPModel(S3Model):
         if form_vars.get("ceiling") and not form_vars.get("altitude"):
             form.errors["altitude"] = \
             current.T("'Altitude' field is mandatory if using 'Ceiling' field.")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_resource_onvalidation(form):
+        """ 
+            For Image Upload
+             NB not using document_onvalidation here because we are extracting
+             other values from the file like size and mime type 
+        """
+        
+        form_vars = form.vars
+        image = form_vars.image
+        if image is None:
+            encoded_file = form_vars.get("imagecrop-data", None)
+            if encoded_file:
+                import base64
+                import uuid
+                import cStringIO
+                metadata, encoded_file = encoded_file.split(",")
+                filename, datatype, enctype = metadata.split(";")
+                f = Storage()
+                f.filename = uuid.uuid4().hex + filename
+                f.file = cStringIO.StringIO(base64.decodestring(encoded_file))
+                form_vars.image = image = f
+                stream = image.file
+                stream.seek(0, os.SEEK_END)
+                file_size = stream.tell()
+                stream.seek(0)
+                
+                # extract mime_type
+                if image is not None:        
+                    data, mime_type = datatype.split(":")
+                    form_vars.size = file_size
+                    form_vars.mime_type = mime_type
+                
+        elif isinstance(image, str):
+            # Image = String => Update not a create, so file not in form
+            return
 
 # =============================================================================
 class S3CAPAreaNameModel(S3Model):
