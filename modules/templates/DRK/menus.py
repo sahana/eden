@@ -169,7 +169,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           ),
                         ),
                     #M("Reports", link=False)(
-                    #    # @todo
+                    #    M("Check-in overdue", c=("dvr", "pr"), f="person",
+                    #      vars = {"closed": "0", "overdue": "1"},
+                    #      ),
                     #    ),
                     M("Activities", f="case_activity")(
                         M("Emergencies",

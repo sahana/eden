@@ -12,6 +12,9 @@ import datetime
 from gluon import current, SPAN
 from gluon.storage import Storage
 
+# Limit after which a checked-out resident is reported overdue (days)
+ABSENCE_LIMIT = 5
+
 def config(settings):
     """
         Template settings: 'Skeleton' designed to be copied to quickly create
@@ -163,9 +166,6 @@ def config(settings):
     settings.cr.shelter_population_dynamic = True
     settings.cr.shelter_housing_unit_management = True
     settings.cr.check_out_is_final = False
-
-    # Limit after which a checked-out resident is reported overdue (days)
-    ABSENCE_LIMIT = 5
 
     # -------------------------------------------------------------------------
     def profile_header(r):
@@ -675,7 +675,8 @@ def config(settings):
                                    datetime.timedelta(days=ABSENCE_LIMIT)
 
                         if overdue == "1":
-                            query = checked_out & (checkout_date < due_date)
+                            query = checked_out & \
+                                    ((checkout_date < due_date) | (checkout_date == None))
                         else:
                             query = not_checked_out | \
                                     checked_out & (checkout_date >= due_date)
@@ -1720,7 +1721,6 @@ def drk_absence(row):
     else:
         registration = None
 
-    LIMIT = 3
     result = current.messages["NONE"]
 
     if registration is None or \
@@ -1743,24 +1743,30 @@ def drk_absence(row):
                                         ).first()
 
     if registration and \
-       registration.registration_status == 3 and \
-       registration.check_out_date:
-
-        delta = (current.request.utcnow - registration.check_out_date).total_seconds()
-        if delta < 0:
-            delta = 0
-        days = int(delta / 86400)
+       registration.registration_status == 3:
 
         T = current.T
-        if days < 1:
-            result = "<1 %s" % T("Day")
-        elif days == 1:
-            result = "1 %s" % T("Day")
-        else:
-            result = "%s %s" % (days, T("Days"))
 
-        if days >= LIMIT:
-            result = SPAN(result, _class="overdue")
+        check_out_date = registration.check_out_date
+        if check_out_date:
+
+            delta = (current.request.utcnow - check_out_date).total_seconds()
+            if delta < 0:
+                delta = 0
+            days = int(delta / 86400)
+
+            if days < 1:
+                result = "<1 %s" % T("Day")
+            elif days == 1:
+                result = "1 %s" % T("Day")
+            else:
+                result = "%s %s" % (days, T("Days"))
+
+            if days >= ABSENCE_LIMIT:
+                result = SPAN(result, _class="overdue")
+
+        else:
+            result = SPAN(T("Date unknown"), _class="overdue")
 
     return result
 

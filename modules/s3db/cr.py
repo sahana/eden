@@ -1238,10 +1238,10 @@ class S3ShelterRegistrationModel(S3Model):
                     query = (htable.shelter_id == reg.shelter_id) & \
                             (htable.deleted != True)
                     row = db(query).select(htable.status,
-                                        htable.date,
-                                        orderby = ~htable.created_on,
-                                        limitby = (0, 1),
-                                        ).first()
+                                           htable.date,
+                                           orderby = ~htable.created_on,
+                                           limitby = (0, 1),
+                                           ).first()
                     if row:
                         previous_status = row.status
                         previous_date = row.date
@@ -1249,35 +1249,39 @@ class S3ShelterRegistrationModel(S3Model):
                         previous_status = None
                         previous_date = None
 
-                    # If registration status has changed, then create a
-                    # new history entry
+                    # Get the current status
                     current_status = reg.registration_status
-                    if current_status != previous_status:
 
-                        # Get the effective date
-                        if current_status == 2:
-                            effective_date_field = "check_in_date"
-                        elif current_status == 3:
-                            effective_date_field = "check_out_date"
-                        else:
-                            effective_date_field = None
+                    # Get the effective date
+                    if current_status == 2:
+                        effective_date_field = "check_in_date"
+                    elif current_status == 3:
+                        effective_date_field = "check_out_date"
+                    else:
+                        effective_date_field = None
+
+                    if effective_date_field:
+                        # Read from registration
+                        effective_date = reg[effective_date_field]
+                    else:
+                        # Use modified_on for history
+                        effective_date = reg.modified_on
+
+                    if current_status != previous_status or \
+                       effective_date_field and not effective_date:
 
                         if effective_date_field:
-                            # Read from registration
-                            effective_date = reg[effective_date_field]
-
-                            # Validate and correct if necessary
+                            # If the new status has an effective date,
+                            # make sure it gets updated when the status
+                            # has changed:
                             if effective_date_field not in formvars or \
                                not effective_date or \
                                previous_date and effective_date < previous_date:
-                                # Correct to now
+
                                 effective_date = current.request.utcnow
                                 reg.update_record(**{
                                     effective_date_field: effective_date,
                                     })
-                        else:
-                            # Just accept as-is
-                            effective_date = reg.modified_on
 
                         # Insert new history entry
                         htable.insert(previous_status = previous_status,
