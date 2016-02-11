@@ -5088,7 +5088,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
         var draftLayer = map.s3.draftLayer;
         var control = new OpenLayers.Control.DrawFeature(draftLayer, OpenLayers.Handler.RegularPolygon, {
                 handlerOptions: {
-                     sides: 1000,
+                     sides: 1000
                 }, 
             // custom Callback
             'featureAdded': function(feature) {
