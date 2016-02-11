@@ -70,6 +70,7 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Dashboard", c="event", f="event", m="summary"),
                 MM("Incidents", c="event", f="incident", m="summary"),
                 MM("Resources", c="org", f="resource", m="summary"),
+                MM("Events", c="event", f="event"),
                 MM("Map", c="gis", f="index"),
                 ]
 
