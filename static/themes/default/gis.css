@@ -451,6 +451,11 @@ svg[id^=OpenLayers] {
   height: 20px !important;
   width: 20px !important;
 }
+.mappnlcntr .drawcircle-on {
+  background-image: url(../../img/draw_circle_on.png) !important;
+  height: 20px !important;
+  width: 20px !important;
+}
 .mappnlcntr .info {
   background-image: url(../../img/gis/mapfish/info.png) !important;
   height: 20px !important;

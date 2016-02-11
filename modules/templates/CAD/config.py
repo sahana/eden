@@ -24,11 +24,11 @@ def config(settings):
     settings.base.system_name_short = T("Sahana")
 
     # Prepop options
-    settings.base.prepopulate_options = {"mandatory": "CAD",
-                                         "default": ("default/users",
-                                                     "CAD/Demo",
-                                                     ),
-                                         }
+    #settings.base.prepopulate_options = {"mandatory": "CAD",
+    #                                     "default": ("default/users",
+    #                                                 "CAD/Demo",
+    #                                                 ),
+    #                                     }
     # Prepop default
     settings.base.prepopulate += ("CAD", "default/users", "CAD/Demo")
 
