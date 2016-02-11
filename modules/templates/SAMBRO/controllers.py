@@ -55,9 +55,8 @@ class index(S3CustomController):
         feature_resources = [{"name"      : T("Alerts"),
                               "id"        : "search_results",
                               "layer_id"  : layer_id,
-                              "tablename" : "cap_alert",
-                              "url"       : URL(c="cap", f=fn,
-                                                extension="geojson"),
+                              # @ToDo: Make the filter update timestamp on refresh in the client side
+                              "filter"    : "~.info.expires__gt=%s" % request.utcnow,
                               # We activate in callback after ensuring URL is updated for current filter status
                               "active"    : False,
                               }]
