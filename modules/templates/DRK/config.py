@@ -164,6 +164,9 @@ def config(settings):
     settings.cr.shelter_housing_unit_management = True
     settings.cr.check_out_is_final = False
 
+    # Limit after which a checked-out resident is reported overdue (days)
+    ABSENCE_LIMIT = 5
+
     # -------------------------------------------------------------------------
     def profile_header(r):
         """
@@ -510,9 +513,10 @@ def config(settings):
                 crud_strings = s3.crud_strings["pr_person"]
                 crud_strings["title_list"] = T("Invalid Cases")
 
+            controller = r.controller
             resource = r.resource
 
-            if r.controller == "security":
+            if controller == "security":
                 # Restricted view for Security staff
                 if r.component:
                     redirect(r.url(method=""))
@@ -632,7 +636,7 @@ def config(settings):
                                    profile_widgets = profile_widgets,
                                    )
 
-            elif r.controller == "dvr":
+            elif controller == "dvr":
 
                 from gluon import Field, IS_EMPTY_OR, IS_IN_SET, IS_NOT_EMPTY
 
@@ -652,6 +656,30 @@ def config(settings):
                 else:
                     absence_field = None
 
+                if not r.record:
+                    overdue = r.get_vars.get("overdue")
+                    if overdue:
+                        # Filter case list for overdue check-in
+                        from s3 import FS
+
+                        reg_status = FS("shelter_registration.registration_status")
+                        checkout_date = FS("shelter_registration.check_out_date")
+
+                        checked_out = (reg_status == 3)
+                        # Must catch None explicitly because it is neither
+                        # equal nor unequal with anything according to SQL rules
+                        not_checked_out = ((reg_status == None) | (reg_status != 3))
+
+                        # Due date for check-in
+                        due_date = current.request.utcnow - \
+                                   datetime.timedelta(days=ABSENCE_LIMIT)
+
+                        if overdue == "1":
+                            query = checked_out & (checkout_date < due_date)
+                        else:
+                            query = not_checked_out | \
+                                    checked_out & (checkout_date >= due_date)
+                        resource.add_filter(query)
 
                 if not r.component:
 
@@ -938,9 +966,6 @@ def config(settings):
 
         # Custom rheader tabs
         attr = dict(attr)
-        #if current.request.controller == "security":
-            #attr["rheader"] = drk_dvr_rheader
-        #else:
         attr["rheader"] = drk_dvr_rheader
 
         return attr
@@ -1013,8 +1038,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def dvr_case_onaccept(form):
         """
-            If archived or status in (DISAPPEARED, LEGALLY_DEPARTED) then
-                remove shelter_registration
+            If case is archived or closed then remove shelter_registration
         """
 
         cancel = False
@@ -1254,7 +1278,7 @@ def config(settings):
 
             resource = r.resource
 
-            # Filter to current cases
+            # Filter to active cases
             if not r.record:
                 from s3 import FS
                 query = (FS("person_id$dvr_case.archived") == False) | \
@@ -1320,7 +1344,7 @@ def config(settings):
 
             resource = r.resource
 
-            # Filter to current cases
+            # Filter to active cases
             if not r.record:
                 from s3 import FS
                 query = (FS("person_id$dvr_case.archived") == False) | \
@@ -1419,7 +1443,7 @@ def config(settings):
 
             resource = r.resource
 
-            # Filter to current cases
+            # Filter to active cases
             if not r.record:
                 from s3 import FS
                 query = (FS("person_id$dvr_case.archived") == False) | \

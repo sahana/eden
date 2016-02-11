@@ -34,16 +34,28 @@ def person():
         resource = r.resource
         resource.add_filter(FS("dvr_case.id") != None)
 
-        # Filter to current/archived cases
+        # Filters to split case list
         if not r.record:
-            archived = r.get_vars.get("archived")
-            if archived in ("1", "true", "yes"):
+            get_vars = r.get_vars
+
+            # Filter to active/archived cases
+            archived = get_vars.get("archived")
+            if archived == "1":
                 archived = True
                 query = FS("dvr_case.archived") == True
             else:
                 archived = False
                 query = (FS("dvr_case.archived") == False) | \
                         (FS("dvr_case.archived") == None)
+
+            # Filter to open/closed cases
+            closed = get_vars.get("closed")
+            if closed == "1":
+                query &= FS("dvr_case.status_id$is_closed") == True
+            elif closed == "0":
+                query &= (FS("dvr_case.status_id$is_closed") == False) | \
+                         (FS("dvr_case.status_id$is_closed") == None)
+
             resource.add_filter(query)
         else:
             archived = False

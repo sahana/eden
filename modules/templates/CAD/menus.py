@@ -64,12 +64,12 @@ class S3MainMenu(default.S3MainMenu):
         """ Custom Modules Menu """
 
         return [homepage(),
-                MM("Feed", c="cms", f="newsfeed", args="datalist",
-               icon="icon-news",
-               ),
-                MM("Dashboard", c="event", f="event", args="summary"),
-                MM("Incidents", c="event", f="incident", args="summary"),
-                MM("Resources", c="org", f="resource", args="summary"),
+                MM("Feed", c="cms", f="newsfeed", m="datalist",
+                   icon="icon-news",
+                   ),
+                MM("Dashboard", c="event", f="event", m="summary"),
+                MM("Incidents", c="event", f="incident", m="summary"),
+                MM("Resources", c="org", f="resource", m="summary"),
                 MM("Map", c="gis", f="index"),
                 ]
 
