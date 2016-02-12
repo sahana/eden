@@ -774,6 +774,42 @@ def alert():
         if r.interactive:
             if get_vars.get("_next"):
                 r.next = get_vars.get("_next")
+            if r.component_name == "info" and \
+               r.component_id is not None and \
+               len(r.post_vars) > 0:
+                # When the component info segment is clicked
+                post_vars_get = request.post_vars.get
+                if post_vars_get("web") == "" or None:
+                    web = "%s%s" % (settings.get_base_public_url(),
+                                    URL(c="cap", f="alert", args=r.id))
+                else:
+                    web = post_vars_get("web", "%s%s" % (settings.get_base_public_url(),
+                                                         URL(c="cap", f="alert", args=r.id)))
+
+                idata = {"priority"  : post_vars_get("priority", None),
+                         "urgency"   : post_vars_get("urgency", None),
+                         "severity"  : post_vars_get("severity", None),
+                         "certainty" : post_vars_get("certainty", None),
+                         # Add "%s:00", otherwise s3_datetime cannot parse 
+                         "effective" : None if post_vars_get("effective") == "" or None
+                                       else "%s:00" % post_vars_get("effective"),
+                         "onset"     : None if post_vars_get("onset") == ""  or None
+                                       else "%s:00" % post_vars_get("onset"),
+                         "expires"   : None if post_vars_get("expires") == "" or None
+                                       else "%s:00" % post_vars_get("expires"),
+                         "web"       : web,
+                         }
+                
+                current_info_id = r.component_id
+                table = db.cap_alert
+                itable = s3db.cap_info
+                rows = db(itable.alert_id == r.id).select(itable.id)
+
+                for row in rows:
+                    if int(row.id) == int(current_info_id):
+                        row.update_record(web=web)
+                    else:
+                        row.update_record(**idata)
             #if r.component_name == "info":
             #    update_url = URL(f="info", args=["[id]"])
             #    s3_action_buttons(r, update_url=update_url)
@@ -902,6 +938,7 @@ def template():
                       "effective",
                       "onset",
                       "expires",
+                      "web",
                       ):
                 field = itable[f]
                 field.writable = False
