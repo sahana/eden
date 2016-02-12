@@ -580,6 +580,10 @@ def alert():
 
             elif r.component_name == "info":
                 itable = r.component.table
+                # Do not show this as overwritten in onaccept
+                itable.web.readable = False
+                itable.web.writable = False
+
                 alert_id = request.args(0)
                 # Check for prepopulate
                 if alert_id:
@@ -774,13 +778,7 @@ def alert():
         if r.interactive:
             if get_vars.get("_next"):
                 r.next = get_vars.get("_next")
-            #if r.component_name == "info":
-            #    update_url = URL(f="info", args=["[id]"])
-            #    s3_action_buttons(r, update_url=update_url)
 
-            #if r.component_name == "area":
-            #    update_url = URL(f="area", args=["[id]"])
-            #    s3_action_buttons(r, update_url=update_url)
 
             if isinstance(output, dict) and "form" in output:
                 if not r.component and \
@@ -902,6 +900,7 @@ def template():
                       "effective",
                       "onset",
                       "expires",
+                      "web",
                       ):
                 field = itable[f]
                 field.writable = False
@@ -957,6 +956,22 @@ def template():
             else:
                 s3.scripts.append("/%s/static/scripts/S3/s3.cap.min.js" % appname)
             s3.stylesheets.append("S3/cap.css")
+
+        elif r.representation == "json":
+            # @ToDo: fix JSON representation's ability to use component list_fields
+            list_fields = ["id",
+                           "template_title",
+                           "scope",
+                           "sender",
+                           "info.category",
+                           "info.event_type_id$name",
+                           "info.response_type",
+                           "info.sender_name",
+                           ]
+
+            s3db.configure(tablename,
+                           list_fields = list_fields,
+                           )
 
         return True
     s3.prep = prep
