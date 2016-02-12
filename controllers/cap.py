@@ -609,6 +609,14 @@ def alert():
                             itable[f].writable = False
 
             elif r.component_name == "area":
+                list_fields = ["info_id",
+                               "name",
+                               "altitude",
+                               "ceiling",
+                               ]
+                s3db.configure("cap_area",
+                               list_fields = list_fields,
+                               )
                 atable = r.component.table
                 # Limit to those for this Alert
                 atable.info_id.requires = IS_EMPTY_OR(
@@ -617,7 +625,7 @@ def alert():
                                                           filterby="alert_id",
                                                           filter_opts=(r.id,),
                                                           ))
-                for f in ("event_type_id", "priority"):
+                for f in ("info_id", "event_type_id", "priority"):
                     # Do not show for the actual area
                     field = atable[f]
                     field.writable = field.readable = False
@@ -651,6 +659,18 @@ def alert():
 
             elif r.component_name == "resource":
                 atable = r.component.table
+                # Hide info_id as this is done in onaccept
+                atable.info_id.readable = False
+                atable.info_id.writable = False
+                # List fields for component
+                list_fields = ["info_id",
+                               "resource_desc",
+                               "image",
+                               "document",
+                               ]
+                s3db.configure("cap_resource",
+                               list_fields = list_fields,
+                               )
                 # Limit to those for this Alert
                 atable.info_id.requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "cap_info.id",
@@ -774,13 +794,198 @@ def alert():
         if r.interactive:
             if get_vars.get("_next"):
                 r.next = get_vars.get("_next")
-            #if r.component_name == "info":
-            #    update_url = URL(f="info", args=["[id]"])
-            #    s3_action_buttons(r, update_url=update_url)
 
-            #if r.component_name == "area":
-            #    update_url = URL(f="area", args=["[id]"])
-            #    s3_action_buttons(r, update_url=update_url)
+            if r.component_name == "area" and len(r.post_vars) > 0:
+                itable = s3db.cap_info
+                atable = s3db.cap_area
+                ltable = s3db.cap_area_location
+                ttable = s3db.cap_area_tag
+
+                alert_id = int(r.id)
+                set_record_owner = current.auth.s3_set_record_owner
+                if r.component_id is not None:
+                    # Area Component Update Case
+                    area_id = int(r.component_id)
+
+                    query = (itable.alert_id == alert_id) & \
+                            (atable.info_id == itable.id)
+
+                    # cap_area case
+                    arow = db(atable.id == area_id).select(atable.name,
+                                                           atable.altitude,
+                                                           atable.ceiling,
+                                                           limitby=(0, 1)).first()
+                    query_ = query & (atable.alert_id == alert_id)
+                    arows = db(query_).select(atable.id)
+
+                    if len(arows) > 0:
+                        for row in arows:
+                            db(atable.id == row.id).update(name = arow.name,
+                                                           altitude = arow.altitude,
+                                                           ceiling = arow.ceiling)
+
+                    # cap_area_location case
+                    lrow = db(ltable.area_id == area_id).select(ltable.location_id,
+                                                                limitby=(0, 1)).first()
+                    if lrow:
+                        query_ = query & (ltable.alert_id == atable.alert_id) & \
+                                         (atable.id == ltable.area_id)
+                        rows = db(query_).select(ltable.id,
+                                                 ltable.area_id)
+    
+                        if (set([arow.id for arow in arows]) == \
+                            set([row.area_id for row in rows])):
+                            # match area_id in cap_area_location => update
+                            for row in rows:
+                                db(ltable.id == row.id).update(\
+                                                        location_id = lrow.location_id)
+                        else:
+                            # area_id not matched in cap_area_location => create
+                            _area_ids = set([arow.id for arow in arows]) - \
+                                        set([row.area_id for row in rows])
+                            for _area_id in _area_ids:
+                                ldata = {"alert_id": alert_id,
+                                         "area_id": _area_id,
+                                         "location_id": lrow.location_id,
+                                         }
+                                lid = ltable.insert(**ldata)
+                                set_record_owner(ltable, lid)
+
+                    # cap_area_tag case
+                    trows = db(ttable.area_id == area_id).select(ttable.area_id,
+                                                                 ttable.tag,
+                                                                 ttable.value)
+                    query_ = query & (ttable.alert_id == atable.alert_id) & \
+                                     (atable.id == ttable.area_id)
+                    rows = db(query_).select(ttable.id,
+                                             ttable.area_id)
+                    # remove all the tag row except the newly created one
+                    # rather than doing costly loop query
+                    for row in rows:
+                        if int(row.area_id) != area_id:
+                            db(ttable.id == row.id).delete()
+
+                    for arow in arows:
+                        if int(arow.id) != area_id:
+                            for trow in trows:
+                                tdata = {"alert_id": alert_id,
+                                         "area_id": arow.id,
+                                         "tag": trow.tag,
+                                         "value": trow.value,
+                                         }
+                                tid = ttable.insert(**tdata)
+                                set_record_owner(ttable, tid)
+                else:
+                    # Area Component Create Case
+                    area_id = int(r.component.lastid)
+                    # Extract information from recently created data
+                    arow = db(atable.id == area_id).select(atable.info_id,
+                                                           atable.name,
+                                                           atable.altitude,
+                                                           atable.ceiling,
+                                                           limitby=(0, 1)).first()
+                    lrow = db(ltable.area_id == area_id).select(ltable.location_id,
+                                                                limitby=(0, 1)).first()
+                    trows = db(ttable.area_id == area_id).select(ttable.tag,
+                                                                 ttable.value)
+                    irows = db(itable.alert_id == alert_id).select(itable.id)
+
+                    for irow in irows:
+                        if irow.id != arow.info_id:
+                            # Insert data in cap_area
+                            adata = {"alert_id": alert_id,
+                                     "info_id": irow.id,
+                                     "name": arow.name,
+                                     "altitude": arow.altitude,
+                                     "ceiling": arow.ceiling,
+                                     }
+                            aid = atable.insert(**adata)
+                            set_record_owner(atable, aid)
+                            if lrow:
+                                # Insert data in cap_area_location
+                                ldata = {"alert_id": alert_id,
+                                         "area_id": aid,
+                                         "location_id": lrow.location_id}
+                                lid = ltable.insert(**ldata)
+                                set_record_owner(ltable, lid)
+                            if len(trows) > 0:
+                                # Insert data in cap_area_tag
+                                for trow in trows:
+                                    tdata = {"alert_id": alert_id,
+                                             "area_id": aid,
+                                             "tag": trow.tag,
+                                             "value": trow.value,
+                                             }
+                                    tid = ttable.insert(**tdata)
+                                    set_record_owner(ttable, tid)
+
+            if r.component_name == "resource" and len(r.post_vars) > 0:
+                itable = s3db.cap_info
+                atable = s3db.cap_area
+                rtable = s3db.cap_resource
+
+                alert_id = r.id
+                if r.component_id is not None:
+                    # update cap_resource
+                    resource_id = int(r.component_id)
+                    # Extract information from recently updated resource
+                    rrow = db(rtable.id == resource_id).select(rtable.doc_id,
+                                                               rtable.resource_desc,
+                                                               rtable.image,
+                                                               rtable.mime_type,
+                                                               rtable.size,
+                                                               rtable.uri,
+                                                               rtable.deref_uri,
+                                                               rtable.digest,
+                                                               limitby=(0, 1)).first()
+                    query = (itable.alert_id == alert_id) & \
+                            (rtable.info_id == itable.id) & \
+                            (rtable.alert_id == rtable.alert_id)
+                    rows = db(query).select(rtable.id)
+                    if len(rows) > 0:
+                        for row in rows:
+                            db(rtable.id == row.id).update(\
+                                                doc_id=rrow.doc_id,
+                                                resource_desc=rrow.resource_desc,
+                                                image = rrow.image,
+                                                mime_type = rrow.mime_type,
+                                                size = rrow.size,
+                                                uri = rrow.uri,
+                                                deref_uri = rrow.deref_uri,
+                                                digest = rrow.digest,
+                                                )
+                else:
+                    # create cap_resource
+                    resource_id = int(r.component.lastid)
+                    # Extract information from recently created resource
+                    rrow = db(rtable.id == resource_id).select(rtable.info_id,
+                                                               rtable.doc_id,
+                                                               rtable.resource_desc,
+                                                               rtable.image,
+                                                               rtable.mime_type,
+                                                               rtable.size,
+                                                               rtable.uri,
+                                                               rtable.deref_uri,
+                                                               rtable.digest,
+                                                               limitby=(0, 1)).first()
+                    irows = db(itable.alert_id == alert_id).select(itable.id)
+
+                    for irow in irows:
+                        if irow.id != rrow.info_id:
+                            # Insert data in cap_resource
+                            rdata = {"alert_id": alert_id,
+                                     "info_id": irow.id,
+                                     "doc_id": rrow.doc_id,
+                                     "resource_desc": rrow.resource_desc,
+                                     "image": rrow.image,
+                                     "mime_type": rrow.mime_type,
+                                     "size": rrow.size,
+                                     "uri": rrow.uri,
+                                     "deref_uri": rrow.deref_uri,
+                                     "digest": rrow.digest,
+                                     }
+                            rid = rtable.insert(**rdata)
+                            current.auth.s3_set_record_owner(rtable, rid)
 
             if isinstance(output, dict) and "form" in output:
                 if not r.component and \
@@ -902,6 +1107,7 @@ def template():
                       "effective",
                       "onset",
                       "expires",
+                      "web",
                       ):
                 field = itable[f]
                 field.writable = False

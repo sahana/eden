@@ -520,25 +520,27 @@
     <!-- ****************************************************************** -->
     <!-- cap_resource -->
     <xsl:template match="resource[@name='cap_resource']">
-        <resource>
-            <resourceDesc><xsl:value-of select="data[@field='resource_desc']"/></resourceDesc>
-            <mimeType><xsl:value-of select="data[@field='mime_type']"/></mimeType>
-            <xsl:if test="data[@field='size']!=''">
-                <size><xsl:value-of select="data[@field='size']"/></size>
-            </xsl:if>
-            <xsl:if test="data[@name='size']!=''">
-                <size><xsl:value-of select="data[@name='size']"/></size>
-            </xsl:if>
-            <xsl:if test="data[@name='uri']!=''">
-                <uri><xsl:value-of select="data[@name='uri']"/></uri>
-            </xsl:if>
-            <xsl:if test="data[@name='deref_uri']!=''">
-                <derefUri><xsl:value-of select="data[@name='deref_uri']"/></derefUri>
-            </xsl:if>
-            <xsl:if test="data[@name='digest']!=''">
-                <digest><xsl:value-of select="data[@name='digest']"/></digest>
-            </xsl:if>
-        </resource>
+        <xsl:if test="data[@field='mime_type']!=''">
+            <resource>
+                <resourceDesc><xsl:value-of select="data[@field='resource_desc']"/></resourceDesc>
+                <mimeType><xsl:value-of select="data[@field='mime_type']"/></mimeType>
+                <xsl:if test="data[@field='size']!=''">
+                    <size><xsl:value-of select="data[@field='size']"/></size>
+                </xsl:if>
+                <xsl:if test="data[@name='size']!=''">
+                    <size><xsl:value-of select="data[@name='size']"/></size>
+                </xsl:if>
+                <xsl:if test="data[@name='uri']!=''">
+                    <uri><xsl:value-of select="data[@name='uri']"/></uri>
+                </xsl:if>
+                <xsl:if test="data[@name='deref_uri']!=''">
+                    <derefUri><xsl:value-of select="data[@name='deref_uri']"/></derefUri>
+                </xsl:if>
+                <xsl:if test="data[@name='digest']!=''">
+                    <digest><xsl:value-of select="data[@name='digest']"/></digest>
+                </xsl:if>
+            </resource>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

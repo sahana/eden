@@ -21,6 +21,7 @@ ALERT_EDITOR,Alert Editor,,cap,compose,,READ,,,,,To send message to Alert Approv
 ALERT_EDITOR,Alert Editor,,pr,subscription,,READ|CREATE|UPDATE|DELETE,,,,,For managing recipients
 ALERT_EDITOR,Alert Editor,,pr,group,,READ|CREATE|UPDATE|DELETE,,,,,For managing recipients
 ALERT_APPROVER,Alert Approver,"Besides Authorizing Message to disseminate, they can also act as CAP Editor",cap,alert,,READ|CREATE|UPDATE|REVIEW|APPROVE,,,,,
+ALERT_APPROVER,Alert Approver,,cap,info,,READ,,,,,
 ALERT_APPROVER,Alert Approver,,cap,template,,READ,,,,,
 ALERT_APPROVER,Alert Approver,,cap,area,,READ,,,,,
 ALERT_APPROVER,Alert Approver,,pr,subscription,,READ|CREATE|UPDATE|DELETE,,,,,For managing recipients
