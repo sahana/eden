@@ -701,7 +701,6 @@ class S3AddPersonWidget2(FormWidget):
             #else:
             #    foundation = False
 
-        controller = self.controller or request.controller
         settings = current.deployment_settings
 
         separate_name_fields = self.separate_name_fields
@@ -741,14 +740,27 @@ class S3AddPersonWidget2(FormWidget):
         req_home_phone = settings.get_pr_request_home_phone()
 
         emailRequired = settings.get_hrm_email_required()
+
+        # Determine controller for autocomplete
+        controller = self.controller
+        if not controller:
+            controller = request.controller
+            if controller not in ("hrm", "vol"):
+                if hrm:
+                    # Always use hrm for human_resource_id
+                    controller = "hrm"
+                else:
+                    # Always use pr for person_id
+                    controller = "pr"
+                    emailRequired = False
+
+        # Widget-Options for additional fields
         occupation = None
         father_name = self.father_name
         grandfather_name = self.grandfather_name
 
-        if controller == "hrm":
-            pass
-
-        elif controller == "vol":
+        # ...fall back to global settings for volunteers
+        if controller == "vol":
             dtable = s3db.pr_person_details
             occupation = dtable.occupation
             if father_name is None:
@@ -761,16 +773,6 @@ class S3AddPersonWidget2(FormWidget):
                 grandfather_name  = settings.get_pr_request_grandfather_name()
             if grandfather_name:
                 grandfather_name = dtable.grandfather_name
-
-        elif controller == "patient":
-            controller = "pr"
-
-        elif hrm:
-            controller = "hrm"
-
-        else:
-            controller = "pr"
-            emailRequired = False
 
         if value:
             db = current.db
@@ -6352,7 +6354,7 @@ i18n.location_not_found="%s"''' % (T("Address Mapped"),
             except ValueError:
                 errors["lat"] = current.T("Latitude is Invalid!")
         elif lat == "":
-            lat = None 
+            lat = None
 
         lon = values.get("lon")
         if lon:

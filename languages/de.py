@@ -2850,6 +2850,7 @@
 'Non-structural Hazards': 'Nicht-strukturelle Gefahren',
 'None (no such record)': 'Nichts (kein entsprechender Datensatz)',
 'None': '-',
+'None of the above': 'Keine(r) der oben genannten',
 'Noodles': 'Nudeln',
 'Normal Address': 'Normale Adresse',
 'Normal Job': 'Normaler Beruf',
