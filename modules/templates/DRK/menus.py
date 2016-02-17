@@ -168,11 +168,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           vars = {"case_flag.name": "Suspended"},
                           ),
                         ),
-                    #M("Reports", link=False)(
-                    #    M("Check-in overdue", c=("dvr", "pr"), f="person",
-                    #      vars = {"closed": "0", "overdue": "1"},
-                    #      ),
-                    #    ),
+                    M("Reports", link=False)(
+                        M("Check-in overdue", c=("dvr", "pr"), f="person",
+                          vars = {"closed": "0", "overdue": "1"},
+                          ),
+                        ),
                     M("Activities", f="case_activity")(
                         M("Emergencies",
                           vars = {"~.emergency": "True"},
