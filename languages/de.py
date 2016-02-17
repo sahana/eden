@@ -1995,6 +1995,7 @@
 'Importing data from spreadsheets': 'Importieren von Daten aus Tabellendokumenten',
 'Improper decontamination': 'Unzureichende Dekontamination',
 'Improper handling of dead bodies': 'Unzureichende Behandlung von Leichen',
+'Inactive': 'Inaktiv',
 'In Catalogs': 'In Katalogen',
 'In Inventories': 'In den Beständen',
 'In Process': 'In Bearbeitung',
