@@ -770,7 +770,7 @@ class S3NavigationItem(object):
                     else:
                         if len(rargs) >= len(args) > 0 and \
                            rargs[len(args)-1].isdigit() and \
-                           not args[-1].isdigit():
+                           not str(args[-1]).isdigit():
                             level = 1
                         else:
                             return 0
