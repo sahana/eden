@@ -965,6 +965,7 @@ class S3ShelterRegistrationModel(S3Model):
     names = ("cr_shelter_allocation",
              "cr_shelter_registration",
              "cr_shelter_registration_history",
+             "cr_shelter_registration_status_opts",
              "cr_shelter_population_onaccept",
              )
 
@@ -1143,6 +1144,7 @@ class S3ShelterRegistrationModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass variables back to global scope (response.s3.*)
         return dict(cr_shelter_population_onaccept = self.shelter_population_onaccept,
+                    cr_shelter_registration_status_opts = reg_status_opts,
                     )
 
     # -------------------------------------------------------------------------

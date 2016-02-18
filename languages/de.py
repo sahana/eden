@@ -3369,7 +3369,7 @@
 'Registered People': 'Registrierte Personen',
 'Registered users can': 'Registrierte Benutzer können',
 'Registered on': 'Registriert am',
-'Registration Date': 'Registrierungsdatum',
+'Registration Date': 'Registriert am',
 'Registration Details': 'Details zur Registrierung',
 'Registration added': 'Registrierung hinzugefügt',
 'Registration entry deleted': 'Anmeldungseintrag gelöscht',

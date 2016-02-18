@@ -737,7 +737,7 @@ def config(settings):
                             reg_check_out_date = None
                         else:
                             reg_shelter = "cr_shelter_registration.shelter_id"
-                            reg_status = (T("Shelter Registration Status"),
+                            reg_status = (T("Presence"),
                                           "cr_shelter_registration.registration_status",
                                           )
                             reg_unit_id = "cr_shelter_registration.shelter_unit_id"
@@ -758,8 +758,8 @@ def config(settings):
                                         #"cr_shelter_registration.site_id",
                                         reg_shelter,
                                         # @ ToDo: Automate this from the Case Status?
-                                        reg_status,
                                         reg_unit_id,
+                                        reg_status,
                                         reg_check_in_date,
                                         reg_check_out_date,
                                         (T("ID"), "pe_label"),
@@ -816,7 +816,9 @@ def config(settings):
                         filter_widgets = resource.get_config("filter_widgets")
                         if filter_widgets:
 
-                            from s3 import S3TextFilter, S3DateFilter
+                            from s3 import S3DateFilter, \
+                                           S3OptionsFilter, \
+                                           S3TextFilter
                             extend_text_filter = True
                             for fw in filter_widgets:
                                 # No filter default for case status
@@ -835,6 +837,21 @@ def config(settings):
                             #dob_filter.operator = ["eq"]
                             filter_widgets.insert(1, dob_filter)
 
+                            # Add filter for registration date
+                            reg_filter = S3DateFilter("dvr_case.date",
+                                                      hidden = True,
+                                                      )
+                            filter_widgets.append(reg_filter)
+
+                            # Add filter for registration status
+                            reg_filter = S3OptionsFilter("shelter_registration.registration_status",
+                                                         label = T("Presence"),
+                                                         options = s3db.cr_shelter_registration_status_opts,
+                                                         hidden = True,
+                                                         cols = 3,
+                                                         )
+                            filter_widgets.append(reg_filter)
+
                             # Add filter for IDs
                             id_filter = S3TextFilter(["pe_label"],
                                                      label = T("IDs"),
@@ -843,12 +860,6 @@ def config(settings):
                                                      comment = T("Search for multiple IDs (separated by blanks)"),
                                                      )
                             filter_widgets.append(id_filter)
-
-                            # Add filter for registration date
-                            reg_filter = S3DateFilter("dvr_case.date",
-                                                      hidden = True,
-                                                      )
-                            filter_widgets.append(reg_filter)
 
                     # Custom list fields (must be outside of r.interactive)
                     list_fields = [(T("ID"), "pe_label"),
@@ -900,7 +911,7 @@ def config(settings):
                                         (T("GU"), "gu.date"),
                                         # Date of the X-Ray (case appointments)
                                         (T("X-Ray"), "xray.date"),
-                                        # Housing Unit (done in interactive now as well) 
+                                        # Housing Unit (done in interactive now as well)
                                         #"shelter_registration.shelter_unit_id",
                                         # Last Check-in (if checked-in)
                                         (T("Registration Status"), "shelter_registration.registration_status"),
