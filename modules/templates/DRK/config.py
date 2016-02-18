@@ -17,12 +17,9 @@ ABSENCE_LIMIT = 5
 
 def config(settings):
     """
-        Template settings: 'Skeleton' designed to be copied to quickly create
-                           custom templates
+        DRK ("Village") Template:
 
-        All settings which are to configure a specific template are located
-        here. Deployers should ideally not need to edit any other files outside
-        of their template folder.
+        Case Management, Refugee Reception Center, German Red Cross
     """
 
     T = current.T
@@ -31,7 +28,6 @@ def config(settings):
     settings.base.system_name_short = "Village"
 
     # PrePopulate data
-    #settings.base.prepopulate = ("skeleton", "default/users")
     settings.base.prepopulate += ("DRK", "default/users", "DRK/Demo")
 
     # Theme (folder to use for views/layout.html)
@@ -109,6 +105,9 @@ def config(settings):
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
     #
     settings.security.policy = 5 # Controller, Function & Table ACLs
+
+    # Version details on About-page require login
+    settings.security.version_info_requires_login = True
 
     # -------------------------------------------------------------------------
     # Inventory Module Settings
@@ -248,95 +247,6 @@ def config(settings):
         return output
 
     settings.ui.profile_header = profile_header
-
-    # -------------------------------------------------------------------------
-    def org_site_check(site_id):
-        """
-            Hook for tasks["org_site_check"]:
-                Check site_id & see which persons have checked-out over 3 days ago
-                without checking back in (but are not in Hospital)
-
-            @deprecated
-        """
-
-        db = current.db
-        s3db = current.s3db
-
-        # Read the Statuses
-        stable = s3db.dvr_case_status
-        statuses = db(stable.code.belongs(("STATUS7", "STATUS8", "STATUS9", "STATUS9A"))).select(stable.code,
-                                                                                                 stable.id,
-                                                                                                 ).as_dict(key="code")
-        DISAPPEARED = statuses["STATUS8"]["id"]
-        LEGALLY_DEPARTED = statuses["STATUS7"]["id"]
-        HOSPITAL = statuses["STATUS9"]["id"]
-        POLICE = statuses["STATUS9A"]["id"]
-
-        THREE_DAYS_AGO = current.request.utcnow - datetime.timedelta(days=3)
-        table = s3db.cr_shelter_registration
-        stable = s3db.cr_shelter
-        ctable = s3db.dvr_case
-        query = (stable.site_id == site_id) & \
-                (stable.id == table.shelter_id) & \
-                (table.check_out_date <= THREE_DAYS_AGO) & \
-                (table.person_id == ctable.person_id) & \
-                (ctable.status_id != HOSPITAL) & \
-                (ctable.status_id != POLICE) & \
-                (ctable.status_id != DISAPPEARED) & \
-                (ctable.archived != True)
-        rows = db(query).select(table.person_id,
-                                table.check_in_date,
-                                table.check_out_date,
-                                )
-        if rows:
-            missing = []
-            mappend = missing.append
-            for row in rows:
-                check_in_date = row.check_in_date
-                if not check_in_date or check_in_date < row.check_out_date:
-                    mappend(row.person_id)
-
-            if missing:
-                # For these users, set Case Flag to 'Suspended' & Status to 'Disappeared'
-                ftable = s3db.dvr_case_flag
-                flag = db(ftable.name == "Suspended").select(ftable.id,
-                                                             limitby=(0, 1)
-                                                             ).first()
-                try:
-                    SUSPENDED = flag.id
-                except:
-                    current.log.error("Prepop of Flag Status 'Suspended' not done")
-                    return
-                ltable = s3db.dvr_case_flag_case
-
-                settings.customise_dvr_case_resource(current.request, "dvr_case")
-                from gluon.tools import callback
-                case_onaccept = s3db.get_config("dvr_case", "onaccept")
-                for person_id in missing:
-                    ltable.insert(person_id = person_id,
-                                  flag_id = SUSPENDED)
-                rform = db(table.person_id == missing[0]).select(table.id,
-                                                                 limitby=(0, 1)
-                                                                 ).first()
-                cases = db(ctable.person_id.belongs(missing)).select(ctable.id,
-                                                                     # For onaccept
-                                                                     ctable.archived,
-                                                                     ctable.person_id,
-                                                                     ctable.status_id,
-                                                                     )
-                for case in cases:
-                    case.update_record(status_id = DISAPPEARED)
-                    # Clear Shelter Registration
-                    form = Storage(vars=case)
-                    callback(case_onaccept, form)
-
-                # Update Shelter Capacity
-                registration_onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
-                registration_onaccept(rform)
-
-                # @ToDo: Send notification of which people have been suspended to ADMIN_HEAD
-
-    #settings.org_site_check = org_site_check
 
     # -------------------------------------------------------------------------
     def site_check_in(site_id, person_id):
@@ -802,7 +712,6 @@ def config(settings):
                             post_vars = r.post_vars
                             archived = post_vars.get("sub_dvr_case_archived")
                             status_id = post_vars.get("sub_dvr_case_status_id")
-                            flags = post_vars.get("link_defaultcase_flag")
                             if archived:
                                 cancel = True
                             if not cancel and status_id:
@@ -815,15 +724,6 @@ def config(settings):
                                         cancel = True
                                 except:
                                     pass
-                            if not cancel and flags:
-                                if type(flags) is not list:
-                                    flags = [flags]
-                                ftable = s3db.dvr_case_flag
-                                flag = db(ftable.name == "Suspended").select(ftable.id,
-                                                                             limitby = (0, 1),
-                                                                             ).first()
-                                if flag and str(flag.id) in flags:
-                                    cancel = True
 
                         if cancel:
                             # Ignore registration data in form if the registration
@@ -955,8 +855,8 @@ def config(settings):
                                    "gender",
                                    "person_details.nationality",
                                    "dvr_case.date",
-                                   #"dvr_case.valid_until",
                                    "dvr_case.status_id",
+                                   (T("Shelter"), "shelter_registration.shelter_unit_id"),
                                    ]
                     if absence_field:
                         list_fields.append(absence_field)
@@ -1134,57 +1034,6 @@ def config(settings):
                        )
 
     settings.customise_dvr_case_resource = customise_dvr_case_resource
-
-    # -------------------------------------------------------------------------
-    def dvr_case_flag_case_onaccept(form):
-        """
-            If flag is SUSPENDED then
-                remove shelter_registration
-        """
-
-        cancel = False
-        form_vars = form.vars
-        flag_id = form_vars.flag_id
-        if flag_id:
-            db = current.db
-            s3db = current.s3db
-            ftable = s3db.dvr_case_flag
-            flag = db(ftable.id == flag_id).select(ftable.name,
-                                                   limitby = (0, 1)
-                                                   ).first()
-            try:
-                if flag.name == "Suspended":
-                    cancel = True
-            except:
-                current.log.error("Flag %s not found" % flag_id)
-                return
-
-        if cancel:
-            rtable = s3db.cr_shelter_registration
-            query = (rtable.person_id == form_vars.person_id)
-            reg = db(query).select(rtable.id, limitby=(0, 1)).first()
-            if reg:
-                resource = s3db.resource("cr_shelter_registration",
-                                         id = reg.id,
-                                         )
-                resource.delete()
-
-    # -------------------------------------------------------------------------
-    def customise_dvr_case_flag_case_resource(r, tablename):
-
-        s3db = current.s3db
-        default_onaccept = s3db.get_config(tablename, "onaccept")
-        if default_onaccept and not isinstance(default_onaccept, list): # Catch running twice
-            onaccept = [default_onaccept,
-                        dvr_case_flag_case_onaccept,
-                        ]
-        else:
-            onaccept = dvr_case_flag_case_onaccept
-        s3db.configure(tablename,
-                       onaccept = onaccept,
-                       )
-
-    settings.customise_dvr_case_flag_case_resource = customise_dvr_case_flag_case_resource
 
     # -------------------------------------------------------------------------
     def dvr_note_onaccept(form):
@@ -1870,7 +1719,7 @@ def drk_dvr_rheader(r, tabs=[]):
                 case = resource.select(["dvr_case.status_id",
                                         "dvr_case.status_id$code",
                                         "dvr_case.archived",
-                                        "case_flag_case.flag_id$name",
+                                        #"case_flag_case.flag_id$name",
                                         "first_name",
                                         "last_name",
                                         ],
@@ -1882,14 +1731,6 @@ def drk_dvr_rheader(r, tabs=[]):
                     case = case[0]
                     archived = case["_row"]["dvr_case.archived"]
                     case_status = lambda row: case["dvr_case.status_id"]
-                    flags = case._row["dvr_case_flag.name"]
-                    if flags:
-                        if type(flags) is not list:
-                            flags = [flags]
-                        suspended = "Suspended" in flags
-                    else:
-                        suspended = False
-                    case_suspended = lambda row: s3_yes_no_represent(suspended)
                     eligible = lambda row: ""
                     name = lambda row: s3_fullname(row)
                 else:
@@ -1897,8 +1738,8 @@ def drk_dvr_rheader(r, tabs=[]):
                     return None
 
                 rheader_fields = [[(T("ID"), "pe_label"), (T("Case Status"), case_status)],
-                                  [(T("Name"), name), (T("Suspended"), case_suspended)],
-                                  ["date_of_birth", (T("Checked-out"), "absence")],
+                                  [(T("Name"), name), (T("Checked-out"), "absence")],
+                                  ["date_of_birth"],
                                   ]
 
                 if archived:
@@ -1906,10 +1747,9 @@ def drk_dvr_rheader(r, tabs=[]):
 
                 if r.component_name == "allowance":
                     # Rule for eligibility:
-                    allowance = case["dvr_case_status.code"] in ("STATUS5", "STATUS6") and \
-                                not suspended
-                    eligible = lambda row, allowance=allowance: \
-                                    s3_yes_no_represent(allowance)
+                    allowance = case["dvr_case_status.code"] in ("STATUS5", "STATUS6")
+                    eligible = lambda row, allowance = allowance: \
+                                      s3_yes_no_represent(allowance)
                     rheader_fields[-1].append((T("Eligible for Allowance"), eligible))
 
         elif tablename == "dvr_case":

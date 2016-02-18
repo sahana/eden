@@ -457,6 +457,12 @@ class S3Config(Storage):
                   self.security.get("registration_visible", True)
         return visible
 
+    def get_security_version_info_requires_login(self):
+        """
+            Whether the version info on the About page requires login
+        """
+        return self.security.get("version_info_requires_login", False)
+
     def get_auth_registration_requires_verification(self):
         return self.auth.get("registration_requires_verification", False)
 
@@ -2423,14 +2429,14 @@ class S3Config(Storage):
         """
 
         return self.cap.get("restrict_fields", False)
-    
+
     def get_cap_post_to_twitter(self):
         """
             Whether to post the alerts in twitter
             @ToDo: enhance this by as well as True,
             being able to specify a specific Twitter channel to tweet on
         """
-        
+
         return self.cap.get("post_to_twitter", False)
 
     # -------------------------------------------------------------------------

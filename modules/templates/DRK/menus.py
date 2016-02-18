@@ -137,11 +137,12 @@ class S3MainMenu(default.S3MainMenu):
     @classmethod
     def menu_about(cls):
 
+        ADMIN = current.auth.get_system_roles().ADMIN
+
         menu_about = MA(c="default")(
-            MA("About", f="about"),
-            MA("Contact", f="contact"),
             MA("Help", f="help"),
-            #MA("Privacy", f="privacy"),
+            #MA("Contact", f="contact"),
+            MA("Version", f="about", restrict = ADMIN),
         )
         return menu_about
 
@@ -164,9 +165,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
         return M(c="dvr")(
                     M("Cases", c=("dvr", "pr"), f="person")(
                         M("Create", m="create"),
-                        M("Suspended Cases",
-                          vars = {"case_flag.name": "Suspended"},
-                          ),
+                        #M("Inactive Cases",
+                        # vars = {"dvr_case.status_id$code": "STATUS8"},
+                        # ),
                         ),
                     M("Reports", link=False)(
                         M("Check-in overdue", c=("dvr", "pr"), f="person",
