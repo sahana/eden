@@ -1109,9 +1109,9 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
         configure(tablename,
                   # Shouldn't be required if all UI actions go through alert controller & XSLT configured appropriately
-                  create_onaccept = update_alert_id(tablename),
                   crud_form = crud_form,
                   list_fields = list_fields,
+                  onaccept = update_alert_id(tablename),
                   onvalidation = self.cap_resource_onvalidation,
                   super_entity = "doc_entity",
                   )
@@ -1249,10 +1249,8 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                                     "info_id",
                                     "is_template",
                                     "name",
-                                    "info_id",
                                     S3SQLInlineComponent("location",
                                                          name = "location",
-                                                         label = "",
                                                          multiple = False,
                                                          fields = [("", "location_id")],
                                                          comment = DIV(_class="tooltip",
@@ -1261,7 +1259,6 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                                                          ),
                                     S3SQLInlineComponent("tag",
                                                          name = "tag",
-                                                         label = "",
                                                          fields = ["tag",
                                                                    "value",
                                                                    ],
@@ -1279,9 +1276,9 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
         configure(tablename,
                   #create_next = URL(f="area", args=["[id]", "location"]),
-                  create_onaccept = update_alert_id(tablename),
-                  onvalidation = self.cap_area_onvalidation,
                   crud_form = crud_form,
+                  onaccept = update_alert_id(tablename),
+                  onvalidation = self.cap_area_onvalidation,
                   )
 
         # Components
@@ -1345,7 +1342,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
         configure(tablename,
                   # Shouldn't be required if all UI actions go through alert controller & XSLT configured appropriately
-                  create_onaccept = update_alert_id(tablename),
+                  onaccept = update_alert_id(tablename),
                   )
 
         # ---------------------------------------------------------------------
@@ -1389,7 +1386,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                      *s3_meta_fields())
 
         configure(tablename,
-                  create_onaccept = update_alert_id(tablename),
+                  onaccept = update_alert_id(tablename),
         #         deduplicate = self.cap_area_tag_deduplicate,
                   )
 
@@ -1580,6 +1577,28 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
             if parameter and ("|{" in parameter or "||" in parameter):
                 fstring = json_formatter(parameter)
                 set_.update(parameter = fstring)
+
+            web = "%s%s" % (current.deployment_settings.get_base_public_url(),
+                            URL(c="cap", f="alert", args=[alert_id])) \
+                            if form_vars.get("web") in ("", None) else form_vars.get("web")
+            idata = {"priority"  : form_vars.get("priority", None),
+                     "urgency"   : form_vars.get("urgency", None),
+                     "severity"  : form_vars.get("severity", None),
+                     "certainty" : form_vars.get("certainty", None),
+                     "effective" : form_vars.get("effective", None),
+                     "onset"     : form_vars.get("onset", None),
+                     "expires"   : form_vars.get("expires", None),
+                     "web"       : web,
+                     }
+            query = (itable.deleted != True) & \
+                    (itable.alert_id == alert_id)
+            rows = db(query).select(itable.id)
+            print [row for row in rows]
+            for row in rows:
+                if int(row.id) == int(info_id):
+                    row.update_record(web=web)
+                else:
+                    row.update_record(**idata)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2025,10 +2044,6 @@ def update_alert_id(tablename):
         else:
             form_vars = form
 
-        if form_vars.get("alert_id", None):
-            # Nothing to do
-            return
-
         # Look up from the info/area
         _id = form_vars.id
         if not _id:
@@ -2062,35 +2077,23 @@ def update_alert_id(tablename):
             except:
                 # Nothing we can do
                 return
+            if alert_id:
+                db(table.id == _id).update(alert_id = alert_id)
         else:
             # cap_area or cap_resource
-            info_id = form_vars.get("info_id", None)
-            if not info_id:
-                # Get the full record
-                item = db(table.id == _id).select(table.alert_id,
-                                                  table.info_id,
-                                                  limitby=(0, 1)).first()
-                try:
-                    alert_id = item.alert_id
-                    info_id = item.info_id
-                except:
-                    # Nothing we can do
-                    return
-                if alert_id:
-                    # Nothing to do
-                    return
-
+            alert_id = int(current.request.args[0])
             itable = db.cap_info
-            info = db(itable.id == info_id).select(itable.alert_id,
-                                                   limitby=(0, 1)).first()
-            try:
-                alert_id = info.alert_id
-            except:
-                # Nothing we can do
+            irows = db(itable.alert_id == alert_id).select(itable.id)
+            info_id = irows.first().id
+            row = db(table.id == _id).select(table.alert_id,
+                                             table.info_id,
+                                             limitby=(0, 1)).first()
+            if row.alert_id is not None and row.info_id is not None:
+                # Nothing to do
                 return
-
-        if alert_id:
-            db(table.id == _id).update(alert_id = alert_id)
+            else:
+                db(table.id == _id).update(alert_id = alert_id,
+                                           info_id = info_id)
 
     return func
 
