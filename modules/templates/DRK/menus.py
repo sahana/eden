@@ -137,11 +137,12 @@ class S3MainMenu(default.S3MainMenu):
     @classmethod
     def menu_about(cls):
 
+        ADMIN = current.auth.get_system_roles().ADMIN
+
         menu_about = MA(c="default")(
-            MA("About", f="about"),
-            MA("Contact", f="contact"),
             MA("Help", f="help"),
-            #MA("Privacy", f="privacy"),
+            #MA("Contact", f="contact"),
+            MA("Version", f="about", restrict = ADMIN),
         )
         return menu_about
 

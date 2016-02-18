@@ -1023,7 +1023,16 @@ def about():
     else:
         item = H2(T("About"))
 
+    response.title = T("About")
+
     # Technical Support Details
+    if settings.get_security_version_info_requires_login() and \
+       not auth.s3_logged_in():
+
+        return dict(details = "",
+                    item = item,
+                    )
+
     import platform
     import string
     import subprocess

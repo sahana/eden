@@ -106,6 +106,9 @@ def config(settings):
     #
     settings.security.policy = 5 # Controller, Function & Table ACLs
 
+    # Version details on About-page require login
+    settings.security.version_info_requires_login = True
+
     # -------------------------------------------------------------------------
     # Inventory Module Settings
     #
