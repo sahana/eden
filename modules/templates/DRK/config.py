@@ -864,7 +864,7 @@ def config(settings):
                                    ]
                     if absence_field:
                         list_fields.append(absence_field)
-                    if r.representation = "xls":
+                    if r.representation == "xls":
                         # Extra list_fields for XLS export
                         attable = s3db.dvr_case_appointment_type
                         appointment_type = db(attable.name == "GU").select(attable.id,
@@ -897,12 +897,13 @@ def config(settings):
                                                                     ),
                                             )
                         list_fields += [# Date of the GU (GU = Health Screening, case appointments)
-                                        "gu.date",
+                                        (T("GU"), "gu.date"),
                                         # Date of the X-Ray (case appointments)
-                                        "xray.date",
+                                        (T("X-Ray"), "xray.date"),
                                         # Housing Unit (done in interactive now as well) 
                                         #"shelter_registration.shelter_unit_id",
                                         # Last Check-in (if checked-in)
+                                        (T("Registration Status"), "shelter_registration.registration_status"),
                                         "shelter_registration.check_in_date",
                                         # Last Check-out (if checked-out)
                                         "shelter_registration.check_out_date",
