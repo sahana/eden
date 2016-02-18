@@ -9,6 +9,7 @@
          Code............................hrm_course.code
          Name............................hrm_course.name
          Organisation....................hrm_course.organisation_id
+         Pass............................hrm_course.pass_mark
          Certificate.....................hrm_course_certificate.certificate_id
          Job Titles......................hrm_course_job_title.job_title_id
          Sectors.........................hrm_course_sector.sector_id
@@ -78,6 +79,9 @@
                         <xsl:value-of select="$OrgName"/>
                     </xsl:attribute>
                 </reference>
+            </xsl:if>
+            <xsl:if test="col[@field='Pass']!=''">
+                <data field="pass_mark"><xsl:value-of select="col[@field='Pass']"/></data>
             </xsl:if>
             <!-- Job Titles -->
             <xsl:call-template name="splitList">

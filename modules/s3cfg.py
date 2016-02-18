@@ -2669,11 +2669,23 @@ class S3Config(Storage):
     def get_hrm_course_grades(self):
         """
             Grade options for Courses
+            NB Best to keep Pass/Fail on these numbers but can add additional values if-required, e.g.:
+            {0: T("No Show"),
+             1: T("Left Early"),
+             8: T("Pass"),
+             9: T("Fail"),
+             }
         """
         T = current.T
         return self.__lazy("hrm", "course_grades", default={8: T("Pass"),
                                                             9: T("Fail"),
                                                             })
+
+    def get_hrm_course_pass_marks(self):
+        """
+            Whether the Pass Mark for a course is defined by the Grade Details
+        """
+        return self.hrm.get("course_pass_marks", False)
 
     def get_hrm_staff_label(self):
         """

@@ -489,7 +489,7 @@ def course():
         return True
     s3.prep = prep
 
-    if not auth.s3_has_role(ADMIN):
+    if not auth.s3_has_role(ADMIN) and not s3.filter:
         s3.filter = auth.filter_by_root_org(s3db.hrm_course)
 
     output = s3_rest_controller(rheader=s3db.hrm_rheader)

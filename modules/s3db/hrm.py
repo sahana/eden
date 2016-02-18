@@ -2551,6 +2551,7 @@ class S3HRSkillModel(S3Model):
         # Courses
         #
         external_courses = settings.get_hrm_trainings_external()
+        course_pass_marks = settings.get_hrm_course_pass_marks()
 
         tablename = "hrm_course"
         define_table(tablename,
@@ -2578,6 +2579,15 @@ class S3HRSkillModel(S3Model):
                            ),
                      Field("hours", "integer",
                            label = T("Hours"),
+                           ),
+                     Field("pass_mark", "float",
+                           default = 0.0,
+                           label = T("Pass Mark"),
+                           requires = IS_EMPTY_OR(
+                                        IS_FLOAT_IN_RANGE(minimum=0.0)
+                                        ),
+                           readable = course_pass_marks,
+                           writable = course_pass_marks,
                            ),
                      s3_comments(label = T("Description"),
                                  comment = None,
@@ -2876,7 +2886,6 @@ class S3HRSkillModel(S3Model):
                            ),
                      # This field can only be filled-out by specific roles
                      # Once this has been filled-out then the other fields are locked
-                     # @ToDo: Grades vary by Course
                      Field("grade", "integer",
                            label = T("Grade"),
                            represent = lambda opt: \
@@ -2887,15 +2896,15 @@ class S3HRSkillModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
-                     # Can store specific test result here
+                     # Can store specific test result here & then auto-calculate the Pass/Fail
                      Field("grade_details", "float",
                            default = 0.0,
                            label = T("Grade Details"),
                            requires = IS_EMPTY_OR(
                                         IS_FLOAT_IN_RANGE(minimum=0.0)
                                         ),
-                           readable = False,
-                           writable = False,
+                           readable = course_pass_marks,
+                           writable = course_pass_marks,
                            ),
                      Field.Method("job_title", hrm_training_job_title),
                      Field.Method("organisation", hrm_training_organisation),
@@ -3745,6 +3754,7 @@ def hrm_training_onvalidation(form):
 def hrm_training_onaccept(form):
     """
         Ensure that Certifications & Hours are Populated from Trainings
+        Provide a Pass/Fail rating based on the Course's Pass Mark
         - called both onaccept & ondelete
     """
 
@@ -3763,6 +3773,8 @@ def hrm_training_onaccept(form):
                                         table.course_id,
                                         table.date,
                                         table.hours,
+                                        table.grade,
+                                        table.grade_details,
                                         table.deleted_fk,
                                         limitby=(0, 1)).first()
 
@@ -3773,7 +3785,24 @@ def hrm_training_onaccept(form):
         person_id = record.person_id
 
     s3db = current.s3db
-    vol_experience = current.deployment_settings.get_hrm_vol_experience()
+    settings = current.deployment_settings
+
+    course_pass_marks = settings.get_hrm_course_pass_marks()
+    if course_pass_marks and not record.grade and record.grade_details:
+        # Provide a Pass/Fail rating based on the Course's Pass Mark
+        ctable = db.hrm_course
+        course = db(ctable.id == record.course_id).select(ctable.pass_mark,
+                                                          limitby=(0, 1)
+                                                          ).first()
+        if course:
+            if record.grade_details >= course.pass_mark:
+                # Pass
+                record.update_record(grade=8)
+            else:
+                # Fail
+                record.update_record(grade=9)
+
+    vol_experience = settings.get_hrm_vol_experience()
     if vol_experience in ("programme", "both"):
         # Check if this person is a volunteer
         hrtable = db.hrm_human_resource
@@ -7716,6 +7745,7 @@ def hrm_training_event_controller():
             r.representation in ("aadata", "pdf", "xls")):
 
             T = current.T
+
             # Use appropriate CRUD strings
             s3.crud_strings["hrm_training"] = Storage(
                 label_create = T("Add Participant"),
@@ -7730,6 +7760,7 @@ def hrm_training_event_controller():
                 msg_record_deleted = T("Participant deleted"),
                 msg_no_match = T("No entries found"),
                 msg_list_empty = T("Currently no Participants registered"))
+
             # Hide/default fields which get populated from the Event
             record = r.record
             table = current.s3db.hrm_training
@@ -7745,11 +7776,13 @@ def hrm_training_event_controller():
             field.readable = False
             field.writable = False
             field.default = record.hours
+
             # Suitable list_fields
             list_fields = ["person_id",
                            (T("Job Title"), "job_title"),
                            (current.messages.ORGANISATION, "organisation"),
                            ]
+
             current.s3db.configure("hrm_training",
                                    list_fields = list_fields
                                    )
