@@ -4627,6 +4627,7 @@
 'You can change the configuration of synchronization module in the Settings section. This configuration includes your UUID (unique identification number), sync schedules, beacon service and so on. Click the following link to go to the Sync Settings page.': 'Sie können die Konfiguration des Synchronisierungsmodules unter Einstellungen anpassen. Diese Konfiguration enthält ihre UUID (unique identification number), Synchronisierungszeitpläne, Beacon-Service, usw. . Klicken sie auf den folgenden Link um zu den Einstellungen für die Synchronisierung zu gelangen.',
 'You can click on the map below to select the Lat/Lon fields': 'Sie können auf die untere Karte klicken um Geographische und Geographische Breiten abzugreifen.',
 'You can search by name, ID or case number': 'Sie können nach Namen, ID oder Fallnummer recherchieren',
+'You can search by name, ID, EasyOpt number and comments': 'Sie können nach Namen, ID, EasyOpt Nummer oder Kommentaren recherchieren',
 'You can select the Draw tool': 'Sie können das Zeichen Tool verwenden',
 'You can set the modem settings for SMS here.': 'Sie können die Modemeinstellungen für SMS hier festlegen.',
 'You can use the Conversion Tool to convert from either GPS coordinates or Degrees/Minutes/Seconds.': 'Sie können das Konvertierungprogamm verwenden von GPS-Koordinatenoder Grad/Minuten/Sekunden umzuwandeln.',

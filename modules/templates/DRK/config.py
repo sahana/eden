@@ -817,14 +817,18 @@ def config(settings):
                         if filter_widgets:
 
                             from s3 import S3TextFilter, S3DateFilter
-
+                            extend_text_filter = True
                             for fw in filter_widgets:
                                 # No filter default for case status
                                 if fw.field == "dvr_case.status_id":
                                     fw.opts.default = None
-                                # Text filter includes EasyOpt Number
-                                if isinstance(fw, S3TextFilter):
-                                    fw.field.append("eo_number.value")
+                                # Text filter includes EasyOpt Number and Case Comments
+                                if extend_text_filter and isinstance(fw, S3TextFilter):
+                                    fw.field.extend(("eo_number.value",
+                                                     "dvr_case.comments",
+                                                     ))
+                                    fw.opts.comment = T("You can search by name, ID, EasyOpt number and comments")
+                                    extend_text_filter = False
 
                             # Add filter for date of birth
                             dob_filter = S3DateFilter("date_of_birth")
@@ -833,17 +837,17 @@ def config(settings):
 
                             # Add filter for IDs
                             id_filter = S3TextFilter(["pe_label"],
-                                                    label = T("IDs"),
-                                                    match_any = True,
-                                                    hidden = True,
-                                                    comment = T("Search for multiple IDs (separated by blanks)"),
-                                                    )
+                                                     label = T("IDs"),
+                                                     match_any = True,
+                                                     hidden = True,
+                                                     comment = T("Search for multiple IDs (separated by blanks)"),
+                                                     )
                             filter_widgets.append(id_filter)
 
                             # Add filter for registration date
                             reg_filter = S3DateFilter("dvr_case.date",
-                                                    hidden = True,
-                                                    )
+                                                      hidden = True,
+                                                      )
                             filter_widgets.append(reg_filter)
 
                     # Custom list fields (must be outside of r.interactive)
