@@ -655,6 +655,8 @@ def config(settings):
     #settings.hrm.use_trainings = False
     # Uncomment this to configure tracking of internal/external training instructors
     #settings.hrm.training_instructors = "external"
+    # Uncomment this to have Pass marks defined by Course
+    #settings.hrm.course_pass_marks = True
     # Uncomment to use activity types in experience record, specify as {"code":"label", ...}
     #settings.hrm.activity_types = {"rdrt": "RDRT Mission"}
 

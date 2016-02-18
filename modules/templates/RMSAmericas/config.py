@@ -443,6 +443,8 @@ def config(settings):
     # Training Instructors are person_ids
     settings.hrm.training_instructors = "internal"
     settings.hrm.record_label = "National Society Information"
+    # Pass marks are defined by Course
+    settings.hrm.course_pass_marks = True
     # Work History & Missions
     settings.hrm.staff_experience = "both"
 
@@ -1329,6 +1331,37 @@ def config(settings):
         table = s3db.hrm_training
         f = table.grade
         f.readable = f.writable = True
+
+        from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter
+        filter_widgets = [
+            S3TextFilter(["person_id$first_name",
+                          "person_id$last_name",
+                          "course_id$name",
+                          "comments",
+                          ],
+                         label = T("Search"),
+                         comment = T("You can search by trainee name, course name or comments. You may use % as wildcard. Press 'Search' without input to list all trainees."),
+                         _class="filter-search",
+                         ),
+            S3OptionsFilter("training_event_id$site_id",
+                            label = T("Country"),
+                            represent = s3db.org_SiteRepresent(show_type=False),
+                            ),
+            S3OptionsFilter("person_id$human_resource.organisation_id",
+                            label = T("Organization"),
+                            ),
+            S3OptionsFilter("course_id",
+                            ),
+            S3OptionsFilter("grade",
+                            ),
+            S3DateFilter("date",
+                         hide_time=True,
+                         ),
+            ]
+
+        s3db.configure(tablename,
+                      filter_widgets = filter_widgets,
+                      )
 
     settings.customise_hrm_training_resource = customise_hrm_training_resource
 

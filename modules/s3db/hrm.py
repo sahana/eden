@@ -2939,7 +2939,8 @@ class S3HRSkillModel(S3Model):
                          _class="filter-search",
                          ),
             S3OptionsFilter("person_id$human_resource.organisation_id",
-                            represent = "%(name)s",
+                            # Doesn't support translations
+                            #represent = "%(name)s",
                             ),
             S3LocationFilter("person_id$location_id",
                              levels = levels,
@@ -2952,6 +2953,8 @@ class S3HRSkillModel(S3Model):
                             label = T("Training Facility"),
                             represent = self.org_site_represent,
                             ),
+            S3OptionsFilter("grade",
+                            ),
             S3DateFilter("date",
                          hide_time=True,
                          ),
@@ -2960,6 +2963,7 @@ class S3HRSkillModel(S3Model):
         report_fields = [(T("Training Event"), "training_event_id"),
                          "person_id",
                          "course_id",
+                         "grade",
                          (messages.ORGANISATION, "organisation"),
                          (T("Facility"), "training_event_id$site_id"),
                          (T("Month"), "month"),
@@ -2988,9 +2992,12 @@ class S3HRSkillModel(S3Model):
                              },
                   deduplicate = self.hrm_training_duplicate,
                   filter_widgets = filter_widgets,
-                  list_fields = ["date",
-                                 "course_id",
-                                 "hours",
+                  list_fields = ["course_id",
+                                 "person_id",
+                                 #(T("Job Title"), "job_title"),
+                                 (current.messages.ORGANISATION, "organisation"),
+                                 "grade",
+                                 "date",
                                  ],
                   list_layout = hrm_training_list_layout,
                   onaccept = hrm_training_onaccept,
@@ -3769,7 +3776,8 @@ def hrm_training_onaccept(form):
     # Get the full record
     db = current.db
     table = db.hrm_training
-    record = db(table.id == _id).select(table.person_id,
+    record = db(table.id == _id).select(table.id,
+                                        table.person_id,
                                         table.course_id,
                                         table.date,
                                         table.hours,
@@ -7670,18 +7678,9 @@ def hrm_training_controller():
 
     def prep(r):
         if r.interactive or r.representation == "aadata":
-            # Suitable list_fields
-            T = current.T
-            list_fields = ["course_id",
-                           "person_id",
-                           (T("Job Title"), "job_title"),
-                           (current.messages.ORGANISATION, "organisation"),
-                           "date",
-                           ]
             s3db.configure("hrm_training",
                            #insertable = False,
                            listadd = False,
-                           list_fields = list_fields,
                            )
 
             if r.method in ("create", "update"):
@@ -7781,6 +7780,7 @@ def hrm_training_event_controller():
             list_fields = ["person_id",
                            (T("Job Title"), "job_title"),
                            (current.messages.ORGANISATION, "organisation"),
+                           "grade",
                            ]
 
             current.s3db.configure("hrm_training",

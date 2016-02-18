@@ -407,7 +407,8 @@
                     </data>
                 </xsl:when>
                 <xsl:otherwise>
-                    <!-- Do Nothing -->
+                    <!-- Assume a Pass -->
+                    <data field="grade">8</data>
                 </xsl:otherwise>
             </xsl:choose>
         </resource>
