@@ -860,7 +860,7 @@ def config(settings):
                                    ]
                     if absence_field:
                         list_fields.append(absence_field)
-                    if r.representation = "xls":
+                    if r.representation == "xls":
                         # Extra list_fields for XLS export
                         attable = s3db.dvr_case_appointment_type
                         appointment_type = db(attable.name == "GU").select(attable.id,
