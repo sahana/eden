@@ -855,8 +855,8 @@ def config(settings):
                                    "gender",
                                    "person_details.nationality",
                                    "dvr_case.date",
-                                   #"dvr_case.valid_until",
                                    "dvr_case.status_id",
+                                   (T("Shelter"), "shelter_registration.shelter_unit_id"),
                                    ]
                     if absence_field:
                         list_fields.append(absence_field)
