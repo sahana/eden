@@ -337,9 +337,13 @@ def config(settings):
 
             if r.interactive and isinstance(output, dict):
                 # Modify Update Button
-                update_url = URL(c="default", f="index", args=["subscriptions"],
-                                 vars={"subscription_id": "[id]"})
-                S3CRUD.action_buttons(r, update_url=update_url)
+                url = URL(c="default", f="index", args=["subscriptions"],
+                          vars={"subscription_id": "[id]"})
+                if not (has_role("ALERT_EDITOR") or \
+                        has_role("ALERT_APPROVER")):
+                    S3CRUD.action_buttons(r, read_url=url)
+                else:
+                    S3CRUD.action_buttons(r, update_url=url)
                 # Modify Add Button
                 if "form" in output:
                     add_btn = A(T("Create Subscription"),

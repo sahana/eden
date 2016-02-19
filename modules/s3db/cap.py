@@ -1249,10 +1249,8 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                                     "info_id",
                                     "is_template",
                                     "name",
-                                    "info_id",
                                     S3SQLInlineComponent("location",
                                                          name = "location",
-                                                         label = "",
                                                          multiple = False,
                                                          fields = [("", "location_id")],
                                                          comment = DIV(_class="tooltip",
@@ -1261,7 +1259,6 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                                                          ),
                                     S3SQLInlineComponent("tag",
                                                          name = "tag",
-                                                         label = "",
                                                          fields = ["tag",
                                                                    "value",
                                                                    ],
@@ -1580,6 +1577,26 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
             if parameter and ("|{" in parameter or "||" in parameter):
                 fstring = json_formatter(parameter)
                 set_.update(parameter = fstring)
+
+            web = "%s%s" % (current.deployment_settings.get_base_public_url(),
+                            URL(c="cap", f="alert", args=[alert_id]))
+            idata = {"priority"  : form_vars.get("priority", None),
+                     "urgency"   : form_vars.get("urgency", None),
+                     "severity"  : form_vars.get("severity", None),
+                     "certainty" : form_vars.get("certainty", None),
+                     "effective" : form_vars.get("effective", None),
+                     "onset"     : form_vars.get("onset", None),
+                     "expires"   : form_vars.get("expires", None),
+                     "web"       : web,
+                     }
+            query = (itable.deleted != True) & \
+                    (itable.alert_id == alert_id)
+            rows = db(query).select(itable.id)
+            for row in rows:
+                if int(row.id) == int(info_id):
+                    row.update_record(web=web)
+                else:
+                    row.update_record(**idata)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2454,14 +2471,10 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
     else:
         if priority == current.messages["NONE"]:
             priority = T("Unknown")
-        certainty = record["cap_info.certainty"]
-        severity = record["cap_info.severity"]
-        urgency = record["cap_info.urgency"]
-        msg_type = record["cap_alert.msg_type"]
         sender_name = record["cap_info.sender_name"]
         sent = record["cap_alert.sent"]
 
-        headline = "%s; %s, %s" % (msg_type, headline, location)
+        headline = "%s" % (headline)
 
         sub_heading = "%s %s" % (priority, event)
 
@@ -2473,17 +2486,17 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
         if priority_row:
             sub_headline["_style"] = "color: #%s" % (priority_row.color_code)
 
-        para = T("It is %(certainty)s and %(urgency)s with %(severity)s threat to life and property.") \
-                % dict(certainty=certainty, urgency=urgency, severity=severity)
+        para = T("%(status)s alert for %(area_description)s.") \
+                % dict(status=status, area_description=location)
 
         issuer = "%s: %s" % (T("Issued by"), sender_name)
         issue_date = "%s: %s" % (T("Issued on"), sent)
 
         item = DIV(headline,
                    BR(),
-                   sub_headline,
-                   BR(),
                    para,
+                   BR(),
+                   sub_headline,
                    BR(),
                    issuer,
                    BR(),

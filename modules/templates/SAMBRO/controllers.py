@@ -105,6 +105,9 @@ class index(S3CustomController):
                                                    orderby = orderby,
                                                    layout = s3db.cap_alert_list_layout
                                                    )
+        if numrows == 0:
+            current.response.s3.crud_strings["cap_alert"].msg_no_match = T("No Current Alerts match these filters.")
+
         ajax_url = URL(c="cap", f=fn, args="datalist.dl", vars={"list_id": list_id})
         output[list_id] = datalist.html(ajaxurl = ajax_url,
                                         pagesize = None,
