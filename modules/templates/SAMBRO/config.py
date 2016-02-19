@@ -227,6 +227,31 @@ def config(settings):
     settings.customise_org_organisation_resource = customise_org_organisation_resource
 
     # -------------------------------------------------------------------------
+    def customise_org_organisation_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            table = current.s3db.org_organisation_tag
+            table.tag.default = "cap_oid"
+            table.value.default = settings.get_cap_identifier_oid()
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_org_organisation_controller = customise_org_organisation_controller
+
+    # -------------------------------------------------------------------------
     def customise_cap_alert_resource(r, tablename):
 
         s3db = current.s3db
@@ -336,7 +361,7 @@ def config(settings):
                 output = standard_postp(r, output)
 
             if r.interactive and isinstance(output, dict):
-                # Modify Update Button
+                # Modify Open Button
                 url = URL(c="default", f="index", args=["subscriptions"],
                           vars={"subscription_id": "[id]"})
                 if not (has_role("ALERT_EDITOR") or \
