@@ -831,14 +831,15 @@ class S3HRModel(S3Model):
             # This gets copied to hrm_human_resource.location_id onaccept, faster to lookup without joins
             #location_context = "site_id$location_id" # When not using S3Track()
             crud_fields.insert(1, "site_id")
+            posn = 3
+            if mix_staff:
+                crud_fields.insert(2, "type")
+                posn += 1
             if use_code:
-                crud_fields.insert(4, "job_title_id")
-                if settings.get_hrm_staff_departments():
-                    crud_fields.insert(5, "department_id")
-            else:
-                crud_fields.insert(3, "job_title_id")
-                if settings.get_hrm_staff_departments():
-                    crud_fields.insert(4, "department_id")
+                posn += 1
+            crud_fields.insert(posn, "job_title_id")
+            if settings.get_hrm_staff_departments():
+                crud_fields.insert(posn, "department_id")
             report_fields.extend(("site_id",
                                   "department_id",
                                   "job_title_id",
@@ -7177,11 +7178,7 @@ def hrm_human_resource_controller(extra_filter=None):
         # Others
         if r.interactive:
             if method == "create" and not r.component:
-                if settings.get_hrm_mix_staff():
-                    # Can create an HR with the option for either Staff or Volunteer within single form
-                    f = r.table.type
-                    f.readable = f.writable = True
-                else:
+                if not settings.get_hrm_mix_staff():
                     # Need to either create a Staff or a Volunteer through separate forms
                     if vol:
                         c = "vol"
