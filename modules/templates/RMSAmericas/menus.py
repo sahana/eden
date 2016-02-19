@@ -665,8 +665,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                    M("Deployments",
                      c="deploy", f="assignment", m="summary"
                    ),
-                   M("Sectors",
-                     c="deploy", f="job_title", restrict=["ADMIN"],
+                   #M("Sectors",
+                   #  c="deploy", f="job_title", restrict=["ADMIN"],
+                   #),
+                   M("Disaster Types",
+                     c="event", f="event_type", restrict=["ADMIN"],
                    ),
                    M("RIT Members",
                      c="deploy", f="human_resource", m="summary")(

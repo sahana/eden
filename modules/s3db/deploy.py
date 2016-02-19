@@ -58,6 +58,7 @@ class S3DeploymentModel(S3Model):
     names = ("deploy_mission",
              "deploy_mission_id",
              "deploy_mission_document",
+             "deploy_mission_status_opts",
              "deploy_application",
              "deploy_assignment",
              "deploy_assignment_appraisal",
@@ -96,9 +97,12 @@ class S3DeploymentModel(S3Model):
                            represent = self.deploy_mission_name_represent,
                            requires = IS_NOT_EMPTY(),
                            ),
+                     s3_date(default = "now",
+                             ),
                      # @ToDo: Link to location via link table
                      # link table could be event_event_location for IFRC (would still allow 1 multi-country event to have multiple missions)
-                     self.gis_location_id(),
+                     self.gis_location_id(widget = S3LocationSelector(),
+                                          ),
                      # @ToDo: Link to event_type via event_id link table instead of duplicating
                      self.event_type_id(),
                      self.org_organisation_id(),
@@ -121,45 +125,7 @@ class S3DeploymentModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        # CRUD Form
-        crud_form = S3SQLCustomForm("name",
-                                    "event_type_id",
-                                    "location_id",
-                                    "code",
-                                    "status",
-                                    # Files
-                                    S3SQLInlineComponent(
-                                        "document",
-                                        name = "file",
-                                        label = T("Files"),
-                                        fields = ["file", "comments"],
-                                        filterby = dict(field = "file",
-                                                        options = "",
-                                                        invert = True,
-                                                        )
-                                    ),
-                                    # Links
-                                    S3SQLInlineComponent(
-                                        "document",
-                                        name = "url",
-                                        label = T("Links"),
-                                        fields = ["url", "comments"],
-                                        filterby = dict(field = "url",
-                                                        options = None,
-                                                        invert = True,
-                                                        )
-                                    ),
-                                    #S3SQLInlineComponent("document",
-                                                         #name = "file",
-                                                         #label = T("Attachments"),
-                                                         #fields = ["file",
-                                                                   #"comments",
-                                                                  #],
-                                                         #),
-                                    "comments",
-                                    "created_on",
-                                    )
-
+        
         # Profile
         list_layout = deploy_MissionProfileLayout()
         alert_widget = dict(label = "Alerts",
@@ -255,55 +221,12 @@ class S3DeploymentModel(S3Model):
                            #list_layout = s3db.doc_document_list_layouts,
                            )
 
-        if settings.has_module("event"):
-            text_fields = ["name",
-                           "code",
-                           "event_type_id$name",
-                           ]
-        else:
-            text_fields = ["name",
-                           "code",
-                           ]
-
         # Table configuration
         profile = URL(c="deploy", f="mission", args=["[id]", "profile"])
         configure(tablename,
                   create_next = profile,
-                  crud_form = crud_form,
                   delete_next = URL(c="deploy", f="mission", args="summary"),
-                  filter_widgets = [
-                    S3TextFilter(text_fields,
-                                 label=T("Search")
-                                 ),
-                    S3LocationFilter("location_id",
-                                     label=messages.COUNTRY,
-                                     widget="multiselect",
-                                     levels=["L0"],
-                                     hidden=True
-                                     ),
-                    S3OptionsFilter("event_type_id",
-                                    widget="multiselect",
-                                    hidden=True
-                                    ),
-                    S3OptionsFilter("status",
-                                    options=mission_status_opts,
-                                    hidden=True
-                                    ),
-                    S3DateFilter("created_on",
-                                 hide_time=True,
-                                 hidden=True
-                                ),
-                    ],
-                  list_fields = ["name",
-                                 (T("Date"), "created_on"),
-                                 "event_type_id",
-                                 (T("Country"), "location_id"),
-                                 "code",
-                                 (T("Responses"), "response_count"),
-                                 (T(label), "hrquantity"),
-                                 "status",
-                                 ],
-                  orderby = "deploy_mission.created_on desc",
+                  orderby = "deploy_mission.date desc",
                   profile_cols = 1,
                   profile_header = lambda r: \
                                    deploy_rheader(r, profile=True),
@@ -527,6 +450,7 @@ class S3DeploymentModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return dict(deploy_mission_id = mission_id,
+                    deploy_mission_status_opts = mission_status_opts,
                     )
 
     # -------------------------------------------------------------------------
@@ -790,25 +714,10 @@ class S3DeploymentAlertModel(S3Model):
             msg_record_deleted = T("Alert deleted"),
             msg_list_empty = T("No Alerts currently registered"))
 
-        # CRUD Form
-        crud_form = S3SQLCustomForm("mission_id",
-                                    "contact_method",
-                                    "subject",
-                                    "body",
-                                    "modified_on",
-                                    )
-
         # Table Configuration
         configure(tablename,
                   super_entity = "pr_pentity",
                   context = {"mission": "mission_id"},
-                  crud_form = crud_form,
-                  list_fields = ["mission_id",
-                                 "contact_method",
-                                 "subject",
-                                 "body",
-                                 "alert_recipient.human_resource_id",
-                                 ],
                   )
 
         # Components
@@ -1490,7 +1399,7 @@ class deploy_Inbox(S3Method):
 # =============================================================================
 def deploy_apply(r, **attr):
     """
-        Custom method to select new RDRT members
+        Custom method to select new Deployables (e.g. RDRT/RIT Members)
 
         @todo: make workflow re-usable for manual assignments
     """
@@ -1505,7 +1414,9 @@ def deploy_apply(r, **attr):
 
     get_vars = r.get_vars
     response = current.response
-    #settings = current.deployment_settings
+    settings = current.deployment_settings
+
+    deploy_team = settings.get_deploy_team_label()
 
     if r.http == "POST":
         added = 0
@@ -1551,9 +1462,9 @@ def deploy_apply(r, **attr):
                         atable.insert(human_resource_id=human_resource_id,
                                       active=True)
                         added += 1
-        # @ToDo: Move 'RDRT' label to settings
-        current.session.confirmation = T("%(number)s RDRT members added") % \
-                                       dict(number=added)
+        current.session.confirmation = T("%(number)s %(team) members added") % \
+                                       dict(team = T(deploy_team),
+                                            number=added)
         if added > 0:
             redirect(URL(f="human_resource", args=["summary"], vars={}))
         else:
@@ -1609,8 +1520,10 @@ def deploy_apply(r, **attr):
         dt_id = "datatable"
 
         # Bulk actions
-        # @todo: generalize label
-        dt_bulk_actions = [(T("Add as RDRT Members"), "add")]
+        dt_bulk_actions = [(T("Add as %(team)s Members") % \
+                                dict(team = T(deploy_team)),
+                            "add"),
+                           ]
 
         if r.representation == "html":
             # Page load
@@ -1666,7 +1579,7 @@ def deploy_apply(r, **attr):
                                            _class="filter-form",
                                            _id="datatable-filter-form",
                                            )
-                fresource = current.s3db.resource(resource.tablename)
+                fresource = s3db.resource(resource.tablename)
                 alias = resource.alias if r.component else None
                 ff = filter_form.html(fresource,
                                       r.get_vars,
@@ -1676,8 +1589,8 @@ def deploy_apply(r, **attr):
                 ff = ""
 
             output = dict(items = items,
-                          # @todo: generalize
-                          title = T("Add RDRT Members"),
+                          title = T("Add %(team)s Members") % \
+                                    dict(team = T(deploy_team)),
                           list_filter_form = ff)
 
             response.view = "list_filter.html"

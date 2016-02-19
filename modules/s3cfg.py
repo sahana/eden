@@ -2600,6 +2600,13 @@ class S3Config(Storage):
         """
         return self.deploy.get("hr_label", "Staff")
 
+    def get_deploy_team_label(self):
+        """
+            Label for deployable Team
+            e.g. 'RDRT', 'RIT'
+        """
+        return self.deploy.get("team_label", "Deployable")
+
     # -------------------------------------------------------------------------
     # Events
     #

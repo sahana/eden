@@ -544,6 +544,7 @@ def config(settings):
 
     # RDRT
     settings.deploy.hr_label = "Member"
+    settings.deploy.team_label = "RDRT"
     settings.customise_deploy_home = deploy_index
     # Enable the use of Organisation Regions
     settings.org.regions = True
@@ -1413,7 +1414,28 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_deploy_alert_resource(r, tablename):
 
-        current.s3db.deploy_alert_recipient.human_resource_id.label = T("Member")
+        s3db = current.s3db
+
+        s3db.deploy_alert_recipient.human_resource_id.label = T("Member")
+
+        from s3 import S3SQLCustomForm
+
+        crud_form = S3SQLCustomForm("mission_id",
+                                    "contact_method",
+                                    "subject",
+                                    "body",
+                                    "modified_on",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = ["mission_id",
+                                      "contact_method",
+                                      "subject",
+                                      "body",
+                                      "alert_recipient.human_resource_id",
+                                      ],
+                       )
 
     settings.customise_deploy_alert_resource = customise_deploy_alert_resource
 
@@ -1536,15 +1558,18 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_deploy_mission_controller(**attr):
 
+        from gluon.html import DIV
+
         db = current.db
         s3db = current.s3db
         s3 = current.response.s3
+        messages = current.messages
+
         MEMBER = T("Member")
-        from gluon.html import DIV
         hr_comment =  \
             DIV(_class="tooltip",
                 _title="%s|%s" % (MEMBER,
-                                  current.messages.AUTOCOMPLETE_HELP))
+                                  messages.AUTOCOMPLETE_HELP))
 
         table = s3db.deploy_mission
         table.code.label = T("Appeal Code")
@@ -1553,8 +1578,9 @@ def config(settings):
 
         # Restrict Location to just Countries
         from s3 import S3Represent, S3MultiSelectWidget
+        COUNTRY = messages.COUNTRY
         field = table.location_id
-        field.label = current.messages.COUNTRY
+        field.label = COUNTRY
         field.requires = s3db.gis_country_requires
         field.widget = S3MultiSelectWidget(multiple=False)
         field.represent = S3Represent(lookup="gis_location", translate=True)
@@ -1564,6 +1590,33 @@ def config(settings):
         rtable.human_resource_id.comment = hr_comment
 
         _customise_assignment_fields()
+
+        from s3 import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
+        filter_widgets = [S3TextFilter(["name",
+                                        "code",
+                                        "event_type_id$name",
+                                        ],
+                                       label=T("Search")
+                                       ),
+                          S3LocationFilter("location_id",
+                                           label=COUNTRY,
+                                           widget="multiselect",
+                                           levels=["L0"],
+                                           hidden=True
+                                           ),
+                          S3OptionsFilter("event_type_id",
+                                          widget="multiselect",
+                                          hidden=True
+                                          ),
+                          S3OptionsFilter("status",
+                                          options=s3db.deploy_mission_status_opts,
+                                          hidden=True
+                                          ),
+                          S3DateFilter("date",
+                                       hide_time=True,
+                                       hidden=True
+                                       ),
+                          ]
 
         # Report options
         report_fact = [(T("Number of Missions"), "count(id)"),
@@ -1587,7 +1640,19 @@ def config(settings):
                                                     ),
                                  )
 
+        list_fields = ["name",
+                       "date",
+                       "event_type_id",
+                       (T("Country"), "location_id"),
+                       "code",
+                       (T("Responses"), "response_count"),
+                       (T("Members Deployed"), "hrquantity"),
+                       "status",
+                       ]
+
         s3db.configure("deploy_mission",
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
                        report_options = report_options,
                        )
 
@@ -1614,18 +1679,59 @@ def config(settings):
             else:
                 result = True
 
-            if r.interactive and not current.auth.s3_has_role("RDRT_ADMIN"):
-                # Limit write-access to these fields to RDRT Admins:
-                fields = ("name",
-                          "event_type_id",
-                          "location_id",
-                          "code",
-                          "status",
-                          )
+            if r.interactive:
                 table = r.resource.table
-                for f in fields:
-                    if f in table:
-                        table[f].writable = False
+                if not current.auth.s3_has_role("RDRT_ADMIN"):
+                    # Limit write-access to these fields to RDRT Admins:
+                    fields = ("name",
+                              "event_type_id",
+                              "location_id",
+                              "code",
+                              "status",
+                              )
+                    for f in fields:
+                        if f in table:
+                            table[f].writable = False
+
+                # Date field is always the same as created_on
+                table.date.writable = False
+                table.date.label = T("Date Created")
+
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent
+                crud_form = S3SQLCustomForm("name",
+                                            "event_type_id",
+                                            "location_id",
+                                            "code",
+                                            "status",
+                                            # Files
+                                            S3SQLInlineComponent(
+                                                "document",
+                                                name = "file",
+                                                label = T("Files"),
+                                                fields = ["file", "comments"],
+                                                filterby = dict(field = "file",
+                                                                options = "",
+                                                                invert = True,
+                                                                )
+                                            ),
+                                            # Links
+                                            S3SQLInlineComponent(
+                                                "document",
+                                                name = "url",
+                                                label = T("Links"),
+                                                fields = ["url", "comments"],
+                                                filterby = dict(field = "url",
+                                                                options = None,
+                                                                invert = True,
+                                                                )
+                                            ),
+                                            "comments",
+                                            "date",
+                                            )
+
+                s3db.configure("deploy_mission",
+                               crud_form = crud_form,
+                               )
 
             if not r.component and r.method == "create":
                 # Org is always IFRC

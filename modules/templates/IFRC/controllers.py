@@ -8,6 +8,8 @@ from gluon.storage import Storage
 
 from s3 import S3CustomController
 
+THEME = "IFRC"
+
 # =============================================================================
 class index():
     """ Custom Home Page """
@@ -233,7 +235,7 @@ class docs(S3CustomController):
         output = current.rest_controller("cms", "post")
 
         # Custom view
-        self._view("IFRC", "docs.html")
+        self._view(THEME, "docs.html")
 
         current.menu.dashboard = None
 
@@ -258,7 +260,7 @@ def deploy_index():
     view = path.join(current.request.folder,
                      "modules",
                      "templates",
-                     "IFRC",
+                     THEME,
                      "views",
                      "deploy",
                      "index.html",

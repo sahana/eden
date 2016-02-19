@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from os import path
+
 from gluon import *
+
 from s3 import S3CustomController
 
 THEME = "RMSAmericas"
@@ -59,5 +62,38 @@ class index(S3CustomController):
 
         self._view(THEME, "index.html")
         return output
+
+# =============================================================================
+def deploy_index():
+    """
+        Custom module homepage for deploy (=RIT) to display online
+        documentation for the module
+    """
+
+    response = current.response
+
+    def prep(r):
+        default_url = URL(f="mission", args="summary", vars={})
+        return current.s3db.cms_documentation(r, "RIT", default_url)
+    response.s3.prep = prep
+    output = current.rest_controller("cms", "post")
+
+    # Custom view
+    view = path.join(current.request.folder,
+                     "modules",
+                     "templates",
+                     THEME,
+                     "views",
+                     "deploy",
+                     "index.html",
+                     )
+    try:
+        # Pass view as file not str to work in compiled mode
+        response.view = open(view, "rb")
+    except IOError:
+        from gluon.http import HTTP
+        raise HTTP(404, "Unable to open Custom View: %s" % view)
+
+    return output
 
 # END =========================================================================

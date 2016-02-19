@@ -1105,9 +1105,9 @@ def cms_documentation(r, default_page, default_url):
         table = r.resource.table
         query = (table.name == name) & (table.deleted != True)
         row = current.db(query).select(table.id,
-                                        table.title,
-                                        table.body,
-                                        limitby=(0, 1)).first()
+                                       table.title,
+                                       table.body,
+                                       limitby=(0, 1)).first()
     if not row:
         if name != default_page:
             # Error - CMS page not found

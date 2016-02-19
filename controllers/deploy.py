@@ -35,11 +35,11 @@ def mission():
 
     def prep(r):
         # Configure created_on field in deploy_mission
-        created_on = r.table.created_on
-        created_on.readable = True
-        created_on.label = T("Date Created")
-        created_on.represent = lambda d: \
-                               s3base.S3DateTime.date_represent(d, utc=True)
+        #created_on = r.table.created_on
+        #created_on.readable = True
+        #created_on.label = T("Date Created")
+        #created_on.represent = lambda d: \
+        #                       s3base.S3DateTime.date_represent(d, utc=True)
         if r.id:
             # Mission-specific workflows return to the profile page
             tablename = r.tablename if not r.component else r.component.tablename
@@ -87,6 +87,7 @@ def mission():
             if not r.component and \
                r.get_vars.get("~.status__belongs") == "2":
                 s3.crud_strings[r.tablename]["title_list"] = T("Active Missions")
+
         return True
     s3.prep = prep
 
@@ -111,14 +112,15 @@ def mission():
             # In component CRUD views, have a subtitle after the rheader
             output["rheader"] = TAG[""](output["rheader"],
                                         H3(output["subtitle"]))
+
         return output
     s3.postp = postp
 
     return s3_rest_controller(# Remove the title if we have a component
                               # (rheader includes the title)
-                              notitle=lambda r: {"title": ""} \
-                                             if r.component else None,
-                              rheader=s3db.deploy_rheader,
+                              notitle = lambda r: {"title": ""} \
+                                               if r.component else None,
+                              rheader = s3db.deploy_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -319,6 +321,12 @@ def experience():
     """ Experience Controller - unfiltered version """
 
     return s3db.hrm_experience_controller()
+
+# -----------------------------------------------------------------------------
+def event_type():
+    """ RESTful CRUD Controller """
+
+    return s3_rest_controller("event", "event_type")
 
 # -----------------------------------------------------------------------------
 def job_title():

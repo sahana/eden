@@ -739,7 +739,7 @@ class S3Profile(S3CRUD):
                 totalrows = displayrows
 
             # Echo
-            draw = int(get_vars.draw or 0)
+            draw = int(get_vars.get("draw") or 0)
 
             # Representation
             if dt is not None:

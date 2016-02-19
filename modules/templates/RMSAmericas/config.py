@@ -12,6 +12,8 @@ from gluon.storage import Storage
 
 from s3 import S3Method
 
+from controllers import deploy_index
+
 RED_CROSS = "Red Cross / Red Crescent"
 
 def config(settings):
@@ -483,6 +485,11 @@ def config(settings):
     settings.hrm.course_grades = hrm_course_grades
 
     # -------------------------------------------------------------------------
+    # RIT
+    settings.deploy.team_label = "RIT"
+    settings.customise_deploy_home = deploy_index
+
+    # -------------------------------------------------------------------------
     # Projects
     settings.project.assign_staff_tab = False
     # Uncomment this to use settings suitable for a global/regional organisation (e.g. DRR)
@@ -710,12 +717,13 @@ def config(settings):
         #        restricted = True,
         #        #module_type = 5,
         #    )),
-        #("event", Storage(
-        #        name_nice = T("Events"),
-        #        #description = "Events",
-        #        restricted = True,
-        #        #module_type = 10
-        #    )),
+        # Used by RIT
+        ("event", Storage(
+                name_nice = T("Events"),
+                #description = "Events",
+                restricted = True,
+                #module_type = 10
+            )),
         #("member", Storage(
         #       name_nice = T("Members"),
         #       #description = "Membership Management System",
@@ -968,6 +976,110 @@ def config(settings):
         return attr
 
     settings.customise_auth_user_controller = customise_auth_user_controller
+
+    # -------------------------------------------------------------------------
+    def customise_deploy_alert_resource(r, tablename):
+
+        s3db = current.s3db
+
+        # Only send Alerts via Email
+        # @ToDo: Also send via Twitter
+        f = s3db[tablename].contact_method
+        f.readable = f.writable = False
+
+        from s3 import S3SQLCustomForm
+
+        crud_form = S3SQLCustomForm("mission_id",
+                                    "subject",
+                                    "body",
+                                    "modified_on",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = ["mission_id",
+                                      "subject",
+                                      "body",
+                                      "alert_recipient.human_resource_id",
+                                      ],
+                       )
+
+    settings.customise_deploy_alert_resource = customise_deploy_alert_resource
+
+    # -------------------------------------------------------------------------
+    def customise_deploy_mission_resource(r, tablename):
+
+        s3db = current.s3db
+        s3db[tablename].event_type_id.label = T("Disaster Type")
+        COUNTRY = current.messages.COUNTRY
+
+        from s3 import S3SQLCustomForm
+
+        crud_form = S3SQLCustomForm("name",
+                                    "date",
+                                    "location_id",
+                                    "event_type_id",
+                                    )
+
+        from s3 import S3DateFilter, S3LocationFilter, S3OptionsFilter, S3TextFilter
+        filter_widgets = [S3TextFilter(["name",
+                                        "event_type_id$name",
+                                        "location_id",
+                                        ],
+                                       label=T("Search")
+                                       ),
+                          S3LocationFilter("location_id",
+                                           label=COUNTRY,
+                                           widget="multiselect",
+                                           levels=["L0"],
+                                           hidden=True
+                                           ),
+                          S3OptionsFilter("event_type_id",
+                                          widget="multiselect",
+                                          hidden=True
+                                          ),
+                          #S3OptionsFilter("status",
+                          #                options=s3db.deploy_mission_status_opts,
+                          #                hidden=True
+                          #                ),
+                          S3DateFilter("date",
+                                       hide_time=True,
+                                       hidden=True
+                                       ),
+                          ]
+
+        list_fields = ["name",
+                       "date",
+                       "event_type_id",
+                       (COUNTRY, "location_id"),
+                       (T("Responses"), "response_count"),
+                       (T("Members Deployed"), "hrquantity"),
+                       ]
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_deploy_mission_resource = customise_deploy_mission_resource
+
+    # -------------------------------------------------------------------------
+    def customise_event_event_type_resource(r, tablename):
+
+        s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Disaster Type"),
+            title_display = T("Disaster Type Details"),
+            title_list = T("Disaster Types"),
+            title_update = T("Edit Disaster Type Details"),
+            title_upload = T("Import Disaster Types"),
+            label_list_button = T("List Disaster Types"),
+            label_delete_button = T("Delete Disaster Type"),
+            msg_record_created = T("Disaster Type added"),
+            msg_record_modified = T("Disaster Type Details updated"),
+            msg_record_deleted = T("Disaster Type deleted"),
+            msg_list_empty = T("No Disaster Types currently defined"))
+
+    settings.customise_event_event_type_resource = customise_event_event_type_resource
 
     # -------------------------------------------------------------------------
     def customise_hrm_course_controller(**attr):
@@ -1312,6 +1424,68 @@ def config(settings):
     settings.customise_hrm_competency_resource = customise_hrm_competency_resource
 
     # -------------------------------------------------------------------------
+    def hrm_training_onaccept(form):
+        """
+            Add People to the RIT Alert List if they have passed the RIT course
+        """
+
+        db = current.db
+        s3db = current.s3db
+        form_vars = form.vars
+
+        # Lookup full record
+        table = db.hrm_training
+        record = db(table.id == form_vars.id).select(table.id,
+                                                     table.person_id,
+                                                     table.course_id,
+                                                     table.grade,
+                                                     limitby=(0, 1)).first()
+        try:
+            course_id = record.course_id
+        except:
+            current.log.error("Cannot find Training record")
+            return
+
+        # Lookup the RIT Course ID
+        ctable = db.hrm_course
+        row = db(ctable.name == "Equipos Regionales de Intervencion General").select(ctable.id,
+                                                                                     cache = s3db.cache,
+                                                                                     limitby=(0, 1)
+                                                                                     ).first()
+        try:
+            rit_course_id = row.id
+        except:
+            current.log.error("Cannot find RIT Course: Prepop not done?")
+            return
+
+        if course_id != rit_course_id:
+            # Nothing to do
+            return
+
+        if record.grade != 8:
+            # Not passed: Nothing to do
+            return
+
+        # Is person already a RIT Member?
+        htable = s3db.hrm_human_resource
+        hr = db(htable.person_id == record.person_id).select(htable.id,
+                                                             limitby=(0, 1)
+                                                             ).first()
+        try:
+            human_resource_id = hr.id
+        except:
+            current.log.error("Cannot find Human Resource record")
+            return
+
+        dtable = s3db.deploy_application
+        exists = db(dtable.human_resource_id == human_resource_id).select(dtable.id,
+                                                                          limitby=(0, 1)
+                                                                          ).first()
+        if not exists:
+            # Add them to the list
+            dtable.insert(human_resource_id = human_resource_id)
+
+    # -------------------------------------------------------------------------
     #def customise_hrm_training_controller(**attr):
 
     #    # Default Filter
@@ -1359,8 +1533,17 @@ def config(settings):
                          ),
             ]
 
+        default_onaccept = s3db.get_config(tablename, "onaccept")
+        if default_onaccept and not isinstance(default_onaccept, list): # Catch running twice
+            onaccept = [default_onaccept,
+                        hrm_training_onaccept,
+                        ]
+        else:
+            onaccept = hrm_training_onaccept
+
         s3db.configure(tablename,
                       filter_widgets = filter_widgets,
+                      onaccept = onaccept,
                       )
 
     settings.customise_hrm_training_resource = customise_hrm_training_resource
