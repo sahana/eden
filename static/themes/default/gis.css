@@ -1,5 +1,9 @@
 /* GIS module */
 
+.embeddedComponent .map_wrapper {
+    min-width: 350px;
+}
+
 .map_wrapper {
     /* Allow Absolutely positioned panels within */
     position: relative;

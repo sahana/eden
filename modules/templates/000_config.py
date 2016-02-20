@@ -216,7 +216,8 @@ settings.frontpage.rss = [
 # Change for different authority and organisations
 # See http://alerting.worldweather.org/ for prefix and oid
 #settings.cap.identifier_prefix = "PAGASA-DOST"
-#settings.cap.identifier_oid = "2.49.0.1.608.0"
+# Country root oid; the oid for the organisation are defined anyway
+#settings.cap.identifier_oid = "2.49.0.1.608"
 #settings.cap.identifier_suffix = "alert"
 # Change this for the offset period in days that the alert will be effective for
 # Expire Date = Effective Date + expire_offset
