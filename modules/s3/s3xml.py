@@ -1945,29 +1945,38 @@ class S3XML(S3Codec):
         """
 
         if isinstance(value, dict):
-            return cls.__obj2element(key, value, native=native)
+            # Value contains an object, so recurse
+            element = cls.__obj2element(key, value, native=native)
 
         elif isinstance(value, (list, tuple)):
-            if not key == cls.TAG.item:
-                _list = etree.Element(key)
+            # Produce an element with one child element per list item
+            if key != cls.TAG.item:
+                element = etree.Element(key)
             else:
-                _list = etree.Element(cls.TAG.list)
+                # Nested list
+                element = etree.Element(cls.TAG.list)
+
+            json2element = cls.__json2element
+            item_tag = cls.TAG.item
+
             for obj in value:
-                item = cls.__json2element(cls.TAG.item, obj,
-                                           native=native)
-                _list.append(item)
-            return _list
+                item = json2element(item_tag, obj, native=native)
+                element.append(item)
 
         else:
+            # Produce a child element
             if native:
+                # always <data field="key">value</data>
                 element = etree.Element(cls.TAG.data)
                 element.set(cls.ATTRIBUTE.field, key)
             else:
+                # always <key>value</key>
                 element = etree.Element(key)
-            if not isinstance(value, (str, unicode)):
+            if not isinstance(value, basestring):
                 value = str(value)
             element.text = value
-            return element
+
+        return element
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -1984,8 +1993,8 @@ class S3XML(S3Codec):
 
         if not tag:
             tag = cls.TAG.object
-
         elif native:
+            # Check for S3JSON prefix, convert object name to name attribute
             if tag.startswith(cls.PREFIX.reference):
                 field = tag[len(cls.PREFIX.reference) + 1:]
                 tag = cls.TAG.reference
@@ -2010,24 +2019,45 @@ class S3XML(S3Codec):
             if field:
                 element.set(cls.ATTRIBUTE.field, field)
 
+        attribute_prefix = cls.PREFIX.attribute
+        text_prefix = cls.PREFIX.text
+
+        obj2element = cls.__obj2element
+        json2element = cls.__json2element
+
         for k in obj:
             m = obj[k]
+
             if isinstance(m, dict):
-                child = cls.__obj2element(k, m, native=native)
+                # Node contains subelements of its own
+                child = obj2element(k, m, native=native)
                 element.append(child)
+
             elif isinstance(m, (list, tuple)):
-                #l = etree.SubElement(element, k)
-                for _obj in m:
-                    child = cls.__json2element(k, _obj, native=native)
+                # Node is a value list
+                if native and k.startswith(attribute_prefix):
+                    # S3JSON: convert value lists for attributes to JSON
+                    a = k[len(attribute_prefix):]
+                    element.set(a, json.dumps(m))
+                    continue
+                for obj_ in m:
+                    child = json2element(k, obj_, native=native)
                     element.append(child)
+
             else:
-                if k == cls.PREFIX.text:
+                # Node is a single value
+                if k == text_prefix:
+                    # ...is a text node
                     element.text = m
-                elif k.startswith(cls.PREFIX.attribute):
-                    a = k[len(cls.PREFIX.attribute):]
+                elif k.startswith(attribute_prefix):
+                    a = k[len(attribute_prefix):]
+                    # ...is an attribute
+                    if not isinstance(m, basestring):
+                        m = str(m)
                     element.set(a, m)
                 else:
-                    child = cls.__json2element(k, m, native=native)
+                    # ...is a subelement
+                    child = json2element(k, m, native=native)
                     element.append(child)
 
         return element
