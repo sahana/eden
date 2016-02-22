@@ -559,8 +559,8 @@ class S3Request(object):
             filters = self.post_vars
 
         # Move filters into GET vars
-        get_vars = dict(get_vars)
-        post_vars = dict(self.post_vars)
+        get_vars = Storage(get_vars)
+        post_vars = Storage(self.post_vars)
 
         del get_vars["$search"]
         for k, v in filters.items():
