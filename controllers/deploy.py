@@ -46,9 +46,12 @@ def mission():
             next_url = r.url(component="", method="profile", vars={})
             if r.component_name == "alert":
                 alert_create_script()
+                if settings.get_deploy_manual_recipients():
+                    create_next = URL(f="alert", args=["[id]", "select"])
+                else:
+                    create_next = next_url
                 s3db.configure(tablename,
-                               create_next = URL(f="alert",
-                                                 args=["[id]", "select"]),
+                               create_next = create_next,
                                delete_next = next_url,
                                update_next = next_url,
                                )
@@ -412,6 +415,7 @@ i18n.only_visible="%s"''' % (T("characters left"),
                              T("Only visible to Email recipients"))
     s3.js_global.append(i18n)
 
+# -----------------------------------------------------------------------------
 def alert():
     """ RESTful CRUD Controller """
 
@@ -437,16 +441,16 @@ def alert():
 
             elif r.component_name == "recipient":
                 settings.search.filter_manager = False
-                from s3.s3filter import S3TextFilter, S3OptionsFilter
+                from s3 import S3TextFilter, S3OptionsFilter
                 recipient_filters = [
-                    s3base.S3TextFilter([
+                    S3TextFilter([
                             "human_resource_id$person_id$first_name",
                             "human_resource_id$person_id$middle_name",
                             "human_resource_id$person_id$last_name",
                         ],
                         label=current.T("Name"),
                     ),
-                    s3base.S3OptionsFilter(
+                    S3OptionsFilter(
                         "human_resource_id$organisation_id",
                         widget="multiselect",
                         filter=True,
@@ -463,11 +467,14 @@ def alert():
                         )
                     )
                 s3db.configure(r.component.tablename,
-                               filter_widgets=recipient_filters)
+                               filter_widgets = recipient_filters,
+                               )
+
                 if r.record.message_id:
                     s3db.configure(r.component.tablename,
-                                   insertable=False,
-                                   deletable=False)
+                                   deletable = False,
+                                   insertable = False,
+                                   )
         else:
             if r.record:
                 if r.record.message_id:
@@ -478,19 +485,17 @@ def alert():
                                    )
             else:
                 alert_create_script()
+                if settings.get_deploy_manual_recipients():
+                    create_next = URL(f="alert", args=["[id]", "select"])
+                else:
+                    create_next = URL(f="alert", args=["[id]", "recipient"])
                 s3db.configure(r.tablename,
-                               create_next = URL(f="alert",
-                                                 args=["[id]", "select"]),
+                               create_next = create_next,
                                deletable = False,
                                # @ToDo: restrict in postp to change this action button
                                #editable = False,
                                )
 
-            created_on = r.table.modified_on
-            created_on.readable = True
-            created_on.label = T("Date")
-            created_on.represent = lambda d: \
-                                   s3base.S3DateTime.date_represent(d, utc=True)
         return True
     s3.prep = prep
 
@@ -540,6 +545,7 @@ def alert():
                            "_class": "delete-btn",
                            },
                           ]
+
         return output
     s3.postp = postp
 
@@ -549,6 +555,41 @@ def alert():
                                              "_default": True,
                                              }
                               )
+
+# -----------------------------------------------------------------------------
+def alert_response():
+    """
+        RESTful CRUD Controller
+        - used to allow RIT Memebers to apply for Positions
+
+        @ToDo: Block all methods but CREATE => what next_url?
+    """
+
+    alert_id = get_vars.get("alert_id")
+    if alert_id:
+        table = s3db.deploy_response
+        f = table.alert_id
+        f.readable = f.writable = False
+        f.default = alert_id
+        atable = s3db.deploy_alert
+        alert = db(atable.id == alert_id).select(atable.mission_id,
+                                                 limitby=(0, 1),
+                                                 ).first()
+        if alert:
+            f = table.mission_id
+            f.readable = f.writable = False
+            f.default = alert.mission_id
+        human_resource_id = auth.s3_logged_in_human_resource()
+        if human_resource_id:
+            f = table.human_resource_id_id
+            f.readable = f.writable = False
+            f.default = alert_id
+        table.message_id.readable = False
+    #else:
+    #    # Block
+    #    pass
+
+    return s3_rest_controller("deploy", "response")
 
 # -----------------------------------------------------------------------------
 def email_inbox():

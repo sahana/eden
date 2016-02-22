@@ -2607,6 +2607,28 @@ class S3Config(Storage):
         """
         return self.deploy.get("team_label", "Deployable")
 
+    def get_deploy_manual_recipients(self):
+        """
+            Whether Alert recipients should be selected manually
+        """
+        return self.deploy.get("manual_recipients", True)
+
+    def get_deploy_post_to_twitter(self):
+        """
+            Whether to post the alerts in twitter
+            @ToDo: enhance this by as well as True,
+            being able to specify a specific Twitter channel to tweet on
+        """
+
+        return self.deploy.get("post_to_twitter", False)
+
+    def get_deploy_responses_via_web(self):
+        """
+            Whether Responses to Alerts come in via the Web
+        """
+
+        return self.deploy.get("responses_via_web", True)
+
     # -------------------------------------------------------------------------
     # Events
     #

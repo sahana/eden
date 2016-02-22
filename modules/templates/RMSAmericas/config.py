@@ -488,6 +488,9 @@ def config(settings):
     # RIT
     settings.deploy.team_label = "RIT"
     settings.customise_deploy_home = deploy_index
+    # Alerts get sent to all recipients
+    settings.deploy.manual_recipients = False
+    settings.deploy.post_to_twitter = True
 
     # -------------------------------------------------------------------------
     # Projects
@@ -987,22 +990,21 @@ def config(settings):
         f = s3db[tablename].contact_method
         f.readable = f.writable = False
 
-        from s3 import S3SQLCustomForm
+        #from s3 import S3SQLCustomForm
 
-        crud_form = S3SQLCustomForm("mission_id",
-                                    "subject",
-                                    "body",
-                                    "modified_on",
-                                    )
+        #crud_form = S3SQLCustomForm("mission_id",
+        #                            "subject",
+        #                            "body",
+        #                            "modified_on",
+        #                            )
 
-        s3db.configure(tablename,
-                       crud_form = crud_form,
-                       list_fields = ["mission_id",
-                                      "subject",
-                                      "body",
-                                      "alert_recipient.human_resource_id",
-                                      ],
-                       )
+        #s3db.configure(tablename,
+                       #crud_form = crud_form,
+                       #list_fields = ["mission_id",
+                       #               "subject",
+                       #               "body",
+                       #               ],
+        #               )
 
     settings.customise_deploy_alert_resource = customise_deploy_alert_resource
 

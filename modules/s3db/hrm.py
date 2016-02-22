@@ -7081,7 +7081,13 @@ def hrm_human_resource_controller(extra_filter=None):
         elif method == "summary":
 
             # CRUD Strings
-            s3.crud_strings["hrm_human_resource"]["title_list"] = T("Staff & Volunteers")
+            if deploy:
+                deploy_team = settings.get_deploy_team_label()
+                s3.crud_strings["hrm_human_resource"]["title_list"] = \
+                    T("%(team)s Members") % dict(team=T(deploy_team))
+            else:
+                s3.crud_strings["hrm_human_resource"]["title_list"] = \
+                    T("Staff & Volunteers")
 
             # Filter Widgets
             filter_widgets = hrm_human_resource_filters(resource_type="both",

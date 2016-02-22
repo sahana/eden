@@ -545,6 +545,8 @@ def config(settings):
     # RDRT
     settings.deploy.hr_label = "Member"
     settings.deploy.team_label = "RDRT"
+    # Responses only come in via Email
+    settings.deploy.responses_via_web = False
     settings.customise_deploy_home = deploy_index
     # Enable the use of Organisation Regions
     settings.org.regions = True
@@ -1418,6 +1420,12 @@ def config(settings):
 
         s3db.deploy_alert_recipient.human_resource_id.label = T("Member")
 
+        created_on = s3db[tablename].modified_on
+        created_on.readable = True
+        created_on.label = T("Date")
+        created_on.represent = lambda d: \
+                               s3base.S3DateTime.date_represent(d, utc=True)
+
         from s3 import S3SQLCustomForm
 
         crud_form = S3SQLCustomForm("mission_id",
@@ -1749,6 +1757,26 @@ def config(settings):
         return attr
 
     settings.customise_deploy_mission_controller = customise_deploy_mission_controller
+
+    # -----------------------------------------------------------------------------
+    def customise_deploy_response_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm
+
+        crud_form = S3SQLCustomForm("mission_id",
+                                    "human_resource_id",
+                                    "message_id",
+                                    "comments",
+                                    # @todo:
+                                    #S3SQLInlineComponent("document"),
+                                    )
+
+        # Table Configuration
+        current.s3db.configure(tablename,
+                               crud_form = crud_form,
+                               )
+
+    settings.customise_deploy_response_resource = customise_deploy_response_resource
 
     # -----------------------------------------------------------------------------
     def poi_marker_fn(record):
@@ -2552,14 +2580,10 @@ def config(settings):
                 output = standard_postp(r, output)
 
             if isinstance(output, dict):
-                if controller == "deploy" and \
-                   "title" in output:
-                    output["title"] = T("RDRT Members")
-                elif vnrc and \
-                     r.method != "report" and \
-                     "form" in output and \
-                     (controller == "vol" or \
-                      r.component_name == "human_resource"):
+                if vnrc and r.method != "report" and \
+                            "form" in output and \
+                            (controller == "vol" or \
+                             r.component_name == "human_resource"):
                     # Remove the injected Programme field
                     del output["form"][0].components[4]
                     del output["form"][0].components[4]

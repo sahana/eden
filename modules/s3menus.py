@@ -700,6 +700,9 @@ class S3OptionsMenu(object):
     def deploy():
         """ Deployments """
 
+        deploy_team = current.deployment_settings.get_deploy_team_label()
+        team_menu = "%(team)s Members" % dict(team=deploy_team)
+
         return M()(M("Missions",
                      c="deploy", f="mission", m="summary")(
                         M("Create", m="create"),
@@ -723,13 +726,13 @@ class S3OptionsMenu(object):
                    M("Job Titles",
                      c="deploy", f="job_title"
                    ),
-                   M("Human Resources",
+                   M(team_menu,
                      c="deploy", f="human_resource", m="summary")(
-                        M("Add Deployables",
+                        M("Add Member",
                           c="deploy", f="application", m="select",
                           p="create", t="deploy_application",
                           ),
-                        M("Import Human Resources",
+                        M("Import Members",
                           c="deploy", f="person", m="import"),
                    ),
                   )

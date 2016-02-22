@@ -1065,6 +1065,14 @@ class S3PersonModel(S3Model):
 
                             # HR Records
                             hrm_human_resource = "person_id",
+                            # HR Documents
+                            doc_document = {"link": "hrm_human_resource",
+                                            "joinby": "person_id",
+                                            "key": "doc_id",
+                                            "fkey": "doc_id",
+                                            "pkey": "id",
+                                            "actuate": "replace",
+                                            },
                             # Skills
                             hrm_certification = "person_id",
                             hrm_competency = "person_id",
