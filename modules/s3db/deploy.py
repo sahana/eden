@@ -1462,7 +1462,7 @@ def deploy_apply(r, **attr):
                         atable.insert(human_resource_id=human_resource_id,
                                       active=True)
                         added += 1
-        current.session.confirmation = T("%(number)s %(team) members added") % \
+        current.session.confirmation = T("%(number)s %(team)s members added") % \
                                        dict(team = T(deploy_team),
                                             number=added)
         if added > 0:
