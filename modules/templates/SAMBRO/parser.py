@@ -79,7 +79,7 @@ class S3Parser(object):
                                                                    table.author,
                                                                    limitby=(0, 1)
                                                                    ).first()
-        if not record:
+        if not record or not record.body:
             return
 
         post_table = s3db.cms_post

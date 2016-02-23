@@ -229,6 +229,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cap_alert_resource(r, tablename):
 
+        from s3 import s3_str
         s3db = current.s3db
         def onapprove(record):
             # Normal onapprove
@@ -254,29 +255,27 @@ def config(settings):
                                                             atable.sender,
                                                             atable.sent,
                                                             limitby=(0, 1)).first()
-                    # Using English Info Segment for now
-                    # Because tweet has Info Headline
-                    iquery = (itable.alert_id == alert_id) & \
-                             (itable.language == "en-US")
-                    irow = db(iquery).select(itable.headline,
-                                             itable.web,
-                                             limitby=(0, 1)).first()
+                    query = (itable.alert_id == alert_id) & \
+                            (itable.deleted != True)
+                    irows = db(query).select(itable.headline,
+                                             itable.web)
                     # @ToDo: shorten url
                     # @ToDo: Handle the multi-message nicely?
                     # @ToDo: Send resource url with tweet
-                    twitter_text = \
+                    for irow in irows:
+                        twitter_text = \
 ("""%(Status)s: %(Headline)s
 %(SENDER)s: %(SenderName)s
 %(WEBSITE)s: %(Website)s""") % dict(Status = arow.status,
-                                    Headline = irow.headline,
+                                    Headline = s3_str(irow.headline),
                                     SENDER = T("Sender"),
-                                    SenderName = arow.sender,
+                                    SenderName = s3_str(arow.sender),
                                     WEBSITE = T("Website"),
                                     Website = irow.web)
-                    try:
-                        current.msg.send_tweet(text=twitter_text)
-                    except tweepy.error.TweepError, e:
-                        current.log.debug("Sending tweets failed: %s" % e)
+                        try:
+                            current.msg.send_tweet(text=twitter_text)
+                        except tweepy.error.TweepError, e:
+                            current.log.debug("Sending tweets failed: %s" % e)
 
         s3db.configure(tablename,
                        onapprove = onapprove,
@@ -358,46 +357,6 @@ def config(settings):
         return attr
 
     settings.customise_pr_subscription_controller = customise_pr_subscription_controller
-
-    # -------------------------------------------------------------------------
-    def customise_cap_warning_priority_resource(r, tablename):
-
-        s3db = current.s3db
-        def onaccept(form):
-            # Normal onaccept if any
-            form_vars = form.vars
-            color_code = form_vars.color_code
-            if color_code:
-                db = current.db
-                stable = s3db.gis_style
-                etable = s3db.gis_layer_entity
-                rows = db(etable.instance_type == "gis_layer_feature"). \
-                                                        select(etable.layer_id)
-                query = (stable.layer_id.belongs([row.layer_id for row in rows]))
-                rows = db(query).select(stable.id, stable.style)
-                if rows:
-                    from s3 import IS_JSONS3
-                    name = form_vars.name
-                    for row in rows:
-                        style = row.style
-                        if style:
-                            if isinstance(style, basestring):
-                                style = json.loads(style)
-                            sdata = dict(prop = "priority",
-                                         fill = color_code,
-                                         fillOpacity = 0.4,
-                                         cat = name,
-                                         )
-                            if sdata not in style:
-                                style.append(sdata)
-                                style = IS_JSONS3()(json.dumps(style))[0]
-                                db(stable.id == row.id).update(style = style)
-
-        s3db.configure(tablename,
-                       create_onaccept = onaccept,
-                       )
-
-    settings.customise_cap_warning_priority_resource = customise_cap_warning_priority_resource
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

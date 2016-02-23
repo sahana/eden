@@ -404,7 +404,7 @@ class S3Notifications(object):
                 path = join("views", "msg")
                 template = get_template(path, filenames)
             if template is None:
-                template = StringIO(T("New updates are available."))
+                template = StringIO(current.T("New updates are available."))
 
             # Select contents format
             if method == "EMAIL" and email_format == "html":

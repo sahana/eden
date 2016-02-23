@@ -25,3 +25,8 @@
 #cap_alert_sent__row{display:none}
 .cap_template_form #cap_alert_template_title__row1,
 .cap_template_form #cap_alert_template_title__row {display:block}
+input#assign-selected-action.selected-action {
+    width: 7.5em;
+    height: 3.5em;
+    border-radius: 3em;
+}
