@@ -440,6 +440,7 @@ class S3CAPModel(S3Model):
                      *s3_meta_fields())
 
         list_fields = [(T("Sent"), "sent"),
+                       (T("Expires"), "info.expires"),
                        "scope",
                        "info.priority",
                        "info.event_type_id",
@@ -1282,7 +1283,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
         configure(tablename,
                   #create_next = URL(f="area", args=["[id]", "location"]),
                   crud_form = crud_form,
-                  deduplicate = S3Duplicate(primary=("name", "alert_id")),
+                  deduplicate = self.cap_area_duplicate,
                   onaccept = update_alert_id(tablename),
                   onvalidation = self.cap_area_onvalidation,
                   )
@@ -1330,7 +1331,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                                                     show_postcode = False,
                                                     ),
                         ),
-                     )
+                     *s3_meta_fields())
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -1347,7 +1348,6 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
             msg_list_empty = T("No locations currently defined for this alert"))
 
         configure(tablename,
-                  # @ToDo: see duplicate for alert_id & location_id
                   deduplicate = S3Duplicate(primary=("area_id", "location_id")),
                   onaccept = update_alert_id(tablename),
                   )
@@ -1587,14 +1587,16 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
             web = "%s%s" % (current.deployment_settings.get_base_public_url(),
                             URL(c="cap", f="alert", args=[alert_id]))
-            idata = {"priority"  : form_vars.get("priority", None),
-                     "urgency"   : form_vars.get("urgency", None),
-                     "severity"  : form_vars.get("severity", None),
-                     "certainty" : form_vars.get("certainty", None),
-                     "effective" : form_vars.get("effective", None),
-                     "onset"     : form_vars.get("onset", None),
-                     "expires"   : form_vars.get("expires", None),
-                     "web"       : web,
+            form_vars_get = form_vars.get
+            idata = {"priority"       : form_vars_get("priority", None),
+                     "urgency"        : form_vars_get("urgency", None),
+                     "severity"       : form_vars_get("severity", None),
+                     "certainty"      : form_vars_get("certainty", None),
+                     "effective"      : form_vars_get("effective", None),
+                     "onset"          : form_vars_get("onset", None),
+                     "expires"        : form_vars_get("expires", None),
+                     "web"            : web,
+                     "event_type_id"  : form_vars_get("event_type_id", None),
                      }
             query = (itable.deleted != True) & \
                     (itable.alert_id == alert_id)
@@ -1669,6 +1671,40 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
         if form_vars.get("ceiling") and not form_vars.get("altitude"):
             form.errors["altitude"] = \
             current.T("'Altitude' field is mandatory if using 'Ceiling' field.")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_area_duplicate(item):
+
+        data = item.data
+        name = data.get("name")
+
+        if name is not None:
+            table = item.table
+            event_type_id = data.get("event_type_id", None)
+            if event_type_id is not None:
+                # This is a template
+                query = (table.name == name) & \
+                        (table.event_type_id == event_type_id)
+            else:
+                alert_id = data.get("alert_id", None)
+                info_id = data.get("info_id", None)
+                query_ = (table.name == name)
+                if alert_id is not None:
+                    # Real Alert, not template
+                    query = query_ & (table.alert_id == alert_id)
+                elif info_id is not None:
+                    # CAP XML Import
+                    query = query_ & (table.info_id == info_id)
+                else:
+                    # Nothing we can use
+                    return
+
+                duplicate = current.db(query).select(table.id,
+                                                     limitby=(0, 1)).first()                
+                if duplicate:
+                    item.id = duplicate.id
+                    item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1795,16 +1831,16 @@ def cap_rheader(r):
         record = r.record
         if record:
             T = current.T
+            db = current.db
             s3db = current.s3db
             tablename = r.tablename
             if tablename == "cap_alert":
                 alert_id = record.id
                 itable = s3db.cap_info
-                row = current.db(itable.alert_id == alert_id).\
-                                        select(itable.id,
-                                               limitby=(0, 1)).first()
+                row = db(itable.alert_id == alert_id).select(itable.id,
+                                                             limitby=(0, 1)).first()
                 if record.is_template:
-                    if not (row and row.id):
+                    if not row:
                         error = DIV(T("An alert needs to contain at least one info item."),
                                     _class="error")
                     else:
@@ -1845,7 +1881,7 @@ def cap_rheader(r):
                 else:
                     action_btn = None
                     msg_type_buttons = None
-                    if not (row and row.id):
+                    if not row:
                         error = DIV(T("You need to create at least one alert information item in order to be able to broadcast this alert!"),
                                     _class="error")
                         export_btn = ""
@@ -1862,7 +1898,6 @@ def cap_rheader(r):
                         if not current.request.get_vars.get("_next") and \
                            current.deployment_settings.get_cap_authorisation() and \
                            record.approved_by is None:
-                            db = current.db
                             auth = current.auth
                             # Show these buttons only if there is atleast one area segment
                             area_table = s3db.cap_area
@@ -1936,15 +1971,18 @@ def cap_rheader(r):
                     if r.representation == "html" and \
                        current.auth.s3_has_permission("update", "cap_alert",
                                                       record_id=alert_id):
-                        # Check to see if 'Predefined Areas' tab need to be added
-                        artable = s3db.cap_area
-                        query = (artable.is_template == True) & \
-                                (artable.deleted == False)
-
-                        template_area_rows = current.db(query)._select(artable.id,
-                                                                       limitby=(0, 1))
-                        if template_area_rows:
-                            tabs.insert(2, (T("Predefined Areas"), "assign"))
+                        # Show predefined areas tab if we have some defined for this event_type
+                        row_ = db(itable.alert_id == alert_id).select(itable.event_type_id,
+                                                                      limitby=(0, 1)).first()
+                        if row_ is not None:
+                            artable = s3db.cap_area
+                            query = (artable.deleted != True) & \
+                                    (artable.is_template == True) & \
+                                    (artable.event_type_id == row_.event_type_id)
+                            template_area_row = db(query).select(artable.id,
+                                                                 limitby=(0, 1)).first()
+                            if template_area_row:
+                                tabs.insert(2, (T("Predefined Areas"), "assign"))
 
                     rheader_tabs = s3_rheader_tabs(r, tabs)
 
@@ -2402,7 +2440,7 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
     #raw = record._row
     # @ToDo: handle the case where we have multiple info segments &/or areas
     headline = record["cap_info.headline"]
-    location = record["cap_area.name"]
+    location = s3_str(record["cap_area.name"])
     priority = record["cap_info.priority"]
     status = record["cap_alert.status"]
     scope = record["cap_alert.scope"]
@@ -2760,6 +2798,11 @@ class cap_AssignArea(S3Method):
 
         elif r.http == "GET":
 
+            # Get the event_type_id to filter by
+            itable = s3db.cap_info
+            row = db(itable.alert_id == alert_id).select(itable.event_type_id,
+                                                         limitby=(0, 1)).first()
+
             # Filter widgets (@todo: lookup from cap_area resource config?)
             filter_widgets = []
 
@@ -2771,6 +2814,7 @@ class cap_AssignArea(S3Method):
                            ]
 
             # Data table
+            area_filter = area_filter & (FS("event_type_id") == row.event_type_id)
             aresource = s3db.resource("cap_area", filter=area_filter)
             totalrows = aresource.count()
             get_vars = r.get_vars
