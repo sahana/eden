@@ -241,11 +241,7 @@ S3.search = {};
             for (key in data) {
                 input = document.createElement('textarea');
                 input.name = key;
-                if (typeof data[key] === 'object') {
-                    input.value = JSON.stringify(data[key]);
-                } else {
-                    input.value = data[key];
-                }
+                input.value = JSON.stringify(data[key]);
                 form.appendChild(input);
             }
         }

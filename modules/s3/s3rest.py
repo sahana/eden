@@ -545,7 +545,7 @@ class S3Request(object):
 
         # Retrieve filters from request body
         if mode == "ajax" or content_type[:10] != "multipart/":
-            # Read body JSON
+            # Read body JSON (from $.searchS3)
             s = self.body
             s.seek(0)
             try:
@@ -554,9 +554,11 @@ class S3Request(object):
                 filters = {}
             if not isinstance(filters, dict):
                 filters = {}
+            decode = None
         else:
-            # Read POST vars
+            # Read POST vars JSON (from $.searchDownloadS3)
             filters = self.post_vars
+            decode = json.loads
 
         # Move filters into GET vars
         get_vars = Storage(get_vars)
@@ -567,8 +569,11 @@ class S3Request(object):
             k0 = k[0]
             if k == "$filter" or \
                k0 != "_" and ("." in k or k0 == "(" and ")" in k):
-                # Copy filter expression into GET vars
-                get_vars[k] = v
+                try:
+                    value = decode(v) if decode else v
+                except ValueError:
+                    continue
+                get_vars[k] = value
                 # Remove filter expression from POST vars
                 if k in post_vars:
                     del post_vars[k]
