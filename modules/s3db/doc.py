@@ -75,6 +75,7 @@ class S3DocumentLibrary(S3Model):
         # Document-referencing entities
         #
         entity_types = Storage(asset_asset=T("Asset"),
+                               cap_resource=T("CAP Resource"),
                                cms_post=T("Post"),
                                cr_shelter=T("Shelter"),
                                deploy_mission=T("Mission"),
