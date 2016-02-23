@@ -1282,7 +1282,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
         configure(tablename,
                   #create_next = URL(f="area", args=["[id]", "location"]),
                   crud_form = crud_form,
-                  deduplicate = S3Duplicate(primary=("name", "alert_id")),
+                  deduplicate = self.cap_area_duplicate,
                   onaccept = update_alert_id(tablename),
                   onvalidation = self.cap_area_onvalidation,
                   )
@@ -1330,7 +1330,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                                                     show_postcode = False,
                                                     ),
                         ),
-                     )
+                     *s3_meta_fields())
 
         # CRUD Strings
         crud_strings[tablename] = Storage(
@@ -1348,7 +1348,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
         configure(tablename,
                   # @ToDo: see duplicate for alert_id & location_id
-                  deduplicate = S3Duplicate(primary=("area_id", "location_id")),
+                  deduplicate = self.cap_area_location_duplicate,
                   onaccept = update_alert_id(tablename),
                   )
 
@@ -1669,6 +1669,51 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
         if form_vars.get("ceiling") and not form_vars.get("altitude"):
             form.errors["altitude"] = \
             current.T("'Altitude' field is mandatory if using 'Ceiling' field.")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_area_duplicate(item):
+
+        db = current.db
+        table = item.table
+        data = item.data
+        name = data.get("name", None)
+        if name is not None:
+            is_template = data.get("is_template", False)
+            if not is_template:
+                # Ensure not template area
+                query = (table.is_template != True) & \
+                        (table.alert_id == data.get("alert_id", None)) & \
+                        (table.name == name)
+
+                duplicate = db(query).select(table.id,
+                                             limitby=(0, 1)).first()                
+                if duplicate:
+                    item.id = duplicate.id
+                    item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_area_location_duplicate(item):
+
+        data = item.data
+        area_id = data.get("area_id", None)
+        if area_id is not None:
+            db = current.db
+            atable = current.s3db.cap_area
+
+            row = db(atable.id == area_id).select(atable.is_template,
+                                                  limitby=(0, 1)).first()
+            if not row.is_template:
+                # Ensure not template area
+                table = item.table
+                query = (table.area_id == area_id) & \
+                        (table.location_id == data.get("location_id", None))
+                duplicate = db(query).select(table.id,
+                                             limitby=(0, 1)).first()                
+                if duplicate:
+                    item.id = duplicate.id
+                    item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
