@@ -875,38 +875,41 @@ def config(settings):
                                    ]
                     if absence_field:
                         list_fields.append(absence_field)
+
                     if r.representation == "xls":
+
                         # Extra list_fields for XLS export
+                        atypes = {"GU": None,
+                                  "X-Ray": None,
+                                  }
                         attable = s3db.dvr_case_appointment_type
-                        appointment_type = db(attable.name == "GU").select(attable.id,
-                                                                           limitby=(0, 1)
-                                                                           ).first()
-                        try:
-                            gu = appointment_type.id
-                        except:
-                            # Prepop not done
-                            gu = None
-                        appointment_type = db(attable.name == "X-Ray").select(attable.id,
-                                                                              limitby=(0, 1)
-                                                                              ).first()
-                        try:
-                            xray = appointment_type.id
-                        except:
-                            # Prepop not done
-                            xray = None
+
+                        query = attable.name.belongs(atypes.keys())
+                        rows = db(query).select(attable.id,
+                                                attable.name,
+                                                )
+                        for row in rows:
+                            atypes[row.name] = row.id
+
+                        # Filtered Components
+                        COMPLETED = 4
                         s3db.add_components("pr_person",
-                                            dvr_case_appointment = ({"name": "gu",
-                                                                     "joinby": "person_id",
-                                                                     "filterby": "type_id",
-                                                                     "filterfor": (gu,),
-                                                                     },
-                                                                    {"name": "xray",
-                                                                     "joinby": "person_id",
-                                                                     "filterby": "type_id",
-                                                                     "filterfor": (xray,),
-                                                                     },
-                                                                    ),
+                                            dvr_case_appointment = (
+                                                {"name": "gu",
+                                                 "joinby": "person_id",
+                                                 "filterby": {"type_id": (atypes["GU"],),
+                                                              "status": COMPLETED,
+                                                              },
+                                                 },
+                                                {"name": "xray",
+                                                 "joinby": "person_id",
+                                                 "filterby": {"type_id": (atypes["X-Ray"],),
+                                                              "status": COMPLETED,
+                                                              }
+                                                 },
+                                                ),
                                             )
+
                         list_fields += [# Date of the GU (GU = Health Screening, case appointments)
                                         (T("GU"), "gu.date"),
                                         # Date of the X-Ray (case appointments)
@@ -918,6 +921,7 @@ def config(settings):
                                         "shelter_registration.check_in_date",
                                         # Last Check-out (if checked-out)
                                         "shelter_registration.check_out_date",
+                                        ("UUID", "uuid"),
                                         ]
                     configure(list_fields = list_fields)
 

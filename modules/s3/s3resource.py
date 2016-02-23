@@ -366,7 +366,30 @@ class S3Resource(object):
         component.multiple = hook.multiple
         component.defaults = hook.defaults
 
-        if not filterby:
+        if isinstance(filterby, dict):
+            # Filter by multiple criteria
+            query = None
+            table = hook.table
+            for k, v in filterby.items():
+                is_list = isinstance(v, (tuple, list))
+                if is_list and len(v) == 1:
+                    filterfor = v[0]
+                    is_list = False
+                else:
+                    filterfor = v
+                if not is_list:
+                    subquery = (table[k] == filterfor)
+                elif filterfor:
+                    subquery = (table[hook.filterby].belongs(filterfor))
+                else:
+                    subquery = None
+                if subquery:
+                    if query is None:
+                        query = subquery
+                    else:
+                        query &= subquery
+            component.filter = query
+        elif not filterby:
             # Can use filterby=False to enforce table aliasing yet
             # suppress component filtering (useful e.g. with two
             # foreign key links from the same table)
