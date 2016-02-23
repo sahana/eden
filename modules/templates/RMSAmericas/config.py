@@ -1068,7 +1068,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_event_event_type_resource(r, tablename):
 
-        s3.crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Create Disaster Type"),
             title_display = T("Disaster Type Details"),
             title_list = T("Disaster Types"),
