@@ -223,7 +223,8 @@ class S3FieldSelector(object):
             try:
                 value = value()
             except:
-                current.log.error("%s.%s: %s" % (tname, fname, sys.exc_info()[1]))
+                t, m = sys.exc_info()[:2]
+                current.log.error("%s.%s: %s" % (tname, fname, str(m) or t.__name__))
                 value = None
 
         if hasattr(field, "expr"):
@@ -982,6 +983,15 @@ class S3Joins(object):
                     joins_dict[tname] = [join]
         self.tables.add(tablename)
         return
+
+    # -------------------------------------------------------------------------
+    def __len__(self):
+        """
+            Return the number of tables in the join, for boolean
+            test of this instance ("if joins:")
+        """
+
+        return len(self.tables)
 
     # -------------------------------------------------------------------------
     def keys(self):

@@ -4755,6 +4755,9 @@ class S3ResourceData(object):
         ljoins.extend(dljoins)
         distinct |= d
 
+        # Primary key
+        pkey = str(table._id)
+
         # Initialize field data and effort estimates
         if not groupby or as_rows:
             self.init_field_data(dfields)
@@ -4766,144 +4769,253 @@ class S3ResourceData(object):
         if tables:
             filter_tables.update(tables)
 
-        # Virtual fields filter and limitby
-        vfltr = resource.get_filter()
-        if vfltr is None:
-            limitby = resource.limitby(start=start, limit=limit)
+        # Joins for filter query
+        filter_ijoins = ijoins.as_list(tablenames = filter_tables,
+                                       aqueries = aqueries,
+                                       prefer = ljoins,
+                                       )
+        filter_ljoins = ljoins.as_list(tablenames = filter_tables,
+                                       aqueries = aqueries,
+                                       )
+
+        # Virtual fields filter
+        vfilter = resource.get_filter()
+
+        # Extra filters
+        efilter = None
+        # @todo: implement this
+        #efilter = resource.get_extra_filters()
+
+        # Is this a paginated request?
+        pagination = limit is not None or start
+
+        # Subselect?
+        if ljoins or ijoins or \
+           efilter or \
+           vfilter and pagination:
+            subselect = True
         else:
-            # Skip start/limit in master query if we filter by virtual
-            # fields: we need to extract all matching rows first, then
-            # filter by virtual fields, then apply page limits
-            limitby = None
+            subselect = False
+
+        # Do we need a filter query?
+        fq = count_only = False
+        if not groupby:
+            end_count = (vfilter or efilter) and not pagination
+            if count and not end_count:
+                fq = True
+                count_only = True
+            if subselect or \
+               getids and pagination or \
+               extra_tables != filter_tables:
+                fq = True
+                count_only = False
 
         # Filter Query:
         # If we need to determine the number and/or ids of all matching
         # records, but not to extract all records, then we run a
         # separate query here to extract just this information:
-
-        # Joins for filter query
-        filter_ijoins = ijoins.as_list(tablenames=filter_tables,
-                                       aqueries=aqueries,
-                                       prefer=ljoins)
-        filter_ljoins = ljoins.as_list(tablenames=filter_tables,
-                                       aqueries=aqueries)
-
         ids = page = totalrows = None
-        if getids or count or ljoins or ijoins:
+        if fq:
+            # Execute the filter query
+            totalrows, ids = self.filter_query(query,
+                                               join = filter_ijoins,
+                                               left = filter_ljoins,
+                                               getids = not count_only,
+                                               orderby = orderby_aggr,
+                                               )
 
-            if not groupby and \
-               not vfltr and \
-               (count or limitby or extra_tables != filter_tables):
+        # Simplify the master query if possible
+        empty = False
+        limitby = None
 
-                # Execute the filter query
-                totalrows, ids = self.filter_query(query,
-                                                   join=filter_ijoins,
-                                                   left=filter_ljoins,
-                                                   getids=getids or ljoins or ijoins,
-                                                   orderby=orderby_aggr)
-                if ids is not None:
+        # If we know all possible record IDs from the filter query,
+        # then we can simplify the master query so it doesn't need
+        # complex joins
+        if ids is not None:
+            if not ids:
+                # No records matching the filter query, so we
+                # can skip the master query too
+                empty = True
+            else:
+                # Which records do we need to extract?
+                if pagination and (efilter or vfilter):
+                    master_ids = ids
+                else:
+                    totalrows = len(ids)
+                    limitby = resource.limitby(start=start, limit=limit)
                     if limitby:
                         page = ids[limitby[0]:limitby[1]]
                     else:
                         page = ids
-                    # Once we have the ids, we don't need to apply the
-                    # filter query (and the joins it requires) again,
-                    # but can use a simplified master query:
-                    master_query = table._id.belongs(page)
+                    master_ids = page
 
-                    # Order and limits are also determined by the page
-                    # (which is an ordered list of record IDs), so we
-                    # do not need to retain them (and join orderby
-                    # fields in subsequent queries) either.
-                    orderby = None
+                # Simplify master query
+                if page is not None and not page:
+                    # Empty page, skip the master query
+                    empty = True
+                    master_query = None
+                elif len(master_ids) == 1:
+                    # Single record, don't use belongs (faster)
+                    master_query = table._id == master_ids[0]
+                else:
+                    master_query = table._id.belongs(set(master_ids))
+
+                orderby = None
+                if not ljoins or ijoins:
+                    # Without joins, there can only be one row per id,
+                    # so we can limit the master query (faster)
+                    limitby = (0, len(master_ids))
+                else:
+                    # With joins, there could be more than one row per id,
+                    # so we can not limit the master query
                     limitby = None
 
-        # If we don't use a simplified master_query, we must include
-        # all necessary joins for filter and orderby (=filter_tables) in
-        # the master query
-        if ids is None and (filter_ijoins or filter_ljoins):
-            master_tables = filter_tables
+        elif pagination and not (efilter or vfilter or count or getids):
 
-        # Determine fields in master query
-        if not groupby:
-            master_tables.update(extra_tables)
-        tables, qfields, mfields, groupby = self.master_fields(dfields,
-                                                               vfields,
-                                                               master_tables,
-                                                               as_rows=as_rows,
-                                                               groupby=groupby)
-        # Additional tables to join?
-        if tables:
-            master_tables.update(tables)
+            limitby = resource.limitby(start=start, limit=limit)
 
-        # ORDERBY settings
-        pkey = str(table._id)
-        if groupby:
-            distinct = False
-            orderby = orderby_aggr
-            has_id = pkey in qfields
-        else:
-            if distinct and orderby:
-                # With DISTINCT, ORDERBY-fields must appear in SELECT
-                # (required by postgresql?)
-                for orderby_field in orderby_fields:
-                    fn = str(orderby_field)
-                    if fn not in qfields:
-                        qfields[fn] = orderby_field
+        if not empty:
+            # If we don't use a simplified master_query, we must include
+            # all necessary joins for filter and orderby (=filter_tables) in
+            # the master query
+            if ids is None and (filter_ijoins or filter_ljoins):
+                master_tables = filter_tables
 
-            # Make sure we have the primary key in SELECT
-            if pkey not in qfields:
-                qfields[pkey] = resource._id
-            has_id = True
+            # Determine fields in master query
+            if not groupby:
+                master_tables.update(extra_tables)
+            tables, qfields, mfields, groupby = self.master_fields(dfields,
+                                                                   vfields,
+                                                                   master_tables,
+                                                                   as_rows = as_rows,
+                                                                   groupby = groupby,
+                                                                   )
+            # Additional tables to join?
+            if tables:
+                master_tables.update(tables)
 
-        # Joins for master query
-        master_ijoins = ijoins.as_list(tablenames=master_tables,
-                                       aqueries=aqueries,
-                                       prefer=ljoins)
-        master_ljoins = ljoins.as_list(tablenames=master_tables,
-                                       aqueries=aqueries)
-
-        # Suspend (mandatory) virtual fields if so requested
-        if not virtual:
-            vf = table.virtualfields
-            osetattr(table, "virtualfields", [])
-
-        # Execute master query
-        db = current.db
-        rows = db(master_query).select(join=master_ijoins,
-                                       left=master_ljoins,
-                                       distinct=distinct,
-                                       groupby=groupby,
-                                       orderby=orderby,
-                                       limitby=limitby,
-                                       cacheable=not as_rows,
-                                       *qfields.values())
-
-        # Restore virtual fields
-        if not virtual:
-            osetattr(table, "virtualfields", vf)
-
-        # Apply virtual fields filter
-        if rows and vfltr is not None:
-            if count:
-                rows = rfilter(rows)
-                totalrows = len(rows)
-                if limit and start is None:
-                    start = 0
-                if start is not None and limit is not None:
-                    rows = Rows(db,
-                                records=rows.records[start:start+limit],
-                                colnames=rows.colnames,
-                                compact=False)
-                elif start is not None:
-                    rows = Rows(db,
-                                records=rows.records[start:],
-                                colnames=rows.colnames,
-                                compact=False)
+            # ORDERBY settings
+            if groupby:
+                distinct = False
+                orderby = orderby_aggr
+                has_id = pkey in qfields
             else:
-                rows = rfilter(rows, start=start, limit=limit)
-            if (getids or ljoins or ijoins) and has_id:
-                ids = self.getids(rows, pkey)
+                if distinct and orderby:
+                    # With DISTINCT, ORDERBY-fields must appear in SELECT
+                    # (required by postgresql?)
+                    for orderby_field in orderby_fields:
+                        fn = str(orderby_field)
+                        if fn not in qfields:
+                            qfields[fn] = orderby_field
+
+                # Make sure we have the primary key in SELECT
+                if pkey not in qfields:
+                    qfields[pkey] = resource._id
+                has_id = True
+
+            # Joins for master query
+            master_ijoins = ijoins.as_list(tablenames = master_tables,
+                                           aqueries = aqueries,
+                                           prefer = ljoins,
+                                           )
+            master_ljoins = ljoins.as_list(tablenames = master_tables,
+                                           aqueries = aqueries,
+                                           )
+
+            # Suspend (mandatory) virtual fields if so requested
+            if not virtual:
+                vf = table.virtualfields
+                osetattr(table, "virtualfields", [])
+
+            # Execute master query
+            db = current.db
+            rows = db(master_query).select(join=master_ijoins,
+                                           left=master_ljoins,
+                                           distinct=distinct,
+                                           groupby=groupby,
+                                           orderby=orderby,
+                                           limitby=limitby,
+                                           cacheable=not as_rows,
+                                           *qfields.values())
+
+            # Restore virtual fields
+            if not virtual:
+                osetattr(table, "virtualfields", vf)
+
+        else:
+            rows = Rows(current.db)
+
+        # Apply any virtual/extra filters, determine the subset
+        if not len(rows) and not ids:
+
+            # Empty set => empty subset (no point to filter/count)
+            page = []
+            ids = []
+            totalrows = 0
+
+        else:
+            if efilter or vfilter:
+
+                # Filter by virtual fields
+                shortcut = False
+                if vfilter:
+                    if pagination and not any((getids, count, efilter)):
+                        # Don't need ids or totalrows
+                        rows = rfilter(rows, start=start, limit=limit)
+                        page = self.getids(rows, pkey)
+                        shortcut = True
+                    else:
+                        rows = rfilter(rows)
+
+                # Extra filter (@todo: implement this)
+                if efilter:
+                    if vfilter or not ids:
+                        ids = self.getids(rows, pkey)
+                    # ids = efilter(ids)
+                    # rows = filter_rows_by_ids(rows, ids)
+
+                if pagination:
+                    # Subset selection with vfilter/efilter
+                    # (=post-filter pagination)
+                    if not shortcut:
+                        if not efilter:
+                            ids = self.getids(rows, pkey)
+                        totalrows = len(ids)
+                        rows, page = self.subset(rows, ids,
+                                                 start = start,
+                                                 limit = limit,
+                                                 has_id = has_id,
+                                                 )
+                else:
+                    # Unlimited select with vfilter/efilter
+                    if not efilter:
+                        ids = self.getids(rows, pkey)
+                    page = ids
+                    totalrows = len(ids)
+
+            elif pagination:
+
+                if page is None:
+                    if limitby:
+                        # Limited master query without count/getids
+                        # (=rows is the subset, only need page IDs)
+                        page = self.getids(rows, pkey)
+                    else:
+                        # Limited select with unlimited master query
+                        # (=getids/count without filter query, need subset)
+                        if not ids:
+                            ids = self.getids(rows, pkey)
+                        # Build the subset
+                        rows, page = self.subset(rows, ids,
+                                                 start = start,
+                                                 limit = limit,
+                                                 has_id = has_id,
+                                                 )
+                        totalrows = len(ids)
+
+            elif not ids:
+                # Unlimited select without vfilter/efilter
+                page = ids = self.getids(rows, pkey)
                 totalrows = len(ids)
 
         # Build the result
@@ -4925,7 +5037,8 @@ class S3ResourceData(object):
                                    pkey,
                                    list(mfields),
                                    join = hasattr(rows[0], tablename),
-                                   represent = represent)
+                                   represent = represent,
+                                   )
 
             # Extract the page record IDs if we don't have them yet
             if page is None:
@@ -4943,7 +5056,8 @@ class S3ResourceData(object):
                                             joined_query,
                                             jfields,
                                             records,
-                                            represent=represent)
+                                            represent=represent,
+                                            )
 
             # Re-combine and represent the records
             results = {}
@@ -5162,12 +5276,13 @@ class S3ResourceData(object):
 
         if getids:
             field = table._id
-            distinct = False
+            #distinct = False
             groupby = field
         else:
             field = table._id.count()
-            distinct = True
+            #distinct = True # has no effect
             groupby = None
+            orderby = None # don't need order if just counting
 
         # Temporarily deactivate virtual fields
         vf = table.virtualfields
@@ -5177,7 +5292,7 @@ class S3ResourceData(object):
         rows = db(query).select(field,
                                 join=join,
                                 left=left,
-                                distinct=distinct,
+                                #distinct=distinct,
                                 orderby=orderby,
                                 groupby=groupby,
                                 cacheable=True)
@@ -5648,6 +5763,38 @@ class S3ResourceData(object):
                 seen(row_id)
                 append(row_id)
         return result
+
+    # -------------------------------------------------------------------------
+    def subset(self, rows, ids, start=None, limit=None, has_id=True):
+        """
+            Build a subset [start:limit] from rows and ids
+
+            @param rows: the Rows
+            @param ids: all matching record IDs
+            @param start: start index of the page
+            @param limit: maximum length of the page
+            @param has_id: whether the Rows contain the primary key
+
+            @return: tuple (rows, page), with:
+                        rows = the Rows in the subset, in order
+                        page = the record IDs in the subset, in order
+        """
+
+        if limit and start is None:
+            start = 0
+
+        if start is not None and limit is not None:
+            rows = rows[start:start+limit]
+            page = ids[start:start+limit]
+
+        elif start is not None:
+            rows = rows[start:]
+            page = ids[start:]
+
+        else:
+            page = ids
+
+        return rows, page
 
     # -------------------------------------------------------------------------
     @staticmethod

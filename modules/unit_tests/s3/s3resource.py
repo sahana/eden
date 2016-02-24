@@ -388,11 +388,8 @@ class ResourceExportTests(unittest.TestCase):
             auth.override = False
 
     # -------------------------------------------------------------------------
-    @unittest.skipIf(current.deployment_settings.get_database_type() == "postgres", "not working for postgres")
     def testExportTreeWithMSince(self):
         """ Test automatic ordering of export items by mtime if msince is given """
-
-        # FIXME: functionality works in postgres, but test fails
 
         assertEqual = self.assertEqual
 
@@ -415,19 +412,30 @@ class ResourceExportTests(unittest.TestCase):
             resource.import_xml(xmltree)
 
             resource = current.s3db.resource(resource,
-                                            uid=["ORDERTESTHOSPITAL1",
-                                                "ORDERTESTHOSPITAL2"])
+                                             uid=["ORDERTESTHOSPITAL1",
+                                                  "ORDERTESTHOSPITAL2",
+                                                  ])
+
+            # Load the records without orderby
             resource.load(limit=2)
             assertEqual(len(resource), 2)
+
+            # Determine which comes first and which last without orderby
             first = resource._rows[0]["uuid"]
             last = resource._rows[1]["uuid"]
 
-            import time
-            time.sleep(2) # Wait 2 seconds to change mtime
-            resource._rows[0].update_record(name="OrderTestHospital1")
+            # Make first older than last
+            now = datetime.datetime.utcnow()
+            ts = now - datetime.timedelta(seconds=5)
+            resource._rows[0].update_record(created_on = ts,
+                                            modified_on = ts,
+                                            )
+            resource._rows[1].update_record(created_on = now,
+                                            modified_on = now,
+                                            )
 
+            # Without msince, elements should have same order as in load
             msince = msince=datetime.datetime.utcnow() - datetime.timedelta(days=1)
-
             tree = resource.export_tree(start=0,
                                         limit=1,
                                         dereference=False)
@@ -438,6 +446,7 @@ class ResourceExportTests(unittest.TestCase):
             uuid = child.get("uuid", None)
             assertEqual(uuid, first)
 
+            # With msince, elements should be ordered by age
             tree = resource.export_tree(start=0,
                                         limit=1,
                                         msince=msince,
@@ -1827,6 +1836,464 @@ class ResourceGetTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
+class ResourceSelectTests(unittest.TestCase):
+    """ Tests for S3Resource.select """
+
+    test_data = (
+        ("select0", "C"),
+        ("select1", "A"),
+        ("select2", "B"),
+        ("select3", "A"),
+        ("select4", "A"),
+        ("select5", "C"),
+        ("select6", "B"),
+        ("select7", "A"),
+        ("select8", "B"),
+        ("select9", "A"),
+    )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def setUpClass(cls):
+
+        s3db = current.s3db
+
+        # Create a simple table
+        s3db.define_table("select_master",
+                          Field("name"),
+                          Field("status"),
+                          *s3_meta_fields())
+
+        # Insert test records
+        table = s3db.select_master
+        for name, status in cls.test_data:
+            table.insert(name=name, status=status)
+
+        # Define a virtual field
+        table.code = Field.Method("code", lambda row: row["select_master.status"])
+
+        current.db.commit()
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def tearDownClass(cls):
+
+        db = current.db
+
+        # Drop the table
+        db.select_master.drop()
+        db.commit()
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        current.auth.override = True
+
+    # -------------------------------------------------------------------------
+    def tearDown(self):
+
+        current.auth.override = False
+
+    # -------------------------------------------------------------------------
+    def testSelectAll(self):
+        """ Test selecting all records """
+
+        s3db = current.s3db
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        # Number of expected matches
+        numitems = len(self.test_data)
+
+        # Define resource
+        resource = s3db.resource("select_master")
+
+        # Simple select
+        data = resource.select(["name", "status"])
+        assertEqual(len(data.rows), numitems)
+
+        # Select with counting
+        data = resource.select(["name", "status"], count=True)
+        assertEqual(len(data.rows), numitems)
+        assertEqual(data.numrows, numitems)
+
+        # Select with getids
+        data = resource.select(["id", "name", "status"], getids=True)
+        rows = data.rows
+        ids = data.ids
+        assertEqual(len(rows), numitems)
+        assertEqual(len(ids), numitems)
+        assertTrue(all(row["select_master.id"] in ids for row in rows))
+
+    # -------------------------------------------------------------------------
+    def testSelectFilter(self):
+        """ Test selection with filter """
+
+        s3db = current.s3db
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        # Number of expected matches
+        numitems = len([item for item in self.test_data if item[1] == "A"])
+
+        # Define resource
+        query = FS("status") == "A"
+        resource = s3db.resource("select_master", filter=query)
+
+        # Simple select
+        data = resource.select(["name", "status"])
+        rows = data.rows
+        # - Rows properly filtered
+        assertEqual(len(rows), numitems)
+        assertTrue(all(row["select_master.status"] == "A" for row in rows))
+
+        # Select with counting
+        data = resource.select(["name", "status"], count=True)
+        # - Rows correctly counted
+        assertEqual(len(data.rows), data.numrows)
+
+        # Select with getids
+        data = resource.select(["id", "name", "status"], getids=True)
+        rows = data.rows
+        ids = data.ids
+        # - ids complete
+        assertEqual(len(rows), len(ids))
+        # - ...and in same order as the rows
+        for index, row in enumerate(rows):
+            assertEqual(row["select_master.id"], ids[index])
+
+    # -------------------------------------------------------------------------
+    def testSelectVirtualFilter(self):
+        """ Test selection with virtual filter """
+
+        s3db = current.s3db
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        # Number of expected matches
+        numitems = len([item for item in self.test_data if item[1] == "A"])
+
+        # Define resource
+        query = FS("code") == "A"
+        resource = s3db.resource("select_master", filter=query)
+
+        # Simple select
+        data = resource.select(["name", "status"])
+        rows = data.rows
+        # - Rows properly filtered
+        assertEqual(len(rows), numitems)
+        assertTrue(all(row["select_master.status"] == "A" for row in rows))
+
+        # Select with counting
+        data = resource.select(["name", "status"], count=True)
+        # - Rows correctly counted
+        assertEqual(len(data.rows), data.numrows)
+
+        # Select with getids
+        data = resource.select(["id", "name", "status"], getids=True)
+        rows = data.rows
+        ids = data.ids
+        # - ids complete
+        assertEqual(len(rows), len(ids))
+        # - ...and in same order as the rows
+        for index, row in enumerate(rows):
+            assertEqual(row["select_master.id"], ids[index])
+
+    # -------------------------------------------------------------------------
+    def testSelectSubset(self):
+        """ Test selection of unfiltered subset (pagination) """
+
+        s3db = current.s3db
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        # Define subset
+        subset = self.test_data
+        numitems = len(subset)
+        names = [item[0] for item in subset]
+
+        # Define resource
+        resource = s3db.resource("select_master")
+
+        # Page limits
+        start = 2
+        limit = 2
+        subset_names = names[start:start+limit]
+
+        # Simple select
+        data = resource.select(["name", "status"],
+                               start = start,
+                               limit = limit,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in page
+        rows = data.rows
+        assertEqual(len(rows), min(numitems - start, limit))
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+
+        # Page with only start
+        start = 2
+        limit = None
+        subset_names = names[start:]
+
+        # Simple select
+        data = resource.select(["name", "status"],
+                               start = start,
+                               limit = limit,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in page
+        rows = data.rows
+        assertEqual(len(rows), numitems - start)
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+
+        # Page with only limit
+        start = None
+        limit = 3
+        subset_names = names[:limit]
+
+        # Simple select
+        data = resource.select(["name", "status"],
+                               start = start,
+                               limit = limit,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in page
+        rows = data.rows
+        assertEqual(len(rows), limit)
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+
+        # Page limits
+        start = 4
+        limit = 5
+        subset_names = names[start:start+limit]
+
+        # Select with counting
+        data = resource.select(["name", "status"],
+                               start = start,
+                               limit = limit,
+                               count = True,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in page
+        rows = data.rows
+        assertEqual(len(rows), min(numitems - start, limit))
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+        # - counts all matching records, however
+        assertEqual(data.numrows, numitems)
+
+        # Select with getids
+        data = resource.select(["id", "name", "status"],
+                               start = start,
+                               limit = limit,
+                               getids = True,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in page
+        rows = data.rows
+        assertEqual(len(rows), min(numitems - start, limit))
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+        # - returns all matching record ids, however
+        assertEqual(len(data.ids), numitems)
+
+        # Page beyond subset
+        start = numitems
+        limit = 10
+
+        # Select with counting
+        data = resource.select(["name", "status"],
+                               start = start,
+                               limit = limit,
+                               count = True,
+                               orderby = "select_master.name",
+                               )
+        # - gives no rows
+        assertEqual(len(data.rows), 0)
+        # - counts all matching records, however
+        assertEqual(data.numrows, numitems)
+
+        # Select with getids
+        data = resource.select(["id", "name", "status"],
+                               start = start,
+                               limit = limit,
+                               getids = True,
+                               orderby = "select_master.name",
+                               )
+        # - gives no rows
+        assertEqual(len(data.rows), 0)
+        # - returns all matching record ids, however
+        assertEqual(len(data.ids), numitems)
+
+    # -------------------------------------------------------------------------
+    def testSelectSubsetFilter(self):
+        """ Test selection of filtered subset (pagination) """
+
+        s3db = current.s3db
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        # Define subset
+        subset = [item for item in self.test_data if item[1] == "A"]
+        numitems = len(subset)
+        names = [item[0] for item in subset]
+
+        # Define resource
+        query = (FS("status") == "A")
+        resource = s3db.resource("select_master",
+                                 filter = query,
+                                 )
+
+        # Page limits
+        start = 2
+        limit = 2
+        subset_names = names[start:start+limit]
+
+        # Simple select
+        data = resource.select(["name", "status"],
+                               start = start,
+                               limit = limit,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in page
+        rows = data.rows
+        assertEqual(len(rows), min(numitems - start, limit))
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+
+        # Page limits
+        start = 4
+        limit = 5
+        subset_names = names[start:start+limit]
+
+        # Select with counting
+        data = resource.select(["name", "status"],
+                               start = start,
+                               limit = limit,
+                               count = True,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in page
+        rows = data.rows
+        assertEqual(len(rows), min(numitems - start, limit))
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+        # - counts all matching records, however
+        assertEqual(data.numrows, numitems)
+
+        # Select with getids
+        data = resource.select(["id", "name", "status"],
+                               start = start,
+                               limit = limit,
+                               getids = True,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in page
+        rows = data.rows
+        assertEqual(len(rows), min(numitems - start, limit))
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+        # - returns all matching record ids, however
+        assertEqual(len(data.ids), numitems)
+
+        # Page beyond subset
+        start = numitems
+        limit = 10
+
+        # Select with counting
+        data = resource.select(["name", "status"],
+                               start = start,
+                               limit = limit,
+                               count = True,
+                               orderby = "select_master.name",
+                               )
+        # - gives no rows
+        assertEqual(len(data.rows), 0)
+        # - counts all matching records, however
+        assertEqual(data.numrows, numitems)
+
+        # Select with getids
+        data = resource.select(["id", "name", "status"],
+                               start = start,
+                               limit = limit,
+                               getids = True,
+                               orderby = "select_master.name",
+                               )
+        # - gives no rows
+        assertEqual(len(data.rows), 0)
+        # - returns all matching record ids, however
+        assertEqual(len(data.ids), numitems)
+
+    # -------------------------------------------------------------------------
+    def testSelectSubsetVirtualFilter(self):
+        """ Test selection of subset (pagination) with virtual filter """
+
+        s3db = current.s3db
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        # Define subset
+        subset = [item for item in self.test_data if item[1] == "A"]
+        numitems = len(subset)
+        names = [item[0] for item in subset]
+
+        # Define resource
+        query = (FS("code") == "A")
+        resource = s3db.resource("select_master",
+                                 filter = query,
+                                 )
+
+        # Page limits
+        start = 2
+        limit = 2
+        subset_names = names[start:start+limit]
+
+        # Simple select
+        data = resource.select(["name", "status"],
+                               start = start,
+                               limit = limit,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in the page
+        rows = data.rows
+        assertEqual(len(rows), min(numitems - start, limit))
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+
+        # Page limits:
+        start = 1
+        limit = 3
+        subset_names = names[start:start+limit]
+
+        # Select with counting
+        data = resource.select(["name", "status"],
+                               start = start,
+                               limit = limit,
+                               count = True,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in the page
+        rows = data.rows
+        assertEqual(len(rows), min(numitems - start, limit))
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+        # - counts all matching records, however
+        assertEqual(data.numrows, numitems)
+
+        # Select with getids
+        data = resource.select(["id", "name", "status"],
+                               start = start,
+                               limit = limit,
+                               getids = True,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in the page
+        assertEqual(len(data.rows), min(numitems - start, limit))
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+        # - returns all matching record ids, however
+        assertEqual(len(data.ids), numitems)
+
+# =============================================================================
 class ResourceLazyVirtualFieldsSupportTests(unittest.TestCase):
     """ Test support for lazy virtual fields """
 
@@ -3151,7 +3618,7 @@ if __name__ == "__main__":
         ResourceDataTableFilterTests,
         ResourceGetTests,
         #ResourceInsertTest,
-        #ResourceSelectTests,
+        ResourceSelectTests,
         #ResourceUpdateTests,
         ResourceDeleteTests,
 
