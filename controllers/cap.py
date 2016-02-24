@@ -614,6 +614,20 @@ def alert():
 
             elif r.component_name == "area":
                 atable = r.component.table
+                row = db(atable.alert_id == r.id).select(atable.info_id,
+                                                         limitby=(0, 1)).first()
+                if row:
+                    # Show info_id in list-fields as we use this for import
+                    list_fields = ["info_id",
+                                   "name",
+                                   "altitude",
+                                   "ceiling",
+                                   ]
+
+                    s3db.configure("cap_area",
+                                   list_fields = list_fields,
+                                   )
+
                 for f in ("event_type_id", "priority"):
                     # Do not show for the actual area
                     field = atable[f]
@@ -635,19 +649,31 @@ def alert():
                     s3db.configure("cap_area",
                                    editable = False,
                                    deletable = False,
-                                   insertable=False,
+                                   insertable = False,
                                    )
 
             elif r.component_name == "resource":
-                atable = r.component.table
+                rtable = r.component.table
+                row = db(rtable.alert_id == r.id).select(rtable.info_id,
+                                                         limitby=(0, 1)).first()
+                if row:
+                    # Show info_id in list-fields as we use this for import
+                    list_fields = ["info_id",
+                                   "resource_desc",
+                                   "image",
+                                   "document",
+                                   ]
 
+                    s3db.configure("cap_resource",
+                                   list_fields = list_fields,
+                                   )
                 if r.record.approved_by is not None:
                     # Once approved, don't allow resource segment to edit
                     # Don't allow to delete
                     s3db.configure("cap_resource",
                                    editable = False,
                                    deletable = False,
-                                   insertable=False,
+                                   insertable = False,
                                    )
 
             # @ToDo: Move inside correct component context (None?)
@@ -968,6 +994,21 @@ def area():
 
         # Area create from this controller is template
         artable.is_template.default = True
+
+        if r.representation == "json":
+            # @ToDo: fix JSON representation's ability to use component list_fields
+            list_fields = ["id",
+                           "name",
+                           "event_type_id$name",
+                           "priority",
+                           "altitude",
+                           "ceiling",
+                           "location.location_id",
+                           ]
+
+            s3db.configure("cap_area",
+                           list_fields = list_fields,
+                           )
 
         return True
     s3.prep = prep
