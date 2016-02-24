@@ -573,6 +573,14 @@ class S3Request(object):
                     value = decode(v) if decode else v
                 except ValueError:
                     continue
+                # Catch any non-str values
+                if type(value) is list:
+                    value = [str(item)
+                             if not isinstance(item, basestring) else item
+                             for item in value
+                             ]
+                elif not isinstance(value, basestring):
+                    value = str(value)
                 get_vars[k] = value
                 # Remove filter expression from POST vars
                 if k in post_vars:

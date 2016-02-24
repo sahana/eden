@@ -48,20 +48,38 @@ class POSTFilterTests(unittest.TestCase):
                       name = "organisation",
                       http = "POST",
                       get_vars = {"$search": "form", "test": "retained"},
-                      post_vars = {"service_organisation.service_id__belongs": "1",
+                      post_vars = {"~.name|~.comments__like": '''["first","second"]''',
+                                   "~.other_field__lt": '''"1"''',
+                                   "multi.nonstr__belongs": '''[1,2,3]''',
+                                   "service_organisation.service_id__belongs": "1",
                                    "other": "testing",
                                    },
                       )
+
         # Method changed to GET:
         assertEqual(r.http, "GET")
         get_vars = r.get_vars
         post_vars = r.post_vars
+
         # $search removed from GET vars:
         assertNotIn("$search", get_vars)
-        # Filter queries from POST vars added to GET vars:
+
+        # Filter queries from POST vars JSON-decoded and added to GET vars:
+        assertEqual(get_vars.get("~.name|~.comments__like"), ["first","second"])
+        assertEqual(get_vars.get("~.other_field__lt"), "1")
+
+        # Edge-cases (non-str values) properly converted:
+        assertEqual(get_vars.get("multi.nonstr__belongs"), ["1", "2", "3"])
         assertEqual(get_vars.get("service_organisation.service_id__belongs"), "1")
+
         # Filter queries removed from POST vars:
+        assertNotIn("~.name|~.comments__like", post_vars)
+        assertNotIn("~.other_field__lt", post_vars)
         assertNotIn("service_organisation.service_id__belongs", post_vars)
+
+        # Non-queries retained in POST vars:
+        assertIn("other", post_vars)
+
         # Must retain other GET vars:
         assertEqual(get_vars.get("test"), "retained")
 
@@ -74,39 +92,21 @@ class POSTFilterTests(unittest.TestCase):
                                    "other": "testing",
                                    },
                       )
+
         # Method should still be POST:
         assertEqual(r.http, "POST")
         get_vars = r.get_vars
         post_vars = r.post_vars
+
         # $search never was in GET vars - confirm this to exclude test regression
         assertNotIn("$search", get_vars)
-        # Filter queries from POST vars not added to GET vars:
-        assertNotIn("service_organisation.service_id__belongs", get_vars)
-        # Filter queries still in POST vars:
-        assertIn("service_organisation.service_id__belongs", post_vars)
-        # Must retain other GET vars:
-        assertEqual(get_vars.get("test"), "retained")
 
-        # Test with empty post vars
-        request._body = StringIO('')
-        r = S3Request(prefix = "org",
-                      name = "organisation",
-                      http = "POST",
-                      get_vars = {"$search": "ajax", "test": "retained"},
-                      post_vars = {"service_organisation.service_id__belongs": "1",
-                                   "other": "testing",
-                                   },
-                      )
-        # Method changed to GET:
-        assertEqual(r.http, "GET")
-        get_vars = r.get_vars
-        post_vars = r.post_vars
-        # $search removed from GET vars:
-        assertNotIn("$search", get_vars)
         # Filter queries from POST vars not added to GET vars:
         assertNotIn("service_organisation.service_id__belongs", get_vars)
+
         # Filter queries still in POST vars:
         assertIn("service_organisation.service_id__belongs", post_vars)
+
         # Must retain other GET vars:
         assertEqual(get_vars.get("test"), "retained")
 
@@ -120,19 +120,26 @@ class POSTFilterTests(unittest.TestCase):
         request = current.request
 
         # Test with valid filter expression JSON
-        request._body = StringIO('{"service_organisation.service_id__belongs":"1"}')
+        jsonstr = '''{"service_organisation.service_id__belongs":"1","~.example__lt":1,"~.other__like":[1,2]}'''
+        request._body = StringIO(jsonstr)
         r = S3Request(prefix = "org",
                       name = "organisation",
                       http = "POST",
                       get_vars = {"$search": "ajax", "test": "retained"},
                       )
+
         # Method changed to GET:
         assertEqual(r.http, "GET")
         get_vars = r.get_vars
+
         # $search removed from GET vars:
         assertNotIn("$search", get_vars)
-        # Filter queries from JSON body added to GET vars:
+
+        # Filter queries from JSON body added to GET vars (always str, or list of str):
         assertEqual(get_vars.get("service_organisation.service_id__belongs"), "1")
+        assertEqual(get_vars.get("~.example__lt"), "1")
+        assertEqual(get_vars.get("~.other__like"), ["1","2"])
+
         # Must retain other GET vars:
         assertEqual(get_vars.get("test"), "retained")
 
@@ -143,13 +150,17 @@ class POSTFilterTests(unittest.TestCase):
                       http = "POST",
                       get_vars = {"test": "retained"},
                       )
+
         # Method should still be POST:
         assertEqual(r.http, "POST")
         get_vars = r.get_vars
+
         # $search never was in GET vars - confirm this to exclude test regression
         assertNotIn("$search", get_vars)
+
         # Filter queries from JSON body not added to GET vars:
         assertNotIn("service_organisation.service_id__belongs", get_vars)
+
         # Must retain other GET vars:
         assertEqual(get_vars.get("test"), "retained")
 
@@ -160,13 +171,17 @@ class POSTFilterTests(unittest.TestCase):
                       http = "POST",
                       get_vars = {"$search": "ajax", "test": "retained"},
                       )
+
         # Method changed to GET:
         assertEqual(r.http, "GET")
         get_vars = r.get_vars
+
         # $search removed from GET vars:
         assertNotIn("$search", get_vars)
+
         # Filter queries from JSON body not added to GET vars:
         assertNotIn("service_organisation.service_id__belongs", get_vars)
+
         # Must retain other GET vars:
         assertEqual(get_vars.get("test"), "retained")
 
@@ -177,13 +192,17 @@ class POSTFilterTests(unittest.TestCase):
                       http = "POST",
                       get_vars = {"$search": "ajax", "test": "retained"},
                       )
+
         # Method changed to GET:
         assertEqual(r.http, "GET")
         get_vars = r.get_vars
+
         # $search removed from GET vars:
         assertNotIn("$search", get_vars)
+
         # Filter queries from JSON body not added to GET vars:
         assertNotIn("service_organisation.service_id__belongs", get_vars)
+
         # Must retain other GET vars:
         assertEqual(get_vars.get("test"), "retained")
 
