@@ -60,6 +60,7 @@
 "Add Professional Experience": "Profesyonel Deneyim Ekle",
 "Add Record": "Kayıt Ekle",
 "Add Region": "Bölge Ekle",
+"Add Resource": "Kaynak Ekle",
 "Add Salary Grade": "Maaş Sınıfı Ekle",
 "Add Salary": "Maaş Ekle",
 "Add Service": "Hizmet Ekle",

@@ -476,6 +476,7 @@
 'Add Request Detail': 'Añadir detalle de petición',
 'Add Request Item': 'Añadir elemento de petición',
 'Add Request': 'Añadir petición',
+'Add Resource': 'Crear recurso',
 'Add Response': 'Añadir Respuesta',
 'Add Salary Grade': 'Añadir Salario Grado ',
 'Add Salary': 'Añadir Salario',

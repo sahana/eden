@@ -301,6 +301,7 @@
 'Add Request Detail': '支援要請の詳細を追加',
 'Add Request Item': '物資の要請を追加します',
 'Add Request': '支援要請を追加',
+'Add Resource': 'リソースを追加',
 'Add Response': '返答を追加',
 'Add Section': 'Sectionを追加',
 'Add Sender Organization': '送付元団体を追加',

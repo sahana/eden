@@ -232,6 +232,7 @@
 'Add Profile Configuration': 'प्रोफाइल बनावट राख्नुहोस्',
 'Add Profile Configuration for this Layer': 'यो तहको लागि प्रोफाइल बनावट राख्नुहोस्',
 'Add Project': 'परियोजना राख्नुहोस्',
+'Add Resource': 'स्रोत राख्नुहोस्',
 'Add Response Summary': 'प्रतिकृया संक्षेप राख्नुहोस्',
 'Add Role': 'भूमिका राख्नुहोस्',
 'Add Room': 'कोठा राख्नुहोस्',

@@ -16,6 +16,7 @@ SITE_DEFAULT,,"State / Province","County / District","City / Town / Village","Vi
 ,CM,Region,Division,Sub-Division,Village,
 ,DE,"Federal State","Government District","Rural District / District","Town / Municipality",Village,
 ,FI,Regional State Administrative Agency,Region,Sub-region,Municipality,,
+,FJ,Division,Province,District,,,,
 ,GE,"Region / Republic",District,,,,
 ,GN,Region,Prefecture,Sub-prefecture,,,
 ,GR,Decentralized Administration,Region,Regional Unit,Municipality,,

@@ -1504,9 +1504,11 @@ class S3OptionsMenu(object):
     def org():
         """ ORG / Organization Registry """
 
+        settings = current.deployment_settings
         ADMIN = current.session.s3.system_roles.ADMIN
-        SECTORS = "Clusters" if current.deployment_settings.get_ui_label_cluster() \
+        SECTORS = "Clusters" if settings.get_ui_label_cluster() \
                              else "Sectors"
+        stats = lambda i: settings.has_module("stats")
 
         return M(c="org")(
                     M("Organizations", f="organisation")(
@@ -1522,11 +1524,8 @@ class S3OptionsMenu(object):
                         M("Create", m="create"),
                         M("Import", m="import"),
                     ),
-                    M("Resource Inventory", f="resource")(
-                        M("Create", m="create"),
-                        M("Import", m="import")
-                    ),
-                    M("Resources", f="resource", m="summary")(
+                    M("Resources", f="resource", m="summary",
+                      check=stats)(
                         M("Create", m="create"),
                         M("Import", m="import")
                     ),

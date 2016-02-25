@@ -493,7 +493,7 @@
 'Add Request Detail': 'Ajouter détails de la demande',
 'Add Request Item': "Ajouter l'élément demandé",
 'Add Request': 'Ajouter une demande',
-'Add Resource': 'Ajout de ressources',
+'Add Resource': 'Ajouter de ressources',
 'Add Response': 'Ajouter une réponse',
 'Add Role': 'Ajouter un rôle',
 'Add Room': 'Ajouter chambre',

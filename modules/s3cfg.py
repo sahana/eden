@@ -3360,6 +3360,12 @@ class S3Config(Storage):
         """
         return self.org.get("organisation_types_multiple", False)
 
+    def get_org_facilities_tab(self):
+        """
+            Whether to show a Tab for Facilities
+        """
+        return self.org.get("facilities_tab", True)
+
     def get_org_groups(self):
         """
             Whether to support Organisation Groups or not
@@ -3375,6 +3381,18 @@ class S3Config(Storage):
             references (pr_group_id)
         """
         return self.org.get("group_team_represent", False)
+
+    def get_org_needs_tab(self):
+        """
+            Whether to show a Tab for Organisation Needs
+        """
+        return self.org.get("needs_tab", False)
+
+    def get_org_offices_tab(self):
+        """
+            Whether to show a Tab for Offices
+        """
+        return self.org.get("offices_tab", True)
 
     def get_org_regions(self):
         """
@@ -4028,11 +4046,11 @@ class S3Config(Storage):
         """
         return self.req.get("prompt_match", True)
 
-    def get_req_summary(self):
-        """
-            Whether to use Summary Needs for Sites (Office/Facility currently):
-        """
-        return self.req.get("summary", False)
+    #def get_req_summary(self):
+    #    """
+    #        Whether to use Summary Needs for Sites (Office/Facility currently):
+    #    """
+    #    return self.req.get("summary", False)
 
     def get_req_use_commit(self):
         """

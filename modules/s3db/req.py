@@ -2066,13 +2066,14 @@ class S3RequestSummaryModel(S3Model):
         Simple Requests Management System
         - Organisations can request Money or Time from remote volunteers
         - Sites can request Time from local volunteers or accept drop-off for Goods
+        - Projects...
     """
 
     names = ("req_organisation_needs",
-             "req_organisation_needs_item",
-             "req_organisation_needs_skill",
+             "req_organisation_needs_id",
              "req_site_needs",
              "req_project_needs",
+             "req_demand",
              )
 
     def model(self):
@@ -2112,9 +2113,8 @@ class S3RequestSummaryModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_NEEDS = T("Add Organization Needs")
         crud_strings[tablename] = Storage(
-            label_create = ADD_NEEDS,
+            label_create = T("Add Organization Needs"),
             title_list = T("Organization Needs"),
             title_display=T("Organization Needs"),
             title_update=T("Edit Organization Needs"),
@@ -2166,63 +2166,6 @@ class S3RequestSummaryModel(S3Model):
                                                       ),
                                  represent = S3Represent(options=demand_options)
                                  )
-
-        # -----------------------------------------------------------------
-        # Linktable Needs <=> Supply Items
-        #
-        item_id = self.supply_item_id
-        CREATE_ITEM = crud_strings["supply_item"].label_create
-
-        tablename = "req_organisation_needs_item"
-        define_table(tablename,
-                     organisation_needs_id(empty=False),
-                     item_id(comment = S3PopupLink(c = "supply",
-                                                   f = "item",
-                                                   label = CREATE_ITEM,
-                                                   tooltip = None,
-                                                   vars = {"prefix": "req"},
-                                                   ),
-                             empty = None,
-                             widget = None,
-                             ),
-                     demand(),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        configure(tablename,
-                  deduplicate = S3Duplicate(primary=("organisation_needs_id",
-                                                     "item_id",
-                                                     ),
-                                            ),
-                  )
-
-        # -----------------------------------------------------------------
-        # Linktable Needs <=> Skills
-        #
-        skill_id = self.hrm_skill_id
-        CREATE_SKILL = crud_strings["hrm_skill"].label_create
-
-        tablename = "req_organisation_needs_skill"
-        define_table(tablename,
-                     organisation_needs_id(empty=False),
-                     skill_id(comment = S3PopupLink(c = "hrm",
-                                                    f = "skill",
-                                                    label = CREATE_SKILL,
-                                                    tooltip = None,
-                                                    vars = {"prefix": "req"},
-                                                    ),
-                              empty=None
-                              ),
-                     demand(),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        configure(tablename,
-                  deduplicate = S3Duplicate(primary=("organisation_needs_id",
-                                                     "skill_id",
-                                                     ),
-                                            ),
-                  )
 
         # -----------------------------------------------------------------
         # Summary of Needs for a site
@@ -2322,10 +2265,30 @@ class S3RequestSummaryModel(S3Model):
             msg_record_modified = T("Project Needs updated"),
             msg_record_deleted = T("Project Needs deleted"))
 
+        # -----------------------------------------------------------------
+        # Demand options (numeric keys so can be sorted by)
+        #
+        demand_options = {1: T("Low"),
+                          2: T("Moderate"),
+                          3: T("High"),
+                          4: T("Urgent"),
+                          }
+
+        demand = S3ReusableField("demand", "integer",
+                                 label = T("Demand"),
+                                 requires = IS_IN_SET(demand_options,
+                                                      zero=None,
+                                                      sort=True,
+                                                      ),
+                                 represent = S3Represent(options=demand_options)
+                                 )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return dict(req_demand = demand,
+                    req_organisation_needs_id = organisation_needs_id,
+                    )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2349,6 +2312,97 @@ class S3RequestSummaryModel(S3Model):
                                              filter = query,
                                              )
             resource.delete(cascade=True)
+
+# =============================================================================
+class S3RequestNeedsItemsModel(S3Model):
+    """
+        Simple Requests Management System
+        - extended to support Items, but still not using normal Requests
+    """
+
+    names = ("req_organisation_needs_item",
+             )
+
+    def model(self):
+
+        # -----------------------------------------------------------------
+        # Linktable Needs <=> Supply Items
+        #
+        item_id = self.supply_item_id
+        CREATE_ITEM = crud_strings["supply_item"].label_create
+
+        tablename = "req_organisation_needs_item"
+        self.define_table(tablename,
+                          self.organisation_needs_id(empty = False),
+                          item_id(comment = S3PopupLink(c = "supply",
+                                                        f = "item",
+                                                        label = CREATE_ITEM,
+                                                        tooltip = None,
+                                                        vars = {"prefix": "req"},
+                                                        ),
+                                  empty = None,
+                                  widget = None,
+                                  ),
+                          self.req_demand(),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("organisation_needs_id",
+                                                          "item_id",
+                                                          ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class S3RequestNeedsSkillsModel(S3Model):
+    """
+        Simple Requests Management System
+        - extended to support Skills, but still not using normal Requests
+    """
+
+    names = ("req_organisation_needs_skill",
+             )
+
+    def model(self):
+
+        # -----------------------------------------------------------------
+        # Linktable Needs <=> Skills
+        #
+        skill_id = self.hrm_skill_id
+        CREATE_SKILL = crud_strings["hrm_skill"].label_create
+
+        tablename = "req_organisation_needs_skill"
+        self.define_table(tablename,
+                          self.organisation_needs_id(empty = False),
+                          skill_id(comment = S3PopupLink(c = "hrm",
+                                                         f = "skill",
+                                                         label = CREATE_SKILL,
+                                                         tooltip = None,
+                                                         vars = {"prefix": "req"},
+                                                         ),
+                                   empty = None
+                                   ),
+                          self.req_demand(),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary=("organisation_needs_id",
+                                                          "skill_id",
+                                                          ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class S3RequestTaskModel(S3Model):

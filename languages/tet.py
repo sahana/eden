@@ -38,6 +38,7 @@
 'Add Organization to Project': 'Aumenta organizasaun ba projetu',
 'Add Point': 'Aumenta poin',
 'Add Reference Document': 'Aumenta referensia dokumentu',
+'Add Resource': 'Aumenta rekursus',
 'Add Staff Member to Project': 'Hatama membru staf sira ba projeitu',
 'Add Theme to Project': 'Aumenta titlu ba projetu',
 'Add Volunteer to Project': 'Hatama voluntatariu ba projeitu',

@@ -341,6 +341,7 @@
 'Add Request Detail': '新增要求詳細資料',
 'Add Request Item': '新增要求項目',
 'Add Request': '新增要求',
+'Add Resource': '新增資源',
 'Add Response': '新增回應',
 'Add School District': '新增學校特區',
 'Add School Report': '新增學校報告',

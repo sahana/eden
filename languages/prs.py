@@ -225,6 +225,7 @@
 'Add Profile Configuration': 'تنظیمات پروفایل را اضافه نمایید ',
 'Add Profile Configuration for this Layer': 'تنظیمات پروفایل را برای این لایه اضافه نمایید',
 'Add Project': 'پروژه را اضافه نمایید',
+'Add Resource': 'منبع را اضافه نمایید',
 'Add Role': 'نقش را اضافه نمایید',
 'Add Room': 'اتاق را اضافه نمایید',
 'Add saved search': 'جستجوی ذخیره شده را اضافه نمایید',
