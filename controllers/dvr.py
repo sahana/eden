@@ -34,6 +34,8 @@ def person():
         resource = r.resource
         resource.add_filter(FS("dvr_case.id") != None)
 
+        CASES = T("Cases")
+
         # Filters to split case list
         if not r.record:
             get_vars = r.get_vars
@@ -42,6 +44,7 @@ def person():
             archived = get_vars.get("archived")
             if archived == "1":
                 archived = True
+                CASES = T("Archived Cases")
                 query = FS("dvr_case.archived") == True
             else:
                 archived = False
@@ -53,9 +56,11 @@ def person():
             closed = get_vars.get("closed")
             get_status_opts = s3db.dvr_case_status_filter_opts
             if closed == "1":
+                CASES = T("Closed Cases")
                 query &= FS("dvr_case.status_id$is_closed") == True
                 status_opts = lambda: get_status_opts(closed=True)
             elif closed == "0":
+                CASES = T("Current Cases")
                 query &= (FS("dvr_case.status_id$is_closed") == False) | \
                          (FS("dvr_case.status_id$is_closed") == None)
                 status_opts = lambda: get_status_opts(closed=False)
@@ -96,7 +101,7 @@ def person():
         if r.interactive:
 
             # Adapt CRUD strings to context
-            CASES = T("Archived Cases") if archived else T("Cases")
+
             s3.crud_strings["pr_person"] = Storage(
                 label_create = T("Create Case"),
                 title_display = T("Case Details"),
