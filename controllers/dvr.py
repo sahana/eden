@@ -49,12 +49,18 @@ def person():
                         (FS("dvr_case.archived") == None)
 
             # Filter to open/closed cases
+            # (also filtering status filter opts)
             closed = get_vars.get("closed")
+            get_status_opts = s3db.dvr_case_status_filter_opts
             if closed == "1":
                 query &= FS("dvr_case.status_id$is_closed") == True
+                status_opts = lambda: get_status_opts(closed=True)
             elif closed == "0":
                 query &= (FS("dvr_case.status_id$is_closed") == False) | \
                          (FS("dvr_case.status_id$is_closed") == None)
+                status_opts = lambda: get_status_opts(closed=False)
+            else:
+                status_opts = get_status_opts
 
             resource.add_filter(query)
         else:
@@ -183,7 +189,7 @@ def person():
                                     cols = 3,
                                     default = default_status,
                                     #label = T("Case Status"),
-                                    options = s3db.dvr_case_status_filter_opts,
+                                    options = status_opts,
                                     sort = False,
                                     ),
                     S3OptionsFilter("person_details.nationality",

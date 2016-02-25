@@ -1761,7 +1761,7 @@ def dvr_case_default_status():
     return default
 
 # =============================================================================
-def dvr_case_status_filter_opts():
+def dvr_case_status_filter_opts(closed=None):
     """
         Get filter options for case status, ordered by workflow position
 
@@ -1772,6 +1772,11 @@ def dvr_case_status_filter_opts():
 
     table = current.s3db.dvr_case_status
     query = (table.deleted != True)
+    if closed is not None:
+        if closed:
+            query &= (table.is_closed == True)
+        else:
+            query &= ((table.is_closed == False) | (table.is_closed == None))
     rows = current.db(query).select(table.id,
                                     table.name,
                                     orderby = "workflow_position",
