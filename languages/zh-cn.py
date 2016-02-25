@@ -233,6 +233,7 @@
 'Add Reference Document': '添加引用文件',
 'Add Report': '添加报告',
 'Add Request': '新增请求',
+'Add Resource': '添加资源',
 'Add Section': '添加部分',
 'Add Setting': '添加设置',
 'Add Skill Equivalence': '添加技能等',

@@ -100,6 +100,7 @@
 'Add Region': 'اضافة منطقة',
 'Add Report': 'اضافة تقرير',
 'Add Request': 'أضف طلبا',
+'Add Resource': 'أضف موردا',
 'Add Skill': 'أضافة مهارة جديدة',
 'Add Skill Equivalence': 'أضف مهارة معادلة',
 'Add Solution': 'إضافة الحل',

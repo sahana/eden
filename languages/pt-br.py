@@ -246,6 +246,7 @@
 'Add Reference Document': 'Incluir documento de referência',
 'Add Report': 'Incluir Relatório',
 'Add Request': 'Incluir Pedido',
+'Add Resource': 'Incluir Recurso',
 'Add Section': 'Incluir Secção',
 'Add Setting': 'Adicionar Definição',
 'Add Skill Equivalence': 'Incluir equivalência de habilidades',

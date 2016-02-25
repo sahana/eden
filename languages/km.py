@@ -217,6 +217,7 @@
 'Add Profile Configuration': 'បន្ថែម​ការ​កំណត់​រចនាសម្ព័ន្ធ​ទម្រង់',
 'Add Record': 'បន្ថែម​កំណត់ត្រា',
 'Add Region': 'បន្ថែម​តំបន់',
+'Add Resource': 'បន្ថែម​ធនធាន',
 'Add Response Summary': 'បន្ថែមការសង្ខេប​អំពី​ចម្លើយ​តប',
 'Add Sector': 'បន្ថែម​ផ្នែក',
 'Add Sector to Organization': 'បន្ថែមផ្នែកទៅ​អង្គការ',

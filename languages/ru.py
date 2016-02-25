@@ -234,6 +234,7 @@
 'Add Reference Document': 'Добавить ссылку Документа',
 'Add Report': 'Добавить отчет',
 'Add Request': 'требование ADD',
+'Add Resource': 'Добавление ресурса',
 'Add Section': 'Добавить раздел',
 'Add Setting': 'Добавить параметр',
 'Add Skill Equivalence': 'Добавить Навык Equivalence',

@@ -225,6 +225,7 @@
 'Add Profile Configuration': 'اضافه کړی د برخی تنظیمات',
 'Add Profile Configuration for this Layer': 'اضافه کړی د برخی تنظیمات دی پاڼی ته',
 'Add Project': 'اضافه کړی پروژه ',
+'Add Resource': 'اضافه کړی منبع',
 'Add Response Summary': 'اضافه کړی د خلاصه د ځواب',
 'Add Role': 'اضافه کړی وظیفه',
 'Add Room': 'اضافه کړی کوټه',

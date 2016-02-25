@@ -180,6 +180,7 @@
 'Add Reference Document': 'Adicionar Documento de Referência',
 'Add Report': 'Adicionar Relatório',
 'Add Request': 'Adicionar Pedido',
+'Add Resource': 'Adicionar Recurso',
 'Add Section': 'Adicionar Secção',
 'Add Solution': 'Adicionar Solução',
 'Add Staff Type': 'Adicionar Tipo de Staff',

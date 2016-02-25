@@ -232,6 +232,7 @@
 'Add Reference Document': '참조 문서 추가',
 'Add Report': '보고서 추가',
 'Add Request': '요청 추가',
+'Add Resource': '자원 추가',
 'Add Section': '섹션 추가',
 'Add Setting': '설정 추가',
 'Add Skill Equivalence': '기술 반복기에 추가',

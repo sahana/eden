@@ -12,12 +12,8 @@ from gluon.storage import Storage
 
 def config(settings):
     """
-        Template settings: 'Skeleton' designed to be copied to quickly create
-                           custom templates
-
-        All settings which are to configure a specific template are located
-        here. Deployers should ideally not need to edit any other files outside
-        of their template folder.
+        Fiji Council of Social Services
+        http://www.piango.org/PIANGO/NLU/NLUs/fiji.html
     """
 
     T = current.T
@@ -27,7 +23,7 @@ def config(settings):
 
     # PrePopulate data
     #settings.base.prepopulate = ("skeleton", "default/users")
-    settings.base.prepopulate += ("skeleton", "default/users")
+    settings.base.prepopulate += ("FCOSS", "default/users")
 
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "skeleton"
@@ -47,7 +43,7 @@ def config(settings):
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
     # e.g. Activities filtered to those of parent Project
-    #settings.gis.countries = ("US",)
+    settings.gis.countries = ("FJ",)
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
     # Uncomment to Disable the Postcode selector in the LocationSelector
@@ -122,6 +118,12 @@ def config(settings):
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
     #
     #settings.security.policy = 7 # Organisation-ACLs
+
+    # -------------------------------------------------------------------------
+    # Orgs
+    settings.org.offices_tab = False
+    settings.org.needs_tab = True
+    settings.org.resources_tab = True
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -244,12 +246,12 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10,
         #)),
-        #("req", Storage(
-        #    name_nice = T("Requests"),
-        #    #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
+        ("req", Storage(
+            name_nice = T("Requests"),
+            #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+            restricted = True,
+            module_type = 10,
+        )),
         #("project", Storage(
         #    name_nice = T("Projects"),
         #    #description = "Tracking of Projects, Activities and Tasks",
@@ -285,12 +287,12 @@ def config(settings):
         #   restricted = True,
         #   module_type = 10,
         #)),
-        #("stats", Storage(
-        #    name_nice = T("Statistics"),
-        #    #description = "Manages statistics",
-        #    restricted = True,
-        #    module_type = None,
-        #)),
+        ("stats", Storage(
+            name_nice = T("Statistics"),
+            #description = "Manages statistics",
+            restricted = True,
+            module_type = None,
+        )),
     ])
 
 # END =========================================================================

@@ -248,6 +248,7 @@
 'Add Reference Document': 'Referenzdokument hinzufügen',
 'Add Report': 'Bericht hinzufügen',
 'Add Request': 'Anfrage hinzufügen',
+'Add Resource': 'Ressource hinzufügen',
 'Add Section': 'Abschnitt hinzufügen',
 'Add Setting': 'Einstellung hinzufügen',
 'Add Skill': 'Fähigkeit hinzufügen',

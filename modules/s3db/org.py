@@ -2077,7 +2077,7 @@ class S3OrganisationResourceModel(S3Model):
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Resource"),
+            label_create = T("Add Resource"),
             title_display = T("Resource Details"),
             title_list = T("Resource Inventory"),
             title_update = T("Edit Resource"),
@@ -5914,6 +5914,11 @@ def org_rheader(r, tabs=[]):
         if not tabs:
             skip_branches = False
 
+            if settings.get_org_offices_tab():
+                offices = (T("Offices"), "office")
+            else:
+                offices = None
+
             # If a filter is being applied to the Organisations, amend the tabs accordingly
             type_filter = current.request.get_vars.get("organisation_type.name",
                                                        None)
@@ -5921,22 +5926,27 @@ def org_rheader(r, tabs=[]):
                 if type_filter == "Supplier":
                     skip_branches = True
                     tabs = [(T("Basic Details"), None, {"native": 1}),
-                            (T("Offices"), "office"),
+                            offices,
                             (T("Warehouses"), "warehouse"),
                             (T("Contacts"), "human_resource"),
                             ]
                 elif type_filter == "Academic,Bilateral,Government,Intergovernmental,NGO,UN agency":
                     tabs = [(T("Basic Details"), None, {"native": 1}),
-                            (T("Offices"), "office"),
+                            offices,
                             (T("Warehouses"), "warehouse"),
                             (T("Contacts"), "human_resource"),
                             (T("Projects"), "project"),
                             ]
             else:
+                if settings.get_org_facilities_tab():
+                    facilities =  (T("Facilities"), "facility")
+                else:
+                    facilities = None
+
                 tabs = [(T("Basic Details"), None),
-                        (T("Offices"), "office"),
+                        offices,
                         (T("Warehouses"), "warehouse"),
-                        (T("Facilities"), "facility"),
+                        facilities,
                         (T("Staff & Volunteers"), "human_resource"),
                         (T("Assets"), "asset"),
                         (T("Projects"), "project"),
@@ -5947,6 +5957,8 @@ def org_rheader(r, tabs=[]):
                     append_tab((T("Tags"), "tag"))
                 if settings.get_org_resources_tab():
                     tabs.insert(-1, (T("Resources"), "resource"))
+                if settings.get_org_needs_tab():
+                    tabs.insert(-1, (T("Needs"), "needs"))
                 if settings.get_org_service_locations():
                     tabs.insert(-1, (T("Service Locations"), "service_location"))
 
@@ -6030,14 +6042,14 @@ def org_rheader(r, tabs=[]):
             if permitted("update", tablename, r.id) and \
                permitted("create", "hrm_human_resource_site"):
                 append_tab((T("Assign %(staff)s") % dict(staff=STAFF), "assign"))
-        if settings.get_req_summary():
-            append_tab((T("Needs"), "site_needs"))
-        if settings.has_module("asset"):
-            append_tab((T("Assets"), "asset"))
         if settings.has_module("inv"):
             tabs = tabs + s3db.inv_tabs(r)
-        if settings.has_module("req"):
+        if settings.get_org_needs_tab():
+            append_tab((T("Needs"), "site_needs"))
+        elif settings.has_module("req"):
             tabs = tabs + s3db.req_tabs(r)
+        if settings.has_module("asset"):
+            append_tab((T("Assets"), "asset"))
 
         tabs.extend(((T("Attachments"), "document"),
                      (T("User Roles"), "roles"),
