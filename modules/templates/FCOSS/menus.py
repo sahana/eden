@@ -48,6 +48,7 @@ class S3MainMenu(default.S3MainMenu):
             homepage("gis"),
             M("Organizations", c="org", f="organisation", m="summary")(),
             M("Resources", c="org", f="resource", m="summary")(),
+            M("Volunteers", c="vol", f="volunteer", m="summary")(),
             M("Needs", c="req", f="organisation_needs")(),
             M("Projects", c="project", f="project", m="summary")(),
             M("Incident Reports", c="event", f="incident_report")(),
