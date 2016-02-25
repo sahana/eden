@@ -4953,7 +4953,7 @@ class S3ResourceData(object):
             ids = []
             totalrows = 0
 
-        else:
+        elif not groupby:
             if efilter or vfilter:
 
                 # Filter by virtual fields
