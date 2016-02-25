@@ -252,12 +252,12 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        #("project", Storage(
-        #    name_nice = T("Projects"),
-        #    #description = "Tracking of Projects, Activities and Tasks",
-        #    restricted = True,
-        #    module_type = 2
-        #)),
+        ("project", Storage(
+            name_nice = T("Projects"),
+            #description = "Tracking of Projects, Activities and Tasks",
+            restricted = True,
+            module_type = 2
+        )),
         #("cr", Storage(
         #    name_nice = T("Shelters"),
         #    #description = "Tracks the location, capacity and breakdown of victims in Shelters",
@@ -276,12 +276,12 @@ def config(settings):
         #   restricted = True,
         #   module_type = 10,
         #)),
-        #("event", Storage(
-        #    name_nice = T("Events"),
-        #    #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
+        ("event", Storage(
+            name_nice = T("Events"),
+            #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
+            restricted = True,
+            module_type = 10,
+        )),
         #("transport", Storage(
         #   name_nice = T("Transport"),
         #   restricted = True,

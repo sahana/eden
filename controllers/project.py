@@ -73,12 +73,13 @@ def project():
                 r.resource.add_component_filter("human_resource", query)
 
         if r.interactive:
-            htable = s3db.hrm_human_resource
-            htable.person_id.comment = DIV(_class="tooltip",
-                                           _title="%s|%s" % (T("Person"),
-                                                             T("Select the person assigned to this role for this project."),
-                                                             )
-                                           )
+            htable = s3db.table("hrm_human_resource")
+            if htable:
+                htable.person_id.comment = DIV(_class="tooltip",
+                                               _title="%s|%s" % (T("Person"),
+                                                                 T("Select the person assigned to this role for this project."),
+                                                                 )
+                                               )
 
             if not component or component_name == "activity":
                 # Filter Themes/Activity Types based on Sector
