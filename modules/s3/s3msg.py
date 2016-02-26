@@ -1949,7 +1949,7 @@ class S3Msg(object):
             else:
                 location_id = None
 
-            title = entry.title
+            title = entry.get("title")
 
             content = entry.get("content", None)
             if content:
@@ -2027,7 +2027,7 @@ class S3Msg(object):
 
             else:
                 _id = minsert(channel_id = channel_id,
-                              title = entry.title,
+                              title = title,
                               from_address = link,
                               body = content,
                               author = entry.get("author", None),

@@ -110,7 +110,7 @@ class S3Parsing(object):
             Authenticate a login request
         """
 
-        if not message:
+        if not message or not message.body:
             return None, None
 
         words = message.body.split(" ")
