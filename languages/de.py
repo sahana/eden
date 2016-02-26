@@ -344,6 +344,7 @@
 'Airspace Closure': 'Luftraumsperrung',
 'Alcohol': 'Alkohol',
 'All Activities': 'Alle Aktivitäten',
+'All Cases': 'Alle Fälle',
 'All Inbound & Outbound Messages are stored here': 'Alle eingehenden und abgehenden Nachrichten werden hier gespeichert',
 'All Resources': 'Alle Ressourcen',
 'All Tasks': 'Alle Aufgaben',

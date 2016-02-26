@@ -403,6 +403,17 @@ def config(settings):
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #
+    def customise_dvr_home():
+        """ Redirect dvr/index to dvr/person?closed=0 """
+
+        from gluon import URL
+        from s3 import s3_redirect_default
+
+        s3_redirect_default(URL(f="person", vars={"closed": "0"}))
+
+    settings.customise_dvr_home = customise_dvr_home
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         s3db = current.s3db

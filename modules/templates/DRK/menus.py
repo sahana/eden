@@ -163,11 +163,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
         ADMIN = current.auth.get_system_roles().ADMIN
 
         return M(c="dvr")(
-                    M("Cases", c=("dvr", "pr"), f="person")(
+                    M("Current Cases", c=("dvr", "pr"), f="person",
+                      vars = {"closed": "0"})(
                         M("Create", m="create"),
-                        #M("Inactive Cases",
-                        # vars = {"dvr_case.status_id$code": "STATUS8"},
-                        # ),
+                        #M("All Cases", vars = {}),
                         ),
                     M("Reports", link=False)(
                         M("Check-in overdue", c=("dvr", "pr"), f="person",
@@ -188,6 +187,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Allowances", f="allowance")(
                         ),
                     M("Archive", link=False)(
+                        M("Closed Cases", f="person",
+                          vars={"closed": "1"},
+                          ),
                         M("Invalid Cases", f="person",
                           vars={"archived": "1"},
                           ),

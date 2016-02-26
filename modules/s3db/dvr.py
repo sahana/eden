@@ -1867,7 +1867,7 @@ class dvr_ManageAppointments(S3Method):
 
             # List fields
             list_fields = ["id",
-                           (T("ID"), "person_id$label"),
+                           (T("ID"), "person_id$pe_label"),
                            "person_id",
                            "type_id",
                            "date",
