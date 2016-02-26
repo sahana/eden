@@ -43,6 +43,14 @@ def config(settings):
     # GeoNames username
     settings.gis.geonames_username = "eden_test"
 
+    # Restrict the Location Selector to just certain countries
+    # NB This can also be over-ridden for specific contexts later
+    # e.g. Activities filtered to those of parent Project
+    #settings.gis.countries = ("MM",)
+
+    # Default timezone for users
+    #settings.L10n.utc_offset = "+0700"
+
     # =========================================================================
     # System Settings
     # -------------------------------------------------------------------------
