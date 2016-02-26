@@ -121,7 +121,7 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Orgs
-    settings.org.offices_tab = False
+    #settings.org.offices_tab = False
     settings.org.needs_tab = True
     settings.org.resources_tab = True
 

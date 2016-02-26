@@ -92,11 +92,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Import", m="import")
                     ),
-                    #M("Offices", f="office")(
-                    #    M("Create", m="create"),
-                    #    M("Map", m="map"),
-                    #    M("Import", m="import")
-                    #),
+                    M("Offices", f="office")(
+                        M("Create", m="create"),
+                        M("Map", m="map"),
+                        M("Import", m="import")
+                    ),
                     M("Resources", f="resource", m="summary",
                       #check=stats
                       )(
