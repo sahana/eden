@@ -70,6 +70,7 @@ def person():
             resource.add_filter(query)
         else:
             archived = False
+            status_opts = s3db.dvr_case_status_filter_opts
 
         # Should not be able to delete records in this view
         resource.configure(deletable = False)

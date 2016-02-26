@@ -881,6 +881,7 @@ def config(settings):
                         # Extra list_fields for XLS export
                         atypes = {"GU": None,
                                   "X-Ray": None,
+                                  "Transfer": None,
                                   }
                         attable = s3db.dvr_case_appointment_type
 
@@ -897,13 +898,19 @@ def config(settings):
                                             dvr_case_appointment = (
                                                 {"name": "gu",
                                                  "joinby": "person_id",
-                                                 "filterby": {"type_id": (atypes["GU"],),
+                                                 "filterby": {"type_id": atypes["GU"],
                                                               "status": COMPLETED,
                                                               },
                                                  },
                                                 {"name": "xray",
                                                  "joinby": "person_id",
-                                                 "filterby": {"type_id": (atypes["X-Ray"],),
+                                                 "filterby": {"type_id": atypes["X-Ray"],
+                                                              "status": COMPLETED,
+                                                              }
+                                                 },
+                                                {"name": "transfer",
+                                                 "joinby": "person_id",
+                                                 "filterby": {"type_id": atypes["Transfer"],
                                                               "status": COMPLETED,
                                                               }
                                                  },
@@ -914,6 +921,8 @@ def config(settings):
                                         (T("GU"), "gu.date"),
                                         # Date of the X-Ray (case appointments)
                                         (T("X-Ray"), "xray.date"),
+                                        # Date of the Transfer (case appointments)
+                                        (T("Transfer"), "transfer.date"),
                                         # Housing Unit (done in interactive now as well)
                                         #"shelter_registration.shelter_unit_id",
                                         # Last Check-in (if checked-in)
