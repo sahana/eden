@@ -892,6 +892,7 @@ def config(settings):
                         # Extra list_fields for XLS export
                         atypes = {"GU": None,
                                   "X-Ray": None,
+                                  "Reported Transferable": None,
                                   "Transfer": None,
                                   }
                         attable = s3db.dvr_case_appointment_type
@@ -919,6 +920,12 @@ def config(settings):
                                                               "status": COMPLETED,
                                                               }
                                                  },
+                                                {"name": "transferable",
+                                                 "joinby": "person_id",
+                                                 "filterby": {"type_id": atypes["Reported Transferable"],
+                                                              "status": COMPLETED,
+                                                              }
+                                                 },
                                                 {"name": "transfer",
                                                  "joinby": "person_id",
                                                  "filterby": {"type_id": atypes["Transfer"],
@@ -932,6 +939,8 @@ def config(settings):
                                         (T("GU"), "gu.date"),
                                         # Date of the X-Ray (case appointments)
                                         (T("X-Ray"), "xray.date"),
+                                        # Date when Reported Transferable (case appointments)
+                                        (T("Reported Transferable"), "transferable.date"),
                                         # Date of the Transfer (case appointments)
                                         (T("Transfer"), "transfer.date"),
                                         # Housing Unit (done in interactive now as well)

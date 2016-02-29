@@ -3434,6 +3434,7 @@
 'Report': 'Bericht',
 'Report To': 'Melden bei',
 'Reported To': 'Gemeldet bei',
+'Reported Transferable': 'Transferierbar gemeldet',
 'Reporter Name': 'Name des Meldenden',
 'Reporter': 'Meldender',
 'Reporting on the projects in the region': 'Berichterstattung über die Projekte in der Region',
