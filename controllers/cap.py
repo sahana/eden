@@ -579,7 +579,7 @@ def alert():
                     s3.crud.submit_style = "hide"
                     s3.crud.custom_submit = (("edit_info",
                                               T("Save and edit information"),
-                                              "",
+                                              "button small",
                                               ),)
 
             elif r.component_name == "info":
@@ -976,7 +976,7 @@ def area():
         if r.representation == "json":
             list_fields = ["id",
                            "name",
-                           "event_type_id$name",
+                           "event_type_id",
                            "priority",
                            "altitude",
                            "ceiling",

@@ -319,14 +319,59 @@ def config(settings):
         from gluon.html import URL, A
         from s3 import S3CRUD
         s3 = current.response.s3
+        s3db = current.s3db
         auth = current.auth
+        request = current.request
+        stable = s3db.pr_subscription
         has_role = auth.s3_has_role
-        # Filter admin based subscription based on roles
-        if not (has_role("ALERT_EDITOR") or \
-                has_role("ALERT_APPROVER")):
-            s3.filter = (current.s3db.pr_subscription.owned_by_user == auth.user.id)
+
+        list_fields = [(T("Filters"), "filter_id"),
+                       (T("Methods"), "method"),
+                       ]
+
+        if request.get_vars["option"] == "manage_recipient" and \
+           (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")):
+                # Admin based subscription
+                s3.filter = (stable.deleted != True) & \
+                            (stable.owned_by_group != None)
+                list_fields.insert(0, (T("People/Groups"), "pe_id"))
+                s3.crud_strings["pr_subscription"].title_list = T("Admin Controlled Subscriptions")
         else:
-            s3.filter = (current.s3db.pr_subscription.owned_by_group != None)
+            # Self Subscription
+            s3.filter = (stable.deleted != True) & \
+                        (stable.owned_by_group == None) & \
+                        (stable.owned_by_user == auth.user.id)
+            s3.crud_strings["pr_subscription"].title_list = T("Your Subscriptions")
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            from s3 import S3Represent
+            table = r.table
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+            MSG_CONTACT_OPTS = {"EMAIL": T("EMAIL"),
+                                "SMS"  : T("SMS"),
+                                "FTP"  : T("FTP"),
+                                }
+            table.method.represent = S3Represent(options=MSG_CONTACT_OPTS,
+                                                 multiple=True,
+                                                 ),
+            if r.representation == "html":
+                table.filter_id.represent = S3Represent(\
+                                    options=pr_subscription_filter_row_options())
+                s3db.configure("pr_subscription",
+                               list_fields = list_fields,
+                               list_orderby = "pe_id desc",
+                               orderby = "pr_subscription.pe_id desc",
+                               )
+
+            return result
+        s3.prep = custom_prep
+
         # Custom postp
         standard_postp = s3.postp
         def custom_postp(r, output):
@@ -336,19 +381,46 @@ def config(settings):
 
             if r.interactive and isinstance(output, dict):
                 # Modify Open Button
-                url = URL(c="default", f="index", args=["subscriptions"],
-                          vars={"subscription_id": "[id]"})
-                if not (has_role("ALERT_EDITOR") or \
-                        has_role("ALERT_APPROVER")):
-                    S3CRUD.action_buttons(r, read_url=url)
+                if request.get_vars["option"] == "manage_recipient" and \
+                   (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")):
+                    # Admin based subscription
+                    S3CRUD.action_buttons(r,
+                                          update_url=URL(c="default", f="index",
+                                                         args=["subscriptions"],
+                                                         vars={"option": "manage_recipient",
+                                                               "subscription_id": "[id]"}
+                                                         ),
+                                          delete_url=URL(c="pr", f="subscription",
+                                                         args=["[id]", "delete"],
+                                                         vars={"option": "manage_recipient"}
+                                                         )
+                                          )
                 else:
-                    S3CRUD.action_buttons(r, update_url=url)
-                # Modify Add Button
+                    # self subscription
+                    S3CRUD.action_buttons(r, update_url=URL(c="default", f="index",
+                                                            args=["subscriptions"],
+                                                            vars={"subscription_id": "[id]"}
+                                                            )
+                                          )
+
                 if "form" in output:
-                    add_btn = A(T("Create Subscription"),
-                                _class="action-btn",
-                                _href=URL(c="default", f="index", args=["subscriptions"])
-                                )
+                    # Modify Add Button
+                    if request.get_vars["option"] == "manage_recipient" and \
+                       (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")):
+                        # Admin based subscription
+                        add_btn = A(T("Create Subscription"),
+                                    _class="action-btn",
+                                    _href=URL(c="default", f="index",
+                                              args=["subscriptions"],
+                                              vars={"option": "manage_recipient"}
+                                              )
+                                    )
+                    else:
+                        # self subscription
+                        add_btn = A(T("Create Subscription"),
+                                    _class="action-btn",
+                                    _href=URL(c="default", f="index", args=["subscriptions"])
+                                    )
                     output["showadd_btn"] = add_btn
 
             return output
@@ -463,5 +535,83 @@ def config(settings):
             module_type = 10,
         )),
     ])
+
+    # -------------------------------------------------------------------------
+    # Functions which are local to this Template
+    # -------------------------------------------------------------------------
+    def pr_subscription_filter_row_options():
+        """
+            Build the options for the pr_subscription filter datatable from query
+            @ToDo complete this for locations
+        """
+
+        db = current.db
+        s3db = current.s3db
+        auth = current.auth
+        has_role = auth.s3_has_role
+        stable = s3db.pr_subscription
+        ftable = s3db.pr_filter
+
+        if current.request.get_vars["option"] == "manage_recipient" and \
+           (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")):
+                # Admin based subscription
+                query = (stable.deleted != True) & \
+                        (stable.owned_by_group != None)
+        else:
+            # Self Subscription
+            query = (stable.deleted != True) & \
+                    (stable.owned_by_group == None) & \
+                    (stable.owned_by_user == auth.user.id)
+
+        left = ftable.on(ftable.id == stable.filter_id)
+        rows = db(query).select(stable.filter_id,
+                                ftable.query,
+                                left=left)
+        if len(rows) > 0:
+            from s3 import s3_str
+            T = current.T
+            etable = s3db.event_event_type
+            ptable = s3db.cap_warning_priority
+            filter_options = {}
+            for row in rows:
+                event_type_id = []
+                priorities_id = []
+                languages = []
+
+                filters = json.loads(row.pr_filter.query)
+                filters = [filter for filter in filters if filter[1] is not None]
+                if len(filters) > 0:
+                    for filter in filters:
+                        # Get the prefix
+                        prefix = s3_str(filter[0]).strip("[]")
+                        # Get the value for prefix
+                        values = filter[1].split(",")
+                        if prefix == "event_type_id__belongs":
+                            event_type_id = int(s3_str(values[0]))
+                            row_ = db(etable.id==event_type_id).select(\
+                                                        etable.name,
+                                                        limitby=(0, 1)).first()
+                            event_type = row_.name
+                        elif prefix == "priority__belongs":
+                            priorities_id = [int(s3_str(value)) for value in values]
+                            rows_ = db(ptable.id.belongs(priorities_id)).select(ptable.name)
+                            priorities = [row_.name for row_ in rows_]
+                        elif prefix == "language__belongs":
+                            languages = [s3_str(value) for value in values]
+
+                    display_text = "<b>%s:</b> %s" % (T("Event Type"), event_type)
+                    if len(priorities_id) > 0:
+                        display_text = "%s<br/><b>%s</b>: %s" % (display_text, T("Priorities"), priorities)
+                    else:
+                        display_text = "%s<br/><b>%s</b>" % (display_text, T("Priorities: None"))
+                    if len(languages) > 0:
+                        display_text = "%s<br/><b>%s</b>:%s" % (display_text, T("Languages"), languages)
+                    else:
+                        display_text = "%s<br/><b>%s</b>" % (display_text, T("Languages: None"))
+                    filter_options[row["pr_subscription.filter_id"]] = display_text
+                else:
+                    filter_options[row["pr_subscription.filter_id"]] = T("No filters")
+
+            return filter_options
 
 # END =========================================================================

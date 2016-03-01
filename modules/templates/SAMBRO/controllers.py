@@ -15,7 +15,7 @@ from gluon.html import *
 from gluon.storage import Storage
 
 from s3 import FS, S3CustomController, S3FilterForm, S3DateFilter, S3LocationFilter, S3OptionsFilter
-
+from s3 import s3_str
 THEME = "SAMBRO"
 
 # =============================================================================
@@ -231,6 +231,7 @@ class subscriptions(S3CustomController):
                                    label = T("Event Type"),
                                    options = self._options("event_type_id"),
                                    widget = "multiselect",
+                                   multiple = False,
                                    resource = "cap_info",
                                    _name = "event-filter",
                                    ),
@@ -241,12 +242,12 @@ class subscriptions(S3CustomController):
                                    resource = "cap_info",
                                    _name = "priority-filter",
                                    ),
-                   S3LocationFilter("location_id",
-                                    label = T("Location(s)"),
-                                    resource = "cap_area_location",
-                                    options = self._options("location_id"),
-                                    _name = "location-filter",
-                                    ),
+                   #S3LocationFilter("location_id",
+                   #                 label = T("Location(s)"),
+                   #                 resource = "cap_area_location",
+                   #                 options = self._options("location_id"),
+                   #                 _name = "location-filter",
+                   #                 ),
                    S3OptionsFilter("language",
                                    label = T("Language"),
                                    options = current.deployment_settings.get_cap_languages(),
@@ -256,32 +257,32 @@ class subscriptions(S3CustomController):
                                    ),
                    ]
 
-        if has_role("ALERT_EDITOR") or \
-           has_role("ALERT_APPROVER"):
-            from s3 import S3Represent
-            recipient_filters = [S3OptionsFilter("id",
-                                       label = T("Person"),
-                                       represent = S3Represent(lookup="auth_user",
-                                            fields = ["first_name", "last_name"],
-                                            field_sep = " ",
-                                            ),
-                                       widget = "multiselect",
-                                       resource = "auth_user",
-                                       _name = "person-filter",
-                                       ),
+        if current.request.get_vars["option"] == "manage_recipient" and \
+           (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")):
+                from s3 import S3Represent
+                recipient_filters = [S3OptionsFilter("id",
+                                           label = T("People"),
+                                           represent = S3Represent(lookup="auth_user",
+                                                fields = ["first_name", "last_name"],
+                                                field_sep = " ",
+                                                ),
+                                           widget = "multiselect",
+                                           resource = "auth_user",
+                                           _name = "person-filter",
+                                           ),
+                                     ]
+                group_filters = [S3OptionsFilter("id",
+                                           label = T("Groups"),
+                                           represent = S3Represent(lookup="pr_group",
+                                                                   fields = ["name"],
+                                                                   ),
+                                           widget = "multiselect",
+                                           resource = "pr_group",
+                                           _name = "group-filter",
+                                           ),
                                  ]
-            group_filters = [S3OptionsFilter("id",
-                                       label = T("Group"),
-                                       represent = S3Represent(lookup="pr_group",
-                                                               fields = ["name"],
-                                                               ),
-                                       widget = "multiselect",
-                                       resource = "pr_group",
-                                       _name = "group-filter",
-                                       ),
-                             ]
-            # Title
-            title = T("Manage Recipients")
+                # Title
+                title = T("Manage Recipients")
         else:
             recipient_filters = None
             group_filters = None
@@ -371,6 +372,8 @@ class subscriptions(S3CustomController):
         request = current.request
         response = current.response
         stable = s3db.pr_subscription
+        ftable = s3db.pr_filter
+        group_table = s3db.pr_group
 
         labels = Storage(
             #RESOURCES = T("Subscribe To"),
@@ -473,7 +476,7 @@ class subscriptions(S3CustomController):
 
         methods = [("EMAIL", T("Email")),
                    ("SMS", T("SMS")),
-                   ("Sync", T("FTP")),
+                   ("FTP", T("FTP")),
                    ]
 
         method_options = Storage(name = "method", requires = IS_IN_SET(methods))
@@ -485,10 +488,9 @@ class subscriptions(S3CustomController):
                               _id="method_selector"),
                      ""))
 
-        if not (has_role("ALERT_EDITOR") or \
-                has_role("ALERT_APPROVER")):
-            # Normal User
-            # Sync Row
+        if not (request.get_vars["option"] == "manage_recipient" and \
+           (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER"))):
+            # managing own subscriptions
             properties = subscription["comments"]
             if properties:
                 properties = json.loads(properties)
@@ -565,7 +567,9 @@ class subscriptions(S3CustomController):
 
         # Submit button
         submit_fieldset = FIELDSET(DIV("",
-                                       INPUT(_type="submit", _value="Update Settings"),
+                                       INPUT(_type="submit",
+                                             _value="Update Settings",
+                                             _class="button small"),
                                        _id = "submit__row"))
 
         form.append(submit_fieldset)
@@ -576,14 +580,14 @@ class subscriptions(S3CustomController):
 
         # Script to show/hide the ftp repo row for FTP checkbox on/off
         repository_script = '''
-if($('#method_selector option[value=Sync]').is(':selected')){
+if($('#method_selector option[value=FTP]').is(':selected')){
     $('#sync_task_repository_id__row').show();
 } else {
     $('#sync_task_repository_id__row').hide();
 }
 
 $('#method_selector').change(function(){
-    if($(this).val().indexOf('Sync') != -1){
+    if($(this).val().indexOf('FTP') != -1){
         $('#sync_task_repository_id__row').show();
     } else {
         $('#sync_task_repository_id__row').hide();
@@ -626,240 +630,321 @@ $('#method_selector').change(function(){
             # Recipient IDs
             user_ids = formvars["person-filter"]
 
-            update_admin_subscription = self._update_admin_subscription
+            from collections import Counter
+
+            get_event_type_priorities = self._get_event_type_priorities
             bulk_user_pe_id = auth.s3_bulk_user_pe_id
+            pr_get_group_pe_id = s3db.pr_get_group_pe_id
             pr_group_table = s3db.pr_group
             define_resource = s3db.resource
             base_query = (stable.deleted != True)
             if user_ids is not None:
                 # Admin Subscriptions
+                # @ToDo: check super-set and/or sub-set for priorities and locations
+                # of same event_type
+                update_admin_subscription = self._update_admin_subscription
                 if group_ids is not None and \
                    len(group_ids) > 0 and \
                    len(user_ids) > 0:
                     # Both Individuals & Groups selected
-                    pe_ids = bulk_user_pe_id(user_ids) # Current Selection
+                    user_pe_ids = bulk_user_pe_id(user_ids) # Current Selection
+                    group_pe_ids = pr_get_group_pe_id(group_ids)
+                    event_type_id, priorities = \
+                        get_event_type_priorities(subscription["filters"]) # Current filters
                     subscription_id = request.get_vars.get("subscription_id")
                     if subscription_id:
-                        query = base_query & (stable.id == subscription_id)
+                        query = base_query & \
+                                (stable.id == subscription_id) & \
+                                (stable.filter_id == ftable.id)
                         row = db(query).select(stable.pe_id,
                                                stable.filter_id,
                                                stable.comments,
+                                               ftable.query,
                                                limitby=(0, 1)).first()
-                        pe_id = row.pe_id
-                        comments = json.loads(row.comments)
-                        if "pr_group.id" in comments and \
-                           str(comments["pr_group.id"]) in group_ids:
-                            # Update
-                            success_subscription = update_admin_subscription(\
-                                                subscription,
-                                                pe_id,
-                                                ae_id,
-                                                group_id=comments["pr_group.id"],
-                                                filter_id=row.filter_id,
-                                                subscription_id=subscription_id,
-                                                )
-                            group_ids.remove(str(comments["pr_group.id"]))
-                        elif pe_id in pe_ids.values():
-                            user_id = [key for key, value in pe_ids.iteritems()
-                                       if value == pe_id][0]
-                            # Update
-                            success_subscription = update_admin_subscription(\
-                                                subscription,
-                                                pe_id,
-                                                ae_id,
-                                                user_id=int(user_id),
-                                                filter_id=row.filter_id,
-                                                subscription_id=subscription_id,
-                                                )
-                            del pe_ids[user_id]
+                        pe_id = row.pr_subscription.pe_id
+                        if pe_id in group_pe_ids.keys():
+                            event_type_id_s, priorities_s = \
+                                get_event_type_priorities(row.pr_filter.query)
+                            if event_type_id_s == event_type_id and \
+                               Counter(priorities_s) == Counter(priorities):
+                                # Update
+                                comments = json.loads(row.pr_subscription.comments)
+                                success_subscription = update_admin_subscription(\
+                                        subscription,
+                                        pe_id,
+                                        ae_id,
+                                        group_id=comments["pr_group.id"],
+                                        filter_id=row.pr_subscription.filter_id,
+                                        subscription_id=subscription_id,
+                                        )
+                        elif pe_id in user_pe_ids.values():
+                            event_type_id_s, priorities_s = \
+                                get_event_type_priorities(row.pr_filter.query)
+                            if event_type_id_s == event_type_id and \
+                               Counter(priorities_s) == Counter(priorities):
+                                # Update
+                                user_id = [key for key, value in pe_ids.iteritems()
+                                           if value == pe_id][0]
+                                success_subscription = update_admin_subscription(\
+                                        subscription,
+                                        pe_id,
+                                        ae_id,
+                                        user_id=int(user_id),
+                                        filter_id=row.pr_subscription.filter_id,
+                                        subscription_id=subscription_id,
+                                        )
                         else:
                             # Removed from subscriptions
                             define_resource("pr_subscription",
                                             id=subscription_id).delete()
                             define_resource("pr_filter",
-                                            id=row.filter_id).delete()
-                    if len(group_ids) > 0:
-                        query = base_query & (stable.owned_by_group != None)
-                        # Get all the rows for the group subscription
-                        rows = db(query).select(stable.comments)
-                        subscribed_group_ids = [int(json.loads(row.comments)["pr_group.id"]) for row in rows
-                                                if "pr_group.id" in json.loads(row.comments)]
-                        for group_id in group_ids:
-                            if int(group_id) in subscribed_group_ids:
-                                comments = json.dumps({"pr_group.id": "%s" % group_id})
-                                row = db(stable.comments == comments).\
-                                                select(stable.id,
-                                                       stable.pe_id,
-                                                       stable.filter_id,
-                                                       limitby=(0, 1)).first()
+                                            id=row.pr_subscription.filter_id).delete()
+                    base_query = base_query & \
+                                 (stable.owned_by_group != None) & \
+                                 (stable.filter_id == ftable.id)
+                    # Groups
+                    for pe_id in group_pe_ids.keys():
+                        group_id = [value for key, value in group_pe_ids.iteritems()
+                                    if key == pe_id][0]
+                        query = base_query & \
+                                (stable.pe_id == pe_id)
+                        rows = db(query).select(stable.id,
+                                                stable.filter_id,
+                                                ftable.query)
+                        if len(rows) > 0:
+                            for row in rows:
+                                event_type_id_s, priorities_s = \
+                                    get_event_type_priorities(row.pr_filter.query)
+                                if event_type_id_s == event_type_id and \
+                                   Counter(priorities_s) == Counter(priorities):
+                                    # Update
+                                    success_subscription = update_admin_subscription(\
+                                        subscription,
+                                        pe_id,
+                                        ae_id,
+                                        group_id=int(group_id),
+                                        filter_id=row.pr_subscription.filter_id,
+                                        subscription_id=row.pr_subscription.id,
+                                        )
+                                    break
+                            else:
+                                # Create
+                                success_subscription = update_admin_subscription(\
+                                                        subscription,
+                                                        pe_id,
+                                                        ae_id,
+                                                        group_id=int(group_id),
+                                                        )
+                        else:
+                            # Create
+                            success_subscription = update_admin_subscription(\
+                                                        subscription,
+                                                        pe_id,
+                                                        ae_id,
+                                                        group_id=int(group_id),
+                                                        )
+                    # People
+                    for pe_id in user_pe_ids.values():
+                        user_id = [key for key, value in user_pe_ids.iteritems()
+                                   if value == pe_id][0]
+                        query = base_query & \
+                                (stable.pe_id == pe_id)
+                        rows = db(query).select(stable.id,
+                                                stable.filter_id,
+                                                ftable.query)
+                        if len(rows) > 0:
+                            for row in rows:
+                                event_type_id_s, priorities_s = \
+                                    get_event_type_priorities(row.pr_filter.query)
+                                if event_type_id_s == event_type_id and \
+                                   Counter(priorities_s) == Counter(priorities):
+                                    # Update
+                                    success_subscription = update_admin_subscription(\
+                                            subscription,
+                                            pe_id,
+                                            ae_id,
+                                            user_id=int(user_id),
+                                            filter_id=row.pr_subscription.filter_id,
+                                            subscription_id=row.pr_subscription.id,
+                                            )
+                                    break
+                            else:
+                                # Create
+                                success_subscription = update_admin_subscription(\
+                                                        subscription,
+                                                        pe_id,
+                                                        ae_id,
+                                                        user_id=int(user_id),
+                                                        )
+                        else:
+                            # Create
+                            success_subscription = update_admin_subscription(\
+                                                            subscription,
+                                                            pe_id,
+                                                            ae_id,
+                                                            user_id=int(user_id),
+                                                            )
+                elif group_ids is not None and len(group_ids) > 0:
+                    # Only groups selected
+                    pe_ids = pr_get_group_pe_id(group_ids)
+                    event_type_id, priorities = \
+                        get_event_type_priorities(subscription["filters"]) # Current filters
+                    subscription_id = request.get_vars.get("subscription_id")
+                    if subscription_id:
+                        query = base_query & \
+                                (stable.id == subscription_id) & \
+                                (stable.filter_id == ftable.id)
+                        row = db(query).select(stable.pe_id,
+                                               stable.filter_id,
+                                               stable.comments,
+                                               ftable.query,
+                                               limitby=(0, 1)).first()
+                        pe_id = row.pr_subscription.pe_id
+                        if pe_id in pe_ids.keys():
+                            event_type_id_s, priorities_s = \
+                                get_event_type_priorities(row.pr_filter.query)
+                            if event_type_id_s == event_type_id and \
+                               Counter(priorities_s) == Counter(priorities):
                                 # Update
+                                comments = json.loads(row.pr_subscription.comments)
                                 success_subscription = update_admin_subscription(\
                                                     subscription,
-                                                    row.pe_id,
+                                                    pe_id,
                                                     ae_id,
-                                                    group_id=group_id,
-                                                    filter_id=row.filter_id,
-                                                    subscription_id=row.id,
+                                                    group_id=comments["pr_group.id"],
+                                                    filter_id=row.pr_subscription.filter_id,
+                                                    subscription_id=subscription_id,
                                                     )
-                            else:
-                                row = db(pr_group_table.id == group_id).\
-                                                select(pr_group_table.pe_id,
-                                                       limitby=(0, 1)).first()
-                                # Create
-                                success_subscription = update_admin_subscription(\
-                                                            subscription,
-                                                            row.pe_id,
-                                                            ae_id,
-                                                            group_id=group_id,
-                                                            )
-
-                    if len(pe_ids.keys()) > 0:
-                        query_ = base_query & (stable.owned_by_group != None)
-                        for pe_id in pe_ids.values():
-                            user_id = [key for key, value in pe_ids.iteritems()
-                                       if value == pe_id][0]
-                            query = query_ & (stable.pe_id == pe_id)
-                            row = db(query).select(stable.id,
-                                                   stable.filter_id,
-                                                   limitby=(0, 1)).first()
-                            if row:
-                                # Update
-                                success_subscription = update_admin_subscription(\
-                                                        subscription,
-                                                        pe_id,
-                                                        ae_id,
-                                                        user_id=int(user_id),
-                                                        filter_id=row.filter_id,
-                                                        subscription_id=row.id,
-                                                        )
-                            else:
-                                # Create record in pr_subscription
-                                success_subscription = update_admin_subscription(\
-                                                            subscription,
-                                                            pe_id,
-                                                            ae_id,
-                                                            user_id=int(user_id),
-                                                            )
-
-                elif group_ids is not None and len(group_ids) > 0:
-                    subscription_id = request.get_vars.get("subscription_id")
-                    if subscription_id:
-                        query = base_query & (stable.id == subscription_id)
-                        row = db(query).select(stable.pe_id,
-                                               stable.filter_id,
-                                               stable.comments,
-                                               limitby=(0, 1)).first()
-                        comments = json.loads(row.comments)
-                        if "pr_group.id" in comments and \
-                           str(comments["pr_group.id"]) in group_ids:
-                            # Update
-                            success_subscription = update_admin_subscription(\
-                                                subscription,
-                                                row.pe_id,
-                                                ae_id,
-                                                group_id=comments["pr_group.id"],
-                                                filter_id=row.filter_id,
-                                                subscription_id=subscription_id,
-                                                )
-                            group_ids.remove(str(comments["pr_group.id"]))
                         else:
                             # Removed from subscriptions
                             define_resource("pr_subscription",
                                             id=subscription_id).delete()
                             define_resource("pr_filter",
-                                            id=row.filter_id).delete()
+                                            id=row.pr_subscription.filter_id).delete()
 
-                    if len(group_ids) > 0:
-                        query = base_query & (stable.owned_by_group != None)
-                        # Get all the rows for the group subscription
-                        rows = db(query).select(stable.comments)
-                        subscribed_group_ids = [int(json.loads(row.comments)["pr_group.id"]) for row in rows
-                                                if "pr_group.id" in json.loads(row.comments)]
-                        for group_id in group_ids:
-                            if int(group_id) in subscribed_group_ids:
-                                comments = json.dumps({"pr_group.id": "%s" % group_id})
-                                row = db(stable.comments == comments).\
-                                                select(stable.id,
-                                                       stable.pe_id,
-                                                       stable.filter_id,
-                                                       limitby=(0, 1)).first()
-                                # Update
-                                success_subscription = update_admin_subscription(\
-                                                        subscription,
-                                                        row.pe_id,
-                                                        ae_id,
-                                                        group_id=group_id,
-                                                        filter_id=row.filter_id,
-                                                        subscription_id=row.id,
-                                                        )
+                    base_query = base_query & \
+                                 (stable.owned_by_group != None) & \
+                                 (stable.filter_id == ftable.id)
+                    for pe_id in pe_ids.keys():
+                        group_id = [value for key, value in pe_ids.iteritems()
+                                    if key == pe_id][0]
+                        query = base_query & \
+                                (stable.pe_id == pe_id)
+                        rows = db(query).select(stable.id,
+                                                stable.filter_id,
+                                                ftable.query)
+                        if len(rows) > 0:
+                            for row in rows:
+                                event_type_id_s, priorities_s = \
+                                    get_event_type_priorities(row.pr_filter.query)
+                                if event_type_id_s == event_type_id and \
+                                   Counter(priorities_s) == Counter(priorities):
+                                    # Update
+                                    success_subscription = update_admin_subscription(\
+                                        subscription,
+                                        pe_id,
+                                        ae_id,
+                                        group_id=int(group_id),
+                                        filter_id=row.pr_subscription.filter_id,
+                                        subscription_id=row.pr_subscription.id,
+                                        )
+                                    break
                             else:
-                                row = db(pr_group_table.id == group_id).\
-                                                select(pr_group_table.pe_id,
-                                                       limitby=(0, 1)).first()
                                 # Create
                                 success_subscription = update_admin_subscription(\
-                                                            subscription,
-                                                            row.pe_id,
-                                                            ae_id,
-                                                            group_id=group_id,
-                                                            )
+                                            subscription,
+                                            pe_id,
+                                            ae_id,
+                                            group_id=int(group_id),
+                                            )
+                        else:
+                            # Create
+                            success_subscription = update_admin_subscription(\
+                                                subscription,
+                                                pe_id,
+                                                ae_id,
+                                                group_id=int(group_id),
+                                                )
                 elif user_ids is not None and len(user_ids) > 0:
+                    # Only users selected
                     pe_ids = bulk_user_pe_id(user_ids) # Current selection
+                    event_type_id, priorities = \
+                        get_event_type_priorities(subscription["filters"]) # Current filters
                     subscription_id = request.get_vars.get("subscription_id")
                     if subscription_id:
-                        query = base_query & (stable.id == subscription_id)
+                        query = base_query & \
+                                (stable.id == subscription_id) & \
+                                (stable.filter_id == ftable.id)
                         row = db(query).select(stable.pe_id,
                                                stable.filter_id,
-                                               stable.comments,
+                                               ftable.query,
                                                limitby=(0, 1)).first()
-                        pe_id = row.pe_id
+                        pe_id = row.pr_subscription.pe_id
                         if pe_id in pe_ids.values():
-                            user_id = [key for key, value in pe_ids.iteritems()
-                                       if value == pe_id][0]
-                            # Update
-                            success_subscription = update_admin_subscription(\
-                                                subscription,
-                                                row.pe_id,
-                                                ae_id,
-                                                user_id=int(user_id),
-                                                filter_id=row.filter_id,
-                                                subscription_id=subscription_id,
-                                                )
-                            del pe_ids[user_id]
+                            event_type_id_s, priorities_s = \
+                                get_event_type_priorities(row.pr_filter.query)
+                            if event_type_id_s == event_type_id and \
+                               Counter(priorities_s) == Counter(priorities):
+                                # Update
+                                user_id = [key for key, value in pe_ids.iteritems()
+                                           if value == pe_id][0]
+                                success_subscription = update_admin_subscription(\
+                                                    subscription,
+                                                    pe_id,
+                                                    ae_id,
+                                                    user_id=int(user_id),
+                                                    filter_id=row.pr_subscription.filter_id,
+                                                    subscription_id=subscription_id,
+                                                    )
                         else:
                             # Removed from subscriptions
                             define_resource("pr_subscription",
                                             id=subscription_id).delete()
                             define_resource("pr_filter",
-                                            id=row.filter_id).delete()
-
-                    if len(pe_ids.keys()) > 0:
-                        base_query &= (stable.owned_by_group != None)
-                        for pe_id in pe_ids.values():
-                            user_id = [key for key, value in pe_ids.iteritems()
-                                       if value == pe_id][0]
-                            query = base_query & (stable.pe_id == pe_id)
-                            row = db(query).select(stable.id,
-                                                   stable.filter_id,
-                                                   limitby=(0, 1)).first()
-                            if row:
-                                # Update
-                                success_subscription = update_admin_subscription(\
-                                                        subscription,
-                                                        pe_id,
-                                                        ae_id,
-                                                        user_id=int(user_id),
-                                                        filter_id=row.filter_id,
-                                                        subscription_id=row.id,
-                                                        )
+                                            id=row.pr_subscription.filter_id).delete()
+                    base_query = base_query & \
+                                 (stable.owned_by_group != None) & \
+                                 (stable.filter_id == ftable.id)
+                    for pe_id in pe_ids.values():
+                        user_id = [key for key, value in pe_ids.iteritems()
+                                   if value == pe_id][0]
+                        query = base_query & \
+                                (stable.pe_id == pe_id)
+                        rows = db(query).select(stable.id,
+                                                stable.filter_id,
+                                                ftable.query)
+                        if len(rows) > 0:
+                            for row in rows:
+                                event_type_id_s, priorities_s = \
+                                    get_event_type_priorities(row.pr_filter.query)
+                                if event_type_id_s == event_type_id and \
+                                   Counter(priorities_s) == Counter(priorities):
+                                    # Update
+                                    success_subscription = update_admin_subscription(\
+                                            subscription,
+                                            pe_id,
+                                            ae_id,
+                                            user_id=int(user_id),
+                                            filter_id=row.pr_subscription.filter_id,
+                                            subscription_id=row.pr_subscription.id,
+                                            )
+                                    break
                             else:
-                                # Insert
+                                # Create
                                 success_subscription = update_admin_subscription(\
                                                             subscription,
                                                             pe_id,
                                                             ae_id,
                                                             user_id=int(user_id),
                                                             )
+                        else:
+                            # Create
+                            success_subscription = update_admin_subscription(\
+                                    subscription,
+                                    pe_id,
+                                    ae_id,
+                                    user_id=int(user_id),
+                                    )
                 else:
                     # Removed from subscription
                     subscription_id = request.get_vars.get("subscription_id")
@@ -871,28 +956,89 @@ $('#method_selector').change(function(){
                                         id=subscription_id).delete()
                         define_resource("pr_filter",
                                         id=row.filter_id).delete()
-                redirect(URL(c="pr", f="subscription"))
+                redirect(URL(c="pr", f="subscription",
+                             vars={"option": "manage_recipient"})
+                         )
             else:
-                # Normal user
-                success_subscription = self._update_subscription(subscription)
+                # managing own subscription
+                # @ToDo: check super-set and/or sub-set for priorities and locations
+                # of same event_type
+                update_subscription = self._update_subscription
+                pe_id = auth_user.pe_id
+                user_id = auth_user.id
+                event_type_id, priorities = \
+                    get_event_type_priorities(subscription["filters"]) # Current filters
+                subscription_id = request.get_vars.get("subscription_id")
+                if subscription_id:
+                    query = base_query & \
+                            (stable.id == subscription_id) & \
+                            (stable.filter_id == ftable.id)
+                    row = db(query).select(stable.filter_id,
+                                           ftable.query,
+                                           limitby=(0, 1)).first()
+                    if row.pr_filter.query == subscription["filters"]:
+                        # Update
+                        success_subscription = update_subscription(\
+                                        subscription,
+                                        pe_id,
+                                        filter_id=row.pr_subscription.filter_id,
+                                        subscription_id=subscription_id,
+                                        )
+                    else:
+                        # Remove
+                        define_resource("pr_subscription",
+                                        id=subscription_id).delete()
+                        define_resource("pr_filter",
+                                        id=row.pr_subscription.filter_id).delete()
+
+                query = base_query & \
+                        (stable.owned_by_group == None) & \
+                        (stable.owned_by_user == user_id) & \
+                        (stable.pe_id == pe_id) & \
+                        (stable.filter_id == ftable.id)
+                rows = db(query).select(stable.id,
+                                        stable.filter_id,
+                                        ftable.query)
+                if len(rows) > 0:
+                    for row in rows:
+                        event_type_id_s, priorities_s = \
+                            get_event_type_priorities(row.pr_filter.query)
+                        if event_type_id_s == event_type_id and \
+                           Counter(priorities_s) == Counter(priorities):
+                            # Update
+                            success_subscription = update_subscription(\
+                                        subscription,
+                                        pe_id,
+                                        filter_id=row.pr_subscription.filter_id,
+                                        subscription_id=row.pr_subscription.id,
+                                        )
+                            break
+                    else:
+                        # Create
+                        success_subscription = update_subscription(subscription,
+                                                                   pe_id)
+                else:
+                    # Create
+                    success_subscription = update_subscription(subscription, pe_id)
+
                 # Process Sync FTP Subscription
-                if "Sync" in subscription["method"] and formvars.repository_id:
+                if "FTP" in subscription["method"] and formvars.repository_id:
                     properties = self._update_sync(subscription["subscribe"][0]['resource'],
                                                    subscription.get("filters"),
                                                    int(formvars.repository_id),
                                                    properties)
                     properties = json.dumps(properties)
-                    query = (stable.deleted != True) & \
-                            (stable.pe_id == auth_user.pe_id) & \
+                    query = base_query & \
+                            (stable.pe_id == pe_id) & \
                             (stable.owned_by_group == None) & \
-                            (stable.owned_by_user == auth_user.id)
+                            (stable.owned_by_user == user_id)
                     db(query).update(comments=properties)
                 else:
                     self._remove_sync(properties)
-                    query = (stable.deleted != True) & \
-                            (stable.pe_id == auth_user.pe_id) & \
+                    query = base_query & \
+                            (stable.pe_id == pe_id) & \
                             (stable.owned_by_group == None) & \
-                            (stable.owned_by_user == auth_user.id)
+                            (stable.owned_by_user == user_id)
                     db(query).update(comments=None)
                 
                 redirect(URL(c="pr", f="subscription"))
@@ -977,20 +1123,16 @@ $('#method_selector').change(function(){
                            })
 
         else:
-            if subscription_id is not None:
-                from gluon.http import redirect
-                redirect(URL(c="default", f="index", args=["subscriptions"]))
-            else:
-                # Form defaults
-                output.update({"id": None,
-                               "filter_id": None,
-                               "get_vars" : get_vars,
-                               "resources": None,
-                               "notify_on": ["new"],#stable.notify_on.default,
-                               "frequency": "immediately",#stable.frequency.default,
-                               "method": stable.method.default,
-                               "comments": None,
-                               })
+            # Form defaults
+            output.update({"id": None,
+                           "filter_id": None,
+                           "get_vars" : get_vars,
+                           "resources": None,
+                           "notify_on": ["new"],#stable.notify_on.default,
+                           "frequency": "immediately",#stable.frequency.default,
+                           "method": stable.method.default,
+                           "comments": None,
+                           })
         return output
 
     # -------------------------------------------------------------------------
@@ -1075,16 +1217,18 @@ $('#method_selector').change(function(){
         return output
 
     # -------------------------------------------------------------------------
-    def _update_subscription(self, subscription):
+    def _update_subscription(self,
+                             subscription,
+                             pe_id,
+                             filter_id=None,
+                             subscription_id=None,
+                             ):
         """ Update subscription settings """
 
         db = current.db
         s3db = current.s3db
 
-        pe_id = subscription["pe_id"]
-
         # Save filters
-        filter_id = subscription["filter_id"]
         filters = subscription.get("filters")
         if filters:
             ftable = s3db.pr_filter
@@ -1099,7 +1243,6 @@ $('#method_selector').change(function(){
 
         # Save subscription settings
         stable = s3db.pr_subscription
-        subscription_id = subscription["id"]
         frequency = subscription["frequency"]
         if not subscription_id:
             success = stable.insert(pe_id=pe_id,
@@ -1441,6 +1584,28 @@ $('#method_selector').change(function(){
         if properties:
             current.s3db.resource("sync_repository",
                                   id=properties["repository_id"]).delete()
+
+    # -------------------------------------------------------------------------
+    def _get_event_type_priorities(self, filters):
+        """ Returns the event type and list of priorities for the filters """
+
+        event_types = []
+        priorities = []
+
+        filters_ = json.loads(filters)
+        filters_ = [filter_ for filter_ in filters_ if filter_[1] is not None]
+        if len(filters_) > 0:
+            for filter_ in filters_:
+                # Get the prefix
+                prefix = s3_str(filter_[0]).strip("[]")
+                # Get the value for prefix
+                values = filter_[1].split(",")
+                if prefix == "event_type_id__belongs":
+                    event_types = [int(s3_str(values[0]))]
+                elif prefix == "priority__belongs":
+                    priorities = [int(s3_str(value)) for value in values]
+
+        return (event_types, priorities)
 
 # =============================================================================
 class user_info(S3CustomController):
