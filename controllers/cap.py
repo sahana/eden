@@ -172,6 +172,10 @@ def alert():
                                deletable=False,
                                insertable=False,
                                )
+            if r.record.reference is not None:
+                # Don't show template_id for Updated/Cancelled/Error/Relay Alert
+                r.table.template_id.readable = False
+                r.table.template_id.writable = False
             if settings.get_cap_restrict_fields():
                 if r.record.msg_type in ("Update", "Cancel", "Error"):
                     # Use case for change in msg_type
@@ -594,8 +598,8 @@ def alert():
                     # Once approved, don't allow info segment to edit
                     # Don't allow to delete
                     s3db.configure("cap_info",
-                                   editable = False,
                                    deletable = False,
+                                   editable = False,
                                    insertable=False,
                                    )
                 if settings.get_cap_restrict_fields():
@@ -633,21 +637,19 @@ def alert():
                     # Once approved, don't allow area segment to edit
                     # Don't allow to delete
                     s3db.configure("cap_area",
-                                   editable = False,
                                    deletable = False,
-                                   insertable=False,
+                                   editable = False,
+                                   insertable = False,
                                    )
 
             elif r.component_name == "resource":
-                atable = r.component.table
-
                 if r.record.approved_by is not None:
                     # Once approved, don't allow resource segment to edit
                     # Don't allow to delete
                     s3db.configure("cap_resource",
-                                   editable = False,
                                    deletable = False,
-                                   insertable=False,
+                                   editable = False,
+                                   insertable = False,
                                    )
 
             # @ToDo: Move inside correct component context (None?)
@@ -845,6 +847,8 @@ def template():
 
         s3db.configure(tablename,
                        list_fields = list_fields,
+                       list_orderby = "cap_info.event_type_id desc",
+                       orderby = "cap_info.event_type_id desc",
                        )
 
         for f in ("identifier", "msg_type"):
@@ -914,7 +918,7 @@ def template():
                            "scope",
                            "sender",
                            "info.category",
-                           "info.event_type_id$name",
+                           "info.event_type_id",
                            "info.response_type",
                            "info.sender_name",
                            ]
@@ -968,6 +972,20 @@ def area():
 
         # Area create from this controller is template
         artable.is_template.default = True
+
+        if r.representation == "json":
+            list_fields = ["id",
+                           "name",
+                           "event_type_id$name",
+                           "priority",
+                           "altitude",
+                           "ceiling",
+                           "location.location_id",
+                           ]
+
+            s3db.configure("cap_area",
+                           list_fields = list_fields,
+                           )
 
         return True
     s3.prep = prep

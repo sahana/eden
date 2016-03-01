@@ -1243,6 +1243,7 @@ class S3Msg(object):
             All chunks, except for first, start with prefix.
         """
 
+        from s3 import s3_str
         res = []
         current_prefix = "" # first chunk has no prefix
         while text:
@@ -1255,8 +1256,8 @@ class S3Msg(object):
                 if i > 0: # got a blank
                     c = c[:i]
                 text = text[len(c):].lstrip()
-                res.append((current_prefix + c.rstrip() + suffix))
-                current_prefix = prefix # from now on, we want a prefix
+                res.append(current_prefix + c.rstrip() + s3_str(suffix))
+                current_prefix = s3_str(prefix) # from now on, we want a prefix
 
     # -------------------------------------------------------------------------
     @staticmethod
