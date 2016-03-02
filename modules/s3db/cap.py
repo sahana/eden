@@ -2789,8 +2789,13 @@ class cap_AssignArea(S3Method):
         s3db = current.s3db
         response = current.response
 
+        # Get the event_type_id to filter by
+        itable = s3db.cap_info
+        row = current.db(itable.alert_id == alert_id).\
+                    select(itable.event_type_id, limitby=(0, 1)).first()
+
         # Filter to limit the selection of areas
-        area_filter = (FS("is_template") == True)
+        area_filter = (FS("is_template") == True) & (FS("event_type_id") == row.event_type_id)
 
         if r.http == "POST":
             # Template areas have been selected
@@ -2837,11 +2842,6 @@ class cap_AssignArea(S3Method):
 
         elif r.http == "GET":
 
-            # Get the event_type_id to filter by
-            itable = s3db.cap_info
-            row = current.db(itable.alert_id == alert_id).\
-                        select(itable.event_type_id, limitby=(0, 1)).first()
-
             # Filter widgets (@todo: lookup from cap_area resource config?)
             filter_widgets = []
 
@@ -2853,7 +2853,6 @@ class cap_AssignArea(S3Method):
                            ]
 
             # Data table
-            area_filter = area_filter & (FS("event_type_id") == row.event_type_id)
             aresource = s3db.resource("cap_area", filter=area_filter)
             totalrows = aresource.count()
             get_vars = r.get_vars

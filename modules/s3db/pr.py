@@ -62,6 +62,7 @@ __all__ = ("S3PersonEntity",
            "pr_remove_affiliation",
            # PE Helpers
            "pr_get_pe_id",
+           "pr_get_group_pe_id",
            # Back-end Role Tools
            "pr_define_role",
            "pr_delete_role",
@@ -6671,6 +6672,24 @@ def pr_get_pe_id(entity, record_id=None):
                 return None
     if record:
         return record.pe_id
+    return None
+
+# -------------------------------------------------------------------------
+def pr_get_group_pe_id(group_ids):
+    """
+        Get the PE-ID for list of group_ids
+
+        @param group_ids: the list of group_ids
+
+        @return: dictionary of pe_id and group_id
+    """
+
+    if len(group_ids) > 0:
+        gtable = current.s3db.pr_group
+        rows = current.db(gtable.id.belongs(group_ids)).select(gtable.id,
+                                                               gtable.pe_id)
+        if rows:
+            return {row.pe_id: row.id for row in rows}
     return None
 
 # =============================================================================
