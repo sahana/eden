@@ -86,7 +86,7 @@ def config(settings):
     # Uncomment to Hide the language toolbar
     #settings.L10n.display_toolbar = False
     # Default timezone for users
-    #settings.L10n.utc_offset = "+0100"
+    settings.L10n.utc_offset = "+1200"
     # Number formats (defaults to ISO 31-0)
     # Decimal separator for numbers (defaults to ,)
     settings.L10n.decimal_separator = "."
@@ -99,12 +99,13 @@ def config(settings):
     # Uncomment this to Translate Organisation Names/Acronyms
     #settings.L10n.translate_org_organisation = True
     # Finance settings
-    #settings.fin.currencies = {
-    #    "EUR" : "Euros",
-    #    "GBP" : "Great British Pounds",
-    #    "USD" : "United States Dollars",
-    #}
-    #settings.fin.currency_default = "USD"
+    settings.fin.currencies = {
+        "EUR" : "Euros",
+        "FJD" : "Fiji Dollars",
+        "GBP" : "Great British Pounds",
+        "USD" : "United States Dollars",
+    }
+    settings.fin.currency_default = "USD"
 
     # Security Policy
     # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -117,13 +118,29 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
     #
-    #settings.security.policy = 7 # Organisation-ACLs
+    settings.security.policy = 3 # Organisation-ACLs
 
     # -------------------------------------------------------------------------
     # Orgs
+    settings.org.sector = True
+    settings.ui.cluster = True
     #settings.org.offices_tab = False
     settings.org.needs_tab = True
     settings.org.resources_tab = True
+
+    # -------------------------------------------------------------------------
+    # Projects
+    settings.project.mode_3w = True
+    settings.project.mode_drr = True
+    settings.project.activities = True
+    settings.project.activity_types = True
+    settings.project.codes = True
+    settings.project.demographics = True
+    settings.project.hazards = True
+    settings.project.programmes = True
+    settings.project.themes = True
+    #settings.project.multiple_budgets = True
+    settings.project.multiple_organisations = True
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -290,6 +307,12 @@ def config(settings):
         ("stats", Storage(
             name_nice = T("Statistics"),
             #description = "Manages statistics",
+            restricted = True,
+            module_type = None,
+        )),
+        ("survey", Storage(
+            name_nice = T("Surveys"),
+            #description = "Manages surveys",
             restricted = True,
             module_type = None,
         )),

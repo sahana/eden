@@ -45,6 +45,7 @@ __all__ = ("S3ProjectModel",
            "S3ProjectOrganisationModel",
            "S3ProjectPlanningModel",
            "S3ProjectProgrammeModel",
+           "S3ProjectProgrammeProjectModel",
            "S3ProjectSectorModel",
            "S3ProjectStatusModel",
            "S3ProjectThemeModel",
@@ -306,35 +307,109 @@ class S3ProjectModel(S3Model):
             # Default
             create_next = None
 
-        list_fields = ["id"]
-        append = list_fields.append
-        if use_codes:
-            append("code")
-        append("name")
-        append("organisation_id")
-        if mode_3w:
-            append((T("Locations"), "location.location_id"))
+        crud_fields = ["organisation_id"]
+        cappend = crud_fields.append
         if programmes:
-            append((T("Program"), "programme.name"))
+            comment = self.project_programme_id.attr.comment
+            comment.vars = {"caller": "link_defaultprogramme",
+                            "prefix": "project",
+                            "parent": "programme_project",
+                            }
+            cappend(S3SQLInlineLink("programme",
+                                    label = T("Program"),
+                                    field = "programme_id",
+                                    multiple = False,
+                                    comment = comment,
+                                    ))
+
+        list_fields = ["id"]
+        lappend = list_fields.append
+        if use_codes:
+            lappend("code")
+        cappend("name")
+        lappend("name")
+        if use_codes:
+            cappend("code")
+        lappend("organisation_id")
+        crud_fields += ["description",
+                        "status_id",
+                        "start_date",
+                        "end_date",
+                        ]
+        if mode_3w:
+            lappend((T("Locations"), "location.location_id"))
+        if programmes:
+            lappend((T("Program"), "programme.name"))
         if settings.get_project_sectors():
-            append((T("Sectors"), "sector.name"))
+            cappend(S3SQLInlineLink("sector",
+                                    label = T("Sectors"),
+                                    field = "sector_id",
+                                    cols = 4,
+                                    translate = True,
+                                    ))
+            lappend((T("Sectors"), "sector.name"))
         if mode_drr and settings.get_project_hazards():
-            append((T("Hazards"), "hazard.name"))
-            #append("drr.hfa")
+            lappend((T("Hazards"), "hazard.name"))
+            cappend(S3SQLInlineLink("hazard",
+                                    label = T("Hazards"),
+                                    field = "hazard_id",
+                                    help_field = self.project_hazard_help_fields,
+                                    cols = 4,
+                                    translate = True,
+                                    ))
+            #lappend("drr.hfa")
         if settings.get_project_themes():
-            append((T("Themes"), "theme.name"))
+            cappend(S3SQLInlineLink("theme",
+                                    label = T("Themes"),
+                                    field = "theme_id",
+                                    help_field = self.project_theme_help_fields,
+                                    cols = 4,
+                                    translate = True,
+                                    # Filter Theme by Sector
+                                    #filterby = "theme_id:project_theme_sector.sector_id",
+                                    #match = "sector_project.sector_id",
+                                    #script = '''
+#$.filterOptionsS3({
+# 'trigger':{'alias':'sector','name':'sector_id','inlineType':'link'},
+# 'target':{'alias':'theme','name':'theme_id','inlineType':'link'},
+# 'lookupPrefix':'project',
+# 'lookupResource':'theme',
+# 'lookupKey':'theme_id:project_theme_sector.sector_id',
+# 'showEmptyField':false,
+# 'tooltip':'project_theme_help_fields(id,name)'
+#})'''
+                                    ))
+            lappend((T("Themes"), "theme.name"))
         if multi_orgs:
-            append((T("Total Funding Amount"), "total_organisation_amount"))
+            lappend((T("Total Funding Amount"), "total_organisation_amount"))
         if budget_monitoring:
-            append((T("Total Budget"), "budget.total_budget"))
+            # @ToDo: Add the defaulting from RMSAmericas/config.py
+            #cappend(S3SQLInlineComponent("budget",
+            #                             label = T("Budget"),
+            #                             #link = False,
+            #                             multiple = False,
+            #                             fields = ["total_budget",
+            #                                       "currency",
+            #                                       #"monitoring_frequency",
+            #                                       ],
+            #                             ))
+            lappend((T("Total Budget"), "budget.total_budget"))
         elif multi_budgets:
-            append((T("Total Annual Budget"), "total_annual_budget"))
+            lappend((T("Total Annual Budget"), "total_annual_budget"))
         else:
-            append((T("Total Budget"), "budget"))
+            crud_fields += ["budget",
+                            "currency",
+                            ]
+            lappend((T("Total Budget"), "budget"))
+        crud_fields += ["human_resource_id",
+                        "comments",
+                        ]
         list_fields += ["start_date",
                         "end_date",
                         "location.location_id",
                         ]
+
+        crud_form = S3SQLCustomForm(*crud_fields)
 
         report_fields = list_fields
         report_col_default = "location.location_id"
@@ -347,6 +422,7 @@ class S3ProjectModel(S3Model):
                              "organisation": "organisation_id",
                              },
                   create_next = create_next,
+                  crud_form = crud_form,
                   deduplicate = self.project_project_deduplicate,
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
@@ -6835,7 +6911,6 @@ class S3ProjectProgrammeModel(S3Model):
 
     names = ("project_programme",
              "project_programme_id",
-             "project_programme_project",
              )
 
     def model(self):
@@ -6843,27 +6918,25 @@ class S3ProjectProgrammeModel(S3Model):
         T = current.T
         db = current.db
 
-        crud_strings = current.response.s3.crud_strings
-        define_table = self.define_table
         NONE = current.messages["NONE"]
 
         # ---------------------------------------------------------------------
         # Project Programmes
         #
         tablename = "project_programme"
-        define_table(tablename,
-                     self.org_organisation_id(),
-                     Field("name",
-                           label = T("Title"),
-                           represent = lambda v: T(v) if v is not None \
-                                                      else NONE,
-                           requires = IS_NOT_EMPTY()
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields())
+        self.define_table(tablename,
+                          self.org_organisation_id(),
+                          Field("name",
+                                label = T("Title"),
+                                represent = lambda v: T(v) if v is not None \
+                                                           else NONE,
+                                requires = IS_NOT_EMPTY()
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
 
         # CRUD Strings
-        crud_strings[tablename] = Storage(
+        current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Create Program"),
             title_display = T("Program"),
             title_list = T("Programs"),
@@ -6892,7 +6965,7 @@ class S3ProjectProgrammeModel(S3Model):
                             comment = S3PopupLink(c = "project",
                                                   f = "programme",
                                                   ),
-                       )
+                            )
 
         self.configure(tablename,
                        deduplicate = self.programme_duplicate,
@@ -6906,15 +6979,6 @@ class S3ProjectProgrammeModel(S3Model):
                                                "autocomplete": "name",
                                                "autodelete": False,
                                                })
-
-        # ---------------------------------------------------------------------
-        # Project Programmes <=> Projects
-        #
-        tablename = "project_programme_project"
-        define_table(tablename,
-                     programme_id(),
-                     self.project_project_id(),
-                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -6954,6 +7018,31 @@ class S3ProjectProgrammeModel(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
         return
+
+# =============================================================================
+class S3ProjectProgrammeProjectModel(S3Model):
+    """
+        Project Programme<>Project Model
+    """
+
+    names = ("project_programme_project",
+             )
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Project Programmes <=> Projects
+        #
+        tablename = "project_programme_project"
+        self.define_table(tablename,
+                          self.project_programme_id(),
+                          self.project_project_id(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class S3ProjectSectorModel(S3Model):
