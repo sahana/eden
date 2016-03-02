@@ -18,7 +18,7 @@ def config(settings):
 
     T = current.T
 
-    #settings.base.system_name = T("Sahana Skeleton")
+    #settings.base.system_name = T("Sahana FCOSS")
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
@@ -26,7 +26,7 @@ def config(settings):
     settings.base.prepopulate += ("FCOSS", "default/users")
 
     # Theme (folder to use for views/layout.html)
-    #settings.base.theme = "skeleton"
+    #settings.base.theme = "FCOSS"
 
     # Authentication settings
     # Should users be allowed to register themselves?
@@ -125,7 +125,7 @@ def config(settings):
     settings.org.sector = True
     settings.ui.cluster = True
     #settings.org.offices_tab = False
-    settings.org.needs_tab = True
+    #settings.org.needs_tab = True
     settings.org.resources_tab = True
 
     # -------------------------------------------------------------------------
@@ -141,6 +141,10 @@ def config(settings):
     settings.project.themes = True
     #settings.project.multiple_budgets = True
     settings.project.multiple_organisations = True
+
+    # -------------------------------------------------------------------------
+    # Requests
+    settings.req.req_type = ("Other",)
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

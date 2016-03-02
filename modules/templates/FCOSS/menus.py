@@ -49,8 +49,9 @@ class S3MainMenu(default.S3MainMenu):
             M("Organizations", c="org", f="organisation", m="summary")(),
             M("Resources", c="org", f="resource", m="summary")(),
             M("Volunteers", c="vol", f="volunteer", m="summary")(),
-            M("Needs", c="req", f="organisation_needs")(),
+            #M("Needs", c="req", f="organisation_needs")(),
             M("Projects", c="project", f="project", m="summary")(),
+            M("Requests", c="req", f="req", m="summary")(),
             M("Incident Reports", c="event", f="incident_report")(),
         ]
 
@@ -103,10 +104,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Import", m="import")
                     ),
-                    M("Organization Needs", c="req", f="organisation_needs")(
-                        M("Create", m="create"),
-                        M("Import", m="import", restrict=[ADMIN]),
-                    ),
+                    #M("Organization Needs", c="req", f="organisation_needs")(
+                    #    M("Create", m="create"),
+                    #    M("Import", m="import", restrict=[ADMIN]),
+                    #),
                     M("Organization Types", f="organisation_type",
                       restrict=[ADMIN])(
                         M("Create", m="create"),
@@ -115,10 +116,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Import", m="import"),
                     ),
-                    M("Facility Needs", c="req", f="site_needs")(
-                        M("Create", m="create"),
-                        M("Import", m="import", restrict=[ADMIN]),
-                    ),
+                    #M("Facility Needs", c="req", f="site_needs")(
+                    #    M("Create", m="create"),
+                    #    M("Import", m="import", restrict=[ADMIN]),
+                    #),
                     #M("Office Types", f="office_type",
                     #  restrict=[ADMIN])(
                     #    M("Create", m="create"),
@@ -133,10 +134,59 @@ class S3OptionsMenu(default.S3OptionsMenu):
                 )
 
     # -------------------------------------------------------------------------
-    def req(self):
+    @staticmethod
+    def req():
         """ REQ / Request Management """
 
-        return self.org()
+        ADMIN = current.session.s3.system_roles.ADMIN
+        settings = current.deployment_settings
+        types = settings.get_req_req_type()
+        if len(types) == 1:
+            t = types[0]
+            if t == "Stock":
+                create_menu = M("Create", m="create", vars={"type": 1})
+            elif t == "People":
+                create_menu = M("Create", m="create", vars={"type": 3})
+            else:
+                create_menu = M("Create", m="create")
+        else:
+            create_menu = M("Create", m="create")
+
+        recurring = lambda i: settings.get_req_recurring()
+        use_commit = lambda i: settings.get_req_use_commit()
+        req_items = lambda i: "Stock" in types
+        req_skills = lambda i: "People" in types
+
+        return M(c="req")(
+                    M("Requests", f="req")(
+                        create_menu,
+                        M("List Recurring Requests", f="req_template", check=recurring),
+                        M("Map", m="map"),
+                        M("Report", m="report"),
+                        M("Search All Requested Items", f="req_item",
+                          check=req_items),
+                        M("Search All Requested Skills", f="req_skill",
+                          check=req_skills),
+                    ),
+                    M("Commitments", f="commit", check=use_commit)(
+                    ),
+                    M("Items", c="supply", f="item")(
+                        M("Create", m="create"),
+                        M("Report", m="report"),
+                        M("Import", m="import", p="create"),
+                    ),
+                    # Catalog Items moved to be next to the Item Categories
+                    #M("Catalog Items", c="supply", f="catalog_item")(
+                       #M("Create", m="create"),
+                    #),
+                    M("Catalogs", c="supply", f="catalog")(
+                        M("Create", m="create"),
+                    ),
+                    M("Item Categories", c="supply", f="item_category",
+                      restrict=[ADMIN])(
+                        M("Create", m="create"),
+                    ),
+                )
 
     # -------------------------------------------------------------------------
     @staticmethod
