@@ -12,21 +12,25 @@ from gluon.storage import Storage
 
 def config(settings):
     """
+        PIANGO
+        http://www.piango.org
+
+        Initially for the Cyclone Winston response
         Fiji Council of Social Services
         http://www.piango.org/PIANGO/NLU/NLUs/fiji.html
     """
 
     T = current.T
 
-    #settings.base.system_name = T("Sahana FCOSS")
+    #settings.base.system_name = T("Sahana PIANGO")
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
-    #settings.base.prepopulate = ("skeleton", "default/users")
-    settings.base.prepopulate += ("FCOSS", "default/users")
+    #settings.base.prepopulate = ("PIANGO", "default/users")
+    settings.base.prepopulate += ("PIANGO", "default/users")
 
     # Theme (folder to use for views/layout.html)
-    #settings.base.theme = "FCOSS"
+    #settings.base.theme = "PIANGO"
 
     # Authentication settings
     # Should users be allowed to register themselves?
@@ -118,7 +122,7 @@ def config(settings):
     # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
     #
-    settings.security.policy = 3 # Organisation-ACLs
+    settings.security.policy = 8 # Full
 
     # -------------------------------------------------------------------------
     # Orgs
@@ -127,6 +131,7 @@ def config(settings):
     #settings.org.offices_tab = False
     #settings.org.needs_tab = True
     settings.org.resources_tab = True
+    settings.org.groups = "Organization Group"
 
     # -------------------------------------------------------------------------
     # Projects
@@ -144,7 +149,7 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Requests
-    settings.req.req_type = ("Other",)
+    settings.req.req_type = ("Stock", "Other")
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -229,12 +234,12 @@ def config(settings):
           restricted = True,
           module_type = 10,
         )),
-        #("doc", Storage(
-        #    name_nice = T("Documents"),
-        #    #description = "A library of digital resources, such as photos, documents and reports",
-        #    restricted = True,
-        #    module_type = 10,
-        #)),
+        ("doc", Storage(
+            name_nice = T("Documents"),
+            #description = "A library of digital resources, such as photos, documents and reports",
+            restricted = True,
+            module_type = 10,
+        )),
         #("msg", Storage(
         #    name_nice = T("Messaging"),
         #    #description = "Sends & Receives Alerts via Email & SMS",
@@ -242,18 +247,18 @@ def config(settings):
         #    # The user-visible functionality of this module isn't normally required. Rather it's main purpose is to be accessed from other modules.
         #    module_type = None,
         #)),
-        #("supply", Storage(
-        #    name_nice = T("Supply Chain Management"),
-        #    #description = "Used within Inventory Management, Request Management and Asset Management",
-        #    restricted = True,
-        #    module_type = None, # Not displayed
-        #)),
-        #("inv", Storage(
-        #    name_nice = T("Warehouses"),
-        #    #description = "Receiving and Sending Items",
-        #    restricted = True,
-        #    module_type = 4
-        #)),
+        ("supply", Storage(
+            name_nice = T("Supply Chain Management"),
+            #description = "Used within Inventory Management, Request Management and Asset Management",
+            restricted = True,
+            module_type = None, # Not displayed
+        )),
+        ("inv", Storage(
+            name_nice = T("Warehouses"),
+            #description = "Receiving and Sending Items",
+            restricted = True,
+            module_type = 4
+        )),
         #("asset", Storage(
         #    name_nice = T("Assets"),
         #    #description = "Recording and Assigning Assets",
