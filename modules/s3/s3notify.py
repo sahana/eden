@@ -54,7 +54,7 @@ from gluon.storage import Storage
 from gluon.tools import fetch
 
 from s3datetime import s3_decode_iso_datetime, s3_encode_iso_datetime, s3_utc
-from s3utils import S3ModuleDebug, s3_truncate, s3_unicode
+from s3utils import S3ModuleDebug, s3_str, s3_truncate, s3_unicode
 
 DEBUG = False
 if DEBUG:
@@ -404,7 +404,7 @@ class S3Notifications(object):
                 path = join("views", "msg")
                 template = get_template(path, filenames)
             if template is None:
-                template = StringIO(current.T("New updates are available."))
+                template = StringIO(s3_str(current.T("New updates are available.")))
 
             # Select contents format
             if method == "EMAIL" and email_format == "html":
