@@ -506,10 +506,6 @@ class subscriptions(S3CustomController):
 
             multiselect = S3MultiSelectWidget(header = False,
                                               multiple = False,
-                                              create = {"c": "sync",
-                                                        "f": "repository",
-                                                        "label": "Create Repository",
-                                                        },
                                               )
             if ftp_rows:
                 if properties:
@@ -523,9 +519,15 @@ class subscriptions(S3CustomController):
                                                      f = "repository",
                                                      m = "update",
                                                      args = [user_repository_id],
+                                                     vars = {"prefix": "sync"},
                                                      title = T("Update Repository"),
-                                                     tooltip = T("You can edit your FTP repository here"),
+                                                     tooltip = T("Edit selected FTP"),
                                                      )
+                    create_repository_comment = S3PopupLink(c = "sync",
+                                                            f = "repository",
+                                                            vars = {"prefix": "sync"},
+                                                            title = T("Add New FTP"),
+                                                            )
                 field = s3db.sync_task.repository_id
                 ftp_ids = [(r.id, s3_unicode(T(r.name))) for r in ftp_rows]
                 field.requires = IS_IN_SET(ftp_ids)
@@ -535,18 +537,20 @@ class subscriptions(S3CustomController):
                              multiselect(field,
                                          user_repository_id,
                                          _id="sync_task_repository_id"),
-                             repository_comment))
+                             [repository_comment,
+                              create_repository_comment]))
             else:
                 if auth.s3_has_permission("create", "sync_repository"):
                     repository_comment = S3PopupLink(c = "sync",
                                                      f = "repository",
+                                                     vars = {"prefix": "sync"},
                                                      title = T("Add FTP Directory and Authentication Details"),
                                                      tooltip = T("Click on the link to begin creating your FTP repository and setting authentication details"),
                                                      )
-
                 rows.append(("sync_task_repository_id__row",
                              "",
-                             "",
+                             multiselect(s3db.sync_task.repository_id, "",
+                                         _id="sync_task_repository_id"),
                              repository_comment))
 
         parent = FIELDSET()
@@ -592,6 +596,10 @@ $('#method_selector').change(function(){
     } else {
         $('#sync_task_repository_id__row').hide();
     }
+})
+
+$('#sync_task_repository_id').on('change', function(e) {
+    $("#repository_update").attr('href', '/eden/sync/repository/'+e.currentTarget.value+'/update?format=popup&prefix=sync&caller=sync_task_repository_id');
 })
 '''
         response.s3.jquery_ready.append(repository_script)
@@ -711,7 +719,7 @@ $('#method_selector').change(function(){
                         rows = db(query).select(stable.id,
                                                 stable.filter_id,
                                                 ftable.query)
-                        if len(rows) > 0:
+                        if rows:
                             for row in rows:
                                 event_type_id_s, priorities_s = \
                                     get_event_type_priorities(row.pr_filter.query)
@@ -752,7 +760,7 @@ $('#method_selector').change(function(){
                         rows = db(query).select(stable.id,
                                                 stable.filter_id,
                                                 ftable.query)
-                        if len(rows) > 0:
+                        if rows:
                             for row in rows:
                                 event_type_id_s, priorities_s = \
                                     get_event_type_priorities(row.pr_filter.query)
@@ -833,7 +841,7 @@ $('#method_selector').change(function(){
                         rows = db(query).select(stable.id,
                                                 stable.filter_id,
                                                 ftable.query)
-                        if len(rows) > 0:
+                        if rows:
                             for row in rows:
                                 event_type_id_s, priorities_s = \
                                     get_event_type_priorities(row.pr_filter.query)
@@ -913,7 +921,7 @@ $('#method_selector').change(function(){
                         rows = db(query).select(stable.id,
                                                 stable.filter_id,
                                                 ftable.query)
-                        if len(rows) > 0:
+                        if rows:
                             for row in rows:
                                 event_type_id_s, priorities_s = \
                                     get_event_type_priorities(row.pr_filter.query)
@@ -999,7 +1007,7 @@ $('#method_selector').change(function(){
                 rows = db(query).select(stable.id,
                                         stable.filter_id,
                                         ftable.query)
-                if len(rows) > 0:
+                if rows:
                     for row in rows:
                         event_type_id_s, priorities_s = \
                             get_event_type_priorities(row.pr_filter.query)

@@ -517,9 +517,14 @@ class S3PopupLink(S3NavigationItem):
         else:
             label = item.label
 
+        if item.method == "update":
+            class_ = "s3_update_resource_link"
+        else:
+            class_ = "s3_add_resource_link"
+
         popup_link = A(label,
                        _href=item.url(format="popup"),
-                       _class="s3_add_resource_link",
+                       _class=class_,
                        _id="%s_add" % item.function,
                        _target="top",
                        _title=item.opts.info,
