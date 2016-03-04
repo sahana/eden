@@ -166,7 +166,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Current Cases", c=("dvr", "pr"), f="person",
                       vars = {"closed": "0"})(
                         M("Create", m="create"),
-                        #M("All Cases", vars = {}),
+                        M("All Cases", vars = {}),
                         ),
                     M("Reports", link=False)(
                         M("Check-in overdue", c=("dvr", "pr"), f="person",
