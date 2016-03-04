@@ -3209,6 +3209,8 @@ def s3_get_filter_opts(tablename,
     table = current.s3db.table(tablename)
     if auth.s3_has_permission("read", table):
         query = auth.s3_accessible_query("read", table)
+        if "deleted" in table.fields:
+            query &= (table.deleted != True)
         if location_filter:
             location = current.session.s3.location_filter
             if location:
