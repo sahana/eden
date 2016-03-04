@@ -7,6 +7,7 @@
     <cap:msgType>Alert</cap:msgType>
     <cap:source>sambro-serv@pagasa.dost.gov.ph</cap:source>
     <cap:scope>Restricted</cap:scope>
+    <cap:restriction>PHIVOLS</cap:restriction>
     <cap:note>This template is intended for CAP on a Map project 'Exercises'. The template is General Flood Bulletin (GFB). Targeting the Central office of PAGASA as First Responders.&#13;
     </cap:note>
     <cap:incidents>Flood</cap:incidents>

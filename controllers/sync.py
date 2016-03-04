@@ -245,4 +245,13 @@ def log():
                                 )
     return output
 
+# -----------------------------------------------------------------------------
+def task():
+    """ RESTful CRUD controller for options.s3json lookups """
+
+    # Pre-process
+    s3.prep = lambda r: r.representation == "s3json" and r.method == "options"
+
+    return s3_rest_controller()
+
 # END =========================================================================

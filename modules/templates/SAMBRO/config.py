@@ -16,7 +16,9 @@ except ImportError:
         import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import current
+from gluon.html import *
 from gluon.storage import Storage
+from s3 import s3_str
 
 def config(settings):
     """
@@ -76,7 +78,10 @@ def config(settings):
     # Notifications
 
     # Template for the subject line in update notifications
-    settings.msg.notify_subject = "$S %s" % T("Alert Notification")
+    settings.msg.notify_subject = "%s $s %s" % (T("SAHANA"), T("Alert Notification"))
+
+    # Notifications format
+    settings.msg.notify_email_format = "html"
 
     # Filename for FTP
     # Characters not allowed are [\ / : * ? " < > | % .]
@@ -229,7 +234,6 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cap_alert_resource(r, tablename):
 
-        from s3 import s3_str
         s3db = current.s3db
         def onapprove(record):
             # Normal onapprove
@@ -284,6 +288,34 @@ def config(settings):
     settings.customise_cap_alert_resource = customise_cap_alert_resource
 
     # -------------------------------------------------------------------------
+    def customise_cap_alert_controller(**attr):
+
+        s3 = current.response.s3
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.representation == "msg":
+                # @ToDo: do same for component info
+                # Notification
+                table = r.table
+                table.scope.represent = None
+                table.status.represent = None
+                table.msg_type.represent = None
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_cap_alert_controller = customise_cap_alert_controller
+
+    # -------------------------------------------------------------------------
     def customise_sync_repository_controller(**attr):
 
         s3 = current.response.s3
@@ -316,21 +348,20 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_pr_subscription_controller(**attr):
 
-        from gluon.html import URL, A
         from s3 import S3CRUD
         s3 = current.response.s3
         s3db = current.s3db
         auth = current.auth
-        request = current.request
         stable = s3db.pr_subscription
         has_role = auth.s3_has_role
 
         list_fields = [(T("Filters"), "filter_id"),
                        (T("Methods"), "method"),
                        ]
+        manage_recipient = current.request.get_vars["option"] == "manage_recipient"
+        role_check = has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")
 
-        if request.get_vars["option"] == "manage_recipient" and \
-           (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")):
+        if manage_recipient and role_check:
                 # Admin based subscription
                 s3.filter = (stable.deleted != True) & \
                             (stable.owned_by_group != None)
@@ -381,8 +412,7 @@ def config(settings):
 
             if r.interactive and isinstance(output, dict):
                 # Modify Open Button
-                if request.get_vars["option"] == "manage_recipient" and \
-                   (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")):
+                if manage_recipient and role_check:
                     # Admin based subscription
                     S3CRUD.action_buttons(r,
                                           update_url=URL(c="default", f="index",
@@ -405,8 +435,7 @@ def config(settings):
 
                 if "form" in output:
                     # Modify Add Button
-                    if request.get_vars["option"] == "manage_recipient" and \
-                       (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")):
+                    if manage_recipient and role_check:
                         # Admin based subscription
                         add_btn = A(T("Create Subscription"),
                                     _class="action-btn",
@@ -429,6 +458,103 @@ def config(settings):
         return attr
 
     settings.customise_pr_subscription_controller = customise_pr_subscription_controller
+
+    # -----------------------------------------------------------------------------
+    def custom_msg_render(resource, data, meta_data, format=None):
+        """
+            Custom Method to pre-render the contents for the message template
+
+            @param resource: the S3Resource
+            @param data: the data returned from S3Resource.select
+            @param meta_data: the meta data for the notification
+            @param format: the contents format ("text" or "html")
+        """
+
+        from s3 import s3_utc
+        created_on_selector = resource.prefix_selector("created_on")
+        created_on_colname = None
+        notify_on = meta_data["notify_on"]
+        last_check_time = meta_data["last_check_time"]
+        rows = data["rows"]
+        rfields = data["rfields"]
+        output = {}
+        new, upd = [], []
+        if format == "text":
+            # Standard text format
+            labels = []
+            append = labels.append
+
+            for rfield in rfields:
+                if rfield.selector == created_on_selector:
+                    created_on_colname = rfield.colname
+                elif rfield.ftype != "id":
+                    append((rfield.colname, rfield.label))
+
+            for row in rows:
+                append_record = upd.append
+                if created_on_colname:
+                    try:
+                        created_on = row["_row"][created_on_colname]
+                    except KeyError, AttributeError:
+                        pass
+                    else:
+                        if s3_utc(created_on) >= last_check_time:
+                            append_record = new.append
+
+                record = []
+                append_column = record.append
+                for colname, label in labels:
+                    append_column((label, row[colname]))
+                append_record(record)
+
+            if "new" in notify_on and len(new):
+                output["new"] = len(new)
+                output["new_records"] = new
+            else:
+                output["new"] = None
+            if "upd" in notify_on and len(upd):
+                output["upd"] = len(upd)
+                output["upd_records"] = upd
+            else:
+                output["upd"] = None
+        else:
+            # HTML emails
+            elements = []
+            append = elements.append
+            for rfield in rfields:
+                if rfield.selector == created_on_selector:
+                    created_on_colname = rfield.colname
+
+            for row in rows:
+                append_record = upd.append
+                if created_on_colname:
+                    try:
+                        created_on = row["_row"][created_on_colname]
+                    except KeyError, AttributeError:
+                        pass
+                    else:
+                        if s3_utc(created_on) >= last_check_time:
+                            append_record = new.append
+                content = get_html_email_content(row)
+                container = DIV(DIV(content))
+                append(container)
+                append(BR())
+                append_record(container)
+            if "new" in notify_on and len(new):
+                output["new"] = len(new)
+                output["new_body"] = DIV(*elements)
+            else:
+                output["new"] = None
+            if "upd" in notify_on and len(upd):
+                output["upd"] = len(upd)
+                output["upd_body"] = DIV(*elements)
+            else:
+                output["upd"] = None
+
+        output.update(meta_data)
+        return output
+
+    settings.msg.notify_renderer = custom_msg_render
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -568,13 +694,12 @@ def config(settings):
                                 ftable.query,
                                 left=left)
         if len(rows) > 0:
-            from s3 import s3_str
             T = current.T
             etable = s3db.event_event_type
             ptable = s3db.cap_warning_priority
             filter_options = {}
             for row in rows:
-                event_type_id = []
+                event_type = None
                 priorities_id = []
                 languages = []
 
@@ -587,7 +712,7 @@ def config(settings):
                         # Get the value for prefix
                         values = filter[1].split(",")
                         if prefix == "event_type_id__belongs":
-                            event_type_id = int(s3_str(values[0]))
+                            event_type_id = s3_str(values[0])
                             row_ = db(etable.id==event_type_id).select(\
                                                         etable.name,
                                                         limitby=(0, 1)).first()
@@ -598,8 +723,10 @@ def config(settings):
                             priorities = [row_.name for row_ in rows_]
                         elif prefix == "language__belongs":
                             languages = [s3_str(value) for value in values]
-
-                    display_text = "<b>%s:</b> %s" % (T("Event Type"), event_type)
+                    if event_type is not None:
+                        display_text = "<b>%s:</b> %s" % (T("Event Type"), event_type)
+                    else:
+                        display_text = "<b>%s</b>" % (T("Event Type: None"))
                     if len(priorities_id) > 0:
                         display_text = "%s<br/><b>%s</b>: %s" % (display_text, T("Priorities"), priorities)
                     else:
@@ -613,5 +740,75 @@ def config(settings):
                     filter_options[row["pr_subscription.filter_id"]] = T("No filters")
 
             return filter_options
+
+    # -------------------------------------------------------------------------
+    def get_html_email_content(row):
+        """
+            prepare the content for html email
+        """
+
+        subject = \
+        T("%(Scope)s %(Status)s Alert: %(Headline)s (ID: %(Identifier)s)") % \
+            dict(Scope = s3_str(row["cap_alert.scope"]),
+                 Status = s3_str(row["cap_alert.status"]),
+                 Headline = s3_str(row["cap_info.headline"]),
+                 Identifier = s3_str(row["cap_alert.identifier"]))
+        body1 = \
+T("""%(Priority)s priority %(MessageType)s 
+message in effect for %(AreaDescription)s""") % dict(\
+                    Priority = s3_str(row["cap_info.priority"]),
+                    MessageType = s3_str(row["cap_alert.msg_type"]),
+                    AreaDescription = s3_str(row["cap_area.name"]))
+        body2 = \
+        T("This %(Severity)s %(EventType)s is %(Urgency)s and is %(Certainty)s") %\
+            dict(Severity = s3_str(row["cap_info.severity"]),
+                 EventType = s3_str(row["cap_info.event_type_id"]),
+                 Urgency = s3_str(row["cap_info.urgency"]),
+                 Certainty = s3_str(row["cap_info.certainty"]))
+        body3 = \
+T("""Message %(Identifier)s: %(EventType)s (%(Category)s) issued by 
+%(SenderName)s sent at %(Date)s from %(Source)s""") % \
+                 dict(Identifier = s3_str(row["cap_alert.identifier"]),
+                      EventType = s3_str(row["cap_info.event_type_id"]),
+                      Category = s3_str(row["cap_info.category"]),
+                      SenderName = s3_str(row["cap_info.sender_name"]),
+                      Date = s3_str(row["cap_alert.sent"]),
+                      Source = s3_str(row["cap_alert.source"]))
+        body4 = T("Alert Description: %(AreaDescription)s") % \
+                dict(AreaDescription = s3_str(row["cap_area.name"]))
+        body5 = T("Expected Response: %(ResponseType)s") % \
+                dict(ResponseType = s3_str(row["cap_info.response_type"]))
+        body6 = T("Instructions: %(Instruction)s") % \
+                dict(Instruction=s3_str(row["cap_info.instruction"]))
+        body7 = \
+T("Alert is effective from %(Effective)s and expires on %(Expires)s") % \
+                dict(Effective = s3_str(row["cap_info.effective"]),
+                     Expires = s3_str(row["cap_info.expires"]))
+        body8 = T("For more details visit %(URL)s or contact %(Contact)s") % \
+                dict(URL = s3_str(row["cap_info.web"]),
+                     Contact = s3_str(row["cap_info.contact"]))
+        body9 = A(T("VIEW ALERT ON THE WEB"),
+                    _href = URL(s3_str(row["cap_info.web"]), "/profile"))
+        return TAG[""](HR(), BR(),
+                       subject,
+                       BR(), BR(),
+                       body1,
+                       BR(),
+                       body2,
+                       BR(), BR(),
+                       body3,
+                       BR(), BR(),
+                       body4,
+                       BR(), BR(),
+                       body5,
+                       BR(), BR(),
+                       body6,
+                       BR(), BR(),
+                       body7,
+                       BR(), BR(),
+                       body8,
+                       BR(), BR(),
+                       body9,
+                       BR())
 
 # END =========================================================================
