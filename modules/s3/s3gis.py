@@ -5793,75 +5793,90 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     if "lat_max" not in form_vars or form_vars.lat_max is None:
                         form_vars.lat_max = lat
 
-        elif form_vars.get("wkt", None):
-            # Parse WKT for LineString, Polygon, etc
-            from shapely.wkt import loads as wkt_loads
-            try:
-                shape = wkt_loads(form_vars.wkt)
-            except:
-                try:
-                    # Perhaps this is really a LINESTRING (e.g. OSM import of an unclosed Way)
-                    linestring = "LINESTRING%s" % form_vars.wkt[8:-1]
-                    shape = wkt_loads(linestring)
-                    form_vars.wkt = linestring
-                except:
-                    form.errors["wkt"] = current.messages.invalid_wkt
-                    return
-            gis_feature_type = shape.type
-            if gis_feature_type == "Point":
-                form_vars.gis_feature_type = 1
-            elif gis_feature_type == "LineString":
-                form_vars.gis_feature_type = 2
-            elif gis_feature_type == "Polygon":
-                form_vars.gis_feature_type = 3
-            elif gis_feature_type == "MultiPoint":
-                form_vars.gis_feature_type = 4
-            elif gis_feature_type == "MultiLineString":
-                form_vars.gis_feature_type = 5
-            elif gis_feature_type == "MultiPolygon":
-                form_vars.gis_feature_type = 6
-            elif gis_feature_type == "GeometryCollection":
-                form_vars.gis_feature_type = 7
-            try:
-                centroid_point = shape.centroid
-                form_vars.lon = centroid_point.x
-                form_vars.lat = centroid_point.y
-                bounds = shape.bounds
-                if gis_feature_type != "Point" or \
-                   "lon_min" not in form_vars or form_vars.lon_min is None or \
-                   form_vars.lon_min == form_vars.lon_max:
-                    # Update bounds unless we have a 'Point' which has already got wider Bounds specified (such as a country)
-                    form_vars.lon_min = bounds[0]
-                    form_vars.lat_min = bounds[1]
-                    form_vars.lon_max = bounds[2]
-                    form_vars.lat_max = bounds[3]
-            except:
-                form.errors.gis_feature_type = current.messages.centroid_error
-
-        elif (form_vars.lon is None and form_vars.lat is None) or \
-             (form_vars.lon == "" and form_vars.lat == ""):
-            # No Geometry available
-            # Don't clobber existing records (e.g. in Prepop)
-            #form_vars.gis_feature_type = "0"
-            # Cannot create WKT, so Skip
-            return
         else:
-            # Point
-            form_vars.gis_feature_type = "1"
-            if form_vars.lat is None or form_vars.lat == "":
-                form.errors["lat"] = current.messages.lat_empty
-            elif form_vars.lon is None or form_vars.lon == "":
-                form.errors["lon"] = current.messages.lon_empty
+            wkt = form_vars.get("wkt", None)
+            if wkt:
+                if wkt[0] == "{":
+                    # This is a GeoJSON geometry
+                    from shapely.geometry import shape as shape_loads
+                    try:
+                        js = json.load(wkt)
+                        shape = shape_loads(js)
+                    except:
+                        form.errors["wkt"] = current.messages.invalid_wkt
+                        return
+                else:
+                    # Assume WKT
+                    from shapely.wkt import loads as wkt_loads
+                    try:
+                        shape = wkt_loads(wkt)
+                    except:
+                        try:
+                            # Perhaps this is really a LINESTRING (e.g. OSM import of an unclosed Way)
+                            linestring = "LINESTRING%s" % wkt[8:-1]
+                            shape = wkt_loads(linestring)
+                            form_vars.wkt = linestring
+                        except:
+                            form.errors["wkt"] = current.messages.invalid_wkt
+                            return
+                gis_feature_type = shape.type
+                if gis_feature_type == "Point":
+                    form_vars.gis_feature_type = 1
+                elif gis_feature_type == "LineString":
+                    form_vars.gis_feature_type = 2
+                elif gis_feature_type == "Polygon":
+                    form_vars.gis_feature_type = 3
+                elif gis_feature_type == "MultiPoint":
+                    form_vars.gis_feature_type = 4
+                elif gis_feature_type == "MultiLineString":
+                    form_vars.gis_feature_type = 5
+                elif gis_feature_type == "MultiPolygon":
+                    form_vars.gis_feature_type = 6
+                elif gis_feature_type == "GeometryCollection":
+                    form_vars.gis_feature_type = 7
+                try:
+                    centroid_point = shape.centroid
+                    form_vars.lon = centroid_point.x
+                    form_vars.lat = centroid_point.y
+                    bounds = shape.bounds
+                    if gis_feature_type != "Point" or \
+                       "lon_min" not in form_vars or form_vars.lon_min is None or \
+                       form_vars.lon_min == form_vars.lon_max:
+                        # Update bounds unless we have a 'Point' which has already got wider Bounds specified (such as a country)
+                        form_vars.lon_min = bounds[0]
+                        form_vars.lat_min = bounds[1]
+                        form_vars.lon_max = bounds[2]
+                        form_vars.lat_max = bounds[3]
+                except:
+                    form.errors.gis_feature_type = current.messages.centroid_error
+
             else:
-                form_vars.wkt = "POINT(%(lon)s %(lat)s)" % form_vars
-                if "lon_min" not in form_vars or form_vars.lon_min is None:
-                    form_vars.lon_min = form_vars.lon
-                if "lon_max" not in form_vars or form_vars.lon_max is None:
-                    form_vars.lon_max = form_vars.lon
-                if "lat_min" not in form_vars or form_vars.lat_min is None:
-                    form_vars.lat_min = form_vars.lat
-                if "lat_max" not in form_vars or form_vars.lat_max is None:
-                    form_vars.lat_max = form_vars.lat
+                lat = form_vars.get("lat", None)
+                lon = form_vars.get("lon", None)
+                if (lon is None and lat is None) or \
+                   (lon == "" and lat == ""):
+                    # No Geometry available
+                    # Don't clobber existing records (e.g. in Prepop)
+                    #form_vars.gis_feature_type = "0"
+                    # Cannot create WKT, so Skip
+                    return
+                else:
+                    # Point
+                    form_vars.gis_feature_type = "1"
+                    if lat is None or lat == "":
+                        form.errors["lat"] = current.messages.lat_empty
+                    elif lon is None or lon == "":
+                        form.errors["lon"] = current.messages.lon_empty
+                    else:
+                        form_vars.wkt = "POINT(%(lon)s %(lat)s)" % form_vars
+                        if "lon_min" not in form_vars or form_vars.lon_min is None:
+                            form_vars.lon_min = lon
+                        if "lon_max" not in form_vars or form_vars.lon_max is None:
+                            form_vars.lon_max = lon
+                        if "lat_min" not in form_vars or form_vars.lat_min is None:
+                            form_vars.lat_min = lat
+                        if "lat_max" not in form_vars or form_vars.lat_max is None:
+                            form_vars.lat_max = lat
 
         if current.deployment_settings.get_gis_spatialdb():
             # Also populate the spatial field
