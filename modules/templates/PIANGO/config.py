@@ -152,6 +152,48 @@ def config(settings):
     settings.req.req_type = ("Stock", "Other")
 
     # -------------------------------------------------------------------------
+    def customise_project_activity_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, S3SQLInlineLink
+
+        s3db = current.s3db
+
+        if r.tablename == "project_project":
+            # Limit Sectors to those for the Project
+            table = s3db.project_sector_project
+            query = (table.project_id == r.id) & \
+                    (table.deleted == False)
+            rows = current.db(query).select(table.sector_id)
+            sector_ids = [row.sector_id for row in rows]
+        else:
+            sector_ids = None
+
+        crud_form = S3SQLCustomForm("name",
+                                    "status_id",
+                                    S3SQLInlineLink("sector",
+                                                    field = "sector_id",
+                                                    label = T("Sectors"),
+                                                    filterby = "id",
+                                                    options = sector_ids,
+                                                    widget = "groupedopts",
+                                                    ),
+                                    "location_id",
+                                    "date",
+                                    "end_date",
+                                    "person_id",
+                                    "comments",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       )
+
+        list_fields = s3db.get_config(tablename, "list_fields")
+        list_fields.insert(2, (T("Sectors"), "sector_activity.sector_id"))
+
+    settings.customise_project_activity_resource = customise_project_activity_resource
+
+    # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
     settings.modules = OrderedDict([
