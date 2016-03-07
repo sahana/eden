@@ -403,6 +403,10 @@ def config(settings):
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #
+    # Uncomment this to enable features to manage transferability of cases
+    settings.dvr.manage_transferability = True
+
+    # -------------------------------------------------------------------------
     def customise_dvr_home():
         """ Redirect dvr/index to dvr/person?closed=0 """
 

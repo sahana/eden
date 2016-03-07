@@ -76,6 +76,8 @@ class DVRCaseModel(S3Model):
 
         person_id = self.pr_person_id
 
+        manage_transferability = settings.get_dvr_manage_transferability()
+
         # ---------------------------------------------------------------------
         # Case Types
         #
@@ -160,6 +162,18 @@ class DVRCaseModel(S3Model):
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Case Closed"),
                                                            T("Cases with this status are closed."),
+                                                           ),
+                                         ),
+                           ),
+                     Field("is_not_transferable", "boolean",
+                           default = False,
+                           label = T("Not Transferable"),
+                           represent = s3_yes_no_represent,
+                           readable = manage_transferability,
+                           writable = manage_transferability,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Not Transferable"),
+                                                           T("Cases with this status are not transferable."),
                                                            ),
                                          ),
                            ),
@@ -313,6 +327,13 @@ class DVRCaseModel(S3Model):
                            # Enabled in controller:
                            readable = False,
                            writable = False,
+                           ),
+                     Field("transferable", "boolean",
+                           default = False,
+                           label = T("Transferable"),
+                           represent = s3_yes_no_represent,
+                           readable = manage_transferability,
+                           writable = manage_transferability,
                            ),
                      # Simplified "head of household" fields:
                      # (if not tracked as separate case beneficiaries)

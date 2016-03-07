@@ -479,6 +479,11 @@ def config(settings):
     #settings.cr.tags = True
 
     # -------------------------------------------------------------------------
+    # Disaster Victim Registry / Case Management
+    # Uncomment this to enable features to manage transferability of cases
+    #settings.dvr.manage_transferability = True
+
+    # -------------------------------------------------------------------------
     # Events
     # Make Event Types Hierarchical
     #settings.event.types_hierarchical = True

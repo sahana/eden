@@ -128,6 +128,7 @@ class S3Config(Storage):
         self.cr = Storage()
         self.database = Storage()
         self.deploy = Storage()
+        self.dvr = Storage()
         self.event = Storage()
         self.evr = Storage()
         self.fin = Storage()
@@ -2628,6 +2629,15 @@ class S3Config(Storage):
         """
 
         return self.deploy.get("responses_via_web", True)
+
+    # -------------------------------------------------------------------------
+    # DVR Options
+    #
+    def get_dvr_manage_transferability(self):
+        """
+            Enable features to manage transferability of cases
+        """
+        return self.dvr.get("manage_transferability", False)
 
     # -------------------------------------------------------------------------
     # Events
