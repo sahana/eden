@@ -4827,6 +4827,7 @@ class S3ResourceData(object):
         # Simplify the master query if possible
         empty = False
         limitby = None
+        orderby_on_limitby = True
 
         # If we know all possible record IDs from the filter query,
         # then we can simplify the master query so it doesn't need
@@ -4860,15 +4861,17 @@ class S3ResourceData(object):
                 else:
                     master_query = table._id.belongs(set(master_ids))
 
-                if (not ljoins or ijoins) and orderby:
+                orderby = None
+                if not ljoins or ijoins:
                     # Without joins, there can only be one row per id,
                     # so we can limit the master query (faster)
                     limitby = (0, len(master_ids))
+                    # Prevent automatic ordering
+                    orderby_on_limitby = False
                 else:
                     # With joins, there could be more than one row per id,
                     # so we can not limit the master query
                     limitby = None
-                    orderby = None
 
         elif pagination and not (efilter or vfilter or count or getids):
 
@@ -4929,13 +4932,14 @@ class S3ResourceData(object):
 
             # Execute master query
             db = current.db
-            rows = db(master_query).select(join=master_ijoins,
-                                           left=master_ljoins,
-                                           distinct=distinct,
-                                           groupby=groupby,
-                                           orderby=orderby,
-                                           limitby=limitby,
-                                           cacheable=not as_rows,
+            rows = db(master_query).select(join = master_ijoins,
+                                           left = master_ljoins,
+                                           distinct = distinct,
+                                           groupby = groupby,
+                                           orderby = orderby,
+                                           limitby = limitby,
+                                           orderby_on_limitby = orderby_on_limitby,
+                                           cacheable = not as_rows,
                                            *qfields.values())
 
             # Restore virtual fields
