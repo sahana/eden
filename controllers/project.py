@@ -81,8 +81,8 @@ def project():
                                                                  )
                                                )
 
-            if not component or component_name == "activity":
-                # Filter Themes/Activity Types based on Sector
+            if not component:
+                # Filter Themes based on Sector
                 if r.record:
                     table = s3db.project_sector_project
                     query = (table.project_id == r.id) & \
@@ -91,7 +91,6 @@ def project():
                     sector_ids = [row.sector_id for row in rows]
                     set_theme_requires(sector_ids)
 
-            if not component:
                 if r.method in ("create", "update"):
                     # Context from a Profile page?"
                     location_id = get_vars.get("(location)", None)
@@ -162,8 +161,14 @@ def project():
                     otable.role.requires = IS_EMPTY_OR(IS_IN_SET(allowed_roles))
 
             elif component_name == "activity":
-                # Filter Activity Type based on Sector
+                # Filter Activity Types/Themes based on Sector
+                table = s3db.project_sector_project
+                query = (table.project_id == r.id) & \
+                        (table.deleted == False)
+                rows = db(query).select(table.sector_id)
+                sector_ids = [row.sector_id for row in rows]
                 set_activity_type_requires("project_activity_activity_type", sector_ids)
+                set_theme_requires(sector_ids)
 
             elif component_name == "goal":
                 # Not working for embedded create form
