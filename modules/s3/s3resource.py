@@ -4860,8 +4860,7 @@ class S3ResourceData(object):
                 else:
                     master_query = table._id.belongs(set(master_ids))
 
-                orderby = None
-                if not ljoins or ijoins:
+                if (not ljoins or ijoins) and orderby:
                     # Without joins, there can only be one row per id,
                     # so we can limit the master query (faster)
                     limitby = (0, len(master_ids))
@@ -4869,6 +4868,7 @@ class S3ResourceData(object):
                     # With joins, there could be more than one row per id,
                     # so we can not limit the master query
                     limitby = None
+                    orderby = None
 
         elif pagination and not (efilter or vfilter or count or getids):
 
