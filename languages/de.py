@@ -2864,6 +2864,7 @@
 'Not Available': 'Nicht verfügbar/vorhanden',
 'Not currently a resident': 'Kein aktueller Bewohner',
 'Not Possible': 'Nicht möglich',
+'Not Required': 'Nicht erforderlich',
 'Not Set': 'Nicht festgelegt',
 'Not Authorized': 'Nicht berechtigt',
 'Not installed or incorrectly configured.': 'Nicht installiert oder nicht korrekt konfiguriert.',

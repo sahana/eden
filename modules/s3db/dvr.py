@@ -1212,6 +1212,7 @@ class DVRCaseAppointmentModel(S3Model):
                                    4: T("Completed"),
                                    5: T("Missed"),
                                    6: T("Cancelled"),
+                                   7: T("Not Required"),
                                    }
 
         tablename = "dvr_case_appointment"
