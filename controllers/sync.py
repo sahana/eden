@@ -245,4 +245,14 @@ def log():
                                 )
     return output
 
+# -----------------------------------------------------------------------------
+def task():
+    """
+        RESTful CRUD controller
+    """
+
+    if "options.s3json" in current.request.args:
+        # S3PopupLink
+        return s3_rest_controller()
+
 # END =========================================================================

@@ -6684,7 +6684,7 @@ def pr_get_group_pe_id(group_ids):
         @return: dictionary of pe_id and group_id
     """
 
-    if len(group_ids) > 0:
+    if group_ids:
         gtable = current.s3db.pr_group
         rows = current.db(gtable.id.belongs(group_ids)).select(gtable.id,
                                                                gtable.pe_id)
