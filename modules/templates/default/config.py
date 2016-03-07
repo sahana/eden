@@ -482,6 +482,8 @@ def config(settings):
     # Disaster Victim Registry / Case Management
     # Uncomment this to enable features to manage transferability of cases
     #settings.dvr.manage_transferability = True
+    # Uncomment this to enable household size in cases, set to "auto" for automatic counting
+    #settings.dvr.household_size = True
 
     # -------------------------------------------------------------------------
     # Events

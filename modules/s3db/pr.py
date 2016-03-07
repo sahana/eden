@@ -2271,6 +2271,7 @@ class S3GroupModel(S3Model):
                                  "group_head",
                                  ],
                   onaccept = self.group_membership_onaccept,
+                  ondelete = self.group_membership_onaccept,
                   realm_entity = self.group_membership_realm_entity,
                   )
 
@@ -2305,57 +2306,101 @@ class S3GroupModel(S3Model):
         """
 
         if hasattr(form, "vars"):
-            _id = form.vars.id
+            record_id = form.vars.id
         elif isinstance(form, Row) and "id" in form:
-            _id = form.id
+            record_id = form.id
         else:
             return
 
-        if not _id:
+        if not record_id:
             return
 
         db = current.db
+        settings = current.deployment_settings
+
         table = db.pr_group_membership
         gtable = db.pr_group
 
-        join = gtable.on(gtable.id == table.group_id)
-        row = db(table.id == _id).select(table.id,
-                                         table.person_id,
-                                         table.group_id,
-                                         table.deleted,
-                                         gtable.group_type,
-                                         join = join,
-                                         limitby = (0, 1)).first()
+        # Use left join for group data
+        left = gtable.on(gtable.id == table.group_id)
+
+        row = db(table.id == record_id).select(table.id,
+                                               table.person_id,
+                                               table.group_id,
+                                               table.deleted,
+                                               table.deleted_fk,
+                                               gtable.id,
+                                               gtable.group_type,
+                                               left = left,
+                                               limitby = (0, 1),
+                                               ).first()
         record = row.pr_group_membership
+
+        if not record:
+            return
+
+        # Get person_id and group_id
         group_id = record.group_id
         person_id = record.person_id
-        if record:
-            if person_id and group_id and not record.deleted:
-                query = (table.person_id == person_id) & \
-                        (table.group_id == group_id) & \
-                        (table.id != record.id) & \
-                        (table.deleted != True)
-                deleted_fk = {"person_id": person_id,
-                              "group_id": group_id,
-                              }
-                db(query).update(deleted = True,
-                                 person_id = None,
-                                 group_id = None,
-                                 deleted_fk = json.dumps(deleted_fk))
-            pr_update_affiliations(table, record)
+        if record.deleted and record.deleted_fk:
+            try:
+                deleted_fk = json.loads(record.deleted_fk)
+            except ValueError:
+                pass
+            else:
+                person_id = deleted_fk.get("person_id", person_id)
+                group_id = deleted_fk.get("group_id", group_id)
 
-        group = row.pr_group
-        if group.group_type == 7:
-            s3db = current.s3db
-            # Generate a case unless we already have one
-            ctable = s3db.table("dvr_case")
-            if ctable:
-                query = (ctable.person_id == person_id) & \
-                        (ctable.deleted != True)
-                row = db(query).select(ctable.id, limitby=(0, 1)).first()
-                if not row:
-                    s3db.dvr_case_default_status()
-                    ctable.insert(person_id=person_id)
+        # Make sure a person always only belongs once
+        # to the same group (delete all other memberships)
+        if person_id and group_id and not record.deleted:
+            query = (table.person_id == person_id) & \
+                    (table.group_id == group_id) & \
+                    (table.id != record.id) & \
+                    (table.deleted != True)
+            deleted_fk = {"person_id": person_id,
+                          "group_id": group_id,
+                          }
+            db(query).update(deleted = True,
+                             person_id = None,
+                             group_id = None,
+                             deleted_fk = json.dumps(deleted_fk),
+                             )
+
+        # Update PE hierarchy affiliations
+        pr_update_affiliations(table, record)
+
+        # DVR extensions
+        s3db = current.s3db
+        ctable = s3db.table("dvr_case")
+        if ctable:
+            # Get the group
+            group = row.pr_group
+            if group.id is None and group_id:
+                query = (gtable.id == group_id) & \
+                        (gtable.deleted != True)
+                row = db(query).select(gtable.id,
+                                       gtable.group_type,
+                                       limitby = (0, 1),
+                                       ).first()
+                if row:
+                    group = row
+
+            if group.group_type == 7:
+                if not record.deleted:
+                    # Generate a case for new case group member
+                    # ...unless we already have one
+                    query = (ctable.person_id == person_id) & \
+                            (ctable.deleted != True)
+                    row = db(query).select(ctable.id, limitby=(0, 1)).first()
+                    if not row:
+                        s3db.dvr_case_default_status()
+                        ctable.insert(person_id=person_id)
+
+                # Update household size for all case group members
+                # ...if set to automatic counting
+                if group_id and settings.get_dvr_household_size() == "auto":
+                    s3db.dvr_case_household_size(group_id)
 
     # -------------------------------------------------------------------------
     @staticmethod

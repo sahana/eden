@@ -405,6 +405,8 @@ def config(settings):
     #
     # Uncomment this to enable features to manage transferability of cases
     settings.dvr.manage_transferability = True
+    # Uncomment this to enable household size in cases, set to "auto" for automatic counting
+    settings.dvr.household_size = "auto"
 
     # -------------------------------------------------------------------------
     def customise_dvr_home():
@@ -801,6 +803,7 @@ def config(settings):
                                         "person_details.nationality",
                                         "person_details.occupation",
                                         "person_details.marital_status",
+                                        "dvr_case.household_size",
                                         S3SQLInlineComponent(
                                                 "contact",
                                                 fields = [("", "value"),
@@ -1020,6 +1023,10 @@ def config(settings):
                                "person_id$gender",
                                (ROLE, "role_id"),
                                ]
+                # Retain group_id in list_fields if added in standard prep
+                lfields = resource.get_config("list_fields")
+                if "group_id" in lfields:
+                    list_fields.insert(0, "group_id")
                 resource.configure(filter_widgets = None,
                                    list_fields = list_fields,
                                    )

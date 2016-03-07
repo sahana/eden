@@ -38,6 +38,7 @@ __all__ = ("DVRCaseModel",
            "DVRCaseAllowanceModel",
            "dvr_case_default_status",
            "dvr_case_status_filter_opts",
+           "dvr_case_household_size",
            "dvr_due_followups",
            "dvr_rheader",
            )
@@ -244,6 +245,9 @@ class DVRCaseModel(S3Model):
         default_site = settings.get_org_default_site()
         permitted_facilities = current.auth.permitted_facilities(redirect_on_error=False)
 
+        household_size = settings.get_dvr_household_size()
+        household_size_writable = household_size and household_size != "auto"
+
         tablename = "dvr_case"
         define_table(tablename,
                      person_id(represent = self.pr_PersonRepresent(show_link=True),
@@ -334,6 +338,18 @@ class DVRCaseModel(S3Model):
                            represent = s3_yes_no_represent,
                            readable = manage_transferability,
                            writable = manage_transferability,
+                           ),
+                     Field("household_size", "integer",
+                           default = 1,
+                           label = T("Household Size"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, None)),
+                           readable = household_size,
+                           writable = household_size_writable,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Household Size"),
+                                                           T("Number of persons belonging to the same household."),
+                                                           ),
+                                         ),
                            ),
                      # Simplified "head of household" fields:
                      # (if not tracked as separate case beneficiaries)
@@ -1809,6 +1825,62 @@ def dvr_case_status_filter_opts(closed=None):
 
     T = current.T
     return OrderedDict((row.id, T(row.name)) for row in rows)
+
+# =============================================================================
+def dvr_case_household_size(group_id):
+    """
+        Update the household_size for all cases in the given case group,
+        taking into account that the same person could belong to multiple
+        case groups. To be called onaccept of pr_group_membership if automatic
+        household size is enabled
+
+        @param group_id: the group_id of the case group (group_type == 7)
+    """
+
+    db = current.db
+    s3db = current.s3db
+    ptable = s3db.pr_person
+    gtable = s3db.pr_group
+    mtable = s3db.pr_group_membership
+
+    # Get all persons related to this group_id, make sure this is a case group
+    join = [mtable.on((mtable.group_id == gtable.id) &
+                      (mtable.deleted != True)),
+            ptable.on(ptable.id == mtable.person_id)
+            ]
+    query = (gtable.id == group_id) & \
+            (gtable.group_type == 7) & \
+            (gtable.deleted != True)
+    rows = db(query).select(ptable.id, join=join)
+    person_ids = set([row.id for row in rows])
+
+    if person_ids:
+        # Get number of case group members for each of these person_ids
+        ctable = s3db.dvr_case
+        rtable = ctable.with_alias("member_cases")
+        otable = mtable.with_alias("case_members")
+        join = [ctable.on(ctable.person_id == mtable.person_id),
+                otable.on((otable.group_id == mtable.group_id) &
+                          (otable.deleted != True)),
+                ]
+        left = rtable.on(rtable.person_id == otable.person_id)
+        query = (mtable.person_id.belongs(person_ids)) & \
+                (mtable.deleted != True) & \
+                (otable.person_id != mtable.person_id) & \
+                (rtable.id != None)
+        cnt = otable.person_id.count()
+        rows = db(query).select(ctable.id,
+                                cnt,
+                                groupby = ctable.id,
+                                join = join,
+                                left = left,
+                                )
+
+        # Update the related cases
+        for row in rows:
+            case_id = row[ctable.id]
+            case_members = row[cnt] + 1
+            db(ctable.id == case_id).update(household_size = case_members)
 
 # =============================================================================
 def dvr_due_followups():

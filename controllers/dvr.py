@@ -267,8 +267,9 @@ def group_membership():
                 if group_ids:
                     # Single group ID?
                     group_id = tuple(group_ids)[0] if len(group_ids) == 1 else None
-                else:
-                    group_id = gtable.insert(name = record_id,
+                elif r.http == "POST":
+                    name = s3_fullname(record_id)
+                    group_id = gtable.insert(name = name,
                                              group_type = 7,
                                              )
                     table.insert(group_id = group_id,
@@ -293,14 +294,19 @@ def group_membership():
                            "person_id$date_of_birth",
                            ]
 
-            if len(group_ids) == 1:
+            if len(group_ids) == 0:
+                # No case group exists, will be auto-generated on POST,
+                # hide the field in the form:
+                field = table.group_id
+                field.readable = field.writable = False
+            elif len(group_ids) == 1:
                 field = table.group_id
                 field.default = group_id
                 # If we have only one relevant case, then hide the group ID
                 # in create-forms:
                 if not r.id:
                     field.readable = field.writable = False
-            else:
+            elif len(group_ids) > 1:
                 # Show the case ID in list fields if there is more than one
                 # relevant case
                 list_fields.insert(0, "group_id")

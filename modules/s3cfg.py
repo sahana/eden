@@ -2639,6 +2639,16 @@ class S3Config(Storage):
         """
         return self.dvr.get("manage_transferability", False)
 
+    def get_dvr_household_size(self):
+        """
+            Register number of persons per household (family)
+
+            False = off
+            True = manual
+            "auto" = count family members automatically
+        """
+        return self.dvr.get("household_size", False)
+
     # -------------------------------------------------------------------------
     # Events
     #
