@@ -319,6 +319,45 @@ def req_controller(template = False):
                 if r.id:
                     table.is_template.readable = table.is_template.writable = False
 
+                keyvalue = settings.get_ui_auto_keyvalue()
+                if keyvalue:
+                    # What Keys do we have?
+                    kvtable = s3db.req_req_tag
+                    keys = db(kvtable.deleted == False).select(kvtable.tag,
+                                                               distinct=True)
+                    if keys:
+                        tablename = "req_req"
+                        crud_fields = [f for f in table.fields if table[f].readable]
+                        cappend = crud_fields.append
+                        add_component = s3db.add_components
+                        list_fields = s3db.get_config(tablename,
+                                                      "list_fields")
+                        lappend = list_fields.append
+                        for key in keys:
+                            tag = key.tag
+                            label = T(tag.title())
+                            cappend(S3SQLInlineComponent("tag",
+                                                         label = label,
+                                                         name = tag,
+                                                         multiple = False,
+                                                         fields = [("", "value")],
+                                                         filterby = dict(field = "tag",
+                                                                         options = tag,
+                                                                         )
+                                                         ))
+                            add_component(tablename,
+                                          org_organisation_tag = {"name": tag,
+                                                                  "joinby": "req_id",
+                                                                  "filterby": "tag",
+                                                                  "filterfor": (tag,),
+                                                                  },
+                                          )
+                            lappend((label, "%s.value" % tag))
+                        crud_form = S3SQLCustomForm(*crud_fields)
+                        s3db.configure(tablename,
+                                       crud_form = crud_form,
+                                       )
+
                 method = r.method
                 if method in (None, "create"):
                     # Hide fields which don't make sense in a Create form
