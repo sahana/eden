@@ -1200,9 +1200,19 @@ class DVRCaseAppointmentModel(S3Model):
         define_table = self.define_table
         configure = self.configure
 
+        settings = current.deployment_settings
+
+        mandatory_appointments = settings.get_dvr_mandatory_appointments()
+
         # ---------------------------------------------------------------------
         # Case Appointment Type
         #
+        mandatory_comment = DIV(_class="tooltip",
+                                _title="%s|%s" % (T("Mandatory Appointment"),
+                                                  T("This appointment is mandatory before transfer."),
+                                                  ),
+                                ),
+
         tablename = "dvr_case_appointment_type"
         define_table(tablename,
                      Field("name", length=64, notnull=True, unique=True,
@@ -1210,6 +1220,37 @@ class DVRCaseAppointmentModel(S3Model):
                            ),
                      Field("active", "boolean",
                            default = True,
+                           label = T("Active"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Active Appointment"),
+                                                           T("Automatically create this appointment for new cases."),
+                                                           ),
+                                         ),
+                           ),
+                     Field("mandatory_children", "boolean",
+                           default = False,
+                           label = T("Mandatory for Children"),
+                           represent = s3_yes_no_represent,
+                           readable = mandatory_appointments,
+                           writable = mandatory_appointments,
+                           comment = mandatory_comment,
+                           ),
+                     Field("mandatory_adolescents", "boolean",
+                           default = False,
+                           label = T("Mandatory for Adolescents"),
+                           represent = s3_yes_no_represent,
+                           readable = mandatory_appointments,
+                           writable = mandatory_appointments,
+                           comment = mandatory_comment,
+                           ),
+                     Field("mandatory_adults", "boolean",
+                           default = False,
+                           label = T("Mandatory for Adults"),
+                           represent = s3_yes_no_represent,
+                           readable = mandatory_appointments,
+                           writable = mandatory_appointments,
+                           comment = mandatory_comment,
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1219,7 +1260,7 @@ class DVRCaseAppointmentModel(S3Model):
             label_create = T("Create Appointment Type"),
             title_display = T("Appointment Type Details"),
             title_list = T("Appointment Types"),
-            title_update = T("Edit Appointment Types"),
+            title_update = T("Edit Appointment Type"),
             label_list_button = T("List Appointment Types"),
             label_delete_button = T("Delete Appointment Type"),
             msg_record_created = T("Appointment Type added"),
@@ -1855,7 +1896,7 @@ def dvr_case_household_size(group_id):
     person_ids = set([row.id for row in rows])
 
     if person_ids:
-        # Get number of case group members for each of these person_ids
+        # Get case group members for each of these person_ids
         ctable = s3db.dvr_case
         rtable = ctable.with_alias("member_cases")
         otable = mtable.with_alias("case_members")
@@ -1868,19 +1909,28 @@ def dvr_case_household_size(group_id):
                 (mtable.deleted != True) & \
                 (otable.person_id != mtable.person_id) & \
                 (rtable.id != None)
-        cnt = otable.person_id.count()
         rows = db(query).select(ctable.id,
-                                cnt,
-                                groupby = ctable.id,
+                                otable.person_id,
                                 join = join,
                                 left = left,
                                 )
 
-        # Update the related cases
+        # Count heads
+        CASE = str(ctable.id)
+        MEMBER = str(otable.person_id)
+        groups = {}
         for row in rows:
-            case_id = row[ctable.id]
-            case_members = row[cnt] + 1
-            db(ctable.id == case_id).update(household_size = case_members)
+            case_id = row[CASE]
+            member_id = row[MEMBER]
+            if case_id not in groups:
+                groups[case_id] = set([member_id])
+            else:
+                groups[case_id].add(member_id)
+
+        # Update the related cases
+        for case_id, members in groups.items():
+            number_of_members = len(members) + 1
+            db(ctable.id == case_id).update(household_size = number_of_members)
 
 # =============================================================================
 def dvr_due_followups():

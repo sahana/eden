@@ -5,12 +5,18 @@
     <!-- **********************************************************************
          DVR Case Appointment Type - CSV Import Stylesheet
 
-         CSV column...........Format..........Content
+         CSV column..................Format..........Content
 
-         Name.................string..........Type Name
-         Active...............string..........is active
-                                              true|false
-         Comments.............string..........Comments
+         Name........................string..........Type Name
+         Active......................string..........is active
+                                                     true|false
+         Mandatory for Children......string..........is mandatory for children
+                                                     true|false
+         Mandatory for Adolescents...string..........is mandatory for adolescents
+                                                     true|false
+         Mandatory for Adults........string..........is mandatory for adults
+                                                     true|false
+         Comments....................string..........Comments
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -33,6 +39,45 @@
                 <xsl:attribute name="value">
                     <xsl:choose>
                         <xsl:when test="$is_active='true'">
+                            <xsl:value-of select="'true'"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="'false'"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:attribute>
+            </data>
+            <xsl:variable name="mandatory_children" select="col[@field='Mandatory for Children']/text()"/>
+            <data field="mandatory_children">
+                <xsl:attribute name="value">
+                    <xsl:choose>
+                        <xsl:when test="$mandatory_children='true'">
+                            <xsl:value-of select="'true'"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="'false'"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:attribute>
+            </data>
+            <xsl:variable name="mandatory_adolescents" select="col[@field='Mandatory for Adolescents']/text()"/>
+            <data field="mandatory_adolescents">
+                <xsl:attribute name="value">
+                    <xsl:choose>
+                        <xsl:when test="$mandatory_adolescents='true'">
+                            <xsl:value-of select="'true'"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="'false'"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:attribute>
+            </data>
+            <xsl:variable name="mandatory_adults" select="col[@field='Mandatory for Adults']/text()"/>
+            <data field="mandatory_adults">
+                <xsl:attribute name="value">
+                    <xsl:choose>
+                        <xsl:when test="$mandatory_adults='true'">
                             <xsl:value-of select="'true'"/>
                         </xsl:when>
                         <xsl:otherwise>

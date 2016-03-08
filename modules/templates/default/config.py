@@ -484,6 +484,8 @@ def config(settings):
     #settings.dvr.manage_transferability = True
     # Uncomment this to enable household size in cases, set to "auto" for automatic counting
     #settings.dvr.household_size = True
+    # Uncomment this to expose flags to mark appointment types as mandatory
+    #settings.dvr.mandatory_appointments = True
 
     # -------------------------------------------------------------------------
     # Events

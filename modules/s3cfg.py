@@ -2649,6 +2649,12 @@ class S3Config(Storage):
         """
         return self.dvr.get("household_size", False)
 
+    def get_dvr_mandatory_appointments(self):
+        """
+            Expose flags to mark appointment types as mandatory
+        """
+        return self.dvr.get("mandatory_appointments", False)
+
     # -------------------------------------------------------------------------
     # Events
     #

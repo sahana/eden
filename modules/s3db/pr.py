@@ -2270,6 +2270,7 @@ class S3GroupModel(S3Model):
                                  "person_id",
                                  "group_head",
                                  ],
+                  onvalidation = self.group_membership_onvalidation,
                   onaccept = self.group_membership_onaccept,
                   ondelete = self.group_membership_onaccept,
                   realm_entity = self.group_membership_realm_entity,
@@ -2300,9 +2301,75 @@ class S3GroupModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def group_membership_onvalidation(form):
+        """
+            Verify that a person isn't added to a group more than once
+
+            @param form: the FORM
+        """
+
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        person_id = form_vars.get("person_id")
+        group_id = form_vars.get("group_id")
+
+        table = current.s3db.pr_group_membership
+        db = current.db
+
+        if not record_id:
+            # New records - use defaults as required
+            if not person_id:
+                person_id = table.person_id.default
+            if not group_id:
+                group_id = table.group_id.default
+
+        elif not person_id or not group_id:
+            # Reload the record
+            query = (table.id == record_id) & \
+                    (table.deleted != True)
+            record = db(query).select(table.person_id,
+                                      table.group_id,
+                                      limitby = (0, 1),
+                                      ).first()
+            if not record:
+                # Nothing we can check
+                return
+            if not person_id:
+                person_id = record.person_id
+            if not group_id:
+                group_id = record.group_id
+
+        # Try to find a duplicate
+        query = (table.person_id == person_id) & \
+                (table.group_id == group_id) & \
+                (table.deleted != True)
+        if record_id:
+            query = (table.id != record_id) & query
+        duplicate = db(query).select(table.id, limitby=(0, 1)).first()
+
+        # Reject form if duplicate exists
+        if duplicate:
+            error = current.T("This person does already belong to this group.")
+            if "person_id" in form_vars:
+                # Group perspective
+                form.errors["person_id"] = error
+            elif "group_id" in form_vars:
+                # Person perspective
+                form.errors["group_id"] = error
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def group_membership_onaccept(form):
         """
             Remove any duplicate memberships and update affiliations
+
+            @param form: the FORM
         """
 
         if hasattr(form, "vars"):
@@ -2371,9 +2438,10 @@ class S3GroupModel(S3Model):
         pr_update_affiliations(table, record)
 
         # DVR extensions
+        s3 = current.response.s3
         s3db = current.s3db
         ctable = s3db.table("dvr_case")
-        if ctable:
+        if ctable and not s3.purge_case_groups:
             # Get the group
             group = row.pr_group
             if group.id is None and group_id:
@@ -2387,7 +2455,20 @@ class S3GroupModel(S3Model):
                     group = row
 
             if group.group_type == 7:
-                if not record.deleted:
+
+                recount = True
+
+                query = (table.group_id == group_id) & \
+                        (table.deleted != True)
+                rows = db(query).select(table.id, limitby = (0, 2))
+                if len(rows) < 2:
+                    # Remove case groups which only have one member
+                    s3.purge_case_groups = True
+                    resource = s3db.resource("pr_group", id=group_id)
+                    resource.delete()
+                    recount = False
+                    s3.purge_case_groups = False
+                elif not record.deleted:
                     # Generate a case for new case group member
                     # ...unless we already have one
                     query = (ctable.person_id == person_id) & \
@@ -2399,7 +2480,8 @@ class S3GroupModel(S3Model):
 
                 # Update household size for all case group members
                 # ...if set to automatic counting
-                if group_id and settings.get_dvr_household_size() == "auto":
+                if recount and group_id and \
+                   settings.get_dvr_household_size() == "auto":
                     s3db.dvr_case_household_size(group_id)
 
     # -------------------------------------------------------------------------
