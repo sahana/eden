@@ -6220,8 +6220,9 @@ def org_organisation_controller():
                             lappend = list_fields.append
                             for key in keys:
                                 tag = key.tag
+                                label = T(tag.title())
                                 cappend(S3SQLInlineComponent("tag",
-                                                             label = T(tag.title()),
+                                                             label = label,
                                                              name = tag,
                                                              multiple = False,
                                                              fields = [("", "value")],
@@ -6236,7 +6237,7 @@ def org_organisation_controller():
                                                                       "filterfor": (tag,),
                                                                       },
                                               )
-                                lappend("%s.value" % tag)
+                                lappend((label, "%s.value" % tag))
                             crud_form = S3SQLCustomForm(*crud_fields)
                             s3db.configure(tablename,
                                            crud_form = crud_form,

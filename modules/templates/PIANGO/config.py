@@ -155,51 +155,72 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_project_activity_resource(r, tablename):
 
-        # crud_form needs modifying to filter sectors by project's
-
-        from s3 import S3SQLCustomForm, S3SQLInlineLink
-
         s3db = current.s3db
 
         if r.tablename == "project_project":
+            # crud_form needs modifying to filter sectors by project's
+
+            from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+
             # Limit Sectors to those for the Project
             table = s3db.project_sector_project
             query = (table.project_id == r.id) & \
                     (table.deleted == False)
             rows = current.db(query).select(table.sector_id)
             sector_ids = [row.sector_id for row in rows]
-        else:
-            sector_ids = None
 
-        crud_form = S3SQLCustomForm("name",
-                                    "status_id",
-                                    S3SQLInlineLink("sector",
-                                                    field = "sector_id",
-                                                    label = T("Sectors"),
-                                                    filterby = "id",
-                                                    options = sector_ids,
-                                                    widget = "groupedopts",
-                                                    ),
-                                    S3SQLInlineLink("activity_type",
-                                                    field = "activity_type_id",
-                                                    label = T("Activity Types"),
-                                                    widget = "groupedopts",
-                                                    ),
-                                    "location_id",
-                                    "date",
-                                    "end_date",
-                                    "person_id",
-                                    "comments",
-                                    )
+            crud_form = S3SQLCustomForm("name",
+                                        "status_id",
+                                        S3SQLInlineLink("sector",
+                                                        field = "sector_id",
+                                                        label = T("Sectors"),
+                                                        filterby = "id",
+                                                        options = sector_ids,
+                                                        widget = "groupedopts",
+                                                        ),
+                                        S3SQLInlineLink("activity_type",
+                                                        field = "activity_type_id",
+                                                        label = T("Activity Types"),
+                                                        widget = "groupedopts",
+                                                        ),
+                                        "location_id",
+                                        "date",
+                                        "end_date",
+                                        S3SQLInlineComponent("distribution",
+                                                             fields = ["parameter_id",
+                                                                       "value",
+                                                                       (T("Intended Impact"), "comments"),
+                                                                       ],
+                                                             label = T("Distributed Supplies"),
+                                                             ),
+                                        "person_id",
+                                        "comments",
+                                        )
 
-        s3db.configure(tablename,
-                       crud_form = crud_form,
-                       )
+            s3db.configure(tablename,
+                           crud_form = crud_form,
+                           )
 
-        # Done automatically from settings now
-        #list_fields = s3db.get_config(tablename, "list_fields")
-        #list_fields.insert(2, (T("Sectors"), "sector_activity.sector_id"))
-        #list_fields.insert(3, (T("Activity Types"), "activity_activity_type.activity_type_id"))
+            list_fields = s3db.get_config(tablename, "list_fields")
+            list_fields.insert(3, (T("Distributions"), "distribution.parameter_id"))
+            # Done automatically from settings now
+            #list_fields.insert(2, (T("Sectors"), "sector_activity.sector_id"))
+            #list_fields.insert(3, (T("Activity Types"), "activity_activity_type.activity_type_id"))
+
+        elif r.tablename == "project_activity":
+            # Modify list_fields for desired Report format
+            list_fields = [("CSO", "organisation_id"),
+                           (T("Activity"), "name"),
+                           (T("Intended Impact"), "distribution.comments"),
+                           (T("Location"), "location_id"),
+                           ]
+
+            s3db.configure(tablename,
+                           deletable = False,
+                           editable = False,
+                           insertable = False,
+                           list_fields = list_fields,
+                           )
 
     settings.customise_project_activity_resource = customise_project_activity_resource
 

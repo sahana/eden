@@ -3556,7 +3556,7 @@ class S3Config(Storage):
 
     def get_org_tags(self):
         """
-            Whether Organidations, Office & Facilities should show a Tags tab
+            Whether Organisations, Offices & Facilities should show a Tags tab
         """
         return self.org.get("tags", False)
 

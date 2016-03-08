@@ -32,6 +32,7 @@ __all__ = ("S3RequestModel",
            "S3RequestSkillModel",
            "S3RequestRecurringModel",
            "S3RequestSummaryModel",
+           "S3RequestTagModel",
            "S3RequestTaskModel",
            "S3CommitModel",
            "S3CommitItemModel",
@@ -2403,6 +2404,72 @@ class S3RequestNeedsSkillsModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {}
+
+# =============================================================================
+class S3RequestTagModel(S3Model):
+    """
+        Request Tags
+    """
+
+    names = ("req_req_tag",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Request Tags
+        # - Key-Value extensions
+        # - can be used to provide conversions to external systems, such as:
+        #   * HXL
+        # - can be a Triple Store for Semantic Web support
+        #
+        tablename = "req_req_tag"
+        self.define_table(tablename,
+                          self.req_req_id(),
+                          # key is a reserved word in MySQL
+                          Field("tag",
+                                label = T("Key"),
+                                ),
+                          Field("value",
+                                label = T("Value"),
+                                ),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       deduplicate = self.req_req_tag_deduplicate,
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def req_req_tag_deduplicate(item):
+        """
+           If the record is a duplicate then it will set the item method
+           to update
+
+           @param item: the S3ImportItem
+        """
+
+        data = item.data
+        tag = data.get("tag", None)
+        organisation_type_id = data.get("req_id", None)
+
+        if not tag or not req_id:
+            return
+
+        table = item.table
+        query = (table.tag.lower() == tag.lower()) & \
+                (table.req_id == req_id)
+
+        duplicate = current.db(query).select(table.id,
+                                             limitby=(0, 1)).first()
+        if duplicate:
+            item.id = duplicate.id
+            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3RequestTaskModel(S3Model):
