@@ -104,9 +104,10 @@ def alert():
                                                  cols = 3,
                                                  multiple = False,
                                                  ))
-        s3db.configure(tablename,
-                       filter_widgets = filter_widgets,
-                       )
+        # No need to put them back - the edit happens in-place
+        #s3db.configure(tablename,
+        #               filter_widgets = filter_widgets,
+        #               )
 
         if r.representation == "dl":
             # DataList: match list_layout

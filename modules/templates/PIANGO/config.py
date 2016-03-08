@@ -143,6 +143,7 @@ def config(settings):
     settings.project.demographics = True
     settings.project.hazards = True
     settings.project.programmes = True
+    settings.project.projects = True
     settings.project.themes = True
     #settings.project.multiple_budgets = True
     settings.project.multiple_organisations = True
@@ -153,6 +154,8 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def customise_project_activity_resource(r, tablename):
+
+        # crud_form needs modifying to filter sectors by project's
 
         from s3 import S3SQLCustomForm, S3SQLInlineLink
 
@@ -177,6 +180,11 @@ def config(settings):
                                                     options = sector_ids,
                                                     widget = "groupedopts",
                                                     ),
+                                    S3SQLInlineLink("activity_type",
+                                                    field = "activity_type_id",
+                                                    label = T("Activity Types"),
+                                                    widget = "groupedopts",
+                                                    ),
                                     "location_id",
                                     "date",
                                     "end_date",
@@ -188,8 +196,10 @@ def config(settings):
                        crud_form = crud_form,
                        )
 
-        list_fields = s3db.get_config(tablename, "list_fields")
-        list_fields.insert(2, (T("Sectors"), "sector_activity.sector_id"))
+        # Done automatically from settings now
+        #list_fields = s3db.get_config(tablename, "list_fields")
+        #list_fields.insert(2, (T("Sectors"), "sector_activity.sector_id"))
+        #list_fields.insert(3, (T("Activity Types"), "activity_activity_type.activity_type_id"))
 
     settings.customise_project_activity_resource = customise_project_activity_resource
 
