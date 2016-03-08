@@ -1782,6 +1782,13 @@ class S3Config(Storage):
         return self.ui.get("icon_layout")
 
     # -------------------------------------------------------------------------
+    def get_ui_auto_keyvalue(self):
+        """
+            Should crud_form & list_fields automatically display all Keys in KeyValue tables?
+            - can be set to False, True or a list of tablenames for which it is True
+        """
+        return self.ui.get("auto_keyvalue", False)
+
     def get_ui_auth_user_represent(self):
         """
             Should the auth_user created_by/modified_by be represented by Name or Email?

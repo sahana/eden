@@ -104,6 +104,7 @@ class S3OrganisationModel(S3Model):
              "org_organisation_type_id",
              "org_region",
              "org_organisation",
+             "org_organisation_crud_fields",
              "org_organisation_id",
              "org_organisation_organisation_type",
              "org_organisation_user",
@@ -810,6 +811,7 @@ class S3OrganisationModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return dict(org_organisation_type_id = organisation_type_id,
+                    org_organisation_crud_fields = form_fields,
                     org_organisation_id = organisation_id,
                     org_organisation_represent = org_organisation_represent,
                     org_region_represent = region_represent,
@@ -6201,6 +6203,45 @@ def org_organisation_controller():
                 r.resource.add_filter(branch_filter)
 
             if not component or r.component_name == "branch":
+                if not component:
+                    keyvalue = settings.get_ui_auto_keyvalue()
+                    if keyvalue:
+                        # What Keys do we have?
+                        kvtable = s3db.org_organisation_tag
+                        keys = db(kvtable.deleted == False).select(kvtable.tag,
+                                                                   distinct=True)
+                        if keys:
+                            tablename = "org_organisation"
+                            crud_fields = s3db.org_organisation_crud_fields
+                            cappend = crud_fields.append
+                            add_component = s3db.add_components
+                            list_fields = s3db.get_config(tablename,
+                                                          "list_fields")
+                            lappend = list_fields.append
+                            for key in keys:
+                                tag = key.tag
+                                cappend(S3SQLInlineComponent("tag",
+                                                             label = T(tag.title()),
+                                                             name = tag,
+                                                             multiple = False,
+                                                             fields = [("", "value")],
+                                                             filterby = dict(field = "tag",
+                                                                             options = tag,
+                                                                             )
+                                                             ))
+                                add_component(tablename,
+                                              org_organisation_tag = {"name": tag,
+                                                                      "joinby": "organisation_id",
+                                                                      "filterby": "tag",
+                                                                      "filterfor": (tag,),
+                                                                      },
+                                              )
+                                lappend("%s.value" % tag)
+                            crud_form = S3SQLCustomForm(*crud_fields)
+                            s3db.configure(tablename,
+                                           crud_form = crud_form,
+                                           )
+
                 if type_filter:
                     type_names = [name.lower().strip()
                                   for name in type_filter.split(",")]
