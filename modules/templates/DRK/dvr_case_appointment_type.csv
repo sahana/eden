@@ -1,8 +1,8 @@
-Name,Active,Comments
-BÜMA,false,
-BAMF,true
-ED,true,
-GU,true,
-X-Ray,true,
-Transfer,true,
-Reported Transferable,true,Reported as Transferable to Regional Authority
+Name,Active,Mandatory for Children,Mandatory for Adolescents,Mandatory for Adults,Comments
+BÜMA,false,false,false,false,
+BAMF,true,false,false,false,
+ED,true,false,false,false,
+GU,true,true,true,true,
+X-Ray,true,false,true,true,
+Transfer,true,false,false,false,
+Reported Transferable,true,false,false,false,Reported as Transferable to Regional Authority
