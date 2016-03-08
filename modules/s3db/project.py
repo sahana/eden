@@ -1021,6 +1021,7 @@ class S3ProjectActivityModel(S3Model):
         s3 = current.response.s3
 
         add_components = self.add_components
+        configure = self.configure
         crud_strings = s3.crud_strings
         define_table = self.define_table
 
@@ -1117,8 +1118,14 @@ class S3ProjectActivityModel(S3Model):
 
         # Resource Configuration
         use_projects = settings.get_project_projects()
-        list_fields = ["id",
-                       "name",
+        crud_fields = ["name",
+                       "status_id",
+                       "location_id",
+                       "person_id",
+                       "comments",
+                       ]
+        
+        list_fields = ["name",
                        "comments",
                        ]
 
@@ -1133,10 +1140,42 @@ class S3ProjectActivityModel(S3Model):
         fact_fields = [(T("Number of Activities"), "count(id)"),
                        ]
 
+        crud_index = 2
+        list_index = 1
+        if settings.get_project_sectors():
+            crud_fields.insert(crud_index,
+                               S3SQLInlineLink("sector",
+                                               field = "sector_id",
+                                               label = T("Sectors"),
+                                               # @ToDo: Filter by Project's sectors
+                                               #filterby = "id",
+                                               #options = sector_ids,
+                                               widget = "groupedopts",
+                                               ))
+            crud_index += 1
+            list_fields.insert(list_index,
+                               (T("Sectors"), "sector_activity.sector_id"))
+            list_index += 1
+            rappend("sector_activity.sector_id")
+            default_col = "sector_activity.sector_id"
+            filter_widgets.append(
+                S3OptionsFilter("sector_activity.sector_id",
+                                # Doesn't support translation
+                                #represent = "%(name)s",
+                                ))
         if settings.get_project_activity_types():
-            list_fields.insert(1, "activity_type.name")
-            rappend((T("Activity Type"), "activity_type.name"))
-            default_col = "activity_type.name"
+            crud_fields.insert(crud_index,
+                               S3SQLInlineLink("activity_type",
+                                               field = "activity_type_id",
+                                               label = T("Activity Types"),
+                                               widget = "groupedopts",
+                                               ))
+            crud_index += 1
+            list_fields.insert(list_index,
+                               (T("Activity Types"), "activity_activity_type.activity_type_id"))
+            list_index += 1
+            rappend((T("Activity Type"), "activity_activity_type.activity_type_id"))
+            default_col = "activity_activity_type.activity_type_id"
             filter_widgets.append(
                 S3OptionsFilter("activity_activity_type.activity_type_id",
                                 label = T("Type"),
@@ -1144,19 +1183,12 @@ class S3ProjectActivityModel(S3Model):
                                 #represent="%(name)s",
                                 ))
         if use_projects:
+            crud_fields.insert(0, "project_id")
             list_fields.insert(0, "project_id")
             rappend((T("Project"), "project_id"))
             filter_widgets.insert(1,
                 S3OptionsFilter("project_id",
                                 represent = "%(name)s",
-                                ))
-        if settings.get_project_sectors():
-            rappend("sector_activity.sector_id")
-            default_col = "sector_activity.sector_id"
-            filter_widgets.append(
-                S3OptionsFilter("sector_activity.sector_id",
-                                # Doesn't support translation
-                                #represent = "%(name)s",
                                 ))
         if settings.get_project_themes():
             rappend("theme_activity.theme_id")
@@ -1193,8 +1225,10 @@ class S3ProjectActivityModel(S3Model):
             rappend(("project_id$hazard_project.hazard_id"))
             rappend((T("HFA"), "project_id$drr.hfa"))
         if mode_task:
-            list_fields.insert(3, "time_estimated")
-            list_fields.insert(4, "time_actual")
+            list_fields.insert(list_index, "time_estimated")
+            list_index += 1
+            list_fields.insert(list_index, "time_actual")
+            list_index += 1
             rappend((T("Time Estimated"), "time_estimated"))
             rappend((T("Time Actual"), "time_actual"))
             default_fact = "sum(time_actual)"
@@ -1210,15 +1244,16 @@ class S3ProjectActivityModel(S3Model):
                                  levels = levels,
                                  ))
 
-            posn = 2
             for level in levels:
                 lfield = "location_id$%s" % level
-                list_fields.insert(posn, lfield)
+                list_fields.insert(list_index, lfield)
                 report_fields.append(lfield)
-                posn += 1
+                list_index += 1
 
             # Highest-level of Hierarchy
             default_row = "location_id$%s" % levels[0]
+
+        crud_form = S3SQLCustomForm(*crud_fields)
 
         report_options = Storage(rows = report_fields,
                                  cols = report_fields,
@@ -1229,16 +1264,17 @@ class S3ProjectActivityModel(S3Model):
                                                     totals = True,
                                                     )
                                  )
-        self.configure(tablename,
-                       # Leave these workflows for Templates
-                       #create_next = create_next,
-                       deduplicate = self.project_activity_deduplicate,
-                       filter_widgets = filter_widgets,
-                       list_fields = list_fields,
-                       #onaccept = self.project_activity_onaccept,
-                       report_options = report_options,
-                       super_entity = "doc_entity",
-                       )
+        configure(tablename,
+                  # Leave these workflows for Templates
+                  #create_next = create_next,
+                  crud_form = crud_form,
+                  deduplicate = self.project_activity_deduplicate,
+                  filter_widgets = filter_widgets,
+                  list_fields = list_fields,
+                  #onaccept = self.project_activity_onaccept,
+                  report_options = report_options,
+                  super_entity = "doc_entity",
+                  )
 
         # Reusable Field
         represent = project_ActivityRepresent()
@@ -1359,6 +1395,12 @@ class S3ProjectActivityModel(S3Model):
             msg_list_empty = T("No Activity Types found for this Activity")
         )
 
+        if (settings.get_project_mode_3w() and \
+            use_projects):
+            configure(tablename,
+                      onaccept = self.project_activity_activity_type_onaccept,
+                      )
+
         # Pass names back to global scope (s3.*)
         return dict(project_activity_id = activity_id,
                     )
@@ -1439,6 +1481,70 @@ class S3ProjectActivityModel(S3Model):
             return [end_date.year]
         else:
             return list(xrange(start_date.year, end_date.year + 1))
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def project_activity_activity_type_onaccept(form):
+        """
+            Ensure the Activity Location is a Project Location with the
+            Activity's Activity Types in (as a minimum).
+
+            @ToDo: deployment_setting to allow project Locations to be
+                   read-only & have data editable only at the Activity level
+        """
+
+        db = current.db
+
+        form_vars_get = form.vars.get
+        activity_id = form_vars_get("activity_id")
+
+        # Find the Project & Location
+        atable = db.project_activity
+        activity = db(atable.id == activity_id).select(atable.project_id,
+                                                       atable.location_id,
+                                                       limitby=(0, 1)
+                                                       ).first()
+        try:
+            project_id = activity.project_id
+            location_id = activity.location_id
+        except:
+            # Nothing we can do
+            return
+
+        if not project_id or not location_id:
+            # Nothing we can do
+            return
+
+        # Find the Project Location
+        s3db = current.s3db
+        ltable = s3db.project_location
+        query = (ltable.project_id == project_id) &\
+                (ltable.location_id == location_id)
+        location = db(query).select(ltable.id,
+                                    limitby=(0, 1)
+                                    ).first()
+
+        if location:
+            pl_id = location.id
+        else:
+            # Create it
+            pl_id = ltable.insert(project_id = project_id,
+                                  location_id = location_id,
+                                  )
+
+        # Ensure we have the Activity Type in
+        activity_type_id = form_vars_get("activity_type_id")
+        latable = s3db.project_activity_type_location
+        query = (latable.project_location_id == pl_id) &\
+                (latable.activity_type_id == activity_type_id)
+        exists = db(query).select(latable.id,
+                                  limitby=(0, 1)
+                                  ).first()
+        if not exists:
+            # Create it
+            latable.insert(project_location_id = pl_id,
+                           activity_type_id = activity_type_id,
+                           )
 
 # =============================================================================
 class S3ProjectActivityTypeModel(S3Model):
