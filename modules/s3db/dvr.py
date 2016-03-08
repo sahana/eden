@@ -1896,7 +1896,7 @@ def dvr_case_household_size(group_id):
     person_ids = set([row.id for row in rows])
 
     if person_ids:
-        # Get number of case group members for each of these person_ids
+        # Get case group members for each of these person_ids
         ctable = s3db.dvr_case
         rtable = ctable.with_alias("member_cases")
         otable = mtable.with_alias("case_members")
@@ -1909,19 +1909,28 @@ def dvr_case_household_size(group_id):
                 (mtable.deleted != True) & \
                 (otable.person_id != mtable.person_id) & \
                 (rtable.id != None)
-        cnt = otable.person_id.count()
         rows = db(query).select(ctable.id,
-                                cnt,
-                                groupby = ctable.id,
+                                otable.person_id,
                                 join = join,
                                 left = left,
                                 )
 
-        # Update the related cases
+        # Count heads
+        CASE = str(ctable.id)
+        MEMBER = str(otable.person_id)
+        groups = {}
         for row in rows:
-            case_id = row[ctable.id]
-            case_members = row[cnt] + 1
-            db(ctable.id == case_id).update(household_size = case_members)
+            case_id = row[CASE]
+            member_id = row[MEMBER]
+            if case_id not in groups:
+                groups[case_id] = set([member_id])
+            else:
+                groups[case_id].add(member_id)
+
+        # Update the related cases
+        for case_id, members in groups.items():
+            number_of_members = len(members) + 1
+            db(ctable.id == case_id).update(household_size = number_of_members)
 
 # =============================================================================
 def dvr_due_followups():
