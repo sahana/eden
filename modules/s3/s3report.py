@@ -136,7 +136,11 @@ class S3Report(S3Method):
         if get_vars:
 
             rows = get_vars.get("rows", None)
+            if type(rows) is list:
+                rows = rows[-1]
             cols = get_vars.get("cols", None)
+            if type(cols) is list:
+                cols = cols[-1]
 
             layer = get_vars.get("fact", "id")
             try:
