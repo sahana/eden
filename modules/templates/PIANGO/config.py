@@ -209,7 +209,7 @@ def config(settings):
 
         elif r.tablename == "project_activity":
             # Modify list_fields for desired Report format
-            list_fields = [("CSO", "organisation_id"),
+            list_fields = [("CSO", "project_id$organisation_id"),
                            (T("Activity"), "name"),
                            (T("Intended Impact"), "distribution.comments"),
                            (T("Location"), "location_id"),
