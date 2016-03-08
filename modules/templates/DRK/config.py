@@ -370,14 +370,30 @@ def config(settings):
                 result = True
 
             if r.method == "check-in":
+                # Configure check-in methods
                 current.s3db.configure("cr_shelter",
                                        site_check_in = site_check_in,
                                        site_check_out = site_check_out,
                                        )
             else:
+                # Security can't do anything else but check-in
                 has_role = current.auth.s3_has_role
                 if has_role("SECURITY") and not has_role("ADMIN"):
-                   return None
+                   current.auth.permission.fail()
+
+            if r.component_name == "shelter_unit":
+                # Expose "transitory" flag for housing units
+                utable = current.s3db.cr_shelter_unit
+                field = utable.transitory
+                field.readable = field.writable = True
+                list_fields = ["name",
+                               "transitory",
+                               "capacity_day",
+                               "population_day",
+                               "available_capacity_day",
+                               ]
+                r.component.configure(list_fields=list_fields)
+
             return result
         s3.prep = custom_prep
 
@@ -388,12 +404,12 @@ def config(settings):
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
+            # Hide side menu and rheader for check-in
             if r.method == "check-in":
                 current.menu.options = None
                 output["rheader"] = ""
 
             return output
-
         s3.postp = custom_postp
 
         return attr

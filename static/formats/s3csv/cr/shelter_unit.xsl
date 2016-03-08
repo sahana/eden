@@ -7,11 +7,13 @@
 
          Column headers defined in this stylesheet:
 
-         Shelter........................required.....cr_shelter.name
-         Unit...........................required.....cr_shelter_unit.name
-         Capacity Day...................cr_shelter_unit.capacity_day
-         Capacity Night.................cr_shelter_unit.capacity_night
-         Country........................optional.....country
+         Shelter........................required.....Shelter Name
+         Unit...........................required.....Shelter Unit Name
+         Transitory.....................optional.....is for transitory accomodation
+                                                     true|false
+         Capacity Day...................optional.....capacity_day (integer)
+         Capacity Night.................optional.....capacity_night (integer)
+         Country........................optional.....Country
          L1.............................optional.....L1
          L2.............................optional.....L2
          L3.............................optional.....L3
@@ -157,7 +159,7 @@
                                                                           col[@field='L5']))[1])]">
                 <xsl:call-template name="L5"/>
             </xsl:for-each>
-            
+
             <!-- Shelters -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('shelter', col[@field='Shelter'])[1])]">
                 <xsl:call-template name="Shelter"/>
@@ -175,32 +177,77 @@
         <xsl:variable name="ShelterName" select="col[@field='Shelter']/text()"/>
         <xsl:variable name="ShelterUnitName" select="col[@field='Unit']/text()"/>
 
-        <resource name="cr_shelter_unit">
-            <data field="name"><xsl:value-of select="$ShelterUnitName"/></data>
-            <data field="capacity_day"><xsl:value-of select="col[@field='Capacity Day']"/></data>
-            <data field="capacity_night"><xsl:value-of select="col[@field='Capacity Night']"/></data>
-            <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+        <xsl:if test="$ShelterName!='' and $ShelterUnitName!=''">
+            <resource name="cr_shelter_unit">
 
-            <!-- Link to Shelter -->
-            <reference field="shelter_id" resource="cr_shelter">
-                <xsl:attribute name="tuid">
-                    <xsl:value-of select="$ShelterName"/>
-                </xsl:attribute>
-            </reference>
-
-            <!-- Link to Location -->
-            <!-- Currently this needs to be a specific location for S3LocationSelectorWidget,
-                 S3LocationSelector doesn't have this limitation -->
-            <reference field="location_id" resource="gis_location">
-                <xsl:attribute name="tuid">
+                <!-- Unit Name -->
+                <data field="name">
                     <xsl:value-of select="$ShelterUnitName"/>
-                </xsl:attribute>
-            </reference>
+                </data>
 
-        </resource>
+                <!-- Capacity Day -->
+                <xsl:variable name="CapacityDay" select="col[@field='Capacity Day']/text()"/>
+                <xsl:if test="$CapacityDay!=''">
+                    <data field="capacity_day">
+                        <xsl:value-of select="$CapacityDay"/>
+                    </data>
+                </xsl:if>
 
-        <!-- Locations -->
-        <xsl:call-template name="Locations"/>
+                <!-- Capacity Night -->
+                <xsl:variable name="CapacityNight" select="col[@field='Capacity Night']/text()"/>
+                <xsl:if test="$CapacityNight!=''">
+                    <data field="capacity_night">
+                        <xsl:value-of select="$CapacityNight"/>
+                    </data>
+                </xsl:if>
+
+                <!-- Transitory Accomodation? -->
+                <xsl:variable name="transitory" select="col[@field='Transitory']/text()"/>
+                <xsl:if test="$transitory!=''">
+                    <data field="transitory">
+                        <xsl:attribute name="value">
+                            <xsl:choose>
+                                <xsl:when test="$transitory='true'">
+                                    <xsl:value-of select="'true'"/>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:value-of select="'false'"/>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </xsl:attribute>
+                    </data>
+                </xsl:if>
+
+                <!-- Link to Shelter -->
+                <reference field="shelter_id" resource="cr_shelter">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$ShelterName"/>
+                    </xsl:attribute>
+                </reference>
+
+                <!-- Link to Location -->
+                <!-- Currently this needs to be a specific location for S3LocationSelectorWidget,
+                     S3LocationSelector doesn't have this limitation -->
+                <reference field="location_id" resource="gis_location">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$ShelterUnitName"/>
+                    </xsl:attribute>
+                </reference>
+
+                <!-- Comments -->
+                <xsl:variable name="Comments" select="col[@field='Comments']/text()"/>
+                <xsl:if test="$Comments!=''">
+                    <data field="comments">
+                        <xsl:value-of select="$Comments"/>
+                    </data>
+                </xsl:if>
+
+            </resource>
+
+            <!-- Locations -->
+            <xsl:call-template name="Locations"/>
+
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->
