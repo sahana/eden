@@ -378,8 +378,6 @@ class S3DocumentLibrary(S3Model):
                 item.id = duplicate.id
                 item.method = item.METHOD.UPDATE
 
-        return
-
     # -------------------------------------------------------------------------
     @staticmethod
     def document_onvalidation(form, document=True):

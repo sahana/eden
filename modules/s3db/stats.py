@@ -296,7 +296,7 @@ class S3StatsDemographicModel(S3Model):
             msg_list_empty = T("No demographics currently defined"))
 
         configure(tablename,
-                  deduplicate = self.stats_demographic_duplicate,
+                  deduplicate = S3Duplicate(),
                   requires_approval = True,
                   super_entity = "stats_parameter",
                   )
@@ -414,7 +414,11 @@ class S3StatsDemographicModel(S3Model):
                                  )
 
         configure(tablename,
-                  deduplicate = self.stats_demographic_data_duplicate,
+                  deduplicate = S3Duplicate(primary = ("parameter_id",
+                                                       "location_id",
+                                                       "date",
+                                                       ),
+                                            ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   # @ToDo: Wrapper function to call this for the record linked
@@ -530,39 +534,6 @@ class S3StatsDemographicModel(S3Model):
             stats_demographic_update_aggregates = self.stats_demographic_update_aggregates,
             stats_demographic_update_location_aggregate = self.stats_demographic_update_location_aggregate,
             )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def stats_demographic_duplicate(item):
-        """ Import item de-duplication """
-
-        name = item.data.get("name")
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def stats_demographic_data_duplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        parameter_id = data.get("parameter_id")
-        location_id = data.get("location_id")
-        date = data.get("date")
-        table = item.table
-        query = (table.date == date) & \
-                (table.location_id == location_id) & \
-                (table.parameter_id == parameter_id)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1271,7 +1242,7 @@ class S3StatsImpactModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  deduplicate = self.stats_impact_type_duplicate,
+                  deduplicate = S3Duplicate(),
                   super_entity = ("doc_entity", "stats_parameter"),
                   )
 
@@ -1349,25 +1320,6 @@ class S3StatsImpactModel(S3Model):
         return dict(stats_impact_id = impact_id,
                     )
 
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def stats_impact_type_duplicate(item):
-        """
-            Deduplication of Impact Type
-        """
-
-        name = item.data.get("name", None)
-        if not name:
-            return
-
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
 # =============================================================================
 class S3StatsPeopleModel(S3Model):
     """
@@ -1420,7 +1372,7 @@ class S3StatsPeopleModel(S3Model):
 
         # Resource Configuration
         configure(tablename,
-                  deduplicate = self.stats_people_type_duplicate,
+                  deduplicate = S3Duplicate(),
                   super_entity = ("doc_entity", "stats_parameter"),
                   )
 
@@ -1527,25 +1479,6 @@ class S3StatsPeopleModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return {}
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def stats_people_type_duplicate(item):
-        """
-            Deduplication of Type of Peoples
-        """
-
-        name = item.data.get("name", None)
-        if not name:
-            return
-
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 def stats_quantile(data, q):

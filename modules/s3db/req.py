@@ -545,7 +545,7 @@ class S3RequestModel(S3Model):
                                   "organisation": "site_id$organisation_id",
                                   "site": "site_id",
                                   },
-                       deduplicate = self.req_req_duplicate,
+                       deduplicate = S3Duplicate(primary = ("req_ref",)),
                        extra_fields = ("req_ref", "type"),
                        filter_widgets = filter_widgets,
                        onaccept = self.req_onaccept,
@@ -1478,34 +1478,6 @@ $.filterOptionsS3({
         query = (table.function_name == "req_add_from_template") & \
                 (table.args == "[%s]" % row.id)
         db(query).delete()
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_req_duplicate(item):
-        """
-          This callback will be called when importing records
-          it will look to see if the record being imported is a duplicate.
-
-          @param item: An S3ImportItem object which includes all the details
-                       of the record being imported
-
-          If the record is a duplicate then it will set the item method to update
-
-          Rules for finding a duplicate:
-           - If the Request Number exists then it's a duplicate
-        """
-
-        request_number = item.data.get("req_ref")
-        if not request_number:
-            return
-
-        table = item.table
-        query = (table.req_ref == request_number)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3RequestItemModel(S3Model):

@@ -125,7 +125,11 @@ class S3MembersModel(S3Model):
                                              )
 
         configure(tablename,
-                  deduplicate = self.member_type_duplicate,
+                  deduplicate = S3Duplicate(primary = ("name",
+                                                       "organisation_id",
+                                                       ),
+                                            ignore_deleted = True,
+                                            ),
                   )
 
         # ---------------------------------------------------------------------
@@ -283,7 +287,11 @@ class S3MembersModel(S3Model):
         configure(tablename,
                   create_next = URL(f="person", args="address",
                                     vars={"membership.id": "[id]"}),
-                  deduplicate = self.member_duplicate,
+                  deduplicate = S3Duplicate(primary = ("person_id",
+                                                       "organisation_id",
+                                                       ),
+                                            ignore_deleted = True,
+                                            ),
                   extra_fields = ("start_date",
                                   "membership_paid",
                                   "fee_exemption",
@@ -507,50 +515,6 @@ class S3MembersModel(S3Model):
         if not data:
             return
         record.update_record(**data)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def member_duplicate(item):
-        """
-            Member record duplicate detection, used for the deduplicate hook
-        """
-
-        data = item.data
-        person_id = data.get("person_id")
-        organisation_id = data.get("organisation_id")
-
-        table = item.table
-        # 1 Membership record per Person<>Organisation
-        query = (table.deleted != True) & \
-                (table.person_id == person_id) & \
-                (table.organisation_id == organisation_id)
-        row = current.db(query).select(table.id,
-                                       limitby=(0, 1)).first()
-        if row:
-            item.id = row.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def member_type_duplicate(item):
-        """
-            Membership Type duplicate detection, used for the deduplicate hook
-        """
-
-        data = item.data
-        name = data.get("name")
-        organisation_id = data.get("organisation_id")
-
-        table = item.table
-        # 1 Membership Type per Name<>Organisation
-        query = (table.deleted != True) & \
-                (table.name == name) & \
-                (table.organisation_id == organisation_id)
-        row = current.db(query).select(table.id,
-                                       limitby=(0, 1)).first()
-        if row:
-            item.id = row.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3MemberProgrammeModel(S3Model):

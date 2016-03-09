@@ -1217,7 +1217,7 @@ class DiseaseStatsModel(S3Model):
             msg_list_empty = T("No statistics currently defined"))
 
         configure(tablename,
-                  deduplicate = self.disease_statistic_duplicate,
+                  deduplicate = S3Duplicate(),
                   super_entity = "stats_parameter",
                   )
 
@@ -1320,7 +1320,11 @@ class DiseaseStatsModel(S3Model):
                                  )
 
         configure(tablename,
-                  deduplicate = self.disease_stats_data_duplicate,
+                  deduplicate = S3Duplicate(primary = ("parameter_id",
+                                                       "location_id",
+                                                       "date",
+                                                       ),
+                                            ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   report_options = report_options,
@@ -1396,39 +1400,6 @@ class DiseaseStatsModel(S3Model):
             disease_stats_update_aggregates = self.disease_stats_update_aggregates,
             disease_stats_update_location_aggregates = self.disease_stats_update_location_aggregates,
             )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def disease_statistic_duplicate(item):
-        """ Import item de-duplication """
-
-        name = item.data.get("name")
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def disease_stats_data_duplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        parameter_id = data.get("parameter_id")
-        location_id = data.get("location_id")
-        date = data.get("date")
-        table = item.table
-        query = (table.date == date) & \
-                (table.location_id == location_id) & \
-                (table.parameter_id == parameter_id)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -310,7 +310,9 @@ class HospitalDataModel(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  deduplicate = self.hms_hospital_duplicate,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("address",),
+                                            ),
                   filter_widgets = filter_widgets,
                   list_fields = ["id",
                                  #"gov_uuid",
@@ -950,31 +952,6 @@ class HospitalDataModel(S3Model):
 
         return dict(hms_hospital_id = lambda **attr: dummy("hospital_id"),
                     )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hms_hospital_duplicate(item):
-        """
-            Hospital record duplicate detection, used for the deduplicate hook
-
-            @param item: the S3ImportItem to check
-        """
-
-        data = item.data
-        #org = data.get("organisation_id")
-        address = data.get("address")
-
-        table = item.table
-        query = (table.name == data.name)
-        #if org:
-        #    query = query & (table.organisation_id == org)
-        if address:
-            query = query & (table.address == address)
-        row = current.db(query).select(table.id,
-                                       limitby=(0, 1)).first()
-        if row:
-            item.id = row.id
-            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod

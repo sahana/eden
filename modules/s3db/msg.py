@@ -1306,7 +1306,9 @@ class S3RSSModel(S3ChannelModel):
                      *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = self.msg_rss_duplicate,
+                       deduplicate = S3Duplicate(primary = ("from_address",),
+                                                 ignore_case = False,
+                                                 )
                        list_fields = ["channel_id",
                                       "title",
                                       "from_address",
@@ -1318,24 +1320,6 @@ class S3RSSModel(S3ChannelModel):
 
         # ---------------------------------------------------------------------
         return {}
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def msg_rss_duplicate(item):
-        """
-            Import item deduplication, match by link (from_address)
-
-            @param item: the S3ImportItem instance
-        """
-
-        from_address = item.data.get("from_address")
-        table = item.table
-        query = (table.from_address == from_address)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3SMSModel(S3Model):
@@ -2294,7 +2278,7 @@ class S3BaseStationModel(S3Model):
             msg_list_empty=T("No Base Stations currently registered"))
 
         self.configure(tablename,
-                       deduplicate = self.msg_basestation_duplicate,
+                       deduplicate = S3Duplicate(),
                        super_entity = "org_site",
                        )
 
@@ -2302,40 +2286,5 @@ class S3BaseStationModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {}
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def msg_basestation_duplicate(item):
-        """
-            Import item deduplication, match by name
-                (Adding location_id doesn't seem to be a good idea)
-
-            @param item: the S3ImportItem instance
-        """
-
-        name = item.data.get("name")
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        #location_id = None
-        # if "location_id" in item.data:
-            # location_id = item.data.location_id
-            ## This doesn't find deleted records:
-            # query = query & (table.location_id == location_id)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        # if duplicate is None and location_id:
-            ## Search for deleted basestations with this name
-            # query = (table.name.lower() == name.lower()) & \
-                    # (table.deleted == True)
-            # row = db(query).select(table.id, table.deleted_fk,
-                                   # limitby=(0, 1)).first()
-            # if row:
-                # fkeys = json.loads(row.deleted_fk)
-                # if "location_id" in fkeys and \
-                   # str(fkeys["location_id"]) == str(location_id):
-                    # duplicate = row
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # END =========================================================================

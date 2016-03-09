@@ -81,7 +81,7 @@ class S3ScenarioModel(S3Model):
         self.configure(tablename,
                        # Open Map Config to set the default Location
                        create_next = URL(args=["[id]", "config"]),
-                       deduplicate = self.scenario_duplicate,
+                       deduplicate = S3Duplicate(),
                        )
 
         # CRUD strings
@@ -199,24 +199,6 @@ class S3ScenarioModel(S3Model):
 
         return dict(scenario_scenario_id = lambda **attr: dummy("scenario_id"),
                     )
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def scenario_duplicate(item):
-        """
-            Deduplication of Scenarios
-        """
-
-        data = item.data
-        name = data.get("name")
-
-        table = item.table
-        query = (table.name == name)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ScenarioAssetModel(S3Model):

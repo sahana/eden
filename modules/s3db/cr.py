@@ -544,7 +544,9 @@ class S3ShelterModel(S3Model):
 
         configure(tablename,
                   create_next = create_next,
-                  deduplicate = self.cr_shelter_duplicate,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("address",),
+                                            ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.cr_shelter_onaccept,
@@ -915,31 +917,6 @@ class S3ShelterModel(S3Model):
         # @ToDo: Update/Create a cr_shelter_status record
 
         return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def cr_shelter_duplicate(item):
-        """
-            Shelter record duplicate detection, used for the deduplicate hook
-
-            @param item: the S3ImportItem to check
-        """
-
-        data = item.data
-        #org = data.get("organisation_id")
-        address = data.get("address")
-
-        table = item.table
-        query = (table.name == data.name)
-        #if org:
-        #    query = query & (table.organisation_id == org)
-        if address:
-            query = query & (table.address == address)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
     # -----------------------------------------------------------------------------
     @staticmethod

@@ -87,7 +87,7 @@ class S3FireModel(S3Model):
         zone_type_represent = S3Represent(lookup=tablename)
 
         self.configure(tablename,
-                       deduplicate = self.fire_zone_type_duplicate,
+                       deduplicate = S3Duplicate(),
                        )
 
         # -----------------------------------------------------------
@@ -137,23 +137,6 @@ class S3FireModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def fire_zone_type_duplicate(item):
-        """
-            Zone Type record duplicate detection, used for the deduplicate hook
-
-            @param item: the S3ImportItem to check
-        """
-
-        table = item.table
-        query = (table.name == item.data.name)
-        row = current.db(query).select(table.id,
-                                       limitby=(0, 1)).first()
-        if row:
-            item.id = row.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3FireStationModel(S3Model):
