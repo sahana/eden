@@ -272,6 +272,7 @@ def group_membership():
                     group_id = gtable.insert(name = name,
                                              group_type = 7,
                                              )
+                    s3db.update_super(gtable, {"id": group_id})
                     table.insert(group_id = group_id,
                                  person_id = record_id,
                                  )
