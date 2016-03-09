@@ -419,7 +419,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cr_shelter_registration_controller(**attr):
         """
-            Shelter Registration controller is just used by the QuartiersManager
+            Shelter Registration controller is just used
+            by the Quartiermanager role.
         """
 
         s3 = current.response.s3
@@ -446,12 +447,17 @@ def config(settings):
                 f.default = r.get_vars["person_id"]
                 f.writable = False
                 f.comment = None
-                # Don't allow changing status
-                table.registration_status.writable = False
-                # Don't check-in user
-                table.check_in_date.writable = False
-                # Don't check-out user
-                table.check_out_date.writable = False
+                # Registration status hidden
+                f = table.registration_status
+                f.readable = False
+                f.writable = False
+                # Check-in dates hidden
+                f = table.check_in_date
+                f.readable = False
+                f.writable = False
+                f = table.check_out_date
+                f.readable = False
+                f.writable = False
 
                 # Go back to the list of residents after assigning
                 from gluon import URL
@@ -497,6 +503,10 @@ def config(settings):
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
+
+            if current.auth.s3_has_role("QUARTIER"):
+                # Enforce closed=0
+                r.vars["closed"] = r.get_vars["closed"] = "0"
 
             # Call standard prep
             if callable(standard_prep):

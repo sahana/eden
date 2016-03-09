@@ -12,9 +12,10 @@ AUTHENTICATED,Authenticated,,hrm,,,READ|UPDATE,,,,,"HRM access is controlled to 
 AUTHENTICATED,Authenticated,,hrm,person,,,READ|UPDATE,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
 AUTHENTICATED,Authenticated,,hrm,staff,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
 AUTHENTICATED,Authenticated,,hrm,volunteer,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-QUARTIER,Quartiersmanager,,dvr,person,,READ,,,,,
-QUARTIER,Quartiersmanager,,cr,shelter_registration,,READ|UPDATE,,,,,"Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them"
-QUARTIER,Quartiersmanager,,,,pr_person,READ,,,,,
+QUARTIER,Quartiermanager,,dvr,person,,READ,,,,,
+QUARTIER,Quartiermanager,,cr,shelter_registration,,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
+QUARTIER,Quartiermanager,,,,cr_shelter_registration,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
+QUARTIER,Quartiermanager,,,,pr_person,READ,,,,,
 SECURITY,Security,,security,person,,CREATE|READ,,,,,
 SECURITY,Security,,dvr,note,,CREATE|READ,,,,,
 SECURITY,Security,,cr,shelter,,READ,,,,,

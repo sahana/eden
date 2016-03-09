@@ -51,8 +51,7 @@ class S3MainMenu(default.S3MainMenu):
             ]
         elif not_admin and has_role("QUARTIER"):
             return [
-                MM("Residents", c="dvr", f="person",
-                   vars = {"closed": "0"}),
+                MM("Residents", c=("dvr", "cr"), f=("person", "shelter_registration")),
             ]
         else:
             return [
