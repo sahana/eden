@@ -1188,6 +1188,7 @@ class S3SupplyDistributionModel(S3Model):
                      self.supply_item_id(ondelete = "RESTRICT",
                                          required = True,
                                          ),
+                     # @ToDo: Hide this field & populate onaccept from the item_id represent
                      Field("name", length=128, unique=True,
                            #label = T("Distribution Item Name"),
                            label = T("Label"),
