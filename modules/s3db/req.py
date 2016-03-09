@@ -2456,7 +2456,7 @@ class S3RequestTagModel(S3Model):
 
         data = item.data
         tag = data.get("tag", None)
-        organisation_type_id = data.get("req_id", None)
+        req_id = data.get("req_id", None)
 
         if not tag or not req_id:
             return
