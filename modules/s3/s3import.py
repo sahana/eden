@@ -2144,13 +2144,14 @@ class S3ImportItem(object):
                 current.log.debug(format_exc(10))
         accepted = True
         if form.errors:
+            element = self.element
             for k in form.errors:
-                e = self.element.findall("data[@field='%s']" % k)
+                e = element.findall("data[@field='%s']" % k)
                 if not e:
-                    e = self.element.findall("reference[@field='%s']" % k)
-                    if not e:
-                        e = self.element
-                        form.errors[k] = "[%s] %s" % (k, form.errors[k])
+                    e = element.findall("reference[@field='%s']" % k)
+                if not e:
+                    e = element
+                    form.errors[k] = "[%s] %s" % (k, form.errors[k])
                 else:
                     e = e[0]
                 e.set(ERROR, str(form.errors[k]).decode("utf-8"))
