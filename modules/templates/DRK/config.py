@@ -417,6 +417,56 @@ def config(settings):
     settings.customise_cr_shelter_controller = customise_cr_shelter_controller
 
     # -------------------------------------------------------------------------
+    def customise_cr_shelter_registration_controller(**attr):
+        """
+            Shelter Registration controller is just used by the QuartiersManager
+        """
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method == "assign":
+                # Prep runs before split into create/update (Create should never happen in Village)
+                table = r.table
+                # Only 1 Shelter
+                f = table.shelter_id
+                f.default = settings.get_org_default_site()
+                f.writable = False # f.readable kept as True for cr_shelter_registration_onvalidation
+                f.comment = None
+                # Only edit for this Person
+                f = table.person_id
+                f.default = r.get_vars["person_id"]
+                f.writable = False
+                f.comment = None
+                # Default to checked-in
+                # @ToDo: Hide this & set onaccept?
+                table.registration_status.default = 2
+                # Don't check-out user
+                table.check_out_date.writable = False
+
+                # Go back to the list of residents after assigning
+                from gluon import URL
+                current.s3db.configure("cr_shelter_registration",
+                                       create_next = URL(c="dvr", f="person"),
+                                       update_next = URL(c="dvr", f="person"),
+                                       )
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_cr_shelter_registration_controller = customise_cr_shelter_registration_controller
+
+    # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #
     # Uncomment this to enable features to manage transferability of cases
@@ -981,6 +1031,31 @@ def config(settings):
 
             return result
         s3.prep = custom_prep
+
+        # Custom postp
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if current.auth.s3_has_role("QUARTIER"):
+                # Add Action Button to assign Housing Unit to the Resident
+                from gluon import URL
+                #from s3 import S3CRUD, s3_str
+                from s3 import s3_str
+                #S3CRUD.action_buttons(r)
+                s3.actions = [dict(label=s3_str(T("Assign Shelter")),
+                                    _class="action-btn",
+                                    url=URL(c="cr",
+                                            f="shelter_registration",
+                                            args=["assign"],
+                                            vars={"person_id": "[id]"},
+                                            )),
+                               ]
+
+            return output
+        s3.postp = custom_postp
 
         # Custom rheader tabs
         attr = dict(attr)

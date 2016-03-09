@@ -59,6 +59,27 @@ def shelter_unit():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def shelter_registration():
+    """
+        RESTful CRUD controller
+    """
+
+    s3.crud_strings.cr_shelter_registration = Storage(
+        label_create = T("Register Person"),
+        title_display = T("Registration Details"),
+        title_list = T("Registered People"),
+        title_update = T("Edit Registration"),
+        label_list_button = T("List Registrations"),
+        msg_record_created = T("Registration added"),
+        msg_record_modified = T("Registration updated"),
+        msg_record_deleted = T("Registration entry deleted"),
+        msg_list_empty = T("No people currently registered in this shelter")
+        )
+
+    output = s3_rest_controller()
+    return output
+
 # =============================================================================
 def shelter():
     """

@@ -39,7 +39,8 @@ class S3MainMenu(default.S3MainMenu):
         default_site = current.deployment_settings.get_org_default_site()
 
         has_role = current.auth.s3_has_role
-        if has_role("SECURITY") and not has_role("ADMIN"):
+        not_admin = not has_role("ADMIN")
+        if not_admin and has_role("SECURITY"):
             return [
                 MM("Residents", c="security", f="person"),
                 #MM("ToDo", c="project", f="task"),
@@ -47,6 +48,10 @@ class S3MainMenu(default.S3MainMenu):
                    args = [default_site, "check-in"],
                    check = default_site is not None,
                    ),
+            ]
+        elif not_admin and has_role("QUARTIER"):
+            return [
+                MM("Residents", c="dvr", f="person"),
             ]
         else:
             return [

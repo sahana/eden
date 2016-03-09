@@ -941,25 +941,6 @@ class S3ShelterModel(S3Model):
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def cr_shelter_service_represent(id, row=None):
-        """ FK representation """
-
-        if row:
-            return row.name
-        elif not id:
-            return current.messages["NONE"]
-
-        db = current.db
-        table = db.cr_shelter_service
-        r = db(table.id == id).select(table.name,
-                                      limitby = (0, 1)).first()
-        try:
-            return r.name
-        except:
-            return current.messages.UNKNOWN_OPT
-
     # -----------------------------------------------------------------------------
     @staticmethod
     def cr_shelter_service_multirepresent(shelter_service_ids):
@@ -1136,8 +1117,13 @@ class S3ShelterRegistrationModel(S3Model):
 
         if housing_unit:
             configure(tablename,
-                      onvalidation = self.unit_onvalidation,
+                      onvalidation = self.cr_shelter_registration_onvalidation,
                       )
+
+        # Custom Methods
+        self.set_method("cr", "shelter_registration",
+                        method = "assign",
+                        action = cr_AssignUnit())
 
         # ---------------------------------------------------------------------
         # Shelter Registration History: history of status changes
@@ -1176,7 +1162,7 @@ class S3ShelterRegistrationModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def unit_onvalidation(form):
+    def cr_shelter_registration_onvalidation(form):
         """
             Check if the housing unit belongs to the requested shelter
         """
@@ -1187,39 +1173,33 @@ class S3ShelterRegistrationModel(S3Model):
             # Housing Unit is not mandatory during Case Registration
             return
 
-        db = current.db
-        T = current.T
-
-        htable = db.cr_shelter_unit
-
         unit_id = None
-        if type(form) is Row:
-            if controller == "evr":
-                shelter_id = form.shelter_id
-                unit_id = form.shelter_unit_id
-            elif controller == "cr":
-                # @ToDo: don't assume this!
-                shelter_id = request.args[0]
-                unit_id = form.shelter_unit_id
-        else:
-            if controller == "evr":
-                shelter_id = form.vars.shelter_id
-                unit_id = form.vars.shelter_unit_id
-            elif controller == "cr":
-                # @ToDo: don't assume this!
-                shelter_id = request.args[0]
-                unit_id = form.vars.shelter_unit_id
 
-        if unit_id == None:
-            warning = T("Warning: No housing unit selected")
-            current.response.warning = warning
+        if type(form) is Row:
+            form_vars = form
         else:
+            form_vars = form.vars
+
+        if controller == "evr":
+            # Registration form includes the Shelter
+            shelter_id = form_vars.shelter_id
+            unit_id = form_vars.shelter_unit_id
+        elif controller == "cr":
+            # Registration form doesn't include the Shelter
+            # @ToDo: don't assume that we are running as component of the shelter
+            shelter_id = form_vars.shelter_id or (form.record and form.record.shelter_id) or request.args[0]
+            unit_id = form_vars.shelter_unit_id
+
+        if unit_id is None:
+            current.response.warning = current.T("Warning: No housing unit selected")
+        else:
+            db = current.db
+            htable = db.cr_shelter_unit
             record = db(htable.id == unit_id).select(htable.shelter_id,
                                                      limitby=(0, 1)).first()
 
-            shelter_value = str(record.shelter_id)
-            if shelter_value != shelter_id:
-                error = T("You have to select a housing unit belonged to the shelter")
+            if str(record.shelter_id) != str(shelter_id):
+                error = current.T("You have to select a housing unit belonging to the shelter")
                 form.errors["branch_id"] = error
                 current.response.error = error
 
@@ -1872,5 +1852,50 @@ def cr_notification_dispatcher(r, **attr):
 
     else:
         raise HTTP(501, current.messages.BADMETHOD)
+
+# =============================================================================
+class cr_AssignUnit(S3CRUD):
+    """
+        Assign a Person to a Housing Unit
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        try:
+            person_id = int(r.get_vars["person_id"])
+        except:
+            raise HTTP(400, current.messages.BAD_REQUEST)
+
+        self.settings = current.response.s3.crud
+        sqlform = self._config("crud_form")
+        self.sqlform = sqlform if sqlform else S3SQLDefaultForm()
+        self.data = None
+
+        # Create or Update?
+        table = current.s3db.cr_shelter_registration
+        query = (table.deleted == False) & \
+                (table.person_id == person_id)
+        exists = current.db(query).select(table.id,
+                                          limitby=(0, 1)
+                                          ).first()
+        if exists:
+            # Update form
+            r.method = "update" # Ensure correct View template is used
+            self.record_id = exists.id
+            output = self.update(r, **attr)
+        else:
+            # Create form
+            r.method = "create" # Ensure correct View template is used
+            self.data = {"person_id": person_id}
+            output = self.create(r, **attr)
+
+        return output
 
 # END =========================================================================
