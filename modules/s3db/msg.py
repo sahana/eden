@@ -1308,7 +1308,7 @@ class S3RSSModel(S3ChannelModel):
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("from_address",),
                                                  ignore_case = False,
-                                                 )
+                                                 ),
                        list_fields = ["channel_id",
                                       "title",
                                       "from_address",
