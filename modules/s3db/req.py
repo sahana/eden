@@ -2438,38 +2438,14 @@ class S3RequestTagModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = self.req_req_tag_deduplicate,
+                       deduplicate = S3Duplicate(primary = ("req_id",
+                                                            "tag",
+                                                            ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def req_req_tag_deduplicate(item):
-        """
-           If the record is a duplicate then it will set the item method
-           to update
-
-           @param item: the S3ImportItem
-        """
-
-        data = item.data
-        tag = data.get("tag", None)
-        req_id = data.get("req_id", None)
-
-        if not tag or not req_id:
-            return
-
-        table = item.table
-        query = (table.tag.lower() == tag.lower()) & \
-                (table.req_id == req_id)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3RequestTaskModel(S3Model):

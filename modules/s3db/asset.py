@@ -396,7 +396,13 @@ class S3AssetModel(S3Model):
                   # Open Tabs after creation
                   create_next = URL(c="asset", f="asset",
                                     args=["[id]"]),
-                  deduplicate = self.asset_duplicate,
+                  deduplicate = S3Duplicate(primary = ("number",
+                                                       ),
+                                            secondary = ("site_id",
+                                                         "organisation_id",
+                                                         ),
+                                            ignore_case = False,
+                                            ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   mark_required = ("organisation_id",),
@@ -634,32 +640,6 @@ $.filterOptionsS3({
 
         return dict(asset_asset_id = lambda **attr: dummy("asset_id"),
                     )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def asset_duplicate(item):
-        """
-            Deduplication of Assets
-        """
-
-        table = item.table
-        data = item.data
-        number = data.get("number", None)
-        query = (table.number == number)
-
-        organisation_id = data.get("organisation_id", None)
-        if organisation_id:
-            query &= (table.organisation_id == organisation_id)
-
-        site_id = data.get("site_id", None)
-        if site_id:
-            query &= (table.site_id == site_id)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod

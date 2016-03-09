@@ -2069,7 +2069,7 @@ class S3GroupModel(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  deduplicate = self.group_deduplicate,
+                  deduplicate = S3Duplicate(ignore_deleted=True),
                   extra = "description",
                   main = "name",
                   super_entity = ("doc_entity",
@@ -2286,22 +2286,6 @@ class S3GroupModel(S3Model):
         return dict(pr_group_id = group_id,
                     pr_mailing_list_crud_strings = mailing_list_crud_strings,
                     )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def group_deduplicate(item):
-        """ Group de-duplication """
-
-        name = item.data.get("name")
-
-        table = item.table
-        query = (table.name == name) & \
-                (table.deleted != True)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2612,7 +2596,12 @@ class S3ContactModel(S3Model):
             msg_list_empty = T("No contact information available"))
 
         configure(tablename,
-                  deduplicate = self.pr_contact_deduplicate,
+                  deduplicate = S3Duplicate(primary=("pe_id",
+                                                     "contact_method",
+                                                     "value",
+                                                     ),
+                                            ignore_deleted = True,
+                                            ),
                   list_fields = ["id",
                                  "contact_method",
                                  "value",
@@ -2654,7 +2643,9 @@ class S3ContactModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  deduplicate = self.pr_emergency_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("pe_id",),
+                                            ignore_deleted = True,
+                                            ),
                   list_layout = pr_EmergencyContactListLayout(),
                   )
 
@@ -2701,51 +2692,6 @@ class S3ContactModel(S3Model):
                 form_vars.value = value
 
         return
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def pr_contact_deduplicate(item):
-        """ Contact information de-duplication """
-
-        data = item.data
-        pe_id = data.get("pe_id")
-        if pe_id is None:
-            return
-
-        table = item.table
-        contact_method = data.get("contact_method")
-        value = data.get("value")
-
-        query = (table.pe_id == pe_id) & \
-                (table.contact_method == contact_method) & \
-                (table.value == value) & \
-                (table.deleted != True)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def pr_emergency_deduplicate(item):
-        """
-            Emergency Contact information de-duplication
-            - currently only 1 of these expected per person
-        """
-
-        pe_id = item.data.get("pe_id")
-        if pe_id is None:
-            return
-
-        table = item.table
-        query = (table.pe_id == pe_id) & \
-                (table.deleted != True)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3AddressModel(S3Model):
@@ -2827,7 +2773,12 @@ class S3AddressModel(S3Model):
 
         # Resource configuration
         self.configure(tablename,
-                       deduplicate = self.pr_address_deduplicate,
+                       deduplicate = S3Duplicate(primary = ("pe_id",
+                                                            "type",
+                                                            "location_id",
+                                                            ),
+                                                 ignore_deleted = True,
+                                                 ),
                        list_fields = list_fields,
                        list_layout = pr_address_list_layout,
                        onaccept = self.pr_address_onaccept,
@@ -2947,29 +2898,6 @@ class S3AddressModel(S3Model):
                 members = db(query).select(mtable.id)
                 for member in members:
                     db(mtable.id == member.id).update(location_id=location_id)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def pr_address_deduplicate(item):
-        """ Address de-duplication """
-
-        data = item.data
-        pe_id = data.get("pe_id")
-        if pe_id is None:
-            return
-
-        type = data.get("type")
-        location_id = data.get("location_id")
-        table = item.table
-        query = (table.pe_id == pe_id) & \
-                (table.type == type) & \
-                (table.location_id == location_id) & \
-                (table.deleted != True)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3AvailabilityModel(S3Model):
@@ -3556,7 +3484,15 @@ class S3PersonIdentityModel(S3Model):
             msg_list_empty = T("No Identities currently registered"))
 
         self.configure(tablename,
-                       deduplicate = self.pr_identity_deduplicate,
+                       # People can have more than 1 'Other', or even Passport
+                       # - so this cannot be used to update the Number, only
+                       #   update comments:
+                       deduplicate = S3Duplicate(primary = ("person_id",
+                                                            "type",
+                                                            "value",
+                                                            ),
+                                                 ignore_deleted = True,
+                                                 ),
                        list_fields = ["id",
                                       "type",
                                       "value",
@@ -3570,31 +3506,6 @@ class S3PersonIdentityModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def pr_identity_deduplicate(item):
-        """ Identity de-duplication """
-
-        data = item.data
-        person_id = data.get("person_id")
-        if person_id is None:
-            return
-
-        id_type = data.get("type")
-        # People can have more than 1 'Other', or even Passport
-        # - so this cannot be used to update the Number, only update comments
-        id_value = data.get("value")
-        table = item.table
-        query = (table.person_id == person_id) & \
-                (table.type == id_type) & \
-                (table.value == id_value) & \
-                (table.deleted != True)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3PersonEducationModel(S3Model):
@@ -3674,7 +3585,9 @@ class S3PersonEducationModel(S3Model):
                                    )
 
         configure(tablename,
-                  deduplicate = self.pr_education_level_duplicate,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("organisation_id",),
+                                            ),
                   )
 
         # ---------------------------------------------------------------------
@@ -3747,7 +3660,14 @@ class S3PersonEducationModel(S3Model):
         configure("pr_education",
                   context = {"person": "person_id",
                              },
-                  deduplicate = self.pr_education_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("person_id",
+                                                       "level",
+                                                       "award",
+                                                       "year",
+                                                       "institute",
+                                                       ),
+                                            ignore_deleted = True,
+                                            ),
                   list_fields = ["id",
                                  # Normally accessed via component
                                  #"person_id",
@@ -3766,51 +3686,6 @@ class S3PersonEducationModel(S3Model):
         # Return model-global names to response.s3
         #
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def pr_education_level_duplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        name = data.get("name")
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        organisation_id = data.get("organisation_id")
-        if organisation_id:
-            query &= (table.organisation_id == organisation_id)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def pr_education_deduplicate(item):
-        """ Education de-duplication """
-
-        data = item.data
-        person_id = data.get("person_id")
-        if person_id is None:
-            return
-
-        level = data.get("level")
-        award = data.get("award")
-        year = data.get("year")
-        institute = data.get("institute")
-        table = item.table
-        query = (table.person_id == person_id) & \
-                (table.level == level) & \
-                (table.award == award) & \
-                (table.year == year) & \
-                (table.institute == institute) & \
-                (table.deleted != True)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3PersonDetailsModel(S3Model):
@@ -3994,7 +3869,9 @@ class S3PersonDetailsModel(S3Model):
             msg_list_empty = T("There are no details for this person yet. Add Person's Details."))
 
         self.configure(tablename,
-                       deduplicate = self.pr_person_details_deduplicate,
+                       deduplicate = S3Duplicate(primary=("person_id",),
+                                                 ignore_deleted = True,
+                                                 ),
                        )
 
         # ---------------------------------------------------------------------
@@ -4002,27 +3879,6 @@ class S3PersonDetailsModel(S3Model):
         #
         return {"pr_marital_status_opts": marital_status_opts,
                 }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def pr_person_details_deduplicate(item):
-        """
-            Person Details de-duplication
-            - only 1 of these expected per person
-        """
-
-        person_id = item.data.get("person_id")
-        if person_id is None:
-            return
-
-        table = item.table
-        query = (table.person_id == person_id) & \
-                (table.deleted != True)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3PersonTagModel(S3Model):

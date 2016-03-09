@@ -698,6 +698,17 @@ def config(settings):
                     # Not used currently:
                     #field.readable = field.writable = True
 
+                    # Customize label and tooltip for "household size"
+                    field = ctable.household_size
+                    FAMILY_MEMBERS = T("Family Members")
+                    field.label = FAMILY_MEMBERS
+                    from gluon.html import DIV
+                    field.comment = DIV(_class="tooltip",
+                                        _title="%s|%s" % (FAMILY_MEMBERS,
+                                                          T("The total number of family members including this person."),
+                                                          ),
+                                        )
+
                     #default_organisation = current.auth.root_org()
                     default_organisation = settings.get_org_default_organisation()
                     if default_organisation:
@@ -871,7 +882,8 @@ def config(settings):
                                         "person_details.nationality",
                                         "person_details.occupation",
                                         "person_details.marital_status",
-                                        "dvr_case.household_size",
+                                        # @todo: expose in next release:
+                                        #"dvr_case.household_size",
                                         S3SQLInlineComponent(
                                                 "contact",
                                                 fields = [("", "value"),
@@ -961,6 +973,9 @@ def config(settings):
                                    ]
                     if absence_field:
                         list_fields.append(absence_field)
+
+                    # @todo: expose in next release
+                    #list_fields.append((FAMILY_MEMBERS, "dvr_case.household_size"))
 
                     if r.representation == "xls":
 

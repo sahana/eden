@@ -410,7 +410,10 @@ class HospitalDataModel(S3Model):
                           *s3_meta_fields())
 
         configure(tablename,
-                  deduplicate = self.hms_hospital_tag_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("hospital_id",
+                                                       "tag",
+                                                       ),
+                                            ),
                   )
 
         # ---------------------------------------------------------------------
@@ -981,30 +984,6 @@ class HospitalDataModel(S3Model):
         """
 
         current.s3db.org_update_affiliations("hms_hospital", form.vars)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def hms_hospital_tag_deduplicate(item):
-        """
-           If the record is a duplicate then it will set the item method to update
-        """
-
-        data = item.data
-        tag = data.get("tag", None)
-        hospital_id = data.get("hospital_id", None)
-
-        if not tag or not hospital_id:
-            return
-
-        table = item.table
-        query = (table.tag.lower() == tag.lower()) & \
-                (table.hospital_id == hospital_id)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod

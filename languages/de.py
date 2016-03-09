@@ -4265,6 +4265,7 @@
 'The staff responsibile for Facilities can make Requests for assistance. Commitments can be made against these Requests however the requests remain open until the requestor confirms that the request is complete.': 'Die zuständigen Mitarbeiter für Anlagen können Hilfe anfordern. Bezüglich dieser Anfragen können Zusagen gemacht werden. Diese bleiben solange offen, bis der Anforderer bestätigt, dass die Anfrage erfüllt ist.',
 'The subject event no longer poses a threat or concern and any follow on action is described in <instruction>': 'Das genannte Ereignis stellt keine Bedrohung oder Sorge mehr dar und jede nachfolgende Aktion is unter <instruction> beschrieben.',
 'The time at which the Event started.': 'Die Zeit zu der das Ereignis startete.',
+'The total number of family members including this person.': 'Die Gesamtanzahl der Familienmitglieder einschliesslich dieser Person.',
 'The token associated with this application on': 'Das token welches mit dieser Anwendung verbunden ist',
 'The unique identifier which identifies this instance to other instances.': 'Die eindeutige Kennung (UUID), die diese Instanz bei der Kommunikation mit anderen Instanzen identifiziert.',
 "The volunteer's role": "Rolle des Freiwilligen",
