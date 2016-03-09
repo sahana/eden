@@ -544,9 +544,7 @@ class S3ShelterModel(S3Model):
 
         configure(tablename,
                   create_next = create_next,
-                  deduplicate = S3Duplicate(primary = ("name",),
-                                            secondary = ("address",),
-                                            ),
+                  deduplicate = S3Duplicate(),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.cr_shelter_onaccept,
