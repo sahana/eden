@@ -90,7 +90,7 @@ class S3OutboxTests(unittest.TestCase):
         if result != 2:
             raise AssertionError("Test data deletion failed")
 
-        resource = s3db.resource("org_organisation", uid="MsgTestorg")
+        resource = s3db.resource("org_organisation", uid="MsgTestOrg")
         result = resource.delete()
         if result != 1:
             raise AssertionError("Test data deletion failed")
