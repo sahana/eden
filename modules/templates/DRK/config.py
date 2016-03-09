@@ -446,9 +446,10 @@ def config(settings):
                 f.default = r.get_vars["person_id"]
                 f.writable = False
                 f.comment = None
-                # Default to checked-in
-                # @ToDo: Hide this & set onaccept?
-                table.registration_status.default = 2
+                # Don't allow changing status
+                table.registration_status.writable = False
+                # Don't check-in user
+                table.check_in_date.writable = False
                 # Don't check-out user
                 table.check_out_date.writable = False
 

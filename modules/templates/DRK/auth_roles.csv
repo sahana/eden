@@ -13,7 +13,7 @@ AUTHENTICATED,Authenticated,,hrm,person,,,READ|UPDATE,,,,"HRM access is controll
 AUTHENTICATED,Authenticated,,hrm,staff,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
 AUTHENTICATED,Authenticated,,hrm,volunteer,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
 QUARTIER,Quartiersmanager,,dvr,person,,READ,,,,,
-QUARTIER,Quartiersmanager,,cr,shelter_registration,,CREATE|READ|UPDATE,,,,,
+QUARTIER,Quartiersmanager,,cr,shelter_registration,,READ|UPDATE,,,,,"Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them"
 QUARTIER,Quartiersmanager,,,,pr_person,READ,,,,,
 SECURITY,Security,,security,person,,CREATE|READ,,,,,
 SECURITY,Security,,dvr,note,,CREATE|READ,,,,,
