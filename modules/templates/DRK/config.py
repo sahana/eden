@@ -503,9 +503,9 @@ def config(settings):
         has_role = current.auth.s3_has_role
         is_admin = has_role(current.auth.get_system_roles().ADMIN)
         QUARTIERMANAGER = not is_admin and \
-                          not any(has_role(r) for r in ("ADMINISTRATION",
-                                                        "ADMIN_HEAD",
-                                                        )) and \
+                          not any(has_role(role) for role in ("ADMINISTRATION",
+                                                              "ADMIN_HEAD",
+                                                              )) and \
                           has_role("QUARTIER")
 
         # Custom prep
