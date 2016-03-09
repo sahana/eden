@@ -2586,7 +2586,8 @@ class S3OrganisationServiceModel(S3Model):
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("organisation_id",
                                                        "service_id",
-                                                       )),
+                                                       ),
+                                            ),
                   )
 
         # ---------------------------------------------------------------------
@@ -2737,7 +2738,8 @@ class S3OrganisationServiceModel(S3Model):
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("service_location_id",
                                                        "service_id",
-                                                       )),
+                                                       ),
+                                            ),
                   )
 
         # ---------------------------------------------------------------------
@@ -2846,38 +2848,14 @@ class S3OrganisationTagModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = self.org_organisation_tag_deduplicate,
+                       deduplicate = S3Duplicate(primary = ("organisation_id",
+                                                            "tag",
+                                                            ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_organisation_tag_deduplicate(item):
-        """
-           If the record is a duplicate then it will set the item method
-           to update
-
-           @param item: the S3ImportItem
-        """
-
-        data = item.data
-        tag = data.get("tag", None)
-        organisation_id = data.get("organisation_id", None)
-
-        if not tag or not organisation_id:
-            return
-
-        table = item.table
-        query = (table.tag.lower() == tag.lower()) & \
-                (table.organisation_id == organisation_id)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3OrganisationTeamModel(S3Model):
@@ -2976,38 +2954,14 @@ class S3OrganisationTypeTagModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = self.org_organisation_type_tag_deduplicate,
+                       deduplicate = S3Duplicate(primary = ("organisation_type_id",
+                                                            "tag",
+                                                            ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_organisation_type_tag_deduplicate(item):
-        """
-           If the record is a duplicate then it will set the item method
-           to update
-
-           @param item: the S3ImportItem
-        """
-
-        data = item.data
-        tag = data.get("tag", None)
-        organisation_type_id = data.get("organisation_type_id", None)
-
-        if not tag or not organisation_type_id:
-            return
-
-        table = item.table
-        query = (table.tag.lower() == tag.lower()) & \
-                (table.organisation_type_id == organisation_type_id)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3SiteModel(S3Model):
@@ -3605,7 +3559,8 @@ class S3SiteNameModel(S3Model):
         self.configure(tablename,
                        deduplicate = S3Duplicate(primary = ("language",
                                                             "site_id",
-                                                            )),
+                                                            ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
@@ -3645,38 +3600,14 @@ class S3SiteTagModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = self.org_site_tag_deduplicate,
+                       deduplicate = S3Duplicate(primary=("site_id",
+                                                          "tag",
+                                                          ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_site_tag_deduplicate(item):
-        """
-           If the record is a duplicate then it will set the item method
-           to update
-
-           @param item: the S3ImportItem
-        """
-
-        data = item.data
-        tag = data.get("tag", None)
-        site_id = data.get("site_id", None)
-
-        if not tag or not site_id:
-            return
-
-        table = item.table
-        query = (table.tag.lower() == tag.lower()) & \
-                (table.site_id == site_id)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3FacilityModel(S3Model):
@@ -4931,38 +4862,14 @@ class S3OfficeTypeTagModel(S3Model):
 
 
         self.configure(tablename,
-                       deduplicate = self.org_office_type_tag_deduplicate,
+                       deduplicate = S3Duplicate(primary = ("office_type_id",
+                                                            "tag",
+                                                            ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_office_type_tag_deduplicate(item):
-        """
-           If the record is a duplicate then it will set the item method
-           to update
-
-           @param item: the S3ImportItem
-        """
-
-        data = item.data
-        tag = data.get("tag", None)
-        office_type_id = data.get("office_type_id", None)
-
-        if not tag or not office_type_id:
-            return
-
-        table = item.table
-        query = (table.tag.lower() == tag.lower()) & \
-                (table.office_type_id == office_type_id)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 def org_organisation_address(row):

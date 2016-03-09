@@ -405,7 +405,10 @@ class S3EventModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  deduplicate = self.event_event_tag_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("event_id",
+                                                       "tag",
+                                                       ),
+                                            ),
                   )
 
         # ---------------------------------------------------------------------
@@ -529,29 +532,6 @@ class S3EventModel(S3Model):
 
         table = item.table
         query = (table.name == name)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def event_event_tag_deduplicate(item):
-        """
-           Deduplication of Event Tags
-        """
-
-        data = item.data
-        tag = data.get("tag", None)
-        event = data.get("event_id", None)
-        if not tag or not event:
-            return
-
-        table = item.table
-        query = (table.tag.lower() == tag.lower()) & \
-                (table.event_id == event)
-
         duplicate = current.db(query).select(table.id,
                                              limitby=(0, 1)).first()
         if duplicate:

@@ -1373,7 +1373,10 @@ class S3LocationTagModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = self.gis_location_tag_deduplicate,
+                       deduplicate = S3Duplicate(primary = ("location_id",
+                                                            "tag",
+                                                            ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
@@ -1402,33 +1405,6 @@ class S3LocationTagModel(S3Model):
         for opt in opts:
             od[opt.id] = opt.name
         return od
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def gis_location_tag_deduplicate(item):
-        """
-           If the record is a duplicate then it will set the item method
-           to update
-
-           @param item: the S3ImportItem
-        """
-
-        data = item.data
-        tag = data.get("tag", None)
-        location_id = data.get("location_id", None)
-
-        if not tag or not location_id:
-            return
-
-        table = item.table
-        query = (table.tag.lower() == tag.lower()) & \
-                (table.location_id == location_id)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3LocationGroupModel(S3Model):
