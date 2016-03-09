@@ -500,11 +500,19 @@ def config(settings):
         s3db = current.s3db
         s3 = current.response.s3
 
+        has_role = current.auth.s3_has_role
+        is_admin = has_role(current.auth.get_system_roles().ADMIN)
+        QUARTIERMANAGER = not is_admin and \
+                          not any(has_role(r) for r in ("ADMINISTRATION",
+                                                        "ADMIN_HEAD",
+                                                        )) and \
+                          has_role("QUARTIER")
+
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
 
-            if current.auth.s3_has_role("QUARTIER"):
+            if QUARTIERMANAGER:
                 # Enforce closed=0
                 r.vars["closed"] = r.get_vars["closed"] = "0"
 
@@ -1065,7 +1073,7 @@ def config(settings):
             if callable(standard_postp):
                 output = standard_postp(r, output)
 
-            if current.auth.s3_has_role("QUARTIER"):
+            if QUARTIERMANAGER:
                 # Add Action Button to assign Housing Unit to the Resident
                 from gluon import URL
                 #from s3 import S3CRUD, s3_str
