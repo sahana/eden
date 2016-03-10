@@ -24,6 +24,7 @@
          Postcode.......................optional.....Postcode
          Lat............................optional.....Latitude
          Lon............................optional.....Longitude
+         WKT............................optional.....Shape
          Comments.......................optional.....Comments
 
     *********************************************************************** -->
@@ -630,6 +631,7 @@
         <xsl:variable name="l3" select="col[@field='L3']/text()"/>
         <xsl:variable name="l4" select="col[@field='L4']/text()"/>
         <xsl:variable name="l5" select="col[@field='L5']/text()"/>
+        <xsl:variable name="wkt" select="col[@field='WKT']/text()"/>
         <xsl:variable name="lat">
             <xsl:call-template name="GetColumnValue">
                 <xsl:with-param name="colhdrs" select="$Lat"/>
@@ -735,8 +737,15 @@
             </xsl:choose>
             <data field="addr_street"><xsl:value-of select="col[@field='Address']"/></data>
             <data field="addr_postcode"><xsl:value-of select="$postcode"/></data>
-            <data field="lat"><xsl:value-of select="$lat"/></data>
-            <data field="lon"><xsl:value-of select="$lon"/></data>
+            <xsl:choose>
+                <xsl:when test="$wkt!=''">
+                    <data field="wkt"><xsl:value-of select="$wkt"/></data>
+                </xsl:when>
+                <xsl:when test="$lat!=''">
+                    <data field="lat"><xsl:value-of select="$lat"/></data>
+                    <data field="lon"><xsl:value-of select="$lon"/></data>
+                </xsl:when>
+            </xsl:choose>
         </resource>
 
     </xsl:template>
