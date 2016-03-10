@@ -185,7 +185,9 @@ class S3WarehouseModel(S3Model):
                                )
 
         configure(tablename,
-                  deduplicate = self.inv_warehouse_type_duplicate,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("organisation_id",),
+                                            ),
                   )
 
         # Tags as component of Warehouse Types
@@ -324,7 +326,9 @@ class S3WarehouseModel(S3Model):
             ]
 
         configure(tablename,
-                  deduplicate = self.inv_warehouse_duplicate,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("organisation_id",),
+                                            ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.inv_warehouse_onaccept,
@@ -356,59 +360,12 @@ class S3WarehouseModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def inv_warehouse_type_duplicate(item):
-        """
-            Import item de-duplication
-
-            @param item: the S3ImportItem instance
-        """
-
-        data = item.data
-        name = data.get("name", None)
-        org = data.get("organisation_id", None)
-
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        if org:
-            query  = query & (table.organisation_id == org)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def inv_warehouse_onaccept(form):
         """
             Update Affiliation, record ownership and component ownership
         """
 
         current.s3db.org_update_affiliations("inv_warehouse", form.vars)
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def inv_warehouse_duplicate(item):
-        """
-            Import item deduplication, match by name and organisation
-                (Adding location_id doesn't seem to be a good idea - see office_duplicate)
-
-            @param item: the S3ImportItem instance
-        """
-
-        data = item.data
-        name = data.get("name", None)
-        org = data.get("organisation_id", None)
-
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        if org:
-            query  = query & (table.organisation_id == org)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3InventoryModel(S3Model):

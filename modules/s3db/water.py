@@ -86,7 +86,7 @@ class S3WaterModel(S3Model):
         zone_type_represent = S3Represent(lookup=tablename)
 
         self.configure(tablename,
-                       deduplicate = self.water_zone_type_duplicate,
+                       deduplicate = S3Duplicate(),
                        )
 
         # -----------------------------------------------------------
@@ -286,23 +286,5 @@ class S3WaterModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def water_zone_type_duplicate(item):
-        """
-            Zone Type record duplicate detection, used for the deduplicate hook
-
-            @param item: the S3ImportItem to check
-        """
-
-        if item.tablename == "water_zone_type":
-            table = item.table
-            query = (table.name == item.data.name)
-            row = current.db(query).select(table.id,
-                                           limitby=(0, 1)).first()
-            if row:
-                item.id = row.id
-                item.method = item.METHOD.UPDATE
 
 # END =========================================================================

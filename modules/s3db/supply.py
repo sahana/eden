@@ -1452,7 +1452,11 @@ class S3SupplyDistributionModel(S3Model):
                   context = {"location": "location_id",
                              "organisation": "activity_id$organisation_activity.organisation_id",
                              },
-                  deduplicate = self.supply_distribution_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("activity_id",
+                                                       "location_id",
+                                                       "parameter_id",
+                                                       ),
+                                            ),
                   filter_widgets = filter_widgets,
                   onaccept = self.supply_distribution_onaccept,
                   report_options = report_options,
@@ -1483,28 +1487,6 @@ class S3SupplyDistributionModel(S3Model):
         if item and not item[dtable.name]:
             db(dtable.id == record_id).update(name = item[ltable.name])
         return
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def supply_distribution_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        activity_id = data.get("activity_id")
-        location_id = data.get("location_id")
-        parameter_id = data.get("parameter_id")
-
-        if activity_id and location_id and parameter_id:
-            # Match distribution by activity, item and location
-            table = item.table
-            query = (table.activity_id == activity_id) & \
-                    (table.location_id == location_id) & \
-                    (table.parameter_id == parameter_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
 
     # ---------------------------------------------------------------------
     @staticmethod
