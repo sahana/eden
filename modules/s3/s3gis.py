@@ -2278,7 +2278,7 @@ class GIS(object):
 
         if settings.get_gis_spatialdb():
             if geojson:
-                decimals = settings.get_gis_decimals()
+                precision = settings.get_gis_precision()
                 if tolerance:
                     # Do the Simplify & GeoJSON direct from the DB
                     web2py_installed_version = parse_version(current.request.global_settings.web2py_version)
@@ -2286,15 +2286,15 @@ class GIS(object):
                     if web2py_installed_datetime >= datetime.datetime(2015, 1, 17, 0, 7, 4):
                         # Use http://www.postgis.org/docs/ST_SimplifyPreserveTopology.html
                         rows = db(query).select(table.id,
-                                                gtable.the_geom.st_simplifypreservetopology(tolerance).st_asgeojson(precision=decimals).with_alias("geojson"))
+                                                gtable.the_geom.st_simplifypreservetopology(tolerance).st_asgeojson(precision=precision).with_alias("geojson"))
                     else:
                         # Use http://www.postgis.org/docs/ST_Simplify.html
                         rows = db(query).select(table.id,
-                                                gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=decimals).with_alias("geojson"))
+                                                gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=precision).with_alias("geojson"))
                 else:
                     # Do the GeoJSON direct from the DB
                     rows = db(query).select(table.id,
-                                            gtable.the_geom.st_asgeojson(precision=decimals).with_alias("geojson"))
+                                            gtable.the_geom.st_asgeojson(precision=precision).with_alias("geojson"))
                 for row in rows:
                     key = row[tablename].id
                     if key in output:
@@ -3259,7 +3259,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                            levels=("L0", "L1", "L2", "L3"),
                            format="geojson",
                            simplify=0.01,
-                           decimals=4,
+                           precision=4,
                            ):
         """
             Export admin areas to /static/cache for use by interactive web-mapping services
@@ -3269,7 +3269,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             @param levels: list of which Lx levels to export
             @param format: Only GeoJSON supported for now (may add KML &/or OSM later)
             @param simplify: tolerance for the simplification algorithm. False to disable simplification
-            @param decimals: number of decimal points to include in the coordinates
+            @param precision: number of decimal points to include in the coordinates
         """
 
         db = current.db
@@ -3294,10 +3294,10 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             _field = table.the_geom
             if simplify:
                 # Do the Simplify & GeoJSON direct from the DB
-                field = _field.st_simplify(simplify).st_asgeojson(precision=decimals).with_alias("geojson")
+                field = _field.st_simplify(simplify).st_asgeojson(precision=precision).with_alias("geojson")
             else:
                 # Do the GeoJSON direct from the DB
-                field = _field.st_asgeojson(precision=decimals).with_alias("geojson")
+                field = _field.st_asgeojson(precision=precision).with_alias("geojson")
         else:
             spatial = False
             field = table.wkt
@@ -3321,7 +3321,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
 
         if "L0" in levels:
             # Reduce the decimals in output by 1
-            _decimals = decimals -1
+            _decimals = precision -1
             if spatial:
                 if simplify:
                     field = _field.st_simplify(simplify).st_asgeojson(precision=_decimals).with_alias("geojson")
@@ -3339,7 +3339,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     wkt = row.wkt
                     if wkt:
                         geojson = _simplify(wkt, tolerance=simplify,
-                                            decimals=_decimals,
+                                            precision=_decimals,
                                             output="geojson")
                     else:
                         name = db(table.id == id).select(table.name,
@@ -3388,7 +3388,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 # We want greater precision when zoomed-in more
                 simplify = simplify / 2 # 0.005 with default setting
                 if spatial:
-                    field = _field.st_simplify(simplify).st_asgeojson(precision=decimals).with_alias("geojson")
+                    field = _field.st_simplify(simplify).st_asgeojson(precision=precision).with_alias("geojson")
             for country in countries:
                 if not spatial or "L0" not in levels:
                     _id = country.id
@@ -3408,7 +3408,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         wkt = row.wkt
                         if wkt:
                             geojson = _simplify(wkt, tolerance=simplify,
-                                                decimals=decimals,
+                                                precision=precision,
                                                 output="geojson")
                         else:
                             name = db(table.id == id).select(table.name,
@@ -3446,7 +3446,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 # We want greater precision when zoomed-in more
                 simplify = simplify / 4 # 0.00125 with default setting
                 if spatial:
-                    field = _field.st_simplify(simplify).st_asgeojson(precision=decimals).with_alias("geojson")
+                    field = _field.st_simplify(simplify).st_asgeojson(precision=precision).with_alias("geojson")
             for country in countries:
                 if not spatial or "L0" not in levels:
                     id = country.id
@@ -3469,7 +3469,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                             wkt = row.wkt
                             if wkt:
                                 geojson = _simplify(wkt, tolerance=simplify,
-                                                    decimals=decimals,
+                                                    precision=precision,
                                                     output="geojson")
                             else:
                                 name = db(table.id == id).select(table.name,
@@ -3507,7 +3507,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 # We want greater precision when zoomed-in more
                 simplify = simplify / 2 # 0.000625 with default setting
                 if spatial:
-                    field = _field.st_simplify(simplify).st_asgeojson(precision=decimals).with_alias("geojson")
+                    field = _field.st_simplify(simplify).st_asgeojson(precision=precision).with_alias("geojson")
             for country in countries:
                 if not spatial or "L0" not in levels:
                     id = country.id
@@ -3533,7 +3533,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                 wkt = row.wkt
                                 if wkt:
                                     geojson = _simplify(wkt, tolerance=simplify,
-                                                        decimals=decimals,
+                                                        precision=precision,
                                                         output="geojson")
                                 else:
                                     name = db(table.id == id).select(table.name,
@@ -3571,7 +3571,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                 # We want greater precision when zoomed-in more
                 simplify = simplify / 2 # 0.0003125 with default setting
                 if spatial:
-                    field = _field.st_simplify(simplify).st_asgeojson(precision=decimals).with_alias("geojson")
+                    field = _field.st_simplify(simplify).st_asgeojson(precision=precision).with_alias("geojson")
             for country in countries:
                 if not spatial or "L0" not in levels:
                     id = country.id
@@ -3600,7 +3600,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                                     wkt = row.wkt
                                     if wkt:
                                         geojson = _simplify(wkt, tolerance=simplify,
-                                                            decimals=decimals,
+                                                            precision=precision,
                                                             output="geojson")
                                     else:
                                         name = db(table.id == id).select(table.name,
@@ -6051,7 +6051,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                  tolerance=None,
                  preserve_topology=True,
                  output="wkt",
-                 decimals=None
+                 precision=None
                  ):
         """
             Simplify a complex Polygon using the Douglas-Peucker algorithm
@@ -6065,7 +6065,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             @param tolerance: how aggressive a simplification to perform
             @param preserve_topology: whether the simplified geometry should be maintained
             @param output: whether to output as WKT or GeoJSON format
-            @param decimals: the number of decimal places to include in the output
+            @param precision: the number of decimal places to include in the output
         """
 
         from shapely.geometry import Point, LineString, Polygon, MultiPolygon
@@ -6088,8 +6088,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
 
         settings = current.deployment_settings
 
-        if not decimals:
-            decimals = settings.get_gis_decimals()
+        if not precision:
+            precision = settings.get_gis_precision()
 
         if tolerance is None:
             tolerance = settings.get_gis_simplify_tolerance()
@@ -6098,7 +6098,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             shape = shape.simplify(tolerance, preserve_topology)
 
         # Limit the number of decimal places
-        formatter = ".%sf" % decimals
+        formatter = ".%sf" % precision
         def shrink_polygon(shape):
             """ Helper Function """
             points = shape.exterior.coords

@@ -63,7 +63,7 @@ def config(settings):
 
     # Settings suitable for Housing Units
     # - move into customise fn if also supporting other polygons
-    settings.gis.decimals = 5
+    settings.gis.precision = 5
     settings.gis.simplify_tolerance = 0
 
     # L10n settings

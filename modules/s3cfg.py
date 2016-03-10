@@ -1345,12 +1345,12 @@ class S3Config(Storage):
         """
         return self.gis.get("simplify_tolerance", 0.01)
 
-    def get_gis_decimals(self):
+    def get_gis_precision(self):
         """
             Number of Decimal places to put in output
             Increase this to 5 for highly-zoomed maps showing buildings
         """
-        return self.gis.get("decimals", 4)
+        return self.gis.get("precision", 4)
 
     def get_gis_spatialdb(self):
         """
