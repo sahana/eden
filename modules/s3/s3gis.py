@@ -2278,6 +2278,7 @@ class GIS(object):
 
         if settings.get_gis_spatialdb():
             if geojson:
+                decimals = settings.get_gis_decimals()
                 if tolerance:
                     # Do the Simplify & GeoJSON direct from the DB
                     web2py_installed_version = parse_version(current.request.global_settings.web2py_version)
@@ -2285,15 +2286,15 @@ class GIS(object):
                     if web2py_installed_datetime >= datetime.datetime(2015, 1, 17, 0, 7, 4):
                         # Use http://www.postgis.org/docs/ST_SimplifyPreserveTopology.html
                         rows = db(query).select(table.id,
-                                                gtable.the_geom.st_simplifypreservetopology(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
+                                                gtable.the_geom.st_simplifypreservetopology(tolerance).st_asgeojson(precision=decimals).with_alias("geojson"))
                     else:
                         # Use http://www.postgis.org/docs/ST_Simplify.html
                         rows = db(query).select(table.id,
-                                                gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
+                                                gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=decimals).with_alias("geojson"))
                 else:
                     # Do the GeoJSON direct from the DB
                     rows = db(query).select(table.id,
-                                            gtable.the_geom.st_asgeojson(precision=4).with_alias("geojson"))
+                                            gtable.the_geom.st_asgeojson(precision=decimals).with_alias("geojson"))
                 for row in rows:
                     key = row[tablename].id
                     if key in output:
