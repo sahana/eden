@@ -1341,8 +1341,16 @@ class S3Config(Storage):
             Default Tolerance for the Simplification of Polygons
             - a lower value means less simplification, which is suitable for higher-resolution local activities
             - a higher value is suitable for global views
+            - set to 0 to disable
         """
         return self.gis.get("simplify_tolerance", 0.01)
+
+    def get_gis_decimals(self):
+        """
+            Number of Decimal places to put in output
+            Increase this to 5 for highly-zoomed maps showing buildings
+        """
+        return self.gis.get("decimals", 4)
 
     def get_gis_spatialdb(self):
         """

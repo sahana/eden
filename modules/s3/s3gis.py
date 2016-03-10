@@ -2278,17 +2278,22 @@ class GIS(object):
 
         if settings.get_gis_spatialdb():
             if geojson:
-                # Do the Simplify & GeoJSON direct from the DB
-                web2py_installed_version = parse_version(current.request.global_settings.web2py_version)
-                web2py_installed_datetime = web2py_installed_version[4] # datetime_index = 4
-                if web2py_installed_datetime >= datetime.datetime(2015, 1, 17, 0, 7, 4):
-                    # Use http://www.postgis.org/docs/ST_SimplifyPreserveTopology.html
-                    rows = db(query).select(table.id,
-                                            gtable.the_geom.st_simplifypreservetopology(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
+                if tolerance:
+                    # Do the Simplify & GeoJSON direct from the DB
+                    web2py_installed_version = parse_version(current.request.global_settings.web2py_version)
+                    web2py_installed_datetime = web2py_installed_version[4] # datetime_index = 4
+                    if web2py_installed_datetime >= datetime.datetime(2015, 1, 17, 0, 7, 4):
+                        # Use http://www.postgis.org/docs/ST_SimplifyPreserveTopology.html
+                        rows = db(query).select(table.id,
+                                                gtable.the_geom.st_simplifypreservetopology(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
+                    else:
+                        # Use http://www.postgis.org/docs/ST_Simplify.html
+                        rows = db(query).select(table.id,
+                                                gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
                 else:
-                    # Use http://www.postgis.org/docs/ST_Simplify.html
+                    # Do the GeoJSON direct from the DB
                     rows = db(query).select(table.id,
-                                            gtable.the_geom.st_simplify(tolerance).st_asgeojson(precision=4).with_alias("geojson"))
+                                            gtable.the_geom.st_asgeojson(precision=4).with_alias("geojson"))
                 for row in rows:
                     key = row[tablename].id
                     if key in output:
@@ -2296,9 +2301,13 @@ class GIS(object):
                     else:
                         output[key] = [row.geojson]
             else:
-                # Do the Simplify direct from the DB
-                rows = db(query).select(table.id,
-                                        gtable.the_geom.st_simplify(tolerance).st_astext().with_alias("wkt"))
+                if tolerance:
+                    # Do the Simplify direct from the DB
+                    rows = db(query).select(table.id,
+                                            gtable.the_geom.st_simplify(tolerance).st_astext().with_alias("wkt"))
+                else:
+                    rows = db(query).select(table.id,
+                                            gtable.the_geom.st_astext().with_alias("wkt"))
                 for row in rows:
                     key = row[tablename].id
                     if key in output:
@@ -2332,24 +2341,40 @@ class GIS(object):
                             output[row.id] = g
 
             else:
-                # Simplify the polygon to reduce download size
-                # & also to work around the recursion limit in libxslt
-                # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
                 if join:
-                    for row in rows:
-                        wkt = simplify(row["gis_location"].wkt)
-                        if wkt:
-                            key = row[tablename].id
-                            if key in output:
-                                output[key].append(wkt)
-                            else:
-                                output[key] = [wkt]
+                    if tolerance:
+                        # Simplify the polygon to reduce download size
+                        # & also to work around the recursion limit in libxslt
+                        # http://blog.gmane.org/gmane.comp.python.lxml.devel/day=20120309
+                        for row in rows:
+                            wkt = simplify(row["gis_location"].wkt)
+                            if wkt:
+                                key = row[tablename].id
+                                if key in output:
+                                    output[key].append(wkt)
+                                else:
+                                    output[key] = [wkt]
+                    else:
+                        for row in rows:
+                            wkt = row["gis_location"].wkt
+                            if wkt:
+                                key = row[tablename].id
+                                if key in output:
+                                    output[key].append(wkt)
+                                else:
+                                    output[key] = [wkt]
                 else:
                     # gis_location: always single
-                    for row in rows:
-                        wkt = simplify(row.wkt)
-                        if wkt:
-                            output[row.id] = wkt
+                    if tolerance:
+                        for row in rows:
+                            wkt = simplify(row.wkt)
+                            if wkt:
+                                output[row.id] = wkt
+                    else:
+                        for row in rows:
+                            wkt = row.wkt
+                            if wkt:
+                                output[row.id] = wkt
 
         return output
 
@@ -6025,7 +6050,7 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                  tolerance=None,
                  preserve_topology=True,
                  output="wkt",
-                 decimals=4
+                 decimals=None
                  ):
         """
             Simplify a complex Polygon using the Douglas-Peucker algorithm
@@ -6060,8 +6085,13 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
             current.log.error("Invalid Shape: %s" % wkt)
             return None
 
-        if not tolerance:
-            tolerance = current.deployment_settings.get_gis_simplify_tolerance()
+        settings = current.deployment_settings
+
+        if not decimals:
+            decimals = settings.get_gis_decimals()
+
+        if tolerance is None:
+            tolerance = settings.get_gis_simplify_tolerance()
 
         if tolerance:
             shape = shape.simplify(tolerance, preserve_topology)
