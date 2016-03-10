@@ -253,4 +253,153 @@ $(document).ready(function(){
 
         return output
 
+# =============================================================================
+def update_transferability():
+    """
+        Update transferability status of all cases, to be called either
+        from scheduler task or manually through custom controller.
+
+        @todo: complete criteria
+        @todo: make a function of that custom controller class
+        @todo: call from org_site_check task
+    """
+
+    # @todo: check that we have admin permissions
+
+    db = current.db
+    s3db = current.s3db
+
+    now = current.request.utcnow
+
+    ptable = s3db.pr_person
+    ctable = s3db.dvr_case
+    stable = s3db.dvr_case_status
+    utable = s3db.cr_shelter_unit
+    rtable = s3db.cr_shelter_registration
+    ttable = s3db.dvr_case_appointment_type
+    atable = s3db.dvr_case_appointment
+
+    # Set transferable=False for all cases
+    query = (ctable.deleted != True)
+    db(query).update(transferable = False)
+
+    # Define age groups (minimum age, maximum age, appointments, maximum absence)
+    age_groups = {"children": (None, 15, "mandatory_children", None),
+                  "adolescents": (15, 18, "mandatory_adolescents", None),
+                  "adults": (18, None, "mandatory_adults", 4),
+                  }
+
+    # Define left joins for base criteria
+    left = [stable.on(stable.id == ctable.status_id),
+            ptable.on(ptable.id == ctable.person_id),
+            rtable.on((rtable.person_id == ptable.id) &
+                      (rtable.deleted != True)),
+            utable.on(utable.id == rtable.shelter_unit_id),
+            ]
+
+    for age_group in age_groups:
+
+        min_age, max_age, appointment_flag, maximum_absence = age_groups[age_group]
+
+        # Translate Age Group => Date of Birth
+        dob_query = (ptable.date_of_birth != None)
+        from dateutil.relativedelta import relativedelta
+        if max_age:
+            dob_min = now - relativedelta(years=max_age)
+            dob_query &= (ptable.date_of_birth > dob_min)
+        if min_age:
+            dob_max = now - relativedelta(years=min_age)
+            dob_query &= (ptable.date_of_birth <= dob_max)
+
+        # Case must be valid
+        case_query = (ctable.deleted != True) & \
+                     ((ctable.archived == False) | \
+                      (ctable.archived == None))
+
+        # Case must not have a non-transferable status
+        case_query &= (stable.is_not_transferable == False) | \
+                      (stable.is_not_transferable == None)
+
+        # Person must be assigned to a non-transitory housing unit
+        case_query &= (utable.id != None) & \
+                      ((utable.transitory == False) | \
+                       (utable.transitory == None))
+
+        # Add date-of-birth query
+        case_query &= dob_query
+
+        # @todo: check that we do not yet have a "reported transferable date"
+
+        # Filter by presence if required
+        if maximum_absence is not None:
+            if maximum_absence:
+                # Must be checked-in or checked-out for less
+                # than maximum_absence days
+                earliest_check_out_date = now - \
+                                          relativedelta(days = maximum_absence)
+                presence_query = (rtable.registration_status == 2) | \
+                                 ((rtable.registration_status == 3) & \
+                                  (rtable.check_out_date > earliest_check_out_date))
+            else:
+                # Must be checked-in or checked-out
+                presence_query = (rtable.registration_status.belongs(2, 3))
+            case_query &= presence_query
+
+        # Select all cases for this age group:
+        cases = db(case_query).select(ctable.id,
+                                      left = left,
+                                      )
+        case_ids = set(case.id for case in cases)
+
+        if case_ids:
+            # Check for mandatory appointments
+            query = ctable.id.belongs(case_ids)
+            aleft = []
+
+            # Get all mandatory appointment types for this age groups:
+            if appointment_flag:
+                tquery = (ttable[appointment_flag] == True) & \
+                         (ttable.deleted != True)
+                rows = db(tquery).select(ttable.id)
+                mandatory_appointments = [row.id for row in rows]
+            else:
+                mandatory_appointments = None
+
+            if mandatory_appointments:
+
+                TODAY = now.date()
+                ONE_YEAR_AGO = (now - relativedelta(years=1)).date()
+
+                # Appointment statuses which do not count as valid dates
+                MISSED = 5
+                CANCELLED = 6
+
+                # Appointment statuses which override the requirement
+                NOT_REQUIRED = 7
+
+                # Join the valid appointment dates
+                for appointment_type_id in mandatory_appointments:
+
+                    alias = "appointments_%s" % appointment_type_id
+                    atable_ = atable.with_alias(alias)
+
+                    join = atable_.on((atable_.person_id == ctable.person_id) & \
+                                      (atable_.type_id == appointment_type_id) & \
+                                      (atable_.deleted != True) & \
+                                      (((atable_.status != MISSED) & \
+                                        (atable_.status != CANCELLED) & \
+                                        (atable_.date != None) & \
+                                        (atable_.date >= ONE_YEAR_AGO) & \
+                                        (atable_.date <= TODAY)) | \
+                                        (atable_.status == NOT_REQUIRED)))
+                    aleft.append(join)
+                    query &= (atable_.id != None)
+
+                # Select all cases that have the required appointment dates
+                cases = db(query).select(ctable.id, left=aleft)
+                case_ids = set(case.id for case in cases)
+
+            # Set the matching cases transferable=True
+            db(ctable.id.belongs(case_ids)).update(transferable=True)
+
 # END =========================================================================
