@@ -102,7 +102,7 @@
                     break;
                 case 'Restricted':
                     restriction_row.show();
-                    recipient_row.hide();
+                    recipient_row.show();
                     break;
                 case 'Private':
                     restriction_row.hide();
