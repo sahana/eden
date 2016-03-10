@@ -179,71 +179,83 @@ def config(settings):
 
         rtable = s3db.cr_shelter_registration
         utable = s3db.cr_shelter_unit
-        PX = db(utable.name == "PX").select(utable.id,
-                                            limitby=(0, 1)
-                                            ).first()
-        try:
-            PX = PX.id
-        except:
-            current.log.warning("No Shelter Unit called 'PX'")
-            PX = None
-            NON_PX = None
-            total = db(rtable.deleted == False).count()
-        else:
-            rows = db(rtable.deleted == False).select(rtable.shelter_unit_id)
-            px_count = 0
-            non_px_count = 0
-            for row in rows:
-                if row.shelter_unit_id == PX:
-                    px_count += 1
-                else:
-                    non_px_count += 1
-            total = px_count + non_px_count
-            PX = TR(TD(T("How many in PX")),
-                    TD(px_count),
-                    )
-            NON_PX = TR(TD(T("How many in BEA (except in PX)")),
-                        TD(non_px_count),
-                        )
+        ctable = s3db.dvr_case
+        stable = s3db.dvr_case_status
 
+        # Count number of shelter registrations,
+        # grouped by transitory-status of the housing unit
+        left = utable.on(utable.id == rtable.shelter_unit_id)
+        query = (rtable.deleted != True)
+        count = rtable.id.count()
+        rows = db(query).select(utable.transitory,
+                                count,
+                                groupby = utable.transitory,
+                                left = left,
+                                )
+        transitory = 0
+        regular = 0
+        for row in rows:
+            if row[utable.transitory]:
+                transitory += row[count]
+            else:
+                regular += row[count]
+        total = transitory + regular
+
+        # Transitory housing unit is called "PX" at BFV Mannheim
+        # @todo: generalize, lookup transitory unit name(s) from db
+        TRANSITORY = TR(TD(T("How many in PX")),
+                        TD(transitory),
+                        )
+        REGULAR = TR(TD(T("How many in BEA (except in PX)")),
+                     TD(regular),
+                     )
         TOTAL = TR(TD(T("How many in BEA (total)")),
                    TD(total),
                    )
 
-        stable = s3db.dvr_case_status
-        statuses = db(stable.code.belongs(("STATUS9", "STATUS9A"))).select(stable.code,
-                                                                           stable.id,
-                                                                           ).as_dict(key="code")
-        HOSPITAL = statuses["STATUS9"]["id"]
-        POLICE = statuses["STATUS9A"]["id"]
-        ctable = s3db.dvr_case
-        query = (ctable.deleted == False) & \
-                (ctable.archived == False) & \
-                (ctable.status_id.belongs((HOSPITAL, POLICE)))
-        external = db(query).count()
+        # Get the IDs of external statuses
+        STATUS_EXTERNAL = ("STATUS9", "STATUS9A")
+        query = (stable.code.belongs(STATUS_EXTERNAL)) & \
+                (stable.deleted != True)
+        rows = db(query).select(stable.id, limitby = (0, 2))
+        external_status_ids = set(row.id for row in rows)
+
+        # Count valid cases with external status
+        count = ctable.id.count()
+        query = (ctable.status_id.belongs(external_status_ids)) & \
+                ((ctable.archived == False) | (ctable.archived == None)) & \
+                (ctable.deleted != True)
+        rows = db(query).select(count)
+        external = rows.first()[count] if rows else 0
+
         EXTERNAL = TR(TD(T("How many external (Hospital / Police)")),
                       TD(external),
                       )
 
+        # Get the number of free places in the BEA
         free = r.record.available_capacity_day
         FREE = TR(TD(T("How many free places")),
                   TD(free),
                   )
 
+        # Generate profile header HTML
         output = DIV(H2(r.record.name),
-                        P(r.record.comments or ""),
-                        TABLE(TOTAL,
-                               PX,
-                               NON_PX,
-                               EXTERNAL,
-                               FREE
-                               ),
-                        A("%s / %s" % (T("Check-In"), T("Check-Out")),
-                          _href=r.url(method="check-in"),
-                          _class="action-btn",
-                          ),
-                        _class="profile-header",
-                        )
+                     P(r.record.comments or ""),
+                     # Current population overview
+                     TABLE(TOTAL,
+                           TRANSITORY,
+                           REGULAR,
+                           EXTERNAL,
+                           FREE
+                           ),
+                     # Action buttons for check-in/out
+                     A("%s / %s" % (T("Check-In"), T("Check-Out")),
+                       _href=r.url(method="check-in"),
+                       _class="action-btn",
+                       ),
+                     _class="profile-header",
+                     )
+
         return output
 
     settings.ui.profile_header = profile_header
