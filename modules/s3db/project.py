@@ -1124,7 +1124,7 @@ class S3ProjectActivityModel(S3Model):
                        "person_id",
                        "comments",
                        ]
-        
+
         list_fields = ["name",
                        "comments",
                        ]
@@ -1268,7 +1268,10 @@ class S3ProjectActivityModel(S3Model):
                   # Leave these workflows for Templates
                   #create_next = create_next,
                   crud_form = crud_form,
-                  deduplicate = self.project_activity_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("name",
+                                                       "project_id",
+                                                       ),
+                                            ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   #onaccept = self.project_activity_onaccept,
@@ -1416,25 +1419,6 @@ class S3ProjectActivityModel(S3Model):
 
         return dict(project_activity_id = lambda **attr: dummy("activity_id"),
                     )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_activity_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        project_id = data.get("project_id")
-        name = data.get("name")
-        # Match activity by project_id and name
-        if project_id and name:
-            table = item.table
-            query = (table.project_id == project_id) & \
-                    (table.name == name)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
 
     # ---------------------------------------------------------------------
     @staticmethod
@@ -1748,7 +1732,10 @@ class S3ProjectActivityOrganisationModel(S3Model):
         )
 
         configure(tablename,
-                  deduplicate = self.project_activity_organisation_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("activity_id",
+                                                       "organisation_id",
+                                                       ),
+                                            ),
                   )
 
         # ---------------------------------------------------------------------
@@ -1765,49 +1752,14 @@ class S3ProjectActivityOrganisationModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  deduplicate = self.project_activity_group_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("activity_id",
+                                                       "group_id",
+                                                       ),
+                                            ),
                   )
 
         # Pass names back to global scope (s3.*)
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_activity_organisation_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        activity_id = data.get("activity_id")
-        organisation_id = data.get("organisation_id")
-        if activity_id and organisation_id:
-            table = item.table
-            query = (table.activity_id == activity_id) & \
-                    (table.organisation_id == organisation_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_activity_group_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        activity_id = data.get("activity_id")
-        group_id = data.get("group_id")
-        if activity_id and group_id:
-            table = item.table
-            query = (table.activity_id == activity_id) & \
-                    (table.group_id == group_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ProjectActivitySectorModel(S3Model):
@@ -1837,30 +1789,14 @@ class S3ProjectActivitySectorModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = self.project_sector_activity_deduplicate,
+                       deduplicate = S3Duplicate(primary = ("activity_id",
+                                                            "sector_id",
+                                                            ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_sector_activity_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        activity_id = data.get("activity_id")
-        sector_id = data.get("sector_id")
-        if activity_id and sector_id:
-            table = item.table
-            query = (table.activity_id == activity_id) & \
-                    (table.sector_id == sector_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ProjectAnnualBudgetModel(S3Model):
@@ -2207,7 +2143,10 @@ class S3ProjectBeneficiaryModel(S3Model):
         configure(tablename,
                   context = {"project": "project_id",
                              },
-                  deduplicate = self.project_beneficiary_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("parameter_id",
+                                                       "project_location_id",
+                                                       ),
+                                            ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.project_beneficiary_onaccept,
@@ -2259,7 +2198,10 @@ class S3ProjectBeneficiaryModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  deduplicate = self.project_beneficiary_activity_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("activity_id",
+                                                       "beneficiary_id",
+                                                       ),
+                                            ),
                   )
 
         # ---------------------------------------------------------------------
@@ -2277,7 +2219,10 @@ class S3ProjectBeneficiaryModel(S3Model):
                      *s3_meta_fields())
 
         configure(tablename,
-                  deduplicate = self.project_beneficiary_activity_type_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("activity_type_id",
+                                                       "beneficiary_id",
+                                                       ),
+                                            ),
                   )
 
         # Pass names back to global scope (s3.*)
@@ -2332,63 +2277,6 @@ class S3ProjectBeneficiaryModel(S3Model):
                     project_id = project_location.project_id,
                     location_id = project_location.location_id
                 )
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def project_beneficiary_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        parameter_id = data.get("parameter_id")
-        project_location_id = data.get("project_location_id")
-        # Match beneficiary by type and project_location
-        if parameter_id and project_location_id:
-            table = item.table
-            query = (table.parameter_id == parameter_id) & \
-                    (table.project_location_id == project_location_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def project_beneficiary_activity_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        activity_id = data.get("activity_id")
-        beneficiary_id = data.get("beneficiary_id")
-
-        if beneficiary_id and activity_id:
-            table = item.table
-            query = (table.beneficiary_id == beneficiary_id) & \
-                    (table.activity_id == activity_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def project_beneficiary_activity_type_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        activity_type_id = data.get("activity_type_id")
-        beneficiary_id = data.get("beneficiary_id")
-
-        if beneficiary_id and activity_type_id:
-            table = item.table
-            query = (table.beneficiary_id == beneficiary_id) & \
-                    (table.activity_type_id == activity_type_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ProjectCampaignModel(S3Model):
@@ -2896,31 +2784,15 @@ class S3ProjectHazardModel(S3Model):
             msg_list_empty = T("No Hazards found for this Project"))
 
         self.configure(tablename,
-                       deduplicate = self.project_hazard_project_deduplicate,
+                       deduplicate = S3Duplicate(primary = ("project_id",
+                                                            "hazard_id",
+                                                            ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
         return dict(project_hazard_id = hazard_id,
                     )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_hazard_project_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        project_id = data.get("project_id")
-        hazard_id = data.get("hazard_id")
-        if project_id and hazard_id:
-            table = item.table
-            query = (table.project_id == project_id) & \
-                    (table.hazard_id == hazard_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ProjectHRModel(S3Model):
@@ -3267,7 +3139,11 @@ class S3ProjectIndicatorModel(S3Model):
 
         # Resource configuration
         configure(tablename,
-                  deduplicate = self.project_indicator_data_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("parameter_id",
+                                                       "project_id",
+                                                       "date",
+                                                       ),
+                                            ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   report_options = report_options,
@@ -3276,27 +3152,6 @@ class S3ProjectIndicatorModel(S3Model):
 
         # Pass names back to global scope (s3.*)
         return {}
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def project_indicator_data_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        parameter_id = data.get("parameter_id")
-        project_id = data.get("project_id")
-        start_date = data.get("date")
-        # Match indicator_data by indicator, project and date
-        if parameter_id and project_id and start_date:
-            table = item.table
-            query = (table.parameter_id == parameter_id) & \
-                    (table.project_id == project_id) & \
-                    (table.date == start_date)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ProjectLocationModel(S3Model):
@@ -3520,7 +3375,10 @@ class S3ProjectLocationModel(S3Model):
                              },
                   create_next = URL(c="project", f="location",
                                     args=["[id]", "beneficiary"]),
-                  deduplicate = self.project_location_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("project_id",
+                                                       "location_id",
+                                                       ),
+                                            ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.project_location_onaccept,
@@ -3693,25 +3551,6 @@ class S3ProjectLocationModel(S3Model):
         db = current.db
         db(db.project_location.id == id).update(name=name)
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_location_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        project_id = data.get("project_id")
-        location_id = data.get("location_id")
-        if project_id and location_id:
-            table = item.table
-            query = (table.project_id == project_id) & \
-                    (table.location_id == location_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-
 # =============================================================================
 class S3ProjectOrganisationModel(S3Model):
     """
@@ -3816,7 +3655,10 @@ class S3ProjectOrganisationModel(S3Model):
         self.configure(tablename,
                        context = {"project": "project_id",
                                   },
-                       deduplicate = self.project_organisation_deduplicate,
+                       deduplicate = S3Duplicate(primary = ("project_id",
+                                                            "organisation_id",
+                                                            ),
+                                                 ),
                        onaccept = self.project_organisation_onaccept,
                        ondelete = self.project_organisation_ondelete,
                        onvalidation = self.project_organisation_onvalidation,
@@ -3922,24 +3764,6 @@ class S3ProjectOrganisationModel(S3Model):
 
             # Set the project organisation_id to NULL (using None)
             db(ptable.id == project_id).update(organisation_id=None)
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def project_organisation_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        project_id = data.get("project_id")
-        organisation_id = data.get("organisation_id")
-        if project_id and organisation_id:
-            table = item.table
-            query = (table.project_id == project_id) & \
-                    (table.organisation_id == organisation_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ProjectPlanningModel(S3Model):
@@ -7074,7 +6898,9 @@ class S3ProjectProgrammeModel(S3Model):
                             )
 
         self.configure(tablename,
-                       deduplicate = self.programme_duplicate,
+                       deduplicate = S3Duplicate(primary = ("name",),
+                                                 secondary = ("organisation_id",),
+                                                 ),
                        )
 
         self.add_components(tablename,
@@ -7103,27 +6929,6 @@ class S3ProjectProgrammeModel(S3Model):
 
         return {"project_programme_id": lambda **attr: dummy("programme_id"),
                 }
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def programme_duplicate(item):
-        """ Import item update-detection """
-
-        data = item.data
-        name = data.get("name")
-        if name:
-            table = item.table
-            query = (table.name.lower() == name.lower())
-            org = data.get("organisation_id")
-            if org:
-                query &= (table.organisation_id == org)
-
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-        return
 
 # =============================================================================
 class S3ProjectProgrammeProjectModel(S3Model):
@@ -7422,7 +7227,10 @@ class S3ProjectThemeModel(S3Model):
         )
 
         configure(tablename,
-                  deduplicate = self.project_theme_project_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("project_id",
+                                                       "theme_id",
+                                                       ),
+                                            ),
                   onaccept = self.project_theme_project_onaccept,
                   )
 
@@ -7461,7 +7269,10 @@ class S3ProjectThemeModel(S3Model):
         )
 
         configure(tablename,
-                  deduplicate = self.project_theme_activity_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("activity_id",
+                                                       "theme_id",
+                                                       ),
+                                            ),
                   #onaccept = self.project_theme_activity_onaccept,
                   )
 
@@ -7544,44 +7355,6 @@ class S3ProjectThemeModel(S3Model):
                 update_or_insert(project_location_id = row.id,
                                  theme_id = theme_id,
                                  percentage = percentages[theme_id])
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_theme_project_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        project_id = data.get("project_id")
-        theme_id = data.get("theme_id")
-        if project_id and theme_id:
-            table = item.table
-            query = (table.project_id == project_id) & \
-                    (table.theme_id == theme_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_theme_activity_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        activity_id = data.get("activity_id")
-        theme_id = data.get("theme_id")
-        if activity_id and theme_id:
-            table = item.table
-            query = (table.activity_id == activity_id) & \
-                    (table.theme_id == theme_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3ProjectDRRModel(S3Model):
@@ -7954,7 +7727,9 @@ class S3ProjectTaskModel(S3Model):
                                        )
 
         configure(tablename,
-                  deduplicate = self.project_milestone_duplicate,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("project_id",),
+                                            ),
                   orderby = "project_milestone.date",
                   )
 
@@ -9084,32 +8859,6 @@ class S3ProjectTaskModel(S3Model):
 
         else:
             raise HTTP(405, current.ERROR.BAD_METHOD)
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def project_milestone_duplicate(item):
-        """
-            Import item de-duplication
-            - Duplicate if same Name & Project
-        """
-
-        data = item.data
-        name = data.get("name")
-        if not name:
-            # Nothing we can work with
-            return
-
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        project_id = data.get("project_id")
-        if project_id:
-            query &= (table.project_id == project_id)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
