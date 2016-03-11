@@ -245,12 +245,15 @@ class S3CAPModel(S3Model):
             ("Draft", T("Draft - not actionable in its current form")),
         ])
         # CAP alert message type (msgType)
+        # NB AllClear is not in msgType as of CAP 1.2, but they target to move it to
+        # msgType instead of responseType in CAP 2.0
         cap_alert_msgType_code_opts = OrderedDict([
             ("Alert", T("Alert: Initial information requiring attention by targeted recipients")),
             ("Update", T("Update: Update and supercede earlier message(s)")),
             ("Cancel", T("Cancel: Cancel earlier message(s)")),
             ("Ack", T("Ack: Acknowledge receipt and acceptance of the message(s)")),
             ("Error", T("Error: Indicate rejection of the message(s)")),
+            ("AllClear", T("AllClear - The subject event no longer poses a threat")),
         ])
         # CAP alert scope
         cap_alert_scope_code_opts = OrderedDict([
@@ -1544,6 +1547,10 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
             form.errors["addresses"] = \
                 current.T("'Recipients' field mandatory in case of 'Private' scope")
 
+        if form_vars.get("scope") == "Restricted" and not form_vars.get("restriction"):
+            form.errors["restriction"] = \
+                current.T("'Restriction' field mandatory in case of 'Restricted' scope")
+
     # -------------------------------------------------------------------------
     @staticmethod
     def cap_info_onaccept(form):
@@ -1982,23 +1989,41 @@ def cap_rheader(r):
 
                         if record.approved_by is not None:
                             if has_permission("create", "cap_alert"):
-                                msg_type_buttons = TAG[""](
-                                        TR(TD(A(T("Update Alert"),
-                                                _id = record.id,
-                                                _data = "Update",
+                                relay_alert = A(T("Relay Alert"),
+                                                _data = "%s/%s" % (record.msg_type, r.id),
                                                 _class = "action-btn cap-clone-update",
-                                                ))),
-                                        TR(TD(A(T("Cancel Alert"),
-                                                _id = record.id,
-                                                _data = "Cancel",
-                                                _class = "action-btn cap-clone-update",
-                                                ))),
-                                        TR(TD(A(T("Error Alert"),
-                                                _id = record.id,
-                                                _data = "Error",
-                                                _class = "action-btn cap-clone-update",
-                                                ))),
-                                        )
+                                                )
+                                if record.created_by:
+                                    utable = db.auth_user
+                                    row = db(utable.id == record.created_by).select(\
+                                                            utable.organisation_id,
+                                                            limitby=(0, 1)).first()
+                                    row_ = db(utable.id == current.auth.user.id).select(\
+                                                            utable.organisation_id,
+                                                            limitby=(0, 1)).first()
+                                    if row.organisation_id == row_.organisation_id:
+                                        msg_type_buttons = TAG[""](
+                                                TR(TD(A(T("Update Alert"),
+                                                        _data = "Update/%s" % r.id,
+                                                        _class = "action-btn cap-clone-update",
+                                                        ))),
+                                                TR(TD(A(T("Cancel Alert"),
+                                                        _data = "Cancel/%s" % r.id,
+                                                        _class = "action-btn cap-clone-update",
+                                                        ))),
+                                                TR(TD(A(T("Error Alert"),
+                                                        _data = "Error/%s" % r.id,
+                                                        _class = "action-btn cap-clone-update",
+                                                        ))),
+                                                TR(TD(A(T("All Clear"),
+                                                        _data = "AllClear/%s" % r.id,
+                                                        _class = "action-btn cap-clone-update",
+                                                        ))),
+                                                )
+                                    else:
+                                        msg_type_buttons = relay_alert
+                                else:
+                                    msg_type_buttons = relay_alert
 
                     tabs = [(T("Alert Details"), None),
                             (T("Information"), "info"),
@@ -2831,8 +2856,11 @@ class cap_AssignArea(S3Method):
                     area_id = int(area_id.strip())
                     add_area_from_template(area_id, alert_id)
                     added += 1
-            current.session.confirmation = T("%(number)s assigned") % \
-                                                            {"number": added}
+            if added == 1:
+                confirm_text = T("1 area assigned")
+            elif added > 1:
+                confirm_text = T("%(number)s areas assigned") % {"number": added}
+            current.session.confirmation = confirm_text
             if added > 0:
                 # Redirect to the list of areas of this alert
                 redirect(URL(args=[r.id, "area"], vars={}))
@@ -3035,7 +3063,7 @@ class cap_CloneAlert(S3Method):
         if not person_id or not auth.s3_has_permission("create", alert_table):
             auth.permission.fail()
 
-        msg_type_options = ["Update", "Cancel", "Error"]
+        msg_type_options = ["Alert", "Update", "Cancel", "Error", "AllClear"]
         msg_type = current.request._get_vars["msg_type"]
 
         if msg_type is None or msg_type not in msg_type_options:
@@ -3092,6 +3120,8 @@ class cap_CloneAlert(S3Method):
                     info_id = info_row.id
                     info_row_clone = info_row.as_dict()
                     del info_row_clone["id"]
+                    if msg_type == "AllClear":
+                        info_row_clone["response_type"] = "AllClear"
                     info_row_clone["alert_id"] = new_alert_id
                     new_info_id = info_table.insert(**info_row_clone)
                     # Post-process create

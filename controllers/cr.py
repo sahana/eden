@@ -52,10 +52,12 @@ def shelter_unit():
         REST controller to
             retrieve options for shelter unit selection
             show layer on Map
+            imports
     """
 
-    # [Geo]JSON & Map Popups only
-    s3.prep = lambda r: r.representation in ("json", "geojson", "plain")
+    # [Geo]JSON & Map Popups or Imports only
+    s3.prep = lambda r: r.representation in ("json", "geojson", "plain") or \
+                        r.method == "import"
 
     return s3_rest_controller()
 

@@ -61,6 +61,11 @@ def config(settings):
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
 
+    # Settings suitable for Housing Units
+    # - move into customise fn if also supporting other polygons
+    settings.gis.precision = 5
+    settings.gis.simplify_tolerance = 0
+
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php

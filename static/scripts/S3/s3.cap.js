@@ -5,7 +5,7 @@
      */
     var bindCloneActions = function() {
         $('.cap-clone-update').unbind('.cap').bind('click.cap', function() {
-            clone(this.id, $(this).attr('data'));
+            clone($(this).attr('data'));
         });
     };
 
@@ -13,27 +13,29 @@
      * Clone (Ajax)
      *
      * @param recordID - record ID for which clone is called
-     * @param msgType - one of the options for msgType change(Update, Cancel and Clear)
+     * @param data - msgType/alert_id data
      */
-    var clone = function(recordID, msgType) {
-
-        $.ajax({
-            'url': S3.Ap.concat('/cap/alert/') + recordID + '/' + 'clone?msg_type=' + msgType,
-            'success': function(data) {
-                window.location.href = S3.Ap.concat('/cap/alert/') + data['message'];
-            },
-            'error': function(request, status, error) {
-                var msg;
-                if (error == 'UNAUTHORIZED') {
-                    msg = i18n.gis_requires_login;
-                } else {
-                    msg = request.responseText;
-                }
-                console.log(msg);
-            },
-            'type': 'POST',
-            'dataType': 'json'
-        });
+    var clone = function(data) {
+        var msgType = data.split('/')[0];
+        var recordID = data.split('/').pop();
+        if (recordID) {
+            $.ajax({
+                'url': S3.Ap.concat('/cap/alert/') + recordID + '/' + 'clone?msg_type=' + msgType,
+                'success': function(data) {
+                    window.location.href = S3.Ap.concat('/cap/alert/') + data['message'];
+                },
+                'error': function(request, status, error) {
+                    if (error == 'UNAUTHORIZED') {
+                        var msg = i18n.gis_requires_login;
+                    } else {
+                        var msg = request.responseText;
+                    }
+                    console.log(msg);
+                },
+                'type': 'POST',
+                'dataType': 'json'
+            });
+        }
     };
 
     function get_table($form) {

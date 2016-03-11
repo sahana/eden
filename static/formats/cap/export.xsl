@@ -233,7 +233,7 @@
             </xsl:if>
 
             <xsl:if test="data[@field='web']!=''">
-                <web><xsl:value-of select="data[@field='web']"/></web>
+                <web><xsl:value-of select="concat(data[@field='web'], '/profile')"/></web>
             </xsl:if>
 
             <xsl:if test="data[@field='contact']!=''">
