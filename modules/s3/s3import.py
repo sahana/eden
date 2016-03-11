@@ -3821,6 +3821,13 @@ class S3Duplicate(object):
 
         if ignore_case and \
            hasattr(value, "lower") and ftype in ("string", "text"):
+            # NB Must convert to unicode before lower() in order to correctly
+            #    convert certain unicode-characters (e.g. İ=>i, or Ẽ=>ẽ)
+            # => PostgreSQL LOWER() on Windows may not convert correctly,
+            #    which seems to be a locale issue:
+            #    http://stackoverflow.com/questions/18507589/the-lower-function-on-international-characters-in-postgresql
+            # => works fine on Debian servers if the locale is a .UTF-8 before
+            #    the Postgres cluster is created
             query = (field.lower() == s3_unicode(value).lower().encode("utf-8"))
         else:
             query = (field == value)
