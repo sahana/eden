@@ -214,7 +214,7 @@ class S3OrganisationModel(S3Model):
         configure(tablename,
                   # Not needed since unique=True but would be
                   # if we removed to make these variable by Org
-                  #deduplicate = self.organisation_type_duplicate,
+                  #deduplicate = S3Duplicate(),
                   hierarchy = hierarchy,
                   )
 
@@ -302,7 +302,7 @@ class S3OrganisationModel(S3Model):
                 )
 
             configure(tablename,
-                      deduplicate = self.org_region_duplicate,
+                      deduplicate = S3Duplicate(),
                       hierarchy = hierarchy,
                       )
         else:
@@ -997,34 +997,6 @@ class S3OrganisationModel(S3Model):
                 # Note this sets only the default, so won't override existing or explicit values
                 record._organisation_type_id = row.id
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def organisation_type_duplicate(item):
-        """ Import item de-duplication """
-
-        name = item.data.get("name", None)
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_region_duplicate(item):
-        """ Import item de-duplication """
-
-        name = item.data.get("name", None)
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
     # -----------------------------------------------------------------------------
     @staticmethod
     def org_search_ac(r, **attr):
@@ -1191,35 +1163,14 @@ class S3OrganisationNameModel(S3Model):
                           *s3_meta_fields())
 
         self.configure(tablename,
-                       deduplicate = self.org_organisation_name_deduplicate,
+                       deduplicate = S3Duplicate(primary = ("organisation_id",
+                                                            "language",
+                                                            ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_organisation_name_deduplicate(item):
-        """
-           If the record is a duplicate then it will set the item method to update
-        """
-
-        data = item.data
-        language = data.get("language", None)
-        org = data.get("organisation_id", None)
-
-        if not language or not org:
-            return
-
-        table = item.table
-        query = (table.language == language) & \
-                (table.organisation_id == org)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3OrganisationBranchModel(S3Model):
@@ -1263,28 +1214,12 @@ class S3OrganisationBranchModel(S3Model):
             msg_list_empty = T("No Branch Organizations currently registered"))
 
         self.configure(tablename,
-                       deduplicate = self.org_branch_duplicate,
+                       # An Organisation can only be a branch of one Organisation:
+                       deduplicate = S3Duplicate(primary = ("branch_id",)),
                        onaccept = self.org_branch_onaccept,
                        ondelete = self.org_branch_ondelete,
                        onvalidation = self.org_branch_onvalidation,
                        )
-
-    # -----------------------------------------------------------------------------
-    @staticmethod
-    def org_branch_duplicate(item):
-        """
-            An Organisation can only be a branch of one Organisation
-        """
-
-        branch_id = item.data.get("branch_id")
-        if branch_id:
-            table = item.table
-            query = (table.branch_id == branch_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1951,30 +1886,14 @@ class S3OrganisationLocationModel(S3Model):
             msg_list_empty = T("No Locations found for this Organization"))
 
         self.configure(tablename,
-                       deduplicate = self.org_organisation_location_deduplicate,
+                       deduplicate = S3Duplicate(primary = ("organisation_id",
+                                                            "location_id",
+                                                            ),
+                                                 ),
                        )
 
         # Pass names back to global scope (s3.*)
         return {}
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_organisation_location_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        organisation_id = data.get("organisation_id")
-        location_id = data.get("location_id")
-        if organisation_id and location_id:
-            table = item.table
-            query = (table.organisation_id == organisation_id) & \
-                    (table.location_id == location_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3OrganisationResourceModel(S3Model):
@@ -2356,7 +2275,10 @@ class S3OrganisationSectorModel(S3Model):
             msg_list_empty = T("No Sectors found for this Organization"))
 
         configure(tablename,
-                  deduplicate = self.org_sector_organisation_deduplicate,
+                  deduplicate = S3Duplicate(primary = ("organisation_id",
+                                                       "sector_id",
+                                                       ),
+                                            ),
                   )
 
         # Pass names back to global scope (s3.*)
@@ -2438,25 +2360,6 @@ class S3OrganisationSectorModel(S3Model):
     #            return current.T(r.name)
     #    except:
     #        return current.messages.UNKNOWN_OPT
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_sector_organisation_deduplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        organisation_id = data.get("organisation_id")
-        sector_id = data.get("sector_id")
-        if organisation_id and sector_id:
-            table = item.table
-            query = (table.organisation_id == organisation_id) & \
-                    (table.sector_id == sector_id)
-            duplicate = current.db(query).select(table.id,
-                                                 limitby=(0, 1)).first()
-
-            if duplicate:
-                item.id = duplicate.id
-                item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3OrganisationServiceModel(S3Model):
@@ -3722,7 +3625,7 @@ class S3FacilityModel(S3Model):
             )
 
         configure(tablename,
-                  deduplicate = self.org_facility_type_duplicate,
+                  deduplicate = S3Duplicate(),
                   hierarchy = hierarchy,
                   list_fields = list_fields,
                   )
@@ -4107,25 +4010,6 @@ class S3FacilityModel(S3Model):
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
 
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def org_facility_type_duplicate(item):
-        """
-            Deduplication of Facility Types
-        """
-
-        name = item.data.get("name")
-        if not name:
-            return
-
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
     # -----------------------------------------------------------------------------
     @staticmethod
     def org_facility_geojson(jsonp=True,
@@ -4352,26 +4236,12 @@ class S3RoomModel(S3Model):
                                   )
 
         self.configure(tablename,
-                       deduplicate = self.org_room_duplicate,
+                       deduplicate = S3Duplicate(),
                        )
 
         # Pass names back to global scope (s3.*)
         return dict(org_room_id = room_id,
                     )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def org_room_duplicate(item):
-        """ Import item de-duplication """
-
-        name = item.data.get("name")
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3OfficeModel(S3Model):
@@ -4459,7 +4329,9 @@ class S3OfficeModel(S3Model):
                             )
 
         configure(tablename,
-                  deduplicate = self.office_type_duplicate,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("organisation_id",),
+                                            ),
                   )
 
         # Components
@@ -4654,7 +4526,9 @@ class S3OfficeModel(S3Model):
                              "org_group": "organisation_id$group_membership.group_id",
                              },
                   crud_form = crud_form,
-                  deduplicate = self.org_office_duplicate,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("organisation_id",),
+                                            ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   onaccept = self.org_office_onaccept,
@@ -4691,24 +4565,6 @@ class S3OfficeModel(S3Model):
         return dict(org_office_type_id = office_type_id,
                     )
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def office_type_duplicate(item):
-        """ Import item de-duplication """
-
-        data = item.data
-        name = data.get("name")
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        organisation_id = data.get("organisation_id")
-        if organisation_id:
-            query &= (table.organisation_id == organisation_id)
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
-
     # ---------------------------------------------------------------------
     @staticmethod
     def org_office_onaccept(form):
@@ -4743,51 +4599,6 @@ class S3OfficeModel(S3Model):
                              national_staff = national_staff,
                              international_staff = international_staff
                              )
-
-    # ---------------------------------------------------------------------
-    @staticmethod
-    def org_office_duplicate(item):
-        """
-            Import item deduplication:
-                - match by name
-                - match org, if defined
-                (Adding location_id doesn't seem to be a good idea)
-
-            @param item: the S3ImportItem instance
-        """
-
-        data = item.data
-        name = data.get("name")
-        if not name:
-            return
-
-        table = item.table
-        query = (table.name.lower() == name.lower())
-        #location_id = data.get("location_id")
-        #if location_id:
-        #    # This doesn't find deleted records:
-        #    query = query & (table.location_id == location_id)
-
-        org = data.get("organisation_id")
-        if org:
-            query &= (table.organisation_id == org)
-
-        duplicate = current.db(query).select(table.id,
-                                             limitby=(0, 1)).first()
-        # if duplicate is None and location_id:
-            ## Search for deleted offices with this name
-            # query = (table.name.lower() == name.lower()) & \
-                    # (table.deleted == True)
-            # row = db(query).select(table.id, table.deleted_fk,
-                                # limitby=(0, 1)).first()
-            # if row:
-                # fkeys = json.loads(row.deleted_fk)
-                # if "location_id" in fkeys and \
-                # str(fkeys["location_id"]) == str(location_id):
-                    # duplicate = row
-        if duplicate:
-            item.id = duplicate.id
-            item.method = item.METHOD.UPDATE
 
 # =============================================================================
 class S3OfficeSummaryModel(S3Model):

@@ -3821,7 +3821,7 @@ class S3Duplicate(object):
 
         if ignore_case and \
            hasattr(value, "lower") and ftype in ("string", "text"):
-            query = (field.lower() == value.lower())
+            query = (field.lower() == s3_unicode(value).lower())
         else:
             query = (field == value)
         return query
