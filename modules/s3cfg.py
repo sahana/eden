@@ -146,8 +146,7 @@ class S3Config(Storage):
         self.irs = Storage()
         self.L10n = Storage()
         # Allow templates to append rather than replace
-        self.L10n.languages = {("en", "English"),
-                               }
+        self.L10n.languages = {"en": "English"}
         self.log = Storage()
         self.mail = Storage()
         self.member = Storage()

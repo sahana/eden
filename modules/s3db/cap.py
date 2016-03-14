@@ -1542,14 +1542,20 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                 multi-field level
         """
 
-        form_vars = form.vars
-        if form_vars.get("scope") == "Private" and not form_vars.get("addresses"):
-            form.errors["addresses"] = \
-                current.T("'Recipients' field mandatory in case of 'Private' scope")
-
-        if form_vars.get("scope") == "Restricted" and not form_vars.get("restriction"):
-            form.errors["restriction"] = \
-                current.T("'Restriction' field mandatory in case of 'Restricted' scope")
+        form_vars_get = form.vars.get
+        if not form_vars_get("is_template"):
+            # For non templates
+            if form_vars_get("scope") == "Private" and not form_vars_get("addresses"):
+                form.errors["addresses"] = \
+                    current.T("'Recipients' field mandatory in case of 'Private' scope")
+    
+            if form_vars_get("scope") == "Restricted" and not form_vars_get("restriction"):
+                form.errors["restriction"] = \
+                    current.T("'Restriction' field mandatory in case of 'Restricted' scope")
+    
+            if form_vars_get("addresses") and not form_vars_get("scope"):
+                form.errors["scope"] = \
+                    current.T("'Scope' field mandatory in case using 'Recipients' field")
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -9,9 +9,9 @@
          Identifier..................string.............CAP template identifier 
                                                         Use to link with template alert
          Language....................string.............CAP template info langauge
-         Category....................list:string........CAP template info category
+         Category.........comma-separated string........CAP template info category
          Event Type..................string.............CAP template info event
-         Response Type...............list:string........CAP template info response_type
+         Response Type....comma-separated string........CAP template info response_type
          Audience....................string.............CAP template info audience
          Event Code.............list:key-value pair.....CAP template info event_code
          Sender Name.................string.............CAP template info sender_name
@@ -19,7 +19,9 @@
          Description.................string.............CAP template info description
          Instruction.................string.............CAP template info instruction
          Contact.....................string.............CAP template info contact
-         Parameters..............list:key-value pair....CAP template info parameter
+         The parameters field looks like this in xml
+         <data field="parameter" value=""[{\"key\":\"para-key1\",\"value\":\"para-value1\"}]""/>
+         Parameters..............key-value pair.........CAP template info parameter
 
     *********************************************************************** -->
     <xsl:import href="../commons.xsl"/>
@@ -54,10 +56,7 @@
                 </data>
             </xsl:if>
             <!-- Category -->
-            <xsl:variable name="list-category" select="col[@field='Category']"/>
-            <xsl:variable name="list-category-val">
-                <xsl:value-of select="substring-before(substring-after($list-category, '['), ']')"/>
-            </xsl:variable>
+            <xsl:variable name="list-category-val" select="col[@field='Category']"/>
             <xsl:if test="$list-category-val!=''">
                 <data field="category">
                     <xsl:attribute name="value">
@@ -72,10 +71,7 @@
                 </data>
             </xsl:if>
             <!-- Response Type -->
-            <xsl:variable name="list-response_type" select="col[@field='Response Type']"/>
-            <xsl:variable name="list-response_type-val">
-                <xsl:value-of select="substring-before(substring-after($list-response_type, '['), ']')"/>
-            </xsl:variable>
+            <xsl:variable name="list-response_type-val" select="col[@field='Response Type']"/>
             <xsl:if test="$list-response_type-val!=''">
                 <data field="response_type">
                     <xsl:attribute name="value">
@@ -159,10 +155,7 @@
                 </data>
             </xsl:if>
             <!-- Parameter -->
-            <xsl:variable name="Parameter" select="col[@field='Parameters']"/>
-            <xsl:variable name="Parameter-string">
-                <xsl:value-of select="translate($Parameter, '[{}]', '')"/>
-            </xsl:variable>
+            <xsl:variable name="Parameter-string" select="col[@field='Parameters']"/>
             <xsl:choose>
                 <xsl:when test="$Parameter-string!=''">
                     <data field="parameter">
