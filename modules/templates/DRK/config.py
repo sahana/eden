@@ -760,17 +760,6 @@ def config(settings):
                     # Not used currently:
                     #field.readable = field.writable = True
 
-                    # Customize label and tooltip for "household size"
-                    field = ctable.household_size
-                    FAMILY_MEMBERS = T("Family Members")
-                    field.label = FAMILY_MEMBERS
-                    from gluon.html import DIV
-                    field.comment = DIV(_class="tooltip",
-                                        _title="%s|%s" % (FAMILY_MEMBERS,
-                                                          T("The total number of family members including this person."),
-                                                          ),
-                                        )
-
                     #default_organisation = current.auth.root_org()
                     default_organisation = settings.get_org_default_organisation()
                     if default_organisation:
@@ -944,8 +933,6 @@ def config(settings):
                                         "person_details.nationality",
                                         "person_details.occupation",
                                         "person_details.marital_status",
-                                        # @todo: expose in next release:
-                                        #"dvr_case.household_size",
                                         S3SQLInlineComponent(
                                                 "contact",
                                                 fields = [("", "value"),
@@ -1031,13 +1018,11 @@ def config(settings):
                                    "person_details.nationality",
                                    "dvr_case.date",
                                    "dvr_case.status_id",
+                                   (T("Size of Family"), "dvr_case.household_size"),
                                    (T("Shelter"), "shelter_registration.shelter_unit_id"),
                                    ]
                     if absence_field:
                         list_fields.append(absence_field)
-
-                    # @todo: expose in next release
-                    #list_fields.append((FAMILY_MEMBERS, "dvr_case.household_size"))
 
                     if r.representation == "xls":
 
@@ -1950,6 +1935,7 @@ def drk_dvr_rheader(r, tabs=[]):
                 case = resource.select(["dvr_case.status_id",
                                         "dvr_case.status_id$code",
                                         "dvr_case.archived",
+                                        "dvr_case.household_size",
                                         #"case_flag_case.flag_id$name",
                                         "first_name",
                                         "last_name",
@@ -1962,6 +1948,7 @@ def drk_dvr_rheader(r, tabs=[]):
                     case = case[0]
                     archived = case["_row"]["dvr_case.archived"]
                     case_status = lambda row: case["dvr_case.status_id"]
+                    household_size = lambda row: case["dvr_case.household_size"]
                     eligible = lambda row: ""
                     name = lambda row: s3_fullname(row)
                 else:
@@ -1969,8 +1956,8 @@ def drk_dvr_rheader(r, tabs=[]):
                     return None
 
                 rheader_fields = [[(T("ID"), "pe_label"), (T("Case Status"), case_status)],
-                                  [(T("Name"), name), (T("Checked-out"), "absence")],
-                                  ["date_of_birth"],
+                                  [(T("Name"), name), (T("Size of Family"), household_size)],
+                                  ["date_of_birth", (T("Checked-out"), "absence")],
                                   ]
 
                 if archived:

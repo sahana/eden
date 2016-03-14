@@ -3932,6 +3932,7 @@
 'Site Needs added': 'Standortbedarf hinzugefügt',
 'Site Needs updated': 'Standortbedarf aktualisiert',
 'Site Needs deleted': 'Standortbedarf gelöscht',
+'Size of Family': 'Grösse der Familie',
 'Situation Awareness & Geospatial Analysis': 'Situationseinschätzung & Räumliche Analyse',
 'Sketch': 'Skizze',
 'Skill Catalog': 'Fähigkeitskatalog',
