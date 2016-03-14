@@ -52,7 +52,7 @@ def config(settings):
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
     # e.g. Activities filtered to those of parent Project
-    #settings.gis.countries = ("US",)
+    settings.gis.countries = ("DE",)
     # Uncomment to display the Map Legend as a floating DIV
     settings.gis.legend = "float"
     # Uncomment to Disable the Postcode selector in the LocationSelector
@@ -393,10 +393,36 @@ def config(settings):
                                        site_check_out = site_check_out,
                                        )
             else:
-                # Security can't do anything else but check-in
                 has_role = current.auth.s3_has_role
                 if has_role("SECURITY") and not has_role("ADMIN"):
-                   current.auth.permission.fail()
+                    # Security can't do anything else but check-in
+                    current.auth.permission.fail()
+
+                if r.method == "profile":
+                    # Add PoI layer to the Map
+                    s3db = current.s3db
+                    ftable = s3db.gis_layer_feature
+                    query = (ftable.controller == "gis") & \
+                            (ftable.function == "poi")
+                    layer = current.db(query).select(ftable.layer_id,
+                                                     limitby=(0, 1)
+                                                     ).first()
+                    try:
+                        layer_id = layer.layer_id
+                    except:
+                        # No suitable prepop found
+                        pass
+                    else:
+                        pois = dict(active = True,
+                                    layer_id = layer_id,
+                                    name = current.T("Buildings"),
+                                    id = "profile-header-%s-%s" % ("gis_poi", r.id),
+                                    )
+                        profile_layers = s3db.get_config("cr_shelter", "profile_layers")
+                        profile_layers += (pois,)
+                        s3db.configure("cr_shelter",
+                                       profile_layers = profile_layers,
+                                       )
 
             if r.component_name == "shelter_unit":
                 # Expose "transitory" flag for housing units

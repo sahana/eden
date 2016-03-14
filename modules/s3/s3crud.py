@@ -671,6 +671,7 @@ class S3CRUD(S3Method):
             output["deduplicate"] = S3Merge.bookmark(r, tablename, record_id)
 
         elif representation == "plain":
+            # e.g. Map Popup
             T = current.T
             fields = [f for f in table if f.readable]
             if r.component:

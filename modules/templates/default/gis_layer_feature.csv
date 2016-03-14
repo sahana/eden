@@ -7,7 +7,7 @@ Hospitals,All Active Medical Facilities,hms,hospital,hospital,Medical Facility,{
 Incident Reports,,event,incident_report,incident,Danger Area,{name} (T('Incident'))<br />{incident_type_id},"name,incident_type_id",,,True,,,,,False,,,
 Locations,Used by Location Details,gis,location,,,{name},"name,gis_feature_type",~.level__ne=None&~.end_date=None,,,,"[{'prop':'gis_feature_type','cat':1,'externalGraphic':'img/markers/marker_red.png'},{'prop':'gis_feature_type','cat':3,'fill':'00BFFF','fillOpacity':0.5},{'prop':'gis_feature_type','cat':6,'fill':'00BFFF','fillOpacity':0.5}]",0.9,,False,,0,0
 Offices,All Active Offices,org,office,office,Building,{name} (T('Office'))<br />{organisation_id},"name,organisation_id",~.obsolete=False,,True,,,,,False,,,
-PoIs,,gis,poi,,,{name} ({poi_type_id}),"name,poi_type_id",,,True,,,,,,False,,
+PoIs,Points of Interest,gis,poi,,,{name} ({poi_type_id}),"name,poi_type_id",,,True,,,,,,False,,
 Projects,,project,location,project,,{name} (T('Project'))<br />{location_id}<br />{multi_activity_type_id},"name,location_id,multi_activity_type_id",,,,,,,,False,,,
 Requests,All Open Requests,req,req,request,"Navaid, Red",{req_ref} (T('Request'))<br />{site_id},"req_ref,site_id",~.fulfil_status__ne=2,True,,,,,,False,,,
 Seaports,All Active Seaports,transport,seaport,port,Marina,{name} (T('Seaport')),name,~.obsolete=False,,True,,,,,False,,,
