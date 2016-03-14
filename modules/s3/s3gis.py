@@ -5831,6 +5831,8 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                     except:
                         form.errors["wkt"] = current.messages.invalid_wkt
                         return
+                    else:
+                        form_vars.wkt = shape.wkt
                 else:
                     # Assume WKT
                     from shapely.wkt import loads as wkt_loads
@@ -5845,6 +5847,12 @@ page.render('%(filename)s', {format: 'jpeg', quality: '100'});''' % \
                         except:
                             form.errors["wkt"] = current.messages.invalid_wkt
                             return
+
+                    if shape.has_z:
+                        # Shapely export of WKT is 2D only
+                        form_vars.wkt = shape.wkt
+                        current.session.warning = current.T("Only 2D geometry stored as PostGIS cannot handle 3D geometries")
+
                 gis_feature_type = shape.type
                 if gis_feature_type == "Point":
                     form_vars.gis_feature_type = 1

@@ -343,12 +343,25 @@ class S3Migration(object):
         """
 
         # Update code: git pull
+        try:
+            # http://gitpython.readthedocs.org
+            from git import Repo
+        except:
+            GITPYTHON = False
+            current.log.warning("GitPython not installed, will need to call out to Git via CLI")
+        else:
+            GITPYTHON = True
+
+        if GITPYTHON:
+            pass
+        else:
+            pass
+
         # run_models_in(environment)
         # or
         # Set migrate=True in models/000_config.py
         # current.s3db.load_all_models() via applications/eden/static/scripts/tools/noop.py
         # Set migrate=False in models/000_config.py
-        pass
 
     # -------------------------------------------------------------------------
     def post(self, moves=None,

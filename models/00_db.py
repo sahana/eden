@@ -32,13 +32,12 @@ except ImportError:
 migrate = settings.get_base_migrate()
 fake_migrate = settings.get_base_fake_migrate()
 
-if migrate:
-    check_reserved = ("mysql", "postgres")
-else:
-    check_reserved = []
-
 (db_string, pool_size) = settings.get_database_string()
 if db_string.find("sqlite") != -1:
+    if migrate:
+        check_reserved = ("mysql", "postgres")
+    else:
+        check_reserved = []
     db = DAL(db_string,
              check_reserved=check_reserved,
              migrate_enabled = migrate,
@@ -58,21 +57,27 @@ else:
             #except ImportError:
             #    # Fallback to pymysql
             #    pass
-            if check_reserved:
+            if migrate:
                 check_reserved = ["postgres"]
+            else:
+                check_reserved = []
             db = DAL(db_string,
                      check_reserved = check_reserved,
                      pool_size = pool_size,
                      migrate_enabled = migrate,
+                     fake_migrate_all = fake_migrate,
                      lazy_tables = not migrate)
         else:
             # PostgreSQL
-            if check_reserved:
+            if migrate:
                 check_reserved = ["mysql"]
+            else:
+                check_reserved = []
             db = DAL(db_string,
                      check_reserved = check_reserved,
                      pool_size = pool_size,
                      migrate_enabled = migrate,
+                     fake_migrate_all = fake_migrate,
                      lazy_tables = not migrate)
     except:
         db_type = db_string.split(":", 1)[0]
