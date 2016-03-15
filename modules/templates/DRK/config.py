@@ -1178,6 +1178,8 @@ def config(settings):
                                "person_id$date_of_birth",
                                "person_id$gender",
                                (ROLE, "role_id"),
+                               (T("Case Status"), "person_id$dvr_case.status_id"),
+                               "person_id$dvr_case.transferable",
                                ]
                 # Retain group_id in list_fields if added in standard prep
                 lfields = resource.get_config("list_fields")
