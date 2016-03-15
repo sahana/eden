@@ -264,22 +264,34 @@ class transferability(S3CustomController):
 
         if auth.s3_has_role(ADMIN):
 
-            # Update transferability
-            result = update_transferability()
-            if result:
-                msg = current.T("%(number)s transferable cases found") % {"number": result}
-                current.session.confirmation = msg
-            else:
-                msg = current.T("No transferable cases found")
-                current.session.warning = msg
+            T = current.T
 
-            # Forward to list of transferable cases
-            redirect(URL(c = "dvr",
-                         f = "person",
-                         vars = {"closed": "0",
-                                 "dvr_case.transferable": "True",
-                                 },
-                         ))
+            form = FORM(H3(T("Check transferability for all current cases")),
+                        INPUT(_type="submit", _value=T("Update now"), _class="tiny primary button"),
+                        P("(%s)" % T("This process can take a couple of minutes")),
+                        )
+
+            if form.accepts(current.request.post_vars, current.session):
+
+                # Update transferability
+                result = update_transferability()
+                if result:
+                    msg = current.T("%(number)s transferable cases found") % {"number": result}
+                    current.session.confirmation = msg
+                else:
+                    msg = current.T("No transferable cases found")
+                    current.session.warning = msg
+
+                # Forward to list of transferable cases
+                redirect(URL(c = "dvr",
+                            f = "person",
+                            vars = {"closed": "0",
+                                    "dvr_case.transferable": "True",
+                                    },
+                            ))
+
+            self._view(THEME, "transferability.html")
+            return {"form": form}
 
         else:
             auth.permission.fail()
