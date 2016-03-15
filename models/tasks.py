@@ -56,7 +56,7 @@ def org_site_check(site_id, user_id=None):
         auth.s3_impersonate(user_id)
 
     # Check for Template-specific processing
-    customise = settings.get("org_site_check")
+    customise = settings.get_org_site_check()
     if customise:
         customise(site_id)
         db.commit()

@@ -273,8 +273,11 @@ class transferability(S3CustomController):
 
             if form.accepts(current.request.post_vars, current.session):
 
+                # Get default site
+                default_site = settings.get_org_default_site()
+
                 # Update transferability
-                result = update_transferability()
+                result = update_transferability(site_id=default_site)
                 if result:
                     msg = current.T("%(number)s transferable cases found") % {"number": result}
                     current.session.confirmation = msg
@@ -297,7 +300,7 @@ class transferability(S3CustomController):
             auth.permission.fail()
 
 # =============================================================================
-def update_transferability():
+def update_transferability(site_id=None):
     """
         Update transferability status of all cases, to be called either
         from scheduler task or manually through custom controller.
@@ -390,6 +393,10 @@ def update_transferability():
         case_query = (ctable.deleted != True) & \
                      ((ctable.archived == False) | \
                       (ctable.archived == None))
+
+        # Check for site
+        if site_id:
+            case_query &= (ctable.site_id == site_id)
 
         # Case must not have a non-transferable status
         case_query &= (stable.is_not_transferable == False) | \

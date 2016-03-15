@@ -3482,6 +3482,12 @@ class S3Config(Storage):
         """
         return self.org.get("site_volunteers", False)
 
+    def get_org_site_check(self):
+        """
+            Get custom tasks for scheduled site checks
+        """
+        return self.org.get("site_check")
+
     def get_org_summary(self):
         """
             Whether to use Summary fields for Organisation/Office:

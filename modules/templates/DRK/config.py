@@ -366,6 +366,21 @@ def config(settings):
         return error, warning
 
     # -------------------------------------------------------------------------
+    def org_site_check(site_id):
+        """ Custom tasks for scheduled site checks """
+
+        # Update transferability
+        from controllers import update_transferability
+        result = update_transferability(site_id=site_id)
+
+        # Log the result
+        msg = "Update Transferability: " \
+              "%s transferable cases found for site %s" % (result, site_id)
+        current.log.info(msg)
+
+    settings.org.site_check = org_site_check
+
+    # -------------------------------------------------------------------------
     def customise_auth_user_resource(r, resource):
 
         current.db.auth_user.organisation_id.default = settings.get_org_default_organisation()
