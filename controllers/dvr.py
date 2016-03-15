@@ -210,6 +210,18 @@ def person():
                                     ),
                     ]
 
+                # Add filter for transferability if relevant for deployment
+                if settings.get_dvr_manage_transferability():
+                    filter_widgets.append(
+                        S3OptionsFilter("dvr_case.transferable",
+                                        options = {True: T("Yes"),
+                                                   False: T("No"),
+                                                   },
+                                        cols = 2,
+                                        hidden = True,
+                                        )
+                        )
+
                 resource.configure(crud_form = crud_form,
                                    filter_widgets = filter_widgets,
                                    )

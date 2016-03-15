@@ -254,22 +254,54 @@ $(document).ready(function(){
         return output
 
 # =============================================================================
+class transferability(S3CustomController):
+    """ Custom controller to update transferability status """
+
+    def __call__(self):
+
+        auth = current.auth
+        ADMIN = auth.get_system_roles().ADMIN
+
+        if auth.s3_has_role(ADMIN):
+
+            # Update transferability
+            result = update_transferability()
+            if result:
+                msg = current.T("%(number)s transferable cases found") % {"number": result}
+                current.session.confirmation = msg
+            else:
+                msg = current.T("No transferable cases found")
+                current.session.warning = msg
+
+            # Forward to list of transferable cases
+            redirect(URL(c = "dvr",
+                         f = "person",
+                         vars = {"closed": "0",
+                                 "dvr_case.transferable": "True",
+                                 },
+                         ))
+
+        else:
+            auth.permission.fail()
+
+# =============================================================================
 def update_transferability():
     """
         Update transferability status of all cases, to be called either
         from scheduler task or manually through custom controller.
 
-        @todo: complete criteria
-        @todo: make a function of that custom controller class
         @todo: call from org_site_check task
+        @todo: check household transferability
     """
-
-    # @todo: check that we have admin permissions
 
     db = current.db
     s3db = current.s3db
 
     now = current.request.utcnow
+
+    from dateutil.relativedelta import relativedelta
+    TODAY = now.date()
+    ONE_YEAR_AGO = (now - relativedelta(years=1)).date()
 
     ptable = s3db.pr_person
     ctable = s3db.dvr_case
@@ -279,9 +311,28 @@ def update_transferability():
     ttable = s3db.dvr_case_appointment_type
     atable = s3db.dvr_case_appointment
 
+    # Appointment status "completed"
+    COMPLETED = 4
+
+    # Appointment statuses which do not count as valid dates
+    MISSED = 5
+    CANCELLED = 6
+
+    # Appointment statuses which override the requirement
+    NOT_REQUIRED = 7
+
     # Set transferable=False for all cases
     query = (ctable.deleted != True)
     db(query).update(transferable = False)
+
+    # Get ID of "Reported Transferable" appointment type
+    query = (ttable.name == "Reported Transferable") & \
+            (ttable.deleted != True)
+    atype = db(query).select(ttable.id, limitby = (0, 1)).first()
+    if atype:
+        reported_transferable = atype.id
+    else:
+        reported_transferable = None
 
     # Define age groups (minimum age, maximum age, appointments, maximum absence)
     age_groups = {"children": (None, 15, "mandatory_children", None),
@@ -297,13 +348,25 @@ def update_transferability():
             utable.on(utable.id == rtable.shelter_unit_id),
             ]
 
+    # Add left join for "reported transferable" date
+    if reported_transferable:
+        rttable = atable.with_alias("reported_transferable")
+        join = rttable.on((rttable.person_id == ctable.person_id) & \
+                          (rttable.type_id == reported_transferable) & \
+                          (rttable.deleted != True) & \
+                          (rttable.date != None) & \
+                          (rttable.date >= ONE_YEAR_AGO) & \
+                          (rttable.date <= TODAY) & \
+                          (rttable.status == COMPLETED))
+        left.append(join)
+
+    result = 0
     for age_group in age_groups:
 
         min_age, max_age, appointment_flag, maximum_absence = age_groups[age_group]
 
         # Translate Age Group => Date of Birth
         dob_query = (ptable.date_of_birth != None)
-        from dateutil.relativedelta import relativedelta
         if max_age:
             dob_min = now - relativedelta(years=max_age)
             dob_query &= (ptable.date_of_birth > dob_min)
@@ -328,7 +391,9 @@ def update_transferability():
         # Add date-of-birth query
         case_query &= dob_query
 
-        # @todo: check that we do not yet have a "reported transferable date"
+        # Check that we do not yet have a "reported transferable date"
+        if reported_transferable:
+            case_query &= (rttable.id == None)
 
         # Filter by presence if required
         if maximum_absence is not None:
@@ -346,12 +411,11 @@ def update_transferability():
             case_query &= presence_query
 
         # Select all cases for this age group:
-        cases = db(case_query).select(ctable.id,
-                                      left = left,
-                                      )
+        cases = db(case_query).select(ctable.id, left = left)
         case_ids = set(case.id for case in cases)
 
         if case_ids:
+
             # Check for mandatory appointments
             query = ctable.id.belongs(case_ids)
             aleft = []
@@ -366,16 +430,6 @@ def update_transferability():
                 mandatory_appointments = None
 
             if mandatory_appointments:
-
-                TODAY = now.date()
-                ONE_YEAR_AGO = (now - relativedelta(years=1)).date()
-
-                # Appointment statuses which do not count as valid dates
-                MISSED = 5
-                CANCELLED = 6
-
-                # Appointment statuses which override the requirement
-                NOT_REQUIRED = 7
 
                 # Join the valid appointment dates
                 for appointment_type_id in mandatory_appointments:
@@ -400,6 +454,10 @@ def update_transferability():
                 case_ids = set(case.id for case in cases)
 
             # Set the matching cases transferable=True
-            db(ctable.id.belongs(case_ids)).update(transferable=True)
+            success = db(ctable.id.belongs(case_ids)).update(transferable=True)
+            if success:
+                result += success
+
+    return result
 
 # END =========================================================================
