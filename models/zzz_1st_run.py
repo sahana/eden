@@ -241,7 +241,8 @@ if len(pop_list) > 0:
 
     # Additional settings for user table imports:
     s3db.configure("auth_user",
-                   onaccept = lambda form: auth.s3_approve_user(form.vars))
+                   onaccept = lambda form: auth.s3_approve_user(form.vars),
+                   )
     s3db.add_components("auth_user", auth_membership="user_id")
 
     # Flag that Assets are being imported, not synced

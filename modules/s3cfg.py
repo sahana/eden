@@ -145,6 +145,9 @@ class S3Config(Storage):
         self.inv = Storage()
         self.irs = Storage()
         self.L10n = Storage()
+        # Allow templates to append rather than replace
+        self.L10n.languages = {("en", "English"),
+                               }
         self.log = Storage()
         self.mail = Storage()
         self.member = Storage()
@@ -1414,35 +1417,7 @@ class S3Config(Storage):
         return self.L10n.get("display_toolbar", True)
 
     def get_L10n_languages(self):
-        return self.L10n.get("languages", OrderedDict([("ar", "العربية"),
-                                                       ("zh-cn", "中文 (简体)"),
-                                                       ("zh-tw", "中文 (繁體)"),
-                                                       ("bs", "Bosanski"),
-                                                       ("en", "English"),
-                                                       ("fr", "Français"),
-                                                       ("de", "Deutsch"),
-                                                       ("el", "ελληνικά"),
-                                                       ("es", "Español"),
-                                                       ("it", "Italiano"),
-                                                       ("ja", "日本語"),
-                                                       ("km", "ភាសាខ្មែរ"),         # Khmer
-                                                       ("ko", "한국어"),
-                                                       ("mn", "Монгол хэл"),   # Mongolian
-                                                       ("my", "မြန်မာစာ"),        # Burmese
-                                                       ("ne", "नेपाली"),           # Nepali
-                                                       ("prs", "دری"),         # Dari
-                                                       ("ps", "پښتو"),         # Pashto
-                                                       ("pt", "Português"),
-                                                       ("pt-br", "Português (Brasil)"),
-                                                       ("ru", "русский"),
-                                                       #("si", "සිංහල"),                # Sinhala
-                                                       #("ta", "தமிழ்"),               # Tamil
-                                                       #("th", "ภาษาไทย"),        # Thai
-                                                       ("tl", "Tagalog"),
-                                                       ("tr", "Türkçe"),
-                                                       ("ur", "اردو"),
-                                                       ("vi", "Tiếng Việt"),
-                                                       ]))
+        return self.L10n.get("languages")
 
     def get_L10n_languages_readonly(self):
         return self.L10n.get("languages_readonly", True)
