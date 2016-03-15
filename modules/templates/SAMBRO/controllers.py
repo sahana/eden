@@ -1468,6 +1468,8 @@ $('#method_selector').change(function(){
         return None
 
 # =============================================================================
+# API for Mobile Client
+# =============================================================================
 class user_info(S3CustomController):
     """
         User Info API, used by Mobile Client
@@ -1500,6 +1502,29 @@ class user_info(S3CustomController):
                     roles.append("a")
 
             response = {"r": roles,
+                        "uid": user.id,
+                        }
+            current.response.headers["Content-Type"] = "application/json"
+            return json.dumps(response)
+
+# =============================================================================
+class get_config_settings(S3CustomController):
+    """
+        Return the configuration settings
+    """
+
+    def __call__(self):
+
+        auth = current.auth
+
+        # Enforce non-interactive response
+        auth.permission.format = "json"
+
+        user = auth.user
+        if not user:
+            auth.permission.fail()
+        else:
+            response = {"o": current.deployment_settings.get_cap_expire_offset(),
                         }
             current.response.headers["Content-Type"] = "application/json"
             return json.dumps(response)
