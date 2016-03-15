@@ -274,7 +274,7 @@ class transferability(S3CustomController):
             if form.accepts(current.request.post_vars, current.session):
 
                 # Get default site
-                default_site = settings.get_org_default_site()
+                default_site = current.deployment_settings.get_org_default_site()
 
                 # Update transferability
                 result = update_transferability(site_id=default_site)
