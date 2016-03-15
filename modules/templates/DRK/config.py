@@ -1178,6 +1178,8 @@ def config(settings):
                                "person_id$date_of_birth",
                                "person_id$gender",
                                (ROLE, "role_id"),
+                               (T("Case Status"), "person_id$dvr_case.status_id"),
+                               "person_id$dvr_case.transferable",
                                ]
                 # Retain group_id in list_fields if added in standard prep
                 lfields = resource.get_config("list_fields")
@@ -1936,6 +1938,7 @@ def drk_dvr_rheader(r, tabs=[]):
                                         "dvr_case.status_id$code",
                                         "dvr_case.archived",
                                         "dvr_case.household_size",
+                                        "dvr_case.transferable",
                                         #"case_flag_case.flag_id$name",
                                         "first_name",
                                         "last_name",
@@ -1948,6 +1951,7 @@ def drk_dvr_rheader(r, tabs=[]):
                     case = case[0]
                     archived = case["_row"]["dvr_case.archived"]
                     case_status = lambda row: case["dvr_case.status_id"]
+                    transferable = lambda row: case["dvr_case.transferable"]
                     household_size = lambda row: case["dvr_case.household_size"]
                     eligible = lambda row: ""
                     name = lambda row: s3_fullname(row)
@@ -1955,9 +1959,16 @@ def drk_dvr_rheader(r, tabs=[]):
                     # Target record exists, but doesn't match filters
                     return None
 
-                rheader_fields = [[(T("ID"), "pe_label"), (T("Case Status"), case_status)],
-                                  [(T("Name"), name), (T("Size of Family"), household_size)],
-                                  ["date_of_birth", (T("Checked-out"), "absence")],
+                rheader_fields = [[(T("ID"), "pe_label"),
+                                   (T("Case Status"), case_status),
+                                   (T("Transferable"), transferable),
+                                   ],
+                                  [(T("Name"), name),
+                                   (T("Size of Family"), household_size),
+                                   ],
+                                  ["date_of_birth",
+                                   (T("Checked-out"), "absence"),
+                                   ],
                                   ]
 
                 if archived:
