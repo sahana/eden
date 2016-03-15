@@ -65,6 +65,8 @@ def config(settings):
     # - move into customise fn if also supporting other polygons
     settings.gis.precision = 5
     settings.gis.simplify_tolerance = 0
+    settings.gis.bbox_min_size = 0.001
+    #settings.gis.bbox_offset = 0.007
 
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)

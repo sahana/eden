@@ -999,12 +999,21 @@ class S3Config(Storage):
         return self.gis.get("api_google",
                             "ABQIAAAAgB-1pyZu7pKAZrMGv3nksRTpH3CbXHjuCVmaTc5MkkU4wO1RRhQWqp1VGwrG8yPE2KhLCPYhD7itFw")
 
-    def get_gis_api_yahoo(self):
+    def get_gis_bbox_min_size(self):
         """
-            API key for Yahoo
-            - deprecated
+            Minimum size for BBOX around Features on Map
+            - so that there is always some Map around a Point
+
+            Value is in degrees
         """
-        return self.gis.get("api_yahoo")
+        return self.gis.get("bbox_min_size", 0.05)
+
+    def get_gis_bbox_inset(self):
+        """
+            BBOX inset around Features on Map
+            - so that ones on the edge don't get cut-off
+        """
+        return self.gis.get("bbox_inset", 0.007)
 
     def get_gis_building_name(self):
         """

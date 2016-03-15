@@ -33,14 +33,24 @@ __all__ = ("S3Migration",)
 
 import datetime
 import os
+import shutil
 
 from uuid import uuid4
 
 from gluon import current, DAL, Field
 from gluon.cfs import getcfs
-from gluon.compileapp import build_environment
+from gluon.compileapp import build_environment,compile_application,remove_compiled_application,run_models_in
 from gluon.restricted import restricted
 from gluon.storage import Storage
+
+#try:
+#    # http://gitpython.readthedocs.org
+#    from git import Repo
+#except:
+#    GITPYTHON = False
+import subprocess
+#else:
+#    GITPYTHON = True
 
 class S3Migration(object):
     """
@@ -55,6 +65,7 @@ class S3Migration(object):
         Where script looks like:
         m = local_import("s3migration")
         migrate = m.S3Migration()
+        #migrate.pull()
         migrate.prep(foreigns=[],
                      moves=[],
                      news=[],
@@ -63,7 +74,8 @@ class S3Migration(object):
                      strints=[],
                      uniques=[],
                      )
-        #migrate.migrate()
+        migrate.migrate()
+        migrate.compile()
         migrate.post(moves=[],
                      news=[],
                      strbools=[],
@@ -89,17 +101,7 @@ class S3Migration(object):
 
     def __init__(self):
 
-        request = current.request
-
-        # Load s3cfg => but why do this so complicated?
-        #name = "applications.%s.modules.s3cfg" % request.application
-        #s3cfg = __import__(name)
-        #for item in name.split(".")[1:]:
-            ## Remove the dot
-            #s3cfg = getattr(s3cfg, item)
-        #settings = s3cfg.S3Config()
-
-        # Can use normal import here since executed in web2py environment:
+        # Load s3cfg
         import s3cfg
         settings = s3cfg.S3Config()
 
@@ -107,6 +109,7 @@ class S3Migration(object):
         current.deployment_settings = settings
 
         # Read settings
+        request = current.request
         model = "%s/models/000_config.py" % request.folder
         code = getcfs(model, model, None)
         response = current.response
@@ -133,6 +136,8 @@ class S3Migration(object):
 
         # Execute 000_config.py
         restricted(code, environment, layer=model)
+
+        self.environment = environment
 
         self.db_engine = settings.get_database_type()
         (db_string, pool_size) = settings.get_database_string()
@@ -228,7 +233,6 @@ class S3Migration(object):
 
         # Create clean folder for the backup
         if os.path.exists(folder):
-            import shutil
             shutil.rmtree(folder)
             import time
             time.sleep(1)
@@ -336,32 +340,145 @@ class S3Migration(object):
         self.db_bak = db_bak
 
     # -------------------------------------------------------------------------
+    def pull(self, version=None):
+        """
+            Update the Eden code
+        """
+
+        #if GITPYTHON:
+        #else:
+        #import s3log
+        #s3log.S3Log.setup()
+        #current.log.warning("GitPython not installed, will need to call out to Git via CLI")
+
+        # Copy the current working directory to revert back to later
+        cwd = os.getcwd()
+
+        # Change to the Eden folder
+        folder = current.request.folder
+        os.chdir(os.path.join(cwd, folder))
+
+        # Remove old compiled code
+        remove_compiled_application(folder)
+
+        # Reset to remove any hotfixes
+        subprocess.call(["git", "reset", "--hard", "HEAD"])
+
+        # Store the current version
+        old_version = subprocess.check_output(["git", "describe", "--always", "HEAD"])
+        self.old_version = old_version.strip()
+
+        # Pull
+        subprocess.call(["git", "pull"])
+
+        if version:
+            # Checkout this version
+            subprocess.call(["git", "checkout", version])
+
+        # Change back
+        os.chdir(cwd)
+
+    # -------------------------------------------------------------------------
+    def find_script(self):
+        """
+            Find the upgrade script(s) to run
+        """
+
+        old_version = self.old_version
+        if not old_version:
+            # Nothing we can do
+            return
+
+        # Find the current version
+        new_version = subprocess.check_output(["git", "describe", "--always", "HEAD"])
+        new_version = new_version.strip()
+
+        # Look for a script to the current version
+        path = os.path.join(request.folder, "static", "scripts", "upgrade")
+
+    # -------------------------------------------------------------------------
+    def run_model(self):
+        """
+            Execute all the models/
+        """
+
+        if not hasattr(current, "db"):
+            run_models_in(self.environment)
+
+    # -------------------------------------------------------------------------
+    def compile(self):
+        """
+            Compile the Eden code
+        """
+
+        # Load the base Model
+        self.run_model()
+
+        from gluon.fileutils import up
+
+        request = current.request
+        join = os.path.join
+
+        # Pass View Templates to Compiler
+        s3 = current.response.s3
+        s3.views = views = {}
+        theme = s3.theme
+        if theme != "default":
+            exists = os.path.exists
+            folder = request.folder
+            for view in ["create.html",
+                         #"delete.html",
+                         "display.html",
+                         "iframe.html",
+                         "list.html",
+                         "list_filter.html",
+                         "map.html",
+                         #"merge.html",
+                         "plain.html",
+                         "popup.html",
+                         "profile.html",
+                         "report.html",
+                         #"review.html",
+                         "summary.html",
+                         #"timeplot.html",
+                         "update.html",
+                         ]:
+                location = current.deployment_settings.get_template_location()
+                if exists(join(folder, location, "templates", theme, "views", "_%s" % view)):
+                    views[view] = "../%s/templates/%s/views/_%s" % (location, theme, view)
+
+        def apath(path="", r=None):
+            """
+            Builds a path inside an application folder
+
+            Parameters
+            ----------
+            path:
+                path within the application folder
+            r:
+                the global request object
+
+            """
+
+            opath = up(r.folder)
+            while path[:3] == "../":
+                (opath, path) = (up(opath), path[3:])
+            return join(opath, path).replace("\\", "/")
+
+        folder = apath(request.application, request)
+        compile_application(folder)
+
+    # -------------------------------------------------------------------------
     def migrate(self):
         """
-            Perform the migration
-            @ToDo
+            Perform an automatic database migration
         """
 
-        # Update code: git pull
-        try:
-            # http://gitpython.readthedocs.org
-            from git import Repo
-        except:
-            GITPYTHON = False
-            current.log.warning("GitPython not installed, will need to call out to Git via CLI")
-        else:
-            GITPYTHON = True
+        # Load the base model
+        self.run_model()
 
-        if GITPYTHON:
-            pass
-        else:
-            pass
-
-        # run_models_in(environment)
-        # or
-        # Set migrate=True in models/000_config.py
-        # current.s3db.load_all_models() via applications/eden/static/scripts/tools/noop.py
-        # Set migrate=False in models/000_config.py
+        # Load all conditional models
+        current.s3db.load_all_models()
 
     # -------------------------------------------------------------------------
     def post(self, moves=None,

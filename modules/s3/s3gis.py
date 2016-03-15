@@ -793,8 +793,11 @@ class GIS(object):
         return bearing
 
     # -------------------------------------------------------------------------
-    def get_bounds(self, features=None, parent=None,
-                   bbox_min_size = 0.05, bbox_inset = 0.007):
+    def get_bounds(self,
+                   features = None,
+                   parent = None,
+                   bbox_min_size = None,
+                   bbox_inset = None):
         """
             Calculate the Bounds of a list of Point Features, suitable for
             setting map bounds. If no features are supplied, the current map
@@ -862,6 +865,8 @@ class GIS(object):
                 lat_max = max(lat, lat_max)
 
             # Assure a reasonable-sized box.
+            settings = current.deployment_settings
+            bbox_min_size = bbox_min_size or settings.get_gis_bbox_inset()
             delta_lon = (bbox_min_size - (lon_max - lon_min)) / 2.0
             if delta_lon > 0:
                 lon_min -= delta_lon
@@ -872,6 +877,7 @@ class GIS(object):
                 lat_max += delta_lat
 
             # Move bounds outward by specified inset.
+            bbox_inset = bbox_inset or settings.get_gis_bbox_inset()
             lon_min -= bbox_inset
             lon_max += bbox_inset
             lat_min -= bbox_inset

@@ -4916,7 +4916,7 @@ class S3LocationSelector(S3Selector):
         self.color_picker = color_picker
         self.catalog_layers = catalog_layers
 
-        self.min_bbox = min_bbox
+        self.min_bbox = min_bbox or settings.get_gis_bbox_min_size()
 
         self.labels = labels
         self.placeholders = placeholders
