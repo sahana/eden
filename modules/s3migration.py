@@ -417,15 +417,18 @@ class S3Migration(object):
         from gluon.fileutils import up
 
         request = current.request
-        join = os.path.join
+        os_path = os.path
+        join = os_path.join
 
         # Pass View Templates to Compiler
+        settings = current.deployment_settings
         s3 = current.response.s3
         s3.views = views = {}
-        theme = s3.theme
+        s3.theme = theme = settings.get_theme()
         if theme != "default":
-            exists = os.path.exists
             folder = request.folder
+            location = settings.get_template_location()
+            exists = os_path.exists
             for view in ["create.html",
                          #"delete.html",
                          "display.html",
@@ -443,7 +446,6 @@ class S3Migration(object):
                          #"timeplot.html",
                          "update.html",
                          ]:
-                location = current.deployment_settings.get_template_location()
                 if exists(join(folder, location, "templates", theme, "views", "_%s" % view)):
                     views[view] = "../%s/templates/%s/views/_%s" % (location, theme, view)
 
