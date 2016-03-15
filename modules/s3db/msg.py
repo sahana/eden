@@ -638,6 +638,7 @@ class S3EmailModel(S3ChannelModel):
                      s3_datetime(default = "now"),
                      Field("subject", length=78,    # RFC 2822
                            label = T("Subject"),
+                           requires = IS_EMPTY_OR(IS_LENGTH(78)),
                            ),
                      Field("body", "text",
                            label = T("Message"),
