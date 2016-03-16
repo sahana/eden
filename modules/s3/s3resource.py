@@ -661,19 +661,39 @@ class S3Resource(object):
             @param fields: dict of field/value pairs to insert
         """
 
+        table = self.table
+        tablename = self.tablename
+
         # Check permission
-        authorised = current.auth.s3_has_permission("create", self.tablename)
+        authorised = current.auth.s3_has_permission("create", tablename)
         if not authorised:
-            raise IOError("Operation not permitted: INSERT INTO %s" %
-                            self.tablename)
+            from s3error import S3PermissionError
+            raise S3PermissionError("Operation not permitted: INSERT INTO %s" %
+                                    tablename)
 
         # Insert new record
         record_id = self.table.insert(**fields)
 
-        # Audit
+        # Post-process create
         if record_id:
-            record = Storage(fields).update(id=record_id)
-            current.audit("create", self.prefix, self.name, form=record)
+
+            # Audit
+            current.audit("create", self.prefix, self.name, record=record_id)
+
+            record = Storage(fields)
+            record.id = record_id
+
+            # Update super
+            s3db = current.s3db
+            s3db.update_super(table, record)
+
+            # Record owner
+            auth = current.auth
+            auth.s3_set_record_owner(table, record_id)
+            auth.s3_make_session_owner(table, record_id)
+
+            # Execute onaccept
+            s3db.onaccept(tablename, record, method="create")
 
         return record_id
 
