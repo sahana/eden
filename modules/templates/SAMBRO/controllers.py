@@ -643,12 +643,12 @@ $('#method_selector').change(function(){
                 update_admin_subscription = self._update_admin_subscription
                 if group_ids is None:
                     group_ids = []
-                if (len(group_ids) > 0 or len(user_ids) > 0):
+                if group_ids or user_ids:
                     user_pe_ids = None
                     group_pe_ids = None
-                    if len(user_ids) > 0:
+                    if user_ids:
                         user_pe_ids = bulk_user_pe_id(user_ids) # Current Selection
-                    if len(group_ids) > 0:
+                    if group_ids:
                         group_pe_ids = get_group_pe_id(group_ids)
                     event_type_id, priorities = \
                         get_event_type_priorities(subscription["filters"]) # Current filters
@@ -662,6 +662,7 @@ $('#method_selector').change(function(){
                                                stable.comments,
                                                ftable.query,
                                                limitby=(0, 1)).first()
+                        pr_subscription = row.pr_subscription
                         pe_id = row.pr_subscription.pe_id
                         if group_pe_ids and (pe_id in group_pe_ids.keys()):
                                 event_type_id_s, priorities_s = \
@@ -669,13 +670,13 @@ $('#method_selector').change(function(){
                                 if event_type_id_s == event_type_id and \
                                    Counter(priorities_s) == Counter(priorities):
                                     # Update
-                                    comments = json.loads(row.pr_subscription.comments)
+                                    comments = json.loads(pr_subscription.comments)
                                     success_subscription = update_admin_subscription(\
                                             subscription,
                                             pe_id,
                                             ae_id,
                                             group_id=comments["pr_group.id"],
-                                            filter_id=row.pr_subscription.filter_id,
+                                            filter_id=pr_subscription.filter_id,
                                             subscription_id=subscription_id,
                                             )
                         elif user_pe_ids and (pe_id in user_pe_ids.values()):
@@ -684,14 +685,14 @@ $('#method_selector').change(function(){
                                 if event_type_id_s == event_type_id and \
                                    Counter(priorities_s) == Counter(priorities):
                                     # Update
-                                    user_id = [key for key, value in user_pe_ids.iteritems()
+                                    user_id = [key for key, value in user_pe_ids.items()
                                                if value == pe_id][0]
                                     success_subscription = update_admin_subscription(\
                                             subscription,
                                             pe_id,
                                             ae_id,
                                             user_id=int(user_id),
-                                            filter_id=row.pr_subscription.filter_id,
+                                            filter_id=pr_subscription.filter_id,
                                             subscription_id=subscription_id,
                                             )
                         else:
@@ -705,15 +706,22 @@ $('#method_selector').change(function(){
                                  (stable.filter_id == ftable.id)
                     # Groups
                     if group_pe_ids:
-                        for pe_id in group_pe_ids.keys():
-                            group_id = [value for key, value in group_pe_ids.iteritems()
-                                        if key == pe_id][0]
+                        for pe_id in group_pe_ids:
+                            group_id = group_pe_ids[pe_id]
                             query = base_query & \
                                     (stable.pe_id == pe_id)
                             rows = db(query).select(stable.id,
                                                     stable.filter_id,
                                                     ftable.query)
-                            if rows:
+                            if not rows:
+                                # Create
+                                success_subscription = update_admin_subscription(\
+                                                            subscription,
+                                                            pe_id,
+                                                            ae_id,
+                                                            group_id=int(group_id),
+                                                            )
+                            else:
                                 for row in rows:
                                     event_type_id_s, priorities_s = \
                                         get_event_type_priorities(row.pr_filter.query)
@@ -737,25 +745,24 @@ $('#method_selector').change(function(){
                                                             ae_id,
                                                             group_id=int(group_id),
                                                             )
-                            else:
-                                # Create
-                                success_subscription = update_admin_subscription(\
-                                                            subscription,
-                                                            pe_id,
-                                                            ae_id,
-                                                            group_id=int(group_id),
-                                                            )
                     # People
                     if user_pe_ids:
-                        for pe_id in user_pe_ids.values():
-                            user_id = [key for key, value in user_pe_ids.iteritems()
-                                       if value == pe_id][0]
+                        for user_id in user_pe_ids:
+                            pe_id = int(user_pe_ids[user_id])
                             query = base_query & \
                                     (stable.pe_id == pe_id)
                             rows = db(query).select(stable.id,
                                                     stable.filter_id,
                                                     ftable.query)
-                            if rows:
+                            if not rows:
+                                # Create
+                                success_subscription = update_admin_subscription(\
+                                                                subscription,
+                                                                pe_id,
+                                                                ae_id,
+                                                                user_id=int(user_id),
+                                                                )
+                            else:
                                 for row in rows:
                                     event_type_id_s, priorities_s = \
                                         get_event_type_priorities(row.pr_filter.query)
@@ -779,14 +786,6 @@ $('#method_selector').change(function(){
                                                             ae_id,
                                                             user_id=int(user_id),
                                                             )
-                            else:
-                                # Create
-                                success_subscription = update_admin_subscription(\
-                                                                subscription,
-                                                                pe_id,
-                                                                ae_id,
-                                                                user_id=int(user_id),
-                                                                )
                 else:
                     # Removed from subscription
                     subscription_id = request.get_vars.get("subscription_id")
@@ -1069,19 +1068,24 @@ $('#method_selector').change(function(){
 
         db = current.db
         s3db = current.s3db
+        ftable = s3db.pr_filter
 
         # Save filters
+        # Filter Public and Restricted alert
+        # Private alert are not sent through subscription
         filters = subscription.get("filters")
-        if filters:
-            ftable = s3db.pr_filter
+        filters = json.loads(filters)
+        scope_filter = ["scope__belongs", "Public, Restricted"]
+        filters.append(scope_filter)
+        filters = json.dumps(filters)
 
-            if not filter_id:
-                success = ftable.insert(pe_id=pe_id, query=filters)
-                filter_id = success
-            else:
-                success = db(ftable.id == filter_id).update(query=filters)
-            if not success:
-                return None
+        if not filter_id:
+            success = ftable.insert(pe_id=pe_id, query=filters)
+            filter_id = success
+        else:
+            success = db(ftable.id == filter_id).update(query=filters)
+        if not success:
+            return None
 
         # Save subscription settings
         stable = s3db.pr_subscription
@@ -1187,6 +1191,8 @@ $('#method_selector').change(function(){
         s3db = current.s3db
         stable = s3db.pr_subscription
         # Save filters
+        # Filter Public and Restricted alert
+        # Private alert are not sent through subscription
         filters = subscription.get("filters")
 
         if user_id is not None:
@@ -1196,19 +1202,24 @@ $('#method_selector').change(function(){
         else:
             comment_filter = None
 
-        if filters:
-            ftable = s3db.pr_filter
-            filters_ = json.loads(filters)
-            filters_ = [filter_ for filter_ in filters_
-                        if filter_[0] != "id__belongs"]
-            filters_ = json.dumps(filters_)
-            if filter_id is None:
-                success = ftable.insert(pe_id=pe_id, query=filters_)
-                filter_id = success
-            else:
-                success = db(ftable.id == filter_id).update(query=filters_)
-            if not success:
-                return None
+        ftable = s3db.pr_filter
+
+        filters = subscription.get("filters")
+        filters = json.loads(filters)
+        scope_filter = ["scope__belongs", "Public, Restricted"]
+        filters.append(scope_filter)
+        filters = json.dumps(filters)
+        filters_ = json.loads(filters)
+        filters_ = [filter_ for filter_ in filters_
+                    if filter_[0] != "id__belongs"]
+        filters_ = json.dumps(filters_)
+        if filter_id is None:
+            success = ftable.insert(pe_id=pe_id, query=filters_)
+            filter_id = success
+        else:
+            success = db(ftable.id == filter_id).update(query=filters_)
+        if not success:
+            return None
         # Save subscription settings
         frequency = subscription["frequency"]
         if subscription_id is None:

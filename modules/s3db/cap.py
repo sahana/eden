@@ -394,14 +394,16 @@ class S3CAPModel(S3Model):
                            ),
                      Field("addresses", "list:string",
                            label = T("Recipients"),
-                           represent = self.list_string_represent,
+                           requires = IS_EMPTY_OR(
+                                        IS_IN_SET(get_cap_alert_addresses_opts(),
+                                                  multiple = True,
+                                                  sort = True,
+                                                  )
+                                        ),
+                           widget = S3MultiSelectWidget(),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The group listing of intended recipients of the alert message"),
                                                            T("Required when scope is 'Private', optional when scope is 'Public' or 'Restricted'. Each recipient shall be identified by an identifier or an address."))),
-                           #@ToDo: provide a better way to add multiple addresses,
-                           #       do not ask the user to delimit it themselves
-                           #       this should eventually use the CAP contacts
-                           #widget = S3CAPAddressesWidget,
                            ),
                      Field("codes", "list:string",
                            default = settings.get_cap_codes(),
@@ -639,8 +641,8 @@ class S3CAPModel(S3Model):
                      Field("name", notnull=True, length=64, unique=True,
                            label = T("Name"),
                            requires = [IS_NOT_ONE_OF(db, "%s.name" % tablename),
-                                       IS_MATCH('^[^"]+$',
-                                               error_message=T('Cannot be empty and Must not include "'))],
+                                       IS_MATCH('^[^"\']+$',
+                                               error_message=T('Name cannot be empty and Must not include " or (\')'))],
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Name"),
                                                            T("The actual name for the warning priority, for eg. Typhoons in Philippines have five priority names (PSWS# 1, PSWS# 2, PSWS# 3, PSWS# 4 and PSWS# 5)"))),
@@ -649,7 +651,7 @@ class S3CAPModel(S3Model):
                                         label = T("Event Type"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Event Type"),
-                                                                        T("The Event to which this priority is targeted for. The 'Event Type' is the name of the standard Eden Event Type . These are available at /eden/event/event_type (The 'Event Type' should be exactly same as in /eden/event/event_type - case sensitive). For those events which are not in /eden/event/event_type but having the warning priority, you can create the event type using /eden/event/event_type/create and they will appear in this list."))),
+                                                                        T("The Event to which this priority is targeted for."))),
                            ),
                      Field("urgency",
                            label = T("Urgency"),
@@ -1856,6 +1858,16 @@ def json_formatter(fstring):
         fstring = "[%s]" % fstring
 
     return fstring
+
+# =============================================================================
+def get_cap_alert_addresses_opts():
+    """ Get the pr_group.id required for cap_alert.addresses field"""
+
+    T = current.T
+    gtable = current.s3db.pr_group
+    rows = current.db(gtable.deleted != True).select(gtable.id,
+                                                     gtable.name)
+    return [(row.id, s3_str(T(row.name))) for row in rows]
 
 # =============================================================================
 def cap_alert_is_template(alert_id):

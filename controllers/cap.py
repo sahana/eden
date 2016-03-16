@@ -133,18 +133,26 @@ def alert():
             # @ToDo: fix JSON representation's ability to use component list_fields
             list_fields = ["id",
                            "identifier",
+                           "msg_type",
                            "sender",
                            "sent",
-                           "status",
-                           "msg_type",
                            "scope",
+                           "status",
+                           "template_id",
+                           "restriction",
+                           "info.description",
                            "info.category",
-                           "info.event_type_id$name",
-                           "info.priority",
-                           "info.urgency",
-                           "info.severity",
                            "info.certainty",
+                           "info.effective",
+                           "info.event_type_id",
+                           "info.event_type_id$name",
+                           "info.expires",
                            "info.headline",
+                           "info.onset",
+                           "info.priority",
+                           "info.response_type",
+                           "info.severity",
+                           "info.urgency",
                            "area.name",
                            ]
 
@@ -619,6 +627,15 @@ def alert():
 
             elif r.component_name == "area":
                 atable = r.component.table
+                list_fields = ["name",
+                               "altitude",
+                               "ceiling",
+                               "location.location_id",
+                               ]
+                s3db.configure("cap_area",
+                               list_fields = list_fields,
+                               )
+
                 for f in ("event_type_id", "priority"):
                     # Do not show for the actual area
                     field = atable[f]
@@ -747,7 +764,6 @@ def alert():
             if get_vars.get("_next"):
                 r.next = get_vars.get("_next")
 
-
             if isinstance(output, dict) and "form" in output:
                 if not r.component and \
                    r.method not in ("import", "import_feed", "profile"):
@@ -780,7 +796,6 @@ def alert():
                                                 None, # rfields
                                                 record
                                                 )
-
         return output
     s3.postp = postp
 
@@ -797,12 +812,39 @@ def info():
     """
 
     def prep(r):
+        if r.representation == "xls":
+            table = r.table
+            table.alert_id.represent = None
+            table.language.represent = None
+            table.category.represent = None
+            table.response_type.represent = None
+            
+            list_fields = ["alert_id",
+                           "language",
+                           "category",
+                           (T("Event Type"), "event_type_id$name"),
+                           "response_type",
+                           "audience",
+                           "event_code",
+                           (T("Sender Name"), "sender_name"),
+                           "headline",
+                           "description",
+                           "instruction",
+                           "contact",
+                           "parameter",
+                           ]
+
+            s3db.configure("cap_info",
+                           list_fields = list_fields,
+                           )
+
         result = info_prep(r)
         if result:
             if not r.component and r.representation == "html":
+                s3.crud.submit_style = "hide"
                 s3.crud.custom_submit = (("add_language",
                                           T("Save and add another language..."),
-                                          "",
+                                          "button small",
                                           ),)
 
         return result
@@ -840,6 +882,7 @@ def template():
 
     def prep(r):
         list_fields = ["template_title",
+                       "identifier",
                        "info.event_type_id",
                        "scope",
                        "incidents",
@@ -851,7 +894,20 @@ def template():
                        list_orderby = "cap_info.event_type_id desc",
                        orderby = "cap_info.event_type_id desc",
                        )
+        if r.representation == "xls":
+            r.table.scope.represent = None
+            r.table.incidents.represent = None
+            list_fields = [(T("ID"), "id"),
+                           "template_title",
+                           "scope",
+                           "restriction",
+                           "note",
+                           "incidents",
+                           ]
 
+            s3db.configure(tablename,
+                           list_fields = list_fields,
+                           )
         for f in ("identifier", "msg_type"):
             field = atable[f]
             field.writable = False
@@ -980,12 +1036,24 @@ def area():
             list_fields = ["id",
                            "name",
                            "event_type_id",
+                           (T("Event Type"), "event_type_id$name"),
                            "priority",
                            "altitude",
                            "ceiling",
                            "location.location_id",
                            ]
 
+            s3db.configure("cap_area",
+                           list_fields = list_fields,
+                           )
+        elif r.representation == "xls":
+            s3db.gis_location.wkt.represent = None
+            list_fields = [(T("Area Description"), "name"),
+                           (T("Event Type"), "event_type_id$name"),
+                           (T("WKT"), "location.location_id$wkt"),
+                           "altitude",
+                           "ceiling",
+                           ]
             s3db.configure("cap_area",
                            list_fields = list_fields,
                            )
