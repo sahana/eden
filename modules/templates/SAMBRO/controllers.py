@@ -1500,6 +1500,8 @@ class user_info(S3CustomController):
                     roles.append("a")
 
             response = {"r": roles,
+                        "uid": user.id,
+                        "o": current.deployment_settings.get_cap_expire_offset(),
                         }
             current.response.headers["Content-Type"] = "application/json"
             return json.dumps(response)

@@ -974,6 +974,8 @@ def area():
         # Area create from this controller is template
         artable.is_template.default = True
 
+        response.s3.crud_strings["cap_area"].title_list = T("Predefined Areas")
+
         if r.representation == "json":
             list_fields = ["id",
                            "name",

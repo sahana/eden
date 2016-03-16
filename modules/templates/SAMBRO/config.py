@@ -112,7 +112,6 @@ def config(settings):
         #("vi", "Tiếng Việt"),   # Vietnamese
         #("zh-cn", "中文 (简体)"),
     ])
-    settings.L10n.languages = languages
     settings.cap.languages = languages
     # Translate the cap_area name
     settings.L10n.translate_cap_area = True

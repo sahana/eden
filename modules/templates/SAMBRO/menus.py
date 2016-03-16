@@ -97,7 +97,7 @@ class S3MainMenu(default.S3MainMenu):
         if not auth.is_logged_in():
             menu_auth = MM("Login", link=False, right=True)(
                            MM("Login", c="default", f="user", m="login",
-                              vars={"_next": URL(c="default", f="index")}),
+                              vars={"_next": URL(c="cap", f="alert")}),
                            MM("Lost Password", c="default", f="user",
                               m="retrieve_password")
                         )
