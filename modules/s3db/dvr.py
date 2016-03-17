@@ -329,9 +329,20 @@ class DVRCaseModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
+                     # "transferable" indicates whether this case is
+                     # ready for transfer (=workflow is complete)
                      Field("transferable", "boolean",
                            default = False,
                            label = T("Transferable"),
+                           represent = s3_yes_no_represent,
+                           readable = manage_transferability,
+                           writable = manage_transferability,
+                           ),
+                     # "household transferable" indicates whether all
+                     # open cases in the case group are ready for transfer
+                     Field("household_transferable", "boolean",
+                           default = False,
+                           label = T("Household Transferable"),
                            represent = s3_yes_no_represent,
                            readable = manage_transferability,
                            writable = manage_transferability,
