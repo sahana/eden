@@ -390,6 +390,8 @@ class S3Msg(object):
         # Place the Message in the appropriate Log
         if contact_method == "EMAIL":
             if not from_address:
+                # Fallback to system default
+                # @ToDo: Allow a multi-context lookup here for multi-tenancy?
                 from_address = current.deployment_settings.get_mail_sender()
 
             table = s3db.msg_email
@@ -857,6 +859,8 @@ class S3Msg(object):
                                    reply_to=reply_to,
                                    sender=sender,
                                    encoding=encoding,
+                                   # e.g. Return-Receipt-To:<user@domain>
+                                   headers={},
                                    # Added to Web2Py 2014-03-04
                                    # - defaults to sender
                                    #from_address=from_address,
@@ -1199,7 +1203,9 @@ class S3Msg(object):
             #    redirect(URL(f='index'))
         except:
             pass
-        return False # Returning False because the API needs to ask us for the messsage again.
+
+        # Return False because the API needs to ask us for the messsage again.
+        return False 
 
     # -------------------------------------------------------------------------
     def send_sms_by_pe_id(self,
@@ -1477,8 +1483,6 @@ class S3Msg(object):
             This is a simple mailbox polling script for the Messaging Module.
             It is normally called from the scheduler.
 
-            @ToDo: Handle MIME attachments
-                   http://docs.python.org/2/library/email-examples.html
             @ToDo: If there is a need to collect from non-compliant mailers
                    then suggest using the robust Fetchmail to collect & store
                    in a more compliant mailer!

@@ -87,6 +87,7 @@ class S3CAPModel(S3Model):
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
+        set_method = self.set_method
         UNKNOWN_OPT = current.messages.UNKNOWN_OPT
 
         # ---------------------------------------------------------------------
@@ -537,17 +538,17 @@ class S3CAPModel(S3Model):
                        cap_resource = "alert_id",
                        )
 
-        self.set_method("cap", "alert",
-                        method = "import_feed",
-                        action = CAPImportFeed())
+        set_method("cap", "alert",
+                   method = "import_feed",
+                   action = CAPImportFeed())
 
-        self.set_method("cap", "alert",
-                        method = "assign",
-                        action = self.cap_AssignArea())
+        set_method("cap", "alert",
+                   method = "assign",
+                   action = self.cap_AssignArea())
 
-        self.set_method("cap", "alert",
-                        method = "clone",
-                        action = self.cap_CloneAlert())
+        set_method("cap", "alert",
+                   method = "clone",
+                   action = self.cap_CloneAlert())
 
         if crud_strings["cap_template"]:
             crud_strings[tablename] = crud_strings["cap_template"]
@@ -1293,6 +1294,8 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
         area_represent = cap_AreaRepresent(show_link=True)
 
         configure(tablename,
+                  context = {"location": "location.location_id",
+                             },
                   #create_next = URL(f="area", args=["[id]", "location"]),
                   crud_form = crud_form,
                   deduplicate = self.cap_area_duplicate,

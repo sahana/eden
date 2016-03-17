@@ -1416,6 +1416,8 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_deploy_alert_resource(r, tablename):
 
+        from s3 import S3DateTime, S3SQLCustomForm
+
         s3db = current.s3db
 
         s3db.deploy_alert_recipient.human_resource_id.label = T("Member")
@@ -1423,10 +1425,7 @@ def config(settings):
         created_on = s3db[tablename].modified_on
         created_on.readable = True
         created_on.label = T("Date")
-        created_on.represent = lambda d: \
-                               s3base.S3DateTime.date_represent(d, utc=True)
-
-        from s3 import S3SQLCustomForm
+        created_on.represent = lambda d: S3DateTime.date_represent(d, utc=True)
 
         crud_form = S3SQLCustomForm("mission_id",
                                     "contact_method",
@@ -1450,7 +1449,7 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_deploy_application_resource(r, tablename):
 
-        r.table.human_resource_id.label = T("Member")
+        current.s3db[tablename].human_resource_id.label = T("Member")
 
     settings.customise_deploy_application_resource = customise_deploy_application_resource
 
