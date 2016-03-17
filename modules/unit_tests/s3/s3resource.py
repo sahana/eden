@@ -1895,6 +1895,80 @@ class ResourceSelectTests(unittest.TestCase):
         current.auth.override = False
 
     # -------------------------------------------------------------------------
+    def testApplyExtraFilter(self):
+        """ Test application of extra filters """
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+        assertNotEqual = self.assertNotEqual
+
+        test_expression = "test filter expression"
+        seen = []
+
+        def test_filter(resource, ids, expression):
+            """ Test filter method """
+
+            # Check resource
+            assertNotEqual(resource, None)
+            assertEqual(resource.tablename, "select_master")
+
+            # Verify that the resource has no extra filters while
+            # extra filters are applied
+            efilters = resource.rfilter.efilters
+            assertEqual(efilters, [])
+
+            # Check ids
+            assertTrue(type(ids) is list)
+            assertNotEqual(len(ids), 0)
+
+            # Remember ids to verify that no unnecessary items are passed
+            #print "called with %s" % str(ids)
+            seen.extend(ids)
+
+            # Verify correct expression is passed
+            assertEqual(expression, test_expression)
+
+            # Filter ids to verify that filter is effective
+            result = [item for item in ids if item > 3 and item % 2 == 0]
+
+            # Add a duplicate to verify that duplicates do not affect
+            # match counting and do not appear in the subset
+            if result:
+                result.insert(0, result[-1])
+
+            # Reverse result list to verify that original order is restored
+            result.reverse()
+
+            return result
+
+        # Define resource, add test filter as extra filter
+        resource = current.s3db.resource("select_master")
+        resource.add_extra_filter(test_filter, test_expression)
+
+        apply_extra_filters = resource.rfilter.apply_extra_filters
+
+        # Fake set of record IDs
+        test_set = [1, 2, 3, 4, 5, 6, 7, 8]
+
+        # Test without limit
+        seen = []
+        subset = apply_extra_filters(test_set)
+        assertEqual(subset, [4, 6, 8])
+        assertEqual(seen, test_set)
+
+        # Test with limit < len(test_set)
+        seen = []
+        subset = apply_extra_filters(test_set, limit=2)
+        assertEqual(subset, [4, 6])
+        assertEqual(seen, [1, 2, 3, 4, 5, 6])
+
+        # Test with limit > len(test_set)
+        seen = []
+        subset = apply_extra_filters(test_set, limit=10)
+        assertEqual(subset, [4, 6, 8])
+        assertEqual(seen, test_set)
+
+    # -------------------------------------------------------------------------
     def testSelectAll(self):
         """ Test selecting all records """
 
@@ -1986,6 +2060,59 @@ class ResourceSelectTests(unittest.TestCase):
         # - Rows properly filtered
         assertEqual(len(rows), numitems)
         assertTrue(all(row["select_master.status"] == "A" for row in rows))
+
+        # Select with counting
+        data = resource.select(["name", "status"], count=True)
+        # - Rows correctly counted
+        assertEqual(len(data.rows), data.numrows)
+
+        # Select with getids
+        data = resource.select(["id", "name", "status"], getids=True)
+        rows = data.rows
+        ids = data.ids
+        # - ids complete
+        assertEqual(len(rows), len(ids))
+        # - ...and in same order as the rows
+        for index, row in enumerate(rows):
+            assertEqual(row["select_master.id"], ids[index])
+
+    # -------------------------------------------------------------------------
+    def testSelectExtraFilter(self):
+        """ Test selection with extra filter """
+
+        s3db = current.s3db
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        test_expression = "A"
+
+        # Number of expected matches
+        numitems = len([item for item in self.test_data if item[1] == test_expression])
+
+        def test_filter(resource, ids, expression):
+            """ Test filter function """
+
+            assertEqual(expression, test_expression)
+
+            table = resource.table
+            query = (table.id.belongs(ids)) & \
+                    (table.status == expression)
+            rows = db(query).select(table.id)
+
+            return [row.id for row in rows]
+
+        # Define resource
+        resource = s3db.resource("select_master",
+                                 extra_filters = [(test_filter, test_expression)],
+                                 )
+
+        # Simple select
+        data = resource.select(["name", "status"])
+        rows = data.rows
+        # - Rows properly filtered
+        assertEqual(len(rows), numitems)
+        assertTrue(all(row["select_master.status"] == test_expression for row in rows))
 
         # Select with counting
         data = resource.select(["name", "status"], count=True)
@@ -2243,6 +2370,87 @@ class ResourceSelectTests(unittest.TestCase):
         query = (FS("code") == "A")
         resource = s3db.resource("select_master",
                                  filter = query,
+                                 )
+
+        # Page limits
+        start = 2
+        limit = 2
+        subset_names = names[start:start+limit]
+
+        # Simple select
+        data = resource.select(["name", "status"],
+                               start = start,
+                               limit = limit,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in the page
+        rows = data.rows
+        assertEqual(len(rows), min(numitems - start, limit))
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+
+        # Page limits:
+        start = 1
+        limit = 3
+        subset_names = names[start:start+limit]
+
+        # Select with counting
+        data = resource.select(["name", "status"],
+                               start = start,
+                               limit = limit,
+                               count = True,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in the page
+        rows = data.rows
+        assertEqual(len(rows), min(numitems - start, limit))
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+        # - counts all matching records, however
+        assertEqual(data.numrows, numitems)
+
+        # Select with getids
+        data = resource.select(["id", "name", "status"],
+                               start = start,
+                               limit = limit,
+                               getids = True,
+                               orderby = "select_master.name",
+                               )
+        # - returns only rows in the page
+        assertEqual(len(data.rows), min(numitems - start, limit))
+        assertTrue(all(row["select_master.name"] in subset_names for row in rows))
+        # - returns all matching record ids, however
+        assertEqual(len(data.ids), numitems)
+
+    # -------------------------------------------------------------------------
+    def testSelectSubsetExtraFilter(self):
+        """ Test selection of subset (pagination) with extra filter """
+
+        s3db = current.s3db
+
+        assertTrue = self.assertTrue
+        assertEqual = self.assertEqual
+
+        test_expression = "A"
+
+        def test_filter(resource, ids, expression):
+            """ Test filter function """
+
+            assertEqual(expression, test_expression)
+
+            table = resource.table
+            query = (table.id.belongs(ids)) & \
+                    (table.status == expression)
+            rows = db(query).select(table.id)
+
+            return [row.id for row in rows]
+
+        # Define subset
+        subset = [item for item in self.test_data if item[1] == test_expression]
+        numitems = len(subset)
+        names = [item[0] for item in subset]
+
+        # Define resource
+        resource = s3db.resource("select_master",
+                                 extra_filters = [(test_filter, test_expression)],
                                  )
 
         # Page limits
@@ -3609,7 +3817,6 @@ if __name__ == "__main__":
     run_suite(
         ComponentJoinConstructionTests,
         ComponentLeftJoinConstructionTests,
-
 
         ResourceLazyVirtualFieldsSupportTests,
         ResourceDataObjectAPITests,

@@ -4577,7 +4577,7 @@ class S3ResourceFilter(object):
                     colnames=rows.colnames, compact=False)
 
     # -------------------------------------------------------------------------
-    def apply_extra_filters(self, ids, limit=None):
+    def apply_extra_filters(self, ids, start=None, limit=None):
         """
             Apply all extra filters on a list of record ids
 
@@ -4588,16 +4588,77 @@ class S3ResourceFilter(object):
             @return: a sequence of matching IDs
         """
 
-        # @todo: implement this
+        # Get the resource
+        resource = self.resource
 
-        # @todo: prevent that apply_extra_filters is called from
-        #        inside a filter method (e.g. if this method is
-        #        using select)
+        # Get extra filters
+        efilters = self.efilters
 
-        # @todo: smart pagination (loop)
-        # @todo: restore order of result ids
+        # Resolve filter methods
+        methods = self.extra_filter_methods
+        filters = []
+        append = filters.append
+        for method, expression in efilters:
+            if callable(method):
+                append((method, expression))
+            else:
+                method = methods.get(method)
+                if method:
+                    append((method, expression))
+                else:
+                    current.log.warning("Unknown filter method: %s" % method)
+        if not filters:
+            # No applicable filters
+            return ids
 
-        return ids
+        # Clear extra filters so that apply_extra_filters is not
+        # called from inside a filter method (e.g. if the method
+        # uses resource.select)
+        self.efilters = []
+
+        # Initialize subset
+        subset = set()
+        tail = ids
+        limit_ = limit
+
+        while tail:
+
+            if limit:
+                head, tail = tail[:limit_], tail[limit_:]
+            else:
+                head, tail = tail, None
+
+            match = head
+            for method, expression in filters:
+                # Apply filter
+                match = method(resource, match, expression)
+                if not match:
+                    break
+
+            if match:
+                subset |= set(match)
+
+            found = len(subset)
+
+            if limit:
+                if found < limit:
+                    # Need more
+                    limit_ = limit - found
+                else:
+                    # Found all
+                    tail = None
+
+        # Restore order
+        subset = [item for item in ids if item in subset]
+
+        # Select start
+        if start:
+            subset = subset[start:]
+
+        # Restore extra filters
+        self.efilters = efilters
+
+        return subset
 
     # -------------------------------------------------------------------------
     def count(self, left=None, distinct=False):
@@ -4976,9 +5037,7 @@ class S3ResourceData(object):
         vfilter = resource.get_filter()
 
         # Extra filters
-        efilter = None
-        # @todo: implement this
-        #efilter = resource.get_extra_filters()
+        efilter = rfilter.get_extra_filters()
 
         # Is this a paginated request?
         pagination = limit is not None or start
@@ -5165,7 +5224,7 @@ class S3ResourceData(object):
                     else:
                         rows = rfilter(rows)
 
-                # Extra filter (@todo: implement this)
+                # Extra filter
                 if efilter:
                     if vfilter or not ids:
                         ids = self.getids(rows, pkey)
@@ -5173,11 +5232,8 @@ class S3ResourceData(object):
                         limit_ = start + limit
                     else:
                         limit_ = None
-                    ids = rfilter.apply_extra_filters(ids,
-                                                      limit = limit_,
-                                                      )
-                    # @todo: implement this:
-                    # rows = filter_rows_by_ids(rows, ids)
+                    ids = rfilter.apply_extra_filters(ids, limit = limit_)
+                    rows = self.getrows(rows, ids, pkey)
 
                 if pagination:
                     # Subset selection with vfilter/efilter
@@ -5968,6 +6024,25 @@ class S3ResourceData(object):
                 seen(row_id)
                 append(row_id)
         return result
+
+    # -------------------------------------------------------------------------
+    def getrows(self, rows, ids, pkey):
+        """
+            Select a subset of rows by their record IDs
+
+            @param rows: the Rows
+            @param ids: the record IDs
+            @param pkey: the primary key
+
+            @return: the subset (Rows)
+        """
+
+        if ids:
+            ids = set(ids)
+            subset = lambda row: row[pkey] in ids
+        else:
+            subset = lambda row: False
+        return rows.find(subset)
 
     # -------------------------------------------------------------------------
     def subset(self, rows, ids, start=None, limit=None, has_id=True):
