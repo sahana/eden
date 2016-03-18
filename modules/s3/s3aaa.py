@@ -1049,6 +1049,11 @@ Thank you"""
         deployment_settings = current.deployment_settings
         T = current.T
 
+        # Customise the resource
+        customise = deployment_settings.customise_resource("auth_user")
+        if customise:
+            customise(request, "auth_user")
+
         utable = self.settings.table_user
         utablename = utable._tablename
         passfield = settings.password_field
@@ -1378,8 +1383,14 @@ Thank you"""
 
         settings = self.settings
         messages = self.messages
+        request = current.request
 
-        key = current.request.args[-1]
+        # Customise the resource
+        customise = current.deployment_settings.customise_resource("auth_user")
+        if customise:
+            customise(request, "auth_user")
+
+        key = request.args[-1]
         utable = settings.table_user
         query = (utable.registration_key == key)
         user = current.db(query).select(limitby=(0, 1)).first()
@@ -2954,7 +2965,6 @@ $.filterOptionsS3({
                 # Customise the resource
                 customise = settings.customise_resource(htablename)
                 if customise:
-                    #import pydevd;pydevd.settrace()
                     request = S3Request("hrm", "human_resource",
                                         current.request,
                                         args=[str(hr_id)])
