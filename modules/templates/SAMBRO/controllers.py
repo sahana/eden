@@ -97,7 +97,7 @@ class index(S3CustomController):
                        "sent",
                        ]
         # Order with most recent Alert first
-        orderby = "cap_info.expires desc"
+        orderby = "cap_alert.sent desc"
         datalist, numrows, ids = resource.datalist(fields = list_fields,
                                                    #start = None,
                                                    limit = None,
