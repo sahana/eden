@@ -37,7 +37,9 @@ def config(settings):
     #settings.base.theme = "SAMBRO"
 
     # The Registration functionality shouldn't be visible to the Public
-    settings.security.registration_visible = False
+    #settings.security.registration_visible = True
+
+    settings.auth.registration_requires_approval = True
 
     # Link Users to Organisations
     settings.auth.registration_requests_organisation = True
@@ -233,34 +235,33 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_cap_alert_resource(r, tablename):
 
+        T = current.T
         db = current.db
         s3db = current.s3db
         def onapprove(record):
             # Normal onapprove
             s3db.cap_alert_approve(record)
-
             # Sync FTP Repository
             current.s3task.async("cap_ftp_sync")
 
             # Twitter Post
-            if settings.get_cap_post_to_twitter():
+            if settings.get_cap_post_to_twitter() and \
+               record["scope"] != "Private":
                 try:
                     import tweepy
                 except ImportError:
                     current.log.debug("tweepy module needed for sending tweets")
                 else:
-                    T = current.T
                     alert_id = int(record["id"])
                     atable = s3db.cap_alert
                     itable = s3db.cap_info
         
                     arow = db(atable.id == alert_id).select(atable.status,
-                                                            atable.sender,
-                                                            atable.sent,
                                                             limitby=(0, 1)).first()
                     query = (itable.alert_id == alert_id) & \
                             (itable.deleted != True)
                     irows = db(query).select(itable.headline,
+                                             itable.sender_name,
                                              itable.web)
                     # @ToDo: shorten url
                     # @ToDo: Handle the multi-message nicely?
@@ -272,7 +273,7 @@ def config(settings):
 %(WEBSITE)s: %(Website)s""") % dict(Status = arow.status,
                                     Headline = s3_str(irow.headline),
                                     SENDER = T("Sender"),
-                                    SenderName = s3_str(arow.sender),
+                                    SenderName = s3_str(irow.sender_name),
                                     WEBSITE = T("Website"),
                                     Website = irow.web)
                         try:

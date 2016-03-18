@@ -99,7 +99,9 @@ class S3MainMenu(default.S3MainMenu):
                            MM("Login", c="default", f="user", m="login",
                               vars={"_next": URL(c="cap", f="alert")}),
                            MM("Lost Password", c="default", f="user",
-                              m="retrieve_password")
+                              m="retrieve_password"),
+                           MM("Request for Account", c="default", f="user",
+                              m="register"),
                         )
         else:
             # Logged-in
