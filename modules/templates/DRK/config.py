@@ -1137,7 +1137,7 @@ def config(settings):
         s3.postp = custom_postp
 
         # Custom rheader tabs
-        if current.request.controller != "default":
+        if current.request.controller == "dvr":
             attr = dict(attr)
             attr["rheader"] = drk_dvr_rheader
 
