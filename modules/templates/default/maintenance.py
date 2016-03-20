@@ -5,6 +5,7 @@ import os
 import time
 
 from gluon import current
+from gluon.settings import global_settings
 
 # =============================================================================
 class Daily():
@@ -31,7 +32,7 @@ class Daily():
         osjoin = os.path.join
         osstat = os.stat
         osremove = os.remove
-        folder = osjoin(request.global_settings.applications_parent,
+        folder = osjoin(global_settings.applications_parent,
                         request.folder,
                         "sessions")
         # Convert to UNIX time

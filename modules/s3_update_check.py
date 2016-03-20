@@ -111,7 +111,7 @@ def update_check(settings):
             web2py_installed_version = version_info.read().split()[-1].strip()
             version_info.close()
             if isinstance(web2py_installed_version, str):
-                # Post 2.4.2, request.global_settings.web2py_version is unparsed
+                # Post 2.4.2, global_settings.web2py_version is unparsed
                 web2py_installed_parsed = parse_version(web2py_installed_version)
                 web2py_installed_datetime = web2py_installed_parsed[datetime_index]
             else:

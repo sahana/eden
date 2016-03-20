@@ -77,6 +77,7 @@ from gluon import *
 #from gluon.http import HTTP, redirect
 from gluon.fileutils import parse_version
 from gluon.languages import lazyT, regex_translate
+from gluon.settings import global_settings
 from gluon.storage import Storage
 
 from s3dal import Rows
@@ -296,16 +297,14 @@ class GIS(object):
             @ToDo: Pass error messages to Result & have JavaScript listen for these
         """
 
-        request = current.request
-
         table = current.s3db.gis_layer_kml
         record = current.db(table.id == record_id).select(table.url,
                                                           limitby=(0, 1)
                                                           ).first()
         url = record.url
 
-        filepath = os.path.join(request.global_settings.applications_parent,
-                                request.folder,
+        filepath = os.path.join(global_settings.applications_parent,
+                                current.request.folder,
                                 "uploads",
                                 "gis_cache",
                                 filename)
@@ -2287,7 +2286,7 @@ class GIS(object):
                 precision = settings.get_gis_precision()
                 if tolerance:
                     # Do the Simplify & GeoJSON direct from the DB
-                    web2py_installed_version = parse_version(current.request.global_settings.web2py_version)
+                    web2py_installed_version = parse_version(global_settings.web2py_version)
                     web2py_installed_datetime = web2py_installed_version[4] # datetime_index = 4
                     if web2py_installed_datetime >= datetime.datetime(2015, 1, 17, 0, 7, 4):
                         # Use http://www.postgis.org/docs/ST_SimplifyPreserveTopology.html
