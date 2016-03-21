@@ -730,6 +730,7 @@ def config(settings):
                 else:
                     absence_field = None
 
+                check_overdue = False
                 if not r.record:
                     overdue = r.get_vars.get("overdue")
                     if overdue:
@@ -755,6 +756,7 @@ def config(settings):
                             query = not_checked_out | \
                                     checked_out & (checkout_date >= due_date)
                         resource.add_filter(query)
+                        check_overdue = True
 
                 if not r.component:
 
@@ -1035,13 +1037,17 @@ def config(settings):
                                    "person_details.nationality",
                                    "dvr_case.date",
                                    "dvr_case.status_id",
-                                   (T("Size of Family"), "dvr_case.household_size"),
                                    (T("Shelter"), "shelter_registration.shelter_unit_id"),
                                    ]
+
+                    # Add fields for managing transferability
+                    if settings.get_dvr_manage_transferability() and not check_overdue:
+                        list_fields[-1:-1] = ["dvr_case.transferable",
+                                              (T("Size of Family"), "dvr_case.household_size"),
+                                              (T("Family Transferable"), "dvr_case.household_transferable"),
+                                              ]
                     if absence_field:
                         list_fields.append(absence_field)
-                    if settings.get_dvr_manage_transferability():
-                        list_fields.append("dvr_case.transferable")
 
                     if r.representation == "xls":
 
