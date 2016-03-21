@@ -74,6 +74,7 @@ class S3ScenarioModel(S3Model):
                           Field("name", notnull=True,
                                 length=64,    # Mayon compatiblity
                                 label = T("Name"),
+                                requires = IS_NOT_EMPTY(),
                                 ),
                           s3_comments(),
                           *s3_meta_fields())

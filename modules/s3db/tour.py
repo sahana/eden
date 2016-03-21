@@ -77,6 +77,7 @@ class S3GuidedTourModel(S3Model):
                            notnull=True,
                            unique=True,
                            represent=lambda v: v or NONE,
+                           requires = IS_NOT_EMPTY(),
                            label=T("Unique code")),
                      Field("controller",
                            represent=lambda v: v or NONE,

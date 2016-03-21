@@ -1642,6 +1642,7 @@ class S3GISConfigModel(S3Model):
         define_table(tablename,
                      Field("name", length=64, notnull=True, unique=True,
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      # If-needed, then Symbology should be here
                      #symbology_id(),
@@ -1735,6 +1736,7 @@ class S3GISConfigModel(S3Model):
         define_table(tablename,
                      Field("name", length=64, notnull=True, unique=True,
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("epsg", "integer", notnull=True,
                            label = "EPSG",
@@ -3098,7 +3100,9 @@ class S3MapModel(S3Model):
         #
         tablename = "gis_feature_query"
         define_table(tablename,
-                     Field("name", length=128, notnull=True),
+                     Field("name", length=128, notnull=True,
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("lat", "double",
                            requires = IS_LAT(),
                            ),
@@ -3978,7 +3982,9 @@ class S3MapModel(S3Model):
         #
         tablename = "gis_cache2"
         define_table(tablename,
-                     Field("name", length=128, notnull=True, unique=True),
+                     Field("name", length=128, notnull=True, unique=True,
+                           requires = IS_NOT_EMPTY(),
+                           ),
                      Field("file", "upload",
                            autodelete = True,
                            custom_retrieve = self.gis_cache2_retrieve,
@@ -4843,6 +4849,7 @@ def name_field():
     return S3ReusableField("name", length=64, notnull=True,
                            #unique=True,
                            label = current.T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            )
 
 # =============================================================================

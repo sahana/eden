@@ -105,6 +105,7 @@ class S3EventModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("parent", "reference event_event_type", # This form of hierarchy may not work on all Databases
                            label = T("SubType of"),
@@ -529,6 +530,7 @@ class S3IncidentModel(S3Model):
                           Field("name", notnull=True, # Name could be a code
                                 length = 64,
                                 label = T("Name"),
+                                requires = IS_NOT_EMPTY(),
                                 ),
                           Field("exercise", "boolean",
                                 label = T("Exercise?"),
@@ -901,6 +903,7 @@ class S3IncidentReportModel(S3Model):
                           s3_datetime(default="now"),
                           Field("name", notnull=True,
                                 label = T("Title"),
+                                requires = IS_NOT_EMPTY(),
                                 ),
                           self.event_incident_type_id(),
                           self.gis_location_id(),
@@ -1220,6 +1223,7 @@ class S3IncidentTypeModel(S3Model):
         self.define_table(tablename,
                           Field("name", notnull=True, length=64,
                                 label = T("Name"),
+                                requires = IS_NOT_EMPTY(),
                                 ),
                           Field("parent", "reference event_incident_type", # This form of hierarchy may not work on all Databases
                                 label = T("SubType of"),

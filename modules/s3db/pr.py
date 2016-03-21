@@ -319,7 +319,9 @@ class S3PersonEntity(S3Model):
                             represent = lambda opt: \
                             role_types.get(opt, UNKNOWN_OPT)),
                       # Role name
-                      Field("role", notnull=True),
+                      Field("role", notnull=True,
+                            requires = IS_NOT_EMPTY(),
+                            ),
                       # Path, for faster lookups
                       Field("path",
                             readable = False,
@@ -3542,6 +3544,7 @@ class S3PersonEducationModel(S3Model):
         define_table(tablename,
                      Field("name", length=64, notnull=True,
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately

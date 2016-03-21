@@ -162,6 +162,7 @@ class SyncDataModel(S3Model):
                                          _title="%s|%s" % (
                                                 T("Repository Name"),
                                                 T("Name of the repository (for you own reference)"))),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("apitype",
                            default = "eden",
@@ -392,12 +393,12 @@ class SyncDataModel(S3Model):
         tablename = "sync_task"
         define_table(tablename,
                      repository_id(),
-                     Field("resource_name",
-                           notnull = True,
+                     Field("resource_name", notnull = True,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (
                                                 T("Resource Name"),
                                                 T("Table name of the resource to synchronize"))),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("infile_pattern",
                            label = T("Input File Name"),

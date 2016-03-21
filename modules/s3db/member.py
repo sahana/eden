@@ -80,6 +80,7 @@ class S3MembersModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately

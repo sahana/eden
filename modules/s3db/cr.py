@@ -86,15 +86,18 @@ class S3ShelterModel(S3Model):
 
         location_id = self.gis_location_id
 
-        # -------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # Shelter types
         # e.g. NGO-operated, Government evacuation center, School, Hospital -- see Agasti opt_camp_type.)
         tablename = "cr_shelter_type"
         define_table(tablename,
                      Field("name", notnull=True,
                            label = NAME,
-                           requires = IS_NOT_ONE_OF(db,
-                                                    "%s.name" % tablename),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_NOT_ONE_OF(db,
+                                                     "%s.name" % tablename,
+                                                     ),
+                                       ],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -152,6 +155,7 @@ class S3ShelterModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True,
                            label = NAME,
+                           requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -216,6 +220,7 @@ class S3ShelterModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True,
                            label = NAME,
+                           requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
