@@ -504,12 +504,11 @@ def update_transferability(site_id=None):
                     ]
             members = ctable.id.count()
             rows = db(query).select(gtable.id,
-                                    members,
                                     groupby = gtable.id,
+                                    having = (members == 0),
                                     left = left,
                                     )
-            group_ids = set(row["pr_group.id"]
-                            for row in rows if row[members] == 0)
+            group_ids = set(row.id for row in rows)
 
             # Add all case groups which have at least one non-transferable member
             open_case = (ctable.archived != True) & \
