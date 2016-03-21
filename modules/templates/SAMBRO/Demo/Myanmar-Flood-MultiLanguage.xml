@@ -8,7 +8,6 @@
     <cap:source>sambro-server@dmh.gov.mm</cap:source>
     <cap:scope>Restricted</cap:scope>
     <cap:restriction>RRD</cap:restriction>
-    <cap:addresses>RRD "Water Related Organization and Department" "Local Government" "Local DMH" "Ministry of Information"</cap:addresses>
     <cap:note>This template is intended for CAP on a Map project 'Exercise'. The template is flood alert warning and bulletin. Simultaneously targeting the public and First Responders. It contain info segments for both English and Myanmar languages. </cap:note>
     <cap:incidents>Flood</cap:incidents>
     <cap:info>

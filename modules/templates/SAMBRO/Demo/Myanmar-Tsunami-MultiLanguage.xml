@@ -7,7 +7,6 @@
     <cap:msgType>Alert</cap:msgType>
     <cap:source>mm.aidiq.com@http://mm.aidiq.com</cap:source>
     <cap:scope>Public</cap:scope>
-    <cap:addresses/>
     <cap:incidents>Tsunami</cap:incidents>
     <cap:info>
         <cap:language>my</cap:language>

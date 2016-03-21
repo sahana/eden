@@ -17,12 +17,13 @@ ALERT_EDITOR,Alert Editor,Can create the CAP Message and submit that for approva
 ALERT_EDITOR,Alert Editor,,cap,info,,READ,,,,,
 ALERT_EDITOR,Alert Editor,,cap,template,,READ,,,,,Use template to create actual alert
 ALERT_EDITOR,Alert Editor,,cap,area,,READ,,,,,For predefined area 
-ALERT_EDITOR,Alert Editor,,cap,compose,,READ,,,,,To send message to Alert Approver
+ALERT_EDITOR,Alert Editor,,cap,notify_approver,,READ,,,,,To send message to Alert Approver
 ALERT_EDITOR,Alert Editor,,pr,subscription,,READ|CREATE|UPDATE|DELETE,,,,,For managing recipients
 ALERT_EDITOR,Alert Editor,,pr,group,,READ|CREATE|UPDATE|DELETE,,,,,For managing recipients
 ALERT_APPROVER,Alert Approver,"Besides Authorizing Message to disseminate, they can also act as CAP Editor",cap,alert,,READ|CREATE|UPDATE|REVIEW|APPROVE,,,,,
 ALERT_APPROVER,Alert Approver,,cap,info,,READ,,,,,
 ALERT_APPROVER,Alert Approver,,cap,template,,READ,,,,,
 ALERT_APPROVER,Alert Approver,,cap,area,,READ,,,,,
+ALERT_APPROVER,Alert Approver,,cap,notify_approver,,READ,,,,,To send message to Alert Approver
 ALERT_APPROVER,Alert Approver,,pr,subscription,,READ|CREATE|UPDATE|DELETE,,,,,For managing recipients
 ALERT_APPROVER,Alert Approver,,pr,group,,READ|CREATE|UPDATE|DELETE,,,,,For managing recipients

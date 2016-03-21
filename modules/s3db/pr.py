@@ -2344,7 +2344,7 @@ class S3GroupModel(S3Model):
 
         # Reject form if duplicate exists
         if duplicate:
-            error = current.T("This person does already belong to this group.")
+            error = current.T("This person already belongs to this group.")
             if "person_id" in form_vars:
                 # Group perspective
                 form.errors["person_id"] = error

@@ -1074,27 +1074,45 @@ def warning_priority():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
-def compose():
+def notify_approver():
     """
         Send message to the people with role of Alert Approval
     """
 
-    # For SAMBRO, permission is checked by the Authentication Roles but the permission
-    # should be checked if CAP module is enabled
     if settings.has_module("msg"):
         # Notify People with the role of Alert Approval via email and SMS
-        pe_ids = get_vars.get("pe_ids")
         alert_id = get_vars.get("cap_alert.id")
-        subject = "%s: Alert Approval Required" % settings.get_system_name_short()
-        url = "%s%s" % (settings.get_base_public_url(),
-                        URL(c="cap", f="alert", args=[alert_id, "review"]))
-        message = "You are requested to take action on this alert:\n\n%s" % url
-        msg.send_by_pe_id(pe_ids, subject, message)
-        try:
-            msg.send_by_pe_id(pe_ids, subject, message, contact_method = "SMS")
-        except ValueError:
-            current.log.error("No SMS Handler defined!")
-        session.confirmation = T("Alert Approval Notified")
+        atable = s3db.cap_alert
+        if not alert_id and not auth.s3_has_permission("update", atable,
+                                                       record_id=alert_id):
+            auth.permission.fail()
+        row = db(atable.id == alert_id).select(atable.approved_by,
+                                               limitby=(0, 1)).first()
+        if not row.approved_by:
+            # Get the user ids for the role alert_approver
+            agtable = db.auth_group
+            group_row = db(agtable.role == "Alert Approver").select(\
+                                                        agtable.id,
+                                                        limitby=(0, 1)).first()
+            if group_row:
+                user_pe_id = auth.s3_user_pe_id
+                user_ids = auth.s3_group_members(group_row.id) # List of user_ids
+                pe_ids = [] # List of pe_ids
+                pe_append = pe_ids.append
+                for user_id in user_ids:
+                    pe_append(user_pe_id(int(user_id)))
+                subject = "%s: Alert Approval Required" % settings.get_system_name_short()
+                url = "%s%s" % (settings.get_base_public_url(),
+                                URL(c="cap", f="alert", args=[alert_id, "review"]))
+                message = "You are requested to take action on this alert:\n\n%s" % url
+                msg.send_by_pe_id(pe_ids, subject, message)
+                try:
+                    msg.send_by_pe_id(pe_ids, subject, message, contact_method = "SMS")
+                except ValueError:
+                    current.log.error("No SMS Handler defined!")
+                session.confirmation = T("Alert Approval Notified")
+        else:
+            session.error = T("Alert already approved")
 
     redirect(URL(c="cap", f="alert"))
 

@@ -7,7 +7,6 @@
     <cap:msgType>Alert</cap:msgType>
     <cap:source>ph.aidiq.com@http://ph.aidiq.com</cap:source>
     <cap:scope>Public</cap:scope>
-    <cap:addresses>"coast guard/" public "local govt"</cap:addresses>
     <cap:note>
 This template is intended for CAP on MAP project 'Exercise'. The template is for tsunami alert and warning . simultaneously targeting the Public and first responders. It handles alert 0 to alert 3.
     </cap:note>
