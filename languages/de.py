@@ -1615,6 +1615,7 @@
 'Family': 'Familie',
 'Family Members': 'Familienmitglieder',
 'Family Reunification': 'Familienzusammenführung',
+'Family Transferable': 'Familie Transferierbar',
 'Family/friends': 'Familie/Freunde',
 'Farmland/fishing material assistance, Rank': 'Ackerland/Materialhilfe für Fischerei, Rang',
 'Fatalities': 'Verstorbene',
