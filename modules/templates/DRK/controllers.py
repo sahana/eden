@@ -488,15 +488,15 @@ def update_transferability(site_id=None):
             if success:
                 result += success
 
-            # Check transferability of family
+            # Check transferability of families
             gtable = s3db.pr_group
             mtable = s3db.pr_group_membership
+            # Family = Case Group (group type 7)
             query = (gtable.group_type == 7) & \
                     (gtable.deleted != True) & \
                     (ctable.id != None)
 
-            # Find all case groups for which have no currently transferable
-            # member => these groups are not transferable by nature
+            # Find all case groups which have no currently transferable member
             left = [mtable.on((mtable.group_id == gtable.id) & \
                               (mtable.deleted != True)),
                     ctable.on((ctable.person_id == mtable.person_id) &
@@ -504,15 +504,13 @@ def update_transferability(site_id=None):
                     ]
             members = ctable.id.count()
             rows = db(query).select(gtable.id,
-                                    members,
                                     groupby = gtable.id,
+                                    having = (members == 0),
                                     left = left,
                                     )
-            group_ids = set(row["pr_group.id"]
-                            for row in rows if row[members] == 0)
+            group_ids = set(row.id for row in rows)
 
-            # Find all other case groups which have at least one non-transferable
-            # member => these groups are not transferable either
+            # Add all case groups which have at least one non-transferable member
             open_case = (ctable.archived != True) & \
                         (ctable.deleted != True)
             if OPEN:
@@ -537,20 +535,29 @@ def update_transferability(site_id=None):
                                     )
             group_ids |= set(row.id for row in rows)
 
-            # Find all cases which do not belong to any of these groups
+            # Find all cases which do not belong to any of these
+            # non-transferable case groups, but either belong to
+            # another case group or are transferable themselves
+            ftable = mtable.with_alias("family")
             left = [mtable.on((mtable.person_id == ctable.person_id) & \
                               (mtable.group_id.belongs(group_ids)) & \
                               (mtable.deleted != True)),
+                    gtable.on((ftable.person_id == ctable.person_id) & \
+                              (ftable.deleted != True) & \
+                              (gtable.id == ftable.group_id) & \
+                              (gtable.group_type == 7)),
                     ]
-
-            query = (ctable.deleted != True) & (mtable.id == None)
+            query = (mtable.id == None) & (ctable.deleted != True)
+            families = gtable.id.count()
+            required = ((families > 0) | (ctable.transferable == True))
             rows = db(query).select(ctable.id,
                                     groupby = ctable.id,
+                                    having = required,
                                     left = left,
                                     )
 
-            # ...and set them household_transferable=True
-            case_ids = (row.id for row in rows)
+            # ...and set them household_transferable=True:
+            case_ids = set(row.id for row in rows)
             if case_ids:
                 db(ctable.id.belongs(case_ids)).update(household_transferable=True)
 
