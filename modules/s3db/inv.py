@@ -140,6 +140,7 @@ class S3WarehouseModel(S3Model):
         define_table(tablename,
                      Field("name", length=128, notnull=True,
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      organisation_id(default = root_org if org_dependent_wh_types else None,
                                      readable = is_admin if org_dependent_wh_types else False,
@@ -216,6 +217,7 @@ class S3WarehouseModel(S3Model):
                      Field("name", notnull=True,
                            length=64,           # Mayon Compatibility
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("code", length=10, # Mayon compatibility
                            label = T("Code"),

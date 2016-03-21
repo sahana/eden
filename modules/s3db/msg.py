@@ -2248,6 +2248,7 @@ class S3BaseStationModel(S3Model):
                           Field("name", notnull=True,
                                 length=64, # Mayon Compatibility
                                 label = T("Name"),
+                                requires = IS_NOT_EMPTY(),
                                 ),
                           Field("code", length=10, # Mayon compatibility
                                 label = T("Code"),

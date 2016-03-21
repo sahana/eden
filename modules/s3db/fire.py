@@ -180,6 +180,7 @@ class S3FireStationModel(S3Model):
                      self.super_link("site_id", "org_site"),
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("code", length=10,
                            # @ToDo: code_requires based on deployment_setting

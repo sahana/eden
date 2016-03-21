@@ -1040,6 +1040,8 @@ def config(settings):
                                    ]
                     if absence_field:
                         list_fields.append(absence_field)
+                    if settings.get_dvr_manage_transferability():
+                        list_fields.append("dvr_case.transferable")
 
                     if r.representation == "xls":
 

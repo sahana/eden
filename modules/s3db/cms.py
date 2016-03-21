@@ -91,6 +91,11 @@ class S3ContentModel(S3Model):
         define_table(tablename,
                      Field("name", length=255, notnull=True, unique=True,
                            label = T("Name"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_NOT_ONE_OF(db,
+                                                     "%s.name" % tablename,
+                                                     ),
+                                       ],
                            ),
                      Field("avatar", "boolean",
                            default = False,
@@ -186,6 +191,7 @@ class S3ContentModel(S3Model):
                      Field("body", "text", notnull=True,
                            label = T("Body"),
                            represent = body_represent,
+                           #requires = IS_NOT_EMPTY(),
                            widget = body_widget,
                            ),
                      # @ToDo: Move this to link table?
@@ -533,6 +539,7 @@ class S3ContentModel(S3Model):
                      post_id(empty=False),
                      Field("body", "text", notnull=True,
                            label = T("Comment"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      *s3_meta_fields())
 

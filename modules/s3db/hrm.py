@@ -158,6 +158,7 @@ class S3HRModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately
@@ -257,6 +258,7 @@ class S3HRModel(S3Model):
                      Field("name", notnull=True,
                            length=64,    # Mayon compatibility
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      organisation_id(default = root_org if org_dependent_job_titles else None,
                                      readable = is_admin if org_dependent_job_titles else False,
@@ -2010,9 +2012,9 @@ class S3HRSkillModel(S3Model):
         #
         tablename = "hrm_skill_type"
         define_table(tablename,
-                     Field("name", notnull=True, unique=True,
-                           length=64,
+                     Field("name", notnull=True, unique=True, length=64,
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2065,6 +2067,7 @@ class S3HRSkillModel(S3Model):
                      Field("name", notnull=True, unique=True,
                            length=64,    # Mayon compatibility
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2426,6 +2429,7 @@ class S3HRSkillModel(S3Model):
                            label = T("Name"),
                            represent = lambda v: T(v) if v is not None \
                                                       else NONE,
+                           requires = IS_NOT_EMPTY(),
                            ),
                      # Only included in order to be able to set
                      # realm_entity to filter appropriately
@@ -2899,6 +2903,7 @@ class S3HRSkillModel(S3Model):
                      Field("name", notnull=True,
                            length=128,   # Mayon Compatibility
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      organisation_id(default = root_org if filter_certs else None,
                                      label = label,
@@ -4062,6 +4067,7 @@ class S3HRProgrammeModel(S3Model):
         define_table(tablename,
                      Field("name", notnull=True, length=64,
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("name_long",
                            label = T("Long Name"),

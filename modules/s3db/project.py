@@ -1564,6 +1564,7 @@ class S3ProjectActivityTypeModel(S3Model):
                            label = T("Name"),
                            represent = lambda v: T(v) if v is not None \
                                                       else NONE,
+                           requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2726,6 +2727,7 @@ class S3ProjectHazardModel(S3Model):
                            label = T("Name"),
                            represent = lambda v: T(v) if v is not None \
                                                       else NONE,
+                           requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(
                         represent = lambda v: T(v) if v is not None \
@@ -7020,6 +7022,7 @@ class S3ProjectStatusModel(S3Model):
         self.define_table(tablename,
                           Field("name", length=128, notnull=True, unique=True,
                                 label = T("Name"),
+                                requires = IS_NOT_EMPTY(),
                                 ),
                           s3_comments(),
                           *s3_meta_fields())
@@ -7097,6 +7100,7 @@ class S3ProjectThemeModel(S3Model):
                            label = T("Name"),
                            represent = lambda v: T(v) if v is not None \
                                                       else NONE,
+                           requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(
                         represent = lambda v: T(v) if v is not None \
@@ -8319,6 +8323,7 @@ class S3ProjectTaskModel(S3Model):
                              ),
                      Field("body", "text", notnull=True,
                            label = T("Comment"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      *s3_meta_fields())
 
@@ -8338,9 +8343,12 @@ class S3ProjectTaskModel(S3Model):
         tablename = "project_role"
         define_table(tablename,
                      Field("role", length=128, notnull=True, unique=True,
-                           label=T("Role"),
-                           requires = IS_NOT_ONE_OF(db,
-                                                    "project_role.role"),
+                           label = T("Role"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_NOT_ONE_OF(db,
+                                                     "project_role.role",
+                                                     ),
+                                       ],
                            ),
                      s3_comments(),
                      *s3_meta_fields())

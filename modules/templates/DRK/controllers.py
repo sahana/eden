@@ -289,7 +289,7 @@ class transferability(S3CustomController):
                 redirect(URL(c = "dvr",
                             f = "person",
                             vars = {"closed": "0",
-                                    "dvr_case.transferable": "True",
+                                    "dvr_case.transferable__belongs": "True",
                                     },
                             ))
 
@@ -459,8 +459,7 @@ def update_transferability(site_id=None):
                     join = atable_.on((atable_.person_id == ctable.person_id) & \
                                       (atable_.type_id == appointment_type_id) & \
                                       (atable_.deleted != True) & \
-                                      (((atable_.status != MISSED) & \
-                                        (atable_.status != CANCELLED) & \
+                                      (((atable_.status == COMPLETED) & \
                                         (atable_.date != None) & \
                                         (atable_.date >= ONE_YEAR_AGO) & \
                                         (atable_.date <= TODAY)) | \

@@ -315,10 +315,8 @@ def group_membership():
             elif len(group_ids) == 1:
                 field = table.group_id
                 field.default = group_id
-                # If we have only one relevant case, then hide the group ID
-                # in create-forms:
-                if not r.id:
-                    field.readable = field.writable = False
+                # If we have only one relevant case, then hide the group ID:
+                field.readable = field.writable = False
             elif len(group_ids) > 1:
                 # Show the case ID in list fields if there is more than one
                 # relevant case

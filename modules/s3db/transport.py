@@ -148,6 +148,7 @@ class S3TransportModel(S3Model):
                      Field("name", notnull=True,
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      # Code is part of the SE
                      Field("code",
@@ -346,6 +347,7 @@ class S3TransportModel(S3Model):
                      Field("name", notnull=True,
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("code",
                            label = T("Code"),
@@ -414,6 +416,7 @@ class S3TransportModel(S3Model):
                      Field("name", notnull=True,
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("code",
                            label = T("Code"),
@@ -591,6 +594,7 @@ class S3TransportModel(S3Model):
                      Field("name", notnull=True,
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      location_id(
                         widget = S3LocationSelector(levels = [],
@@ -714,6 +718,7 @@ class S3TransportModel(S3Model):
                      Field("name", notnull=True,
                            length = 64, # Mayon Compatibility
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      border_crossing_id(),
                      organisation_id(),
