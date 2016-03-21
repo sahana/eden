@@ -181,7 +181,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                       check=cap_editors)(
                         M("Create", m="create"),
                         M("Import from Feed URL", m="import_feed", p="create",
-                          restrict=["ADMIN"]),
+                          check=cap_editors),
                     ),
                     M("Templates", f="template")(
                         M("Create", m="create",

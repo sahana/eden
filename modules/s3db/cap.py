@@ -401,6 +401,10 @@ class S3CAPModel(S3Model):
                                                   sort = True,
                                                   )
                                         ),
+                           represent = S3Represent(lookup="pr_group",
+                                                   fields = ["name"],
+                                                   multiple = True,
+                                                   ),
                            widget = S3MultiSelectWidget(),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The group listing of intended recipients of the alert message"),
@@ -1970,32 +1974,16 @@ def cap_rheader(r):
                             area_row = db(area_table.alert_id == alert_id).\
                                                 select(area_table.id,
                                                        limitby=(0, 1)).first()
-                            if area_row:
-                                # For Alert Editor
-                                if has_permission("update", "cap_alert",
-                                                  record_id=alert_id):
-                                    # Get the user ids for the role alert_approver
-                                    agtable = db.auth_group
-                                    group_row = db(agtable.role == "Alert Approver").\
-                                                   select(agtable.id,
-                                                          limitby=(0, 1)).first()
-                                    if group_row:
-                                        user_pe_id = auth.s3_user_pe_id
-                                        user_ids = auth.s3_group_members(group_row.id) # List of user_ids
-                                        pe_ids = [] # List of pe_ids
-                                        pe_append = pe_ids.append
-                                        for user_id in user_ids:
-                                            pe_append(user_pe_id(int(user_id)))
-
-                                    action_btn = A(T("Submit for Approval"),
-                                                   _href = URL(f = "compose",
-                                                               vars = {"cap_alert.id": record.id,
-                                                                       "pe_ids": pe_ids,
-                                                                       },
-                                                               ),
-                                                   _class = "action-btn confirm-btn"
-                                                   )
-                                    current.response.s3.jquery_ready.append(
+                            if area_row and has_permission("update", "cap_alert",
+                                                           record_id=record.id):
+                                action_btn = A(T("Submit for Approval"),
+                                               _href = URL(f = "notify_approver",
+                                                           vars = {"cap_alert.id": record.id,
+                                                                   },
+                                                           ),
+                                               _class = "action-btn confirm-btn"
+                                               )
+                                current.response.s3.jquery_ready.append(
 '''S3.confirmClick('.confirm-btn','%s')''' % T("Do you want to submit the alert for approval?"))
 
                                 # For Alert Approver
