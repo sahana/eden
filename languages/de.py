@@ -4309,7 +4309,7 @@
 'This module allows the editing of page content using a web browser.': 'Dieses Modul ermöglicht das Editieren der Webseite unter Verwendung des Browsers.',
 'This module allows you to plan scenarios for both Exercises & Events. You can allocate appropriate Resources (Human, Assets & Facilities) so that these can be mobilized easily.': 'Mit diesem Modul können Szenarien sowohl für Übungen als auch für Ereignisse planen. Sie können geeignete Ressourcen (Menschen, Anlagen & Einrichtungen) zuordnen, damit diese leicht mobilisiert werden können.',
 'This page shows you logs of past syncs. Click on the link below to go to this page.': 'Diese Seite zeigt ihnen die Protokolle von vorherigen Syncs. Klicken Sie auf den Link unten um auf diese Seite zu gelangen.',
-'This person does already belong to this group': 'Diese Person gehört bereits zu dieser Gruppe',
+'This person already belongs to this group': 'Diese Person gehört bereits zu dieser Gruppe',
 'This screen allows you to upload a collection of photos to the server.': 'Diese Seite ermöglicht ihnen eine Sammlung von Fotos zum Server hochzuladen.',
 'This setting can only be controlled by the Administrator.': 'Diese Einstellung kann nur vom Systemverwalter vorgenommen werden.',
 'This shipment has already been received.': 'Diese Lieferung wurde bereits empfangen.',
