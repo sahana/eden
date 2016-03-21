@@ -1003,6 +1003,17 @@ def config(settings):
                             #dob_filter.operator = ["eq"]
                             filter_widgets.insert(1, dob_filter)
 
+                            # Add filter for family transferability
+                            ft_filter = S3OptionsFilter("dvr_case.household_transferable",
+                                                        label = T("Family Transferable"),
+                                                        options = {True: T("Yes"),
+                                                                   False: T("No"),
+                                                                   },
+                                                        cols = 2,
+                                                        hidden = True,
+                                                        )
+                            filter_widgets.append(ft_filter)
+
                             # Add filter for registration date
                             reg_filter = S3DateFilter("dvr_case.date",
                                                       hidden = True,
@@ -1964,6 +1975,7 @@ def drk_dvr_rheader(r, tabs=[]):
                                         "dvr_case.archived",
                                         "dvr_case.household_size",
                                         "dvr_case.transferable",
+                                        "dvr_case.household_transferable",
                                         #"case_flag_case.flag_id$name",
                                         "first_name",
                                         "last_name",
@@ -1978,6 +1990,7 @@ def drk_dvr_rheader(r, tabs=[]):
                     case_status = lambda row: case["dvr_case.status_id"]
                     transferable = lambda row: case["dvr_case.transferable"]
                     household_size = lambda row: case["dvr_case.household_size"]
+                    household_transferable = lambda row: case["dvr_case.household_transferable"]
                     eligible = lambda row: ""
                     name = lambda row: s3_fullname(row)
                 else:
@@ -1990,6 +2003,7 @@ def drk_dvr_rheader(r, tabs=[]):
                                    ],
                                   [(T("Name"), name),
                                    (T("Size of Family"), household_size),
+                                   (T("Family Transferable"), household_transferable),
                                    ],
                                   ["date_of_birth",
                                    (T("Checked-out"), "absence"),
