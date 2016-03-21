@@ -488,78 +488,78 @@ def update_transferability(site_id=None):
             if success:
                 result += success
 
-            # Check transferability of families
-            gtable = s3db.pr_group
-            mtable = s3db.pr_group_membership
-            # Family = Case Group (group type 7)
-            query = (gtable.group_type == 7) & \
-                    (gtable.deleted != True) & \
-                    (ctable.id != None)
+    # Check transferability of families
+    gtable = s3db.pr_group
+    mtable = s3db.pr_group_membership
+    # Family = Case Group (group type 7)
+    query = (gtable.group_type == 7) & \
+            (gtable.deleted != True) & \
+            (ctable.id != None)
 
-            # Find all case groups which have no currently transferable member
-            left = [mtable.on((mtable.group_id == gtable.id) & \
-                              (mtable.deleted != True)),
-                    ctable.on((ctable.person_id == mtable.person_id) &
-                              (ctable.transferable == True)),
-                    ]
-            members = ctable.id.count()
-            rows = db(query).select(gtable.id,
-                                    groupby = gtable.id,
-                                    having = (members == 0),
-                                    left = left,
-                                    )
-            group_ids = set(row.id for row in rows)
+    # Find all case groups which have no currently transferable member
+    left = [mtable.on((mtable.group_id == gtable.id) & \
+                      (mtable.deleted != True)),
+            ctable.on((ctable.person_id == mtable.person_id) &
+                      (ctable.transferable == True)),
+            ]
+    members = ctable.id.count()
+    rows = db(query).select(gtable.id,
+                            groupby = gtable.id,
+                            having = (members == 0),
+                            left = left,
+                            )
+    group_ids = set(row.id for row in rows)
 
-            # Add all case groups which have at least one non-transferable member
-            open_case = (ctable.archived != True) & \
-                        (ctable.deleted != True)
-            if OPEN:
-                open_case = (ctable.status_id.belongs(OPEN)) & open_case
+    # Add all case groups which have at least one non-transferable member
+    open_case = (ctable.archived != True) & \
+                (ctable.deleted != True)
+    if OPEN:
+        open_case = (ctable.status_id.belongs(OPEN)) & open_case
 
-            if group_ids:
-                query &= (~(gtable.id.belongs(group_ids)))
-            left = [mtable.on((mtable.group_id == gtable.id) & \
-                              (mtable.deleted != True)),
-                    ctable.on((ctable.person_id == mtable.person_id) & \
-                              open_case & \
-                              ((ctable.transferable == False) | \
-                               (ctable.transferable == None))),
-                    ]
-            if transferability_complete:
-                left.append(tcjoin)
-                query &= (tctable.id == None)
+    if group_ids:
+        query &= (~(gtable.id.belongs(group_ids)))
+    left = [mtable.on((mtable.group_id == gtable.id) & \
+                      (mtable.deleted != True)),
+            ctable.on((ctable.person_id == mtable.person_id) & \
+                      open_case & \
+                      ((ctable.transferable == False) | \
+                       (ctable.transferable == None))),
+            ]
+    if transferability_complete:
+        left.append(tcjoin)
+        query &= (tctable.id == None)
 
-            rows = db(query).select(gtable.id,
-                                    groupby = gtable.id,
-                                    left = left,
-                                    )
-            group_ids |= set(row.id for row in rows)
+    rows = db(query).select(gtable.id,
+                            groupby = gtable.id,
+                            left = left,
+                            )
+    group_ids |= set(row.id for row in rows)
 
-            # Find all cases which do not belong to any of these
-            # non-transferable case groups, but either belong to
-            # another case group or are transferable themselves
-            ftable = mtable.with_alias("family")
-            left = [mtable.on((mtable.person_id == ctable.person_id) & \
-                              (mtable.group_id.belongs(group_ids)) & \
-                              (mtable.deleted != True)),
-                    gtable.on((ftable.person_id == ctable.person_id) & \
-                              (ftable.deleted != True) & \
-                              (gtable.id == ftable.group_id) & \
-                              (gtable.group_type == 7)),
-                    ]
-            query = (mtable.id == None) & (ctable.deleted != True)
-            families = gtable.id.count()
-            required = ((families > 0) | (ctable.transferable == True))
-            rows = db(query).select(ctable.id,
-                                    groupby = ctable.id,
-                                    having = required,
-                                    left = left,
-                                    )
+    # Find all cases which do not belong to any of these
+    # non-transferable case groups, but either belong to
+    # another case group or are transferable themselves
+    ftable = mtable.with_alias("family")
+    left = [mtable.on((mtable.person_id == ctable.person_id) & \
+                      (mtable.group_id.belongs(group_ids)) & \
+                      (mtable.deleted != True)),
+            gtable.on((ftable.person_id == ctable.person_id) & \
+                      (ftable.deleted != True) & \
+                      (gtable.id == ftable.group_id) & \
+                      (gtable.group_type == 7)),
+            ]
+    query = (mtable.id == None) & (ctable.deleted != True)
+    families = gtable.id.count()
+    required = ((families > 0) | (ctable.transferable == True))
+    rows = db(query).select(ctable.id,
+                            groupby = ctable.id,
+                            having = required,
+                            left = left,
+                            )
 
-            # ...and set them household_transferable=True:
-            case_ids = set(row.id for row in rows)
-            if case_ids:
-                db(ctable.id.belongs(case_ids)).update(household_transferable=True)
+    # ...and set them household_transferable=True:
+    case_ids = set(row.id for row in rows)
+    if case_ids:
+        db(ctable.id.belongs(case_ids)).update(household_transferable=True)
 
     return result
 
