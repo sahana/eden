@@ -270,12 +270,14 @@ def config(settings):
                         twitter_text = \
 ("""%(Status)s: %(Headline)s
 %(SENDER)s: %(SenderName)s
-%(WEBSITE)s: %(Website)s""") % dict(Status = arow.status,
-                                    Headline = s3_str(irow.headline),
-                                    SENDER = T("Sender"),
-                                    SenderName = s3_str(irow.sender_name),
-                                    WEBSITE = T("Website"),
-                                    Website = irow.web)
+%(WEBSITE)s: %(Website)s%(Profile)s""") % dict(Status = arow.status,
+                                               Headline = s3_str(irow.headline),
+                                               SENDER = T("Sender"),
+                                               SenderName = s3_str(irow.sender_name),
+                                               WEBSITE = T("Website"),
+                                               Website = irow.web,
+                                               Profile = "/profile",
+                                               )
                         try:
                             current.msg.send_tweet(text=twitter_text)
                         except tweepy.error.TweepError, e:
@@ -360,7 +362,6 @@ def config(settings):
                 result = True
 
             if r.representation == "msg":
-                # @ToDo: do same for component info
                 # Notification
                 table = r.table
                 table.scope.represent = None
@@ -835,14 +836,14 @@ def config(settings):
         response_type = itable.response_type.represent(row["cap_info.response_type"])
 
         subject = \
-        T("%(Scope)s %(Status)s Alert: %(Headline)s (ID: %(Identifier)s)") % \
+        T("%(Scope)s %(Status)s Alert") % \
             dict(Scope = s3_str(row["cap_alert.scope"]),
-                 Status = s3_str(row["cap_alert.status"]),
-                 Headline = s3_str(row["cap_info.headline"]),
-                 Identifier = s3_str(row["cap_alert.identifier"]))
+                 Status = s3_str(row["cap_alert.status"]))
+        headline = H2(T((s3_str(row["cap_info.headline"]))))
+        id = T("ID: %(Identifier)s") % dict(Identifier = s3_str(row["cap_alert.identifier"]))
         body1 = \
-T("""%(Priority)s priority %(MessageType)s 
-message in effect for %(AreaDescription)s""") % dict(\
+T("""%(Priority)s message %(MessageType)s 
+in effect for %(AreaDescription)s""") % dict(\
                     Priority = s3_str(priority),
                     MessageType = s3_str(row["cap_alert.msg_type"]),
                     AreaDescription = s3_str(row["cap_area.name"]))
@@ -877,7 +878,11 @@ T("Alert is effective from %(Effective)s and expires on %(Expires)s") % \
         body9 = A(T("VIEW ALERT ON THE WEB"),
                     _href = "%s/%s" % (s3_str(row["cap_info.web"]), "profile"))
         return TAG[""](HR(), BR(),
-                       subject,
+                       body9,
+                       BR(), BR(),
+                       subject, headline,
+                       BR(),
+                       id,
                        BR(), BR(),
                        body1,
                        BR(),
@@ -893,9 +898,7 @@ T("Alert is effective from %(Effective)s and expires on %(Expires)s") % \
                        BR(), BR(),
                        body7,
                        BR(), BR(),
-                       body8,
-                       BR(), BR(),
-                       body9,
+                       body8,                       
                        BR())
 
     # -------------------------------------------------------------------------

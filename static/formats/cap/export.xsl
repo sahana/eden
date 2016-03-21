@@ -270,7 +270,7 @@
                     <xsl:text>&#x0A;</xsl:text>
                     <xsl:text>Sender: </xsl:text><xsl:value-of select="../data[@field='sender']"/>
                     <xsl:text>&#x0A;</xsl:text>
-                    <xsl:text>Website: </xsl:text><xsl:value-of select="data[@field='web']"/>
+                    <xsl:text>Website: </xsl:text><xsl:value-of select="concat(data[@field='web'], '/profile')"/>
                 </value>
             </parameter>
 
