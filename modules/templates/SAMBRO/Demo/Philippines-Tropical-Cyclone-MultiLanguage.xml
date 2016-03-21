@@ -7,7 +7,6 @@
     <cap:msgType>Alert</cap:msgType>
     <cap:source>sambro-serv@pagasa.dost.gov.ph</cap:source>
     <cap:scope>Public</cap:scope>
-    <cap:addresses>"National Disaster Risk Reduction and Management Council" "Malacanang(Office of the President)" "Philippine Coast Guards"</cap:addresses>
     <cap:note>This template is intended for CAP on a Map project "Exercises". The template is a tropical cyclone alerts and warning.  Simultaneously targeting the Public and the First-Responders. It contains information segment for both English and Filipino languages.</cap:note>
     <cap:incidents>"Tropical Storm"</cap:incidents>
     <cap:info>
