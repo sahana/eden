@@ -1122,6 +1122,12 @@ def config(settings):
                                                               }
                                                  },
                                                 ),
+                                            pr_group = {"name": "family",
+                                                        "link": "pr_group_membership",
+                                                        "joinby": "person_id",
+                                                        "key": "group_id",
+                                                        "filterby": {"group_type": 7},
+                                                        },
                                             )
 
                         list_fields += [# Date of the GU (GU = Health Screening, case appointments)
@@ -1139,7 +1145,10 @@ def config(settings):
                                         "shelter_registration.check_in_date",
                                         # Last Check-out (if checked-out)
                                         "shelter_registration.check_out_date",
+                                        # Person UUID
                                         ("UUID", "uuid"),
+                                        # Family Record ID
+                                        (T("Family ID"), "family.id"),
                                         ]
                     configure(list_fields = list_fields)
 
