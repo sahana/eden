@@ -1359,20 +1359,29 @@ class DVRCaseAppointmentModel(S3Model):
                         action = dvr_ManageAppointments,
                         )
 
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary=("person_id",
+                                                     "type_id",
+                                                     ),
+                                            ),
+                  )
+
         # @todo: onaccept to change status "planning" to "planned" if a date
         #        has been entered, and vice versa
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"dvr_appointment_status_opts": appointment_status_opts,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        return {}
+        return {"dvr_appointment_status_opts": {},
+                }
 
 # =============================================================================
 class DVRCaseBeneficiaryModel(S3Model):

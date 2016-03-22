@@ -724,21 +724,27 @@ class S3Importer(S3Method):
             except:
                 pass
 
-        if form.accepts(r.post_vars, current.session,
-                        formname="upload_form"):
-            upload_id = table.insert(**table._filter_fields(form.vars))
+        if form.accepts(r.post_vars, current.session, formname="upload_form"):
+
+            formvars = form.vars
+
+            # Create the upload entry
+            upload_id = table.insert(file = formvars.file)
+
+            # Process extra fields
             if self.csv_extra_fields:
+
                 # Convert Values to Represents
-                self.csv_extra_data = Storage()
+                extra_data = self.csv_extra_data = Storage()
                 for f in self.csv_extra_fields:
-                    label = f.get("label", None)
+                    label = f.get("label")
                     if not label:
                         continue
-                    field = f.get("field", None)
-                    value = f.get("value", None)
+                    field = f.get("field")
+                    value = f.get("value")
                     if field:
-                        if field.name in form.vars:
-                            data = form.vars[field.name]
+                        if field.name in formvars:
+                            data = formvars[field.name]
                         else:
                             data = field.default
                         value = data
@@ -763,7 +769,8 @@ class S3Importer(S3Method):
                                     value = value.m
                     elif value is None:
                         continue
-                    self.csv_extra_data[label] = value
+                    extra_data[label] = value
+
         s3.no_formats = True
         return form
 

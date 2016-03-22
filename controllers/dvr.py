@@ -433,7 +433,30 @@ def allowance():
 def case_appointment():
     """ Appointments: RESTful CRUD Controller """
 
-    return s3_rest_controller()
+    def prep(r):
+
+        if r.method == "import":
+            # Allow deduplication of persons by pe_label: existing
+            # pe_labels would be caught by IS_NOT_ONE_OF before
+            # reaching the deduplicator, so remove the validator here:
+            ptable = s3db.pr_person
+            ptable.pe_label.requires = None
+        return True
+    s3.prep = prep
+
+    table = s3db.dvr_case_appointment
+
+    return s3_rest_controller(csv_extra_fields=[{"label": "Type",
+                                                 "field": table.type_id,
+                                                 },
+                                                {"label": "Date",
+                                                 "field": table.date,
+                                                 },
+                                                {"label": "Status",
+                                                 "field": table.status,
+                                                 },
+                                                ],
+                              )
 
 # -----------------------------------------------------------------------------
 def case_appointment_type():

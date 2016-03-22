@@ -1552,6 +1552,7 @@ def config(settings):
                                         cols = 3,
                                         ),
                         S3OptionsFilter("status",
+                                        options = s3db.dvr_appointment_status_opts,
                                         default = 2,
                                         ),
                         S3DateFilter("date",
@@ -1583,6 +1584,10 @@ def config(settings):
                                "status",
                                "comments",
                                ]
+
+                if r.representation == "xls":
+                    # Include Person UUID
+                    list_fields.append(("UUID", "person_id$uuid"))
 
                 resource.configure(list_fields = list_fields,
                                    insertable = False,

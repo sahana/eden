@@ -1211,7 +1211,12 @@
                 $('.dt-truncate .ui-icon-zoomin, .dt-truncate .ui-icon-zoomout').bind('click.dtToggleCell', toggleCell);
                 bindButtons(t, tableConfig, fnActionCallBacks);
                 if (oSettings.aiDisplay.length === 0) {
+                    // Hide the export options (table is empty)
+                    $(selector).closest('.dt-wrapper').find('.dt-export-options').hide();
                     return;
+                } else {
+                    // Show the export options (table has data)
+                    $(selector).closest('.dt-wrapper').find('.dt-export-options').show();
                 }
                 if (tableConfig['group'].length) {
                     var groupList = tableConfig['group'];
