@@ -730,7 +730,13 @@ def config(settings):
                 else:
                     absence_field = None
 
+                # List modes
                 check_overdue = False
+                show_family_transferable = False
+
+                # Labels
+                FAMILY_TRANSFERABLE = T("Family Transferable")
+
                 if not r.record:
                     overdue = r.get_vars.get("overdue")
                     if overdue:
@@ -757,6 +763,10 @@ def config(settings):
                                     checked_out & (checkout_date >= due_date)
                         resource.add_filter(query)
                         check_overdue = True
+
+                    show_family_transferable = r.get_vars.get("show_family_transferable")
+                    if show_family_transferable == "1":
+                        show_family_transferable = True
 
                 if not r.component:
 
@@ -1004,15 +1014,16 @@ def config(settings):
                             filter_widgets.insert(1, dob_filter)
 
                             # Add filter for family transferability
-                            ft_filter = S3OptionsFilter("dvr_case.household_transferable",
-                                                        label = T("Family Transferable"),
-                                                        options = {True: T("Yes"),
-                                                                   False: T("No"),
-                                                                   },
-                                                        cols = 2,
-                                                        hidden = True,
-                                                        )
-                            filter_widgets.append(ft_filter)
+                            if show_family_transferable:
+                                ft_filter = S3OptionsFilter("dvr_case.household_transferable",
+                                                            label = FAMILY_TRANSFERABLE,
+                                                            options = {True: T("Yes"),
+                                                                       False: T("No"),
+                                                                       },
+                                                            cols = 2,
+                                                            hidden = True,
+                                                            )
+                                filter_widgets.append(ft_filter)
 
                             # Add filter for registration date
                             reg_filter = S3DateFilter("dvr_case.date",
@@ -1053,10 +1064,15 @@ def config(settings):
 
                     # Add fields for managing transferability
                     if settings.get_dvr_manage_transferability() and not check_overdue:
-                        list_fields[-1:-1] = ["dvr_case.transferable",
-                                              (T("Size of Family"), "dvr_case.household_size"),
-                                              (T("Family Transferable"), "dvr_case.household_transferable"),
-                                              ]
+                        transf_fields = ["dvr_case.transferable",
+                                         (T("Size of Family"), "dvr_case.household_size"),
+                                         ]
+                        if show_family_transferable:
+                            transf_fields.append((FAMILY_TRANSFERABLE,
+                                                  "dvr_case.household_transferable"))
+                        list_fields[-1:-1] = transf_fields
+
+                    # Days of absence (virtual field)
                     if absence_field:
                         list_fields.append(absence_field)
 
@@ -1975,7 +1991,7 @@ def drk_dvr_rheader(r, tabs=[]):
                                         "dvr_case.archived",
                                         "dvr_case.household_size",
                                         "dvr_case.transferable",
-                                        "dvr_case.household_transferable",
+                                        #"dvr_case.household_transferable",
                                         #"case_flag_case.flag_id$name",
                                         "first_name",
                                         "last_name",
@@ -1990,7 +2006,7 @@ def drk_dvr_rheader(r, tabs=[]):
                     case_status = lambda row: case["dvr_case.status_id"]
                     transferable = lambda row: case["dvr_case.transferable"]
                     household_size = lambda row: case["dvr_case.household_size"]
-                    household_transferable = lambda row: case["dvr_case.household_transferable"]
+                    #household_transferable = lambda row: case["dvr_case.household_transferable"]
                     eligible = lambda row: ""
                     name = lambda row: s3_fullname(row)
                 else:
@@ -2003,7 +2019,7 @@ def drk_dvr_rheader(r, tabs=[]):
                                    ],
                                   [(T("Name"), name),
                                    (T("Size of Family"), household_size),
-                                   (T("Family Transferable"), household_transferable),
+                                   #(T("Family Transferable"), household_transferable),
                                    ],
                                   ["date_of_birth",
                                    (T("Checked-out"), "absence"),

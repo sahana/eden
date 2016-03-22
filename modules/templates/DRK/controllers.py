@@ -290,6 +290,7 @@ class transferability(S3CustomController):
                             f = "person",
                             vars = {"closed": "0",
                                     "dvr_case.transferable__belongs": "True",
+                                    "show_family_transferable": "1",
                                     },
                             ))
 
