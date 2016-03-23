@@ -13,11 +13,11 @@
          NB Either UUID or ID must identify an existing person
          record - no person record can be created with this import.
 
-         Type........................string..........the appointment type name,
+         Appointment Type............string..........the appointment type name,
                                                      mandatory
-         Date........................ISO date........the appointment date,
+         Appointment Date............ISO date........the appointment date,
                                                      mandatory
-         Status......................string..........the appointment status,
+         Appointment Status..........string..........the appointment status,
                                                      mandatory
                                                      Planning|Planned|In Progress|Completed|
                                                      Missed|Cancelled|Not Required
@@ -28,7 +28,7 @@
     <xsl:output method="xml"/>
 
     <!-- Index for Appointment Types -->
-    <xsl:key name="types" match="row" use="col[@field='Type']/text()"/>
+    <xsl:key name="types" match="row" use="col[@field='Appointment Type']/text()"/>
 
     <!-- Index for Person PE Labels -->
     <xsl:key name="persons" match="row" use="col[@field='ID']/text()"/>
@@ -38,7 +38,7 @@
         <s3xml>
 
             <!-- Appointment types -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('types', col[@field='Type']/text())[1])]">
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('types', col[@field='Appointment Type']/text())[1])]">
                 <xsl:call-template name="AppointmentType"/>
             </xsl:for-each>
 
@@ -58,9 +58,9 @@
         <xsl:variable name="PersonUUID" select="col[@field='UUID']/text()"/>
         <xsl:variable name="PersonLabel" select="col[@field='ID']/text()"/>
 
-        <xsl:variable name="Type" select="col[@field='Type']/text()"/>
-        <xsl:variable name="Date" select="col[@field='Date']/text()"/>
-        <xsl:variable name="Status" select="col[@field='Status']/text()"/>
+        <xsl:variable name="Type" select="col[@field='Appointment Type']/text()"/>
+        <xsl:variable name="Date" select="col[@field='Appointment Date']/text()"/>
+        <xsl:variable name="Status" select="col[@field='Appointment Status']/text()"/>
         <xsl:variable name="Comments" select="col[@field='Comments']/text()"/>
 
         <xsl:if test="($PersonUUID!='' or $PersonLabel!='') and $Type!='' and $Status!=''">
@@ -145,7 +145,7 @@
     <!-- ****************************************************************** -->
     <xsl:template name="AppointmentType">
 
-        <xsl:variable name="Type" select="col[@field='Type']/text()"/>
+        <xsl:variable name="Type" select="col[@field='Appointment Type']/text()"/>
         <xsl:if test="$Type!=''">
             <resource name="dvr_case_appointment_type">
                 <xsl:attribute name="tuid">

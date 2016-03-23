@@ -446,13 +446,13 @@ def case_appointment():
 
     table = s3db.dvr_case_appointment
 
-    return s3_rest_controller(csv_extra_fields=[{"label": "Type",
+    return s3_rest_controller(csv_extra_fields=[{"label": "Appointment Type",
                                                  "field": table.type_id,
                                                  },
-                                                {"label": "Date",
+                                                {"label": "Appointment Date",
                                                  "field": table.date,
                                                  },
-                                                {"label": "Status",
+                                                {"label": "Appointment Status",
                                                  "field": table.status,
                                                  },
                                                 ],
