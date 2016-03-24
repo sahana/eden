@@ -2438,6 +2438,14 @@ class S3Config(Storage):
 
         return self.cap.get("post_to_twitter", False)
 
+    def get_cap_same_code(self):
+        """
+            Name of the tag that will be used to lookup in the gis_location_tag
+            to extract location_id for the alert
+        """
+
+        return self.cap.get("same_code")
+
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #
