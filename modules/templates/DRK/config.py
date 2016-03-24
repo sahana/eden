@@ -383,7 +383,7 @@ def config(settings):
     settings.org.site_check = org_site_check
 
     # -------------------------------------------------------------------------
-    def customise_auth_user_resource(r, resource):
+    def customise_auth_user_resource(r, tablename):
 
         current.db.auth_user.organisation_id.default = settings.get_org_default_organisation()
 
@@ -475,6 +475,24 @@ def config(settings):
         return attr
 
     settings.customise_cr_shelter_controller = customise_cr_shelter_controller
+
+    # -------------------------------------------------------------------------
+    def customise_cr_shelter_registration_resource(r, tablename):
+
+        table = current.s3db.cr_shelter_registration
+        field = table.shelter_unit_id
+
+        # Filter to available housing units
+        from gluon import IS_EMPTY_OR
+        from s3 import IS_ONE_OF
+        field.requires = IS_EMPTY_OR(IS_ONE_OF(current.db, "cr_shelter_unit.id",
+                                               field.represent,
+                                               filterby = "status",
+                                               filter_opts = (1,),
+                                               orderby="shelter_id",
+                                               ))
+
+    settings.customise_cr_shelter_registration_resource = customise_cr_shelter_registration_resource
 
     # -------------------------------------------------------------------------
     def customise_cr_shelter_registration_controller(**attr):
@@ -829,9 +847,12 @@ def config(settings):
                                 from s3 import IS_ONE_OF
                                 field.requires = IS_EMPTY_OR(
                                                     IS_ONE_OF(dbset, "cr_shelter_unit.id",
-                                                            field.represent,
-                                                            sort=True,
-                                                            ))
+                                                              field.represent,
+                                                              # Only available units:
+                                                              filterby = "status",
+                                                              filter_opts = (1,),
+                                                              sort=True,
+                                                              ))
                         else:
                             # Limit sites to default_organisation
                             field = ctable.site_id

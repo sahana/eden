@@ -872,11 +872,11 @@ class S3ShelterModel(S3Model):
                                           label = T("Housing Unit"),
                                           ondelete = "RESTRICT",
                                           represent = represent,
-                                          requires = IS_NULL_OR(IS_ONE_OF(db, "cr_shelter_unit.id",
-                                                                          represent,
-                                                                          orderby="shelter_id",
-                                                                          #sort=True
-                                                                )),
+                                          requires = IS_EMPTY_OR(IS_ONE_OF(db, "cr_shelter_unit.id",
+                                                                           represent,
+                                                                           orderby="shelter_id",
+                                                                           #sort=True
+                                                                 )),
                                           #widget = S3AutocompleteWidget("cr", "shelter_unit")
                                           )
 
@@ -976,7 +976,7 @@ class S3ShelterModel(S3Model):
                 return 0
         else:
             total = None
-        
+
         if total is not None and actual is not None:
             if actual == total:
                 # Empty
