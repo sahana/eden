@@ -1,49 +1,51 @@
 uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
+AUTHENTICATED,Authenticated,,,,cr_shelter_registration_history,NONE,,,,,
 AUTHENTICATED,Authenticated,,gis,,,READ,READ|CREATE|UPDATE|DELETE,,,,Authenticated users can see the Map
 AUTHENTICATED,Authenticated,,gis,location,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
+AUTHENTICATED,Authenticated,,hrm,,,READ|UPDATE,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,person,,,READ|UPDATE,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,staff,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,volunteer,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,msg,search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,,pr,,,READ|UPDATE,,,,,Authenticated users can only see/edit their own PR records
 AUTHENTICATED,Authenticated,,,,pr_person,READ|UPDATE,,,,,Authenticated users can only see/edit their own PR records
 AUTHENTICATED,Authenticated,,pr,person,,CREATE,READ|UPDATE,,,,But need to be able to add/edit addresses
 AUTHENTICATED,Authenticated,,pr,pentity,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,,pr,person_search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
-AUTHENTICATED,Authenticated,,msg,search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,,supply,,,READ|CREATE,,,,,Authenticated  users can see the Supply Catalogue
-AUTHENTICATED,Authenticated,,hrm,,,READ|UPDATE,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,Authenticated,,hrm,person,,,READ|UPDATE,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,Authenticated,,hrm,staff,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,Authenticated,,hrm,volunteer,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-QUARTIER,Quartiermanager,,dvr,person,,READ,,,,,
 QUARTIER,Quartiermanager,,cr,shelter_registration,,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
 QUARTIER,Quartiermanager,,,,cr_shelter_registration,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
+QUARTIER,Quartiermanager,,dvr,person,,READ,,,,,
 QUARTIER,Quartiermanager,,,,pr_person,READ,,,,,
-SECURITY,Security,,security,person,,CREATE|READ,,,,,
-SECURITY,Security,,dvr,note,,CREATE|READ,,,,,
 SECURITY,Security,,cr,shelter,,READ,,,,,
-SECURITY,Security,,,,pr_person,READ,,,,,
+SECURITY,Security,,dvr,note,,CREATE|READ,,,,,
 SECURITY,Security,,,,dvr_note,CREATE|READ,,,,,
+SECURITY,Security,,,,pr_person,READ,,,,,
+SECURITY,Security,,security,person,,CREATE|READ,,,,,
 MEDICAL,Medical,,cr,,,READ,,,,,
 MEDICAL,Medical,,dvr,,,CREATE|READ|UPDATE,,,,,
-MEDICAL,Medical,,inv,,,READ,,,,,
 MEDICAL,Medical,,,,dvr_note,CREATE|READ,,,,,
+MEDICAL,Medical,,inv,,,READ,,,,,
 MEDICAL,Medical,,project,,,CREATE|READ|UPDATE,CREATE|READ|UPDATE|DELETE,,,,
 INFO_POINT,Info Point,,cr,,,READ,,,,,
 INFO_POINT,Info Point,,dvr,,,READ,,,,,
-INFO_POINT,Info Point,,inv,,,READ,,,,,
 INFO_POINT,Info Point,,,,dvr_note,CREATE|READ,,,,,
+INFO_POINT,Info Point,,inv,,,READ,,,,,
 INFO_POINT,Info Point,,,,pr_person,READ,READ,,,,
 INFO_POINT,Info Point,,project,,,CREATE|READ|UPDATE,CREATE|READ|UPDATE|DELETE,,,,
 ADMINISTRATION,Administration,,cr,,,ALL,,,,,
 ADMINISTRATION,Administration,,dvr,,,ALL,,,,,
-ADMINISTRATION,Administration,,inv,,,ALL,,,,,
 ADMINISTRATION,Administration,,,,dvr_note,CREATE|READ,,,,,
+ADMINISTRATION,Administration,,inv,,,ALL,,,,,
 ADMINISTRATION,Administration,,,,pr_person,ALL,ALL,,,,
 ADMINISTRATION,Administration,,project,,,ALL,,,,,
 ADMINISTRATION,Administration,,vol,,,ALL,,,,,
 ADMIN_HEAD,Head of Administration,,cr,,,ALL,,,,,
+ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration_history,READ,,,,,
 ADMIN_HEAD,Head of Administration,,dvr,,,ALL,,,,,
+ADMIN_HEAD,Head of Administration,,,,dvr_note,CREATE|READ,READ,,,,
 ADMIN_HEAD,Head of Administration,,hrm,,,ALL,,,,,
 ADMIN_HEAD,Head of Administration,,inv,,,ALL,,,,,
-ADMIN_HEAD,Head of Administration,,,,dvr_note,CREATE|READ,READ,,,,
 ADMIN_HEAD,Head of Administration,,,,pr_person,ALL,ALL,,,,
 ADMIN_HEAD,Head of Administration,,project,,,ALL,,,,,
 ADMIN_HEAD,Head of Administration,,vol,,,ALL,,,,,
