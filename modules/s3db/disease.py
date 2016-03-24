@@ -83,7 +83,6 @@ class DiseaseDataModel(S3Model):
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
-
         define_table = self.define_table
 
         # =====================================================================
@@ -92,6 +91,7 @@ class DiseaseDataModel(S3Model):
         tablename = "disease_disease"
         define_table(tablename,
                      self.super_link("doc_id", "doc_entity"),
+                     # @ToDo: Labels for i18n
                      Field("name",
                            requires = IS_NOT_EMPTY()
                            ),
@@ -832,7 +832,6 @@ class ContactTracingModel(S3Model):
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
-
         define_table = self.define_table
 
         case_id = self.disease_case_id

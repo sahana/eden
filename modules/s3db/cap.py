@@ -2706,7 +2706,6 @@ class CAPImportFeed(S3Method):
         if r.representation == "html":
 
             T = current.T
-            request = current.request
             response = current.response
 
             title = T("Import from Feed URL")
@@ -2746,16 +2745,16 @@ class CAPImportFeed(S3Method):
             output = dict(title=title,
                           form=form)
 
-            if form.accepts(request.vars, current.session):
+            if form.accepts(r.post_vars, current.session):
 
-                form_vars = form.vars
-                url = form_vars.get("url", None)
+                form_vars_get = form.vars.get
+                url = form_vars_get("url", None)
                 if not url:
                     response.error = T("URL is required")
                     return output
                 # @ToDo:
-                username = form_vars.get("username", None)
-                password = form_vars.get("password", None)
+                #username = form_vars_get("username", None)
+                #password = form_vars_get("password", None)
                 try:
                     file = fetch(url)
                 except urllib2.URLError:
@@ -2766,7 +2765,7 @@ class CAPImportFeed(S3Method):
                     return output
 
                 File = StringIO(file)
-                stylesheet = os.path.join(request.folder, "static", "formats",
+                stylesheet = os.path.join(r.folder, "static", "formats",
                                           "cap", "import.xsl")
                 xml = current.xml
                 tree = xml.parse(File)
@@ -2776,7 +2775,7 @@ class CAPImportFeed(S3Method):
                                       name=resource.name)
                 try:
                     resource.import_xml(s3xml,
-                                        ignore_errors=form_vars.get("ignore_errors", None))
+                                        ignore_errors=form_vars_get("ignore_errors", None))
                 except:
                     response.error = str(sys.exc_info()[1])
                 else:

@@ -830,6 +830,7 @@ class S3ShelterModel(S3Model):
                            label = T("Free for domestic animals"),
                            represent = s3_yes_no_represent,
                            ),
+                     Field.Method("cstatus", self.cr_shelter_unit_status),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -944,6 +945,71 @@ class S3ShelterModel(S3Model):
                 return shelter_service.name
             except:
                 return current.messages.UNKNOWN_OPT
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cr_shelter_unit_status(row):
+        """
+            Virtual Field to show the status of the unit by available capacity
+            - used to colour features on the map
+            0: Full
+            1: Partial
+            2: Empty
+        """
+
+        if hasattr(row, "cr_shelter_unit"):
+            row = row.cr_shelter_unit
+
+        if hasattr(row, "available_capacity_day"):
+            actual = row.available_capacity_day
+        else:
+            actual = None
+
+        if actual == 0:
+            # Full
+            return 0
+
+        if hasattr(row, "capacity_day"):
+            total = row.capacity_day
+            if total == 0:
+                # No capacity ever, so Full
+                return 0
+        else:
+            total = None
+        
+        if total is not None and actual is not None:
+            if actual == total:
+                # Empty
+                return 2
+            else:
+                # Partial
+                return 1
+
+        if hasattr(row, "id"):
+            # Reload the record
+            s3_debug("Reloading cr_shelter_unit record")
+            table = current.s3db.cr_shelter_unit
+            r = current.db(table.id == row.id).select(table.capacity_day,
+                                                      table.available_capacity_day,
+                                                      limitby=(0, 1)
+                                                      ).first()
+            if r:
+                actual = r.available_capacity_day
+                if actual == 0:
+                    # Full
+                    return 0
+                total = r.capacity_day
+                if total == 0:
+                    # No capacity ever, so Full
+                    return 0
+                elif actual == total:
+                    # Empty
+                    return 2
+                else:
+                    # Partial
+                    return 1
+
+        return current.messages["NONE"]
 
 # =============================================================================
 class S3ShelterRegistrationModel(S3Model):

@@ -45,10 +45,10 @@ class S3HierarchyModel(S3Model):
         #
         tablename = "s3_hierarchy"
         self.define_table(tablename,
-                          Field("tablename",
-                                length=64),
+                          Field("tablename", length=64),
                           Field("dirty", "boolean",
-                                default=False),
+                                default = False,
+                                ),
                           Field("hierarchy", "json"),
                           *s3_timestamp())
 

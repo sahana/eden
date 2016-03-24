@@ -1629,7 +1629,7 @@ class S3BudgetMonitoringModel(S3Model):
 
         if hasattr(row, "id"):
             # Reload the record
-            s3_debug("Reload")
+            #s3_debug("Reloading budget_monitoring record")
             table = current.s3db.budget_monitoring
             r = current.db(table.id == row.id).select(table.planned,
                                                       table.value,
