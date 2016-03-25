@@ -1579,6 +1579,15 @@ def config(settings):
                                         ),
                         S3DateFilter("date",
                                      ),
+                        S3OptionsFilter("person_id$dvr_case.status_id$is_closed",
+                                        cols = 2,
+                                        default = False,
+                                        #hidden = True,
+                                        label = T("Case Closed"),
+                                        options = {True: T("Yes"),
+                                                   False: T("No"),
+                                                   },
+                                        ),
                         S3TextFilter(["person_id$pe_label"],
                                      label = T("IDs"),
                                      match_any = True,
@@ -1593,7 +1602,7 @@ def config(settings):
                 from s3 import s3_set_default_filter
                 now = current.request.utcnow
                 today = now.replace(hour=0, minute=0, second=0, microsecond=0)
-                tomorrow = today + datetime.timedelta(days=2)
+                tomorrow = today + datetime.timedelta(days=1)
                 s3_set_default_filter("~.date",
                                       {"ge": today, "le": tomorrow},
                                       tablename = "dvr_case_appointment",
