@@ -1133,7 +1133,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
         configure(tablename,
                   crud_form = crud_form,
                   list_fields = list_fields,
-                  onaccept = update_alert_id(tablename),
+                  onaccept = self.cap_resource_onaccept,
                   onvalidation = self.cap_resource_onvalidation,
                   super_entity = "doc_entity",
                   )
@@ -1303,7 +1303,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                   #create_next = URL(f="area", args=["[id]", "location"]),
                   crud_form = crud_form,
                   deduplicate = self.cap_area_duplicate,
-                  onaccept = update_alert_id(tablename),
+                  onaccept = self.cap_area_onaccept,
                   onvalidation = self.cap_area_onvalidation,
                   )
 
@@ -1368,7 +1368,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
         configure(tablename,
                   deduplicate = S3Duplicate(primary=("area_id", "location_id")),
-                  onaccept = update_alert_id(tablename),
+                  onaccept = self.cap_area_location_onaccept
                   )
 
         # ---------------------------------------------------------------------
@@ -1412,8 +1412,8 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                      *s3_meta_fields())
 
         configure(tablename,
-                  onaccept = update_alert_id(tablename),
-        #         deduplicate = self.cap_area_tag_deduplicate,
+                  onaccept = self.cap_area_tag_onaccept,
+                  deduplicate = S3Duplicate(primary=("area_id", "tag", "value")),
                   )
 
         # ---------------------------------------------------------------------
@@ -1691,18 +1691,6 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def cap_area_onvalidation(form):
-        """
-            Custom Form Validation
-        """
-
-        form_vars = form.vars
-        if form_vars.get("ceiling") and not form_vars.get("altitude"):
-            form.errors["altitude"] = \
-            current.T("'Altitude' field is mandatory if using 'Ceiling' field.")
-
-    # -------------------------------------------------------------------------
-    @staticmethod
     def cap_area_duplicate(item):
 
         data = item.data
@@ -1734,6 +1722,141 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                 if duplicate:
                     item.id = duplicate.id
                     item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_area_onaccept(form):
+        """
+            Link alert_id for CAP XML import 
+        """
+
+        form_vars = form.vars
+
+        if form_vars.get("event_type_id"):
+            # Predefined Area
+            return
+
+        info_id = form_vars.get("info_id", None)
+        if info_id:
+            # CAP XML
+            # Add the alert_id to this component of component
+            # to make it a direct component for UI purposes
+            db = current.db
+            itable = db.cap_info
+            item = db(itable.id == info_id).select(itable.alert_id,
+                                                   limitby=(0, 1)).first()
+            alert_id = item.alert_id
+
+            if alert_id:
+                db(db.cap_area.id == form_vars.id).update(alert_id = alert_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_area_onvalidation(form):
+
+        form_vars = form.vars
+        if form_vars.get("ceiling") and not form_vars.get("altitude"):
+            form.errors["altitude"] = \
+                current.T("'Altitude' field is mandatory if using 'Ceiling' field.")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_area_location_onaccept(form):
+        """
+            Link alert_id for non-template area 
+        """
+
+        form_vars = form.vars
+
+        area_id = form_vars.get("area_id", None)
+        if not area_id:
+            # comes from assign method
+            return
+
+        db = current.db
+        atable = db.cap_area
+
+        row = db(atable.id == area_id).select(atable.alert_id,
+                                              limitby=(0, 1)).first()
+        alert_id = row.alert_id
+        if alert_id:
+            # This is not template area
+            # NB Template area are not linked with alert_id
+            db(db.cap_area_location.id == form_vars.id).update(alert_id = alert_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_area_tag_onaccept(form):
+        """
+            Link location if area_tag has SAME code
+            Link alert_id for non-template area 
+        """
+
+        form_vars = form.vars
+
+        area_id = form_vars.get("area_id", None)
+        if not area_id:
+            # comes from assign method
+            return
+
+        db = current.db
+        atable = db.cap_area
+        same_code = current.deployment_settings.get_cap_same_code()
+        tag = form_vars.get("tag")
+
+        arow = db(atable.id == area_id).select(atable.alert_id,
+                                               limitby=(0, 1)).first()
+        alert_id = arow.alert_id
+
+        if tag and same_code:
+            if tag == "SAME":
+                # SAME tag referes to some location_id in CAP
+                ttable = current.s3db.gis_location_tag
+
+                tquery = (ttable.tag == same_code) & \
+                         (ttable.value == form_vars.get("value")) & \
+                         (ttable.deleted != True)
+                trow = db(tquery).select(ttable.location_id,
+                                         limitby=(0, 1)).first()
+                if trow:
+                    # Match
+                    ltable = db.cap_area_location
+                    ldata = {"area_id": area_id,
+                             "alert_id": alert_id or None,
+                             "location_id": trow.location_id,
+                             }
+                    lid = ltable.insert(**ldata)
+                    current.auth.s3_set_record_owner(ltable, lid)
+                    # Uncomment this when required
+                    #ldata["id"] = lid
+                    #s3db.onaccept(ltable, ldata)
+
+        if alert_id:
+            # This is not template area
+            db(db.cap_area_tag.id == form_vars.id).update(alert_id = alert_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_resource_onaccept(form):
+        """
+            Link alert_id for CAP XML import 
+        """
+
+        form_vars = form.vars
+
+        info_id = form_vars.get("info_id", None)
+        if info_id:
+            # CAP XML
+            # Add the alert_id to this component of component
+            # to make it a direct component for UI purposes
+            db = current.db
+            itable = db.cap_info
+            item = db(itable.id == info_id).select(itable.alert_id,
+                                                   limitby=(0, 1)).first()
+            alert_id = item.alert_id
+
+            if alert_id:
+                db(db.cap_resource.id == form_vars.id).update(alert_id = alert_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2138,89 +2261,6 @@ def cap_rheader(r):
                                   )
 
     return rheader
-
-# =============================================================================
-def update_alert_id(tablename):
-    """ On-accept for area and resource records """
-
-    def func(form):
-        if "vars" in form:
-            form_vars = form.vars
-        elif "id" in form:
-            form_vars = form
-        elif hasattr(form, "vars"):
-            form_vars = form.vars
-        else:
-            form_vars = form
-
-        if form_vars.get("alert_id", None):
-            # Nothing to do
-            return
-
-        # Look up from the info/area
-        _id = form_vars.id
-        if not _id:
-            return
-
-        db = current.db
-        table = db[tablename]
-
-        if tablename == "cap_area_location" or tablename == "cap_area_tag":
-            area_id = form_vars.get("area_id", None)
-            if not area_id:
-                # Get the full record
-                item = db(table.id == _id).select(table.alert_id,
-                                                  table.area_id,
-                                                  limitby=(0, 1)).first()
-                try:
-                    alert_id = item.alert_id
-                    area_id = item.area_id
-                except:
-                    # Nothing we can do
-                    return
-                if alert_id:
-                    # Nothing to do
-                    return
-
-            atable = db.cap_area
-            area = db(atable.id == area_id).select(atable.alert_id,
-                                                   limitby=(0, 1)).first()
-            try:
-                alert_id = area.alert_id
-            except:
-                # Nothing we can do
-                return
-        else:
-            # cap_area or cap_resource
-            info_id = form_vars.get("info_id", None)
-            if not info_id:
-                # Get the full record
-                item = db(table.id == _id).select(table.alert_id,
-                                                  table.info_id,
-                                                  limitby=(0, 1)).first()
-                try:
-                    alert_id = item.alert_id
-                    info_id = item.info_id
-                except:
-                    # Nothing we can do
-                    return
-                if alert_id:
-                    # Nothing to do
-                    return
-
-            itable = db.cap_info
-            info = db(itable.id == info_id).select(itable.alert_id,
-                                                   limitby=(0, 1)).first()
-            try:
-                alert_id = info.alert_id
-            except:
-                # Nothing we can do
-                return
-
-        if alert_id:
-            db(table.id == _id).update(alert_id = alert_id)
-
-    return func
 
 # =============================================================================
 def cap_gis_location_xml_post_parse(element, record):
