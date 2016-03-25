@@ -11,4 +11,7 @@ def config(settings):
 
     settings.base.system_name = T("Philippines Warning and Situational-Awareness System")
 
+    # for creating location from SAME geocodes
+    settings.cap.same_code = "PSGC"
+
 # END =========================================================================

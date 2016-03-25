@@ -975,7 +975,9 @@ def template():
                            "scope",
                            "sender",
                            "info.category",
+                           "info.description",
                            "info.event_type_id",
+                           "info.headline",
                            "info.response_type",
                            "info.sender_name",
                            ]
