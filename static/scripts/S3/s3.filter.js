@@ -386,6 +386,7 @@ S3.search = {};
             urlVar,
             value,
             values,
+            subString,
             operator;
 
         // Text widgets
@@ -393,14 +394,18 @@ S3.search = {};
             $this = $(this);
             id = $this.attr('id');
             urlVar = $('#' + id + '-data').val();
-            value = $this.val();
+            value = $this.val().trim();
             if (value) {
                 values = value.split(' ');
                 var match = $this.data('match'),
                     quoted,
                     anyValue = [];
                 for (i=0; i < values.length; i++) {
-                    quoted = quoteValue('*' + values[i] + '*');
+                    subString = $.trim(values[i]);
+                    if (subString === "") {
+                        continue;
+                    }
+                    quoted = quoteValue('*' + subString + '*');
                     if (match == "any") {
                         anyValue.push(quoted);
                     } else {

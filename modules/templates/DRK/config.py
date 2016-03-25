@@ -1547,7 +1547,7 @@ def config(settings):
             if not r.component:
 
                 if r.interactive and not r.id:
-                    # Custom filter widgets
+                    # Add EO Number as component so it can be filtered by
                     s3db.add_components("pr_person",
                                         pr_person_tag = {"name": "eo_number",
                                                          "joinby": "person_id",
@@ -1557,6 +1557,7 @@ def config(settings):
                                                          },
                                         )
 
+                    # Custom filter widgets
                     from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter, s3_get_filter_opts
                     filter_widgets = [
                         S3TextFilter(["person_id$pe_label",
@@ -1578,7 +1579,14 @@ def config(settings):
                                         ),
                         S3DateFilter("date",
                                      ),
+                        S3TextFilter(["person_id$pe_label"],
+                                     label = T("IDs"),
+                                     match_any = True,
+                                     hidden = True,
+                                     comment = T("Search for multiple IDs (separated by blanks)"),
+                                     ),
                         ]
+
                     resource.configure(filter_widgets = filter_widgets)
 
                 # Default filter today's and tomorrow's appointments
