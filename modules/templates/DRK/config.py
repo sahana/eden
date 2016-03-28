@@ -1100,51 +1100,41 @@ def config(settings):
                         list_fields.append(absence_field)
 
                     if r.representation == "xls":
-
                         # Extra list_fields for XLS export
-                        atypes = {"GU": None,
-                                  "X-Ray": None,
-                                  "Reported Transferable": None,
-                                  "Transfer": None,
-                                  }
-                        attable = s3db.dvr_case_appointment_type
 
-                        query = attable.name.belongs(atypes.keys())
+                        # Add appointment dates
+                        atypes = ["GU",
+                                  "X-Ray",
+                                  "Reported Transferable",
+                                  "Transfer",
+                                  "Sent to RP",
+                                  ]
+                        COMPLETED = 4
+                        afields = []
+                        attable = s3db.dvr_case_appointment_type
+                        query = attable.name.belongs(atypes)
                         rows = db(query).select(attable.id,
                                                 attable.name,
                                                 )
+                        add_components = s3db.add_components
                         for row in rows:
-                            atypes[row.name] = row.id
+                            type_id = row.id
+                            name = "appointment%s" % type_id
+                            hook = {"name": name,
+                                    "joinby": "person_id",
+                                    "filterby": {"type_id": type_id,
+                                                 "status": COMPLETED,
+                                                 },
+                                    }
+                            add_components("pr_person",
+                                           dvr_case_appointment = hook,
+                                           )
+                            afields.append((T(row.name), "%s.date" % name))
 
-                        # Filtered Components
-                        COMPLETED = 4
+                        list_fields.extend(afields)
+
+                        # Add family key
                         s3db.add_components("pr_person",
-                                            dvr_case_appointment = (
-                                                {"name": "gu",
-                                                 "joinby": "person_id",
-                                                 "filterby": {"type_id": atypes["GU"],
-                                                              "status": COMPLETED,
-                                                              },
-                                                 },
-                                                {"name": "xray",
-                                                 "joinby": "person_id",
-                                                 "filterby": {"type_id": atypes["X-Ray"],
-                                                              "status": COMPLETED,
-                                                              }
-                                                 },
-                                                {"name": "transferable",
-                                                 "joinby": "person_id",
-                                                 "filterby": {"type_id": atypes["Reported Transferable"],
-                                                              "status": COMPLETED,
-                                                              }
-                                                 },
-                                                {"name": "transfer",
-                                                 "joinby": "person_id",
-                                                 "filterby": {"type_id": atypes["Transfer"],
-                                                              "status": COMPLETED,
-                                                              }
-                                                 },
-                                                ),
                                             pr_group = {"name": "family",
                                                         "link": "pr_group_membership",
                                                         "joinby": "person_id",
@@ -1153,20 +1143,13 @@ def config(settings):
                                                         },
                                             )
 
-                        list_fields += [# Date of the GU (GU = Health Screening, case appointments)
-                                        (T("GU"), "gu.date"),
-                                        # Date of the X-Ray (case appointments)
-                                        (T("X-Ray"), "xray.date"),
-                                        # Date when Reported Transferable (case appointments)
-                                        (T("Reported Transferable"), "transferable.date"),
-                                        # Date of the Transfer (case appointments)
-                                        (T("Transfer"), "transfer.date"),
-                                        # Housing Unit (done in interactive now as well)
-                                        #"shelter_registration.shelter_unit_id",
-                                        # Last Check-in (if checked-in)
-                                        (T("Registration Status"), "shelter_registration.registration_status"),
+                        list_fields += [# Current check-in/check-out status
+                                        (T("Registration Status"),
+                                         "shelter_registration.registration_status",
+                                         ),
+                                        # Last Check-in date
                                         "shelter_registration.check_in_date",
-                                        # Last Check-out (if checked-out)
+                                        # Last Check-out date
                                         "shelter_registration.check_out_date",
                                         # Person UUID
                                         ("UUID", "uuid"),

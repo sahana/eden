@@ -3846,6 +3846,7 @@
 'Sent Shipment updated': 'Gesendete Lieferung aktualisiert',
 'Sent Shipments': 'Gesendete Lieferungen',
 'Sent SMS': 'Gesendete SMS',
+'Sent to RP': 'Zu RP geschickt',
 'Sent date': 'Versanddatum',
 'Sent': 'gesendet',
 'Separated children, caregiving arrangements': 'von Eltern getrennte Kinder, Pflegevereinbarungen',
