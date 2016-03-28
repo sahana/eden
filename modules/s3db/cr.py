@@ -1300,7 +1300,8 @@ class S3ShelterRegistrationModel(S3Model):
 
                     # Get the previous status
                     htable = s3db.cr_shelter_registration_history
-                    query = (htable.shelter_id == reg.shelter_id) & \
+                    query = (htable.person_id == reg.person_id) & \
+                            (htable.shelter_id == reg.shelter_id) & \
                             (htable.deleted != True)
                     row = db(query).select(htable.status,
                                            htable.date,
