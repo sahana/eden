@@ -2444,19 +2444,47 @@ class S3GroupModel(S3Model):
                     group = row
 
             if group.group_type == 7:
+                # DVR Case Group
 
-                recount = True
+                update_household_size = settings.get_dvr_household_size() == "auto"
+                recount = s3db.dvr_case_household_size
 
+                if update_household_size and record.deleted and person_id:
+                    # Update the household size for removed group member
+                    query = (table.person_id == person_id) & \
+                            (table.group_id != group_id) & \
+                            (table.deleted != True) & \
+                            (gtable.id == table.group_id) & \
+                            (gtable.group_type == 7)
+                    row = db(query).select(table.group_id,
+                                           limitby = (0, 1),
+                                           ).first()
+                    if row:
+                        # Person still belongs to other case groups,
+                        # count properly:
+                        recount(row.group_id)
+                    else:
+                        # No further case groups, so household size is 1
+                        ctable = s3db.dvr_case
+                        cquery = (ctable.person_id == person_id)
+                        db(cquery).update(household_size = 1)
+
+                # Get number of (remaining) members in this group
                 query = (table.group_id == group_id) & \
                         (table.deleted != True)
                 rows = db(query).select(table.id, limitby = (0, 2))
+
                 if len(rows) < 2:
-                    # Remove case groups which only have one member
+                    # Update the household size for current group members
+                    if update_household_size:
+                        recount(group_id)
+                        update_household_size = False
+                    # Remove the case group if it only has one member
                     s3.purge_case_groups = True
                     resource = s3db.resource("pr_group", id=group_id)
                     resource.delete()
-                    recount = False
                     s3.purge_case_groups = False
+
                 elif not record.deleted:
                     # Generate a case for new case group member
                     # ...unless we already have one
@@ -2467,11 +2495,9 @@ class S3GroupModel(S3Model):
                         s3db.dvr_case_default_status()
                         ctable.insert(person_id=person_id)
 
-                # Update household size for all case group members
-                # ...if set to automatic counting
-                if recount and group_id and \
-                   settings.get_dvr_household_size() == "auto":
-                    s3db.dvr_case_household_size(group_id)
+                # Update the household size for current group members
+                if update_household_size:
+                    recount(group_id)
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -1924,14 +1924,13 @@ def dvr_case_household_size(group_id):
         ctable = s3db.dvr_case
         rtable = ctable.with_alias("member_cases")
         otable = mtable.with_alias("case_members")
-        join = [ctable.on(ctable.person_id == mtable.person_id),
-                otable.on((otable.group_id == mtable.group_id) &
+        join = ctable.on(ctable.person_id == mtable.person_id)
+        left = [otable.on((otable.group_id == mtable.group_id) &
                           (otable.deleted != True)),
+                rtable.on(rtable.person_id == otable.person_id),
                 ]
-        left = rtable.on(rtable.person_id == otable.person_id)
         query = (mtable.person_id.belongs(person_ids)) & \
                 (mtable.deleted != True) & \
-                (otable.person_id != mtable.person_id) & \
                 (rtable.id != None)
         rows = db(query).select(ctable.id,
                                 otable.person_id,
@@ -1944,8 +1943,8 @@ def dvr_case_household_size(group_id):
         MEMBER = str(otable.person_id)
         groups = {}
         for row in rows:
-            case_id = row[CASE]
             member_id = row[MEMBER]
+            case_id = row[CASE]
             if case_id not in groups:
                 groups[case_id] = set([member_id])
             else:
@@ -1953,7 +1952,7 @@ def dvr_case_household_size(group_id):
 
         # Update the related cases
         for case_id, members in groups.items():
-            number_of_members = len(members) + 1
+            number_of_members = len(members)
             db(ctable.id == case_id).update(household_size = number_of_members)
 
 # =============================================================================
