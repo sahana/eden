@@ -863,6 +863,10 @@ class S3ShelterModel(S3Model):
                   #deduplicate = S3Duplicate(primary=("shelter_id", "name")),
                   deduplicate = S3Duplicate(),
                   list_fields = list_fields,
+                  # Extra fields for cr_shelter_unit_status:
+                  extra_fields = ["capacity_day",
+                                  "available_capacity_day",
+                                  ],
                   onaccept = population_onaccept,
                   ondelete = population_onaccept,
                   )
