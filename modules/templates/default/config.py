@@ -487,6 +487,8 @@ def config(settings):
     #settings.dvr.household_size = True
     # Uncomment this to expose flags to mark appointment types as mandatory
     #settings.dvr.mandatory_appointments = True
+    # Uncomment this to allow cases to belong to multiple case groups ("households")
+    #settings.dvr.multiple_case_groups = True
 
     # -------------------------------------------------------------------------
     # Events

@@ -2661,6 +2661,12 @@ class S3Config(Storage):
         """
         return self.dvr.get("mandatory_appointments", False)
 
+    def get_dvr_multiple_case_groups(self):
+        """
+            Whether a case can belong to multiple case groups at the same time
+        """
+        return self.dvr.get("multiple_case_groups", False)
+
     # -------------------------------------------------------------------------
     # Events
     #

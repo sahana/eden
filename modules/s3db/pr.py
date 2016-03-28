@@ -2308,8 +2308,9 @@ class S3GroupModel(S3Model):
         person_id = form_vars.get("person_id")
         group_id = form_vars.get("group_id")
 
-        table = current.s3db.pr_group_membership
         db = current.db
+        s3db = current.s3db
+        table = s3db.pr_group_membership
 
         if not record_id:
             # New records - use defaults as required
@@ -2335,16 +2336,45 @@ class S3GroupModel(S3Model):
                 group_id = record.group_id
 
         # Try to find a duplicate
+        CASE_GROUP = 7
+        group_type = None
         query = (table.person_id == person_id) & \
-                (table.group_id == group_id) & \
-                (table.deleted != True)
+                (table.deleted != True) & \
+                (table.group_id == group_id)
+
+        multiple_case_groups = current.deployment_settings \
+                                      .get_dvr_multiple_case_groups()
+        if not multiple_case_groups:
+            # Check if group is a case group
+            gtable = s3db.pr_group
+            gquery = (gtable.id == group_id)
+            group = db(gquery).select(gtable.group_type,
+                                      limitby=(0, 1),
+                                      ).first()
+            if group:
+                group_type = group.group_type
+            if group_type == CASE_GROUP:
+                # Alter the query so it checks for any case group
+                query = (table.person_id == person_id) & \
+                        (table.deleted != True) & \
+                        (gtable.id == table.group_id) & \
+                        (gtable.group_type == group_type)
+
         if record_id:
+            # Exclude this record during update
             query = (table.id != record_id) & query
-        duplicate = db(query).select(table.id, limitby=(0, 1)).first()
+
+        duplicate = db(query).select(table.group_id,
+                                     limitby=(0, 1),
+                                     ).first()
 
         # Reject form if duplicate exists
         if duplicate:
-            error = current.T("This person already belongs to this group.")
+            if group_type == CASE_GROUP and \
+               str(duplicate.group_id) != str(group_id):
+                error = current.T("This person already belongs to another case group")
+            else:
+                error = current.T("This person already belongs to this group")
             if "person_id" in form_vars:
                 # Group perspective
                 form.errors["person_id"] = error
