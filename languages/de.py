@@ -4310,6 +4310,7 @@
 'Themes': 'Themen',
 'There are errors': 'Es sind Fehler aufgetreten',
 'There are insufficient items in the Inventory to send this shipment': 'Es sind nicht genügend Artikel im Bestand um diese Lieferung zu abzusenden.',
+'There are more than %(max)s results, please input more characters.': 'Mehr als %(max)s Treffer gefunden, bitte mehr Zeichen eingeben',
 'There are multiple records at this location': 'An dieser Stelle gibt es mehrere Datensätze',
 'There is no address for this person yet. Add new address.': 'Für diese Person gibt es noch keine Adresse. Fügen Sie eine neue Adresse hinzu.',
 'These are settings for Inbound Mail.': 'Dies sind Einstellungen für eingehende Mail.',
