@@ -194,3 +194,17 @@ h4.profile-sub-header {
     padding: 7px;
     margin-top: 5px;
 }
+
+/* Text representation */
+.text-body {
+    white-space: pre-wrap;
+}
+.s3-truncate-more,
+.s3-truncate-less {
+    font-style: italic;
+}
+.s3-truncate-more:before,
+.s3-truncate-less:before {
+    font-style: italic;
+    content: "...";
+}

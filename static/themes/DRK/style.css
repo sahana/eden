@@ -1066,6 +1066,25 @@ h4.profile-sub-header {
   margin-top: 5px;
 }
 
+/* Text representation */
+/* line 199, ../scss/custom/_widgets.scss */
+.text-body {
+  white-space: pre-wrap;
+}
+
+/* line 202, ../scss/custom/_widgets.scss */
+.s3-truncate-more,
+.s3-truncate-less {
+  font-style: italic;
+}
+
+/* line 206, ../scss/custom/_widgets.scss */
+.s3-truncate-more:before,
+.s3-truncate-less:before {
+  font-style: italic;
+  content: "...";
+}
+
 /* line 1, ../scss/custom/_misc.scss */
 .org-logo {
   vertical-align: top;
