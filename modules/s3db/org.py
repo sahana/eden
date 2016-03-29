@@ -5461,47 +5461,75 @@ class org_SiteCheckInMethod(S3Method):
                 from ..s3.s3track import S3Trackable
                 person_id = person.id
                 tracker = S3Trackable(ptable, record_id=person_id)
-                if "check-in" in r.post_vars:
-                    # We're not Checking-in in S3Track terms (that's about interlocking with another object)
+
+                post_vars = r.post_vars
+                postprocess = None
+                record = r.record
+                callback = None
+
+                if "check-in" in post_vars:
+
+                    # We're not Checking-in in S3Track terms (that's
+                    # about interlocking with another object)
                     #tracker.check_in()
-                    record = r.record
+
                     # @ToDo: Check if we are already checked-in?
                     tracker.set_location(record.location_id)
+
                     # Check for Hook (e.g. to be able to update cr_shelter_registration)
                     postprocess = s3db.get_config(r.tablename, "site_check_in")
-                    if postprocess:
-                        error, warning = postprocess(record.site_id, person_id)
-                        if warning:
-                            response.warning = warning
-                        if error:
-                            response.error = error
-                        else:
-                            response.confirmation = T("Checked-in successfully!")
-                    else:
-                        response.confirmation = T("Checked-in successfully!")
-                elif "check-out" in r.post_vars:
+                    action = "check-in"
+                    confirmation = T("Checked-in successfully!")
+
+                elif "check-out" in post_vars:
                     # Check-Out
-                    # We're not Checking-out in S3Track terms (that's about removing an interlock with another object)
-                    # What we're doing is saying that we're now back at our base location
+
+                    # We're not Checking-out in S3Track terms (that's
+                    # about removing an interlock with another object)
+                    # What we're doing is saying that we're now back at
+                    # our base location
                     #tracker.check_out()
+
                     # @ToDo: Check if we are already checked-out?
                     tracker.set_location(person.location_id)
+
                     # Check for Hook (e.g. to be able to update cr_shelter_registration)
                     postprocess = s3db.get_config(r.tablename, "site_check_out")
-                    if postprocess:
-                        error, warning = postprocess(r.record.site_id, person_id)
-                        if warning:
-                            response.warning = warning
-                        if error:
-                            response.error = error
-                        else:
-                            response.confirmation = T("Checked-out successfully!")
+                    action = "check-out"
+                    confirmation = T("Checked-out successfully!")
+
+                if postprocess is not None:
+
+                    result = postprocess(record.site_id, person_id)
+                    if isinstance(result, tuple):
+                        if len(result) == 2:
+                            error, warning = result
+                        elif len(result) == 3:
+                            error, warning, callback = result
                     else:
-                        response.confirmation = T("Checked-out successfully!")
+                        # Ignore return value
+                        error, warning = None, None
+
+                    if warning:
+                        response.warning = warning
+                    if error:
+                        response.error = error
+                    else:
+                        response.confirmation = confirmation
+                else:
+                    response.confirmation = confirmation
+
+                if callback is not None:
+                    # Callback requested by post-process, e.g. to
+                    # show a custom page with handling instructions
+                    return callback(record.site_id,
+                                    person_id,
+                                    action = action,
+                                    )
 
         # @ToDo: Allow configuring the special chars via Web UI?
         # NB  small tilde  char not visible in Notepad++ using default font, switch to Consolas!
-        success = T("Scan succesful: check In or Out?")
+        #success = T("Scan successful: check In or Out?")
         # @ToDo: Personalise with Name from AJAX call too?
         #checked_in = T("You are currently Checked-In, would you like to Check-Out?")
         #checked_out = T("You are currently Checked-Out, would you like to Check-In?")
@@ -5511,6 +5539,7 @@ class org_SiteCheckInMethod(S3Method):
         #else:
         #    s3.scripts.append("/%s/static/scripts/jquery.barcodelistener-1.1-min.js" % r.application)
         #s3.jquery_ready.append('''$(document).BarcodeListener([['§','32'],['˜','732']],function(code){$('#pe_label').val(code);S3.showAlert('%(success)s')})''' % success)
+
         response.view = "check-in.html"
         output = dict(form = form,
                       title = T("Check-In"),

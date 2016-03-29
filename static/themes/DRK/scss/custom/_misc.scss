@@ -97,3 +97,16 @@ body.rtl {
     padding: 0.2rem;
     text-transform: uppercase;
 }
+.checkpoint-advise {
+    background: #fff0f0 none repeat scroll 0 0;
+    border: 2px solid red;
+    margin-bottom: 1rem;
+    padding: 0.6rem;
+    p {
+        white-space: pre-wrap;
+    }
+}
+.checkpoint-person {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}

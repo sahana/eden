@@ -1217,3 +1217,21 @@ body.rtl .username i.icon {
   padding: 0.2rem;
   text-transform: uppercase;
 }
+
+/* line 100, ../scss/custom/_misc.scss */
+.checkpoint-advise {
+  background: #fff0f0 none repeat scroll 0 0;
+  border: 2px solid red;
+  margin-bottom: 1rem;
+  padding: 0.6rem;
+}
+/* line 105, ../scss/custom/_misc.scss */
+.checkpoint-advise p {
+  white-space: pre-wrap;
+}
+
+/* line 109, ../scss/custom/_misc.scss */
+.checkpoint-person {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}

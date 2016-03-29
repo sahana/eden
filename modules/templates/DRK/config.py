@@ -268,6 +268,60 @@ def config(settings):
     settings.ui.profile_header = profile_header
 
     # -------------------------------------------------------------------------
+    def show_flag_instructions(site_id, person_id, action=None):
+        """
+            Show advise/instructions for checkpoint staff if
+            such flags are set for this persons
+
+            @param site_id: the site ID (unused in this version)
+            @param person_id: the person record ID
+        """
+
+        s3db = current.s3db
+
+        ftable = s3db.dvr_case_flag
+        ltable = s3db.dvr_case_flag_case
+        query = (ltable.person_id == person_id) & \
+                (ltable.deleted != True) & \
+                (ftable.id == ltable.flag_id) & \
+                (ftable.deleted != True)
+
+        if action == "check-in":
+            query &= (ftable.advise_at_check_in == True)
+        elif action == "check-out":
+            query &= (ftable.advise_at_check_out == True)
+        else:
+            query &= ((ftable.advise_at_check_in == True) |
+                      (ftable.advise_at_check_out == True))
+
+        from gluon import DIV, H4, P
+
+        info = DIV(_class="checkpoint-advise")
+        append = info.append
+        flags = current.db(query).select(ftable.name,
+                                         ftable.instructions,
+                                         )
+
+        for flag in flags:
+            instructions = flag.instructions
+            if instructions:
+                append(DIV(H4(T(flag.name)),
+                           P(instructions),
+                           _class="checkpoint-instructions",
+                           ))
+
+        from s3 import S3CustomController, s3_fullname
+        S3CustomController._view("DRK", "advise.html")
+
+        output = {"person": DIV(s3_fullname(person_id),
+                                _class="checkpoint-person",
+                                ),
+                  "info": info,
+                  }
+
+        return output
+
+    # -------------------------------------------------------------------------
     def site_check_in(site_id, person_id):
         """
             When a person is checked-in to a Shelter then update the Shelter Registration
@@ -294,37 +348,61 @@ def config(settings):
         if status and status.is_closed:
             wappend(T("Not currently a resident"))
 
-        # Find the Registration
-        stable = s3db.cr_shelter
-        rtable = s3db.cr_shelter_registration
+        # Check if we have any case flag to deny check-in or to show advise
+        ftable = s3db.dvr_case_flag
+        ltable = s3db.dvr_case_flag_case
+        query = (ltable.person_id == person_id) & \
+                (ltable.deleted != True) & \
+                (ftable.id == ltable.flag_id) & \
+                (ftable.deleted != True)
+        flags = db(query).select(ftable.advise_at_check_in,
+                                 ftable.instructions,
+                                 ftable.deny_check_in,
+                                 )
+        callback = None
+        deny_check_in = False
+        for flag in flags:
+            if flag.deny_check_in:
+                deny_check_in = True
+            if flag.advise_at_check_in and flag.instructions:
+                callback = show_flag_instructions
 
-        query = (stable.site_id == site_id) & \
-                (stable.id == rtable.shelter_id) & \
-                (rtable.person_id == person_id) & \
-                (rtable.deleted != True)
-        registration = db(query).select(rtable.id,
-                                        rtable.registration_status,
-                                        limitby=(0, 1),
-                                        ).first()
-        if not registration:
-            error = T("Registration not found")
-            return error, ", ".join(s3_str(w) for w in warnings)
+        if not deny_check_in:
 
-        error = None
+            # Find the Registration
+            stable = s3db.cr_shelter
+            rtable = s3db.cr_shelter_registration
 
-        if registration.registration_status == 2:
-            wappend(T("Client was already checked-in"))
+            query = (stable.site_id == site_id) & \
+                    (stable.id == rtable.shelter_id) & \
+                    (rtable.person_id == person_id) & \
+                    (rtable.deleted != True)
+            registration = db(query).select(rtable.id,
+                                            rtable.registration_status,
+                                            limitby=(0, 1),
+                                            ).first()
+            if not registration:
+                error = T("Registration not found")
+                return error, ", ".join(s3_str(w) for w in warnings)
 
-        # Update the Shelter Registration
-        registration.update_record(check_in_date = current.request.utcnow,
-                                   registration_status = 2,
-                                   )
+            error = None
 
-        onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
-        if onaccept:
-            onaccept(registration)
+            if registration.registration_status == 2:
+                wappend(T("Client was already checked-in"))
 
-        return error, ", ".join(s3_str(w) for w in warnings)
+            # Update the Shelter Registration
+            registration.update_record(check_in_date = current.request.utcnow,
+                                    registration_status = 2,
+                                    )
+
+            onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
+            if onaccept:
+                onaccept(registration)
+
+        else:
+            error = T("Check-in denied")
+
+        return error, ", ".join(s3_str(w) for w in warnings), callback
 
     # -------------------------------------------------------------------------
     def site_check_out(site_id, person_id):
@@ -333,39 +411,62 @@ def config(settings):
         """
 
         s3db = current.s3db
+        db = current.db
 
-        # Find the Registration
-        stable = s3db.cr_shelter
-        rtable = s3db.cr_shelter_registration
-        query = (stable.site_id == site_id) & \
-                (stable.id == rtable.shelter_id) & \
-                (rtable.person_id == person_id) & \
-                (rtable.deleted != True)
-        registration = current.db(query).select(rtable.id,
-                                                rtable.registration_status,
-                                                limitby=(0, 1),
-                                                ).first()
-        if not registration:
-            # @ToDo: Check to see if they DISAPPEARED, etc
-            error = T("Registration not found")
-            warning = None
-            return error, warning
+        # Check if we have any case flag to deny check-in or to show advise
+        ftable = s3db.dvr_case_flag
+        ltable = s3db.dvr_case_flag_case
+        query = (ltable.person_id == person_id) & \
+                (ltable.deleted != True) & \
+                (ftable.id == ltable.flag_id) & \
+                (ftable.deleted != True)
+        flags = db(query).select(ftable.advise_at_check_out,
+                                 ftable.instructions,
+                                 ftable.deny_check_out,
+                                 )
+        callback = None
+        deny_check_out = False
+        for flag in flags:
+            if flag.deny_check_out:
+                deny_check_out = True
+            if flag.advise_at_check_out and flag.instructions:
+                callback = show_flag_instructions
 
-        error = None
-        if registration.registration_status == 3:
-            warning = T("Client was already checked-out")
+        warning = None
+        if not deny_check_out:
+
+            # Find the Registration
+            stable = s3db.cr_shelter
+            rtable = s3db.cr_shelter_registration
+            query = (stable.site_id == site_id) & \
+                    (stable.id == rtable.shelter_id) & \
+                    (rtable.person_id == person_id) & \
+                    (rtable.deleted != True)
+            registration = db(query).select(rtable.id,
+                                            rtable.registration_status,
+                                            limitby=(0, 1),
+                                            ).first()
+            if not registration:
+                # @ToDo: Check to see if they DISAPPEARED, etc
+                error = T("Registration not found")
+                return error, warning
+
+            error = None
+            if registration.registration_status == 3:
+                warning = T("Client was already checked-out")
+
+            # Update the Shelter Registration
+            registration.update_record(check_out_date = current.request.utcnow,
+                                    registration_status = 3)
+
+            onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
+            if onaccept:
+                onaccept(registration)
+
         else:
-            warning = None
+            error = T("Check-out denied")
 
-        # Update the Shelter Registration
-        registration.update_record(check_out_date = current.request.utcnow,
-                                   registration_status = 3)
-
-        onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
-        if onaccept:
-            onaccept(registration)
-
-        return error, warning
+        return error, warning, callback
 
     # -------------------------------------------------------------------------
     def org_site_check(site_id):
