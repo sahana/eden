@@ -322,6 +322,8 @@ def update_transferability(site_id=None):
     ptable = s3db.pr_person
     ctable = s3db.dvr_case
     stable = s3db.dvr_case_status
+    ftable = s3db.dvr_case_flag
+    cftable = s3db.dvr_case_flag_case
     utable = s3db.cr_shelter_unit
     rtable = s3db.cr_shelter_registration
     ttable = s3db.dvr_case_appointment_type
@@ -349,14 +351,24 @@ def update_transferability(site_id=None):
     else:
         transferability_complete = None
 
-    # Get IDs of closed case statuses
-    query = ((stable.is_closed == False) | (stable.is_closed == None)) & \
+    # Get IDs of open case statuses
+    query = ((stable.is_closed == False) | \
+             (stable.is_closed == None)) & \
             (stable.deleted != True)
     rows = db(query).select(stable.id)
     if rows:
         OPEN = set(row.id for row in rows)
     else:
         OPEN = None
+
+    # Get IDs of non-transferable case flags
+    query = (ftable.is_not_transferable == True) & \
+            (ftable.deleted != True)
+    rows = db(query).select(ftable.id)
+    if rows:
+        NOT_TRANSFERABLE = set(row.id for row in rows)
+    else:
+        NOT_TRANSFERABLE = None
 
     # Define age groups (minimum age, maximum age, appointments, maximum absence)
     age_groups = {"children": (None, 15, "mandatory_children", None),
@@ -383,6 +395,13 @@ def update_transferability(site_id=None):
                             (tctable.date <= TODAY) & \
                             (tctable.status == COMPLETED))
         left.append(tcjoin)
+
+    # Add left join for non-transferable case flags
+    if NOT_TRANSFERABLE:
+        cfjoin = cftable.on((cftable.person_id == ctable.person_id) & \
+                            (cftable.flag_id.belongs(NOT_TRANSFERABLE)) & \
+                            (cftable.deleted != True))
+        left.append(cfjoin)
 
     result = 0
     for age_group in age_groups:
@@ -413,6 +432,10 @@ def update_transferability(site_id=None):
         # Case must not have a non-transferable status
         case_query &= (stable.is_not_transferable == False) | \
                       (stable.is_not_transferable == None)
+
+        # Case must not have a non-transferable case flag
+        if NOT_TRANSFERABLE:
+            case_query &= (cftable.id == None)
 
         # Person must be assigned to a non-transitory housing unit
         case_query &= (utable.id != None) & \

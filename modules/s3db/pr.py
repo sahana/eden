@@ -2457,7 +2457,8 @@ class S3GroupModel(S3Model):
         pr_update_affiliations(table, record)
 
         # DVR extensions
-        s3 = current.response.s3
+        response = current.response
+        s3 = response.s3
         s3db = current.s3db
         ctable = s3db.table("dvr_case")
         if ctable and not s3.purge_case_groups:
@@ -2523,7 +2524,16 @@ class S3GroupModel(S3Model):
                     row = db(query).select(ctable.id, limitby=(0, 1)).first()
                     if not row:
                         s3db.dvr_case_default_status()
-                        ctable.insert(person_id=person_id)
+                        cresource = s3db.resource("dvr_case")
+                        try:
+                            # Using resource.insert for proper authorization
+                            # and post-processing (=audit, ownership, realm,
+                            # onaccept)
+                            cresource.insert(person_id=person_id)
+                        except S3PermissionError:
+                            # Unlikely (but possible) that this situation
+                            # is deliberate => issue a warning
+                            response.warning = current.T("No permission to create a case record for new group member")
 
                 # Update the household size for current group members
                 if update_household_size:
