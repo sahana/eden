@@ -2050,7 +2050,7 @@
 'In Catalogs': 'In Katalogen',
 'In Inventories': 'In den Beständen',
 'In Process': 'In Bearbeitung',
-'In Progress': 'In Arbeit',
+'In Progress': 'In Bearbeitung',
 'In Window layout the map maximises to fill the window, so no need to set a large value here.': 'Beim Aufbau des Fensters wird die Karte maximiert um das Fenster auszufüllen, daher ist es nicht notwendig hier einen grossen Wert festzulegen.',
 'Inbound Mail Settings': 'Eingehende Mail-Einstellungen',
 'InBox': 'Eingang',

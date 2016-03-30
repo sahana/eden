@@ -225,9 +225,9 @@ def config(settings):
         rows = db(query).select(stable.id)
         OPEN = set(row.id for row in rows)
 
+        # Count number of external persons
         ftable = s3db.dvr_case_flag
         ltable = s3db.dvr_case_flag_case
-
         left = [ltable.on((ltable.flag_id == ftable.id) & \
                           (ltable.deleted != True)),
                 ctable.on((ctable.person_id == ltable.person_id) & \
