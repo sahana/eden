@@ -36,6 +36,7 @@ __all__ = ("DVRCaseModel",
            "DVRCaseBeneficiaryModel",
            "DVRCaseEconomyInformationModel",
            "DVRCaseAllowanceModel",
+           "DVRCaseEventModel",
            "dvr_case_default_status",
            "dvr_case_status_filter_opts",
            "dvr_case_household_size",
@@ -411,6 +412,7 @@ class DVRCaseModel(S3Model):
         self.add_components(tablename,
                             dvr_beneficiary_data = "case_id",
                             dvr_case_activity = "case_id",
+                            dvr_case_event = "case_id",
                             dvr_case_service_contact = "case_id",
                             dvr_economy = {"joinby": "case_id",
                                            "multiple": False,
@@ -696,6 +698,7 @@ class DVRCaseFlagModel(S3Model):
         define_table(tablename,
                      Field("name",
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      Field("advise_at_check_in", "boolean",
                            default = False,
@@ -850,6 +853,7 @@ class DVRNeedsModel(S3Model):
         define_table(tablename,
                      Field("name",
                            label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -945,9 +949,13 @@ class DVRNotesModel(S3Model):
         #
         tablename = "dvr_note_type"
         define_table(tablename,
-                     Field("name", unique=True,
+                     Field("name", length=128, unique=True,
                            label = T("Name"),
-                           length = 128,
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_NOT_ONE_OF(db,
+                                                     "dvr_note_type.name",
+                                                     ),
+                                       ],
                            ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -1888,6 +1896,144 @@ class DVRCaseAllowanceModel(S3Model):
 
         return {"dvr_allowance_status_opts": {},
                 }
+
+# =============================================================================
+class DVRCaseEventModel(S3Model):
+    """ Model representing monitoring events for cases """
+
+    names = ("dvr_case_event_type",
+             "dvr_case_event",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Case Event Types
+        #
+        tablename = "dvr_case_event_type"
+        define_table(tablename,
+                     Field("code", notnull=True, length=64, unique=True,
+                           label = T("Code"),
+                           requires = [IS_NOT_EMPTY(),
+                                       IS_NOT_ONE_OF(db,
+                                                     "dvr_case_event_type.code",
+                                                     ),
+                                       ],
+                           ),
+                     Field("name",
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Event Type"),
+            title_display = T("Event Type Details"),
+            title_list = T("Event Types"),
+            title_update = T("Edit Event Type"),
+            label_list_button = T("List Event Types"),
+            label_delete_button = T("Delete Event Type"),
+            msg_record_created = T("Event Type created"),
+            msg_record_modified = T("Event Type updated"),
+            msg_record_deleted = T("Event Type deleted"),
+            msg_list_empty = T("No Event Types currently defined"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename, translate=True)
+        event_type_id = S3ReusableField("type_id", "reference %s" % tablename,
+                                        label = T("Event Type"),
+                                        ondelete = "RESTRICT",
+                                        represent = represent,
+                                        requires = IS_ONE_OF(db, "%s.id" % tablename,
+                                                             represent,
+                                                             ),
+                                        sortby = "name",
+                                        comment = S3PopupLink(c="dvr",
+                                                              f="case_event_type",
+                                                              tooltip=T("Create a new event type"),
+                                                              ),
+                                        )
+
+        # ---------------------------------------------------------------------
+        # Case Events
+        #
+        tablename = "dvr_case_event"
+        define_table(tablename,
+                     self.dvr_case_id(comment = None,
+                                      empty = False,
+                                      label = T("Case Number"),
+                                      ondelete = "CASCADE",
+                                      writable = False,
+                                      ),
+                     # Beneficiary (component link):
+                     # @todo: populate from case and hide in case perspective
+                     self.pr_person_id(comment = None,
+                                       empty = False,
+                                       ondelete = "CASCADE",
+                                       writable = False,
+                                       ),
+                     event_type_id(comment = None,
+                                   # Not user-writable as this is for automatic
+                                   # event registration, override in template if
+                                   # required:
+                                   writable = False,
+                                   ),
+                     s3_datetime(label = T("Date/Time"),
+                                 default = "now",
+                                 empty = False,
+                                 future = 0,
+                                 writable = False,
+                                 ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Event"),
+            title_display = T("Event Details"),
+            title_list = T("Events"),
+            title_update = T("Edit Event"),
+            label_list_button = T("List Events"),
+            label_delete_button = T("Delete Event"),
+            msg_record_created = T("Event added"),
+            msg_record_modified = T("Event updated"),
+            msg_record_deleted = T("Event deleted"),
+            msg_list_empty = T("No Events currently registered"),
+            )
+
+        self.configure(tablename,
+                       # Not user-insertable as this is for automatic
+                       # event registration, override in template if
+                       # required:
+                       insertable = False,
+                       deduplicate = S3Duplicate(primary=("person_id",
+                                                          "type_id",
+                                                          ),
+                                                 ),
+                       )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        return {}
 
 # =============================================================================
 def dvr_case_default_status():
