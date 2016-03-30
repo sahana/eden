@@ -91,8 +91,8 @@ class DVRCaseModel(S3Model):
                            ),
                      # Enable in template if/when org-specific
                      # case types are required:
-                     self.org_organisation_id(readable=False,
-                                              writable=False,
+                     self.org_organisation_id(readable = False,
+                                              writable = False,
                                               ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -126,10 +126,10 @@ class DVRCaseModel(S3Model):
                            default = 1,
                            label = T("Workflow Position"),
                            requires = IS_INT_IN_RANGE(1, None),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Workflow Position"),
-                                                           T("Rank when ordering cases by status."),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Workflow Position"),
+                                                             T("Rank when ordering cases by status"),
+                                                             ),
                                          ),
                            ),
                      Field("code", length=64, notnull=True, unique=True,
@@ -139,10 +139,10 @@ class DVRCaseModel(S3Model):
                                                      "%s.code" % tablename,
                                                      ),
                                        ],
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Status Code"),
-                                                           T("A unique code to identify the status."),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Status Code"),
+                                                             T("A unique code to identify the status"),
+                                                             ),
                                          ),
                            ),
                      Field("name",
@@ -154,10 +154,10 @@ class DVRCaseModel(S3Model):
                            default = False,
                            label = T("Default Status"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Default Status"),
-                                                           T("This status applies for new cases unless specified otherwise."),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Default Status"),
+                                                             T("This status applies for new cases unless specified otherwise"),
+                                                             ),
                                          ),
                            ),
                      Field("is_closed", "boolean",
@@ -166,7 +166,7 @@ class DVRCaseModel(S3Model):
                            represent = s3_yes_no_represent,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Case Closed"),
-                                                           T("Cases with this status are closed."),
+                                                           T("Cases with this status are closed"),
                                                            ),
                                          ),
                            ),
@@ -176,17 +176,17 @@ class DVRCaseModel(S3Model):
                            represent = s3_yes_no_represent,
                            readable = manage_transferability,
                            writable = manage_transferability,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Not Transferable"),
-                                                           T("Cases with this status are not transferable."),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Not Transferable"),
+                                                             T("Cases with this status are not transferable"),
+                                                             ),
                                          ),
                            ),
                      s3_comments(
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Comments"),
-                                                           T("Describe the meaning, reasons and potential consequences of this status."),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Comments"),
+                                                             T("Describe the meaning, reasons and potential consequences of this status"),
+                                                             ),
                                          ),
                            ),
                      *s3_meta_fields())
@@ -359,7 +359,7 @@ class DVRCaseModel(S3Model):
                            writable = household_size_writable,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Household Size"),
-                                                           T("Number of persons belonging to the same household."),
+                                                           T("Number of persons belonging to the same household"),
                                                            ),
                                          ),
                            ),
@@ -687,9 +687,13 @@ class DVRCaseFlagModel(S3Model):
         T = current.T
         db = current.db
 
+        settings = current.deployment_settings
         crud_strings = current.response.s3.crud_strings
+
         define_table = self.define_table
         configure = self.configure
+
+        manage_transferability = settings.get_dvr_manage_transferability()
 
         # ---------------------------------------------------------------------
         # Case Flags
@@ -704,49 +708,61 @@ class DVRCaseFlagModel(S3Model):
                            default = False,
                            label = T("Advice at Check-in"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Advice at Check-in"),
-                                                           T("Show handling instructions at check-in"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Advice at Check-in"),
+                                                             T("Show handling instructions at check-in"),
+                                                             ),
                                          ),
                            ),
                      Field("advise_at_check_out", "boolean",
                            default = False,
                            label = T("Advice at Check-out"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Advice at Check-out"),
-                                                           T("Show handling instructions at check-out"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Advice at Check-out"),
+                                                             T("Show handling instructions at check-out"),
+                                                             ),
                                          ),
                            ),
                      Field("instructions", "text",
                            label = T("Instructions"),
                            represent = s3_text_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Instructions"),
-                                                           T("Instructions for handling of the case"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Instructions"),
+                                                             T("Instructions for handling of the case"),
+                                                             ),
                                          ),
                            ),
                      Field("deny_check_in", "boolean",
                            default = False,
                            label = T("Deny Check-in"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Deny Check-in"),
-                                                           T("Deny the person to check-in when this flag is set"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Deny Check-in"),
+                                                             T("Deny the person to check-in when this flag is set"),
+                                                             ),
                                          ),
                            ),
                      Field("deny_check_out", "boolean",
                            default = False,
                            label = T("Deny Check-out"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Deny Check-out"),
-                                                           T("Deny the person to check-out when this flag is set"),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Deny Check-out"),
+                                                             T("Deny the person to check-out when this flag is set"),
+                                                             ),
+                                         ),
+                           ),
+                     Field("is_not_transferable", "boolean",
+                           default = False,
+                           label = T("Not Transferable"),
+                           represent = s3_yes_no_represent,
+                           readable = manage_transferability,
+                           writable = manage_transferability,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Not Transferable"),
+                                                             T("Cases with this flag are not transferable"),
+                                                             ),
                                          ),
                            ),
                      s3_comments(),
@@ -1082,7 +1098,7 @@ class DVRCaseActivityModel(S3Model):
                            represent = s3_yes_no_represent,
                            ),
                      # Activate in template as needed:
-                     self.org_organisation_id(label=T("Referral Agency"),
+                     self.org_organisation_id(label = T("Referral Agency"),
                                               readable = False,
                                               writable = False,
                                               ),
@@ -1285,7 +1301,7 @@ class DVRCaseAppointmentModel(S3Model):
         #
         mandatory_comment = DIV(_class="tooltip",
                                 _title="%s|%s" % (T("Mandatory Appointment"),
-                                                  T("This appointment is mandatory before transfer."),
+                                                  T("This appointment is mandatory before transfer"),
                                                   ),
                                 ),
 
@@ -1302,10 +1318,10 @@ class DVRCaseAppointmentModel(S3Model):
                            default = True,
                            label = T("Active"),
                            represent = s3_yes_no_represent,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Active Appointment"),
-                                                           T("Automatically create this appointment for new cases."),
-                                                           ),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Active Appointment"),
+                                                             T("Automatically create this appointment for new cases"),
+                                                             ),
                                          ),
                            ),
                      Field("mandatory_children", "boolean",
@@ -1398,7 +1414,7 @@ class DVRCaseAppointmentModel(S3Model):
                            requires = IS_IN_SET(appointment_status_opts,
                                                 zero = None,
                                                 ),
-                           represent = S3Represent(options=appointment_status_opts,
+                           represent = S3Represent(options = appointment_status_opts,
                                                    ),
                            ),
                      s3_comments(),
@@ -1425,9 +1441,9 @@ class DVRCaseAppointmentModel(S3Model):
                         )
 
         configure(tablename,
-                  deduplicate = S3Duplicate(primary=("person_id",
-                                                     "type_id",
-                                                     ),
+                  deduplicate = S3Duplicate(primary = ("person_id",
+                                                       "type_id",
+                                                       ),
                                             ),
                   )
 
@@ -1959,9 +1975,9 @@ class DVRCaseEventModel(S3Model):
                                                              represent,
                                                              ),
                                         sortby = "name",
-                                        comment = S3PopupLink(c="dvr",
-                                                              f="case_event_type",
-                                                              tooltip=T("Create a new event type"),
+                                        comment = S3PopupLink(c = "dvr",
+                                                              f = "case_event_type",
+                                                              tooltip = T("Create a new event type"),
                                                               ),
                                         )
 
@@ -2017,9 +2033,9 @@ class DVRCaseEventModel(S3Model):
                        # event registration, override in template if
                        # required:
                        insertable = False,
-                       deduplicate = S3Duplicate(primary=("person_id",
-                                                          "type_id",
-                                                          ),
+                       deduplicate = S3Duplicate(primary = ("person_id",
+                                                            "type_id",
+                                                            ),
                                                  ),
                        )
 
@@ -2298,16 +2314,16 @@ class dvr_ManageAppointments(S3Method):
                 items = dt.html(totalrows,
                                 filteredrows,
                                 dt_id,
-                                dt_pageLength=display_length,
-                                dt_ajax_url=URL(c="dvr",
-                                                f="case_appointment",
-                                                args=["manage"],
-                                                vars={},
-                                                extension="aadata",
-                                                ),
-                                dt_searching="false",
-                                dt_pagination="true",
-                                dt_bulk_actions=dt_bulk_actions,
+                                dt_pageLength = display_length,
+                                dt_ajax_url = URL(c = "dvr",
+                                                  f = "case_appointment",
+                                                  args = ["manage"],
+                                                  vars = {},
+                                                  extension = "aadata",
+                                                  ),
+                                dt_searching = "false",
+                                dt_pagination = "true",
+                                dt_bulk_actions = dt_bulk_actions,
                                 )
 
                 # Filter form
@@ -2318,9 +2334,9 @@ class dvr_ManageAppointments(S3Method):
                     filter_submit_url = r.url(vars=_vars)
 
                     # Where to retrieve updated filter options from:
-                    filter_ajax_url = URL(f="case_appointment",
-                                          args=["filter.options"],
-                                          vars={},
+                    filter_ajax_url = URL(f = "case_appointment",
+                                          args = ["filter.options"],
+                                          vars = {},
                                           )
 
                     get_config = resource.get_config
@@ -2366,7 +2382,8 @@ class dvr_ManageAppointments(S3Method):
                                 filteredrows,
                                 dt_id,
                                 echo,
-                                dt_bulk_actions=dt_bulk_actions)
+                                dt_bulk_actions = dt_bulk_actions,
+                                )
                 response.headers["Content-Type"] = "application/json"
                 return items
 
@@ -2409,7 +2426,7 @@ def dvr_rheader(r, tabs=[]):
             case = resource.select(["dvr_case.reference",
                                     "dvr_case.case_type_id",
                                     ],
-                                    represent=True,
+                                    represent = True,
                                     ).rows
             if case:
                 case = case[0]
@@ -2438,8 +2455,8 @@ def dvr_rheader(r, tabs=[]):
                               ]
 
         rheader = S3ResourceHeader(rheader_fields, tabs)(r,
-                                                         table=resource.table,
-                                                         record=record,
+                                                         table = resource.table,
+                                                         record = record,
                                                          )
 
     return rheader

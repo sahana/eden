@@ -1,6 +1,6 @@
-Name,Comments
-Priority,
-Security,
-Medical,
-Mail,
-Sought,
+Name,Not Transferable,Comments
+Priority,false,
+Security,false,
+Medical,false,
+Mail,false,
+Sought,false,
