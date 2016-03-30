@@ -220,19 +220,27 @@ def config(settings):
                    TD(total),
                    )
 
-        # Get the IDs of external statuses
-        STATUS_EXTERNAL = ("STATUS9", "STATUS9A")
-        query = (stable.code.belongs(STATUS_EXTERNAL)) & \
-                (stable.deleted != True)
-        rows = db(query).select(stable.id, limitby = (0, 2))
-        external_status_ids = set(row.id for row in rows)
+        # Get the IDs of open case statuses
+        query = (stable.is_closed == False) & (stable.deleted != True)
+        rows = db(query).select(stable.id)
+        OPEN = set(row.id for row in rows)
 
-        # Count valid cases with external status
+        ftable = s3db.dvr_case_flag
+        ltable = s3db.dvr_case_flag_case
+
+        left = [ltable.on((ltable.flag_id == ftable.id) & \
+                          (ltable.deleted != True)),
+                ctable.on((ctable.person_id == ltable.person_id) & \
+                          (ctable.status_id.belongs(OPEN)) & \
+                          ((ctable.archived == False) | (ctable.archived == None)) & \
+                          (ctable.deleted != True)),
+                ]
+        query = (ftable.is_external == True) & \
+                (ftable.deleted != True) & \
+                (ltable.id != None) & \
+                (ctable.id != None)
         count = ctable.id.count()
-        query = (ctable.status_id.belongs(external_status_ids)) & \
-                ((ctable.archived == False) | (ctable.archived == None)) & \
-                (ctable.deleted != True)
-        rows = db(query).select(count)
+        rows = db(query).select(count, left=left)
         external = rows.first()[count] if rows else 0
 
         EXTERNAL = TR(TD(T("How many external (Hospital / Police)")),
@@ -2125,12 +2133,10 @@ def drk_dvr_rheader(r, tabs=[]):
                             ]
 
                 case = resource.select(["dvr_case.status_id",
-                                        "dvr_case.status_id$code",
+                                        #"dvr_case.status_id$code",
                                         "dvr_case.archived",
                                         "dvr_case.household_size",
                                         "dvr_case.transferable",
-                                        #"dvr_case.household_transferable",
-                                        #"case_flag_case.flag_id$name",
                                         "first_name",
                                         "last_name",
                                         ],
@@ -2144,8 +2150,7 @@ def drk_dvr_rheader(r, tabs=[]):
                     case_status = lambda row: case["dvr_case.status_id"]
                     transferable = lambda row: case["dvr_case.transferable"]
                     household_size = lambda row: case["dvr_case.household_size"]
-                    #household_transferable = lambda row: case["dvr_case.household_transferable"]
-                    eligible = lambda row: ""
+                    #eligible = lambda row: ""
                     name = lambda row: s3_fullname(row)
                 else:
                     # Target record exists, but doesn't match filters
@@ -2157,7 +2162,6 @@ def drk_dvr_rheader(r, tabs=[]):
                                    ],
                                   [(T("Name"), name),
                                    (T("Size of Family"), household_size),
-                                   #(T("Family Transferable"), household_transferable),
                                    ],
                                   ["date_of_birth",
                                    (T("Checked-out"), "absence"),
@@ -2167,12 +2171,14 @@ def drk_dvr_rheader(r, tabs=[]):
                 if archived:
                     rheader_fields.insert(0, [(None, hint)])
 
-                if r.component_name == "allowance":
-                    # Rule for eligibility:
-                    allowance = case["dvr_case_status.code"] in ("STATUS5", "STATUS6")
-                    eligible = lambda row, allowance = allowance: \
-                                      s3_yes_no_represent(allowance)
-                    rheader_fields[-1].append((T("Eligible for Allowance"), eligible))
+                # @todo: No basis for this rule (statuses do no longer exist),
+                #        define new rule or remove this:
+                #if r.component_name == "allowance":
+                #    # Rule for eligibility:
+                #    allowance = case["dvr_case_status.code"] in ("STATUS5", "STATUS6")
+                #    eligible = lambda row, allowance = allowance: \
+                #                      s3_yes_no_represent(allowance)
+                #    rheader_fields[-1].append((T("Eligible for Allowance"), eligible))
 
         elif tablename == "dvr_case":
 

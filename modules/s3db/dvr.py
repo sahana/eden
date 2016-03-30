@@ -765,6 +765,16 @@ class DVRCaseFlagModel(S3Model):
                                                              ),
                                          ),
                            ),
+                     Field("is_external", "boolean",
+                           default = False,
+                           label = T("External"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("External"),
+                                                             T("This flag indicates that the person is currently external"),
+                                                             ),
+                                         ),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
