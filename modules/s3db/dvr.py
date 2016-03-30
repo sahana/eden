@@ -207,8 +207,8 @@ class DVRCaseModel(S3Model):
 
         # Table configuration
         configure(tablename,
-                  # Automatic since unique=True
-                  #deduplicate = S3Duplicate(primary = ("code",)),
+                  # Allow imports to change the status code:
+                  deduplicate = S3Duplicate(primary = ("name",)),
                   onaccept = self.case_status_onaccept,
                   )
 
@@ -771,7 +771,7 @@ class DVRCaseFlagModel(S3Model):
                            represent = s3_yes_no_represent,
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("External"),
-                                                             T("This flag indicates that the person is currently external"),
+                                                             T("This flag indicates that the person is currently accommodated/being held externally (e.g. in Hospital or with Police)"),
                                                              ),
                                          ),
                            ),

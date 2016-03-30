@@ -4335,7 +4335,7 @@
 'These need to be added in Decimal Degrees.': 'Diese müssen in Dezimalgrad hinzugefügt werden.',
 'They': 'Sie',
 'This appointment is mandatory before transfer': 'Dieser Termin ist zwingend erforderlich vor Transfer',
-'This flag indicates that the person is currently external': 'Dieses Flag zeigt an dass die Person momentan extern ist',
+'This flag indicates that the person is currently accommodated/being held externally (e.g. in Hospital or with Police)': 'Dieses Flag zeigt an dass die Person momentan extern untergebracht ist oder festgehalten wird (z.B. im Krankenhaus, oder bei der Polizei)',
 'This Group has no Members yet': 'Diese Gruppe hat noch keine Mitglieder',
 'This Team has no Members yet': 'Dieses Team hat noch keine Mitglieder',
 'This appears to be a duplicate of': 'Dies scheint ein Duplikat zu sein von',

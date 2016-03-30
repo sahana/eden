@@ -1085,6 +1085,7 @@ def config(settings):
                                         S3SQLInlineLink("case_flag",
                                                         label = T("Flags"),
                                                         field = "flag_id",
+                                                        help_field = "comments",
                                                         cols = 3,
                                                         ),
                                         "last_name",
