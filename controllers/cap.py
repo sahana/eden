@@ -609,7 +609,7 @@ def alert():
                     s3db.configure("cap_info",
                                    deletable = False,
                                    editable = False,
-                                   insertable=False,
+                                   insertable = False,
                                    )
                 if settings.get_cap_restrict_fields():
                     if r.record.msg_type in ("Update", "Cancel", "Error"):
@@ -734,6 +734,9 @@ def alert():
                     row_clone["alert_id"] = lastid
                     row_clone["template_info_id"] = row.id
                     row_clone["is_template"] = False
+                    row_clone["effective"] = request.utcnow
+                    row_clone["expires"] = s3db.cap_expiry_date()
+                    row_clone["sender_name"] = s3db.cap_sender_name()
                     itable.insert(**row_clone)
 
                 # Clone all cap_resource entries from the alert template

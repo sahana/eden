@@ -281,10 +281,10 @@ class S3Notifications(object):
             return json_message(message="No notifications configured "
                                         "for this subscription")
 
-        # Authorization (subscriber must be logged in)
-        auth = current.auth
+        # Authorization (pe_id must not be None)
         pe_id = subscription["pe_id"]
-        if not auth.s3_logged_in() or auth.user.pe_id != pe_id:
+
+        if not pe_id:
             r.unauthorised()
 
         # Fields to extract
@@ -419,6 +419,9 @@ class S3Notifications(object):
                 exc_info = sys.exc_info()[:2]
                 error = ("%s: %s" % (exc_info[0].__name__, exc_info[1]))
                 errors.append(error)
+                continue
+
+            if not message:
                 continue
 
             # Send the message
