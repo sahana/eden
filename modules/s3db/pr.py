@@ -2523,7 +2523,14 @@ class S3GroupModel(S3Model):
                             (ctable.deleted != True)
                     row = db(query).select(ctable.id, limitby=(0, 1)).first()
                     if not row:
+                        # Customise case resource
+                        r = S3Request("dvr", "case", current.request)
+                        r.customise_resource("dvr_case")
+
+                        # Get the default case status from database
                         s3db.dvr_case_default_status()
+
+                        # Create a case
                         cresource = s3db.resource("dvr_case")
                         try:
                             # Using resource.insert for proper authorization

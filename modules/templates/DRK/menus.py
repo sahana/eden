@@ -36,7 +36,8 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        default_site = current.deployment_settings.get_org_default_site()
+        from config import drk_default_shelter
+        shelter_id = drk_default_shelter()
 
         has_role = current.auth.s3_has_role
         not_admin = not has_role("ADMIN")
@@ -45,8 +46,8 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Residents", c="security", f="person"),
                 #MM("ToDo", c="project", f="task"),
                 MM("Check-In / Check-Out", c="cr", f="shelter",
-                   args = [default_site, "check-in"],
-                   check = default_site is not None,
+                   args = [shelter_id, "check-in"],
+                   check = shelter_id is not None,
                    ),
             ]
         elif not_admin and has_role("QUARTIER"):
@@ -60,13 +61,13 @@ class S3MainMenu(default.S3MainMenu):
                 #homepage("req"),
                 homepage("inv"),
                 MM("Dashboard", c="cr", f="shelter",
-                   args = [default_site, "profile"],
-                   check = default_site is not None,
+                   args = [shelter_id, "profile"],
+                   check = shelter_id is not None,
                    ),
                 # @ToDO: Move to Dashboard Widget?
                 MM("Housing Units", c="cr", f="shelter",
-                   args = [default_site, "shelter_unit"],
-                   check = default_site is not None,
+                   args = [shelter_id, "shelter_unit"],
+                   check = shelter_id is not None,
                    ),
                 homepage("vol"),
                 homepage("hrm"),
