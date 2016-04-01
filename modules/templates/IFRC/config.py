@@ -2248,8 +2248,7 @@ def config(settings):
         s3db = current.s3db
 
         # Special cases for different NS
-        arcs = False
-        vnrc = False
+        arcs = vnrc = False
         root_org = current.auth.root_org_name()
 
         controller = current.request.controller
@@ -2316,7 +2315,8 @@ def config(settings):
             get_config = resource.get_config
 
             if controller == "vol":
-                if root_org == ARCS:
+                if arcs:
+                    # ARCS have a custom Volunteer form
                     from s3 import IS_ADD_PERSON_WIDGET2, S3SQLCustomForm, S3SQLInlineComponent
                     table.person_id.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
                     table.code.label = T("Volunteer ID")
