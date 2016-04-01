@@ -1,5 +1,5 @@
 Position,Code,Status,Default,Closed,Not Transferable,Comments
-1,STATUS0,In Progress,true,false,false,Case in progress
-2,STATUS7,Transfer Completed,false,true,false,"Transferred to other destination, case closed"
-3,STATUS8,Inactive,false,true,false,"Confirmed disappeared, no longer entitled to benefits, case closed"
-4,STATUS11,Legally Departed,false,true,false,"Returned to country of origin, case closed"
+1,OPEN,In Progress,true,false,false,Case in progress
+2,TRANSFERRED,Transfer Completed,false,true,false,"Transferred to other destination, case closed"
+3,INACTIVE,Inactive,false,true,false,"Confirmed disappeared, no longer entitled to benefits, case closed"
+4,DEPARTED,Legally Departed,false,true,false,"Returned to country of origin, case closed"

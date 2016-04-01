@@ -9,6 +9,8 @@
 
          Code........................string..........Type Code
          Name........................string..........Type Name
+         Default.....................string..........is default type
+                                                     true|false
          Comments....................string..........Comments
 
     *********************************************************************** -->
@@ -32,9 +34,25 @@
             <data field="code">
                 <xsl:value-of select="$Code"/>
             </data>
+
             <data field="name">
                 <xsl:value-of select="$Name"/>
             </data>
+
+            <xsl:variable name="is_default" select="col[@field='Default']/text()"/>
+            <data field="is_default">
+                <xsl:attribute name="value">
+                    <xsl:choose>
+                        <xsl:when test="$is_default='true'">
+                            <xsl:value-of select="'true'"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="'false'"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:attribute>
+            </data>
+
             <data field="comments">
                 <xsl:value-of select="col[@field='Comments']/text()"/>
             </data>

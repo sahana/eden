@@ -1235,3 +1235,8 @@ body.rtl .username i.icon {
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
+
+/* line 113, ../scss/custom/_misc.scss */
+.check-id-btn {
+  margin-left: 0.5rem !important;
+}

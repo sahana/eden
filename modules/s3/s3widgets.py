@@ -2850,8 +2850,11 @@ class S3GroupedOptionsWidget(FormWidget):
 
         # Add tooltips
         items = []
+        T = current.T
         for key, label in group_items:
-            tooltip = helptext.get(key, None)
+            tooltip = helptext.get(key)
+            if tooltip:
+                tooltip = s3_str(T(tooltip))
             item = (key, label, key in values, tooltip)
             items.append(item)
 

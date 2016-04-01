@@ -530,4 +530,10 @@ def case_event_type():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def case_event():
+    """ Case Event Types: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
 # END =========================================================================
