@@ -1941,6 +1941,8 @@ class DVRCaseEventModel(S3Model):
         define_table = self.define_table
         crud_strings = s3.crud_strings
 
+        configure = self.configure
+
         # ---------------------------------------------------------------------
         # Case Event Types
         #
@@ -1958,6 +1960,16 @@ class DVRCaseEventModel(S3Model):
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
+                     Field("is_default", "boolean",
+                           default = False,
+                           label = T("Default Event Type"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Default Event Type"),
+                                                             T("Assume this event type if no type was specified for an event"),
+                                                             ),
+                                         ),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -1974,6 +1986,11 @@ class DVRCaseEventModel(S3Model):
             msg_record_deleted = T("Event Type deleted"),
             msg_list_empty = T("No Event Types currently defined"),
         )
+
+        # Table Configuration
+        configure(tablename,
+                  onaccept = self.case_event_type_onaccept,
+                  )
 
         # Reusable field
         represent = S3Represent(lookup=tablename, translate=True)
@@ -2010,6 +2027,7 @@ class DVRCaseEventModel(S3Model):
                                        writable = False,
                                        ),
                      event_type_id(comment = None,
+                                   ondelete = "CASCADE",
                                    # Not user-writable as this is for automatic
                                    # event registration, override in template if
                                    # required:
@@ -2038,16 +2056,29 @@ class DVRCaseEventModel(S3Model):
             msg_list_empty = T("No Events currently registered"),
             )
 
-        self.configure(tablename,
-                       # Not user-insertable as this is for automatic
-                       # event registration, override in template if
-                       # required:
-                       insertable = False,
-                       deduplicate = S3Duplicate(primary = ("person_id",
-                                                            "type_id",
-                                                            ),
-                                                 ),
-                       )
+        # Table Configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("person_id",
+                                                       "type_id",
+                                                       ),
+                                            ),
+                  # Not user-insertable as this is for automatic
+                  # event registration, override in template if
+                  # required:
+                  insertable = False,
+                  list_fields = ["date",
+                                 "type_id",
+                                 (T("Registered by"), "created_by"),
+                                 "comments",
+                                 ],
+                  orderby = "%s.date desc" % tablename,
+                  )
+
+        # Custom method for event registration
+        self.set_method("dvr", "case_event",
+                        method = "register",
+                        action = DVRRegisterCaseEvent,
+                        )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2060,6 +2091,31 @@ class DVRCaseEventModel(S3Model):
         """ Safe defaults for names in case the module is disabled """
 
         return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_event_type_onaccept(form):
+        """
+            Onaccept routine for case event types:
+            - only one type can be the default
+
+            @param form: the FORM
+        """
+
+        form_vars = form.vars
+        try:
+            record_id = form_vars.id
+        except AttributeError:
+            record_id = None
+        if not record_id:
+            return
+
+        # If this type is the default, then set is_default-flag
+        # for all other types to False:
+        if "is_default" in form_vars and form_vars.is_default:
+            table = current.s3db.dvr_case_event_type
+            db = current.db
+            db(table.id != record_id).update(is_default = False)
 
 # =============================================================================
 def dvr_case_default_status():
@@ -2401,6 +2457,296 @@ class dvr_ManageAppointments(S3Method):
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
+
+# =============================================================================
+class DVRRegisterCaseEvent(S3Method):
+    """ Method handler to register case events """
+
+    def apply_method(self, r, **attr):
+
+        output = {}
+        response = current.response
+
+        settings = current.deployment_settings
+
+        s3db = current.s3db
+
+        T = current.T
+
+        http = r.http
+        get_vars = r.get_vars
+        post_vars = r.post_vars
+
+        error = None
+        person = None
+        pe_label = None
+
+        # @todo: user must be permitted to create case events
+
+        # @todo: get event type code form URL if GET, otherwise leave empty
+
+        # @todo: add Ajax submission (full page reload rather slow)
+
+        check = False
+        if http == "GET" and "code" in get_vars:
+
+            pe_label = get_vars["code"]
+
+        elif http == "POST" and "check" in post_vars:
+
+            check = True
+            pe_label = post_vars.get("pe_label")
+
+
+        if pe_label is not None:
+            person = self.get_person(pe_label)
+
+            if person is None:
+                pe_label = None
+                response.error = T("No person with this ID number")
+
+        formstyle = settings.get_ui_formstyle()
+        data = None
+
+        formfields = [Field("pe_label",
+                            label = T("ID"),
+                            requires = IS_NOT_EMPTY(error_message=T("Enter or scan an ID")),
+                            ),
+                      ]
+
+        if person:
+
+            name = s3_fullname(person)
+            dob = person.date_of_birth
+            if dob:
+                dob = S3DateTime.date_represent(dob)
+                person_data = "%s (%s %s)" % (name, T("Date of Birth"), dob)
+            else:
+                person_data = name
+
+            # Add fields for person details, populate form
+            data = {"id": "",
+                    "pe_label": pe_label,
+                    "person": person_data,
+                    }
+            person_fields = [Field("person",
+                                   label = T("Name"),
+                                   writable = False,
+                                   ),
+                             ]
+            formfields.extend(person_fields)
+
+        buttons = [INPUT(_type="submit",
+                         _class="tiny primary button",
+                         _name="submit",
+                         _value=T("Register"),
+                         ),
+                   INPUT(_type="submit",
+                         _class="tiny secondary button check-id-btn",
+                         _name="check",
+                         _value=T("Check ID"),
+                         ),
+                   A(T("Cancel"),
+                     _href = r.url(id="", method="register", vars={}),
+                     _class = "action-lnk",
+                     )
+                   ]
+
+        # @todo: add hidden input field with selected event type (code)
+        form = SQLFORM.factory(record = data,
+                               showid = False,
+                               #labels = labels,
+                               formstyle = formstyle,
+                               #table_name = tablename,
+                               #upload = s3.download_url,
+                               #readonly = readonly,
+                               #separator = "",
+                               #submit_button = settings.submit_button,
+                               buttons = buttons,
+                               *formfields)
+
+        #if scanned with ZXing:
+        #    add hidden input that form has been created with ZXing
+
+        formname = "dvr_register_event"
+
+        if form.accepts(r.post_vars,
+                        current.session,
+                        onvalidation = self.validate,
+                        formname = formname,
+                        keepvalues = False,
+                        hideerror = False,
+                        ):
+
+            formvars = form.vars
+
+            person_id = formvars.person_id
+            event_type_id = formvars.type_id
+
+            if not check:
+                if person_id:
+                    success = self.register_event(person_id, event_type_id)
+                    if success:
+                        response.confirmation = T("Event registered")
+                    else:
+                        response.error = T("Could not register event")
+                else:
+                    response.error = T("Person not found")
+
+            #if form was scanned with ZXing and "scan another" and not error:
+                #add hidden INPUT to automatically start ZXing
+
+        response.view = self._view(r, "dvr/register_case_event.html")
+
+        ret = URL(args = ["register"],
+                  vars = {"code": "{CODE}"},
+                  host = True,
+                  )
+
+        # Add ZXing Button
+        url = "zxing://scan/?ret=%s&SCAN_FORMATS=Code 128,UPC_A,EAN_13" % ret
+        output["zxing"] = A(T("Scan with Zxing"),
+                            _href =  url,
+                            _class = "tiny primary button",
+                            )
+
+        #scripts = response.s3.scripts
+        #appname = r.application
+        #script = "/%s/static/scripts/S3/s3.dvr.js" % appname
+        #if script not in scripts:
+            #scripts.append(script)
+
+        output["form"] = form
+        return output
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def register_event(person_id, type_id):
+        """
+            Register a case event
+
+            @param person_id: the person record ID
+            @param type:id: the event type record ID
+        """
+
+        s3db = current.s3db
+
+        ctable = s3db.dvr_case
+        etable = s3db.dvr_case_event
+
+        # Get the case ID for the person_id
+        query = (ctable.person_id == person_id) & \
+                (ctable.deleted != True)
+        case = current.db(query).select(ctable.id,
+                                        limitby=(0, 1),
+                                        ).first()
+        if case:
+            case_id = case.id
+        else:
+            case_id = None
+
+        success = etable.insert(person_id = person_id,
+                                case_id = case_id,
+                                type_id = type_id,
+                                date = current.request.utcnow,
+                                )
+        return success
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def validate(cls, form):
+        """
+            Validate the event registration form
+
+            @param form: the FORM
+        """
+
+        T = current.T
+
+        formvars = form.vars
+        pe_label = formvars.get("pe_label").strip()
+
+        person = cls.get_person(pe_label)
+        if person is None:
+            form.errors["pe_label"] = T("No person with this ID number")
+        else:
+            formvars.person_id = person.id
+
+        # Identify the event type
+        type_id = None
+        event_code = formvars.get("event_code")
+        if event_code:
+            ttable = current.s3db.dvr_case_event_type
+            query = (ttable.code == event_code) & \
+                    (ttable.deleted != True)
+            event_type = current.db(query).select(ttable.id,
+                                                  limitby=(0, 1),
+                                                  ).first()
+            if event_type:
+                type_id = event_type.id
+            else:
+                form.errors["event_code"] = T("Invalid event code")
+
+        # Fall back to default event type
+        if not type_id:
+            type_id, event_code = cls.get_default_event_type()
+
+        formvars.type_id = type_id
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_default_event_type():
+        """
+            Get the default case event type
+
+            @return: a tuple (type_id, code), or (None, None) if no default
+                     event type is configured
+        """
+
+        table = current.s3db.dvr_case_event_type
+        query = (table.is_default == True) & \
+                (table.deleted != True)
+        row = current.db(query).select(table.id,
+                                       table.code,
+                                       limitby = (0, 1),
+                                       ).first()
+        if row:
+            return row.id, row.code
+        else:
+            return None, None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_person(pe_label):
+        """
+            Get the person record for a PE Label, search only for
+            persons with an open DVR case.
+
+            @param pe_label: the PE label
+        """
+
+        person = None
+        if pe_label:
+            query = (FS("pe_label") == pe_label) & \
+                    (FS("dvr_case.id") != None) & \
+                    (FS("dvr_case.archived") != True) & \
+                    (FS("dvr_case.status_id$is_closed") != True)
+            presource = current.s3db.resource("pr_person", filter=query)
+            rows = presource.select(["id",
+                                     "first_name",
+                                     "middle_name",
+                                     "last_name",
+                                     "date_of_birth",
+                                     "gender",
+                                     ],
+                                    start = 0,
+                                    limit = 2,
+                                    as_rows = True,
+                                    )
+            if len(rows) == 1:
+                person = rows[0]
+
+        return person
 
 # =============================================================================
 def dvr_rheader(r, tabs=[]):

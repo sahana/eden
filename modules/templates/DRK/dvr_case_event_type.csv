@@ -1,2 +1,2 @@
-Code,Name,Comments
-CHP,Checkpoint,Person has shown up at a checkpoint
+Code,Name,Default,Comments
+SEEN,Seen,true,Person has been registered at a checkpoint

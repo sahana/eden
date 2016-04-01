@@ -1829,6 +1829,28 @@ def config(settings):
     settings.customise_dvr_allowance_controller = customise_dvr_allowance_controller
 
     # -------------------------------------------------------------------------
+    def customise_dvr_case_event_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom postp
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.method == "register":
+                from s3 import S3CustomController
+                S3CustomController._view("DRK", "register_case_event.html")
+            return output
+        s3.postp = custom_postp
+
+        return attr
+
+    settings.customise_dvr_case_event_controller = customise_dvr_case_event_controller
+
+    # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
         """
             Restrict list of assignees to just Staff/Volunteers
@@ -2171,6 +2193,7 @@ def drk_dvr_rheader(r, tabs=[]):
                             (T("Appointments"), "case_appointment"),
                             (T("Allowance"), "allowance"),
                             (T("Presence"), "shelter_registration_history"),
+                            (T("Events"), "case_event"),
                             (T("Notes"), "case_note"),
                             ]
 
