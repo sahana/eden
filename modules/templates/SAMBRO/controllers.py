@@ -248,41 +248,44 @@ class subscriptions(S3CustomController):
                    #                 options = self._options("location_id"),
                    #                 _name = "location-filter",
                    #                 ),
-                   S3OptionsFilter("language",
-                                   label = T("Language"),
-                                   options = current.deployment_settings.get_cap_languages(),
-                                   represent = "%(name)s",
-                                   resource = "cap_info",
-                                   _name = "language-filter",
-                                   ),
                    ]
+        cap_languages = current.deployment_settings.get_cap_languages()
+        if len(cap_languages) > 1:
+            language_filters = S3OptionsFilter("language",
+                                               label = T("Language"),
+                                               options = cap_languages,
+                                               represent = "%(name)s",
+                                               resource = "cap_info",
+                                               _name = "language-filter",
+                                               )
+            filters.append(language_filters)
 
         if current.request.get_vars["option"] == "manage_recipient" and \
-           (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")):
-                from s3 import S3Represent
-                recipient_filters = [S3OptionsFilter("id",
-                                           label = T("People"),
-                                           represent = S3Represent(lookup="auth_user",
-                                                fields = ["first_name", "last_name"],
-                                                field_sep = " ",
-                                                ),
-                                           widget = "multiselect",
-                                           resource = "auth_user",
-                                           _name = "person-filter",
-                                           ),
-                                     ]
-                group_filters = [S3OptionsFilter("id",
-                                           label = T("Groups"),
-                                           represent = S3Represent(lookup="pr_group",
-                                                                   fields = ["name"],
-                                                                   ),
-                                           widget = "multiselect",
-                                           resource = "pr_group",
-                                           _name = "group-filter",
-                                           ),
+           (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")):          
+            from s3 import S3Represent
+            recipient_filters = [S3OptionsFilter("id",
+                                       label = T("People"),
+                                       represent = S3Represent(lookup="auth_user",
+                                            fields = ["first_name", "last_name"],
+                                            field_sep = " ",
+                                            ),
+                                       widget = "multiselect",
+                                       resource = "auth_user",
+                                       _name = "person-filter",
+                                       ),
                                  ]
-                # Title
-                title = T("Manage Recipients")
+            group_filters = [S3OptionsFilter("id",
+                                       label = T("Groups"),
+                                       represent = S3Represent(lookup="pr_group",
+                                                               fields = ["name"],
+                                                               ),
+                                       widget = "multiselect",
+                                       resource = "pr_group",
+                                       _name = "group-filter",
+                                       ),
+                             ]
+            # Title
+            title = T("Manage Recipients")
         else:
             recipient_filters = None
             group_filters = None
@@ -926,6 +929,20 @@ $('#method_selector').change(function(){
         output = {"pe_id": pe_id}
 
         get_vars = {}
+        if subscription_id is None:
+            # Create form
+            cap_languages = current.deployment_settings.get_cap_languages()
+            if len(cap_languages) > 1:
+                default_option_language = None
+                default_user_language = current.auth.user.language
+                if default_user_language:
+                    if default_user_language == "en":
+                        default_user_language = "en-US"
+                    if default_user_language in cap_languages:
+                        default_option_language = default_user_language
+                if default_option_language is not None:
+                    get_vars = {"language__belongs": default_option_language}
+
         if row and row is not None:
             # Existing settings
             s = getattr(row, "pr_subscription")

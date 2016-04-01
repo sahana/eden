@@ -1,8 +1,8 @@
 uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
 ANONYMOUS,Anonymous,,cap,public,,READ,,,,,Can only see scope=public alerts
+ANONYMOUS,Anonymous,,cap,alert,,READ,,,,,for subscriptions purpose
 ANONYMOUS,Anonymous,,cms,post,,READ,,,,,
 AUTHENTICATED,Authenticated,,cap,index,,READ,,,,,
-AUTHENTICATED,Authenticated,,cap,alert,,READ,,,,,
 AUTHENTICATED,Authenticated,,pr,,,READ,,,,,
 AUTHENTICATED,Authenticated,,pr,contact,,CREATE,READ|UPDATE|DELETE,,,,Can edit their own record
 AUTHENTICATED,Authenticated,,pr,person,,READ|CREATE,READ|UPDATE,,,,Can edit their own record
