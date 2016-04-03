@@ -1092,7 +1092,7 @@ $('#method_selector').change(function(){
         # Private alert are not sent through subscription
         filters = subscription.get("filters")
         filters = json.loads(filters)
-        scope_filter = ["scope__belongs", "Public, Restricted"]
+        scope_filter = ["scope__belongs", "Public,Restricted"]
         filters.append(scope_filter)
         filters = json.dumps(filters)
 
@@ -1223,7 +1223,7 @@ $('#method_selector').change(function(){
 
         filters = subscription.get("filters")
         filters = json.loads(filters)
-        scope_filter = ["scope__belongs", "Public, Restricted"]
+        scope_filter = ["scope__belongs", "Public,Restricted"]
         filters.append(scope_filter)
         filters = json.dumps(filters)
         filters_ = json.loads(filters)

@@ -353,18 +353,21 @@ def config(settings):
     def customise_cap_alert_controller(**attr):
 
         s3 = current.response.s3
+        auth = current.auth
+        if not auth.user:
+            # For notifications for group
+            r = current.request
+            if not r.function == "public":
+                if r.get_vars.format == "msg":
+                    # This is called by notification
+                    # The request from web looks like r.extension
+                    s3.filter = (FS("scope") != "Private")
+                else:
+                    auth.permission.fail()
+
         # Custom prep
         standard_prep = s3.prep
-        def custom_prep(r):
-            auth = current.auth
-            if not auth.user:
-                # For notifications for group
-                if not r.function == "public":
-                    if r.representation == "msg":
-                        s3.filter = (FS("scope") != "Private")
-                    else:
-                        auth.permission.fail()
-                    
+        def custom_prep(r):                    
             # Call standard prep
             if callable(standard_prep):
                 result = standard_prep(r)
