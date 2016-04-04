@@ -92,12 +92,12 @@ class DiseaseDataModel(S3Model):
         tablename = "disease_disease"
         define_table(tablename,
                      self.super_link("doc_id", "doc_entity"),
-                     Field("name",
+                     Field("name", "text"
                            requires = IS_NOT_EMPTY()
                            ),
-                     Field("short_name"),
-                     Field("acronym"),
-                     Field("code",
+                     Field("short_name", "text"),
+                     Field("acronym", "text" ),
+                     Field("code", "text"
                            label = T("ICD-10-CM Code"),
                            ),
                      Field("description", "text"),
