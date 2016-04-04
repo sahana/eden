@@ -467,7 +467,6 @@ class S3CAPModel(S3Model):
                          (T("Source"), "source"),
                          (T("Scope"), "scope"),
                          (T("Restriction"), "restriction"),
-                         (T("ID"), "info.id"),
                          (T("Category"), "info.category"),
                          (T("Event"), "info.event_type_id"),
                          (T("Response type"), "info.response_type"),
