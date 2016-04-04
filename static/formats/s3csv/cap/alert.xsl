@@ -8,6 +8,7 @@
 
          Template Title..............string.............CAP template template_title
          Identifier..................string.............CAP template identifier
+         Event Type..................string.............CAP template event
          Scope.......................string.............CAP template scope
          Restriction.................string.............CAP template restriction
          Note........................string.............CAP template note
@@ -100,9 +101,44 @@
                     </xsl:attribute>
                 </data>
             </xsl:if>
+            <!-- Event Type -->
+            <xsl:variable name="EventTypeName" select="col[@field='Event Type']"/>
+            <xsl:if test="$EventTypeName!=''">
+                <reference field="event_type_id" resource="event_event_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$EventTypeName"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
 
         </resource>
+
+        <!-- Event Type Template call -->
+        <xsl:variable name="EventTypeName" select="col[@field='Event Type']"/>
+        <xsl:if test="$EventTypeName!=''">
+            <xsl:call-template name="EventType">
+                <xsl:with-param name="EventTypeName">
+                    <xsl:value-of select="$EventTypeName"/>
+                </xsl:with-param>
+            </xsl:call-template>
+        </xsl:if>
     
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="EventType">
+        
+        <xsl:param name="EventTypeName"/>
+        
+        <resource name="event_event_type">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$EventTypeName"/>
+            </xsl:attribute>
+            <data field="name">
+                <xsl:value-of select="$EventTypeName"/>
+            </data>
+        </resource>
+        
     </xsl:template>
     
     <!-- ****************************************************************** -->

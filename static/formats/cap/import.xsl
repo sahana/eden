@@ -6,7 +6,7 @@
 
          CAP Import Templates for Sahana Eden
 
-         Copyright (c) 2011-15 Sahana Software Foundation
+         Copyright (c) 2011-16 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -119,6 +119,13 @@
                 <data field="note">
                     <xsl:value-of select="cap:note" />
                 </data>
+            </xsl:if>
+            <xsl:if test="./cap:info/cap:event!=''">
+                <reference field="event_type_id" resource="event_event_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="./cap:info/cap:event" />
+                    </xsl:attribute>
+                </reference>
             </xsl:if>
 
             <!-- below two fields are further parsed in python code -->

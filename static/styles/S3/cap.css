@@ -22,11 +22,12 @@
 #cap_alert_is_template__row1,
 #cap_alert_is_template__row,
 #cap_alert_sent__row1,
-#cap_alert_sent__row{display:none}
+#cap_alert_sent__row {display:none;}
 .cap_template_form #cap_alert_template_title__row1,
-.cap_template_form #cap_alert_template_title__row {display:block}
+.cap_template_form #cap_alert_template_title__row {display:block;}
 input#assign-selected-action.selected-action {
     width: 7.5em;
     height: 3.5em;
     border-radius: 3em;
 }
+#cap_info_event_type_id__row {display:none;}

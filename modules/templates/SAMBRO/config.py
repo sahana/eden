@@ -807,10 +807,13 @@ def config(settings):
         event_type_id = row["cap_info.event_type_id"]
         priority_id = row["cap_info.priority"]
 
-        if not isinstance(event_type_id, lazyT):
-            event_type = itable.event_type_id.represent(event_type_id)
+        if event_type_id and event_type_id != "-":
+            if not isinstance(event_type_id, lazyT):
+                event_type = itable.event_type_id.represent(event_type_id)
+            else:
+                event_type = event_type_id
         else:
-            event_type = event_type_id
+            event_type = T("None")
 
         if priority_id and \
            priority_id != "-":
