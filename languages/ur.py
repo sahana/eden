@@ -149,6 +149,7 @@
 'Surgery': 'سرجری',
 'Tasks': 'کام',
 'Teams': 'ٹیم',
+'Tehsil': 'تَحصِیل',
 'Town': 'ٹاؤن',
 'Transport': 'نقل و حمل',
 'Type': 'قسم',

@@ -1450,10 +1450,10 @@ def config(settings):
 
         # Lookup the RIT Course ID
         ctable = db.hrm_course
-        row = db(ctable.name == "Equipos Regionales de Intervencion General").select(ctable.id,
-                                                                                     cache = s3db.cache,
-                                                                                     limitby=(0, 1)
-                                                                                     ).first()
+        row = db(ctable.name == "Regional Intervention Teams").select(ctable.id,
+                                                                      cache = s3db.cache,
+                                                                      limitby=(0, 1)
+                                                                      ).first()
         try:
             rit_course_id = row.id
         except:
