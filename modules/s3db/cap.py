@@ -286,6 +286,22 @@ class S3CAPModel(S3Model):
                            readable = False,
                            writable = True,
                            ),
+                     self.event_type_id(empty = False,
+                                        label = T("Event Type"),
+                                        comment = DIV(_class="tooltip",
+                                                      _title="%s|%s" % (T("Event Type of the alert message"),
+                                                                        T("Event Type is classification of event."))),
+                                        script = '''
+$.filterOptionsS3({
+    'trigger':'event_type_id',
+    'target':'template_id',
+    'lookupPrefix': 'cap',
+    'lookupResource':'template',
+    'fncRepresent': function(record,PrepResult){return record.template_title},
+    'optional': true,
+    'lookupURL': S3.Ap.concat('/cap/template.json?~.event_type_id=')
+})'''
+                     ),
                      Field("template_id", "reference cap_alert",
                            label = T("Template"),
                            ondelete = "RESTRICT",
@@ -787,6 +803,7 @@ class S3CAPModel(S3Model):
                                                            T("If not specified, will the same as the Event Type."))),
                            ),
                      self.event_type_id(empty = False,
+                                        readable = False,
                                         label = T("Event Type"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Event Type of the alert message"),
