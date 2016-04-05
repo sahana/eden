@@ -3,11 +3,19 @@
   {{try:}}{{=H2(title)}}{{except:}}{{pass}}
  </div>
 </div>
-{{try:}}{{if zxing:}}<div class='row'>
- <div class='small-12 columns'>
-  {{=zxing}}
+<div class='row'>
+  <div class='small-6 columns'>
+   {{try:}}{{=zxing}}{{except:}}{{pass}}
+  </div>
+  <div class='small-6 columns'>
+   {{try:}}{{=event_type}}{{except:}}{{pass}}
+  </div>
+</div>
+<div class='row'>
+ <div class='large-4 medium-8 small-12 columns end'>
+  {{try:}}{{=event_type_selector}}{{except:}}{{pass}}
  </div>
-</div>{{pass}}{{except:}}{{pass}}
+</div>
 <div class='row'>
  <div class='small-12 columns'>
   {{include "key.html"}}

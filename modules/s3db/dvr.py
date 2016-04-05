@@ -2473,6 +2473,7 @@ class DVRRegisterCaseEvent(S3Method):
 
         output = {}
         response = current.response
+        s3 = response.s3
 
         settings = current.deployment_settings
 
@@ -2513,10 +2514,9 @@ class DVRRegisterCaseEvent(S3Method):
                 # Only check ID label, don't register an event
                 check = True
                 pe_label = post_vars.get("label")
-                event_code = None
-            else:
-                # Register an event (form.accepts)
-                event_code = post_vars.get("event")
+
+            # Register an event (form.accepts)
+            event_code = post_vars.get("event")
             scanner = post_vars.get("scanner")
 
         if pe_label is not None:
@@ -2528,11 +2528,13 @@ class DVRRegisterCaseEvent(S3Method):
                     response.error = T("No person with this ID number")
                 #pe_label = None
 
-        # Get the event type
-        event_type_id, event_code = self.get_event_type(event_code)
-        if not event_type_id:
+        # Get the current event type
+        event_type = self.get_event_type(event_code)
+        if not event_type:
             # Fall back to default event type
-            event_type_id, event_code = self.get_event_type()
+            event_type = self.get_event_type()
+        if event_type:
+            event_code = event_type.code
 
         formstyle = settings.get_ui_formstyle()
         data = None
@@ -2544,8 +2546,8 @@ class DVRRegisterCaseEvent(S3Method):
                             ),
                       ]
 
+        # Add person data if identified
         if person:
-
             name = s3_fullname(person)
             dob = person.date_of_birth
             if dob:
@@ -2553,8 +2555,6 @@ class DVRRegisterCaseEvent(S3Method):
                 person_data = "%s (%s %s)" % (name, T("Date of Birth"), dob)
             else:
                 person_data = name
-
-            # Add fields for person details, populate form
             data = {"id": "",
                     "label": pe_label,
                     "person": person_data,
@@ -2566,6 +2566,8 @@ class DVRRegisterCaseEvent(S3Method):
                              ]
             formfields.extend(person_fields)
 
+        # Form buttons
+        # @todo: toggle for workflow
         buttons = [INPUT(_type="submit",
                          _class="tiny primary button",
                          _name="submit",
@@ -2577,28 +2579,20 @@ class DVRRegisterCaseEvent(S3Method):
                          _value=T("Check ID"),
                          ),
                    A(T("Cancel"),
-                     _href = r.url(id="", method="register", vars={}),
-                     _class = "action-lnk",
+                     _class = "cancel-action action-lnk",
                      )
                    ]
 
         # Hidden fields to store event type and scanner
-        hidden = {}
-        if event_code:
-            hidden["event"] = event_code
-        if scanner:
-            hidden["scanner"] = scanner
+        hidden = {"event": event_code,
+                  "scanner": scanner,
+                  }
 
         # Generate the form
         form = SQLFORM.factory(record = data,
                                showid = False,
-                               #labels = labels,
                                formstyle = formstyle,
-                               #table_name = tablename,
-                               #upload = s3.download_url,
-                               #readonly = readonly,
-                               #separator = "",
-                               #submit_button = settings.submit_button,
+                               table_name = "case_event",
                                buttons = buttons,
                                hidden = hidden,
                                *formfields)
@@ -2618,6 +2612,7 @@ class DVRRegisterCaseEvent(S3Method):
 
             if not check:
                 if person_id:
+                    event_type_id = event_type.id if event_type else None
                     success = self.register_event(person_id, event_type_id)
                     if success:
                         response.confirmation = T("Event registered")
@@ -2630,29 +2625,54 @@ class DVRRegisterCaseEvent(S3Method):
             #        "scan another" and not error: add hidden INPUT to
             #        automatically start ZXing
 
+        # Event type header
+        if event_type:
+            event_type_name = T(event_type.name)
+        else:
+            event_type_name = current.messages["NONE"]
+        event_type_header = DIV(H4(SPAN(T(event_type_name),
+                                        _class="event-type-name",
+                                        ),
+                                   SPAN(ICON("settings"),
+                                        _class="event-type-setting",
+                                        ),
+                                   _class="event-type-toggle",
+                                   ),
+                                _class="event-type-header",
+                                )
+        output["event_type"] = event_type_header
+
+        # Event type selector
+        event_types = self.get_event_types()
+        buttons = []
+        for k, v in event_types.items():
+            if k != "_default":
+                button = LI(A(T(v.name),
+                              _class = "secondary button event-type-selector",
+                              data = {"code": s3_str(v.code),
+                                      "name": s3_str(T(v.name)),
+                                      },
+                              ),
+                            )
+                buttons.append(button)
+        output["event_type_selector"] = UL(buttons,
+                                           _class="button-group stack hide event-type-selector",
+                                           )
+
+        # ZXing Barcode Scanner Launch Button
+        output["zxing"] = self.get_zxing_launch_button(event_code)
+
         # Custom view
         response.view = self._view(r, "dvr/register_case_event.html")
 
-        # ZXing return URL
-        scan_vars = {"label": "{CODE}", "scanner": "zxing"}
-        if event_code:
-            # must double-escape ampersands:
-            scan_vars["event"] = event_code.replace("&", "%2526")
-        ret = URL(args = ["register"], vars = scan_vars, host = True)
-
-        ret = str(ret).replace("&", "%26")
-        url = "zxing://scan/?ret=%s&SCAN_FORMATS=Code 128,UPC_A,EAN_13" % ret
-        output["zxing"] = A(T("Scan with Zxing"),
-                            _href =  url,
-                            _class = "tiny primary button",
-                            )
-
         # Static JS
-        #scripts = response.s3.scripts
-        #appname = r.application
-        #script = "/%s/static/scripts/S3/s3.dvr.js" % appname
-        #if script not in scripts:
-            #scripts.append(script)
+        scripts = s3.scripts
+        appname = r.application
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.dvr.js" % appname
+        else:
+            script = "/%s/static/scripts/S3/s3.dvr.min.js" % appname
+        scripts.append(script)
 
         return output
 
@@ -2690,8 +2710,7 @@ class DVRRegisterCaseEvent(S3Method):
         return success
 
     # -------------------------------------------------------------------------
-    @classmethod
-    def validate(cls, form):
+    def validate(self, form):
         """
             Validate the event registration form
 
@@ -2703,7 +2722,7 @@ class DVRRegisterCaseEvent(S3Method):
         formvars = form.vars
         pe_label = formvars.get("label").strip()
 
-        person = cls.get_person(pe_label)
+        person = self.get_person(pe_label)
         if person is None:
             form.errors["label"] = T("No person with this ID number")
         else:
@@ -2713,44 +2732,65 @@ class DVRRegisterCaseEvent(S3Method):
         type_id = None
         event_code = formvars.get("event_code")
         if event_code:
-            type_id, event_code = cls.get_event_type(event_code)
-            if not type_id:
+            event_type = self.get_event_type(event_code)
+            if not event_type:
                 form.errors["event_code"] = T("Invalid event code")
+            else:
+                type_id = event_type.id
 
         formvars.type_id = type_id
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def get_event_type(code=None):
+    def get_event_types(self):
         """
-            Get the case event type
+            Lazy getter for case event types
+
+            @return: a dict {id: Row} for dvr_case_event_type, with an
+                     additional key "_default" for the default event type
+        """
+
+        if not hasattr(self, "event_types"):
+
+            event_types = {}
+            table = current.s3db.dvr_case_event_type
+
+            query = (table.deleted != True)
+            rows = current.db(query).select(table.id,
+                                            table.code,
+                                            table.name,
+                                            table.is_default,
+                                            table.comments,
+                                            )
+            for row in rows:
+                event_types[row.id] = row
+                if row.is_default:
+                    event_types["_default"] = row
+            self.event_types = event_types
+
+        return self.event_types
+
+    # -------------------------------------------------------------------------
+    def get_event_type(self, code=None):
+        """
+            Get a case event type for an event code
 
             @param code: the type code (using default event type if None)
 
-            @return: a tuple (type_id, code), or (None, None) if no default
-                     event type is configured
-
-            @todo: refactor to return the entire event type
+            @return: the dvr_case_event_type Row, or None if not found
         """
 
-        table = current.s3db.dvr_case_event_type
+        event_types = self.get_event_types()
 
-        row = None
-        if code:
-            query = (table.code == code) & \
-                    (table.deleted != True)
+        event_type = None
+        if code is None:
+            event_type = event_types.get("_default")
         else:
-            query = (table.is_default == True) & \
-                    (table.deleted != True)
+            for value in event_types.values():
+                if value.code == code:
+                    event_type = value
+                    break
 
-        row = current.db(query).select(table.id,
-                                       table.code,
-                                       limitby = (0, 1),
-                                       ).first()
-        if row:
-            return row.id, row.code
-        else:
-            return None, None
+        return event_type
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2776,14 +2816,60 @@ class DVRRegisterCaseEvent(S3Method):
                                      "date_of_birth",
                                      "gender",
                                      ],
-                                    start = 0,
-                                    limit = 2,
-                                    as_rows = True,
-                                    )
+                                     start = 0,
+                                     limit = 2,
+                                     as_rows = True,
+                                     )
             if len(rows) == 1:
                 person = rows[0]
 
         return person
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_zxing_launch_button(event_code):
+        """
+            Renders the button to launch the Zxing barcode scanner app
+
+            @param event_code: the current event code
+            @return: the Zxing launch button
+        """
+
+        T = current.T
+
+        # URL template
+        template = "zxing://scan/?ret=%s&SCAN_FORMATS=Code 128,UPC_A,EAN_13"
+
+        # Query variables for return URL
+        scan_vars = {"label": "{CODE}",
+                     "scanner": "zxing",
+                     "event": "{EVENT}",
+                     }
+
+        # Return URL template
+        tmp = URL(args = ["register"],
+                  vars = scan_vars,
+                  host = True,
+                  )
+        tmp = str(tmp).replace("&", "%26")
+
+        # Current return URL
+        if event_code:
+            # must double-escape ampersands:
+            scan_vars["event"] = event_code.replace("&", "%2526")
+        ret = URL(args = ["register"],
+                  vars = scan_vars,
+                  host = True,
+                  )
+        ret = str(ret).replace("&", "%26")
+
+        # Construct button
+        return A(T("Scan with Zxing"),
+                 _href = template % ret,
+                 _class = "tiny primary button zxing-button",
+                 data = {"tmp": template % tmp,
+                         },
+                 )
 
 # =============================================================================
 def dvr_rheader(r, tabs=[]):

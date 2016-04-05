@@ -1180,33 +1180,12 @@ h4.profile-sub-header {
   padding-right: 0;
 }
 
-/* line 69, ../scss/custom/_misc.scss */
-body.rtl .personal-menu {
-  clear: left;
-  float: left;
-}
-/* line 73, ../scss/custom/_misc.scss */
-body.rtl .language-selector {
-  float: left;
-}
-/* line 76, ../scss/custom/_misc.scss */
-body.rtl .username {
-  padding-left: 0.5rem;
-  padding-right: 0;
-  float: left;
-}
-/* line 79, ../scss/custom/_misc.scss */
-body.rtl .username i.icon {
-  padding-left: 0;
-  padding-right: 0.2rem;
-}
-
-/* line 87, ../scss/custom/_misc.scss */
+/* line 67, ../scss/custom/_misc.scss */
 .overdue {
   color: red;
 }
 
-/* line 90, ../scss/custom/_misc.scss */
+/* line 70, ../scss/custom/_misc.scss */
 .invalid-case {
   border: 1px solid red;
   color: red;
@@ -1218,25 +1197,73 @@ body.rtl .username i.icon {
   text-transform: uppercase;
 }
 
-/* line 100, ../scss/custom/_misc.scss */
+/* line 80, ../scss/custom/_misc.scss */
 .checkpoint-advise {
   background: #fff0f0 none repeat scroll 0 0;
   border: 2px solid red;
   margin-bottom: 1rem;
   padding: 0.6rem;
 }
-/* line 105, ../scss/custom/_misc.scss */
+/* line 85, ../scss/custom/_misc.scss */
 .checkpoint-advise p {
   white-space: pre-wrap;
 }
 
-/* line 109, ../scss/custom/_misc.scss */
+/* line 89, ../scss/custom/_misc.scss */
 .checkpoint-person {
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
 
-/* line 113, ../scss/custom/_misc.scss */
+/* line 93, ../scss/custom/_misc.scss */
 .check-id-btn {
   margin-left: 0.5rem !important;
+}
+
+/* line 96, ../scss/custom/_misc.scss */
+.event-top {
+  margin-top: 0.3rem !important;
+}
+
+/* line 99, ../scss/custom/_misc.scss */
+.event-type-header {
+  text-align: right;
+}
+
+/* line 102, ../scss/custom/_misc.scss */
+.event-type-setting {
+  color: black;
+  font-size: 1.1rem;
+  margin-left: 0.8rem;
+  vertical-align: text-top;
+}
+
+/* line 108, ../scss/custom/_misc.scss */
+.event-type-toggle {
+  cursor: pointer;
+}
+
+/* line 114, ../scss/custom/_misc.scss */
+body.rtl .personal-menu {
+  clear: left;
+  float: left;
+}
+/* line 118, ../scss/custom/_misc.scss */
+body.rtl .language-selector {
+  float: left;
+}
+/* line 121, ../scss/custom/_misc.scss */
+body.rtl .username {
+  padding-left: 0.5rem;
+  padding-right: 0;
+  float: left;
+}
+/* line 124, ../scss/custom/_misc.scss */
+body.rtl .username i.icon {
+  padding-left: 0;
+  padding-right: 0.2rem;
+}
+/* line 130, ../scss/custom/_misc.scss */
+body.rtl .event-type-header {
+  text-align: left;
 }
