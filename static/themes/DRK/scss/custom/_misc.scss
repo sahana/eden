@@ -64,26 +64,6 @@
     }
     float: right;
 }
-
-body.rtl {
-    .personal-menu {
-        clear: left;
-        float: left;
-    }
-    .language-selector {
-        float: left;
-    }
-    .username {
-        padding-left: 0.5rem;
-        padding-right: 0;
-        i.icon {
-            padding-left: 0;
-            padding-right: 0.2rem;
-        }
-        float: left;
-    }
-}
-
 .overdue {
     color: red;
 }
@@ -112,4 +92,42 @@ body.rtl {
 }
 .check-id-btn {
     margin-left: 0.5rem!important;
+}
+.event-top {
+    margin-top: 0.3rem!important;
+}
+.event-type-header {
+    text-align: right;
+}
+.event-type-setting {
+    color: black;
+    font-size: 1.1rem;
+    margin-left: 0.8rem;
+    vertical-align: text-top;
+}
+.event-type-toggle {
+    cursor: pointer;
+}
+
+// Overrides for right-to-left orientation
+body.rtl {
+    .personal-menu {
+        clear: left;
+        float: left;
+    }
+    .language-selector {
+        float: left;
+    }
+    .username {
+        padding-left: 0.5rem;
+        padding-right: 0;
+        i.icon {
+            padding-left: 0;
+            padding-right: 0.2rem;
+        }
+        float: left;
+    }
+    .event-type-header {
+        text-align: left;
+    }
 }
