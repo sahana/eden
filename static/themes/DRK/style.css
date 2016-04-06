@@ -1216,21 +1216,16 @@ h4.profile-sub-header {
 }
 
 /* line 93, ../scss/custom/_misc.scss */
-.check-id-btn {
-  margin-left: 0.5rem !important;
-}
-
-/* line 96, ../scss/custom/_misc.scss */
 .event-top {
   margin-top: 0.3rem !important;
 }
 
-/* line 99, ../scss/custom/_misc.scss */
+/* line 96, ../scss/custom/_misc.scss */
 .event-type-header {
   text-align: right;
 }
 
-/* line 102, ../scss/custom/_misc.scss */
+/* line 99, ../scss/custom/_misc.scss */
 .event-type-setting {
   color: black;
   font-size: 1.1rem;
@@ -1238,32 +1233,32 @@ h4.profile-sub-header {
   vertical-align: text-top;
 }
 
-/* line 108, ../scss/custom/_misc.scss */
+/* line 105, ../scss/custom/_misc.scss */
 .event-type-toggle {
   cursor: pointer;
 }
 
-/* line 114, ../scss/custom/_misc.scss */
+/* line 111, ../scss/custom/_misc.scss */
 body.rtl .personal-menu {
   clear: left;
   float: left;
 }
-/* line 118, ../scss/custom/_misc.scss */
+/* line 115, ../scss/custom/_misc.scss */
 body.rtl .language-selector {
   float: left;
 }
-/* line 121, ../scss/custom/_misc.scss */
+/* line 118, ../scss/custom/_misc.scss */
 body.rtl .username {
   padding-left: 0.5rem;
   padding-right: 0;
   float: left;
 }
-/* line 124, ../scss/custom/_misc.scss */
+/* line 121, ../scss/custom/_misc.scss */
 body.rtl .username i.icon {
   padding-left: 0;
   padding-right: 0.2rem;
 }
-/* line 130, ../scss/custom/_misc.scss */
+/* line 127, ../scss/custom/_misc.scss */
 body.rtl .event-type-header {
   text-align: left;
 }

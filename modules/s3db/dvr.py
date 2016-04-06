@@ -2567,21 +2567,29 @@ class DVRRegisterCaseEvent(S3Method):
             formfields.extend(person_fields)
 
         # Form buttons
-        # @todo: toggle for workflow
-        buttons = [INPUT(_type="submit",
-                         _class="tiny primary button",
-                         _name="submit",
-                         _value=T("Register"),
-                         ),
-                   INPUT(_type="submit",
-                         _class="tiny secondary button check-id-btn",
-                         _name="check",
-                         _value=T("Check ID"),
-                         ),
-                   A(T("Cancel"),
-                     _class = "cancel-action action-lnk",
-                     )
-                   ]
+        check_btn = INPUT(_class = "tiny secondary button check-btn",
+                          _name = "check",
+                          _type = "submit",
+                          _value = T("Check ID"),
+                          )
+        submit_btn = INPUT(_class = "tiny primary button submit-btn",
+                           _name = "submit",
+                           _type = "submit",
+                           _value = T("Register"),
+                           )
+        # Toggle buttons (active button first, otherwise pressing Enter
+        # hits the disabled button so requiring an extra tab step)
+        if person:
+            check_btn["_disabled"] = "disabled"
+            check_btn.add_class("hide")
+            buttons = [submit_btn, check_btn]
+        else:
+            submit_btn["_disabled"] = "disabled"
+            submit_btn.add_class("hide")
+            buttons = [check_btn, submit_btn]
+
+        # Add the cancel-action
+        buttons.append(A(T("Cancel"), _class = "cancel-action action-lnk"))
 
         # Hidden fields to store event type and scanner
         hidden = {"event": event_code,
@@ -2631,14 +2639,14 @@ class DVRRegisterCaseEvent(S3Method):
         else:
             event_type_name = current.messages["NONE"]
         event_type_header = DIV(H4(SPAN(T(event_type_name),
-                                        _class="event-type-name",
+                                        _class = "event-type-name",
                                         ),
                                    SPAN(ICON("settings"),
-                                        _class="event-type-setting",
+                                        _class = "event-type-setting",
                                         ),
-                                   _class="event-type-toggle",
+                                   _class = "event-type-toggle",
                                    ),
-                                _class="event-type-header",
+                                _class = "event-type-header",
                                 )
         output["event_type"] = event_type_header
 
