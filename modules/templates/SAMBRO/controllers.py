@@ -481,6 +481,10 @@ class subscriptions(S3CustomController):
                    ("FTP", T("FTP")),
                    ]
 
+        if not (request.get_vars["option"] == "manage_recipient" and \
+           (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER"))):
+            methods.append(("GCM", T("GCM")))
+
         method_options = Storage(name = "method", requires = IS_IN_SET(methods))
 
         rows.append(("method_selector__row",
