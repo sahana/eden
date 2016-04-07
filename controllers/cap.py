@@ -103,6 +103,7 @@ def alert():
                                                          ]),
                                                  cols = 3,
                                                  multiple = False,
+                                                 default = unexpired_ids,
                                                  ))
         # No need to put them back - the edit happens in-place
         #s3db.configure(tablename,
@@ -990,6 +991,7 @@ def template():
                            "info.headline",
                            "info.response_type",
                            "info.sender_name",
+                           "info.parameter",
                            ]
 
             s3db.configure(tablename,

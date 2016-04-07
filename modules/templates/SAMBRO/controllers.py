@@ -481,6 +481,10 @@ class subscriptions(S3CustomController):
                    ("FTP", T("FTP")),
                    ]
 
+        if not (request.get_vars["option"] == "manage_recipient" and \
+           (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER"))):
+            methods.append(("GCM", T("GCM")))
+
         method_options = Storage(name = "method", requires = IS_IN_SET(methods))
 
         rows.append(("method_selector__row",
@@ -1529,7 +1533,7 @@ class user_info(S3CustomController):
 
             response = {"r": roles,
                         "uid": user.id,
-                        "pe_id": user.pe_id,
+                        "pid": auth.s3_logged_in_person(),
                         "o": current.deployment_settings.get_cap_expire_offset(),
                         }
             current.response.headers["Content-Type"] = "application/json"
