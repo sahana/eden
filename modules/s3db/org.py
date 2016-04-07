@@ -5498,6 +5498,12 @@ class org_SiteCheckInMethod(S3Method):
                     action = "check-out"
                     confirmation = T("Checked-out successfully!")
 
+                else:
+                    # Form was not submitted by any of the submit buttons,
+                    # this must be a client-side error. Raise a status so
+                    # the client can recover (i.e. reload the JS)
+                    r.error(400, current.ERROR.BAD_REQUEST, next=r.url())
+
                 if postprocess is not None:
 
                     result = postprocess(record.site_id, person_id)
