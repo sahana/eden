@@ -866,6 +866,7 @@ class S3ShelterModel(S3Model):
                   # Extra fields for cr_shelter_unit_status:
                   extra_fields = ["capacity_day",
                                   "available_capacity_day",
+                                  "status",
                                   ],
                   onaccept = population_onaccept,
                   ondelete = population_onaccept,
@@ -959,19 +960,30 @@ class S3ShelterModel(S3Model):
             0: Full
             1: Partial
             2: Empty
+            3: Not Available
         """
 
         if hasattr(row, "cr_shelter_unit"):
             row = row.cr_shelter_unit
+
+        if hasattr(row, "status"):
+            status = row.status
+        else:
+            status = None
+
+        if status == 2:
+            # Not Available
+            return 3
 
         if hasattr(row, "available_capacity_day"):
             actual = row.available_capacity_day
         else:
             actual = None
 
-        if actual == 0:
-            # Full
-            return 0
+        if status is not None and actual is not None:
+            if actual <= 0:
+                # Full (or over-capacity)
+                return 0
 
         if hasattr(row, "capacity_day"):
             total = row.capacity_day
@@ -981,7 +993,7 @@ class S3ShelterModel(S3Model):
         else:
             total = None
 
-        if total is not None and actual is not None:
+        if status is not None and total is not None and actual is not None:
             if actual == total:
                 # Empty
                 return 2
@@ -993,14 +1005,19 @@ class S3ShelterModel(S3Model):
             # Reload the record
             s3_debug("Reloading cr_shelter_unit record")
             table = current.s3db.cr_shelter_unit
-            r = current.db(table.id == row.id).select(table.capacity_day,
+            r = current.db(table.id == row.id).select(table.status,
+                                                      table.capacity_day,
                                                       table.available_capacity_day,
                                                       limitby=(0, 1)
                                                       ).first()
             if r:
+                status = r.status
+                if status == 2:
+                    # Not Available
+                    return 3
                 actual = r.available_capacity_day
-                if actual == 0:
-                    # Full
+                if actual <= 0:
+                    # Full (or over-capacity)
                     return 0
                 total = r.capacity_day
                 if total == 0:

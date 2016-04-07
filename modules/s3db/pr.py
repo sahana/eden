@@ -1996,7 +1996,7 @@ class S3GroupModel(S3Model):
                           4 : T("other"),
                           5 : T("Mailing Lists"),
                           #6 : T("Society"),
-                          7 : T("Case")
+                          7 : T("Case"),
                           }
 
         tablename = "pr_group"
@@ -2031,13 +2031,13 @@ class S3GroupModel(S3Model):
                      Field("meetings",
                            label = T("Meetings"),
                            represent = lambda v: v or NONE,
-                           # Enable in S3SQLCustomForm as-required
+                           # Enable in Templates as-required
                            readable = False,
                            writable = False,
                            ),
                      # Base location
-                     self.gis_location_id(readable=False,
-                                          writable=False,
+                     self.gis_location_id(readable = False,
+                                          writable = False,
                                           ),
                      s3_comments(),
                      *s3_meta_fields())
@@ -2457,11 +2457,13 @@ class S3GroupModel(S3Model):
         pr_update_affiliations(table, record)
 
         # DVR extensions
-        response = current.response
-        s3 = response.s3
         s3db = current.s3db
         ctable = s3db.table("dvr_case")
-        if ctable and not s3.purge_case_groups:
+        if not ctable:
+            return
+        response = current.response
+        s3 = response.s3
+        if not s3.purge_case_groups:
             # Get the group
             group = row.pr_group
             if group.id is None and group_id:
@@ -2500,47 +2502,48 @@ class S3GroupModel(S3Model):
                         cquery = (ctable.person_id == person_id)
                         db(cquery).update(household_size = 1)
 
-                # Get number of (remaining) members in this group
-                query = (table.group_id == group_id) & \
-                        (table.deleted != True)
-                rows = db(query).select(table.id, limitby = (0, 2))
+                if not s3.bulk:
+                    # Get number of (remaining) members in this group
+                    query = (table.group_id == group_id) & \
+                            (table.deleted != True)
+                    rows = db(query).select(table.id, limitby = (0, 2))
 
-                if len(rows) < 2:
-                    # Update the household size for current group members
-                    if update_household_size:
-                        recount(group_id)
-                        update_household_size = False
-                    # Remove the case group if it only has one member
-                    s3.purge_case_groups = True
-                    resource = s3db.resource("pr_group", id=group_id)
-                    resource.delete()
-                    s3.purge_case_groups = False
+                    if len(rows) < 2:
+                        # Update the household size for current group members
+                        if update_household_size:
+                            recount(group_id)
+                            update_household_size = False
+                        # Remove the case group if it only has one member
+                        s3.purge_case_groups = True
+                        resource = s3db.resource("pr_group", id=group_id)
+                        resource.delete()
+                        s3.purge_case_groups = False
 
-                elif not record.deleted:
-                    # Generate a case for new case group member
-                    # ...unless we already have one
-                    query = (ctable.person_id == person_id) & \
-                            (ctable.deleted != True)
-                    row = db(query).select(ctable.id, limitby=(0, 1)).first()
-                    if not row:
-                        # Customise case resource
-                        r = S3Request("dvr", "case", current.request)
-                        r.customise_resource("dvr_case")
+                    elif not record.deleted:
+                        # Generate a case for new case group member
+                        # ...unless we already have one
+                        query = (ctable.person_id == person_id) & \
+                                (ctable.deleted != True)
+                        row = db(query).select(ctable.id, limitby=(0, 1)).first()
+                        if not row:
+                            # Customise case resource
+                            r = S3Request("dvr", "case", current.request)
+                            r.customise_resource("dvr_case")
 
-                        # Get the default case status from database
-                        s3db.dvr_case_default_status()
+                            # Get the default case status from database
+                            s3db.dvr_case_default_status()
 
-                        # Create a case
-                        cresource = s3db.resource("dvr_case")
-                        try:
-                            # Using resource.insert for proper authorization
-                            # and post-processing (=audit, ownership, realm,
-                            # onaccept)
-                            cresource.insert(person_id=person_id)
-                        except S3PermissionError:
-                            # Unlikely (but possible) that this situation
-                            # is deliberate => issue a warning
-                            response.warning = current.T("No permission to create a case record for new group member")
+                            # Create a case
+                            cresource = s3db.resource("dvr_case")
+                            try:
+                                # Using resource.insert for proper authorization
+                                # and post-processing (=audit, ownership, realm,
+                                # onaccept)
+                                cresource.insert(person_id=person_id)
+                            except S3PermissionError:
+                                # Unlikely (but possible) that this situation
+                                # is deliberate => issue a warning
+                                response.warning = current.T("No permission to create a case record for new group member")
 
                 # Update the household size for current group members
                 if update_household_size:
