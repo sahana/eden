@@ -2667,6 +2667,22 @@ class S3Config(Storage):
         """
         return self.dvr.get("multiple_case_groups", False)
 
+    def get_dvr_id_code_pattern(self):
+        """
+            A regular expression pattern to parse ID Codes (QR codes),
+            None to disable ID code parsing
+
+            Should return the following groups:
+                label                   the PE label, mandatory
+                first_name              optional
+                last_name               optional
+                date_of_birth           optional
+
+            Example:
+                "(?P<label>[^,]*),(?P<first_name>[^,]*),(?P<last_name>[^,]*),(?P<date_of_birth>[^,]*)"
+        """
+        return self.dvr.get("id_code_pattern", None)
+
     # -------------------------------------------------------------------------
     # Events
     #

@@ -2492,7 +2492,7 @@ class DVRRegisterCaseEvent(S3Method):
             auth.permission.fail()
 
         # Initialize form variables
-        pe_label = None
+        label = None
         scanner = None
         event_code = None
 
@@ -2503,7 +2503,7 @@ class DVRRegisterCaseEvent(S3Method):
         if http == "GET":
 
             # Coming from external scan app (e.g. Zxing), or from a link
-            pe_label = get_vars.get("label")
+            label = get_vars.get("label")
             event_code = get_vars.get("event")
             scanner = get_vars.get("scanner")
 
@@ -2513,20 +2513,22 @@ class DVRRegisterCaseEvent(S3Method):
             if "check" in post_vars:
                 # Only check ID label, don't register an event
                 check = True
-                pe_label = post_vars.get("label")
+                label = post_vars.get("label")
 
             # Register an event (form.accepts)
             event_code = post_vars.get("event")
             scanner = post_vars.get("scanner")
 
-        if pe_label is not None:
+        pe_label = None
+        if label is not None:
 
             # Identify the person
-            person = self.get_person(pe_label)
+            person = self.get_person(label)
             if person is None:
                 if http == "GET":
                     response.error = T("No person with this ID number")
-                #pe_label = None
+            else:
+                pe_label = person.pe_label
 
         # Get the current event type
         event_type = self.get_event_type(event_code)
@@ -2801,37 +2803,165 @@ class DVRRegisterCaseEvent(S3Method):
         return event_type
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def get_person(pe_label):
+    @classmethod
+    def get_person(cls, pe_label):
         """
-            Get the person record for a PE Label, search only for
-            persons with an open DVR case.
+            Get the person record for a PE Label (or ID code), search only
+            for persons with an open DVR case.
 
-            @param pe_label: the PE label
+            @param pe_label: the PE label (or a scanned ID code as string)
         """
 
+        s3db = current.s3db
         person = None
+
+        # Fields to extract
+        fields = ["id",
+                  "pe_label",
+                  "first_name",
+                  "middle_name",
+                  "last_name",
+                  "date_of_birth",
+                  "gender",
+                  ]
+
+        data = cls.parse_code(pe_label)
+
+        pe_label = data["label"]
         if pe_label:
+            # Search by PE label
             query = (FS("pe_label") == pe_label) & \
                     (FS("dvr_case.id") != None) & \
                     (FS("dvr_case.archived") != True) & \
                     (FS("dvr_case.status_id$is_closed") != True)
-            presource = current.s3db.resource("pr_person", filter=query)
-            rows = presource.select(["id",
-                                     "first_name",
-                                     "middle_name",
-                                     "last_name",
-                                     "date_of_birth",
-                                     "gender",
-                                     ],
-                                     start = 0,
-                                     limit = 2,
-                                     as_rows = True,
-                                     )
+            presource = s3db.resource("pr_person", filter=query)
+            rows = presource.select(fields,
+                                    start = 0,
+                                    limit = 1,
+                                    as_rows = True,
+                                    )
+            if rows:
+                person = rows[0]
+
+        if person:
+
+            data_match = True
+
+            first_name, last_name = None, None
+            if "first_name" in data:
+                first_name = s3_unicode(data["first_name"]).lower()
+                if s3_unicode(person.first_name).lower() != first_name:
+                    data_match = False
+            if "last_name" in data:
+                last_name = s3_unicode(data["last_name"]).lower()
+                if s3_unicode(person.last_name).lower() != last_name:
+                    data_match = False
+
+            if not data_match:
+                # Family member? => search by names/DoB
+                ptable = s3db.pr_person
+                query = current.auth.s3_accessible_query("read", ptable)
+
+                gtable = s3db.pr_group
+                mtable = s3db.pr_group_membership
+                otable = mtable.with_alias("family")
+                ctable = s3db.dvr_case
+                stable = s3db.dvr_case_status
+
+                left = [gtable.on((gtable.id == mtable.group_id) & \
+                                  (gtable.group_type == 7)),
+                        otable.on((otable.group_id == gtable.id) & \
+                                  (otable.person_id != mtable.person_id) & \
+                                  (otable.deleted != True)),
+                        ptable.on((ptable.id == otable.person_id) & \
+                                  (ptable.pe_label != None)),
+                        ctable.on((ctable.person_id == otable.person_id) & \
+                                  (ctable.archived != True)),
+                        stable.on((stable.id == ctable.status_id)),
+                        ]
+                query &= (mtable.person_id == person.id) & \
+                         (ctable.id != None) & \
+                         (stable.is_closed != True) & \
+                         (mtable.deleted != True) & \
+                         (ptable.deleted != True)
+                if first_name:
+                    query &= (ptable.first_name.lower() == first_name)
+                if last_name:
+                    query &= (ptable.last_name.lower() == last_name)
+
+                if "date_of_birth" in data:
+                    # Include date of birth
+                    dob, error = IS_UTC_DATE()(data["date_of_birth"])
+                    if not error and dob:
+                        query &= (ptable.date_of_birth == dob)
+
+                fields_ = [ptable[fn] for fn in fields]
+                rows = current.db(query).select(left=left,
+                                                limitby = (0, 2),
+                                                *fields_)
+                if len(rows) == 1:
+                    person = rows[0]
+
+        elif "first_name" in data and "last_name" in data:
+
+            first_name = s3_unicode(data["first_name"]).lower()
+            last_name = s3_unicode(data["last_name"]).lower()
+
+            # Search by names
+            query = (FS("pe_label") != None)
+            if first_name:
+                query &= (FS("first_name").lower() == first_name)
+            if last_name:
+                query &= (FS("last_name").lower() == last_name)
+
+            if "date_of_birth" in data:
+                # Include date of birth
+                dob, error = IS_UTC_DATE()(data["date_of_birth"])
+                if not error and dob:
+                    query &= (FS("date_of_birth") == dob)
+
+            # Find only open cases
+            query &= (FS("dvr_case.id") != None) & \
+                     (FS("dvr_case.archived") != True) & \
+                     (FS("dvr_case.status_id$is_closed") != True)
+
+            presource = s3db.resource("pr_person", filter=query)
+            rows = presource.select(fields,
+                                    start = 0,
+                                    limit = 2,
+                                    as_rows = True,
+                                    )
             if len(rows) == 1:
                 person = rows[0]
 
         return person
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def parse_code(code):
+        """
+            Parse a scanned ID code (QR Code)
+
+            @param code: the scanned ID code (string)
+
+            @return: a dict {"label": the PE label,
+                             "first_name": optional first name,
+                             "last_name": optional last name,
+                             "date_of_birth": optional date of birth,
+                             }
+        """
+
+        data = {"label": code}
+
+        pattern = current.deployment_settings.get_dvr_id_code_pattern()
+        if pattern and code:
+            import re
+            pattern = re.compile(pattern)
+            m = pattern.match(code)
+            if m:
+                data.update(m.groupdict())
+
+        return data
 
     # -------------------------------------------------------------------------
     @staticmethod
