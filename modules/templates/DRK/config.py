@@ -193,10 +193,12 @@ def config(settings):
         if not record:
             return ""
 
+        shelter_id = record.id
+
         # Count number of shelter registrations for this shelter,
         # grouped by transitory-status of the housing unit
         left = utable.on(utable.id == rtable.shelter_unit_id)
-        query = (rtable.shelter_id == record.id) & \
+        query = (rtable.shelter_id == shelter_id) & \
                 (rtable.deleted != True)
         count = rtable.id.count()
         rows = db(query).select(utable.transitory,
@@ -212,6 +214,33 @@ def config(settings):
             else:
                 regular += row[count]
         total = transitory + regular
+
+        # Children
+        from dateutil.relativedelta import relativedelta
+        EIGHTEEN = r.utcnow - relativedelta(years=18)
+        ptable = s3db.pr_person
+        query = (ptable.date_of_birth > EIGHTEEN) & \
+                (ptable.id == rtable.person_id) & \
+                (rtable.shelter_id == shelter_id)
+        count = ptable.id.count()
+        row = db(query).select(count,
+                               limitby=(0, 1)).first()
+        children = row[count]
+
+        CHILDREN = TR(TD(T("How many Children")),
+                         TD(children),
+                         )
+
+        # Families
+        gtable = s3db.pr_group
+        query = (gtable.group_type == 7)
+        count = ptable.id.count()
+        rows = db(query).select(count,
+                               limitby=(0, 1)).first()
+        families = row[count]
+        FAMILIES = TR(TD(T("How many Families")),
+                         TD(families),
+                         )
 
         # Transitory housing unit is called "PX" at BFV Mannheim
         # @todo: generalize, lookup transitory unit name(s) from db
@@ -246,7 +275,7 @@ def config(settings):
                 (ftable.deleted != True) & \
                 (ltable.id != None) & \
                 (ctable.id != None) & \
-                (rtable.shelter_id == record.id)
+                (rtable.shelter_id == shelter_id)
         count = ctable.id.count()
         rows = db(query).select(count, left=left)
         external = rows.first()[count] if rows else 0
@@ -266,12 +295,14 @@ def config(settings):
                      P(record.comments or ""),
                      # Current population overview
                      TABLE(TOTAL,
+                           CHILDREN,
+                           FAMILIES,
                            TRANSITORY,
                            REGULAR,
                            EXTERNAL,
                            FREE
                            ),
-                     # Action buttons for check-in/out
+                     # Action button for check-in/out
                      A("%s / %s" % (T("Check-In"), T("Check-Out")),
                        _href=r.url(method="check-in"),
                        _class="action-btn",
@@ -893,8 +924,8 @@ def config(settings):
                         not_checked_out = ((reg_status == None) | (reg_status != 3))
 
                         # Due date for check-in
-                        due_date = current.request.utcnow - \
-                                   datetime.timedelta(days=ABSENCE_LIMIT)
+                        due_date = r.utcnow - \
+                                    datetime.timedelta(days=ABSENCE_LIMIT)
 
                         if overdue == "1":
                             query = checked_out & \
@@ -1710,7 +1741,7 @@ def config(settings):
 
                 # Default filter today's and tomorrow's appointments
                 from s3 import s3_set_default_filter
-                now = current.request.utcnow
+                now = r.utcnow
                 today = now.replace(hour=0, minute=0, second=0, microsecond=0)
                 tomorrow = today + datetime.timedelta(days=1)
                 s3_set_default_filter("~.date",
