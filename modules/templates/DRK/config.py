@@ -714,6 +714,8 @@ def config(settings):
     settings.dvr.mandatory_appointments = True
     # Uncomment this to allow cases to belong to multiple case groups ("households")
     #settings.dvr.multiple_case_groups = True
+    # Configure a regular expression pattern for ID Codes (QR Codes)
+    settings.dvr.id_code_pattern = "(?P<label>[^,]*),(?P=label),(?P<last_name>[^,]*),(?P<first_name>[^,]*),(?P<date_of_birth>[^,]*),.*"
 
     # -------------------------------------------------------------------------
     def customise_dvr_home():
