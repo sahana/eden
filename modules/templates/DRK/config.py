@@ -305,6 +305,11 @@ def config(settings):
                   TD(free),
                   )
 
+        # Announcements
+        from s3db.cms import S3CMS
+        resource_content = S3CMS.resource_content
+        announce = resource_content("cr", "shelter", shelter_id)
+                  
         # Generate profile header HTML
         output = DIV(H2(record.name),
                      P(record.comments or ""),
@@ -317,6 +322,7 @@ def config(settings):
                            EXTERNAL,
                            FREE
                            ),
+                     announce,
                      # Action button for check-in/out
                      A("%s / %s" % (T("Check-In"), T("Check-Out")),
                        _href=r.url(method="check-in"),

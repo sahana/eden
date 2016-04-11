@@ -176,21 +176,30 @@ def post():
                         table.replies.readable = table.replies.writable = False
                         if not url:
                             url = URL(c=_module, f=resource)
-                    elif resource:
-                        # We're creating/updating text for a Resource Summary page
-                        table.name.default = "%s Summary Page Header" % resource
-                        table.title.readable = table.title.writable = False
-                        table.replies.readable = table.replies.writable = False
-                        if not url:
-                            url = URL(c=_module, f=resource, args="summary")
                     else:
-                        # We're creating/updating a Module home page
-                        table.name.default = "%s Home Page" % _module
-                        _crud = s3.crud_strings[tablename]
-                        _crud.label_create = T("New Page")
-                        _crud.title_update = T("Edit Page")
-                        if not url:
-                            url = URL(c=_module, f="index")
+                        record = get_vars.get("record", None)
+                        if record:
+                            # We're creating/updating text for a Profile page
+                            table.name.default = "%s %s Profile Page" % (resource, record)
+                            table.title.readable = table.title.writable = False
+                            table.replies.readable = table.replies.writable = False
+                            if not url:
+                                url = URL(c=_module, f=resource, args=[record, "profile"])
+                        elif resource:
+                            # We're creating/updating text for a Resource Summary page
+                            table.name.default = "%s Summary Page Header" % resource
+                            table.title.readable = table.title.writable = False
+                            table.replies.readable = table.replies.writable = False
+                            if not url:
+                                url = URL(c=_module, f=resource, args="summary")
+                        else:
+                            # We're creating/updating a Module home page
+                            table.name.default = "%s Home Page" % _module
+                            _crud = s3.crud_strings[tablename]
+                            _crud.label_create = T("New Page")
+                            _crud.title_update = T("Edit Page")
+                            if not url:
+                                url = URL(c=_module, f="index")
 
                     s3db.configure(tablename,
                                    create_next = url,
