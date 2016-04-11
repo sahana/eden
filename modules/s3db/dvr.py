@@ -1975,6 +1975,9 @@ class DVRCaseEventModel(S3Model):
         # ---------------------------------------------------------------------
         # Case Event Types
         #
+        role_table = str(current.auth.settings.table_group)
+        role_represent = S3Represent(lookup=role_table, fields=("role",))
+
         tablename = "dvr_case_event_type"
         define_table(tablename,
                      Field("code", notnull=True, length=64, unique=True,
@@ -1996,6 +1999,20 @@ class DVRCaseEventModel(S3Model):
                            comment = DIV(_class = "tooltip",
                                          _title = "%s|%s" % (T("Default Event Type"),
                                                              T("Assume this event type if no type was specified for an event"),
+                                                             ),
+                                         ),
+                           ),
+                     Field("role_required", "reference %s" % role_table,
+                           label = T("User Role Required"),
+                           ondelete = "SET NULL",
+                           represent = role_represent,
+                           requires = IS_EMPTY_OR(IS_ONE_OF(db,
+                                                            "%s.id" % role_table,
+                                                            role_represent,
+                                                            )),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("User Role Required"),
+                                                             T("User role required to register events of this type"),
                                                              ),
                                          ),
                            ),
@@ -2564,8 +2581,7 @@ class DVRRegisterCaseEvent(S3Method):
         if not event_type:
             # Fall back to default event type
             event_type = self.get_event_type()
-        if event_type:
-            event_code = event_type.code
+        event_code = event_type.code if event_type else None
 
         formstyle = settings.get_ui_formstyle()
         data = None
@@ -2610,7 +2626,7 @@ class DVRRegisterCaseEvent(S3Method):
                            )
         # Toggle buttons (active button first, otherwise pressing Enter
         # hits the disabled button so requiring an extra tab step)
-        if person:
+        if person and event_code:
             check_btn["_disabled"] = "disabled"
             check_btn.add_class("hide")
             buttons = [submit_btn, check_btn]
@@ -2794,6 +2810,13 @@ class DVRRegisterCaseEvent(S3Method):
             table = current.s3db.dvr_case_event_type
 
             query = (table.deleted != True)
+
+            sr = current.auth.get_system_roles()
+            roles = current.session.s3.roles
+            if sr.ADMIN not in roles:
+                query &= (table.role_required == None) | \
+                         (table.role_required.belongs(roles))
+
             rows = current.db(query).select(table.id,
                                             table.code,
                                             table.name,

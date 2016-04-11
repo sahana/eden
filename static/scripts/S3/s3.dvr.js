@@ -115,6 +115,10 @@
             $('input[type="hidden"][name="event"]').val(code);
             // Update event type in header
             $('.event-type-name').text(name);
+            // Enable submit if we have a person
+            if ($('#case_event_person__row').length) {
+                toggleSubmit($('form'), true);
+            }
             // Update Zxing URL
             $('.zxing-button').each(function() {
                 var $this = $(this),
