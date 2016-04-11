@@ -12,6 +12,7 @@
          Body...................Post Body (HTML)
          Module.................optional.....Post Module
          Resource...............optional.....Post Resource
+         Record.................optional.....Post Record (currently this is the raw ID, so only useful if we know we'll only have a single record!)
          Country................optional.....Post Country
          L1.....................optional.....Post L1
          L2.....................optional.....Post L2
@@ -315,6 +316,9 @@
                     <data field="module"><xsl:value-of select="$Module"/></data>
                     <xsl:if test="$Resource!=''">
                         <data field="resource"><xsl:value-of select="$Resource"/></data>
+                        <xsl:if test="col[@field='Record']!=''">
+                            <data field="record"><xsl:value-of select="col[@field='Record']"/></data>
+                        </xsl:if>
                     </xsl:if>
                 </resource>
             </xsl:if>

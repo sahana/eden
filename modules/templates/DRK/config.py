@@ -184,7 +184,7 @@ def config(settings):
             Profile Header for Shelter Profile page
         """
 
-        from gluon.html import DIV, H2, P, TABLE, TR, TD, A
+        from gluon.html import DIV, H2, P, TABLE, TR, TD, A, XML, URL
 
         db = current.db
         s3db = current.s3db
@@ -310,19 +310,66 @@ def config(settings):
         resource_content = S3CMS.resource_content
         announce = resource_content("cr", "shelter", shelter_id)
                   
+        # Weather (uses fake weather module/resource)
+        table = s3db.cms_post
+        ltable = db.cms_post_module
+        query = (ltable.module == "weather") & \
+                (ltable.resource == "weather") & \
+                (ltable.record == shelter_id) & \
+                (ltable.post_id == table.id) & \
+                (table.deleted != True)
+        _item = db(query).select(table.id,
+                                 table.body,
+                                 limitby=(0, 1)).first()
+        auth = current.auth
+        ADMIN = auth.get_system_roles().ADMIN
+        ADMIN = auth.s3_has_role(ADMIN)
+        if ADMIN:
+            url_vars = {"module": "weather",
+                        "resource": "weather",
+                        "record": shelter_id,
+                        }
+            if _item:
+                item = DIV(XML(_item.body),
+                           A(T("Edit Weather"),
+                             _href=URL(c="cms", f="post",
+                                       args = [_item.id, "update"],
+                                       vars = url_vars,
+                                       ),
+                             _class="action-btn cms-edit",
+                             ))
+            else:
+                item = A(T("Edit Weather"),
+                         _href=URL(c="cms", f="post",
+                                   args = "create",
+                                   vars = url_vars,
+                                   ),
+                         _class="action-btn cms-edit",
+                         )
+        elif _item:
+            item = XML(_item.body)
+        else:
+            item = ""
+
+        weather = DIV(item, _id="cms_weather", _class="cms_content")
+
         # Generate profile header HTML
         output = DIV(H2(record.name),
                      P(record.comments or ""),
-                     # Current population overview
-                     TABLE(TOTAL,
-                           CHILDREN,
-                           FAMILIES,
-                           TRANSITORY,
-                           REGULAR,
-                           EXTERNAL,
-                           FREE
-                           ),
                      announce,
+                     # Current population overview
+                     TABLE(TR(TD(TABLE(TOTAL,
+                                    CHILDREN,
+                                    FAMILIES,
+                                    TRANSITORY,
+                                    REGULAR,
+                                    EXTERNAL,
+                                    FREE
+                                    ),
+                                 ),
+                              TD(weather),
+                              ),
+                           ),
                      # Action button for check-in/out
                      A("%s / %s" % (T("Check-In"), T("Check-Out")),
                        _href=r.url(method="check-in"),
