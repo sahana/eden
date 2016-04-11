@@ -184,7 +184,7 @@ def config(settings):
             Profile Header for Shelter Profile page
         """
 
-        from gluon.html import DIV, H2, P, TABLE, TR, TD, A, XML, URL
+        from gluon.html import DIV, H2, H3, P, TABLE, TR, TD, A, XML, URL, HR
 
         db = current.db
         s3db = current.s3db
@@ -356,7 +356,9 @@ def config(settings):
         # Generate profile header HTML
         output = DIV(H2(record.name),
                      P(record.comments or ""),
+                     H3(T("Announcements")),
                      announce,
+                     HR(),
                      # Current population overview
                      TABLE(TR(TD(TABLE(TOTAL,
                                     CHILDREN,
@@ -367,7 +369,9 @@ def config(settings):
                                     FREE
                                     ),
                                  ),
-                              TD(weather),
+                              TD(weather,
+                                 _class="show-for-large-up",
+                                 ),
                               ),
                            ),
                      # Action button for check-in/out
