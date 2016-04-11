@@ -1187,7 +1187,21 @@ class S3CMS(S3Method):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def resource_content(module, resource, record=None, widget_id=None):
+    def resource_content(module,
+                         resource,
+                         record=None,
+                         widget_id=None,
+                         hide_if_empty=False):
+        """
+            Render resource-related CMS contents
+
+            @param module: the module prefix
+            @param resource: the resource name (without prefix)
+            @param record: the record ID (optional)
+            @param widget_id: the DOM node ID for the CMS widget
+            @param hide_if_empty: return an empty string when there is no
+                                  contents rather than a blank DIV
+        """
 
         db = current.db
         table = current.s3db.cms_post
@@ -1237,7 +1251,10 @@ class S3CMS(S3Method):
         else:
             item = ""
 
-        output = DIV(item, _id=widget_id, _class="cms_content")
+        if item != "" or not hide_if_empty:
+            output = DIV(item, _id=widget_id, _class="cms_content")
+        else:
+            output = item
         return output
 
 # =============================================================================

@@ -308,8 +308,10 @@ def config(settings):
         # Announcements
         from s3db.cms import S3CMS
         resource_content = S3CMS.resource_content
-        announce = resource_content("cr", "shelter", shelter_id)
-                  
+        announce = resource_content("cr", "shelter", shelter_id,
+                                    hide_if_empty=True,
+                                    )
+
         # Weather (uses fake weather module/resource)
         table = s3db.cms_post
         ltable = db.cms_post_module
@@ -328,10 +330,17 @@ def config(settings):
             url_vars = {"module": "weather",
                         "resource": "weather",
                         "record": shelter_id,
+                        # Custom redirect after CMS edit
+                        # (required for fake module/resource)
+                        "url": URL(c = "cr",
+                                   f = "shelter",
+                                   args = [shelter_id, "profile"],
+                                   ),
                         }
+            EDIT_WEATHER = T("Edit Weather Widget")
             if _item:
                 item = DIV(XML(_item.body),
-                           A(T("Edit Weather"),
+                           A(EDIT_WEATHER,
                              _href=URL(c="cms", f="post",
                                        args = [_item.id, "update"],
                                        vars = url_vars,
@@ -339,7 +348,7 @@ def config(settings):
                              _class="action-btn cms-edit",
                              ))
             else:
-                item = A(T("Edit Weather"),
+                item = A(EDIT_WEATHER,
                          _href=URL(c="cms", f="post",
                                    args = "create",
                                    vars = url_vars,
@@ -356,7 +365,7 @@ def config(settings):
         # Generate profile header HTML
         output = DIV(H2(record.name),
                      P(record.comments or ""),
-                     H3(T("Announcements")),
+                     H3(T("Announcements")) if announce else "",
                      announce,
                      HR(),
                      # Current population overview
