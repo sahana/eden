@@ -449,7 +449,8 @@ class DVRCaseModel(S3Model):
         configure(tablename,
                   #report_options = report_options,
                   onvalidation = self.case_onvalidation,
-                  onaccept = self.case_onaccept,
+                  create_onaccept = self.case_create_onaccept,
+                  update_onaccept = self.case_onaccept,
                   )
 
         # Reusable field
@@ -626,13 +627,27 @@ class DVRCaseModel(S3Model):
                 form.errors["reference"] = msg
 
     # -------------------------------------------------------------------------
+    @classmethod
+    def case_create_onaccept(cls, form):
+        """
+            Wrapper for case_onaccept when called during create
+            rather than update
+
+            @param form: the FORM
+        """
+
+        cls.case_onaccept(form, create=True)
+
+    # -------------------------------------------------------------------------
     @staticmethod
-    def case_onaccept(form):
+    def case_onaccept(form, create=False):
         """
             Case onaccept routine:
             - auto-create active appointments
+            - count household size for new cases
 
             @param form: the FORM
+            @param create: perform additional actions for new cases
         """
 
         db = current.db
@@ -673,6 +688,20 @@ class DVRCaseModel(S3Model):
                           person_id = person_id,
                           type_id = row.id,
                           )
+
+        if create and \
+           current.deployment_settings.get_dvr_household_size() == "auto":
+            # Count household size for newly created cases, in order
+            # to catch pre-existing case group memberships
+            gtable = s3db.pr_group
+            mtable = s3db.pr_group_membership
+            query = ((mtable.person_id == person_id) & \
+                     (mtable.deleted != True) & \
+                     (gtable.id == mtable.group_id) & \
+                     (gtable.group_type == 7))
+            rows = db(query).select(gtable.id)
+            for row in rows:
+                dvr_case_household_size(row.id)
 
 # =============================================================================
 class DVRCaseFlagModel(S3Model):
