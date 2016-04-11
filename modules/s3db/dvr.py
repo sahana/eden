@@ -2575,6 +2575,7 @@ class DVRRegisterCaseEvent(S3Method):
                     response.error = T("No person with this ID number")
             else:
                 pe_label = person.pe_label
+                post_vars["label"] = pe_label
 
         # Get the current event type
         event_type = self.get_event_type(event_code)
@@ -2879,9 +2880,9 @@ class DVRRegisterCaseEvent(S3Method):
 
         data = cls.parse_code(pe_label)
 
-        pe_label = data["label"]
-        if pe_label:
-            # Search by PE label
+        def person_(label):
+            """ Helper function to find a person by pe_label """
+
             query = (FS("pe_label") == pe_label) & \
                     (FS("dvr_case.id") != None) & \
                     (FS("dvr_case.archived") != True) & \
@@ -2892,12 +2893,21 @@ class DVRRegisterCaseEvent(S3Method):
                                     limit = 1,
                                     as_rows = True,
                                     )
-            if rows:
-                person = rows[0]
+            return rows[0] if rows else None
+
+        pe_label = data["label"]
+        if pe_label:
+            person = person_(pe_label)
+        if person:
+            data_match = True
+        else:
+            family = data.get("family")
+            if family:
+                # Get the head of family
+                person = person_(family)
+                data_match = False
 
         if person:
-
-            data_match = True
 
             first_name, last_name = None, None
             if "first_name" in data:

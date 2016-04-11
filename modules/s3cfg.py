@@ -2674,6 +2674,7 @@ class S3Config(Storage):
 
             Should return the following groups:
                 label                   the PE label, mandatory
+                family                  the PE label of the head of family, optional
                 first_name              optional
                 last_name               optional
                 date_of_birth           optional
