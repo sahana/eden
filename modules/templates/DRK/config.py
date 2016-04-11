@@ -223,21 +223,31 @@ def config(settings):
                 (ptable.id == rtable.person_id) & \
                 (rtable.shelter_id == shelter_id)
         count = ptable.id.count()
-        row = db(query).select(count,
-                               limitby=(0, 1)).first()
+        row = db(query).select(count).first()
         children = row[count]
 
         CHILDREN = TR(TD(T("How many Children")),
                          TD(children),
                          )
 
-        # Families
+        # Families on-site
         gtable = s3db.pr_group
-        query = (gtable.group_type == 7)
-        count = ptable.id.count()
-        rows = db(query).select(count,
-                               limitby=(0, 1)).first()
-        families = row[count]
+        mtable = s3db.pr_group_membership
+        join = [mtable.on((mtable.group_id == gtable.id) & \
+                          (mtable.deleted != True)),
+                rtable.on((rtable.person_id == mtable.person_id) & \
+                          (rtable.shelter_id == shelter_id) & \
+                          (rtable.deleted != True)),
+                ]
+        query = (gtable.group_type == 7) & \
+                (gtable.deleted != True)
+
+        rows = db(query).select(gtable.id,
+                                having = (mtable.id.count() > 1),
+                                groupby = gtable.id,
+                                join = join,
+                                )
+        families = len(rows)
         FAMILIES = TR(TD(T("How many Families")),
                          TD(families),
                          )
@@ -1463,18 +1473,26 @@ def config(settings):
 
         s3db = current.s3db
 
-        default_onaccept = s3db.get_config(tablename, "onaccept")
+        config = {}
+        get_config = s3db.get_config
 
-        if not default_onaccept:
-            onaccept = dvr_case_onaccept
-        elif not isinstance(default_onaccept, list):
-            onaccept = [default_onaccept, dvr_case_onaccept]
-        else:
-            onaccept = default_onaccept
-            if all(cb != dvr_case_onaccept for cb in onaccept):
-                onaccept.append(dvr_case_onaccept)
+        for method in ("create", "update", None):
 
-        s3db.configure(tablename, onaccept = onaccept)
+            setting = "%s_onaccept" % method if method else "onaccept"
+            default = get_config(tablename, setting)
+            if not default:
+                if method is None and len(config) < 2:
+                    onaccept = dvr_case_onaccept
+                else:
+                    continue
+            elif not isinstance(default, list):
+                onaccept = [default, dvr_case_onaccept]
+            else:
+                onaccept = default
+                if all(cb != dvr_case_onaccept for cb in onaccept):
+                    onaccept.append(dvr_case_onaccept)
+
+        s3db.configure(tablename, **config)
 
     settings.customise_dvr_case_resource = customise_dvr_case_resource
 
