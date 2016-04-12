@@ -386,7 +386,7 @@ def config(settings):
                      # Action button for check-in/out
                      A("%s / %s" % (T("Check-In"), T("Check-Out")),
                        _href=r.url(method="check-in"),
-                       _class="action-btn",
+                       _class="action-btn dashboard-action",
                        ),
                      _class="profile-header",
                      )

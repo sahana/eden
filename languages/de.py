@@ -1576,6 +1576,7 @@
 'Evacuees Capacity (Night only)': 'Evakuierungspotential (nur Nacht)',
 'Evaluate the information in this message.  (This value SHOULD NOT be used in public warning applications.)': 'Informationen in dieser Nachricht bewerten. (Dieser Wert sollte NICHT in öffentlichen Warnung verwendet werden.)',
 'Event Details': 'Details zum Ereignis',
+'Event Registration': 'Ereignisregistrierung',
 'Event Type': 'Ereignistyp',
 'Event Type created': 'Ereignistyp angelegt',
 'Event Type deleted': 'Ereignistyp gelöscht',

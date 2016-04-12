@@ -194,6 +194,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                     M("Allowances", f="allowance")(
                         ),
+                    M("Event Registration", c="dvr", f="case_event", m="register", p="create")(
+                        ),
                     M("Archive", link=False)(
                         M("Closed Cases", f="person",
                           vars={"closed": "1"},
