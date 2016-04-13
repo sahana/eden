@@ -518,16 +518,21 @@ def config(settings):
             if registration.registration_status == 2:
                 wappend(T("Client was already checked-in"))
 
-            # Update the Shelter Registration
-            registration.update_record(check_in_date = current.request.utcnow,
-                                    registration_status = 2,
-                                    )
+            now = current.request.utcnow
 
+            # Update the Shelter Registration
+            registration.update_record(check_in_date = now,
+                                       registration_status = 2,
+                                       )
             onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
             if onaccept:
                 onaccept(registration)
 
+            # Update last_seen_on
+            s3db.dvr_update_last_seen(person_id, now)
+
         else:
+            # @todo: log as case event anyway?
             error = T("Check-in denied")
 
         return error, ", ".join(s3_str(w) for w in warnings), callback
@@ -575,7 +580,6 @@ def config(settings):
                                             limitby=(0, 1),
                                             ).first()
             if not registration:
-                # @ToDo: Check to see if they DISAPPEARED, etc
                 error = T("Registration not found")
                 return error, warning
 
@@ -583,15 +587,21 @@ def config(settings):
             if registration.registration_status == 3:
                 warning = T("Client was already checked-out")
 
-            # Update the Shelter Registration
-            registration.update_record(check_out_date = current.request.utcnow,
-                                    registration_status = 3)
+            now = current.request.utcnow
 
+            # Update the Shelter Registration
+            registration.update_record(check_out_date = now,
+                                       registration_status = 3,
+                                       )
             onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
             if onaccept:
                 onaccept(registration)
 
+            # Update last_seen_on
+            s3db.dvr_update_last_seen(person_id, now)
+
         else:
+            # @todo: log as case event anyway?
             error = T("Check-out denied")
 
         return error, warning, callback
@@ -2320,10 +2330,10 @@ def drk_dvr_rheader(r, tabs=[]):
                             ]
 
                 case = resource.select(["dvr_case.status_id",
-                                        #"dvr_case.status_id$code",
                                         "dvr_case.archived",
                                         "dvr_case.household_size",
                                         "dvr_case.transferable",
+                                        "dvr_case.last_seen_on",
                                         "first_name",
                                         "last_name",
                                         ],
@@ -2332,12 +2342,13 @@ def drk_dvr_rheader(r, tabs=[]):
                                         ).rows
 
                 if case:
+                    # Extract case data
                     case = case[0]
                     archived = case["_row"]["dvr_case.archived"]
                     case_status = lambda row: case["dvr_case.status_id"]
                     transferable = lambda row: case["dvr_case.transferable"]
                     household_size = lambda row: case["dvr_case.household_size"]
-                    #eligible = lambda row: ""
+                    last_seen_on = lambda row: case["dvr_case.last_seen_on"]
                     name = lambda row: s3_fullname(row)
                 else:
                     # Target record exists, but doesn't match filters
@@ -2345,27 +2356,19 @@ def drk_dvr_rheader(r, tabs=[]):
 
                 rheader_fields = [[(T("ID"), "pe_label"),
                                    (T("Case Status"), case_status),
-                                   (T("Transferable"), transferable),
+                                   (T("Last seen on"), last_seen_on),
                                    ],
                                   [(T("Name"), name),
-                                   (T("Size of Family"), household_size),
+                                   (T("Transferable"), transferable),
+                                   (T("Checked-out"), "absence"),
                                    ],
                                   ["date_of_birth",
-                                   (T("Checked-out"), "absence"),
+                                   (T("Size of Family"), household_size),
                                    ],
                                   ]
 
                 if archived:
                     rheader_fields.insert(0, [(None, hint)])
-
-                # @todo: No basis for this rule (statuses do no longer exist),
-                #        define new rule or remove this:
-                #if r.component_name == "allowance":
-                #    # Rule for eligibility:
-                #    allowance = case["dvr_case_status.code"] in ("STATUS5", "STATUS6")
-                #    eligible = lambda row, allowance = allowance: \
-                #                      s3_yes_no_represent(allowance)
-                #    rheader_fields[-1].append((T("Eligible for Allowance"), eligible))
 
         elif tablename == "dvr_case":
 

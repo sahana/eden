@@ -40,6 +40,7 @@ __all__ = ("DVRCaseModel",
            "dvr_case_default_status",
            "dvr_case_status_filter_opts",
            "dvr_case_household_size",
+           "dvr_update_last_seen",
            "dvr_due_followups",
            "dvr_rheader",
            )
@@ -301,6 +302,12 @@ class DVRCaseModel(S3Model):
                              readable = False,
                              writable = False,
                              ),
+                     s3_datetime("last_seen_on",
+                                 label = T("Last seen on"),
+                                 # Enable in template if required
+                                 readable = False,
+                                 writable = False,
+                                 ),
                      status_id(),
                      Field("priority", "integer",
                            default = 2,
@@ -2104,6 +2111,7 @@ class DVRCaseEventModel(S3Model):
 
         # Table Configuration
         configure(tablename,
+                  create_onaccept = self.case_event_create_onaccept,
                   deduplicate = S3Duplicate(primary = ("person_id",
                                                        "type_id",
                                                        ),
@@ -2162,6 +2170,41 @@ class DVRCaseEventModel(S3Model):
             table = current.s3db.dvr_case_event_type
             db = current.db
             db(table.id != record_id).update(is_default = False)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_event_create_onaccept(form):
+        """
+            Actions after creation of a case event:
+                - update last_seen_on in the corresponding cases
+
+            @param form: the FORM
+        """
+
+        formvars = form.vars
+        try:
+            record_id = formvars.id
+        except AttributeError:
+            record_id = None
+        if not record_id:
+            return
+
+        person_id = formvars.get("person_id")
+        if not person_id:
+            # Reload the record
+            table = current.s3db.dvr_case_event
+            row = current.db(table.id == record_id).select(table.person_id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+            if not row:
+                return
+            else:
+                person_id == row.person_id
+        if not person_id:
+            return
+
+        # Update last_seen
+        dvr_update_last_seen(person_id, current.request.utcnow)
 
 # =============================================================================
 def dvr_case_default_status():
@@ -2758,12 +2801,22 @@ class DVRRegisterCaseEvent(S3Method):
         else:
             case_id = None
 
-        success = etable.insert(person_id = person_id,
-                                case_id = case_id,
-                                type_id = type_id,
-                                date = current.request.utcnow,
-                                )
-        return success
+        data = {"person_id": person_id,
+                "case_id": case_id,
+                "type_id": type_id,
+                "date": current.request.utcnow,
+                }
+        record_id = etable.insert(**data)
+        if record_id:
+            # Set record owner
+            auth = current.auth
+            auth.s3_set_record_owner(etable, record_id)
+            auth.s3_make_session_owner(etable, record_id)
+            # Execute onaccept
+            data["id"] = record_id
+            s3db.onaccept(etable, data, method="create")
+
+        return record_id
 
     # -------------------------------------------------------------------------
     def validate(self, form):
@@ -3070,6 +3123,45 @@ class DVRRegisterCaseEvent(S3Method):
                  data = {"tmp": template % tmp,
                          },
                  )
+
+# =============================================================================
+def dvr_update_last_seen(person_id, date):
+    """
+        Helper function for automatic updates of dvr_case.last_seen_on
+
+        @param person_id: the person ID
+        @param date: the date when last seen
+    """
+
+    if not date:
+        # Ignore (do not default)
+        return False
+
+    import datetime
+    if not isinstance(date, datetime.datetime):
+        # Date?
+        try:
+            date = datetime.datetime.combine(date, datetime.time(0, 0, 0))
+        except TypeError:
+            return False
+
+    if date > current.request.utcnow:
+        # Must not be future
+        return False
+
+    ctable = current.s3db.dvr_case
+    query = (ctable.person_id == person_id) & \
+            (ctable.deleted != True) & \
+            ((ctable.last_seen_on == None) |
+             (ctable.last_seen_on < date))
+
+    success = current.db(query).update(last_seen_on = date,
+                                       # Don't change author stamp for
+                                       # system-controlled record update
+                                       modified_on = ctable.modified_on,
+                                       modified_by = ctable.modified_by,
+                                       )
+    return True if success else False
 
 # =============================================================================
 def dvr_rheader(r, tabs=[]):

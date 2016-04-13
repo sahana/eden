@@ -2229,6 +2229,7 @@
 'Last Pull': 'Letzter Pull',
 'Last Push': 'Letzter Push',
 'Last known location': 'Letzte bekannte Position',
+'Last seen on': 'Zuletzt gesehen am',
 'Last synchronization time': 'Zeitpunkt der letzte Synchronisierung',
 'Last updated by': 'Letzte Aktualisierung durch',
 'Last updated on': 'Letzte Aktualisierung am',
