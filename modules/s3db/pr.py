@@ -3910,11 +3910,11 @@ class S3PersonDetailsModel(S3Model):
                                 ),
                           Field("company",
                                 label = T("Company"),
-                                # @ToDo: Autofill from hrm_human_resource Staff Organisation
+                                # @ToDo: Autofill from hrm_human_resource Staff Organisation ?
                                 ),
                           Field("affiliations",
                                 label = T("Affiliations"),
-                                # @ToDo: Autofill from hrm_human_resource Volunteer Organisation
+                                # @ToDo: Autofill from hrm_human_resource Volunteer Organisation ?
                                 ),
                           Field("criminal_record", "boolean",
                                 label = T("Criminal Record"),
