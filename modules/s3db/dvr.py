@@ -1986,6 +1986,7 @@ class DVRCaseAllowanceModel(S3Model):
         allowance_status_opts = {1: T("pending"),
                                  2: T("paid"),
                                  3: T("refused"),
+                                 4: T("missed"),
                                  }
 
         tablename = "dvr_allowance"
@@ -1999,17 +2000,25 @@ class DVRCaseAllowanceModel(S3Model):
                                       label = T("Case Number"),
                                       ondelete = "CASCADE",
                                       ),
-                     s3_date(default="now"),
+                     s3_date(default="now",
+                             label = T("Planned on"),
+                             ),
+                     s3_datetime("paid_on",
+                                 label = T("Paid on"),
+                                 future = 0,
+                                 ),
                      Field("amount", "double",
+                           label = T("Amount"),
                            ),
                      s3_currency(),
                      Field("status", "integer",
+                           default = 1, # pending
                            requires = IS_IN_SET(allowance_status_opts,
                                                 zero = None,
                                                 ),
                            represent = S3Represent(options=allowance_status_opts,
                                                    ),
-                           widget = S3GroupedOptionsWidget(cols = 3,
+                           widget = S3GroupedOptionsWidget(cols = 4,
                                                            multiple = False,
                                                            ),
                            ),
@@ -2030,6 +2039,12 @@ class DVRCaseAllowanceModel(S3Model):
             msg_list_empty = T("No Allowance Information currently registered"),
             )
 
+        # Table configuration
+        configure(tablename,
+                  onaccept = self.allowance_onaccept,
+                  onvalidation = self.allowance_onvalidation,
+                  )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -2043,6 +2058,58 @@ class DVRCaseAllowanceModel(S3Model):
 
         return {"dvr_allowance_status_opts": {},
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def allowance_onvalidation(form):
+        """
+            Validate allowance form
+                - Status paid requires paid_on date
+
+            @param form: the FORM
+        """
+
+        formvars = form.vars
+
+        date = formvars.get("paid_on")
+        status = formvars.get("status")
+
+        if str(status) == "2" and not date:
+            form.errors["paid_on"] = current.T("Date of payment required")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def allowance_onaccept(form):
+        """
+            Actions after creating/updating allowance information
+                - update last_seen_on when set to "paid"
+        """
+
+        if not current.deployment_settings.get_dvr_payments_update_last_seen_on():
+            # No action required
+            return
+
+        # Read form data
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        if not record_id:
+            return
+
+        table = current.s3db.dvr_allowance
+        record = current.db(table.id == record_id).select(table.person_id,
+                                                          table.paid_on,
+                                                          table.status,
+                                                          limitby = (0, 1),
+                                                          ).first()
+
+        if record and record.status == 2:
+            dvr_update_last_seen(record.person_id, record.paid_on)
 
 # =============================================================================
 class DVRCaseEventModel(S3Model):

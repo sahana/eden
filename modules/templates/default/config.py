@@ -489,6 +489,8 @@ def config(settings):
     #settings.dvr.mandatory_appointments = True
     # Uncomment this to have appointments with personal presence update last_seen_on
     #settings.dvr.appointments_update_last_seen_on = True
+    # Uncomment this to have allowance payments update last_seen_on
+    #settings.dvr.payments_update_last_seen_on = True
     # Uncomment this to allow cases to belong to multiple case groups ("households")
     #settings.dvr.multiple_case_groups = True
     # Configure a regular expression pattern for ID Codes (QR Codes)

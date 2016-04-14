@@ -805,6 +805,8 @@ def config(settings):
     settings.dvr.mandatory_appointments = True
     # Uncomment this to have appointments with personal presence update last_seen_on
     settings.dvr.appointments_update_last_seen_on = True
+    # Uncomment this to have allowance payments update last_seen_on
+    settings.dvr.payments_update_last_seen_on = True
     # Uncomment this to allow cases to belong to multiple case groups ("households")
     #settings.dvr.multiple_case_groups = True
     # Configure a regular expression pattern for ID Codes (QR Codes)
@@ -1926,10 +1928,11 @@ def config(settings):
                                       ),
                         S3OptionsFilter("status",
                                         default = 2,
-                                        cols = 3,
+                                        cols = 4,
                                         options = s3db.dvr_allowance_status_opts,
                                         ),
                         date_filter,
+                        S3DateFilter("paid_on"),
                         ]
                     resource.configure(filter_widgets = filter_widgets)
 
