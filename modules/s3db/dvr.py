@@ -1501,6 +1501,8 @@ class DVRCaseAppointmentModel(S3Model):
                                                        "type_id",
                                                        ),
                                             ),
+                  onvalidation = self.case_appointment_onvalidation,
+                  onaccept = self.case_appointment_onaccept,
                   )
 
         # @todo: onaccept to change status "planning" to "planned" if a date
@@ -1519,6 +1521,79 @@ class DVRCaseAppointmentModel(S3Model):
 
         return {"dvr_appointment_status_opts": {},
                 }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_appointment_onvalidation(form):
+        """
+            Validate appointment form
+                - Future appointments can not be set to completed
+
+            @param form: the FORM
+        """
+
+        formvars = form.vars
+
+        date = formvars.get("date")
+        status = formvars.get("status")
+
+        if date and str(status) == "4" and \
+           date > current.request.utcnow.date():
+
+            form.errors["status"] = current.T("Appointments with future dates can not be marked as completed")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_appointment_onaccept(form):
+        """
+            Actions after creating/updating appointments
+                - Update last_seen_on in the corresponding case(s) if an
+                  appointment that requires presence is set to completed
+
+            @param form: the FORM
+        """
+
+        if not current.deployment_settings.get_dvr_appointments_update_last_seen_on():
+            # No action required
+            return
+
+        # Read form data
+        form_vars = form.vars
+        if "id" in form_vars:
+            record_id = form_vars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+
+        if not record_id:
+            return
+
+        s3db = current.s3db
+
+        # Get the appointment record and its type
+        atable = s3db.dvr_case_appointment
+        ttable = s3db.dvr_case_appointment_type
+        left = ttable.on(ttable.id == atable.type_id)
+        record = current.db(atable.id == record_id).select(
+                                         atable.person_id,
+                                         atable.date,
+                                         atable.status,
+                                         ttable.presence_required,
+                                         left = left,
+                                         limitby = (0, 1),
+                                         ).first()
+
+        if record and \
+           record.dvr_case_appointment_type.presence_required:
+
+            appointment = record.dvr_case_appointment
+            appointment_date = appointment.date
+
+            if appointment.status == 4 and appointment_date:
+                dvr_update_last_seen(appointment.person_id,
+                                     appointment_date,
+                                     )
 
 # =============================================================================
 class DVRCaseBeneficiaryModel(S3Model):
@@ -3144,7 +3219,7 @@ def dvr_update_last_seen(person_id, date):
     """
 
     if not date:
-        # Ignore (do not default)
+        # Ignore (do not default, caller may not check for date)
         return False
 
     import datetime
@@ -3154,10 +3229,20 @@ def dvr_update_last_seen(person_id, date):
             date = datetime.datetime.combine(date, datetime.time(0, 0, 0))
         except TypeError:
             return False
+        # Local time offset to UTC (NB: can be 0)
+        delta = S3DateTime.get_offset_value(current.session.s3.utc_offset)
+    else:
+        delta = None
 
-    if date > current.request.utcnow:
-        # Must not be future
+    now = current.request.utcnow
+    if date > now:
+        # Date must not be future
         return False
+
+    if delta is not None:
+        # Default to 08:00 local time if no time given
+        # (...but not later than current time)
+        date = min(now, date + datetime.timedelta(seconds = 28800 - delta))
 
     ctable = current.s3db.dvr_case
     query = (ctable.person_id == person_id) & \

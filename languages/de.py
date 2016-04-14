@@ -1764,6 +1764,7 @@
 'Funding Organization': 'Finanzierende Organisation',
 'Funeral': 'Beerdigung',
 'Further Action Recommended': 'Weitere Aktivität empfohlen',
+'Appointments with future dates can not be marked as completed': 'Termine mit Datum in der Zukunft können nicht als beendet markiert werden',
 'GIS Reports of Shelter': 'GIS-Berichte der Unterkünfte',
 'GIS integration to view location details of the Shelter': 'GIS-Integration um Details zum Standort der Unterkunft zu erhalten',
 "Google Earth's Keyhole Markup Language": "Google Earth's Keyhole Markup Language",
