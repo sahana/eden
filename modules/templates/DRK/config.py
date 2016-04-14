@@ -518,18 +518,13 @@ def config(settings):
             if registration.registration_status == 2:
                 wappend(T("Client was already checked-in"))
 
-            now = current.request.utcnow
-
             # Update the Shelter Registration
-            registration.update_record(check_in_date = now,
+            registration.update_record(check_in_date = current.request.utcnow,
                                        registration_status = 2,
                                        )
             onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
             if onaccept:
                 onaccept(registration)
-
-            # Update last_seen_on
-            s3db.dvr_update_last_seen(person_id, now)
 
         else:
             # @todo: log as case event anyway?
@@ -587,18 +582,13 @@ def config(settings):
             if registration.registration_status == 3:
                 warning = T("Client was already checked-out")
 
-            now = current.request.utcnow
-
             # Update the Shelter Registration
-            registration.update_record(check_out_date = now,
+            registration.update_record(check_out_date = current.request.utcnow,
                                        registration_status = 3,
                                        )
             onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
             if onaccept:
                 onaccept(registration)
-
-            # Update last_seen_on
-            s3db.dvr_update_last_seen(person_id, now)
 
         else:
             # @todo: log as case event anyway?

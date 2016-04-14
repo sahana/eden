@@ -1374,6 +1374,10 @@ class S3ShelterRegistrationModel(S3Model):
                                       shelter_id = reg.shelter_id,
                                       )
 
+                        # Update last_seen_on
+                        if current.deployment_settings.has_module("dvr"):
+                            s3db.dvr_update_last_seen(person_id)
+
         # Update population
         cls.shelter_population_onaccept(form,
                                         tablename = "cr_shelter_registration",

@@ -1501,8 +1501,9 @@ class DVRCaseAppointmentModel(S3Model):
                                                        "type_id",
                                                        ),
                                             ),
-                  onvalidation = self.case_appointment_onvalidation,
                   onaccept = self.case_appointment_onaccept,
+                  ondelete = self.case_appointment_ondelete,
+                  onvalidation = self.case_appointment_onvalidation,
                   )
 
         # @todo: onaccept to change status "planning" to "planned" if a date
@@ -1547,53 +1548,63 @@ class DVRCaseAppointmentModel(S3Model):
     def case_appointment_onaccept(form):
         """
             Actions after creating/updating appointments
-                - Update last_seen_on in the corresponding case(s) if an
-                  appointment that requires presence is set to completed
+                - Update last_seen_on in the corresponding case(s)
 
             @param form: the FORM
         """
 
-        if not current.deployment_settings.get_dvr_appointments_update_last_seen_on():
-            # No action required
-            return
+        if current.deployment_settings.get_dvr_appointments_update_last_seen_on():
 
-        # Read form data
-        form_vars = form.vars
-        if "id" in form_vars:
-            record_id = form_vars.id
-        elif hasattr(form, "record_id"):
-            record_id = form.record_id
-        else:
-            record_id = None
+            # Read form data
+            form_vars = form.vars
+            if "id" in form_vars:
+                record_id = form_vars.id
+            elif hasattr(form, "record_id"):
+                record_id = form.record_id
+            else:
+                record_id = None
+            if not record_id:
+                return
 
-        if not record_id:
-            return
+            # Get the person ID
+            table = current.s3db.dvr_case_appointment
+            row = current.db(table.id == record_id).select(table.person_id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+            # Update last_seen_on
+            if row:
+                dvr_update_last_seen(row.person_id)
 
-        s3db = current.s3db
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_appointment_ondelete(row):
+        """
+            Actions after deleting appointments
+                - Update last_seen_on in the corresponding case(s)
 
-        # Get the appointment record and its type
-        atable = s3db.dvr_case_appointment
-        ttable = s3db.dvr_case_appointment_type
-        left = ttable.on(ttable.id == atable.type_id)
-        record = current.db(atable.id == record_id).select(
-                                         atable.person_id,
-                                         atable.date,
-                                         atable.status,
-                                         ttable.presence_required,
-                                         left = left,
-                                         limitby = (0, 1),
-                                         ).first()
+            @param row: the deleted Row
+        """
 
-        if record and \
-           record.dvr_case_appointment_type.presence_required:
+        if current.deployment_settings.get_dvr_appointments_update_last_seen_on():
 
-            appointment = record.dvr_case_appointment
-            appointment_date = appointment.date
+            # Get the deleted keys
+            table = current.s3db.dvr_case_appointment
+            row = current.db(table.id == row.id).select(table.deleted_fk,
+                                                        limitby = (0, 1),
+                                                        ).first()
+            if row and row.deleted_fk:
 
-            if appointment.status == 4 and appointment_date:
-                dvr_update_last_seen(appointment.person_id,
-                                     appointment_date,
-                                     )
+                # Get the person ID
+                try:
+                    deleted_fk = json.loads(row.deleted_fk)
+                except (ValueError, TypeError):
+                    person_id = None
+                else:
+                    person_id = deleted_fk.get("person_id")
+
+                # Update last_seen_on
+                if person_id:
+                    dvr_update_last_seen(person_id)
 
 # =============================================================================
 class DVRCaseBeneficiaryModel(S3Model):
@@ -2042,6 +2053,7 @@ class DVRCaseAllowanceModel(S3Model):
         # Table configuration
         configure(tablename,
                   onaccept = self.allowance_onaccept,
+                  ondelete = self.allowance_ondelete,
                   onvalidation = self.allowance_onvalidation,
                   )
 
@@ -2082,34 +2094,61 @@ class DVRCaseAllowanceModel(S3Model):
     def allowance_onaccept(form):
         """
             Actions after creating/updating allowance information
-                - update last_seen_on when set to "paid"
+                - update last_seen_on
         """
 
-        if not current.deployment_settings.get_dvr_payments_update_last_seen_on():
-            # No action required
-            return
+        if current.deployment_settings.get_dvr_payments_update_last_seen_on():
 
-        # Read form data
-        form_vars = form.vars
-        if "id" in form_vars:
-            record_id = form_vars.id
-        elif hasattr(form, "record_id"):
-            record_id = form.record_id
-        else:
-            record_id = None
+            # Read form data
+            form_vars = form.vars
+            if "id" in form_vars:
+                record_id = form_vars.id
+            elif hasattr(form, "record_id"):
+                record_id = form.record_id
+            else:
+                record_id = None
+            if not record_id:
+                return
 
-        if not record_id:
-            return
+            # Get the person ID
+            table = current.s3db.dvr_allowance
+            row = current.db(table.id == record_id).select(table.person_id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+            # Update last_seen_on
+            if row:
+                dvr_update_last_seen(row.person_id)
 
-        table = current.s3db.dvr_allowance
-        record = current.db(table.id == record_id).select(table.person_id,
-                                                          table.paid_on,
-                                                          table.status,
-                                                          limitby = (0, 1),
-                                                          ).first()
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def allowance_ondelete(row):
+        """
+            Actions after deleting allowance information
+                - Update last_seen_on in the corresponding case(s)
 
-        if record and record.status == 2:
-            dvr_update_last_seen(record.person_id, record.paid_on)
+            @param row: the deleted Row
+        """
+
+        if current.deployment_settings.get_dvr_payments_update_last_seen_on():
+
+            # Get the deleted keys
+            table = current.s3db.dvr_allowance
+            row = current.db(table.id == row.id).select(table.deleted_fk,
+                                                        limitby = (0, 1),
+                                                        ).first()
+            if row and row.deleted_fk:
+
+                # Get the person ID
+                try:
+                    deleted_fk = json.loads(row.deleted_fk)
+                except (ValueError, TypeError):
+                    person_id = None
+                else:
+                    person_id = deleted_fk.get("person_id")
+
+                # Update last_seen_on
+                if person_id:
+                    dvr_update_last_seen(person_id)
 
 # =============================================================================
 class DVRCaseEventModel(S3Model):
@@ -2277,6 +2316,7 @@ class DVRCaseEventModel(S3Model):
                                  (T("Registered by"), "created_by"),
                                  "comments",
                                  ],
+                  ondelete = self.case_event_ondelete,
                   orderby = "%s.date desc" % tablename,
                   )
 
@@ -2356,7 +2396,36 @@ class DVRCaseEventModel(S3Model):
             return
 
         # Update last_seen
-        dvr_update_last_seen(person_id, current.request.utcnow)
+        dvr_update_last_seen(person_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def case_event_ondelete(row):
+        """
+            Actions after deleting a case event:
+                - update last_seen_on in the corresponding cases
+
+            @param row: the deleted Row
+        """
+
+        # Get the deleted keys
+        table = current.s3db.dvr_case_event
+        row = current.db(table.id == row.id).select(table.deleted_fk,
+                                                    limitby = (0, 1),
+                                                    ).first()
+        if row and row.deleted_fk:
+
+            # Get the person ID
+            try:
+                deleted_fk = json.loads(row.deleted_fk)
+            except (ValueError, TypeError):
+                person_id = None
+            else:
+                person_id = deleted_fk.get("person_id")
+
+            # Update last_seen_on
+            if person_id:
+                dvr_update_last_seen(person_id)
 
 # =============================================================================
 def dvr_case_default_status():
@@ -3277,53 +3346,111 @@ class DVRRegisterCaseEvent(S3Method):
                  )
 
 # =============================================================================
-def dvr_update_last_seen(person_id, date):
+def dvr_update_last_seen(person_id):
     """
         Helper function for automatic updates of dvr_case.last_seen_on
 
         @param person_id: the person ID
-        @param date: the date when last seen
     """
 
-    if not date:
-        # Ignore (do not default, caller may not check for date)
-        return False
-
-    import datetime
-    if not isinstance(date, datetime.datetime):
-        # Date?
-        try:
-            date = datetime.datetime.combine(date, datetime.time(0, 0, 0))
-        except TypeError:
-            return False
-        # Local time offset to UTC (NB: can be 0)
-        delta = S3DateTime.get_offset_value(current.session.s3.utc_offset)
-    else:
-        delta = None
+    db = current.db
+    s3db = current.s3db
 
     now = current.request.utcnow
-    if date > now:
-        # Date must not be future
-        return False
+    last_seen_on = None
 
-    if delta is not None:
-        # Default to 08:00 local time if no time given
-        # (...but not later than current time)
-        date = min(now, date + datetime.timedelta(seconds = 28800 - delta))
+    if not person_id:
+        return
 
-    ctable = current.s3db.dvr_case
+    # Get the last case event
+    etable = s3db.dvr_case_event
+    query = (etable.person_id == person_id) & \
+            (etable.date != None) & \
+            (etable.date <= now) & \
+            (etable.deleted != True)
+    event = db(query).select(etable.date,
+                             orderby = ~etable.date,
+                             limitby = (0, 1),
+                             ).first()
+    if event:
+        last_seen_on = event.date
+
+    # Check shelter registration history for newer entries
+    htable = s3db.cr_shelter_registration_history
+    query = (htable.person_id == person_id) & \
+            (htable.status.belongs(2, 3)) & \
+            (htable.date != None) & \
+            (htable.deleted != True)
+    if last_seen_on is not None:
+        query &= htable.date > last_seen_on
+    entry = db(query).select(htable.date,
+                             orderby = ~htable.date,
+                             limitby = (0, 1),
+                             ).first()
+    if entry:
+        last_seen_on = entry.date
+
+    settings = current.deployment_settings
+
+    # Case appointments to update last_seen_on?
+    if settings.get_dvr_appointments_update_last_seen_on():
+
+        atable = s3db.dvr_case_appointment
+        ttable = s3db.dvr_case_appointment_type
+        left = ttable.on(ttable.id == atable.type_id)
+        query = (atable.person_id == person_id) & \
+                (atable.date != None) & \
+                (ttable.presence_required == True) & \
+                (atable.date <= now.date()) & \
+                (atable.status == 4) & \
+                (atable.deleted != True)
+        if last_seen_on is not None:
+            query &= atable.date > last_seen_on.date()
+        appointment = db(query).select(atable.date,
+                                       left = left,
+                                       orderby = ~atable.date,
+                                       limitby = (0, 1),
+                                       ).first()
+        if appointment:
+            date = appointment.date
+            try:
+                date = datetime.datetime.combine(date, datetime.time(0, 0, 0))
+            except TypeError:
+                pass
+            # Local time offset to UTC (NB: can be 0)
+            delta = S3DateTime.get_offset_value(current.session.s3.utc_offset)
+            # Default to 08:00 local time (...unless that would be future)
+            date = min(now, date + datetime.timedelta(seconds = 28800 - delta))
+            last_seen_on = date
+
+    # Allowance payments to update last_seen_on?
+    if settings.get_dvr_payments_update_last_seen_on():
+
+        atable = s3db.dvr_allowance
+        query = (atable.person_id == person_id) & \
+                (atable.paid_on != None) & \
+                (atable.status == 2) & \
+                (atable.deleted != True)
+        if last_seen_on is not None:
+            query &= atable.paid_on > last_seen_on
+        payment = db(query).select(atable.paid_on,
+                                   orderby = ~atable.paid_on,
+                                   limitby = (0, 1),
+                                   ).first()
+        if payment:
+            last_seen_on = payment.paid_on
+
+    # Update last_seen_on
+    ctable = s3db.dvr_case
     query = (ctable.person_id == person_id) & \
-            (ctable.deleted != True) & \
-            ((ctable.last_seen_on == None) |
-             (ctable.last_seen_on < date))
-
-    success = current.db(query).update(last_seen_on = date,
-                                       # Don't change author stamp for
-                                       # system-controlled record update
-                                       modified_on = ctable.modified_on,
-                                       modified_by = ctable.modified_by,
-                                       )
-    return True if success else False
+            (ctable.archived != True) & \
+            (ctable.deleted != True)
+    db(query).update(last_seen_on = last_seen_on,
+                     # Don't change author stamp for
+                     # system-controlled record update:
+                     modified_on = ctable.modified_on,
+                     modified_by = ctable.modified_by,
+                     )
 
 # =============================================================================
 def dvr_rheader(r, tabs=[]):
