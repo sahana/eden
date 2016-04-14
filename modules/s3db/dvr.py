@@ -1394,6 +1394,16 @@ class DVRCaseAppointmentModel(S3Model):
                            writable = mandatory_appointments,
                            comment = mandatory_comment,
                            ),
+                     Field("presence_required", "boolean",
+                           default = True,
+                           label = T("Presence required"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Presence required"),
+                                                             T("This appointment requires the presence of the person concerned"),
+                                                             ),
+                                         ),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
