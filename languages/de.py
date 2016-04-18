@@ -2909,6 +2909,7 @@
 'No pending registrations found': 'Keine anstehenden Registrierungen gefunden',
 'No pending registrations matching the query': 'Die Abfrage lieferte keine keine anstehenden Registrierungen',
 'No person record found for current user.': 'Kein Personendatensatz für den aktuellen Benutzer gefunden.',
+'No person found with this ID number': 'Keine Person mit dieser ID Nummer gefunden',
 'No problem group defined yet': 'Noch keine Problem-Gruppe definiert',
 'No records found': 'Keine Datensätze gefunden',
 'No records matching the query': 'Die Abfrage lieferte keine Datensätze',
