@@ -518,18 +518,13 @@ def config(settings):
             if registration.registration_status == 2:
                 wappend(T("Client was already checked-in"))
 
-            now = current.request.utcnow
-
             # Update the Shelter Registration
-            registration.update_record(check_in_date = now,
+            registration.update_record(check_in_date = current.request.utcnow,
                                        registration_status = 2,
                                        )
             onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
             if onaccept:
                 onaccept(registration)
-
-            # Update last_seen_on
-            s3db.dvr_update_last_seen(person_id, now)
 
         else:
             # @todo: log as case event anyway?
@@ -587,18 +582,13 @@ def config(settings):
             if registration.registration_status == 3:
                 warning = T("Client was already checked-out")
 
-            now = current.request.utcnow
-
             # Update the Shelter Registration
-            registration.update_record(check_out_date = now,
+            registration.update_record(check_out_date = current.request.utcnow,
                                        registration_status = 3,
                                        )
             onaccept = s3db.get_config("cr_shelter_registration", "onaccept")
             if onaccept:
                 onaccept(registration)
-
-            # Update last_seen_on
-            s3db.dvr_update_last_seen(person_id, now)
 
         else:
             # @todo: log as case event anyway?
@@ -803,6 +793,10 @@ def config(settings):
     settings.dvr.household_size = "auto"
     # Uncomment this to expose flags to mark appointment types as mandatory
     settings.dvr.mandatory_appointments = True
+    # Uncomment this to have appointments with personal presence update last_seen_on
+    settings.dvr.appointments_update_last_seen_on = True
+    # Uncomment this to have allowance payments update last_seen_on
+    settings.dvr.payments_update_last_seen_on = True
     # Uncomment this to allow cases to belong to multiple case groups ("households")
     #settings.dvr.multiple_case_groups = True
     # Configure a regular expression pattern for ID Codes (QR Codes)
@@ -1572,6 +1566,7 @@ def config(settings):
                 onaccept = default
                 if all(cb != dvr_case_onaccept for cb in onaccept):
                     onaccept.append(dvr_case_onaccept)
+            config[setting] = onaccept
 
         s3db.configure(tablename, **config)
 
@@ -1924,10 +1919,11 @@ def config(settings):
                                       ),
                         S3OptionsFilter("status",
                                         default = 2,
-                                        cols = 3,
+                                        cols = 4,
                                         options = s3db.dvr_allowance_status_opts,
                                         ),
                         date_filter,
+                        S3DateFilter("paid_on"),
                         ]
                     resource.configure(filter_widgets = filter_widgets)
 

@@ -2661,6 +2661,21 @@ class S3Config(Storage):
         """
         return self.dvr.get("mandatory_appointments", False)
 
+    def get_dvr_appointments_update_last_seen_on(self):
+        """
+            Whether appointments which require presence shall
+            automatically update the "last seen on" date when
+            set to "completed"
+        """
+        return self.dvr.get("appointments_update_last_seen_on", False)
+
+    def get_dvr_payments_update_last_seen_on(self):
+        """
+            Whether payments (e.g. allowance) shall automatically update
+            the "last seen on" date when set to "paid"
+        """
+        return self.dvr.get("payments_update_last_seen_on", False)
+
     def get_dvr_multiple_case_groups(self):
         """
             Whether a case can belong to multiple case groups at the same time
