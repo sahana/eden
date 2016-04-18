@@ -162,7 +162,7 @@ def human_resource():
 def person():
     """
         'Members' RESTful CRUD Controller
-            - currently used as "member profile"
+            - used as "member profile"
             - used for Imports
     """
 

@@ -402,39 +402,101 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def deploy():
         """ RDRT Alerting and Deployments """
 
-        return M()(M("Missions",
-                     c="deploy", f="mission", m="summary")(
-                        M("Create", m="create"),
-                        M("Active Missions", m="summary",
-                          vars={"~.status__belongs": "2"}),
-                   ),
-                   M("Alerts",
-                     c="deploy", f="alert")(
-                        M("Create", m="create"),
-                        M("InBox",
-                          c="deploy", f="email_inbox",
-                        ),
-                        M("Settings",
-                          c="deploy", f="email_channel",
-                          p="update", t="msg_email_channel",
-                          ),
-                   ),
-                   M("Deployments",
-                     c="deploy", f="assignment", m="summary"
-                   ),
-                   M("Sectors",
-                     c="deploy", f="job_title", restrict=["ADMIN"],
-                   ),
-                   M("RDRT Members",
-                     c="deploy", f="human_resource", m="summary")(
-                        M("Add Member",
-                          c="deploy", f="application", m="select",
-                          p="create", t="deploy_application",
-                          ),
-                        M("Import Members", c="deploy", f="person", m="import"),
-                   ),
-                   M("Online Manual", c="deploy", f="index"),
-               )
+        AP = False
+        user = current.auth.user
+        organisation_id = user and user.organisation_id or None
+        if organisation_id:
+            s3db = current.s3db
+            otable = s3db.org_organisation
+            rtable = s3db.org_region
+            query = (otable.id == organisation_id) & \
+                    (otable.region_id == rtable.id)
+            region = current.db(query).select(rtable.name,
+                                              cache = s3db.cache,
+                                              limitby=(0, 1)
+                                              ).first()
+            if region and region.name in ("Asia Pacific", "East Asia", "Pacific", "South Asia", "South East Asia"):
+                AP = True
+
+        if AP:
+            # Asia Pacific
+            return M()(M("Alerts",
+                         c="deploy", f="alert")(
+                            M("Create", m="create"),
+                            M("InBox",
+                              c="deploy", f="email_inbox",
+                            ),
+                            M("Settings",
+                              c="deploy", f="email_channel",
+                              p="update", t="msg_email_channel",
+                              ),
+                       ),
+                       M("Missions",
+                         c="deploy", f="mission", m="summary")(
+                            M("Create", m="create"),
+                            M("Active Missions", m="summary",
+                              vars={"~.status__belongs": "2"}),
+                            M("Closed Missions", m="summary",
+                              vars={"~.status__belongs": "1"}),
+                       ),
+                       M("Training",
+                         c="deploy", f="training")(
+                            M("Create", m="create"),
+                            M("Search Training"),
+                            M("Import Training Participants", m="import"),
+                       ),
+                       #M("Deployments",
+                       #  c="deploy", f="assignment", m="summary"
+                       #),
+                       M("RDRT Members",
+                         c="deploy", f="human_resource", m="summary")(
+                            M("Find RDRT"),
+                            M("Add Member",
+                              c="deploy", f="application", m="select",
+                              p="create", t="deploy_application",
+                              ),
+                            M("Import Members", c="deploy", f="person", m="import"),
+                       ),
+                       M("Sectors",
+                         c="deploy", f="job_title", restrict=["ADMIN"],
+                       ),
+                       #M("Online Manual", c="deploy", f="index"),
+                   )
+        else:
+            # Africa
+            return M()(M("Missions",
+                         c="deploy", f="mission", m="summary")(
+                            M("Create", m="create"),
+                            M("Active Missions", m="summary",
+                              vars={"~.status__belongs": "2"}),
+                       ),
+                       M("Alerts",
+                         c="deploy", f="alert")(
+                            M("Create", m="create"),
+                            M("InBox",
+                              c="deploy", f="email_inbox",
+                            ),
+                            M("Settings",
+                              c="deploy", f="email_channel",
+                              p="update", t="msg_email_channel",
+                              ),
+                       ),
+                       M("Deployments",
+                         c="deploy", f="assignment", m="summary"
+                       ),
+                       M("Sectors",
+                         c="deploy", f="job_title", restrict=["ADMIN"],
+                       ),
+                       M("RDRT Members",
+                         c="deploy", f="human_resource", m="summary")(
+                            M("Add Member",
+                              c="deploy", f="application", m="select",
+                              p="create", t="deploy_application",
+                              ),
+                            M("Import Members", c="deploy", f="person", m="import"),
+                       ),
+                       M("Online Manual", c="deploy", f="index"),
+                   )
 
     # -------------------------------------------------------------------------
     @staticmethod

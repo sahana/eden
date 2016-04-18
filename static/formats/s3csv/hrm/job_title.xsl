@@ -7,8 +7,9 @@
 
          CSV fields:
          Name............................hrm_job_title.name
-         Organisation....................hrm_job_title.organisation_id
          Type............................hrm_job_title.type
+         Organisation....................hrm_job_title.organisation_id
+         Region..........................hrm_job_title.region_id
          Comments........................hrm_job_title.comments
 
     *********************************************************************** -->
@@ -19,12 +20,19 @@
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
+    <xsl:key name="regions" match="row" use="col[@field='Region']"/>
     <xsl:key name="orgs" match="row" use="col[@field='Organisation']"/>
 
     <!-- ****************************************************************** -->
 
     <xsl:template match="/">
         <s3xml>
+            <!-- Regions -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('regions',
+                                                                       col[@field='Region'])[1])]">
+                <xsl:call-template name="Region"/>
+            </xsl:for-each>
+
             <!-- Organisations -->
             <xsl:for-each select="//row[generate-id(.)=generate-id(key('orgs',
                                                                        col[@field='Organisation'])[1])]">
@@ -38,6 +46,7 @@
     <!-- ****************************************************************** -->
     <xsl:template match="row">
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
+        <xsl:variable name="RegionName" select="col[@field='Region']/text()"/>
         <xsl:variable name="Type">
             <xsl:call-template name="uppercase">
                 <xsl:with-param name="string" select="col[@field='Type']/text()"/>
@@ -72,6 +81,29 @@
                     </xsl:attribute>
                 </reference>
             </xsl:if>
+
+            <!-- Link to Region to filter lookup lists -->
+            <xsl:if test="$RegionName!=''">
+                <reference field="region_id" resource="org_region">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="$RegionName"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+        </resource>
+
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Region">
+
+        <xsl:variable name="RegionName" select="col[@field='Region']/text()"/>
+
+        <resource name="org_region">
+            <xsl:attribute name="tuid">
+                <xsl:value-of select="$RegionName"/>
+            </xsl:attribute>
+            <data field="name"><xsl:value-of select="$RegionName"/></data>
         </resource>
 
     </xsl:template>

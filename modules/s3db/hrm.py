@@ -260,6 +260,10 @@ class S3HRModel(S3Model):
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
+                     # Enable in templates as-required
+                     self.org_region_id(readable = False,
+                                        writable = False,
+                                        ),
                      organisation_id(default = root_org if org_dependent_job_titles else None,
                                      readable = is_admin if org_dependent_job_titles else False,
                                      writable = is_admin if org_dependent_job_titles else False,

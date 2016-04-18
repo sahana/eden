@@ -103,6 +103,8 @@ class S3OrganisationModel(S3Model):
     names = ("org_organisation_type",
              "org_organisation_type_id",
              "org_region",
+             "org_region_id",
+             "org_region_represent",
              "org_organisation",
              "org_organisation_crud_fields",
              "org_organisation_id",
@@ -289,7 +291,7 @@ class S3OrganisationModel(S3Model):
                             IS_ONE_OF(db, "org_region.id",
                                       region_represent,
                                       sort=True,
-                                      # Only show the Regions, not the Zones
+                                      # IFRC: Only show the Regions, not the Zones
                                       not_filterby="parent",
                                       not_filter_opts=(None,)
                                       )),
@@ -816,6 +818,7 @@ class S3OrganisationModel(S3Model):
                     org_organisation_crud_fields = form_fields,
                     org_organisation_id = organisation_id,
                     org_organisation_represent = org_organisation_represent,
+                    org_region_id = region_id,
                     org_region_represent = region_represent,
                     )
 

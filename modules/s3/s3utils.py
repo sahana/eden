@@ -361,7 +361,6 @@ def s3_set_default_filter(selector, value, tablename=None):
             filter_defaults[level] = {}
         filter_defaults = filter_defaults[level]
     filter_defaults[selector] = value
-    return
 
 # =============================================================================
 def s3_dev_toolbar():

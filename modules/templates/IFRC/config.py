@@ -305,6 +305,7 @@ def config(settings):
     settings.L10n.translate_org_organisation = True
 
     # Names of Orgs with specific settings
+    AP_ZONE = "Asia-Pacific Region"
     ARCS = "Afghan Red Crescent Society"
     AURC = "Australian Red Cross"
     BRCS = "Bangladesh Red Crescent Society"
@@ -1008,7 +1009,8 @@ def config(settings):
             s3db = current.s3db
             otable = s3db.org_organisation
             org = db(otable.id == user_org_id).select(otable.pe_id,
-                                                      limitby=(0, 1)
+                                                      limitby=(0, 1),
+                                                      cache = s3db.cache,
                                                       ).first()
             if org:
                 pe_id = org.pe_id
@@ -1020,6 +1022,39 @@ def config(settings):
                 return ids
             else:
                 return user_org_id
+        else:
+            # no default
+            return {}
+
+    # -----------------------------------------------------------------------------
+    def user_region_and_children_default_filter(selector, tablename=None):
+        """
+            Default filter for organisation_id:
+            * Use the user's region if logged-in and associated with an
+              organisation.
+        """
+
+        auth = current.auth
+        user_org_id = auth.is_logged_in() and auth.user.organisation_id
+        if user_org_id:
+            db = current.db
+            s3db = current.s3db
+            otable = s3db.org_organisation
+            org = db(otable.id == user_org_id).select(otable.region_id,
+                                                      limitby=(0, 1),
+                                                      cache = s3db.cache,
+                                                      ).first()
+            if org:
+                region_id = org.region_id
+                # Find Sub regions (just 1 level needed)
+                rtable = s3db.org_region
+                subregions = db(rtable.parent == region_id).select(rtable.id)
+                if subregions:
+                    region_ids = [region.id for region in subregions]
+                    region_ids.append(region_id)
+                else:
+                    region_ids = [region_id]
+                return region_ids
         else:
             # no default
             return {}
@@ -1454,7 +1489,73 @@ def config(settings):
     settings.customise_deploy_application_resource = customise_deploy_application_resource
 
     # -----------------------------------------------------------------------------
-    def _customise_assignment_fields(**attr):
+    def _is_asia_pacific(region_id=False):
+        """
+            Helper to determine if the user is in the Asia Pacific region
+            - used for RDRT
+        """
+
+        user = current.auth.user
+        organisation_id = user and user.organisation_id or None
+        if organisation_id:
+
+            db = current.db
+            s3db = current.s3db
+
+            otable = s3db.org_organisation
+            rtable = s3db.org_region
+            query = (otable.id == organisation_id) & \
+                    (otable.region_id == rtable.id)
+            region = db(query).select(rtable.id,
+                                      rtable.name,
+                                      cache = s3db.cache,
+                                      limitby=(0, 1)
+                                      ).first()
+            if region and region.name in ("Asia Pacific", "East Asia", "Pacific", "South Asia", "South East Asia"):
+                if region_id:
+                    if region == "Asia Pacific":
+                        region_id = region.id
+                    else:
+                        region_id = db(rtable.name == "Asia Pacific").select(rtable.id,
+                                                                             limitby=(0, 1)
+                                                                             ).first().id
+                    return region_id
+                else:
+                    return True
+
+        return False
+
+    # -----------------------------------------------------------------------------
+    def _customise_job_title_field(field, r = None):
+        """
+            Helper to customise the Job Title field for RDRT
+        """
+
+        field.comment = None
+        field.label = T("Sector")
+
+        from s3 import IS_ONE_OF
+
+        db = current.db
+        s3db = current.s3db
+
+        table = s3db.hrm_job_title
+        query = (table.type == 4)
+
+        region_id = _is_asia_pacific(region_id=True)
+        if region_id:
+            query &= (table.region_id == region_id)
+
+        if r and r.method == "update" and r.record.job_title_id:
+            # Allow to keep the current value
+            query |= (table.id == r.record.job_title_id)
+
+        field.requires = IS_ONE_OF(db(query), "hrm_job_title.id",
+                                   field.represent,
+                                   )
+
+    # -----------------------------------------------------------------------------
+    def _customise_assignment_fields():
 
         MEMBER = T("Member")
         from gluon.html import DIV
@@ -1468,20 +1569,11 @@ def config(settings):
         atable = s3db.deploy_assignment
         atable.human_resource_id.label = MEMBER
         atable.human_resource_id.comment = hr_comment
-        field = atable.job_title_id
-        field.comment = None
-        field.label = T("Sector")
-        field.requires = IS_ONE_OF(current.db, "hrm_job_title.id",
-                                   field.represent,
-                                   filterby = "type",
-                                   filter_opts = (4,),
-                                   )
+        _customise_job_title_field(atable.job_title_id)
 
         # Default activity_type when creating experience records from assignments
         activity_type = s3db.hrm_experience.activity_type
         activity_type.default = activity_type.update = "rdrt"
-
-        return
 
     # -----------------------------------------------------------------------------
     def customise_deploy_assignment_controller(**attr):
@@ -1830,12 +1922,6 @@ def config(settings):
 
         tablename = "hrm_course"
 
-        # Organisation needs to be an NS
-        ns_only(tablename,
-                required = False,
-                branches = False,
-                )
-
         # Different settings for different NS
         root_org = current.auth.root_org_name()
         if root_org == VNRC:
@@ -1846,16 +1932,27 @@ def config(settings):
         s3db = current.s3db
         table = s3db.hrm_course
 
+        # List fields
         list_fields = ["code",
                        "name",
                        ]
+
         ADMIN = current.session.s3.system_roles.ADMIN
         if current.auth.s3_has_role(ADMIN):
             list_fields.append("organisation_id")
+            # Organisation needs to be an NS
+            # NB AP RDRT Courses are linked to a Branch
+            ns_only(tablename,
+                    required = False,
+                    branches = False,
+                    )
+
         if settings.get_hrm_trainings_external():
             list_fields.append("external")
+
         list_fields.append((T("Sectors"), "course_sector.sector_id"))
 
+        # CRUD Form
         from s3 import S3SQLCustomForm, S3SQLInlineLink
         crud_form = S3SQLCustomForm("code",
                                     "name",
@@ -1880,16 +1977,11 @@ def config(settings):
     def customise_hrm_credential_controller(**attr):
 
         # Currently just used by RDRT
-        table = current.s3db.hrm_credential
-        field = table.job_title_id
-        field.comment = None
-        field.label = T("Sector")
-        from s3 import IS_ONE_OF
-        field.requires = IS_ONE_OF(current.db, "hrm_job_title.id",
-                                   field.represent,
-                                   filterby = "type",
-                                   filter_opts = (4,),
-                                   )
+        s3db = current.s3db
+        table = s3db.hrm_credential
+
+        _customise_job_title_field(table.job_title_id)
+
         table.organisation_id.readable = table.organisation_id.writable = False
         table.performance_rating.readable = table.performance_rating.writable = False
         table.start_date.readable = table.start_date.writable = False
@@ -1939,18 +2031,9 @@ def config(settings):
                 table = r.table
 
                 job_title_id = table.job_title_id
+                _customise_job_title_field(job_title_id, r)
                 job_title_id.label = T("Sector / Area of Expertise")
-                job_title_id.comment = None
-                jtable = current.s3db.hrm_job_title
-                query = (jtable.type == 4)
-                if r.method == "update" and r.record.job_title_id:
-                    # Allow to keep the current value
-                    query |= (jtable.id == r.record.job_title_id)
-                from s3 import IS_ONE_OF
-                job_title_id.requires = IS_ONE_OF(current.db(query),
-                                                  "hrm_job_title.id",
-                                                  job_title_id.represent,
-                                                  )
+
                 job_title = table.job_title
                 job_title.readable = job_title.writable = True
             return True
@@ -2252,7 +2335,13 @@ def config(settings):
         root_org = current.auth.root_org_name()
 
         controller = current.request.controller
-        if controller != "deploy" and root_org != CRMADA: # CRMADA have too many branches which causes issues
+        if controller == "deploy":
+            # Default Filter
+            from s3 import s3_set_default_filter
+            s3_set_default_filter("~.organisation_id$region_id",
+                                  user_region_and_children_default_filter,
+                                  tablename = "hrm_human_resource")
+        elif root_org != CRMADA: # CRMADA have too many branches which causes issues
             # Default Filter
             from s3 import s3_set_default_filter
             s3_set_default_filter("~.organisation_id",
@@ -2598,12 +2687,15 @@ def config(settings):
     def customise_hrm_job_title_controller(**attr):
 
         s3 = current.response.s3
-        table = current.s3db.hrm_job_title
         controller = current.request.controller
         if controller == "deploy":
+            deploy = True
             # Filter to just deployables
+            s3db = current.s3db
+            table = s3db.hrm_job_title
             s3.filter = (table.type == 4)
         else:
+            deploy = False
             # Organisation needs to be an NS
             ns_only("hrm_job_title",
                     required = False,
@@ -2619,12 +2711,24 @@ def config(settings):
             else:
                 result = True
 
-            if controller == "deploy":
+            if deploy:
                 field = table.type
                 field.default = 4
                 field.readable = field.writable = False
                 table.organisation_id.readable = False
                 table.organisation_id.writable = False
+                field = table.region_id
+                field.readable = field.writable = True
+                from gluon import IS_EMPTY_OR
+                from s3 import IS_ONE_OF
+                field.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(current.db, "org_region.id",
+                                              s3db.org_region_represent,
+                                              sort=True,
+                                              # Only show the Top-Level Regions (Formerly called Zones)
+                                              filterby="parent",
+                                              filter_opts=(None,)
+                                              ))
 
                 #help = T("If you don't see the Sector in the list, you can add a new one by clicking link 'Create Sector'.")
                 s3.crud_strings["hrm_job_title"] = Storage(
@@ -2713,6 +2817,30 @@ def config(settings):
         if root_org == VNRC:
             # Remove link to download Template
             attr["csv_template"] = "hide"
+
+        if current.request.controller == "deploy" and _is_asia_pacific():
+            # Only interested in RDRT courses
+            
+            db = current.db
+            s3db = current.s3db
+            otable = s3db.org_organisation
+            org = db(otable.name == AP_ZONE).select(otable.id,
+                                                    limitby=(0, 1),
+                                                    cache = s3db.cache,
+                                                    ).first()
+            try:
+                organisation_id = org.id
+            except:
+                current.log.error("Cannot find org %s - prepop not done?" % AP_ZONE)
+            else:
+                from s3 import FS, IS_ONE_OF
+                current.response.s3.filter = (FS("~.course_id$organisation_id") == organisation_id)
+                field = s3db.hrm_training.course_id
+                field.requires = IS_ONE_OF(db, "hrm_course.id",
+                                           field.represent,
+                                           filterby="organisation_id",
+                                           filter_opts=(organisation_id,),
+                                           )
 
         return attr
 
@@ -3567,15 +3695,7 @@ def config(settings):
                 #        )
                 field = atable.supervisor_id
                 field.readable = field.writable = False
-                field = atable.job_title_id
-                field.comment = None
-                field.label = T("Sector") # RDRT-specific
-                from s3 import IS_ONE_OF
-                field.requires = IS_ONE_OF(current.db, "hrm_job_title.id",
-                                           field.represent,
-                                           filterby = "type",
-                                           filter_opts = (4,),
-                                           )
+                _customise_job_title_field(atable.job_title_id)
 
             elif component_name == "experience":
                 if root_org == IRCS:
