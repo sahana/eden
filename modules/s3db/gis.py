@@ -399,6 +399,11 @@ class S3LocationModel(S3Model):
                             #                "multiple": False,
                             #                },
 
+                            # Regions
+                            org_region_country = {"name": "region",
+                                                  "joinby": "location_id",
+                                                  },
+
                             # Sites
                             org_site = "location_id",
                             )

@@ -311,6 +311,7 @@ def config(settings):
     BRCS = "Bangladesh Red Crescent Society"
     CRMADA = "Malagasy Red Cross Society"
     CVTL = "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"
+    IFRC = "International Federation of Red Cross and Red Crescent Societies"
     IRCS = "Iraqi Red Crescent Society"
     NRCS = "Nepal Red Cross Society"
     NZRC = "New Zealand Red Cross"
@@ -1528,6 +1529,46 @@ def config(settings):
         return False
 
     # -----------------------------------------------------------------------------
+    def _countries_for_region():
+        """
+            Helper to determine the list of countries in a user's root region
+        """
+
+        user = current.auth.user
+        organisation_id = user and user.organisation_id or None
+        if organisation_id:
+
+            db = current.db
+            s3db = current.s3db
+
+            otable = s3db.org_organisation
+            rtable = s3db.org_region
+            query = (otable.id == organisation_id) & \
+                    (rtable.id == otable.region_id)
+            region = db(query).select(rtable.id,
+                                      rtable.parent,
+                                      cache = s3db.cache,
+                                      limitby=(0, 1)
+                                      ).first()
+            if region:
+                ctable = s3db.org_region_country
+                parent = region.parent
+                if parent:
+                    query = (rtable.parent == parent)
+                else:
+                    query = (rtable.parent == region.id)
+                query &= (rtable.deleted == False)   
+                children = db(query).select(rtable.id)
+                region_ids = [c.id for c in children]
+                query = (ctable.region_id.belongs(region_ids)) & \
+                        (ctable.deleted == False)
+                countries = db(query).select(ctable.location_id)
+                countries = [c.location_id for c in countries]
+                return countries
+
+        return []
+
+    # -----------------------------------------------------------------------------
     def _customise_job_title_field(field, r = None):
         """
             Helper to customise the Job Title field for RDRT
@@ -1682,9 +1723,22 @@ def config(settings):
         COUNTRY = messages.COUNTRY
         field = table.location_id
         field.label = COUNTRY
-        field.requires = s3db.gis_country_requires
-        field.widget = S3MultiSelectWidget(multiple=False)
         field.represent = S3Represent(lookup="gis_location", translate=True)
+        countries = _countries_for_region()
+        if countries:
+            # Limit to just this region's countries
+            from s3 import IS_ONE_OF
+            field.requires = IS_ONE_OF(db, "gis_location.id",
+                                       field.represent,
+                                       filterby = "id",
+                                       filter_opts = countries,
+                                       sort=True)
+            # Filter to just the user's region
+            s3.filter = (field.belongs(countries))
+        else:
+            # Allow all countries
+            field.requires = s3db.gis_country_requires
+        field.widget = S3MultiSelectWidget(multiple=False)
 
         rtable = s3db.deploy_response
         rtable.human_resource_id.label = MEMBER
@@ -1837,12 +1891,14 @@ def config(settings):
             if not r.component and r.method == "create":
                 # Org is always IFRC
                 otable = s3db.org_organisation
-                query = (otable.name == "International Federation of Red Cross and Red Crescent Societies")
+                query = (otable.name == IFRC)
                 organisation = db(query).select(otable.id,
                                                 limitby = (0, 1),
                                                 ).first()
-                if organisation:
+                try:
                     r.table.organisation_id.default = organisation.id
+                except:
+                    current.log.error("Cannot find org %s - prepop not done?" % IFRC)
 
             return result
         s3.prep = custom_prep
@@ -2355,15 +2411,13 @@ def config(settings):
             # @ToDo: Make this use the same lookup as in ns_only to check if user can see HRs from multiple NS
             settings.org.regions = False
             s3db.hrm_human_resource.site_id.represent = s3db.org_SiteRepresent(show_type = False)
+            #settings.org.site_label = "Office/Center"
 
         if controller == "vol":
             if root_org == ARCS:
                 arcs = True
                 settings.pr.request_email = False
                 settings.pr.request_year_of_birth = True
-
-        #elif vnrc:
-        #    settings.org.site_label = "Office/Center"
 
         s3 = current.response.s3
 
@@ -2527,6 +2581,24 @@ def config(settings):
 
             elif controller == "deploy":
                 # Custom settings for RDRT
+                AP = _is_asia_pacific()
+                if AP:
+                    db = current.db
+                    otable = s3db.org_organisation
+                    org = db(otable.name == AP_ZONE).select(otable.id,
+                                                            limitby=(0, 1),
+                                                            cache = s3db.cache,
+                                                            ).first()
+                    try:
+                        organisation_id = org.id
+                    except:
+                        current.log.error("Cannot find org %s - prepop not done?" % AP_ZONE)
+                        organisation_id = None
+                    else:
+                        pass
+                        # @ToDo: Filter the list_field. This isn't working:
+                        #from s3 import FS
+                        #resource.add_filter((FS("~.course_id$organisation_id") == organisation_id), "training")
 
                 # Custom profile widgets for hrm_competency ("skills"):
                 from s3 import FS
@@ -2539,7 +2611,8 @@ def config(settings):
                 contacts_filter = None
                 while profile_widgets:
                     widget = profile_widgets.pop(0)
-                    if widget["tablename"] == "hrm_competency":
+                    w_tablename = widget["tablename"]
+                    if w_tablename == "hrm_competency":
                         for skill_type, label, label_create in subsets:
                             query = widget["filter"] & \
                                     (FS("skill_id$skill_type_id$name") == skill_type)
@@ -2548,9 +2621,14 @@ def config(settings):
                             new_widget["label_create"] = label_create
                             new_widget["filter"] = query
                             append_widget(new_widget)
-                    elif widget["tablename"] == "hrm_experience":
+                    elif w_tablename == "hrm_experience":
                         new_widget = dict(widget)
                         new_widget["create_controller"] = "deploy"
+                        append_widget(new_widget)
+                    elif w_tablename == "hrm_training" and AP and organisation_id:
+                        new_widget = dict(widget)
+                        new_widget["filter"] = widget["filter"] & \
+                            (FS("~.course_id$organisation_id") == organisation_id)
                         append_widget(new_widget)
                     else:
                         append_widget(widget)
@@ -2654,11 +2732,13 @@ def config(settings):
                                (T("Emergency Contacts"), "person_id$contact_emergency.id"),
                                "person_id$physical_description.blood_type",
                                ]
+
                 resource.configure(filter_widgets = filters,
                                    list_fields = list_fields,
                                    profile_widgets = widgets,
                                    profile_header = rdrt_member_profile_header,
                                    )
+
             return True
         s3.prep = custom_prep
 
@@ -2825,6 +2905,8 @@ def config(settings):
             
             db = current.db
             s3db = current.s3db
+            ttable = s3db.hrm_training
+
             otable = s3db.org_organisation
             org = db(otable.name == AP_ZONE).select(otable.id,
                                                     limitby=(0, 1),
@@ -2837,12 +2919,20 @@ def config(settings):
             else:
                 from s3 import FS, IS_ONE_OF
                 current.response.s3.filter = (FS("~.course_id$organisation_id") == organisation_id)
-                field = s3db.hrm_training.course_id
+                field = ttable.course_id
                 field.requires = IS_ONE_OF(db, "hrm_course.id",
                                            field.represent,
                                            filterby="organisation_id",
                                            filter_opts=(organisation_id,),
                                            )
+            # Grades 1-4
+            course_grade_opts = (1, 2, 3, 4)
+            field = s3db.hrm_training.grade
+            field.readable = field.writable = True
+            field.represent = lambda opt: course_grade_opts.get(opt, NONE)
+            from gluon import IS_EMPTY_OR, IS_IN_SET
+            field.requires = IS_EMPTY_OR(IS_IN_SET(course_grade_opts,
+                                                   zero=None))
 
         return attr
 

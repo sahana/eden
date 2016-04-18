@@ -1793,9 +1793,15 @@
                         <resource name="hrm_course">
                             <xsl:attribute name="tuid"><xsl:value-of select="$item"/></xsl:attribute>
                             <data field="name"><xsl:value-of select="$item"/></data>
-                            <reference field="organisation_id" resource="org_organisation">
-                                <xsl:attribute name="tuid"><xsl:value-of select="concat('ORG:', $org)"/></xsl:attribute>
-                            </reference>
+                            <xsl:if test="not(starts-with($item, 'RDRT'))">
+                                <!--
+                                    Most training courses in Staff/Volunteer imports will be for that NS
+                                    RDRT courses however should match the IFRC Region
+                                -->
+                                <reference field="organisation_id" resource="org_organisation">
+                                    <xsl:attribute name="tuid"><xsl:value-of select="concat('ORG:', $org)"/></xsl:attribute>
+                                </reference>
+                            </xsl:if>
                             <data field="external"><xsl:value-of select="$arg2"/></data>
                         </resource>
                     </reference>
