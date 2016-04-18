@@ -16,6 +16,7 @@
     var clearAlert = function() {
 
         $('.alert-error, .alert-warning, .alert-info, .alert-success').fadeOut('fast');
+        $('.error_wrapper').fadeOut('fast').remove();
     };
 
     /**
@@ -45,12 +46,15 @@
      * also re-enabling the ID check button while hiding the registration button
      *
      * @param {jQuery} form - the form node
+     * @param {bool} keepAlerts - do not clear the alert space
      */
-    var clearForm = function(form) {
+    var clearForm = function(form, keepAlerts) {
 
-        clearAlert();
+        if (!keepAlerts) {
+            clearAlert();
+        }
         $('#case_event_label').val('');
-        $('#case_event_person__row').remove();
+        $('#case_event_person__row .controls').hide().empty();
         toggleSubmit(form, false);
     };
 
@@ -66,35 +70,12 @@
                 e.stopPropagation();
                 return false;
             });
+        } else {
+            // Clear alert space when launching Zxing
+            $('.zxing-button').unbind(ns).bind('click' + ns, function() {
+                clearAlert();
+            });
         }
-
-        // Cancel-button to clear the form
-        $('a.cancel-action').unbind(ns).bind('click' + ns, function(e) {
-            e.preventDefault();
-            clearForm($(this).closest('form'));
-        });
-
-
-        var labelInput = $('#case_event_label').unbind(ns);
-
-        labelInput.focus().val(labelInput.val());
-
-        // Changing the label resets form
-        labelInput.bind('input' + ns, function(e) {
-            $('#case_event_person__row').remove();
-            toggleSubmit($(this).closest('form'), false);
-        });
-        // Key events for label field
-        labelInput.bind('keyup' + ns, function(e) {
-            switch (e.which) {
-                case 27:
-                    // Pressing ESC resets the form
-                    clearForm($(this).closest('form'));
-                    break;
-                default:
-                    break;
-            }
-        });
 
         // Toggle event type selector
         $('.event-type-toggle').unbind(ns).bind('click' + ns, function() {
@@ -116,7 +97,7 @@
             // Update event type in header
             $('.event-type-name').text(name);
             // Enable submit if we have a person
-            if ($('#case_event_person__row').length) {
+            if ($('#case_event_person__row .controls').text()) {
                 toggleSubmit($('form'), true);
             }
             // Update Zxing URL
@@ -131,11 +112,150 @@
             self.closest('ul.event-type-selector').slideUp();
         });
 
-        // Clear alert space when launching Zxing
-        $('.zxing-button').unbind(ns).bind('click' + ns, function() {
+        var labelInput = $('#case_event_label').unbind(ns);
+
+        // Focus on ID input at start
+        labelInput.focus().val(labelInput.val());
+
+        // Changing the label resets form
+        labelInput.bind('input' + ns, function(e) {
             clearAlert();
+            $('#case_event_person__row .controls').hide().empty();
+            toggleSubmit($(this).closest('form'), false);
         });
 
+        // Key events for label field
+        labelInput.bind('keyup' + ns, function(e) {
+            switch (e.which) {
+                case 27:
+                    // Pressing ESC resets the form
+                    clearForm($(this).closest('form'));
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        // Cancel-button to clear the form
+        $('a.cancel-action').unbind(ns).bind('click' + ns, function(e) {
+            e.preventDefault();
+            clearForm($(this).closest('form'));
+        });
+
+        var personInfo = $('#case_event_person__row .controls');
+
+        // Click-Handler for Check-ID button
+        $('.check-btn').unbind(ns).bind('click' + ns, function(e) {
+
+            e.preventDefault();
+            clearAlert();
+
+            var label = $('#case_event_label').val();
+            if (!label) {
+                return;
+            }
+
+            var input = {'l': label, 'c': true},
+                ajaxURL = S3.Ap.concat('/dvr/case_event/register.json');
+
+            // Clear person info, show throbber
+            personInfo.empty();
+            var throbber = $('<div class="inline-throbber">').insertAfter(personInfo);
+
+            $.ajaxS3({
+                'url': ajaxURL,
+                'type': 'POST',
+                'dataType': 'json',
+                'contentType': 'application/json; charset=utf-8',
+                'data': JSON.stringify(input),
+                'success': function(data) {
+
+                    // Remove the throbber
+                    throbber.remove();
+
+                    if (data.e) {
+                        // Show error message on ID field
+                        var msg = $('<div class="error_wrapper"><div id="label__error" class="error" style="display: block;">' + data.e + '</div></div>').hide();
+                        msg.insertAfter($('#case_event_label')).slideDown();
+
+                    } else {
+                        // Show the person details
+                        personInfo.html(data.p).removeClass('hide').show();
+                        // Enable submit if we have a valid event type
+                        if ($('input[type="hidden"][name="event"]').val()) {
+                            toggleSubmit($('form'), true);
+                        }
+                    }
+
+                    // Show alerts
+                    if (data.a) {
+                        S3.showAlert(data.a, 'error');
+                    } else if (data.m) {
+                        S3.showAlert(data.m, 'success');
+                    }
+
+                },
+                'error': function () {
+
+                    // Clear the form, but keep the alert
+                    throbber.remove();
+                    clearForm($('form'), true);
+                }
+            });
+        });
+
+        $('.submit-btn').unbind(ns).bind('click' + ns, function(e) {
+
+            e.preventDefault();
+            clearAlert();
+
+            var label = $('#case_event_label').val(),
+                event = $('input[type="hidden"][name="event"]').val();
+            if (!label || !event) {
+                return;
+            }
+            var input = {'l': label, 't': event},
+                ajaxURL = S3.Ap.concat('/dvr/case_event/register.json');
+
+            // Show throbber (don't clear person info just yet)
+            var throbber = $('<div class="inline-throbber">').insertAfter(personInfo);
+
+            $.ajaxS3({
+                'url': ajaxURL,
+                'type': 'POST',
+                'dataType': 'json',
+                'contentType': 'application/json; charset=utf-8',
+                'data': JSON.stringify(input),
+                'success': function(data) {
+
+                    // Remove the throbber
+                    throbber.remove();
+
+                    if (data.e) {
+                        // Show error message on ID field
+                        var msg = $('<div class="error_wrapper"><div id="label__error" class="error" style="display: block;">' + data.e + '</div></div>').hide();
+                        msg.insertAfter($('#case_event_label')).slideDown();
+
+                    } else {
+                        // Done - clear the form
+                        clearForm($('form'));
+                    }
+
+                    if (data.a) {
+                        S3.showAlert(data.a, 'error', false);
+                    } else if (data.m) {
+                        S3.showAlert(data.m, 'success', false);
+                    }
+
+                },
+                'error': function () {
+
+                    // Clear the form, but keep the alert
+                    throbber.remove();
+                    clearForm($('form'), true);
+                }
+            });
+        });
     });
 
 }(jQuery));

@@ -2781,6 +2781,41 @@ class DVRRegisterCaseEvent(S3Method):
             @param attr: controller parameters
         """
 
+        # User must be permitted to create case events
+        auth = current.auth
+        permitted = auth.s3_has_permission("create", "dvr_case_event")
+        if not permitted:
+            auth.permission.fail()
+
+        output = {}
+        representation = r.representation
+
+        if representation == "html":
+            if r.http in ("GET", "POST"):
+                output = self.registration_form(r, **attr)
+            else:
+                r.error(405, current.ERROR.BAD_METHOD)
+
+        elif representation == "json":
+            if r.http == "POST":
+                output = self.registration_ajax(r, **attr)
+            else:
+                r.error(405, current.ERROR.BAD_METHOD)
+
+        else:
+            r.error(415, current.ERROR.BAD_FORMAT)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def registration_form(self, r, **attr):
+        """
+            Render and process the registration form
+
+            @param r: the S3Request instance
+            @param attr: controller parameters
+        """
+
         output = {}
         response = current.response
         s3 = response.s3
@@ -2794,12 +2829,6 @@ class DVRRegisterCaseEvent(S3Method):
         http = r.http
         get_vars = r.get_vars
         post_vars = r.post_vars
-
-        # User must be permitted to create case events
-        auth = current.auth
-        permitted = auth.s3_has_permission("create", "dvr_case_event")
-        if not permitted:
-            auth.permission.fail()
 
         # Initialize form variables
         label = None
@@ -2819,7 +2848,6 @@ class DVRRegisterCaseEvent(S3Method):
 
         elif http == "POST":
 
-            # @todo: add Ajax submission (full page reload rather slow)
             if "check" in post_vars:
                 # Only check ID label, don't register an event
                 check = True
@@ -2836,7 +2864,7 @@ class DVRRegisterCaseEvent(S3Method):
             person = self.get_person(label)
             if person is None:
                 if http == "GET":
-                    response.error = T("No person with this ID number")
+                    response.error = T("No person found with this ID number")
             else:
                 pe_label = person.pe_label
                 post_vars["label"] = pe_label
@@ -2856,6 +2884,10 @@ class DVRRegisterCaseEvent(S3Method):
                             label = T("ID"),
                             requires = IS_NOT_EMPTY(error_message=T("Enter or scan an ID")),
                             ),
+                      Field("person",
+                            label = "",
+                            writable = False,
+                            ),
                       ]
 
         # Add person data if identified
@@ -2867,16 +2899,13 @@ class DVRRegisterCaseEvent(S3Method):
                 person_data = "%s (%s %s)" % (name, T("Date of Birth"), dob)
             else:
                 person_data = name
-            data = {"id": "",
-                    "label": pe_label,
-                    "person": person_data,
-                    }
-            person_fields = [Field("person",
-                                   label = T("Name"),
-                                   writable = False,
-                                   ),
-                             ]
-            formfields.extend(person_fields)
+        else:
+            person_data = ""
+
+        data = {"id": "",
+                "label": pe_label,
+                "person": person_data,
+                }
 
         # Form buttons
         check_btn = INPUT(_class = "tiny secondary button check-btn",
@@ -2997,6 +3026,79 @@ class DVRRegisterCaseEvent(S3Method):
         return output
 
     # -------------------------------------------------------------------------
+    def registration_ajax(self, r, **attr):
+        """
+            Ajax response method
+
+            @param r: the S3Request instance
+            @param attr: controller parameters
+        """
+
+        T = current.T
+
+        s = r.body
+        s.seek(0)
+        try:
+            data = json.load(s)
+        except (ValueError, TypeError):
+            r.error(400, current.ERROR.BAD_REQUEST)
+
+        output = {}
+
+        alert = None
+        error = None
+        message = None
+
+        pe_label = data.get("l")
+
+        # Identify the person
+
+        person = self.get_person(pe_label)
+        if person is None:
+            error = s3_str(T("No person found with this ID number"))
+
+        else:
+            check = data.get("c")
+            if check:
+
+                name = s3_fullname(person)
+                dob = person.date_of_birth
+                if dob:
+                    dob = S3DateTime.date_represent(dob)
+                    person_data = "%s (%s %s)" % (name, T("Date of Birth"), dob)
+                else:
+                    person_data = name
+
+                output["p"] = s3_str(person_data)
+                output["l"] = person.pe_label
+
+            else:
+                event_code = data.get("t")
+                if not event_code:
+                    alert = T("No event type specified")
+                else:
+                    event_type = self.get_event_type(event_code)
+                    if not event_type:
+                        alert = T("Invalid event type %s" % event_code)
+                    else:
+                        success = self.register_event(person.id, event_type.id)
+                        if success:
+                            message = T("Event registered")
+                        else:
+                            alert = T("Could not register event")
+
+        # Add messages to output
+        if error:
+            output["e"] = s3_str(error)
+        if message:
+            output["m"] = s3_str(message)
+        if alert:
+            output["a"] = s3_str(alert)
+
+        current.response.headers["Content-Type"] = "application/json"
+        return json.dumps(output)
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def register_event(person_id, type_id):
         """
@@ -3054,7 +3156,7 @@ class DVRRegisterCaseEvent(S3Method):
 
         person = self.get_person(pe_label)
         if person is None:
-            form.errors["label"] = T("No person with this ID number")
+            form.errors["label"] = T("No person found with this ID number")
         else:
             formvars.person_id = person.id
 

@@ -691,11 +691,13 @@ body.popup {
     color: #c00;
 }
 /* Copy of BootStrap Styling */
-button.close {
+.alert button.close {
     background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
     border: 0 none;
     cursor: pointer;
     padding: 0;
+    display: inline;
+    margin: 0 0.3rem;
 }
 
 /* Throbber */
