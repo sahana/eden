@@ -103,6 +103,7 @@ class S3OrganisationModel(S3Model):
     names = ("org_organisation_type",
              "org_organisation_type_id",
              "org_region",
+             "org_region_country",
              "org_region_id",
              "org_region_represent",
              "org_organisation",
@@ -308,6 +309,26 @@ class S3OrganisationModel(S3Model):
                       deduplicate = S3Duplicate(),
                       hierarchy = hierarchy,
                       )
+
+            if settings.get_org_region_countries():
+                # Components
+                add_components(tablename,
+                               # Tags
+                               org_region_country = {"name": "country",
+                                                     "joinby": "region_id",
+                                                     },
+                               )
+
+                # ---------------------------------------------------------------------
+                # Region countries
+                #
+                tablename = "org_region_country"
+                define_table(tablename,
+                             region_id(),
+                             self.gis_country_id(),
+                             s3_comments(),
+                             *s3_meta_fields())
+
         else:
             region_represent = None
             region_id = S3ReusableField("region_id", "integer",

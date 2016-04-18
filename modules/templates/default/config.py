@@ -561,6 +561,8 @@ def config(settings):
     #settings.org.regions = True
     # Make Organisation Regions Hierarchical
     #settings.org.regions_hierarchical = True
+    # Enable the use of Organisation Region Countries
+    #settings.org.region_countries = True
     # Uncomment to show a Tab for Organisation Resources
     #settings.org.resources_tab = True
     # Make Services Hierarchical

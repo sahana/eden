@@ -3470,6 +3470,12 @@ class S3Config(Storage):
         """
         return self.org.get("regions", False)
 
+    def get_org_region_countries(self):
+        """
+            Whether Organisation Regions maintain a list of countries
+        """
+        return self.org.get("region_countries", False)
+
     def get_org_regions_hierarchical(self):
         """
             Whether Organisation Regions are Hierarchical or not

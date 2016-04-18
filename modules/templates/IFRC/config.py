@@ -497,6 +497,12 @@ def config(settings):
     # Organisation Management
     # Enable the use of Organisation Branches
     settings.org.branches = True
+    # Enable the use of Organisation Regions
+    settings.org.regions = True
+    # Make Organisation Regions Hierarchical
+    settings.org.regions_hierarchical = True
+    # Enable the use of Organisation Region Countries
+    settings.org.region_countries = True
     # Set the length of the auto-generated org/site code the default is 10
     settings.org.site_code_len = 3
     # Set the label for Sites
@@ -549,10 +555,6 @@ def config(settings):
     # Responses only come in via Email
     settings.deploy.responses_via_web = False
     settings.customise_deploy_home = deploy_index
-    # Enable the use of Organisation Regions
-    settings.org.regions = True
-    # Make Organisation Regions Hierarchical
-    settings.org.regions_hierarchical = True
     # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
     settings.hrm.skill_types = True
     # RDRT overrides these within controller:
@@ -2383,15 +2385,15 @@ def config(settings):
 
             table = s3db.hrm_human_resource
 
-            if arcs:
-                field = s3db.vol_details.card
-                field.readable = field.writable = True
-
-            elif vnrc:
+            if vnrc:
                 field = table.job_title_id
                 field.readable = field.writable = False
 
-            if not vnrc:
+            else:
+                if arcs:
+                    field = s3db.vol_details.card
+                    field.readable = field.writable = True
+
                 from s3 import S3OptionsFilter
                 filter_widgets = s3db.get_config("hrm_human_resource",
                                                  "filter_widgets")
@@ -2524,7 +2526,7 @@ def config(settings):
                                    )
 
             elif controller == "deploy":
-                # Custom setting for RDRT
+                # Custom settings for RDRT
 
                 # Custom profile widgets for hrm_competency ("skills"):
                 from s3 import FS
@@ -2583,7 +2585,7 @@ def config(settings):
                                        "icon": "user",
                                        })
 
-                # Remove unneeded filters widgets
+                # Remove unneeded filter widgets
                 filters = []
                 append_widget = filters.append
                 filter_widgets = get_config("filter_widgets")
