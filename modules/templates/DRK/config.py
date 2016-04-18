@@ -1566,6 +1566,7 @@ def config(settings):
                 onaccept = default
                 if all(cb != dvr_case_onaccept for cb in onaccept):
                     onaccept.append(dvr_case_onaccept)
+            config[setting] = onaccept
 
         s3db.configure(tablename, **config)
 
