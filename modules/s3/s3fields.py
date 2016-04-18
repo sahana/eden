@@ -47,7 +47,7 @@ from s3datetime import S3DateTime
 from s3navigation import S3ScriptItem
 from s3utils import s3_auth_user_represent, s3_auth_user_represent_name, s3_unicode, s3_str, S3MarkupStripper
 from s3validators import IS_ONE_OF, IS_UTC_DATE, IS_UTC_DATETIME
-from s3widgets import S3CalendarWidget, S3DateWidget, S3DateTimeWidget
+from s3widgets import S3CalendarWidget, S3DateWidget
 
 try:
     db = current.db
@@ -618,7 +618,6 @@ class S3Represent(object):
             self.htemplate = "%s > %s"
 
         self.setup = True
-        return
 
     # -------------------------------------------------------------------------
     def _lookup(self, values, rows=None):
@@ -726,6 +725,7 @@ class S3Represent(object):
                     lookup.pop(k, None)
                     items[keys.get(k, k)] = theset[k] = represent_row(row)
 
+        # Anything left gets set to default
         if lookup:
             for k in lookup:
                 items[keys.get(k, k)] = self.default
@@ -748,8 +748,6 @@ class S3Represent(object):
 
         if value in theset:
             return theset[value]
-
-        represent_row = self.represent_row
 
         prefix = None
         parent = hierarchy.parent(value)

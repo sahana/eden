@@ -11,6 +11,9 @@ except:
 
 from gluon import current
 from gluon.storage import Storage
+
+from s3 import S3Represent
+
 from controllers import deploy_index
 
 def config(settings):
@@ -2595,10 +2598,11 @@ def config(settings):
                         current.log.error("Cannot find org %s - prepop not done?" % AP_ZONE)
                         organisation_id = None
                     else:
-                        pass
-                        # @ToDo: Filter the list_field. This isn't working:
+                        # Filter the list_field
+                        s3db.hrm_training.course_id.represent = hrm_CourseRepresent(organisation_id)
+                        # @ToDo: Filter the Report. This isn't working (still shows NONEs for non-RDRT trainings in the report):
                         #from s3 import FS
-                        #resource.add_filter((FS("~.course_id$organisation_id") == organisation_id), "training")
+                        #resource.add_component_filter("training", (FS("training.course_id$organisation_id") == organisation_id))
 
                 # Custom profile widgets for hrm_competency ("skills"):
                 from s3 import FS
@@ -4920,5 +4924,57 @@ def config(settings):
             r.table.date.requires = requires.other
 
     settings.customise_vulnerability_data_resource = customise_vulnerability_data_resource
+
+# =============================================================================
+class hrm_CourseRepresent(S3Represent):
+    """
+        Representation of Courses
+        - list filtered to just those linked to the specified Organisation
+        - used for AP RDRT
+    """
+
+    def __init__(self, organisation_id):
+
+        self.organisation_id = organisation_id
+
+        super(hrm_CourseRepresent,
+              self).__init__(lookup="hrm_course",
+                             #none="",
+                             translate=True)
+
+    # -------------------------------------------------------------------------
+    def lookup_rows(self, key, values, fields=None):
+        """
+            Lookup all rows referenced by values.
+            (in foreign key representations)
+
+            @param key: the key Field
+            @param values: the values
+            @param fields: the fields to retrieve
+        """
+
+        table = self.table
+        organisation_id = self.organisation_id
+
+        if len(values) == 1:
+            query = (key == values[0])
+        else:
+            query = key.belongs(values)
+        rows = current.db(query).select(key,
+                                        table.name,
+                                        table.organisation_id,
+                                        )
+        new_rows = []
+        append = new_rows.append
+        for row in rows:
+            new_row = {key: row.id,
+                       }
+            if row.organisation_id == organisation_id:
+                new_row["name"] = row.name
+            else:
+                new_row["name"] = None
+            append(new_row)
+        self.queries += 1
+        return new_rows
 
 # END =========================================================================

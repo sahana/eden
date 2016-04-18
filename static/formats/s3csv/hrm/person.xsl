@@ -1796,7 +1796,8 @@
                             <xsl:if test="not(starts-with($item, 'RDRT'))">
                                 <!--
                                     Most training courses in Staff/Volunteer imports will be for that NS
-                                    RDRT courses however should match the IFRC Region
+                                    RDRT courses however should match the existing one linked to the IFRC Region
+                                    @ToDo: Allow the org to be specified so that ones common to multiple regions can match the correct one
                                 -->
                                 <reference field="organisation_id" resource="org_organisation">
                                     <xsl:attribute name="tuid"><xsl:value-of select="concat('ORG:', $org)"/></xsl:attribute>
