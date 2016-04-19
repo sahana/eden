@@ -388,10 +388,8 @@ class S3Resource(object):
                     filterfor = v
                 if not is_list:
                     subquery = (table[k] == filterfor)
-                elif filterfor:
-                    subquery = (table[hook.filterby].belongs(filterfor))
                 else:
-                    subquery = None
+                    subquery = (table[k].belongs(set(filterfor)))
                 if subquery:
                     if query is None:
                         query = subquery
@@ -5887,7 +5885,6 @@ class S3ResourceData(object):
                                links as HTML
         """
 
-        NONE = current.messages["NONE"]
         colname = rfield.colname
 
         field_data = self.field_data
@@ -5966,16 +5963,15 @@ class S3ResourceData(object):
                     vlist.append(value)
 
                 # Concatenate multiple values
-                NONE = current.messages["NONE"]
                 if any([hasattr(v, "xml") for v in vlist]):
                     data = TAG[""](
                             list(
                                 chain.from_iterable(
-                                    [(v, ", ") for v in vlist if v != NONE])
+                                    [(v, ", ") for v in vlist])
                                 )[:-1]
                             )
                 else:
-                    data = ", ".join([s3_unicode(v) for v in vlist if v != NONE])
+                    data = ", ".join([s3_unicode(v) for v in vlist])
 
                 result[colname] = data
                 if raw_data:

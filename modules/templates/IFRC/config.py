@@ -1560,7 +1560,7 @@ def config(settings):
                     query = (rtable.parent == parent)
                 else:
                     query = (rtable.parent == region.id)
-                query &= (rtable.deleted == False)   
+                query &= (rtable.deleted == False)
                 children = db(query).select(rtable.id)
                 region_ids = [c.id for c in children]
                 query = (ctable.region_id.belongs(region_ids)) & \
@@ -2597,12 +2597,35 @@ def config(settings):
                     except:
                         current.log.error("Cannot find org %s - prepop not done?" % AP_ZONE)
                         organisation_id = None
+                    #else:
+                        ## Filter the list_field
+                        #s3db.hrm_training.course_id.represent = hrm_CourseRepresent(organisation_id)
+                        ## @ToDo: Filter the Report. This isn't working (still shows NONEs for non-RDRT trainings in the report):
+                        ##from s3 import FS
+                        ##resource.add_component_filter("training", (FS("training.course_id$organisation_id") == organisation_id))
+
                     else:
-                        # Filter the list_field
-                        s3db.hrm_training.course_id.represent = hrm_CourseRepresent(organisation_id)
-                        # @ToDo: Filter the Report. This isn't working (still shows NONEs for non-RDRT trainings in the report):
-                        #from s3 import FS
-                        #resource.add_component_filter("training", (FS("training.course_id$organisation_id") == organisation_id))
+                        # Filter trainings to courses which belong to
+                        # the AP_ZONE organisation:
+                        ctable = s3db.hrm_course
+                        query = (ctable.organisation_id == organisation_id) & \
+                                (ctable.deleted != True)
+                        courses = db(query).select(ctable.id)
+                        course_ids = [row.id for row in rows]
+                        s3db.add_components("hrm_human_resource",
+                                            hrm_training = {"link": "pr_person",
+                                                            "joinby": "id",
+                                                            "key": "id",
+                                                            "fkey": "person_id",
+                                                            "pkey": "person_id",
+                                                            "filterby": {"course_id": course_ids,
+                                                                         },
+                                                            },
+                                            )
+                        # Re-attach component (we're past resource initialization)
+                        hook = s3db.get_component("hrm_human_resource", "training")
+                        if hook:
+                            r.resource._attach("training", hook)
 
                 # Custom profile widgets for hrm_competency ("skills"):
                 from s3 import FS
@@ -2906,7 +2929,7 @@ def config(settings):
 
         if current.request.controller == "deploy" and _is_asia_pacific():
             # Only interested in RDRT courses
-            
+
             db = current.db
             s3db = current.s3db
             ttable = s3db.hrm_training
