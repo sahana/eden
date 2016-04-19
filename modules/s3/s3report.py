@@ -1416,6 +1416,20 @@ class S3PivotTable(object):
         rows = self.rows
         cols = self.cols
 
+        # Exclude records with empty axis values ------------------------------
+        #
+        exclude_empty = current.s3db.get_config(tablename, "report_exclude_empty")
+        if exclude_empty is True:
+            # Exclude empty axis values for all fields
+            query = (FS(rows) != None) & (FS(cols) != None)
+            resource.add_filter(query)
+
+        elif type(exclude_empty) is tuple:
+            # Exclude empty axis values for some fields
+            for axis in (cols, rows):
+                if axis in exclude_empty:
+                    resource.add_filter(FS(axis) != None)
+
         # Retrieve the records ------------------------------------------------
         #
         data = resource.select(self.rfields.keys(), limit=None)
@@ -1443,7 +1457,6 @@ class S3PivotTable(object):
 
             dataframe = []
             extend = dataframe.extend
-            #insert = dataframe.append
             expand = self._expand
 
             for _id in records:

@@ -2620,6 +2620,12 @@ def config(settings):
                         if hook:
                             r.resource._attach("training", hook)
 
+                # Exclude None-values for training course pivot axis
+                s3db.configure("hrm_human_resource",
+                               report_exclude_empty=("training.course_id",
+                                                     ),
+                               )
+
                 # Custom profile widgets for hrm_competency ("skills"):
                 from s3 import FS
                 subsets = (("Computer", "Computer Skills", "Add Computer Skills"),
