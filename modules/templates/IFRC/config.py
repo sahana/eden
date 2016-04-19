@@ -2597,13 +2597,6 @@ def config(settings):
                     except:
                         current.log.error("Cannot find org %s - prepop not done?" % AP_ZONE)
                         organisation_id = None
-                    #else:
-                        ## Filter the list_field
-                        #s3db.hrm_training.course_id.represent = hrm_CourseRepresent(organisation_id)
-                        ## @ToDo: Filter the Report. This isn't working (still shows NONEs for non-RDRT trainings in the report):
-                        ##from s3 import FS
-                        ##resource.add_component_filter("training", (FS("training.course_id$organisation_id") == organisation_id))
-
                     else:
                         # Filter trainings to courses which belong to
                         # the AP_ZONE organisation:
@@ -2611,7 +2604,7 @@ def config(settings):
                         query = (ctable.organisation_id == organisation_id) & \
                                 (ctable.deleted != True)
                         courses = db(query).select(ctable.id)
-                        course_ids = [row.id for row in rows]
+                        course_ids = [c.id for c in courses]
                         s3db.add_components("hrm_human_resource",
                                             hrm_training = {"link": "pr_person",
                                                             "joinby": "id",
@@ -2956,7 +2949,7 @@ def config(settings):
             course_grade_opts = (1, 2, 3, 4)
             field = s3db.hrm_training.grade
             field.readable = field.writable = True
-            field.represent = lambda opt: course_grade_opts.get(opt, NONE)
+            field.represent = None
             from gluon import IS_EMPTY_OR, IS_IN_SET
             field.requires = IS_EMPTY_OR(IS_IN_SET(course_grade_opts,
                                                    zero=None))
