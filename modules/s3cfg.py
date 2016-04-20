@@ -2669,6 +2669,19 @@ class S3Config(Storage):
         """
         return self.dvr.get("appointments_update_last_seen_on", False)
 
+    def get_dvr_appointments_update_case_status(self):
+        """
+            Whether appointments automatically update the case
+            status when set to "completed"
+        """
+        return self.dvr.get("appointments_update_case_status", False)
+
+    def get_dvr_case_events_close_appointments(self):
+        """
+            Whether case events automatically close appointments
+        """
+        return self.dvr.get("case_events_close_appointments", False)
+
     def get_dvr_payments_update_last_seen_on(self):
         """
             Whether payments (e.g. allowance) shall automatically update

@@ -64,6 +64,7 @@ class DVRCaseModel(S3Model):
              "dvr_case_id",
              "dvr_case_language",
              "dvr_case_status",
+             "dvr_case_status_id",
              "dvr_case_type",
              )
 
@@ -71,12 +72,12 @@ class DVRCaseModel(S3Model):
 
         T = current.T
         db = current.db
-
-        configure = self.configure
-        crud_strings = current.response.s3.crud_strings
-        define_table = self.define_table
         settings = current.deployment_settings
 
+        crud_strings = current.response.s3.crud_strings
+
+        configure = self.configure
+        define_table = self.define_table
         person_id = self.pr_person_id
 
         manage_transferability = settings.get_dvr_manage_transferability()
@@ -512,6 +513,7 @@ class DVRCaseModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"dvr_case_id": case_id,
+                "dvr_case_status_id": status_id,
                 }
 
     # -------------------------------------------------------------------------
@@ -524,7 +526,10 @@ class DVRCaseModel(S3Model):
                                 writable = False,
                                 )
 
-        return {"dvr_case_id": lambda **attr: dummy("case_id"),
+        return {"dvr_case_id": lambda name="case_id", **attr: \
+                               dummy(name, **attr),
+                "dvr_case_status_id": lambda name="status_id", **attr: \
+                                      dummy(name, **attr),
                 }
 
     # -------------------------------------------------------------------------
@@ -722,12 +727,12 @@ class DVRCaseFlagModel(S3Model):
 
         T = current.T
         db = current.db
-
         settings = current.deployment_settings
+
         crud_strings = current.response.s3.crud_strings
 
-        define_table = self.define_table
         configure = self.configure
+        define_table = self.define_table
 
         manage_transferability = settings.get_dvr_manage_transferability()
 
@@ -887,7 +892,8 @@ class DVRCaseFlagModel(S3Model):
                                 writable = False,
                                 )
 
-        return {"dvr_case_flag_id": lambda **attr: dummy("flag_id"),
+        return {"dvr_case_flag_id": lambda name="flag_id", **attr: \
+                                    dummy(name, **attr),
                 }
 
 # =============================================================================
@@ -905,6 +911,7 @@ class DVRNeedsModel(S3Model):
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
+
         define_table = self.define_table
         configure = self.configure
 
@@ -985,7 +992,8 @@ class DVRNeedsModel(S3Model):
                                 writable = False,
                                 )
 
-        return {"dvr_need_id": lambda **attr: dummy("need_id"),
+        return {"dvr_need_id": lambda name="need_id", **attr: \
+                               dummy(name, **attr),
                 }
 
 # =============================================================================
@@ -1004,6 +1012,7 @@ class DVRNotesModel(S3Model):
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
+
         define_table = self.define_table
 
         # ---------------------------------------------------------------------
@@ -1105,8 +1114,9 @@ class DVRCaseActivityModel(S3Model):
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
-        define_table = self.define_table
+
         configure = self.configure
+        define_table = self.define_table
 
         twoweeks = current.request.utcnow + datetime.timedelta(days=14)
 
@@ -1327,20 +1337,22 @@ class DVRCaseAppointmentModel(S3Model):
 
     names = ("dvr_case_appointment",
              "dvr_case_appointment_type",
+             "dvr_appointment_type_id",
              )
 
     def model(self):
 
         T = current.T
         db = current.db
-
-        crud_strings = current.response.s3.crud_strings
-        define_table = self.define_table
-        configure = self.configure
-
         settings = current.deployment_settings
 
+        crud_strings = current.response.s3.crud_strings
+
+        configure = self.configure
+        define_table = self.define_table
+
         mandatory_appointments = settings.get_dvr_mandatory_appointments()
+        update_case_status = settings.get_dvr_appointments_update_case_status()
 
         # ---------------------------------------------------------------------
         # Case Appointment Type
@@ -1404,6 +1416,11 @@ class DVRCaseAppointmentModel(S3Model):
                                                              ),
                                          ),
                            ),
+                     self.dvr_case_status_id(
+                        label = T("Case Status upon Completion"),
+                        readable = update_case_status,
+                        writable = update_case_status,
+                        ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -1513,6 +1530,7 @@ class DVRCaseAppointmentModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"dvr_appointment_status_opts": appointment_status_opts,
+                "dvr_appointment_type_id": appointment_type_id,
                 }
 
     # -------------------------------------------------------------------------
@@ -1520,7 +1538,14 @@ class DVRCaseAppointmentModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
+
         return {"dvr_appointment_status_opts": {},
+                "dvr_appointment_type_id": lambda name="type_id", **attr: \
+                                           dummy(name, **attr),
                 }
 
     # -------------------------------------------------------------------------
@@ -1549,31 +1574,75 @@ class DVRCaseAppointmentModel(S3Model):
         """
             Actions after creating/updating appointments
                 - Update last_seen_on in the corresponding case(s)
+                - Update the case status if configured to do so
 
             @param form: the FORM
         """
 
-        if current.deployment_settings.get_dvr_appointments_update_last_seen_on():
+        # Read form data
+        formvars = form.vars
+        if "id" in formvars:
+            record_id = formvars.id
+        elif hasattr(form, "record_id"):
+            record_id = form.record_id
+        else:
+            record_id = None
+        if not record_id:
+            return
 
-            # Read form data
-            form_vars = form.vars
-            if "id" in form_vars:
-                record_id = form_vars.id
-            elif hasattr(form, "record_id"):
-                record_id = form.record_id
-            else:
-                record_id = None
-            if not record_id:
-                return
+        db = current.db
+        s3db = current.s3db
 
-            # Get the person ID
-            table = current.s3db.dvr_case_appointment
-            row = current.db(table.id == record_id).select(table.person_id,
-                                                           limitby = (0, 1),
-                                                           ).first()
-            # Update last_seen_on
+        settings = current.deployment_settings
+
+        person_id = formvars.get("person_id")
+        case_id = formvars.get("case_id")
+
+        if not person_id or not case_id:
+            table = s3db.dvr_case_appointment
+            row = db(table.id == record_id).select(table.case_id,
+                                                   table.person_id,
+                                                   limitby = (0, 1),
+                                                   ).first()
             if row:
-                dvr_update_last_seen(row.person_id)
+                person_id = row.person_id
+                case_id = row.case_id
+
+        if settings.get_dvr_appointments_update_last_seen_on() and person_id:
+            # Update last_seen_on
+            dvr_update_last_seen(person_id)
+
+        # Update the case status if appointment is completed today
+        # NB appointment status "completed" must be set by this form
+        if settings.get_dvr_appointments_update_case_status() and \
+           s3_str(formvars.get("status")) == "4":
+
+            # Get the case status to be set when appointment is completed today
+            today = current.request.utcnow.date()
+            ttable = s3db.dvr_case_appointment_type
+            query = (table.id == record_id) & \
+                    (table.date == today) & \
+                    (table.deleted != True) & \
+                    (ttable.id == table.type_id) & \
+                    (ttable.status_id != None)
+            row = db(query).select(ttable.status_id, limitby = (0, 1)).first()
+            if row:
+                # Update the corresponding case(s)
+                # NB appointments without case_id update all cases for the person
+                ctable = s3db.dvr_case
+                stable = s3db.dvr_case_status
+                query = (ctable.person_id == person_id) & \
+                        (ctable.archived != True) & \
+                        (ctable.deleted != True) & \
+                        (stable.id == ctable.status_id) & \
+                        (stable.is_closed != True)
+                if case_id:
+                    query &= (ctable.id == case_id)
+                cases = db(query).select(ctable.id)
+                has_permission = current.auth.s3_has_permission
+                for case in cases:
+                    if has_permission("update", ctable, record_id=case.id):
+                        case.update_record(status_id = row.status_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1623,8 +1692,9 @@ class DVRCaseBeneficiaryModel(S3Model):
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
-        define_table = self.define_table
+
         configure = self.configure
+        define_table = self.define_table
 
         # ---------------------------------------------------------------------
         # Beneficiary Types (e.g. Age Groups)
@@ -1759,7 +1829,8 @@ class DVRCaseBeneficiaryModel(S3Model):
                                 writable = False,
                                 )
 
-        return {"dvr_beneficiary_type_id": lambda **attr: dummy("beneficiary_type_id"),
+        return {"dvr_beneficiary_type_id": lambda name="beneficiary_type_id", **attr: \
+                                           dummy(name, **attr),
                 }
 
 
@@ -1779,8 +1850,9 @@ class DVRCaseEconomyInformationModel(S3Model):
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
-        define_table = self.define_table
+
         configure = self.configure
+        define_table = self.define_table
 
         # ---------------------------------------------------------------------
         # Housing Types
@@ -1988,8 +2060,9 @@ class DVRCaseAllowanceModel(S3Model):
         db = current.db
 
         crud_strings = current.response.s3.crud_strings
-        define_table = self.define_table
+
         configure = self.configure
+        define_table = self.define_table
 
         # ---------------------------------------------------------------------
         # Allowance Information
@@ -2164,17 +2237,20 @@ class DVRCaseEventModel(S3Model):
 
         db = current.db
         s3 = current.response.s3
+        settings = current.deployment_settings
 
-        define_table = self.define_table
         crud_strings = s3.crud_strings
 
         configure = self.configure
+        define_table = self.define_table
 
         # ---------------------------------------------------------------------
         # Case Event Types
         #
         role_table = str(current.auth.settings.table_group)
         role_represent = S3Represent(lookup=role_table, fields=("role",))
+
+        close_appointments = settings.get_dvr_case_events_close_appointments()
 
         tablename = "dvr_case_event_type"
         define_table(tablename,
@@ -2214,6 +2290,18 @@ class DVRCaseEventModel(S3Model):
                                                              ),
                                          ),
                            ),
+                     self.dvr_appointment_type_id(
+                        "appointment_type_id",
+                        label = T("Appointment Type"),
+                        readable = close_appointments,
+                        writable = close_appointments,
+                        comment = DIV(_class = "tooltip",
+                                      _title = "%s|%s" % (T("Appointment Type"),
+                                                          T("The type of appointments which are completed with this type of event"),
+                                                          ),
+                                      ),
+
+                        ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -2390,6 +2478,7 @@ class DVRCaseEventModel(S3Model):
         """
             Actions after creation of a case event:
                 - update last_seen_on in the corresponding cases
+                - close appointments if configured to do so
 
             @param form: the FORM
         """
@@ -2402,22 +2491,145 @@ class DVRCaseEventModel(S3Model):
         if not record_id:
             return
 
+        db = current.db
+        s3db = current.s3db
+
+        close_appointments = current.deployment_settings \
+                                    .get_dvr_case_events_close_appointments()
+
+        case_id = formvars.get("case_id")
         person_id = formvars.get("person_id")
-        if not person_id:
+        type_id = formvars.get("type_id")
+
+        if not person_id or \
+           close_appointments and (not case_id or not type_id):
             # Reload the record
-            table = current.s3db.dvr_case_event
-            row = current.db(table.id == record_id).select(table.person_id,
-                                                           limitby = (0, 1),
-                                                           ).first()
+            table = s3db.dvr_case_event
+            row = db(table.id == record_id).select(table.case_id,
+                                                   table.person_id,
+                                                   table.type_id,
+                                                   limitby = (0, 1),
+                                                   ).first()
             if not row:
                 return
-            else:
-                person_id == row.person_id
+
+            case_id = row.case_id
+            person_id == row.person_id
+            type_id = row.type_id
+
         if not person_id:
             return
 
         # Update last_seen
         dvr_update_last_seen(person_id)
+
+        # Close appointments
+        if close_appointments and type_id:
+
+            atable = s3db.dvr_case_appointment
+            ttable = s3db.dvr_case_event_type
+
+            today = current.request.utcnow.date()
+
+            left = atable.on((atable.type_id == ttable.appointment_type_id) & \
+                             (atable.person_id == person_id) & \
+                             ((atable.date == None) | (atable.date <= today)) & \
+                             (atable.deleted != True)
+                             )
+
+            query = (ttable.id == type_id) & \
+                    (ttable.appointment_type_id != None) & \
+                    (ttable.deleted != True)
+
+            if case_id:
+                query &= (atable.case_id == case_id) | \
+                         (atable.case_id == None)
+            rows = db(query).select(ttable.appointment_type_id,
+                                    atable.id,
+                                    atable.date,
+                                    atable.status,
+                                    left = left,
+                                    orderby = ~atable.date,
+                                    )
+
+            data = {"date": today, "status": 4}
+            if rows:
+                update = None
+                create = False
+
+                first = rows[0].dvr_case_appointment
+                if first.id is None:
+                    # No appointment of this type yet
+                    create = True
+
+                else:
+                    # Find key dates
+                    undated = open_today = closed_today = previous = None
+                    for row in rows:
+                        appointment = row.dvr_case_appointment
+                        if appointment.date is None:
+                            if not undated:
+                                # An appointment without date
+                                undated = appointment
+                        elif appointment.date == today:
+                            if appointment.status != 4:
+                                # An open or cancelled appointment today
+                                open_today = appointment
+                            else:
+                                # A closed appointment today
+                                closed_today = appointment
+                        elif previous is None:
+                            # The last appointment before today
+                            previous = appointment
+
+                    if open_today:
+                        # If we have an open appointment for today, update it
+                        update = open_today
+                    elif closed_today:
+                        # If we already have a closed appointment for today,
+                        # do nothing
+                        update = None
+                    elif previous:
+                        if previous.status not in (1, 2, 3):
+                            # Last appointment before today is closed
+                            # => create a new one unless there is an undated one
+                            if undated:
+                                update = undated
+                            else:
+                                create = True
+                        else:
+                            # Last appointment before today is still open
+                            # => update it
+                            update = previous
+                    else:
+                        update = undated
+
+                if create:
+                    # Create a new closed appointment
+                    data["type_id"] = rows[0].dvr_case_event_type.appointment_type_id
+                    data["person_id"] = person_id
+                    data["case_id"] = case_id
+                    aresource = s3db.resource("dvr_case_appointment")
+                    try:
+                        record_id = aresource.insert(**data)
+                    except S3PermissionError:
+                        current.log.error("Event Registration: %s" % sys.exc_info()[1])
+
+                elif update:
+                    # Update the appointment
+                    permitted = current.auth.s3_has_permission("update",
+                                                               atable,
+                                                               record_id=update.id,
+                                                               )
+                    if permitted:
+                        success = update.update_record(**data)
+                        if success:
+                            data["id"] = update.id
+                            s3db.onaccept(atable, data, method="update")
+                        else:
+                            current.log.error("Event Registration: could not update appointment %s" % update.id)
+                    else:
+                        current.log.error("Event registration: not permitted to update appointment %s" % update.id)
 
     # -------------------------------------------------------------------------
     @staticmethod
