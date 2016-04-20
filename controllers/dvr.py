@@ -534,6 +534,20 @@ def case_event_type():
 def case_event():
     """ Case Event Types: RESTful CRUD Controller """
 
+    def prep(r):
+        if not r.component:
+            list_fields = ["date",
+                           (T("ID"), "person_id$pe_label"),
+                           "person_id",
+                           "type_id",
+                           (T("Registered by"), "created_by"),
+                           "comments",
+                           ]
+            r.resource.configure(list_fields = list_fields,
+                                 )
+        return True
+    s3.prep = prep
+
     return s3_rest_controller()
 
 # END =========================================================================

@@ -2261,6 +2261,7 @@ class DVRCaseEventModel(S3Model):
                                       empty = False,
                                       label = T("Case Number"),
                                       ondelete = "CASCADE",
+                                      readable = False,
                                       writable = False,
                                       ),
                      # Beneficiary (component link):
@@ -2300,6 +2301,24 @@ class DVRCaseEventModel(S3Model):
             msg_list_empty = T("No Events currently registered"),
             )
 
+        # Filter Widgets
+        filter_widgets = [S3TextFilter(["person_id$pe_label",
+                                        "person_id$first_name",
+                                        "person_id$middle_name",
+                                        "person_id$last_name",
+                                        "created_by$email",
+                                        "comments",
+                                        ],
+                                        label = T("Search"),
+                                       ),
+                          S3OptionsFilter("type_id",
+                                          options = lambda: s3_get_filter_opts("dvr_case_event_type",
+                                                                               translate = True,
+                                                                               ),
+                                          ),
+                          S3DateFilter("date"),
+                          ]
+
         # Table Configuration
         configure(tablename,
                   create_onaccept = self.case_event_create_onaccept,
@@ -2307,11 +2326,13 @@ class DVRCaseEventModel(S3Model):
                                                        "type_id",
                                                        ),
                                             ),
+                  filter_widgets = filter_widgets,
                   # Not user-insertable as this is for automatic
                   # event registration, override in template if
                   # required:
                   insertable = False,
-                  list_fields = ["date",
+                  list_fields = ["person_id",
+                                 "date",
                                  "type_id",
                                  (T("Registered by"), "created_by"),
                                  "comments",
