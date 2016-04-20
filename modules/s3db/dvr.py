@@ -1638,11 +1638,19 @@ class DVRCaseAppointmentModel(S3Model):
                         (stable.is_closed != True)
                 if case_id:
                     query &= (ctable.id == case_id)
-                cases = db(query).select(ctable.id)
+                cases = db(query).select(ctable.id,
+                                         ctable.person_id,
+                                         ctable.archived,
+                                         )
                 has_permission = current.auth.s3_has_permission
                 for case in cases:
                     if has_permission("update", ctable, record_id=case.id):
+                        # Customise case resource
+                        r = S3Request("dvr", "case", current.request)
+                        r.customise_resource("dvr_case")
+                        # Update case status + run onaccept
                         case.update_record(status_id = row.status_id)
+                        s3db.onaccept(ctable, case, method="update")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2622,6 +2630,10 @@ class DVRCaseEventModel(S3Model):
                                                                record_id=update.id,
                                                                )
                     if permitted:
+                        # Customise appointment resource
+                        r = S3Request("dvr", "case_appointment", current.request)
+                        r.customise_resource("dvr_case_appointment")
+                        # Update appointment
                         success = update.update_record(**data)
                         if success:
                             data["id"] = update.id
@@ -3356,6 +3368,10 @@ class DVRRegisterCaseEvent(S3Method):
             case_id = case.id
         else:
             case_id = None
+
+        # Customise event resource
+        r = S3Request("dvr", "case_event", current.request)
+        r.customise_resource("dvr_case_event")
 
         data = {"person_id": person_id,
                 "case_id": case_id,
