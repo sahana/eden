@@ -2622,8 +2622,8 @@ def config(settings):
 
                 # Exclude None-values for training course pivot axis
                 s3db.configure("hrm_human_resource",
-                               report_exclude_empty=("training.course_id",
-                                                     ),
+                               report_exclude_empty = ("training.course_id",
+                                                       ),
                                )
 
                 # Custom profile widgets for hrm_competency ("skills"):

@@ -1,0 +1,27 @@
+{{extend "layout.html"}}
+<div id='home'>
+{{try:}}
+<h2 align='center'>{{=title}}</h2>
+{{except:}}{{pass}}
+<div id='menu_box_center'>
+{{try:}}
+{{=sit_dec_res_box}}
+{{except:}}{{pass}}
+{{=facility_box}}
+{{if AUTHENTICATED not in session.s3.roles:}}
+ <div id='login_box' class='menu_box'>
+  <div id='login_form' {{if self_registration and not registered and not login_form.errors:}}class='hide'{{pass}}>
+   {{=login_div}}
+   {{include "auth/_login.html"}}
+  </div>
+  {{if self_registration:}}
+   <div id='register_form' {{if registered or login_form.errors:}}class='hide'{{pass}}>
+    {{=register_div}}
+    {{include "auth/_register.html"}}
+   </div>
+  {{pass}}
+ </div>
+{{pass}}
+{{=manage_facility_box}}
+</div>
+</div>

@@ -57,7 +57,7 @@
          Passport Country...............optional.....person identity
          Passport Expiry Date...........optional.....person identity
          Email..........................required.....person email address. Supports multiple comma-separated
-         Mobile Phone...................optional.....person mobile phone number
+         Mobile Phone...................optional.....person mobile phone number. Supports multiple comma-separated
          Home Phone.....................optional.....home phone number
          Office Phone...................optional.....office phone number
          Skype..........................optional.....person skype ID
@@ -91,6 +91,7 @@
          Teams..........................optional.....comma-separated list of Groups
          Trainings......................optional.....comma-separated list of Training Courses attended
          Training:XXXX..................optional.....Date of Training Course XXXX OR "True" to add Training Courses by column
+                                                     Can be Date;Venue in field to specify the Venue of the Training Event
          External Trainings.............optional.....comma-separated list of External Training Courses attended
          Certificates...................optional.....comma-separated list of Certificates
          Certificate:XXXX...............optional.....Expiry Date of Certificate XXXX OR "True" to add Certificate by column
@@ -108,11 +109,14 @@
          Disciplinary Body..............optional.....hrm_disciplinary_action.disciplinary_body
          Active.........................optional.....volunteer_details.active
          Volunteer Type.................optional.....volunteer_details.volunteer_type
-         Deployable.....................optional.....link to deployments module (true|false)
-         Deployable Roles...............optional.....credentials (job_titles for which person is deployable)
          Availability...................optional.....Availability dropdown
          Availability Comments..........optional.....Availability Comments
          Slot:XXXX......................optional.....Availability for Slot XXXX
+
+         Extensions for deploy module:
+         Deployable.....................optional.....link to deployments module (true|false)
+         Deployable Roles...............optional.....credentials (job_titles for which person is deployable)
+         Deployments....................optional.....comma-separated list of Missions for which the person was deployed
 
          Turkey-specific:
          Identity Card City
@@ -934,10 +938,6 @@
             </xsl:if>
 
             <!-- Job Roles that a deployable is credentialled for -->
-            <xsl:call-template name="splitList">
-                <xsl:with-param name="list" select="$DeployableRoles"/>
-                <xsl:with-param name="arg">deployablerole_ref</xsl:with-param>
-            </xsl:call-template>
 
             <!-- Teams -->
             <xsl:call-template name="splitList">
@@ -1159,6 +1159,12 @@
                     <data field="active" value="true"/>
                 </resource>
             </xsl:if>
+
+            <!-- Deployments -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list" select="col[@field='Deployments']"/>
+                <xsl:with-param name="arg">deployment</xsl:with-param>
+            </xsl:call-template>
 
             <!-- Salary -->
             <xsl:if test="col[@field='Staff Level']/text() != '' or col[@field='Salary Grade']/text() != '' or col[@field='Monthly Salary']/text() != ''">
@@ -1750,6 +1756,7 @@
                     <data field="value"><xsl:value-of select="$item"/></data>
                 </resource>
             </xsl:when>
+
             <!-- Deployable Roles -->
             <xsl:when test="$arg='deployablerole'">
                 <resource name="hrm_job_title">
@@ -1771,6 +1778,18 @@
                     </reference>
                 </resource>
             </xsl:when>
+
+            <!-- Deployments -->
+            <xsl:when test="$arg='deployment'">
+                <resource name="deploy_assignment">
+                    <reference field="mission_id" resource="deploy_mission">
+                        <resource name="deploy_mission">
+                            <data field="name"><xsl:value-of select="$item"/></data>
+                        </resource>
+                    </reference>
+                </resource>
+            </xsl:when>
+
             <!-- Teams -->
             <xsl:when test="$arg='team'">
                 <resource name="pr_group_membership">
@@ -1786,6 +1805,7 @@
                     </reference>
                 </resource>
             </xsl:when>
+
             <!-- Trainings -->
             <xsl:when test="$arg='training'">
                 <resource name="hrm_training">
@@ -1806,12 +1826,38 @@
                             <data field="external"><xsl:value-of select="$arg2"/></data>
                         </resource>
                     </reference>
-                    <xsl:if test="$date!='' and $date!='TRUE' and $date!='True' and $date!='true' and $date!='YES' and $date!='Yes' and $date!='yes'">
-                        <data field="date"><xsl:value-of select="$date"/></data>
-                    </xsl:if>
+                    <xsl:choose>
+                        <xsl:when test="$date='' or $date='TRUE' or $date='True' or $date='true' or $date='YES' or $date='Yes' or $date='yes'">
+                            <!-- no-op -->
+                        </xsl:when>
+                        <xsl:when test="contains($date, ';')">
+                            <xsl:variable name="real_date">
+                                <xsl:value-of select="substring-before($date, ';')"/>
+                            </xsl:variable>
+                            <xsl:variable name="venue">
+                                <xsl:value-of select="substring-after($date, ';')"/>
+                            </xsl:variable>
+                            <data field="date"><xsl:value-of select="$real_date"/></data>
+                            <reference field="training_event_id" resource="hrm_training_event">
+                                <resource name="hrm_training_event">
+                                    <reference field="course_id" resource="hrm_course">
+                                        <xsl:attribute name="tuid"><xsl:value-of select="$item"/></xsl:attribute>
+                                    </reference>
+                                    <reference field="site_id" resource="org_facility">
+                                        <data field="name"><xsl:value-of select="$venue"/></data>
+                                    </reference>
+                                    <data field="start_date"><xsl:value-of select="$real_date"/></data>
+                                </resource>
+                            </reference>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <data field="date"><xsl:value-of select="$date"/></data>
+                        </xsl:otherwise>
+                    </xsl:choose>
                 </resource>
             </xsl:when>
-            <!-- Certificate -->
+
+            <!-- Certificates -->
             <xsl:when test="$arg='certificate'">
                 <resource name="hrm_certification">
                     <reference field="certificate_id" resource="hrm_certificate">
@@ -1825,6 +1871,7 @@
                     </xsl:if>
                 </resource>
             </xsl:when>
+
         </xsl:choose>
     </xsl:template>
 
