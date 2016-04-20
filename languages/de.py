@@ -2816,6 +2816,7 @@
 'No Impacts currently registered': 'Zurzeit sind keine Auswirkungen registriert',
 'No Incident Reports currently registered': 'Zurzeit sind keine Vorfallberichte registriert',
 'No Incoming Shipments': 'Keine eingehenden Lieferungen',
+'No instructions for this flag': 'Keine Anweisungen zu dieser Markierung',
 'No Item Categories currently registered': 'Zurzeit sind keine Artikelkategorien registriert',
 'No Item Packs currently registered': 'Zurzeit sind keine Artikelpakete registriert',
 'No Items currently registered in this Inventory': 'Für diesen Bestand sind zurzeit keine Artikel registriert',

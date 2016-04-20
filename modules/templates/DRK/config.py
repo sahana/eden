@@ -401,42 +401,26 @@ def config(settings):
             Show advise/instructions for checkpoint staff if
             such flags are set for this persons
 
-            @param site_id: the site ID (unused in this version)
+            @param site_id: the site ID (currently unused)
             @param person_id: the person record ID
         """
 
         s3db = current.s3db
 
-        ftable = s3db.dvr_case_flag
-        ltable = s3db.dvr_case_flag_case
-        query = (ltable.person_id == person_id) & \
-                (ltable.deleted != True) & \
-                (ftable.id == ltable.flag_id) & \
-                (ftable.deleted != True)
-
-        if action == "check-in":
-            query &= (ftable.advise_at_check_in == True)
-        elif action == "check-out":
-            query &= (ftable.advise_at_check_out == True)
-        else:
-            query &= ((ftable.advise_at_check_in == True) |
-                      (ftable.advise_at_check_out == True))
+        flag_info = current.s3db.dvr_get_flag_instructions(person_id,
+                                                           action = action,
+                                                           )
 
         from gluon import DIV, H4, P
 
         info = DIV(_class="checkpoint-advise")
         append = info.append
-        flags = current.db(query).select(ftable.name,
-                                         ftable.instructions,
-                                         )
 
-        for flag in flags:
-            instructions = flag.instructions
-            if instructions:
-                append(DIV(H4(T(flag.name)),
-                           P(instructions),
-                           _class="checkpoint-instructions",
-                           ))
+        for flagname, instructions in flag_info["info"]:
+            append(DIV(H4(T(flagname)),
+                       P(instructions),
+                       _class="checkpoint-instructions",
+                       ))
 
         from s3 import S3CustomController, s3_fullname
         S3CustomController._view("DRK", "advise.html")
@@ -492,7 +476,7 @@ def config(settings):
         for flag in flags:
             if flag.deny_check_in:
                 deny_check_in = True
-            if flag.advise_at_check_in and flag.instructions:
+            if flag.advise_at_check_in:
                 callback = show_flag_instructions
 
         if not deny_check_in:
@@ -557,7 +541,7 @@ def config(settings):
         for flag in flags:
             if flag.deny_check_out:
                 deny_check_out = True
-            if flag.advise_at_check_out and flag.instructions:
+            if flag.advise_at_check_out:
                 callback = show_flag_instructions
 
         warning = None

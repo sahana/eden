@@ -41,6 +41,7 @@ __all__ = ("DVRCaseModel",
            "dvr_case_status_filter_opts",
            "dvr_case_household_size",
            "dvr_update_last_seen",
+           "dvr_get_flag_instructions",
            "dvr_due_followups",
            "dvr_rheader",
            )
@@ -3715,6 +3716,79 @@ class DVRRegisterCaseEvent(S3Method):
                  data = {"tmp": template % tmp,
                          },
                  )
+
+# =============================================================================
+def dvr_get_flag_instructions(person_id, action=None):
+    """
+        Get handling instructions if flags are set for a person
+
+        @param person_id: the person ID
+        @param action: the action for which instructions are needed:
+                       - check-in|check-out|payment|id-check
+
+        @returns: dict {"permitted": whether the action is permitted
+                        "info": list of tuples (flagname, instructions)
+                        }
+    """
+
+    s3db = current.s3db
+
+    ftable = s3db.dvr_case_flag
+    ltable = s3db.dvr_case_flag_case
+    query = (ltable.person_id == person_id) & \
+            (ltable.deleted != True) & \
+            (ftable.id == ltable.flag_id) & \
+            (ftable.deleted != True)
+
+    if action == "check-in":
+        query &= (ftable.advise_at_check_in == True) | \
+                 (ftable.deny_check_in == True)
+    elif action == "check-out":
+        query &= (ftable.advise_at_check_out == True) | \
+                 (ftable.deny_check_out == True)
+    elif action == "payment":
+        query &= (ftable.advise_at_id_check == True) | \
+                 (ftable.allowance_suspended == True)
+    else:
+        query &= (ftable.advise_at_id_check == True)
+
+    flags = current.db(query).select(ftable.name,
+                                     ftable.deny_check_in,
+                                     ftable.deny_check_out,
+                                     ftable.allowance_suspended,
+                                     ftable.advise_at_check_in,
+                                     ftable.advise_at_check_out,
+                                     ftable.advise_at_id_check,
+                                     ftable.instructions,
+                                     )
+
+    info = []
+    permitted = True
+    for flag in flags:
+        advise = False
+        if action == "check-in":
+            if flag.deny_check_in:
+                permitted = False
+            advise = flag.advise_at_check_in
+        elif action == "check-out":
+            if flag.deny_check_out:
+                permitted = False
+            advise = flag.advise_at_check_out
+        elif action == "payment":
+            if flag.allowance_suspended:
+                permitted = False
+            advise = advise_at_id_check
+        else:
+            advise = advise_at_id_check
+        if advise:
+            instructions = flag.instructions
+            if not instructions.strip():
+                instructions = current.T("No instructions for this flag")
+            info.append((flag.name, instructions))
+
+    return {"permitted": permitted,
+            "info": info,
+            }
 
 # =============================================================================
 def dvr_update_last_seen(person_id):
