@@ -719,8 +719,10 @@ class S3HRModel(S3Model):
                                            "joinby": "human_resource_id",
                                            "key": "project_id",
                                            },
-                        # Application for Deployment (RDRT)
+                        # Application for Deployment
                         deploy_application = "human_resource_id",
+                        # Assignments
+                        deploy_assignment = "human_resource_id",
                         # Hours
                         #hrm_hours = "human_resource_id",
                         )

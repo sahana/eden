@@ -226,6 +226,7 @@ class S3DeploymentModel(S3Model):
         configure(tablename,
                   create_next = profile,
                   delete_next = URL(c="deploy", f="mission", args="summary"),
+                  create_onaccept = self.deploy_mission_create_onaccept,
                   orderby = "deploy_mission.date desc",
                   profile_cols = 1,
                   profile_header = lambda r: \
@@ -495,6 +496,78 @@ class S3DeploymentModel(S3Model):
         return A(name,
                  _href=URL(c="deploy", f="mission",
                            args=[mission.id, "profile"]))
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def deploy_mission_create_onaccept(form):
+        """
+            See if we can auto-populate the Date/Location/Event Type in imported records
+
+            @param form: the form
+        """
+
+        if not current.response.s3.bulk:
+            # Only relevant to imported records
+            return
+
+        # Load the complete record
+        db = current.db
+        s3db = current.s3db
+        table = s3db.deploy_mission
+        record = db(table.id == form.vars.id).select(table.id,
+                                                     table.name,
+                                                     #table.date,
+                                                     table.location_id,
+                                                     table.event_type_id,
+                                                     limitby = (0, 1),
+                                                     ).first()
+        name = record.name
+        if " " not in name:
+            # Nothing we can do
+            return
+
+        year, location = record.name.split(" ", 1)
+        if " " in location:
+            location, event_type = location.split(" ", 1)
+        else:
+            event_type = None
+
+        update = {}
+
+        # Not possible as date defaults :/
+        #if not record.date:
+        #    try:
+        #        year = int(year)
+        #    except:
+        #        # Doesn't seem to be a year
+        #        pass
+        #    else:
+        #        update["date"] = year
+
+        if not record.location_id:
+            gtable = s3db.gis_location
+            matches = db(gtable.name == location).select(gtable.id)
+            if len(matches) == 1:
+                update["location_id"] = matches.first().id
+            elif event_type and len(matches) == 0:
+                matches = db(gtable.name == "%s %s" % (location, event_type)).select(gtable.id)
+                if len(matches) == 1:
+                    update["location_id"] = matches.first().id
+
+        if event_type and not record.event_type_id:
+            if event_type == "EQ":
+                event_type = "Earthquake"
+            elif event_type == "Flood":
+                event_type = "Floods"
+            etable = s3db.event_event_type
+            event_type = db(etable.name == event_type).select(etable.id,
+                                                              limitby=(0, 1)
+                                                              ).first()
+            if event_type:
+                update["event_type_id"] = event_type.id
+
+        if update:
+            record.update_record(**update)
 
     # -------------------------------------------------------------------------
     @staticmethod
