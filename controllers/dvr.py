@@ -461,6 +461,7 @@ def allowance():
 
         # Skip - we don't want to update person records here
         item.skip = True
+        item.method = None
 
     s3db.configure("pr_person", deduplicate=person_deduplicate)
 
