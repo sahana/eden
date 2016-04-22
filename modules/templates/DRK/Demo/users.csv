@@ -1,4 +1,5 @@
 First Name,Last Name,Email,Password,Role,Organisation,Facility Type,Office,Language
+BEA,Scan,scan@example.com,eden,SCAN,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
 BEA,Security,security@example.com,eden,SECURITY,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
 BEA,Medical,medical@example.com,eden,MEDICAL,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de
 BEA,Info Point,infopoint@example.com,eden,INFO_POINT,Deutsches Rotes Kreuz,Shelter,BEA Benjamin Franklin Village,de

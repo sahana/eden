@@ -41,6 +41,7 @@ class S3MainMenu(default.S3MainMenu):
 
         has_role = current.auth.s3_has_role
         not_admin = not has_role("ADMIN")
+
         if not_admin and has_role("SECURITY"):
             return [
                 MM("Residents", c="security", f="person"),
@@ -50,13 +51,22 @@ class S3MainMenu(default.S3MainMenu):
                    check = shelter_id is not None,
                    ),
             ]
+
         elif not_admin and has_role("QUARTIER"):
             return [
                 MM("Residents", c=("dvr", "cr"), f=("person", "shelter_registration")),
             ]
+
         else:
             return [
                 MM("Residents", c=("dvr", "pr")),
+                MM("Event Registration", c="dvr", f="case_event",
+                   m = "register",
+                   p = "create",
+                   # Show only if not authorized to see "Residents"
+                   # (=the last preceding item)
+                   check = lambda this: not this.preceding()[-1].check_permission(),
+                   ),
                 MM("ToDo", c="project", f="task"),
                 #homepage("req"),
                 homepage("inv"),

@@ -2,17 +2,25 @@ uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected
 AUTHENTICATED,Authenticated,,,,cr_shelter_registration_history,NONE,,,,,Normal users have no access to the check-in history
 AUTHENTICATED,Authenticated,,gis,,,READ,READ|CREATE|UPDATE|DELETE,,,,Authenticated users can see the Map
 AUTHENTICATED,Authenticated,,gis,location,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Note the owning role for locations is set to Authenticated by default, so this controls the access that logged in users have. (In general, tables do not have a default owning role.)"
-AUTHENTICATED,Authenticated,,hrm,,,READ|UPDATE,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,Authenticated,,hrm,person,,,READ|UPDATE,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,Authenticated,,hrm,staff,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
-AUTHENTICATED,Authenticated,,hrm,volunteer,,,,,,,"HRM access is controlled to just HR Staff, except for access to your own record - requires security policy 4+"
+AUTHENTICATED,Authenticated,,hrm,,,READ|UPDATE,,,,,
+AUTHENTICATED,Authenticated,,hrm,index,,NONE,,,,,Hides the Staff menu item
+AUTHENTICATED,Authenticated,,hrm,staff,,NONE,,,,,Normal users have no access to staff data
+AUTHENTICATED,Authenticated,,hrm,person,,,READ|UPDATE,,,,Normal users can see their own staff record
+AUTHENTICATED,Authenticated,,vol,index,,NONE,,,,,Hides the Volunteers menu item
+AUTHENTICATED,Authenticated,,vol,volunteer,,NONE,,,,,Normal users have no access to volunteer data
 AUTHENTICATED,Authenticated,,msg,search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
-AUTHENTICATED,Authenticated,,pr,,,READ|UPDATE,,,,,Authenticated users can only see/edit their own PR records
-AUTHENTICATED,Authenticated,,,,pr_person,READ|UPDATE,,,,,Authenticated users can only see/edit their own PR records
-AUTHENTICATED,Authenticated,,pr,person,,CREATE,READ|UPDATE,,,,But need to be able to add/edit addresses
+AUTHENTICATED,Authenticated,,pr,,,CREATE,READ|UPDATE,,,,Authenticated users can only see/edit their own PR records
+AUTHENTICATED,Authenticated,,pr,person,,,READ|UPDATE,,,,But need to be able to add/edit addresses
+AUTHENTICATED,Authenticated,,,,pr_person,,READ|UPDATE,,,,Authenticated users can only see/edit their own PR records
+AUTHENTICATED,Authenticated,,,,pr_address,CREATE,READ|UPDATE|DELETE,,,,But need to be able to add/edit/delete addresses
+AUTHENTICATED,Authenticated,,,,pr_contact,CREATE,READ|UPDATE|DELETE,,,,But need to be able to add/edit/delete contact information
+AUTHENTICATED,Authenticated,,,,pr_contact_emergency,CREATE,READ|UPDATE|DELETE,,,,But need to be able to add/edit/delete emergency contact information
 AUTHENTICATED,Authenticated,,pr,pentity,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,,pr,person_search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,,supply,,,READ|CREATE,,,,,Authenticated  users can see the Supply Catalogue
+SCAN,Scan,,dvr,case_event,,CREATE|READ,,,,,Scan role can access the case event controller
+SCAN,Scan,,,,dvr_case_event,CREATE,READ,,,,Scan role can create case events and read those they created
+SCAN,Scan,,,,pr_person,READ,,,,,Scan role can lookup persons
 QUARTIER,Quartiermanager,,cr,shelter_registration,,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
 QUARTIER,Quartiermanager,,,,cr_shelter_registration,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
 QUARTIER,Quartiermanager,,dvr,person,,READ,,,,,
@@ -48,17 +56,23 @@ ADMINISTRATION,Administration,,dvr,case_event,,CREATE|READ|UPDATE,,,,,"Administr
 ADMINISTRATION,Administration,,,,dvr_case_event,CREATE|READ|UPDATE,,,,,"Administration can create, read and update case events"
 ADMINISTRATION,Administration,,,,dvr_note,CREATE|READ,,,,,
 ADMINISTRATION,Administration,,inv,,,ALL,,,,,
-ADMINISTRATION,Administration,,,,pr_person,ALL,ALL,,,,
-ADMINISTRATION,Administration,,project,,,ALL,,,,,
-ADMINISTRATION,Administration,,vol,,,ALL,,,,,
+ADMINISTRATION,Administration,,,,pr_person,ALL,,,,,
+ADMINISTRATION,Administration,,project,,,ALL,,,,,Administration has unrestricted access to task management
+ADMINISTRATION,Administration,,vol,,,READ|UPDATE,,,,,Administration can access the volunteer module
+ADMINISTRATION,Administration,,vol,index,,READ,,,,,Administration can access the volunteer index controller
+ADMINISTRATION,Administration,,vol,volunteer,,READ|UPDATE,,,,,Administration can read and update volunteer records
 ADMIN_HEAD,Head of Administration,,cr,,,ALL,,,,,
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration_history,READ,,,,,Head of administration can read check-in history
 ADMIN_HEAD,Head of Administration,,dvr,,,ALL,,,,,
 ADMIN_HEAD,Head of Administration,,dvr,case_event,,ALL,,,,,"Head of administration can create, read and update case events"
 ADMIN_HEAD,Head of Administration,,,,dvr_case_event,ALL,,,,,"Head of administration can create, read and update case events"
 ADMIN_HEAD,Head of Administration,,,,dvr_note,CREATE|READ,READ,,,,
-ADMIN_HEAD,Head of Administration,,hrm,,,ALL,,,,,
+ADMIN_HEAD,Head of Administration,,hrm,,,ALL,,,,,Head of administration has unrestricted access to staff module
+ADMIN_HEAD,Head of Administration,,hrm,index,,ALL,,,,,Head of administration has unrestricted access to staff module index controller
+ADMIN_HEAD,Head of Administration,,hrm,staff,,ALL,,,,,Head of administration has unrestricted access to staff data
 ADMIN_HEAD,Head of Administration,,inv,,,ALL,,,,,
-ADMIN_HEAD,Head of Administration,,,,pr_person,ALL,ALL,,,,
-ADMIN_HEAD,Head of Administration,,project,,,ALL,,,,,
-ADMIN_HEAD,Head of Administration,,vol,,,ALL,,,,,
+ADMIN_HEAD,Head of Administration,,,,pr_person,ALL,,,,,
+ADMIN_HEAD,Head of Administration,,project,,,ALL,,,,,Head of administration has unrestricted access to task management
+ADMIN_HEAD,Head of Administration,,vol,,,ALL,,,,,Head of administration has unrestricted access to volunteer module
+ADMIN_HEAD,Head of Administration,,vol,index,,ALL,,,,,Head of administration has unrestricted access to volunteer module index controller
+ADMIN_HEAD,Head of Administration,,vol,volunteer,,ALL,,,,,Head of administration has unrestricted access to volunteer data
