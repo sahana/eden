@@ -427,7 +427,60 @@ def case_type():
 def allowance():
     """ Allowances: RESTful CRUD Controller """
 
-    return s3_rest_controller()
+    deduplicate = s3db.get_config("pr_person", "deduplicate")
+
+    def person_deduplicate(item):
+        """
+            Wrapper for person deduplicator to identify person
+            records, but preventing actual imports of persons
+        """
+
+        # Run standard person deduplication
+        if deduplicate:
+            deduplicate(item)
+
+        # Person not found?
+        if item.method != item.METHOD.UPDATE:
+
+            # Provide some meaningful details of the failing
+            # person record to facilitate correction of the source:
+            from s3 import s3_unicode
+            person_details = []
+            append = person_details.append
+            data = item.data
+            for f in ("pe_label", "last_name", "first_name", "date_of_birth"):
+                value = data.get(f)
+                if value:
+                    append(s3_unicode(value))
+            error = "Person not found: %s" % ", ".join(person_details)
+            item.error = error
+            item.element.set(current.xml.ATTRIBUTE["error"], error)
+
+            # Reject any new person records
+            item.accepted = False
+
+        # Skip - we don't want to update person records here
+        item.skip = True
+
+    s3db.configure("pr_person", deduplicate=person_deduplicate)
+
+    def prep(r):
+        if r.method == "import":
+            # Allow deduplication of persons by pe_label: existing
+            # pe_labels would be caught by IS_NOT_ONE_OF before
+            # reaching the deduplicator, so remove the validator here:
+            ptable = s3db.pr_person
+            ptable.pe_label.requires = None
+        return True
+    s3.prep = prep
+
+    table = s3db.dvr_allowance
+
+    return s3_rest_controller(csv_extra_fields=[{"label": "Date",
+                                                 "field": table.date,
+                                                 },
+                                                ],
+                              )
 
 # -----------------------------------------------------------------------------
 def case_appointment():

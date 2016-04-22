@@ -203,6 +203,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Bulk Status Update", m="manage", p="update"),
                         ),
                     M("Allowances", f="allowance")(
+                        M("Import", m="import"),
                         ),
                     M("Event Registration", c="dvr", f="case_event", m="register", p="create")(
                         ),

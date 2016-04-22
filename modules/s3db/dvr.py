@@ -2138,10 +2138,14 @@ class DVRCaseAllowanceModel(S3Model):
                      self.pr_person_id(empty = False,
                                        ondelete = "CASCADE",
                                        ),
-                     self.dvr_case_id(empty = False,
+                     self.dvr_case_id(# @ToDo: Populate this onaccept from imports
+                                      #empty = False,
                                       label = T("Case Number"),
                                       ondelete = "CASCADE",
                                       ),
+                     s3_date("entitlement_period",
+                             label = T("Entitlement Period"),
+                             ),
                      s3_date(default="now",
                              label = T("Planned on"),
                              ),
@@ -2183,6 +2187,10 @@ class DVRCaseAllowanceModel(S3Model):
 
         # Table configuration
         configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("person_id",
+                                                       "entitlement_period",
+                                                       ),
+                                            ),
                   onaccept = self.allowance_onaccept,
                   ondelete = self.allowance_ondelete,
                   onvalidation = self.allowance_onvalidation,
