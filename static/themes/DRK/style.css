@@ -1239,31 +1239,36 @@ h4.profile-sub-header {
 }
 
 /* line 108, ../scss/custom/_misc.scss */
+.controls.has-flaginfo {
+  width: 100%;
+}
+
+/* line 111, ../scss/custom/_misc.scss */
 .dashboard-action {
   margin-bottom: 1.0rem;
 }
 
-/* line 114, ../scss/custom/_misc.scss */
+/* line 117, ../scss/custom/_misc.scss */
 body.rtl .personal-menu {
   clear: left;
   float: left;
 }
-/* line 118, ../scss/custom/_misc.scss */
+/* line 121, ../scss/custom/_misc.scss */
 body.rtl .language-selector {
   float: left;
 }
-/* line 121, ../scss/custom/_misc.scss */
+/* line 124, ../scss/custom/_misc.scss */
 body.rtl .username {
   padding-left: 0.5rem;
   padding-right: 0;
   float: left;
 }
-/* line 124, ../scss/custom/_misc.scss */
+/* line 127, ../scss/custom/_misc.scss */
 body.rtl .username i.icon {
   padding-left: 0;
   padding-right: 0.2rem;
 }
-/* line 130, ../scss/custom/_misc.scss */
+/* line 133, ../scss/custom/_misc.scss */
 body.rtl .event-type-header {
   text-align: left;
 }

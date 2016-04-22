@@ -3101,31 +3101,30 @@ class DVRRegisterCaseEvent(S3Method):
         scanner = None
         event_code = None
 
-        check = False
+        # Initialize processing variables
+        check = True
         error = None
         person = None
 
         if http == "GET":
-
             # Coming from external scan app (e.g. Zxing), or from a link
             label = get_vars.get("label")
             event_code = get_vars.get("event")
             scanner = get_vars.get("scanner")
 
         elif http == "POST":
-
+            # Form submission
             if "check" in post_vars:
                 # Only check ID label, don't register an event
-                check = True
                 label = post_vars.get("label")
-
-            # Register an event (form.accepts)
+            else:
+                # Form has been submitted with "Register"
+                check = False
             event_code = post_vars.get("event")
             scanner = post_vars.get("scanner")
 
         pe_label = None
         if label is not None:
-
             # Identify the person
             person = self.get_person(label)
             if person is None:
@@ -3142,10 +3141,7 @@ class DVRRegisterCaseEvent(S3Method):
             event_type = self.get_event_type()
         event_code = event_type.code if event_type else None
 
-        formstyle = settings.get_ui_formstyle()
-        data = None
-
-        # Form always has an ID field (=pe_label)
+        # Form fields
         formfields = [Field("label",
                             label = T("ID"),
                             requires = IS_NOT_EMPTY(error_message=T("Enter or scan an ID")),
@@ -3154,9 +3150,14 @@ class DVRRegisterCaseEvent(S3Method):
                             label = "",
                             writable = False,
                             ),
+                      Field("flaginfo",
+                            label = "",
+                            writable = False,
+                            ),
                       ]
 
         # Add person data if identified
+        flags = []
         if person:
             name = s3_fullname(person)
             dob = person.date_of_birth
@@ -3165,13 +3166,21 @@ class DVRRegisterCaseEvent(S3Method):
                 person_data = "%s (%s %s)" % (name, T("Date of Birth"), dob)
             else:
                 person_data = name
+            flag_info = dvr_get_flag_instructions(person.id,
+                                                  action = "id-check",
+                                                  )
+            permitted = flag_info["permitted"]
+            if check:
+                # Add the flag info to the form
+                info = flag_info["info"]
+                for flagname, instructions in info:
+                    flags.append({"n": s3_str(T(flagname)),
+                                  "i": s3_str(T(instructions)),
+                                  })
+
         else:
             person_data = ""
-
-        data = {"id": "",
-                "label": pe_label,
-                "person": person_data,
-                }
+            permitted = False
 
         # Form buttons
         check_btn = INPUT(_class = "tiny secondary button check-btn",
@@ -3186,7 +3195,7 @@ class DVRRegisterCaseEvent(S3Method):
                            )
         # Toggle buttons (active button first, otherwise pressing Enter
         # hits the disabled button so requiring an extra tab step)
-        if person and event_code:
+        if person and event_code and permitted:
             check_btn["_disabled"] = "disabled"
             check_btn.add_class("hide")
             buttons = [submit_btn, check_btn]
@@ -3201,9 +3210,19 @@ class DVRRegisterCaseEvent(S3Method):
         # Hidden fields to store event type and scanner
         hidden = {"event": event_code,
                   "scanner": scanner,
+                  "permitted": json.dumps(permitted),
+                  "flags": json.dumps(flags),
                   }
 
-        # Generate the form
+        # Current form data
+        data = {"id": "",
+                "label": pe_label,
+                "person": person_data,
+                "flaginfo": "",
+                }
+
+        # Generate the form and add it to the output
+        formstyle = settings.get_ui_formstyle()
         form = SQLFORM.factory(record = data,
                                showid = False,
                                formstyle = formstyle,
@@ -3235,10 +3254,6 @@ class DVRRegisterCaseEvent(S3Method):
                         response.error = T("Could not register event")
                 else:
                     response.error = T("Person not found")
-
-            # @todo: if form was scanned with ZXing and submitted with
-            #        "scan another" and not error: add hidden INPUT to
-            #        automatically start ZXing
 
         # Event type header
         if event_type:
@@ -3302,6 +3317,7 @@ class DVRRegisterCaseEvent(S3Method):
 
         T = current.T
 
+        # Load JSON data from request body
         s = r.body
         s.seek(0)
         try:
@@ -3309,21 +3325,29 @@ class DVRRegisterCaseEvent(S3Method):
         except (ValueError, TypeError):
             r.error(400, current.ERROR.BAD_REQUEST)
 
-        output = {}
 
+        # Initialize processing variables
+        output = {}
         alert = None
         error = None
         message = None
-
-        pe_label = data.get("l")
+        permitted = False
+        flags = []
 
         # Identify the person
-
+        pe_label = data.get("l")
         person = self.get_person(pe_label)
+        
         if person is None:
             error = s3_str(T("No person found with this ID number"))
 
         else:
+            # Get flag info
+            flag_info = dvr_get_flag_instructions(person.id,
+                                                  action = "id-check",
+                                                  )
+            permitted = flag_info["permitted"]
+
             check = data.get("c")
             if check:
 
@@ -3338,10 +3362,17 @@ class DVRRegisterCaseEvent(S3Method):
                 output["p"] = s3_str(person_data)
                 output["l"] = person.pe_label
 
+                info = flag_info["info"]
+                for flagname, instructions in info:
+                    flags.append({"n": s3_str(T(flagname)),
+                                  "i": s3_str(T(instructions)),
+                                  })
             else:
                 event_code = data.get("t")
                 if not event_code:
                     alert = T("No event type specified")
+                elif not permitted:
+                    alert = T("Event registration not permitted")
                 else:
                     event_type = self.get_event_type(event_code)
                     if not event_type:
@@ -3360,6 +3391,10 @@ class DVRRegisterCaseEvent(S3Method):
             output["m"] = s3_str(message)
         if alert:
             output["a"] = s3_str(alert)
+
+        # Add flag info to output
+        output["s"] = permitted
+        output["f"] = flags
 
         current.response.headers["Content-Type"] = "application/json"
         return json.dumps(output)
@@ -3777,9 +3812,9 @@ def dvr_get_flag_instructions(person_id, action=None):
         elif action == "payment":
             if flag.allowance_suspended:
                 permitted = False
-            advise = advise_at_id_check
+            advise = flag.advise_at_id_check
         else:
-            advise = advise_at_id_check
+            advise = flag.advise_at_id_check
         if advise:
             instructions = flag.instructions
             if not instructions.strip():

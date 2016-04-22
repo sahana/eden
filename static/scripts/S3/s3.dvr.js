@@ -28,13 +28,26 @@
      */
     var toggleSubmit = function(form, submit) {
 
-        var buttons = ['.check-btn', '.submit-btn'];
+        var $form = $(form),
+            buttons = ['.check-btn', '.submit-btn'];
+
         if (submit) {
-            buttons.reverse();
+            // Check whether form action is permitted
+            var permissionInfo = $form.find('input[type=hidden][name=permitted]'),
+                actionPermitted = false;
+            if (permissionInfo.length) {
+                permissionInfo = permissionInfo.val();
+                if (permissionInfo) {
+                    actionPermitted = JSON.parse(permissionInfo);
+                }
+            }
+            // Only enable submit if permitted
+            if (actionPermitted) {
+                buttons.reverse();
+            }
         }
 
-        var $form = $(form),
-            active = $form.find(buttons[0]),
+        var active = $form.find(buttons[0]),
             disabled = $form.find(buttons[1]);
 
         disabled.prop('disabled', true).hide().insertAfter(active);
@@ -47,15 +60,70 @@
      *
      * @param {jQuery} form - the form node
      * @param {bool} keepAlerts - do not clear the alert space
+     * @param {bool} keepLabel - do not clear the label input field
      */
-    var clearForm = function(form, keepAlerts) {
+    var clearForm = function(form, keepAlerts, keepLabel) {
 
+        // Clear alerts
         if (!keepAlerts) {
             clearAlert();
         }
-        $('#case_event_label').val('');
+
+        // Reset flag info and permission info
+        var $form = $(form);
+        $form.find('input[type=hidden][name=permitted]').val('false');
+        $form.find('input[type=hidden][name=flags]').val('[]');
+
+        // Clear ID label
+        if (!keepLabel) {
+            $('#case_event_label').val('');
+        }
+
+        // Hide person info
         $('#case_event_person__row .controls').hide().empty();
+        $('#case_event_flaginfo__row .controls').empty();
+
+        // Disable submit
         toggleSubmit(form, false);
+    };
+
+    /**
+     * Show flag info
+     *
+     * @param {jQuery} form - the form node
+     */
+    var showFlagInfo = function(form) {
+
+        var flagInfo = $(form).find('input[type=hidden][name=flags]'),
+            flagInfoContainer = $('#case_event_flaginfo__row .controls').empty();
+
+        if (flagInfo.length) {
+            flagInfo = JSON.parse(flagInfo.val());
+        } else {
+            flagInfo = [];
+        }
+
+        var numFlags = flagInfo.length;
+        if (numFlags) {
+
+            flagInfoContainer.addClass('has-flaginfo');
+            
+            var advise = $('<div class="checkpoint-advise">').hide().appendTo(flagInfoContainer),
+                flag,
+                instructions;
+
+            for (var i=0; i < numFlags; i++) {
+                
+                flag = flagInfo[i];
+                instructions = $('<div class="checkpoint-instructions">').appendTo(advise);
+
+                $('<h4>' + flag.n + '</h4>').appendTo(instructions);
+                if (flag.i) {
+                    $('<p>' + flag.i + '</p>').appendTo(instructions);
+                }
+            }
+            advise.slideDown();
+        }
     };
 
     /**
@@ -119,9 +187,7 @@
 
         // Changing the label resets form
         labelInput.bind('input' + ns, function(e) {
-            clearAlert();
-            $('#case_event_person__row .controls').hide().empty();
-            toggleSubmit($(this).closest('form'), false);
+            clearForm($(this).closest('form'), false, true);
         });
 
         // Key events for label field
@@ -142,7 +208,9 @@
             clearForm($(this).closest('form'));
         });
 
-        var personInfo = $('#case_event_person__row .controls');
+        var personInfo = $('#case_event_person__row .controls'),
+            flagInfo = $('form input[type=hidden][name=flags]'),
+            permitted = $('form input[type=hidden][name=permitted]');
 
         // Click-Handler for Check-ID button
         $('.check-btn').unbind(ns).bind('click' + ns, function(e) {
@@ -181,10 +249,23 @@
                     } else {
                         // Show the person details
                         personInfo.html(data.p).removeClass('hide').show();
+                        // Update flag info
+                        if (data.f) {
+                            flagInfo.val(JSON.stringify(data.f));
+                        } else {
+                            flagInfo.val('[]');
+                        }
+                        // Update permission info
+                        if (data.s !== undefined) {
+                            permitted.val(JSON.stringify(data.s));
+                        } else {
+                            permitted.val('false');
+                        }
                         // Enable submit if we have a valid event type
                         if ($('input[type="hidden"][name="event"]').val()) {
                             toggleSubmit($('form'), true);
                         }
+                        showFlagInfo($('form'));
                     }
 
                     // Show alerts
@@ -256,6 +337,8 @@
                 }
             });
         });
+
+        showFlagInfo($('form'));
     });
 
 }(jQuery));
