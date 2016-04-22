@@ -1633,7 +1633,7 @@ class DVRCaseAppointmentModel(S3Model):
             # Update last_seen_on
             dvr_update_last_seen(person_id)
 
-        # Update the case status if appointment is completed today
+        # Update the case status if appointment is completed
         # NB appointment status "completed" must be set by this form
         if settings.get_dvr_appointments_update_case_status() and \
            s3_str(formvars.get("status")) == "4":
@@ -1642,12 +1642,37 @@ class DVRCaseAppointmentModel(S3Model):
             today = current.request.utcnow.date()
             ttable = s3db.dvr_case_appointment_type
             query = (table.id == record_id) & \
-                    (table.date == today) & \
                     (table.deleted != True) & \
                     (ttable.id == table.type_id) & \
                     (ttable.status_id != None)
-            row = db(query).select(ttable.status_id, limitby = (0, 1)).first()
+            row = db(query).select(table.date,
+                                   ttable.status_id,
+                                   limitby = (0, 1),
+                                   ).first()
             if row:
+                # Check whether there is a later appointment that
+                # would have set a different case status (we don't
+                # want to override this when closing appointments
+                # restrospectively):
+                date = row.dvr_case_appointment.date
+                status_id = row.dvr_case_appointment_type.status_id
+                query = (table.person_id == person_id)
+                if case_id:
+                    query &= (table.case_id == case_id)
+                query &= (table.date != None) & \
+                         (table.status == 4) & \
+                         (table.date > date) & \
+                         (table.deleted != True) & \
+                         (ttable.id == table.type_id) & \
+                         (ttable.status_id != None) & \
+                         (ttable.status_id != status_id)
+                later = db(query).select(table.id, limitby = (0, 1)).first()
+                if later:
+                    status_id = None
+            else:
+                status_id = None
+
+            if status_id:
                 # Update the corresponding case(s)
                 # NB appointments without case_id update all cases for the person
                 ctable = s3db.dvr_case
@@ -1667,10 +1692,14 @@ class DVRCaseAppointmentModel(S3Model):
                 for case in cases:
                     if has_permission("update", ctable, record_id=case.id):
                         # Customise case resource
-                        r = S3Request("dvr", "case", current.request)
+                        r = S3Request("dvr", "case",
+                                      current.request,
+                                      args = [],
+                                      get_vars = {},
+                                      )
                         r.customise_resource("dvr_case")
                         # Update case status + run onaccept
-                        case.update_record(status_id = row.status_id)
+                        case.update_record(status_id = status_id)
                         s3db.onaccept(ctable, case, method="update")
 
     # -------------------------------------------------------------------------
@@ -2652,7 +2681,11 @@ class DVRCaseEventModel(S3Model):
                                                                )
                     if permitted:
                         # Customise appointment resource
-                        r = S3Request("dvr", "case_appointment", current.request)
+                        r = S3Request("dvr", "case_appointment",
+                                      current.request,
+                                      args = [],
+                                      get_vars = {},
+                                      )
                         r.customise_resource("dvr_case_appointment")
                         # Update appointment
                         success = update.update_record(**data)
@@ -3428,7 +3461,11 @@ class DVRRegisterCaseEvent(S3Method):
             case_id = None
 
         # Customise event resource
-        r = S3Request("dvr", "case_event", current.request)
+        r = S3Request("dvr", "case_event",
+                      current.request,
+                      args = [],
+                      get_vars = {},
+                      )
         r.customise_resource("dvr_case_event")
 
         data = {"person_id": person_id,
