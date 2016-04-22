@@ -200,7 +200,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Appointments", f="case_appointment")(
                         M("Overview"),
                         M("Import Updates", m="import"),
-                        M("Bulk Status Update", m="manage"),
+                        M("Bulk Status Update", m="manage", p="update"),
                         ),
                     M("Allowances", f="allowance")(
                         ),

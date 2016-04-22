@@ -2873,6 +2873,9 @@ class dvr_ManageAppointments(S3Method):
         get_vars = r.get_vars
         response = current.response
 
+        if not self._permitted("update"):
+            r.unauthorised()
+
         if r.http == "POST" and r.representation != "aadata":
 
             count = 0

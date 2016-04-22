@@ -18,9 +18,13 @@ AUTHENTICATED,Authenticated,,,,pr_contact_emergency,CREATE,READ|UPDATE|DELETE,,,
 AUTHENTICATED,Authenticated,,pr,pentity,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,,pr,person_search,,READ,,,,,Custom Controller to allow access to PR via JSON for AutoComplete
 AUTHENTICATED,Authenticated,,supply,,,READ|CREATE,,,,,Authenticated  users can see the Supply Catalogue
+SCAN,Scan,,,,cr_shelter_registration,READ,,,,,Scan role can read shelter registration info
 SCAN,Scan,,dvr,case_event,,CREATE|READ,,,,,Scan role can access the case event controller
 SCAN,Scan,,,,dvr_case_event,CREATE,READ,,,,Scan role can create case events and read those they created
 SCAN,Scan,,,,pr_person,READ,,,,,Scan role can lookup persons
+SCAN,Scan,,dvr,index,,READ,,,,,Scan role can access DVR index controller
+SCAN,Scan,,dvr,person,,READ,,,,,Scan role can read cases
+SCAN,Scan,,dvr,group_membership,,READ,,,,,Scan role can read family members
 QUARTIER,Quartiermanager,,cr,shelter_registration,,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
 QUARTIER,Quartiermanager,,,,cr_shelter_registration,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
 QUARTIER,Quartiermanager,,dvr,person,,READ,,,,,
@@ -35,24 +39,36 @@ SECURITY,Security,,,,dvr_note,CREATE|READ,,,,,
 SECURITY,Security,,,,pr_person,READ,,,,,Security can look up persons
 SECURITY,Security,,security,person,,CREATE|READ,,,,,
 MEDICAL,Medical,,cr,,,READ,,,,,
+MEDICAL,Medical,,,,cr_shelter_registration,READ,,,,,Medical can read shelter registration info
 MEDICAL,Medical,,dvr,,,CREATE|READ|UPDATE,,,,,
 MEDICAL,Medical,,dvr,case_event,,CREATE|READ,,,,,Medical can create and read in tables required for case event registration
+MEDICAL,Medical,,,,dvr_allowance,NONE,,,,,Medical can not see allowance details
+MEDICAL,Medical,,,,dvr_case_activity,READ|UPDATE,,,,,Medical can read and update activities
+MEDICAL,Medical,,,,dvr_case_appointment,CREATE|READ|UPDATE,,,,,Medical can manage appointments
 MEDICAL,Medical,,,,dvr_case_event,CREATE,READ,,,,Medical can register case events and read those they created
 MEDICAL,Medical,,,,dvr_note,CREATE|READ,,,,,
 MEDICAL,Medical,,inv,,,READ,,,,,
 MEDICAL,Medical,,,,pr_person,READ,,,,,Medical can look up persons
 MEDICAL,Medical,,project,,,CREATE|READ|UPDATE,CREATE|READ|UPDATE|DELETE,,,,
 INFO_POINT,Info Point,,cr,,,READ,,,,,
+INFO_POINT,Info Point,,,,cr_shelter_registration,READ,,,,,Infopoint can read shelter registration info
 INFO_POINT,Info Point,,dvr,,,READ,,,,,
 INFO_POINT,Info Point,,dvr,case_event,,CREATE|READ,,,,,Infopoint can create and read in tables required for case event registration
+INFO_POINT,Info Point,,,,dvr_allowance,NONE,,,,,Infopoint can not see allowance details
+INFO_POINT,Info Point,,,,dvr_case_activity,READ,,,,,Infopoint can read case activities
+INFO_POINT,Info Point,,,,dvr_case_appointment,READ,,,,,Infopoint can read case appointments
 INFO_POINT,Info Point,,,,dvr_case_event,CREATE,READ,,,,Infopoint can register case events and read those they created
 INFO_POINT,Info Point,,,,dvr_note,CREATE|READ,,,,,
 INFO_POINT,Info Point,,inv,,,READ,,,,,
 INFO_POINT,Info Point,,,,pr_person,READ,,,,,Infopoint can look up persons
 INFO_POINT,Info Point,,project,,,CREATE|READ|UPDATE,CREATE|READ|UPDATE|DELETE,,,,
 ADMINISTRATION,Administration,,cr,,,ALL,,,,,
+ADMINISTRATION,Administration,,,,cr_shelter_registration,ALL,,,,,Administration can manage shelter registration info
 ADMINISTRATION,Administration,,dvr,,,ALL,,,,,
 ADMINISTRATION,Administration,,dvr,case_event,,CREATE|READ|UPDATE,,,,,"Administration can create, read and update case events"
+ADMINISTRATION,Administration,,,,dvr_allowance,ALL,,,,,Administration have unrestricted access to allowance information
+ADMINISTRATION,Administration,,,,dvr_case_activity,ALL,,,,,Administration can manage activities
+ADMINISTRATION,Administration,,,,dvr_case_appointment,ALL,,,,,Administration have unrestricted access to case appointments
 ADMINISTRATION,Administration,,,,dvr_case_event,CREATE|READ|UPDATE,,,,,"Administration can create, read and update case events"
 ADMINISTRATION,Administration,,,,dvr_note,CREATE|READ,,,,,
 ADMINISTRATION,Administration,,inv,,,ALL,,,,,
@@ -62,9 +78,13 @@ ADMINISTRATION,Administration,,vol,,,READ|UPDATE,,,,,Administration can access t
 ADMINISTRATION,Administration,,vol,index,,READ,,,,,Administration can access the volunteer index controller
 ADMINISTRATION,Administration,,vol,volunteer,,READ|UPDATE,,,,,Administration can read and update volunteer records
 ADMIN_HEAD,Head of Administration,,cr,,,ALL,,,,,
+ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration,ALL,,,,,Head of administration can manage shelter registration info
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration_history,READ,,,,,Head of administration can read check-in history
 ADMIN_HEAD,Head of Administration,,dvr,,,ALL,,,,,
 ADMIN_HEAD,Head of Administration,,dvr,case_event,,ALL,,,,,"Head of administration can create, read and update case events"
+ADMIN_HEAD,Head of Administration,,,,dvr_allowance,ALL,,,,,Head of administration have unrestricted access to allowance information
+ADMIN_HEAD,Head of Administration,,,,dvr_case_activity,ALL,,,,,Head of administration can manage activities
+ADMIN_HEAD,Head of Administration,,,,dvr_case_appointment,ALL,,,,,Head fo administration have unrestricted access to case appointments
 ADMIN_HEAD,Head of Administration,,,,dvr_case_event,ALL,,,,,"Head of administration can create, read and update case events"
 ADMIN_HEAD,Head of Administration,,,,dvr_note,CREATE|READ,READ,,,,
 ADMIN_HEAD,Head of Administration,,hrm,,,ALL,,,,,Head of administration has unrestricted access to staff module
