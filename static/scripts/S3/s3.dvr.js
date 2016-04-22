@@ -107,13 +107,13 @@
         if (numFlags) {
 
             flagInfoContainer.addClass('has-flaginfo');
-            
+
             var advise = $('<div class="checkpoint-advise">').hide().appendTo(flagInfoContainer),
                 flag,
                 instructions;
 
             for (var i=0; i < numFlags; i++) {
-                
+
                 flag = flagInfo[i];
                 instructions = $('<div class="checkpoint-instructions">').appendTo(advise);
 
@@ -210,7 +210,7 @@
 
         var personInfo = $('#case_event_person__row .controls'),
             flagInfo = $('form input[type=hidden][name=flags]'),
-            permitted = $('form input[type=hidden][name=permitted]');
+            permissionInfo = $('form input[type=hidden][name=permitted]');
 
         // Click-Handler for Check-ID button
         $('.check-btn').unbind(ns).bind('click' + ns, function(e) {
@@ -257,9 +257,9 @@
                         }
                         // Update permission info
                         if (data.s !== undefined) {
-                            permitted.val(JSON.stringify(data.s));
+                            permissionInfo.val(JSON.stringify(data.s));
                         } else {
-                            permitted.val('false');
+                            permissionInfo.val('false');
                         }
                         // Enable submit if we have a valid event type
                         if ($('input[type="hidden"][name="event"]').val()) {

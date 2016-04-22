@@ -3245,7 +3245,9 @@ class DVRRegisterCaseEvent(S3Method):
             person_id = formvars.person_id
 
             if not check:
-                if person_id:
+                if not formvars.get("permitted"):
+                    response.error = T("Event registration not permitted")
+                elif person_id:
                     event_type_id = event_type.id if event_type else None
                     success = self.register_event(person_id, event_type_id)
                     if success:
@@ -3337,7 +3339,7 @@ class DVRRegisterCaseEvent(S3Method):
         # Identify the person
         pe_label = data.get("l")
         person = self.get_person(pe_label)
-        
+
         if person is None:
             error = s3_str(T("No person found with this ID number"))
 
@@ -3462,8 +3464,13 @@ class DVRRegisterCaseEvent(S3Method):
         person = self.get_person(pe_label)
         if person is None:
             form.errors["label"] = T("No person found with this ID number")
+            permitted = False
         else:
-            formvars.person_id = person.id
+            person_id = person.id
+            formvars.person_id = person_id
+            flag_info = dvr_get_flag_instructions(person_id, action="id-check")
+            permitted = flag_info["permitted"]
+        formvars.permitted = permitted
 
         # Validate the event type (if not default)
         type_id = None
@@ -3474,7 +3481,6 @@ class DVRRegisterCaseEvent(S3Method):
                 form.errors["event_code"] = T("Invalid event code")
             else:
                 type_id = event_type.id
-
         formvars.type_id = type_id
 
     # -------------------------------------------------------------------------
