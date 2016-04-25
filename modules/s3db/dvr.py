@@ -4350,6 +4350,15 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
         updated = 0
         failed = 0
 
+        # Customise allowance resource
+        r = S3Request("dvr", "allowance",
+                      current.request,
+                      args = [],
+                      get_vars = {},
+                      )
+        r.customise_resource("dvr_allowance")
+        onaccept = current.s3db.onaccept
+
         db = current.db
         query = current.auth.s3_accessible_query("update", atable)
         for payment in payments:
@@ -4360,6 +4369,9 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
                      (atable.deleted != True)
             success = db(query).update(**data)
             if success:
+                record = {"id": record_id, "person_id": person_id}
+                record.update(data)
+                onaccept(atable, record, method="update")
                 updated += 1
             else:
                 failed += 1
