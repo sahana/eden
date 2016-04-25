@@ -105,8 +105,24 @@
 .event-type-toggle {
     cursor: pointer;
 }
-.controls.has-flaginfo {
+.controls.has-flaginfo,
+.controls.has-details {
     width: 100%;
+    table {
+        width: 100%;
+        border: none;
+    }
+}
+.payment-amount {
+    color: darkgreen;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+#payment-form {
+    #allowance_date__row,
+    #allowance_comments__row {
+        display: none;
+    }
 }
 .dashboard-action {
     margin-bottom: 1.0rem;

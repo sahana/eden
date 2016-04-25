@@ -2196,6 +2196,11 @@ class DVRCaseAllowanceModel(S3Model):
                   onvalidation = self.allowance_onvalidation,
                   )
 
+        self.set_method("dvr", "allowance",
+                        method = "register",
+                        action = DVRRegisterPayment,
+                        )
+
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
@@ -3082,6 +3087,9 @@ class dvr_ManageAppointments(S3Method):
 class DVRRegisterCaseEvent(S3Method):
     """ Method handler to register case events """
 
+    # Action to check flag restrictions for
+    ACTION = "id-check"
+
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
@@ -3091,11 +3099,8 @@ class DVRRegisterCaseEvent(S3Method):
             @param attr: controller parameters
         """
 
-        # User must be permitted to create case events
-        auth = current.auth
-        permitted = auth.s3_has_permission("create", "dvr_case_event")
-        if not permitted:
-            auth.permission.fail()
+        if not self.permitted():
+            current.auth.permission.fail()
 
         output = {}
         representation = r.representation
@@ -3126,48 +3131,41 @@ class DVRRegisterCaseEvent(S3Method):
             @param attr: controller parameters
         """
 
-        output = {}
-        response = current.response
-        s3 = response.s3
-
-        settings = current.deployment_settings
-
-        s3db = current.s3db
-
         T = current.T
 
-        http = r.http
-        get_vars = r.get_vars
-        post_vars = r.post_vars
+        s3db = current.s3db
+        response = current.response
+        settings = current.deployment_settings
 
-        # Initialize form variables
-        label = None
-        scanner = None
-        event_code = None
+        s3 = response.s3
 
-        # Initialize processing variables
-        check = True
+        output = {}
         error = None
-        person = None
 
-        if http == "GET":
-            # Coming from external scan app (e.g. Zxing), or from a link
-            label = get_vars.get("label")
-            event_code = get_vars.get("event")
-            scanner = get_vars.get("scanner")
+        http = r.http
+        request_vars = r.get_vars
 
-        elif http == "POST":
+        check = True
+        label = None
+
+        if http == "POST":
             # Form submission
-            if "check" in post_vars:
+            request_vars = r.post_vars
+            if "check" in request_vars:
                 # Only check ID label, don't register an event
-                label = post_vars.get("label")
+                label = request_vars.get("label")
             else:
                 # Form has been submitted with "Register"
                 check = False
-            event_code = post_vars.get("event")
-            scanner = post_vars.get("scanner")
+        else:
+            # Coming from external scan app (e.g. Zxing), or from a link
+            label = request_vars.get("label")
 
+        scanner = request_vars.get("scanner")
+
+        person = None
         pe_label = None
+
         if label is not None:
             # Identify the person
             person = self.get_person(label)
@@ -3176,31 +3174,9 @@ class DVRRegisterCaseEvent(S3Method):
                     response.error = T("No person found with this ID number")
             else:
                 pe_label = person.pe_label
-                post_vars["label"] = pe_label
+                request_vars["label"] = pe_label
 
-        # Get the current event type
-        event_type = self.get_event_type(event_code)
-        if not event_type:
-            # Fall back to default event type
-            event_type = self.get_event_type()
-        event_code = event_type.code if event_type else None
-
-        # Form fields
-        formfields = [Field("label",
-                            label = T("ID"),
-                            requires = IS_NOT_EMPTY(error_message=T("Enter or scan an ID")),
-                            ),
-                      Field("person",
-                            label = "",
-                            writable = False,
-                            ),
-                      Field("flaginfo",
-                            label = "",
-                            writable = False,
-                            ),
-                      ]
-
-        # Add person data if identified
+        # Get flag and permission info
         flags = []
         if person:
             name = s3_fullname(person)
@@ -3211,20 +3187,67 @@ class DVRRegisterCaseEvent(S3Method):
             else:
                 person_data = name
             flag_info = dvr_get_flag_instructions(person.id,
-                                                  action = "id-check",
+                                                  action = self.ACTION,
                                                   )
             permitted = flag_info["permitted"]
             if check:
-                # Add the flag info to the form
                 info = flag_info["info"]
                 for flagname, instructions in info:
                     flags.append({"n": s3_str(T(flagname)),
                                   "i": s3_str(T(instructions)),
                                   })
-
         else:
             person_data = ""
             permitted = False
+
+        # Identify the event type
+        event_code = request_vars.get("event")
+        event_type = self.get_event_type(event_code)
+        if not event_type:
+            # Fall back to default event type
+            event_type = self.get_event_type()
+        event_code = event_type.code if event_type else None
+
+        # Whether the event registration is actionable
+        actionable = event_code is not None
+
+        # Standard form fields and data
+        formfields = [Field("label",
+                            label = T("ID"),
+                            requires = IS_NOT_EMPTY(error_message=T("Enter or scan an ID")),
+                            ),
+                      Field("person",
+                            label = "",
+                            writable = False,
+                            default = "",
+                            ),
+                      Field("flaginfo",
+                            label = "",
+                            writable = False,
+                            ),
+                      ]
+
+        data = {"id": "",
+                "label": pe_label,
+                "person": person_data,
+                "flaginfo": "",
+                }
+
+        # Hidden fields to store event type, scanner, flag info and permission
+        hidden = {"event": event_code,
+                  "scanner": scanner,
+                  "actionable": json.dumps(actionable),
+                  "permitted": json.dumps(permitted),
+                  "flags": json.dumps(flags),
+                  }
+
+        # Additional form data
+        widget_id, submit = self.get_form_data(person,
+                                               formfields,
+                                               data,
+                                               hidden,
+                                               permitted = permitted,
+                                               )
 
         # Form buttons
         check_btn = INPUT(_class = "tiny secondary button check-btn",
@@ -3235,11 +3258,13 @@ class DVRRegisterCaseEvent(S3Method):
         submit_btn = INPUT(_class = "tiny primary button submit-btn",
                            _name = "submit",
                            _type = "submit",
-                           _value = T("Register"),
+                           _value = submit,
                            )
+
         # Toggle buttons (active button first, otherwise pressing Enter
         # hits the disabled button so requiring an extra tab step)
-        if person and event_code and permitted:
+        actionable = hidden.get("actionable") == "true"
+        if person and actionable and permitted:
             check_btn["_disabled"] = "disabled"
             check_btn.add_class("hide")
             buttons = [submit_btn, check_btn]
@@ -3251,89 +3276,35 @@ class DVRRegisterCaseEvent(S3Method):
         # Add the cancel-action
         buttons.append(A(T("Cancel"), _class = "cancel-action action-lnk"))
 
-        # Hidden fields to store event type and scanner
-        hidden = {"event": event_code,
-                  "scanner": scanner,
-                  "permitted": json.dumps(permitted),
-                  "flags": json.dumps(flags),
-                  }
-
-        # Current form data
-        data = {"id": "",
-                "label": pe_label,
-                "person": person_data,
-                "flaginfo": "",
-                }
+        resourcename = r.resource.name
 
         # Generate the form and add it to the output
         formstyle = settings.get_ui_formstyle()
-        form = SQLFORM.factory(record = data,
+        form = SQLFORM.factory(record = data if check else None,
                                showid = False,
                                formstyle = formstyle,
-                               table_name = "case_event",
+                               table_name = resourcename,
                                buttons = buttons,
                                hidden = hidden,
+                               _id = widget_id,
                                *formfields)
         output["form"] = form
 
         # Process the form
+        formname = "%s/registration" % resourcename
         if form.accepts(r.post_vars,
                         current.session,
                         onvalidation = self.validate,
-                        formname = "dvr_register_event",
+                        formname = formname,
                         keepvalues = False,
                         hideerror = False,
                         ):
 
-            formvars = form.vars
-            person_id = formvars.person_id
-
             if not check:
-                if not formvars.get("permitted"):
-                    response.error = T("Event registration not permitted")
-                elif person_id:
-                    event_type_id = event_type.id if event_type else None
-                    success = self.register_event(person_id, event_type_id)
-                    if success:
-                        response.confirmation = T("Event registered")
-                    else:
-                        response.error = T("Could not register event")
-                else:
-                    response.error = T("Person not found")
+                self.accept(r, form, event_type=event_type)
 
-        # Event type header
-        if event_type:
-            event_type_name = T(event_type.name)
-        else:
-            event_type_name = current.messages["NONE"]
-        event_type_header = DIV(H4(SPAN(T(event_type_name),
-                                        _class = "event-type-name",
-                                        ),
-                                   SPAN(ICON("settings"),
-                                        _class = "event-type-setting",
-                                        ),
-                                   _class = "event-type-toggle",
-                                   ),
-                                _class = "event-type-header",
-                                )
-        output["event_type"] = event_type_header
-
-        # Event type selector
-        event_types = self.get_event_types()
-        buttons = []
-        for k, v in event_types.items():
-            if k != "_default":
-                button = LI(A(T(v.name),
-                              _class = "secondary button event-type-selector",
-                              data = {"code": s3_str(v.code),
-                                      "name": s3_str(T(v.name)),
-                                      },
-                              ),
-                            )
-                buttons.append(button)
-        output["event_type_selector"] = UL(buttons,
-                                           _class="button-group stack hide event-type-selector",
-                                           )
+        header = self.get_header(event_type)
+        output.update(header)
 
         # ZXing Barcode Scanner Launch Button
         output["zxing"] = self.get_zxing_launch_button(event_code)
@@ -3341,24 +3312,156 @@ class DVRRegisterCaseEvent(S3Method):
         # Custom view
         response.view = self._view(r, "dvr/register_case_event.html")
 
-        # Static JS
-        scripts = s3.scripts
-        appname = r.application
-        if s3.debug:
-            script = "/%s/static/scripts/S3/s3.dvr.js" % appname
-        else:
-            script = "/%s/static/scripts/S3/s3.dvr.min.js" % appname
-        scripts.append(script)
+        # Inject JS
+        options = {"tablename": resourcename,
+                   "ajaxURL": r.url(None,
+                                    method = "register",
+                                    representation = "json",
+                                    ),
+                   }
+        self.inject_js(widget_id, options)
 
         return output
 
     # -------------------------------------------------------------------------
+    # Configuration
+    # -------------------------------------------------------------------------
+    def permitted(self):
+        """
+            Helper function to check permissions
+
+            @return: True if permitted to use this method, else False
+        """
+
+        # User must be permitted to create case events
+        return self._permitted("create")
+
+    # -------------------------------------------------------------------------
+    def get_event_type(self, code=None):
+        """
+            Get a case event type for an event code
+
+            @param code: the type code (using default event type if None)
+
+            @return: the dvr_case_event_type Row, or None if not found
+        """
+
+        event_types = self.get_event_types()
+
+        event_type = None
+        if code is None:
+            event_type = event_types.get("_default")
+        else:
+            for value in event_types.values():
+                if value.code == code:
+                    event_type = value
+                    break
+
+        return event_type
+
+    # -------------------------------------------------------------------------
+    def validate(self, form):
+        """
+            Validate the event registration form
+
+            @param form: the FORM
+        """
+
+        T = current.T
+
+        formvars = form.vars
+        pe_label = formvars.get("label").strip()
+
+        person = self.get_person(pe_label)
+        if person is None:
+            form.errors["label"] = T("No person found with this ID number")
+            permitted = False
+        else:
+            person_id = person.id
+            formvars.person_id = person_id
+            flag_info = dvr_get_flag_instructions(person_id,
+                                                  action = self.ACTION,
+                                                  )
+            permitted = flag_info["permitted"]
+        formvars.permitted = permitted
+
+        # Validate the event type (if not default)
+        type_id = None
+        event_code = formvars.get("event_code")
+        if event_code:
+            event_type = self.get_event_type(event_code)
+            if not event_type:
+                form.errors["event_code"] = T("Invalid event code")
+            else:
+                type_id = event_type.id
+        formvars.type_id = type_id
+
+    # -------------------------------------------------------------------------
+    def accept(self, r, form, event_type=None):
+        """
+            Helper function to process the form
+
+            @param r: the S3Request
+            @param form: the FORM
+            @param event_type: the event_type (Row)
+        """
+
+        T = current.T
+        response = current.response
+
+        formvars = form.vars
+        person_id = formvars.person_id
+
+        success = False
+
+        if not formvars.get("permitted"):
+            response.error = T("Event registration not permitted")
+
+        elif person_id:
+            event_type_id = event_type.id if event_type else None
+            success = self.register_event(person_id, event_type_id)
+            if success:
+                success = True
+                response.confirmation = T("Event registered")
+            else:
+                response.error = T("Could not register event")
+
+        else:
+            response.error = T("Person not found")
+
+        return success
+
+    # -------------------------------------------------------------------------
     def registration_ajax(self, r, **attr):
         """
-            Ajax response method
+            Ajax response method, expects a JSON input like:
+
+                {l: the PE label (from the input field),
+                 c: boolean to indicate whether to just check
+                    the PE label or to register payments
+                 t: the event type code
+                 }
 
             @param r: the S3Request instance
             @param attr: controller parameters
+
+            @return: JSON response, structure:
+
+                    {l: the actual PE label (to update the input field),
+                     p: the person details,
+                     f: [{n: the flag name
+                          i: the flag instructions
+                          },
+                         ...],
+
+                     s: whether the action is permitted or not
+
+                     e: form error (for label field)
+
+                     a: error message
+                     w: warning message
+                     m: success message
+                     }
         """
 
         T = current.T
@@ -3374,9 +3477,13 @@ class DVRRegisterCaseEvent(S3Method):
 
         # Initialize processing variables
         output = {}
-        alert = None
+
         error = None
+
+        alert = None
         message = None
+        warning = None
+
         permitted = False
         flags = []
 
@@ -3431,12 +3538,14 @@ class DVRRegisterCaseEvent(S3Method):
                             alert = T("Could not register event")
 
         # Add messages to output
+        if alert:
+            output["a"] = s3_str(alert)
         if error:
             output["e"] = s3_str(error)
         if message:
             output["m"] = s3_str(message)
-        if alert:
-            output["a"] = s3_str(alert)
+        if warning:
+            output["w"] = s3_str(warning)
 
         # Add flag info to output
         output["s"] = permitted
@@ -3445,6 +3554,79 @@ class DVRRegisterCaseEvent(S3Method):
         current.response.headers["Content-Type"] = "application/json"
         return json.dumps(output)
 
+    # -------------------------------------------------------------------------
+    def get_form_data(self, person, formfields, data, hidden, permitted=False):
+        """
+            Helper function to extend the form
+
+            @param person: the person (Row)
+            @param formfields: list of form fields (Field)
+            @param data: the form data (dict)
+            @param hidden: hidden form fields (dict)
+            @param permitted: whether the action is permitted
+
+            @return: tuple (widget_id, submit_label)
+        """
+
+        widget_id = "case-event-form"
+        submit = current.T("Register")
+
+        return widget_id, submit
+
+    # -------------------------------------------------------------------------
+    def get_header(self, event_type=None):
+        """
+            Helper function to construct the event type header
+
+            @param event_type: the event type (Row)
+            @returns: dict of view items
+        """
+
+        T = current.T
+
+        output = {}
+
+        # Event type header
+        if event_type:
+            event_type_name = T(event_type.name)
+        else:
+            event_type_name = current.messages["NONE"]
+
+        event_type_header = DIV(H4(SPAN(T(event_type_name),
+                                        _class = "event-type-name",
+                                        ),
+                                   SPAN(ICON("settings"),
+                                        _class = "event-type-setting",
+                                        ),
+                                   _class = "event-type-toggle",
+                                   _id = "event-type-toggle",
+                                   ),
+                                _class = "event-type-header",
+                                )
+        output["event_type"] = event_type_header
+
+        # Event type selector
+        event_types = self.get_event_types()
+        buttons = []
+        for k, v in event_types.items():
+            if k != "_default":
+                button = LI(A(T(v.name),
+                              _class = "secondary button event-type-selector",
+                              data = {"code": s3_str(v.code),
+                                      "name": s3_str(T(v.name)),
+                                      },
+                              ),
+                            )
+                buttons.append(button)
+        output["event_type_selector"] = UL(buttons,
+                                           _class="button-group stack hide event-type-selector",
+                                           _id="event-type-selector",
+                                           )
+
+        return output
+
+    # -------------------------------------------------------------------------
+    # Class-specific functions
     # -------------------------------------------------------------------------
     @staticmethod
     def register_event(person_id, type_id):
@@ -3497,41 +3679,6 @@ class DVRRegisterCaseEvent(S3Method):
         return record_id
 
     # -------------------------------------------------------------------------
-    def validate(self, form):
-        """
-            Validate the event registration form
-
-            @param form: the FORM
-        """
-
-        T = current.T
-
-        formvars = form.vars
-        pe_label = formvars.get("label").strip()
-
-        person = self.get_person(pe_label)
-        if person is None:
-            form.errors["label"] = T("No person found with this ID number")
-            permitted = False
-        else:
-            person_id = person.id
-            formvars.person_id = person_id
-            flag_info = dvr_get_flag_instructions(person_id, action="id-check")
-            permitted = flag_info["permitted"]
-        formvars.permitted = permitted
-
-        # Validate the event type (if not default)
-        type_id = None
-        event_code = formvars.get("event_code")
-        if event_code:
-            event_type = self.get_event_type(event_code)
-            if not event_type:
-                form.errors["event_code"] = T("Invalid event code")
-            else:
-                type_id = event_type.id
-        formvars.type_id = type_id
-
-    # -------------------------------------------------------------------------
     def get_event_types(self):
         """
             Lazy getter for case event types
@@ -3568,28 +3715,7 @@ class DVRRegisterCaseEvent(S3Method):
         return self.event_types
 
     # -------------------------------------------------------------------------
-    def get_event_type(self, code=None):
-        """
-            Get a case event type for an event code
-
-            @param code: the type code (using default event type if None)
-
-            @return: the dvr_case_event_type Row, or None if not found
-        """
-
-        event_types = self.get_event_types()
-
-        event_type = None
-        if code is None:
-            event_type = event_types.get("_default")
-        else:
-            for value in event_types.values():
-                if value.code == code:
-                    event_type = value
-                    break
-
-        return event_type
-
+    # Common methods
     # -------------------------------------------------------------------------
     @classmethod
     def get_person(cls, pe_label):
@@ -3805,6 +3931,461 @@ class DVRRegisterCaseEvent(S3Method):
                  data = {"tmp": template % tmp,
                          },
                  )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inject_js(widget_id, options):
+        """
+            Helper function to inject static JS and instantiate
+            the eventRegistration widget
+
+            @param widget_id: the node ID where to instantiate the widget
+            @param options: dict of widget options (JSON-serializable)
+        """
+
+        s3 = current.response.s3
+        appname = current.request.application
+
+        # Static JS
+        scripts = s3.scripts
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.dvr.js" % appname
+        else:
+            script = "/%s/static/scripts/S3/s3.dvr.min.js" % appname
+        scripts.append(script)
+
+        # Instantiate widget
+        scripts = s3.jquery_ready
+        script = '''$('#%(id)s').eventRegistration(%(options)s)''' % \
+                 {"id": widget_id, "options": json.dumps(options)}
+        if script not in scripts:
+            scripts.append(script)
+
+# =============================================================================
+class DVRRegisterPayment(DVRRegisterCaseEvent):
+    """ Method handler to register case events """
+
+    # Action to check flag restrictions for
+    ACTION = "payment"
+
+    # -------------------------------------------------------------------------
+    # Configuration
+    # -------------------------------------------------------------------------
+    def permitted(self):
+        """
+            Helper function to check permissions
+
+            @return: True if permitted to use this method, else False
+        """
+
+        # User must be permitted to update allowance records
+        return self._permitted("update")
+
+    # -------------------------------------------------------------------------
+    def get_event_type(self, code=None):
+        """
+            Get a case event type for an event code
+
+            @param code: the type code (using default event type if None)
+
+            @return: the dvr_case_event_type Row, or None if not found
+        """
+
+        # Only one type of event
+        return Storage(code="PAYMENT")
+
+    # -------------------------------------------------------------------------
+    def accept(self, r, form, event_type=None):
+        """
+            Helper function to process the form
+
+            @param r: the S3Request
+            @param form: the FORM
+            @param event_type: the event_type (Row)
+        """
+
+        T = current.T
+        response = current.response
+
+        formvars = form.vars
+        person_id = formvars.person_id
+
+        success = False
+
+        if not formvars.get("permitted"):
+            response.error = T("Payment registration not permitted")
+
+        elif person_id:
+            # Get payment data from hidden input
+            payments = r.post_vars.get("actions")
+            if payments:
+
+                # @todo: read date from formvars (utcnow as fallback)
+                date = r.utcnow
+                comments = formvars.get("comments")
+
+                updated, failed = self.register_payments(person_id,
+                                                         payments,
+                                                         date = date,
+                                                         comments = comments,
+                                                         )
+                response.confirmation = T("%(number)s payment(s) registered") % \
+                                        {"number": updated}
+                if failed:
+                    response.warning = T("%(number)s payment(s) not found") % \
+                                       {"number": failed}
+            else:
+                response.error = T("No payments specified")
+        else:
+            response.error = T("Person not found")
+
+        return success
+
+    # -------------------------------------------------------------------------
+    def registration_ajax(self, r, **attr):
+        """
+            Ajax response method, expects a JSON input like:
+
+                {l: the PE label (from the input field),
+                 c: boolean to indicate whether to just check
+                    the PE label or to register payments
+                 d: the payment data (raw data, which payments to update)
+                 }
+
+            @param r: the S3Request instance
+            @param attr: controller parameters
+
+            @return: JSON response, structure:
+
+                    {l: the actual PE label (to update the input field),
+                     p: the person details,
+                     f: [{n: the flag name
+                          i: the flag instructions
+                          },
+                         ...],
+
+                     u: whether there are any actionable data
+                     s: whether the action is permitted or not
+
+                     d: {t: time stamp
+                         h: payment details (raw data)
+                         d: payment details (HTML)
+                         }
+
+                     e: form error (for label field)
+
+                     a: error message
+                     w: warning message
+                     m: success message
+                     }
+        """
+
+        T = current.T
+
+        # Load JSON data from request body
+        s = r.body
+        s.seek(0)
+        try:
+            data = json.load(s)
+        except (ValueError, TypeError):
+            r.error(400, current.ERROR.BAD_REQUEST)
+
+
+        # Initialize processing variables
+        output = {}
+        alert = None
+        error = None
+        warning = None
+        message = None
+        permitted = False
+        flags = []
+
+        # Identify the person
+        pe_label = data.get("l")
+        person = self.get_person(pe_label)
+
+        if person is None:
+            error = s3_str(T("No person found with this ID number"))
+
+        else:
+            # Get flag info
+            flag_info = dvr_get_flag_instructions(person.id,
+                                                  action = self.ACTION,
+                                                  )
+            permitted = flag_info["permitted"]
+
+            check = data.get("c")
+            if check:
+                name = s3_fullname(person)
+                dob = person.date_of_birth
+                if dob:
+                    dob = S3DateTime.date_represent(dob)
+                    person_data = "%s (%s %s)" % (name, T("Date of Birth"), dob)
+                else:
+                    person_data = name
+
+                output["p"] = s3_str(person_data)
+                output["l"] = person.pe_label
+
+                info = flag_info["info"]
+                for flagname, instructions in info:
+                    flags.append({"n": s3_str(T(flagname)),
+                                  "i": s3_str(T(instructions)),
+                                  })
+
+                if permitted:
+                    payments = self.get_payment_data(person.id)
+                else:
+                    payments = []
+                date = S3DateTime.datetime_represent(current.request.utcnow,
+                                                     utc = True,
+                                                     )
+                output["d"] = {"d": s3_str(self.payment_data_represent(payments)),
+                               "t": s3_str(date),
+                               "h": payments,
+                               }
+                if payments:
+                    output["u"] = True
+                else:
+                    output["u"] = False
+            else:
+                if not permitted:
+                    alert = T("Payment registration not permitted")
+                else:
+                    # Get payment data from JSON
+                    payments = data.get("d")
+                    if payments:
+
+                        # @todo: read date from JSON data (utcnow as fallback)
+                        date = r.utcnow
+                        comments = data.get("c")
+
+                        updated, failed = self.register_payments(
+                                                    person.id,
+                                                    payments,
+                                                    date = date,
+                                                    comments = comments,
+                                                    )
+                        message = T("%(number)s payment(s) registered") % \
+                                  {"number": updated}
+                        if failed:
+                            warning = T("%(number)s payment(s) not found") % \
+                                      {"number": failed}
+                    else:
+                        alert = T("No payments specified")
+
+        # Add messages to output
+        if alert:
+            output["a"] = s3_str(alert)
+        if error:
+            output["e"] = s3_str(error)
+        if message:
+            output["m"] = s3_str(message)
+        if warning:
+            output["w"] = s3_str(warning)
+
+        # Add flag info to output
+        output["s"] = permitted
+        output["f"] = flags
+
+        current.response.headers["Content-Type"] = "application/json"
+        return json.dumps(output)
+
+    # -------------------------------------------------------------------------
+    def get_form_data(self, person, formfields, data, hidden, permitted=False):
+        """
+            Helper function to extend the form
+
+            @param person: the person (Row)
+            @param formfields: list of form fields (Field)
+            @param data: the form data (dict)
+            @param hidden: hidden form fields (dict)
+            @param permitted: whether the action is permitted
+
+            @return: tuple (widget_id, submit_label)
+        """
+
+        T = current.T
+
+        if person and permitted:
+            payments = self.get_payment_data(person.id)
+        else:
+            payments = []
+
+        date = S3DateTime.datetime_represent(current.request.utcnow,
+                                             utc = True,
+                                             )
+
+        # Additional form fields for payments
+        formfields.extend([Field("details",
+                                label = T("Pending Payments"),
+                                writable = False,
+                                represent = self.payment_data_represent,
+                                ),
+                           Field("date",
+                                 label = T("Payment Date"),
+                                 writable = False,
+                                 default = date,
+                                 ),
+                           Field("comments",
+                                 label = T("Comments"),
+                                 widget = s3_comments_widget,
+                                 ),
+                           ])
+
+        # Additional data for payments
+        data["date"] = s3_str(date)
+        data["details"] = payments
+        data["comments"] = ""
+
+        # Add payments JSON to hidden form fields, update actionable info
+        hidden["actions"] = json.dumps(payments)
+        if not payments:
+            hidden["actionable"] = "false"
+
+        widget_id = "payment-form"
+        submit = current.T("Register")
+
+        return widget_id, submit
+
+    # -------------------------------------------------------------------------
+    def get_header(self, event_type=None):
+        """
+            Helper function to construct the event type header
+
+            @param event_type: the event type (Row)
+            @returns: dict of view items
+        """
+
+        # Simple title, no selector/toggle
+        event_type_header = DIV(H4(SPAN(current.T("Allowance Payment"),
+                                        _class = "event-type-name",
+                                        ),
+                                   ),
+                                _class = "event-type-header",
+                                )
+
+        output = {"event_type": event_type_header,
+                  "event_type_selector": "",
+                  }
+
+        return output
+
+    # -------------------------------------------------------------------------
+    # Class-specific functions
+    # -------------------------------------------------------------------------
+    def get_payment_data(self, person_id):
+        """
+            Helper function to extract currently pending allowance
+            payments for the person_id.
+
+            @param person_id: the person record ID
+
+            @return: a list of dicts [{i: record_id,
+                                       d: date,
+                                       c: currency,
+                                       a: amount,
+                                       }, ...]
+        """
+
+        query = (FS("person_id") == person_id) & \
+                (FS("status") == 1) & \
+                (FS("date") <= current.request.utcnow.date())
+
+        resource = current.s3db.resource("dvr_allowance",
+                                         filter = query,
+                                         )
+        data = resource.select(["id",
+                                "date",
+                                "currency",
+                                "amount",
+                                ],
+                                orderby = "dvr_allowance.date",
+                                represent = True,
+                               )
+
+        payments = []
+        append = payments.append
+        for row in data.rows:
+            payment_details = {"r": row["dvr_allowance.id"],
+                               "d": row["dvr_allowance.date"],
+                               "c": row["dvr_allowance.currency"],
+                               "a": row["dvr_allowance.amount"],
+                               }
+            append(payment_details)
+
+        return payments
+
+    # -------------------------------------------------------------------------
+    def register_payments(self, person_id, payments, date=None, comments=None):
+        """
+            Helper function to register payments
+
+            @param person_id: the person record ID
+            @param payments: the payments as sent from form
+            @param date: the payment date (default utcnow)
+            @param comments: comments for the payments
+
+            @return: tuple (updated, failed), number of records
+        """
+
+        if isinstance(payments, basestring):
+            try:
+                payments = json.loads(payments)
+            except (ValueError, TypeError):
+                payments = []
+
+        if not date:
+            date = current.request.utcnow
+
+        # Data to write
+        data = {"status": 2,
+                "paid_on": date,
+                }
+        if comments:
+            data["comments"] = comments
+
+        atable = current.s3db.dvr_allowance
+
+        updated = 0
+        failed = 0
+
+        db = current.db
+        query = current.auth.s3_accessible_query("update", atable)
+        for payment in payments:
+            record_id = payment.get("r")
+            query &= (atable.id == record_id) & \
+                     (atable.person_id == person_id) & \
+                     (atable.status != 2) & \
+                     (atable.deleted != True)
+            success = db(query).update(**data)
+            if success:
+                updated += 1
+            else:
+                failed += 1
+
+        return updated, failed
+
+    # -------------------------------------------------------------------------
+    def payment_data_represent(self, data):
+        """
+            Representation method for the payment details field
+
+            @param data: the payment data (from get_payment_data)
+        """
+
+        if data:
+            output = TABLE(_class="payment-details")
+            for payment in data:
+                details = TR(TD(payment["d"], _class="payment-date"),
+                             TD(payment["c"], _class="payment-currency"),
+                             TD(payment["a"], _class="payment-amount"),
+                             )
+                output.append(details)
+        else:
+            output = current.T("No pending payments")
+
+        return output
 
 # =============================================================================
 def dvr_get_flag_instructions(person_id, action=None):

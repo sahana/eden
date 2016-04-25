@@ -1,235 +1,142 @@
 /**
- * Static JS for DVR Disaster Victim Registration
+ * jQuery UI Widget for DVR Case Event Registration / Payment Registration
+ *
+ * @copyright 2016 (c) Sahana Software Foundation
+ * @license MIT
+ *
+ * requires jQuery 1.9.1+
+ * requires jQuery UI 1.10 widget factory
  */
-
-// Module pattern to hide internal vars
-(function() {
+(function($, undefined) {
 
     "use strict";
 
-    // Namespace for events
-    var ns = '.dvr';
+    var eventRegistrationID = 0;
 
     /**
-     * Helper function to hide any alert messages that are currently shown
+     * eventRegistration, instantiate on event registration form
      */
-    var clearAlert = function() {
+    $.widget('dvr.eventRegistration', {
 
-        $('.alert-error, .alert-warning, .alert-info, .alert-success').fadeOut('fast');
-        $('.error_wrapper').fadeOut('fast').remove();
-    };
+        /**
+         * Default options
+         *
+         * @prop {string} tablename - the tablename used for the form
+         * @prop {bool} ajax - data submission using Ajax
+         * @prop {string} ajaxURL - the URL to send Ajax requests to
+         */
+        options: {
 
-    /**
-     * Helper function to toggle the submit mode of the form
-     *
-     * @param {jQuery} form - the form node
-     * @param {bool} submit - true to enable event registration while disabling
-     *                        the ID check button, false vice versa
-     */
-    var toggleSubmit = function(form, submit) {
+            tablename: 'case_event',
+            ajax: null,
+            ajaxURL: ''
+        },
 
-        var $form = $(form),
-            buttons = ['.check-btn', '.submit-btn'];
+        /**
+         * Create the widget
+         */
+        _create: function() {
 
-        if (submit) {
-            // Check whether form action is permitted
-            var permissionInfo = $form.find('input[type=hidden][name=permitted]'),
-                actionPermitted = false;
-            if (permissionInfo.length) {
-                permissionInfo = permissionInfo.val();
-                if (permissionInfo) {
-                    actionPermitted = JSON.parse(permissionInfo);
+            this.id = eventRegistrationID;
+            eventRegistrationID += 1;
+
+            // Namespace for events
+            this.namespace = '.eventRegistration';
+        },
+
+        /**
+         * Update the widget options
+         */
+        _init: function() {
+
+            // ID prefix for form rows
+            this.idPrefix = '#' + this.options.tablename;
+
+            // Hidden input fields
+            var form = $(this.element);
+
+            this.flagInfo = form.find('input[type=hidden][name=flags]');
+            this.permissionInfo = form.find('input[type=hidden][name=permitted]');
+            this.actionableInfo = form.find('input[type=hidden][name=actionable]');
+            this.eventType = form.find('input[type="hidden"][name="event"]');
+            this.actionDetails = form.find('input[type="hidden"][name="actions"]');
+
+            this.refresh();
+        },
+
+        /**
+         * Remove generated elements & reset other changes
+         */
+        _destroy: function() {
+
+            $.Widget.prototype.destroy.call(this);
+        },
+
+        /**
+         * Redraw contents
+         */
+        refresh: function() {
+
+            var opts = this.options,
+                prefix = this.idPrefix;
+
+            this._unbindEvents();
+
+            // Enable Ajax if we have an AjaxURL
+            if (opts.ajaxURL && opts.ajax === null) {
+                opts.ajax = true;
+            }
+
+            // Show flag info at start
+            this._showFlagInfo();
+
+            // Enable styles on details row
+            $(this.element).find(prefix + '_details__row .controls').addClass('has-details');
+
+            // Show action details, if any
+            if (this.actionDetails.length) {
+                var actionData = JSON.parse(this.actionDetails.val());
+                if (actionData.length) {
+                    this._showDetails(true);
+                } else {
+                    this._hideDetails();
                 }
-            }
-            // Only enable submit if permitted
-            if (actionPermitted) {
-                buttons.reverse();
-            }
-        }
-
-        var active = $form.find(buttons[0]),
-            disabled = $form.find(buttons[1]);
-
-        disabled.prop('disabled', true).hide().insertAfter(active);
-        active.prop('disabled', false).hide().removeClass('hide').show();
-    };
-
-    /**
-     * Helper function to remove the person data and empty the label input,
-     * also re-enabling the ID check button while hiding the registration button
-     *
-     * @param {jQuery} form - the form node
-     * @param {bool} keepAlerts - do not clear the alert space
-     * @param {bool} keepLabel - do not clear the label input field
-     */
-    var clearForm = function(form, keepAlerts, keepLabel) {
-
-        // Clear alerts
-        if (!keepAlerts) {
-            clearAlert();
-        }
-
-        // Reset flag info and permission info
-        var $form = $(form);
-        $form.find('input[type=hidden][name=permitted]').val('false');
-        $form.find('input[type=hidden][name=flags]').val('[]');
-
-        // Clear ID label
-        if (!keepLabel) {
-            $('#case_event_label').val('');
-        }
-
-        // Hide person info
-        $('#case_event_person__row .controls').hide().empty();
-        $('#case_event_flaginfo__row .controls').empty();
-
-        // Disable submit
-        toggleSubmit(form, false);
-    };
-
-    /**
-     * Show flag info
-     *
-     * @param {jQuery} form - the form node
-     */
-    var showFlagInfo = function(form) {
-
-        var flagInfo = $(form).find('input[type=hidden][name=flags]'),
-            flagInfoContainer = $('#case_event_flaginfo__row .controls').empty();
-
-        if (flagInfo.length) {
-            flagInfo = JSON.parse(flagInfo.val());
-        } else {
-            flagInfo = [];
-        }
-
-        var numFlags = flagInfo.length;
-        if (numFlags) {
-
-            flagInfoContainer.addClass('has-flaginfo');
-
-            var advise = $('<div class="checkpoint-advise">').hide().appendTo(flagInfoContainer),
-                flag,
-                instructions;
-
-            for (var i=0; i < numFlags; i++) {
-
-                flag = flagInfo[i];
-                instructions = $('<div class="checkpoint-instructions">').appendTo(advise);
-
-                $('<h4>' + flag.n + '</h4>').appendTo(instructions);
-                if (flag.i) {
-                    $('<p>' + flag.i + '</p>').appendTo(instructions);
-                }
-            }
-            advise.slideDown();
-        }
-    };
-
-    /**
-     * Actions on jQuery-ready, configure event handlers for page elements
-     */
-    $(document).ready(function() {
-
-        // Disable Zxing-button if not Android
-        if (navigator.userAgent.toLowerCase().indexOf("android") == -1) {
-            $('.zxing-button').addClass('disabled').unbind('click').click(function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
-            });
-        } else {
-            // Clear alert space when launching Zxing
-            $('.zxing-button').unbind(ns).bind('click' + ns, function() {
-                clearAlert();
-            });
-        }
-
-        // Toggle event type selector
-        $('.event-type-toggle').unbind(ns).bind('click' + ns, function() {
-            var selector = $('ul.event-type-selector');
-            if (selector.hasClass('hide')) {
-                selector.hide().removeClass('hide').slideDown();
             } else {
-                selector.slideToggle();
+                this._hideDetails();
             }
-        });
 
-        // Select event type
-        $('a.event-type-selector').unbind(ns).bind('click' + ns, function() {
-            var self = $(this),
-                code = self.data('code'),
-                name = self.data('name');
-            // Store new event type in form
-            $('input[type="hidden"][name="event"]').val(code);
-            // Update event type in header
-            $('.event-type-name').text(name);
-            // Enable submit if we have a person
-            if ($('#case_event_person__row .controls').text()) {
-                toggleSubmit($('form'), true);
-            }
-            // Update Zxing URL
-            $('.zxing-button').each(function() {
-                var $this = $(this),
-                    urlTemplate = $this.data('tmp');
-                if (urlTemplate) {
-                    $this.attr('href', urlTemplate.replace('%7BEVENT%7D', code));
-                }
-            });
-            // Hide event type selector
-            self.closest('ul.event-type-selector').slideUp();
-        });
+            // Focus on label input at start
+            var labelInput = $(prefix + '_label');
+            labelInput.focus().val(labelInput.val());
 
-        var labelInput = $('#case_event_label').unbind(ns);
+            this._bindEvents();
+        },
 
-        // Focus on ID input at start
-        labelInput.focus().val(labelInput.val());
+        /**
+         * Ajax method to identify the person from the label
+         */
+        _checkID: function() {
 
-        // Changing the label resets form
-        labelInput.bind('input' + ns, function(e) {
-            clearForm($(this).closest('form'), false, true);
-        });
+            this._clearAlert();
 
-        // Key events for label field
-        labelInput.bind('keyup' + ns, function(e) {
-            switch (e.which) {
-                case 27:
-                    // Pressing ESC resets the form
-                    clearForm($(this).closest('form'));
-                    break;
-                default:
-                    break;
-            }
-        });
+            var prefix = this.idPrefix,
+                label = $(prefix + '_label').val();
 
-        // Cancel-button to clear the form
-        $('a.cancel-action').unbind(ns).bind('click' + ns, function(e) {
-            e.preventDefault();
-            clearForm($(this).closest('form'));
-        });
-
-        var personInfo = $('#case_event_person__row .controls'),
-            flagInfo = $('form input[type=hidden][name=flags]'),
-            permissionInfo = $('form input[type=hidden][name=permitted]');
-
-        // Click-Handler for Check-ID button
-        $('.check-btn').unbind(ns).bind('click' + ns, function(e) {
-
-            e.preventDefault();
-            clearAlert();
-
-            var label = $('#case_event_label').val();
             if (!label) {
                 return;
             }
 
             var input = {'l': label, 'c': true},
-                ajaxURL = S3.Ap.concat('/dvr/case_event/register.json');
+                ajaxURL = this.options.ajaxURL,
+                // Clear the person info
+                personInfo = $(prefix + '_person__row .controls').empty(),
+                // Show a throbber
+                throbber = $('<div class="inline-throbber">').insertAfter(personInfo),
+                self = this;
 
-            // Clear person info, show throbber
-            personInfo.empty();
-            var throbber = $('<div class="inline-throbber">').insertAfter(personInfo);
+            this._clearDetails();
 
+            // Send the ajax request
             $.ajaxS3({
                 'url': ajaxURL,
                 'type': 'POST',
@@ -244,28 +151,53 @@
                     if (data.e) {
                         // Show error message on ID field
                         var msg = $('<div class="error_wrapper"><div id="label__error" class="error" style="display: block;">' + data.e + '</div></div>').hide();
-                        msg.insertAfter($('#case_event_label')).slideDown();
+                        msg.insertAfter($(prefix + '_label')).slideDown();
 
                     } else {
+
                         // Show the person details
                         personInfo.html(data.p).removeClass('hide').show();
+
                         // Update flag info
+                        var flagInfo = self.flagInfo;
                         if (data.f) {
                             flagInfo.val(JSON.stringify(data.f));
                         } else {
                             flagInfo.val('[]');
                         }
+
                         // Update permission info
+                        var permissionInfo = self.permissionInfo;
                         if (data.s !== undefined) {
                             permissionInfo.val(JSON.stringify(data.s));
                         } else {
                             permissionInfo.val('false');
                         }
-                        // Enable submit if we have a valid event type
-                        if ($('input[type="hidden"][name="event"]').val()) {
-                            toggleSubmit($('form'), true);
+
+                        // Update actionable info
+                        var actionableInfo = self.actionableInfo,
+                            actionable = data.u;
+                        if (actionableInfo.length) {
+                            if (actionable !== undefined) {
+                                actionableInfo.val(JSON.stringify(data.u));
+                            } else {
+                                actionable = true;
+                                actionableInfo.val('true');
+                            }
                         }
-                        showFlagInfo($('form'));
+
+                        // Render details
+                        if (data.d) {
+                            self._updateDetails(data.d, actionable);
+                        }
+
+                        // Enable submit if we have a valid event type
+                        if (self.eventType.val()) {
+                            self._toggleSubmit(true);
+                        }
+
+                        // Show the flag info
+                        self._showFlagInfo();
                     }
 
                     // Show alerts
@@ -278,28 +210,51 @@
                 },
                 'error': function () {
 
-                    // Clear the form, but keep the alert
+                    // Remove throbber
                     throbber.remove();
-                    clearForm($('form'), true);
+
+                    // Clear the form, but keep the alert
+                    self._clearForm(true);
                 }
             });
-        });
+        },
 
-        $('.submit-btn').unbind(ns).bind('click' + ns, function(e) {
+        /**
+         * Ajax method to register the event
+         */
+        _registerEvent: function() {
 
-            e.preventDefault();
-            clearAlert();
+            this._clearAlert();
 
-            var label = $('#case_event_label').val(),
-                event = $('input[type="hidden"][name="event"]').val();
+            var prefix = this.idPrefix,
+                label = $(prefix + '_label').val(),
+                event = this.eventType.val();
+
             if (!label || !event) {
                 return;
             }
-            var input = {'l': label, 't': event},
-                ajaxURL = S3.Ap.concat('/dvr/case_event/register.json');
 
-            // Show throbber (don't clear person info just yet)
-            var throbber = $('<div class="inline-throbber">').insertAfter(personInfo);
+            var input = {'l': label, 't': event},
+                ajaxURL = this.options.ajaxURL,
+                // Don't clear the person info just yet
+                personInfo = $(prefix + '_person__row .controls'),
+                // Show a throbber
+                throbber = $('<div class="inline-throbber">').insertAfter(personInfo),
+                self = this;
+
+            // Add action data (if any) to request JSON
+            var actionDetails = this.actionDetails;
+            if (actionDetails.length) {
+                actionDetails = actionDetails.val();
+                if (actionDetails) {
+                    input.d = JSON.parse(actionDetails);
+                } else {
+                    input.d = [];
+                }
+            }
+
+            // Add comments to request JSON
+            input.c = $(prefix + 'comments').val();
 
             $.ajaxS3({
                 'url': ajaxURL,
@@ -315,30 +270,379 @@
                     if (data.e) {
                         // Show error message on ID field
                         var msg = $('<div class="error_wrapper"><div id="label__error" class="error" style="display: block;">' + data.e + '</div></div>').hide();
-                        msg.insertAfter($('#case_event_label')).slideDown();
+                        msg.insertAfter($(prefix + '_label')).slideDown();
 
                     } else {
                         // Done - clear the form
-                        clearForm($('form'));
+                        self._clearForm();
                     }
 
+                    // Show alert/confirmation message
                     if (data.a) {
                         S3.showAlert(data.a, 'error', false);
                     } else if (data.m) {
                         S3.showAlert(data.m, 'success', false);
                     }
-
                 },
                 'error': function () {
 
-                    // Clear the form, but keep the alert
+                    // Remove the throbber
                     throbber.remove();
-                    clearForm($('form'), true);
+
+                    // Clear the form, but keep the alert
+                    this._clearForm(true);
                 }
             });
-        });
+        },
 
-        showFlagInfo($('form'));
+        /**
+        * Helper function to hide any alert messages that are currently shown
+        */
+        _clearAlert: function() {
+
+            $('.alert-error, .alert-warning, .alert-info, .alert-success').fadeOut('fast');
+            $('.error_wrapper').fadeOut('fast').remove();
+        },
+
+        /**
+         * Helper function to show flag infos
+         */
+        _showFlagInfo: function() {
+
+            var flagInfo = this.flagInfo,
+                prefix = this.idPrefix,
+                flagInfoContainer = $(prefix + '_flaginfo__row .controls').empty();
+
+            if (flagInfo.length) {
+                flagInfo = JSON.parse(flagInfo.val());
+            } else {
+                flagInfo = [];
+            }
+
+            var numFlags = flagInfo.length;
+            if (numFlags) {
+
+                flagInfoContainer.addClass('has-flaginfo');
+
+                var advise = $('<div class="checkpoint-advise">').hide().appendTo(flagInfoContainer),
+                    flag,
+                    instructions;
+
+                for (var i=0; i < numFlags; i++) {
+
+                    flag = flagInfo[i];
+                    instructions = $('<div class="checkpoint-instructions">').appendTo(advise);
+
+                    $('<h4>' + flag.n + '</h4>').appendTo(instructions);
+                    if (flag.i) {
+                        $('<p>' + flag.i + '</p>').appendTo(instructions);
+                    }
+                }
+                advise.slideDown();
+            }
+        },
+
+        /**
+         * Helper function to hide the details form fields
+         */
+        _hideDetails: function() {
+
+            var prefix = this.idPrefix,
+                hasPersonInfo = $(prefix + '_person__row .controls').text();
+
+            if (hasPersonInfo) {
+                // Retain the details (showing empty-message)
+                $(prefix + '_details__row').show();
+            } else {
+                // Hide the details if there are no person data
+                $(prefix + '_details__row').hide();
+            }
+
+            // Hide all other details
+            $(prefix + '_date__row').hide();
+            $(prefix + '_comments__row').hide();
+        },
+
+        /**
+         * Helper function to show the details form fields
+         *
+         * @param {bool} actionable - whether there are any actionable details
+         */
+        _showDetails: function(actionable) {
+
+            var prefix = this.idPrefix;
+
+            $(prefix + '_details__row').show();
+            if (actionable) {
+                $(prefix + '_date__row').show();
+                $(prefix + '_comments__row').show();
+            }
+        },
+
+        /**
+         * Helper function to update the action details in the form
+         *
+         * @param {object} data - the action details as dict
+         * @param {bool} actionable - whether there are any actionable details
+         */
+        _updateDetails: function(data, actionable) {
+
+            var prefix = this.idPrefix,
+                detailsContainer = $(prefix + '_details__row .controls'),
+                dateContainer = $(prefix + '_date__row .controls');
+
+            // Update the hidden input
+            var actionDetails = this.actionDetails;
+            if (actionDetails.length) {
+                if (data.h !== '') {
+                    actionDetails.val(JSON.stringify(data.h));
+                } else {
+                    actionDetails.val('[]');
+                }
+            }
+
+            // Update the visible form fields
+            $(prefix + '_details__row .controls').html(data.d);
+            $(prefix + '_date__row .controls').html(data.t);
+
+            // Show the form fields
+            this._showDetails(actionable);
+        },
+
+        /**
+         * Helper function to clear the details form fields
+         */
+        _clearDetails: function() {
+
+            var prefix = this.idPrefix;
+
+            this._hideDetails();
+
+            $(prefix + '_details__row .controls').empty();
+            $(prefix + '_date__row .controls').empty();
+            $(prefix + '_comments').val('');
+        },
+
+        /**
+         * Helper function to toggle the submit mode of the form
+         *
+         * @param {bool} submit - true to enable event registration while disabling
+         *                        the ID check button, false vice versa
+         */
+        _toggleSubmit: function(submit) {
+
+            var form = $(this.element),
+                buttons = ['.check-btn', '.submit-btn'],
+                permissionInfo = this.permissionInfo,
+                actionableInfo = this.actionableInfo;
+
+            if (submit) {
+
+                var permitted = false,
+                    actionable = false;
+
+                // Check whether form action is permitted
+                if (permissionInfo.length) {
+                    permissionInfo = permissionInfo.val();
+                    if (permissionInfo) {
+                        permitted = JSON.parse(permissionInfo);
+                    }
+                }
+
+                // Check whether the form is actionable
+                if (permitted) {
+                    actionable = true;
+                    if (actionableInfo.length) {
+                        actionableInfo = actionableInfo.val();
+                        if (actionableInfo) {
+                            actionable = JSON.parse(actionableInfo);
+                        }
+                    }
+                }
+
+                // Only enable submit if permitted and actionable
+                if (permitted && actionable) {
+                    buttons.reverse();
+                }
+            }
+
+            var active = form.find(buttons[0]),
+                disabled = form.find(buttons[1]);
+
+            disabled.prop('disabled', true).hide().insertAfter(active);
+            active.prop('disabled', false).hide().removeClass('hide').show();
+        },
+
+        /**
+        * Helper function to remove the person data and empty the label input,
+        * also re-enabling the ID check button while hiding the registration button
+        *
+        * @param {bool} keepAlerts - do not clear the alert space
+        * @param {bool} keepLabel - do not clear the label input field
+        */
+        _clearForm: function(keepAlerts, keepLabel) {
+
+            var form = $(this.element),
+                prefix = this.idPrefix;
+
+            // Clear alerts
+            if (!keepAlerts) {
+                this._clearAlert();
+            }
+
+            // Reset flag info and permission info
+            this.flagInfo.val('[]');
+            this.permissionInfo.val('false');
+
+            // Clear ID label
+            if (!keepLabel) {
+                $(prefix + '_label').val('');
+            }
+
+            // Hide person info
+            $(prefix + '_person__row .controls').hide().empty();
+            $(prefix + '_flaginfo__row .controls').empty();
+
+            // Clear details
+            this._clearDetails();
+
+            // Disable submit
+            this._toggleSubmit(false);
+        },
+
+        /**
+         * Bind events to generated elements (after refresh)
+         */
+        _bindEvents: function() {
+
+            var form = $(this.element),
+                prefix = this.idPrefix,
+                ns = this.namespace,
+                self = this;
+
+            // Events for outside elements
+            var zxingButton = $('.zxing-button'),
+                eventTypeToggle = $('#event-type-toggle'),
+                eventTypeSelector = $('#event-type-selector');
+
+            if (navigator.userAgent.toLowerCase().indexOf("android") == -1) {
+                // Disable Zxing-button if not Android
+                zxingButton.addClass('disabled').click(function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                });
+            } else {
+                // Clear alert space when launching Zxing
+                zxingButton.bind('click' + ns, function() {
+                    self._clearAlert();
+                });
+            }
+
+            // Toggle event type selector
+            eventTypeToggle.bind('click' + ns, function() {
+                if (eventTypeSelector.hasClass('hide')) {
+                    eventTypeSelector.hide().removeClass('hide').slideDown();
+                } else {
+                    eventTypeSelector.slideToggle();
+                }
+            });
+
+            // Select event type
+            eventTypeSelector.find('a.event-type-selector').bind('click' + ns, function() {
+
+                var $this = $(this),
+                    code = $this.data('code'),
+                    name = $this.data('name');
+
+                // Store new event type in form
+                $('input[type="hidden"][name="event"]').val(code);
+
+                // Update event type in header
+                $('.event-type-name').text(name);
+
+                // Enable submit if we have a person
+                if ($(prefix + '_person__row .controls').text()) {
+                    self._toggleSubmit(true);
+                }
+
+                // Update Zxing URL
+                zxingButton.each(function() {
+                    var $zxing = $(this),
+                        urlTemplate = $zxing.data('tmp');
+                    if (urlTemplate) {
+                        $zxing.attr('href', urlTemplate.replace('%7BEVENT%7D', code));
+                    }
+                });
+
+                // Hide event type selector
+                eventTypeSelector.slideUp();
+            });
+
+            // Cancel-button to clear the form
+            form.find('a.cancel-action').bind('click' + ns, function(e) {
+                e.preventDefault();
+                self._clearForm();
+            });
+
+            if (this.options.ajax) {
+                // Click-Handler for Check-ID button
+                form.find('.check-btn').bind('click' + ns, function(e) {
+                    e.preventDefault();
+                    self._checkID();
+                });
+                // Click-Handler for Register button
+                form.find('.submit-btn').unbind(ns).bind('click' + ns, function(e) {
+                    e.preventDefault();
+                    self._registerEvent();
+                });
+            }
+
+            // Events for the label input
+            var labelInput = $(prefix + '_label');
+
+            // Changing the label resets form
+            labelInput.bind('input' + ns, function(e) {
+                self._clearForm(false, true);
+            });
+
+            // Key events for label field
+            labelInput.bind('keyup' + ns, function(e) {
+                switch (e.which) {
+                    case 27:
+                        // Pressing ESC resets the form
+                        self._clearForm();
+                        break;
+                    default:
+                        break;
+                }
+            });
+
+            return true;
+        },
+
+        /**
+         * Unbind events (before refresh)
+         */
+        _unbindEvents: function() {
+
+            var form = $(this.element),
+                ns = this.namespace,
+                prefix = this.idPrefix;
+
+            $('.zxing-button').unbind(ns).unbind('click');
+            $('#event-type-toggle').unbind(ns);
+            $('#event-type-selector').find('a.event-type-selector').unbind(ns);
+
+            $(prefix + '_label').unbind(ns);
+
+            form.find('a.cancel-action').unbind(ns);
+
+            form.find('.check-btn').unbind(ns);
+
+            form.find('.submit-btn').unbind(ns);
+
+            return true;
+        }
     });
-
-}(jQuery));
+})(jQuery);
