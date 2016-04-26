@@ -2131,6 +2131,10 @@ class DVRCaseAllowanceModel(S3Model):
                                  3: T("refused"),
                                  4: T("missed"),
                                  }
+        amount_represent = lambda v: IS_FLOAT_AMOUNT.represent(v,
+                                                               precision = 2,
+                                                               fixed = True,
+                                                               )
 
         tablename = "dvr_allowance"
         define_table(tablename,
@@ -2156,6 +2160,7 @@ class DVRCaseAllowanceModel(S3Model):
                                  ),
                      Field("amount", "double",
                            label = T("Amount"),
+                           represent = amount_represent,
                            ),
                      s3_currency(),
                      Field("status", "integer",
