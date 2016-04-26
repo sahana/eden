@@ -522,7 +522,7 @@ class S3Msg(object):
                               organisation_id = None,
                               contact_method = contact_method,
                               channel_id = channel_id,
-                              from_address = from_address,
+                              from_address = None,
                               outgoing_sms_handler = outgoing_sms_handler,
                               lookup_org = lookup_org,
                               channels = channels):
@@ -721,13 +721,15 @@ class S3Msg(object):
             if entity_type == "pr_person":
                 # Send the message to this person
                 try:
-                    status = dispatch_to_pe_id(pe_id,
-                                               subject,
-                                               message,
-                                               row.id,
-                                               message_id,
-                                               organisation_id,
-                                               from_address)
+                    status = dispatch_to_pe_id(
+                                    pe_id,
+                                    subject,
+                                    message,
+                                    row.id,
+                                    message_id,
+                                    organisation_id = organisation_id,
+                                    from_address = from_address,
+                                    )
                 except:
                     status = False
 
@@ -1212,7 +1214,7 @@ class S3Msg(object):
             pass
 
         # Return False because the API needs to ask us for the messsage again.
-        return False 
+        return False
 
     # -------------------------------------------------------------------------
     def send_sms_by_pe_id(self,
