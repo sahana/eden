@@ -1531,7 +1531,7 @@ class DVRCaseAppointmentModel(S3Model):
         # Custom methods
         self.set_method("dvr", "case_appointment",
                         method = "manage",
-                        action = dvr_ManageAppointments,
+                        action = DVRManageAppointments,
                         )
 
         configure(tablename,
@@ -2121,6 +2121,7 @@ class DVRCaseAllowanceModel(S3Model):
 
         configure = self.configure
         define_table = self.define_table
+        set_method = self.set_method
 
         # ---------------------------------------------------------------------
         # Allowance Information
@@ -2196,10 +2197,14 @@ class DVRCaseAllowanceModel(S3Model):
                   onvalidation = self.allowance_onvalidation,
                   )
 
-        self.set_method("dvr", "allowance",
-                        method = "register",
-                        action = DVRRegisterPayment,
-                        )
+        set_method("dvr", "allowance",
+                   method = "register",
+                   action = DVRRegisterPayment,
+                   )
+        set_method("dvr", "allowance",
+                   method = "manage",
+                   action = DVRManageAllowance,
+                   )
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -2875,7 +2880,7 @@ def dvr_due_followups():
     return resource.count()
 
 # =============================================================================
-class dvr_ManageAppointments(S3Method):
+class DVRManageAppointments(S3Method):
     """ Custom method to bulk-manage appointments """
 
     def apply_method(self, r, **attr):
@@ -3082,6 +3087,166 @@ class dvr_ManageAppointments(S3Method):
                 r.error(415, current.ERROR.BAD_FORMAT)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
+
+# =============================================================================
+class DVRManageAllowance(S3Method):
+    """ Method handler to bulk-update allowance payments status """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Main entry point for REST interface.
+
+            @param r: the S3Request instance
+            @param attr: controller parameters
+        """
+
+        # User must be permitted to update allowance information
+        permitted = self._permitted("update")
+        if not permitted:
+            r.unauthorised()
+
+        if r.representation in ("html", "iframe"):
+            if r.http in ("GET", "POST"):
+                output = self.bulk_update_status(r, **attr)
+            else:
+                r.error(405, current.ERROR.BAD_METHOD)
+        else:
+            r.error(415, current.ERROR.BAD_FORMAT)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def bulk_update_status(self, r, **attr):
+        """
+            Method to bulk-update status of allowance payments
+
+            @param r: the S3Request instance
+            @param attr: controller parameters
+        """
+
+        T = current.T
+        s3db = current.s3db
+
+        settings = current.deployment_settings
+        response = current.response
+
+        output = {"title": T("Update Allowance Status"),
+                  }
+
+        status_opts = dict(s3db.dvr_allowance_status_opts)
+
+        # Can not bulk-update from or to status "paid"
+        del status_opts[2]
+
+        # Form fields
+        formfields = [s3_date("from_date",
+                              label = T("Planned From"),
+                              set_min = "#allowance_to_date",
+                              ),
+                      s3_date("to_date",
+                              default = "now",
+                              label = T("Planned Until"),
+                              set_max = "#allowance_from_date",
+                              empty = False,
+                              ),
+                      Field("current_status", "integer",
+                            default = 1, # pending
+                            label = T("Current Status"),
+                            requires = IS_IN_SET(status_opts),
+                            ),
+                      Field("new_status", "integer",
+                            default = 4, # missed
+                            label = T("New Status"),
+                            requires = IS_IN_SET(status_opts),
+                            ),
+                      ]
+
+        # Form buttons
+        submit_btn = INPUT(_class = "tiny primary button",
+                           _name = "submit",
+                           _type = "submit",
+                           _value = T("Update"),
+                           )
+        cancel_btn = A(T("Cancel"),
+                       _href = r.url(id=None, method=""),
+                       _class = "action-lnk",
+                       )
+        buttons = [submit_btn, cancel_btn]
+
+        # Generate the form and add it to the output
+        resourcename = r.resource.name
+        formstyle = settings.get_ui_formstyle()
+        form = SQLFORM.factory(record = None,
+                               showid = False,
+                               formstyle = formstyle,
+                               table_name = resourcename,
+                               buttons = buttons,
+                               *formfields)
+        output["form"] = form
+
+        # Process the form
+        formname = "%s/manage" % resourcename
+        if form.accepts(r.post_vars,
+                        current.session,
+                        formname = formname,
+                        onvalidation = self.validate,
+                        keepvalues = False,
+                        hideerror = False,
+                        ):
+
+            formvars = form.vars
+
+            current_status = formvars.current_status
+            new_status = formvars.new_status
+
+            table = s3db.dvr_allowance
+            query = current.auth.s3_accessible_query("update", table) & \
+                    (table.status == current_status) & \
+                    (table.deleted != True)
+            from_date = formvars.from_date
+            if from_date:
+                query &= table.date >= from_date
+            to_date = formvars.to_date
+            if to_date:
+                query &= table.date <= to_date
+
+            result = current.db(query).update(status=int(new_status))
+            if result:
+                response.confirmation = T("%(number)s records updated") % \
+                                        {"number": result}
+            else:
+                response.warning = T("No records found")
+
+        response.view = self._view(r, "update.html")
+        return output
+
+    # -------------------------------------------------------------------------
+    def validate(self, form):
+        """
+            Update form validation
+
+            @param form: the FORM
+        """
+
+        T = current.T
+
+        formvars = form.vars
+        errors = form.errors
+
+        # Must not update from status "paid"
+        if str(formvars.current_status) == "2":
+            errors.current_status = T("Bulk update from this status not allowed")
+
+        # Must not update to status "paid"
+        if str(formvars.new_status) == "2":
+            errors.new_status = T("Bulk update to this status not allowed")
+
+        # To-date must be after from-date
+        from_date = formvars.from_date
+        to_date = formvars.to_date
+        if from_date and to_date and from_date > to_date:
+            errors.to_date = T("Date until must be after date from")
 
 # =============================================================================
 class DVRRegisterCaseEvent(S3Method):

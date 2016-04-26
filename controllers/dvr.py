@@ -466,12 +466,32 @@ def allowance():
     s3db.configure("pr_person", deduplicate=person_deduplicate)
 
     def prep(r):
+
         if r.method == "import":
             # Allow deduplication of persons by pe_label: existing
             # pe_labels would be caught by IS_NOT_ONE_OF before
             # reaching the deduplicator, so remove the validator here:
             ptable = s3db.pr_person
             ptable.pe_label.requires = None
+
+        record = r.record
+        if record:
+            table = r.table
+            readonly = []
+            if record.status == 2:
+                # Can't change payment details if already paid
+                readonly = ["person_id",
+                            "entitlement_period",
+                            "date",
+                            "paid_on",
+                            "amount",
+                            "currency",
+                            ]
+            for fn in readonly:
+                if fn in table.fields:
+                    field = table[fn]
+                    field.writable = False
+                    field.comment = None
         return True
     s3.prep = prep
 

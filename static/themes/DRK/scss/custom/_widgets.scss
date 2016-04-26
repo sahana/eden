@@ -78,6 +78,9 @@ input.date.hasDatepicker {
     background-image: url("../../img/bootstrap/calendar.gif");
     margin-left: 10px;
 }
+.ui-datepicker.ui-widget {
+    z-index: 1000!important;
+}
 
 /* Range filter widgets */
 .range-filter-label label {

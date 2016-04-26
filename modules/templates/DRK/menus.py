@@ -204,8 +204,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         ),
                     M("Allowances", f="allowance")(
                         M("Overview"),
-                        M("Import", m="import", p="create"),
                         M("Payment Registration", m="register", p="update"),
+                        M("Status Update", m="manage", p="update"),
+                        M("Import", m="import", p="create"),
                         ),
                     M("Event Registration", c="dvr", f="case_event", m="register", p="create")(
                         ),
