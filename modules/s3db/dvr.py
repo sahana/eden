@@ -4530,13 +4530,14 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
         onaccept = current.s3db.onaccept
 
         db = current.db
-        query = current.auth.s3_accessible_query("update", atable)
+        accessible = current.auth.s3_accessible_query("update", atable)
         for payment in payments:
             record_id = payment.get("r")
-            query &= (atable.id == record_id) & \
-                     (atable.person_id == person_id) & \
-                     (atable.status != 2) & \
-                     (atable.deleted != True)
+            query = accessible & \
+                    (atable.id == record_id) & \
+                    (atable.person_id == person_id) & \
+                    (atable.status != 2) & \
+                    (atable.deleted != True)
             success = db(query).update(**data)
             if success:
                 record = {"id": record_id, "person_id": person_id}
