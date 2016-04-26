@@ -225,6 +225,28 @@ def person():
                 resource.configure(crud_form = crud_form,
                                    filter_widgets = filter_widgets,
                                    )
+            elif r.component_name == "allowance" and \
+                 r.method in (None, "update"):
+
+                records = r.component.select(["status"], as_rows=True)
+                if len(records) == 1:
+                    record = records[0]
+                    table = r.component.table
+                    readonly = []
+                    if record.status == 2:
+                        # Can't change payment details if already paid
+                        readonly = ["person_id",
+                                    "entitlement_period",
+                                    "date",
+                                    "paid_on",
+                                    "amount",
+                                    "currency",
+                                    ]
+                    for fn in readonly:
+                        if fn in table.fields:
+                            field = table[fn]
+                            field.writable = False
+                            field.comment = None
 
         # Module-specific list fields (must be outside of r.interactive)
         list_fields = ["dvr_case.reference",

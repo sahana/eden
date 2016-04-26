@@ -1913,6 +1913,9 @@ def config(settings):
                                         ),
                         S3DateFilter("date"),
                         S3DateFilter("paid_on"),
+                        S3DateFilter("entitlement_period",
+                                     hidden = True,
+                                     )
                         ]
                     resource.configure(filter_widgets = filter_widgets)
 
@@ -1924,12 +1927,16 @@ def config(settings):
                 # Custom list fields
                 list_fields = [(T("ID"), "person_id$pe_label"),
                                "person_id",
+                               "entitlement_period",
                                "date",
                                "currency",
                                "amount",
                                "status",
+                               "paid_on",
                                "comments",
                                ]
+                if r.representation == "xls":
+                    list_fields.append(("UUID", "person_id$uuid"))
 
                 resource.configure(list_fields = list_fields,
                                    insertable = False,
