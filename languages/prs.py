@@ -696,7 +696,7 @@
 'Date of Birth': 'تاریخ تولد',
 'Date Printed': 'تاریخ چاپ گردید',
 'Date Received': 'تاریخ دریافت گردید',
-'Date resigned': 'تاریخ ثبت گردید',
+'Date Resigned': 'تاریخ ثبت گردید',
 'Date/Time': 'تاریخ/زمان',
 'Day': 'روز',
 'De-duplicate': 'المثنی',

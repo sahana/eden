@@ -511,6 +511,8 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     # Members
+    # Hide Membership Types
+    #settings.member.membership_types = False
     # Show a CV tab for Members
     #settings.member.cv_tab = True
 

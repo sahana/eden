@@ -586,6 +586,8 @@ class S3EmailModel(S3ChannelModel):
                      super_link("channel_id", "msg_channel"),
                      Field("name"),
                      Field("description"),
+                     # Allows using different Inboxes for different Orgs/Branches
+                     self.org_organisation_id(),
                      Field("enabled", "boolean",
                            default = True,
                            label = T("Enabled?"),

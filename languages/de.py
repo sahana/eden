@@ -1098,7 +1098,7 @@
 'Date of Birth': 'Geburtsdatum',
 'Date of Latest Information on Beneficiaries Reached': 'Datum von aktuellen Informationen der Finanzhilfen erreicht',
 'Date of Report': 'Datum des Berichts',
-'Date resigned': 'Datum der Kündigung',
+'Date Resigned': 'Datum der Kündigung',
 'Date': 'Datum',
 'Date/Time of Find': 'Datum/Zeit des Fundes',
 'Date/Time when found': 'Datum / Uhrzeit, wann festgestellt',

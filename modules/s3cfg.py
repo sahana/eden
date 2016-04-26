@@ -3334,6 +3334,13 @@ class S3Config(Storage):
         """
         return self.member.get("cv_tab", False)
 
+    def get_member_membership_types(self):
+        """
+            Whether to have Membership Types
+        """
+        return self.__lazy("member", "membership_types", default=True)
+
+
     # -------------------------------------------------------------------------
     # Organisations
     #
@@ -3706,6 +3713,10 @@ class S3Config(Storage):
     def get_pr_request_home_phone(self):
         """ Include Home Phone in the AddPersonWidget2 """
         return self.__lazy("pr", "request_home_phone", default=False)
+
+    def get_pr_request_mobile_phone(self):
+        """ Include Mobile Phone in the AddPersonWidget2 """
+        return self.__lazy("pr", "request_mobile_phone", default=True)
 
     def get_pr_request_year_of_birth(self):
         """ Include Year of Birth in the AddPersonWidget2 """

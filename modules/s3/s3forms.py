@@ -2936,7 +2936,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         # Update super entity link
                         s3db.update_super(table, values)
                         # Update link table
-                        if link and actuate_link:
+                        if link and actuate_link and \
+                            options.get("update_link", True):
                             link.update_link(master, values)
                         # Set record owner
                         auth.s3_set_record_owner(table, record_id)

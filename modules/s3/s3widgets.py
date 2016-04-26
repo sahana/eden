@@ -712,8 +712,8 @@ class S3AddPersonWidget2(FormWidget):
         date_of_birth = None
         year_of_birth = self.year_of_birth
 
-        dtable = None
         ptable = s3db.pr_person
+        dtable = s3db.pr_person_details
         first_name_field = ptable.first_name
         middle_name_field = ptable.middle_name
         last_name_field = ptable.last_name
@@ -722,7 +722,6 @@ class S3AddPersonWidget2(FormWidget):
             # Use Global deployment_setting
             year_of_birth = settings.get_pr_request_year_of_birth()
         if year_of_birth:
-            dtable = s3db.pr_person_details
             year_of_birth = dtable.year_of_birth
 
         if settings.get_pr_request_dob():
@@ -738,6 +737,7 @@ class S3AddPersonWidget2(FormWidget):
 
         req_email = settings.get_pr_request_email()
         req_home_phone = settings.get_pr_request_home_phone()
+        req_mobile_phone = settings.get_pr_request_mobile_phone()
 
         emailRequired = settings.get_hrm_email_required()
 
@@ -755,24 +755,24 @@ class S3AddPersonWidget2(FormWidget):
                     emailRequired = False
 
         # Widget-Options for additional fields
-        occupation = None
         father_name = self.father_name
         grandfather_name = self.grandfather_name
 
-        # ...fall back to global settings for volunteers
+        if father_name is None:
+            # Use Global deployment_setting
+            father_name = settings.get_pr_request_father_name()
+        if father_name:
+            father_name = dtable.father_name
+        if grandfather_name is None:
+            # Use Global deployment_setting
+            grandfather_name  = settings.get_pr_request_grandfather_name()
+        if grandfather_name:
+            grandfather_name = dtable.grandfather_name
+
         if controller == "vol":
-            dtable = s3db.pr_person_details
             occupation = dtable.occupation
-            if father_name is None:
-                # Use Global deployment_setting
-                father_name = settings.get_pr_request_father_name()
-            if father_name:
-                father_name = dtable.father_name
-            if grandfather_name is None:
-                # Use Global deployment_setting
-                grandfather_name  = settings.get_pr_request_grandfather_name()
-            if grandfather_name:
-                grandfather_name = dtable.grandfather_name
+        else:
+            occupation = None
 
         if value:
             db = current.db
@@ -847,31 +847,34 @@ class S3AddPersonWidget2(FormWidget):
                 values["gender"] = person.gender
 
             # Contacts as separate query as we can't easily limitby
-            ctable = s3db.pr_contact
-            contact_methods = ["SMS"]
+            contact_methods = []
             if req_email:
                 contact_methods.append("EMAIL")
             if req_home_phone:
                 contact_methods.append("HOME_PHONE")
-            query = (ctable.pe_id == person.pe_id) & \
-                    (ctable.deleted == False) & \
-                    (ctable.contact_method.belongs(contact_methods))
-            contacts = db(query).select(ctable.contact_method,
-                                        ctable.value,
-                                        orderby=ctable.priority,
-                                        )
+            if req_mobile_phone:
+                contact_methods.append("SMS")
             email = mobile_phone = home_phone = ""
-            for contact in contacts:
-                if req_email and not email and contact.contact_method == "EMAIL":
-                    email = contact.value
-                elif not mobile_phone and contact.contact_method == "SMS":
-                    mobile_phone = contact.value
-                elif req_home_phone and not home_phone and contact.contact_method == "HOME_PHONE":
-                    home_phone = contact.value
-                if mobile_phone and \
-                   ((req_email and email) or (not req_email)) and \
-                   ((req_home_phone and home_phone) or (not req_home_phone)):
-                    break
+            if contact_methods:
+                ctable = s3db.pr_contact
+                query = (ctable.pe_id == person.pe_id) & \
+                        (ctable.deleted == False) & \
+                        (ctable.contact_method.belongs(contact_methods))
+                contacts = db(query).select(ctable.contact_method,
+                                            ctable.value,
+                                            orderby=ctable.priority,
+                                            )
+                for contact in contacts:
+                    if req_email and not email and contact.contact_method == "EMAIL":
+                        email = contact.value
+                    elif not mobile_phone and contact.contact_method == "SMS":
+                        mobile_phone = contact.value
+                    elif req_home_phone and not home_phone and contact.contact_method == "HOME_PHONE":
+                        home_phone = contact.value
+                    if mobile_phone and \
+                       ((req_email and email) or (not req_email)) and \
+                       ((req_home_phone and home_phone) or (not req_home_phone)):
+                        break
             values["home_phone"] = home_phone
             values["email"] = email
             values["mobile_phone"] = mobile_phone
@@ -994,7 +997,8 @@ class S3AddPersonWidget2(FormWidget):
         if req_email:
             fappend(("email", T("Email"), INPUT(), emailRequired))
 
-        fappend(("mobile_phone", settings.get_ui_label_mobile_phone(), INPUT(), False))
+        if req_mobile_phone:
+            fappend(("mobile_phone", settings.get_ui_label_mobile_phone(), INPUT(), False))
 
         if req_home_phone:
             fappend(("home_phone", T("Home Phone"), INPUT(), False))

@@ -85,7 +85,10 @@ def person():
     tablename = "pr_person"
     table = s3db.pr_person
 
-    s3db.configure(tablename, deletable=False)
+    s3db.configure(tablename,
+                   deletable = False,
+                   )
+
     s3.crud_strings[tablename].update(
             title_upload = T("Import Members"))
 
@@ -153,7 +156,7 @@ def person():
                     label_list_button = T("List Memberships")
                 )
 
-            if r.method != "import":
+            if r.method not in ("import", "search_ac", "validate"):
                 if not r.component:
                     # Assume members under 120
                     s3db.pr_person.date_of_birth.widget = \

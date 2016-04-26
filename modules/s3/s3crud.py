@@ -2037,6 +2037,12 @@ class S3CRUD(S3Method):
             alias = None
         if "resource" in get_vars:
             tablename = get_vars["resource"]
+
+            # Customise the resource
+            customise = current.deployment_settings.customise_resource(tablename)
+            if customise:
+                customise(r, tablename)
+
             components = [alias] if alias else None
             try:
                 resource = current.s3db.resource(tablename,

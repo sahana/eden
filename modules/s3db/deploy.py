@@ -1046,16 +1046,26 @@ class S3DeploymentAlertModel(S3Model):
             message = "%s\n:mission_id:%s:" % (message, mission_id)
 
             # Lookup from_address
-            # @ToDo: Allow multiple channels to be defined &
-            #        select the appropriate one for this mission
+            organisation_id = current.auth.user.organisation_id
             ctable = s3db.msg_email_channel
-            channel = db(ctable.deleted == False).select(ctable.username,
-                                                         ctable.server,
-                                                         limitby = (0, 1)
-                                                         ).first()
-            if not channel:
+            query = (ctable.deleted == False) & \
+                    (ctable.enabled == True)
+            if organisation_id:
+                query &= ((ctable.organisation_id == None) | \
+                          (ctable.organisation_id == organisation_id))
+            channels = db(query).select(ctable.username,
+                                        ctable.server,
+                                        )
+            if not channels:
                 current.session.error = T("Need to configure an Email Address!")
                 redirect(URL(f="email_channel"))
+            elif organisation_id and len(channels) > 1:
+                _channels = channels.find(lambda row: row.organisation_id == organisation_id)
+                if not _channels:
+                    _channels = channels.find(lambda row: row.organisation_id == None)
+                channel = _channels.first()
+            else:
+                channel = channels.first()
 
             from_address = "%s@%s" % (channel.username, channel.server)
 

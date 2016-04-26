@@ -1727,6 +1727,8 @@ class S3PersonModel(S3Model):
             JSON lookup method for S3AddPersonWidget2
         """
 
+        settings = current.deployment_settings
+
         # Read Input
         post_vars = current.request.post_vars
         name = post_vars["name"]
@@ -1806,7 +1808,6 @@ class S3PersonModel(S3Model):
                   "image.image",
                   ]
 
-        settings = current.deployment_settings
         MAX_SEARCH_RESULTS = settings.get_search_max_results()
         show_hr = settings.get_pr_search_shows_hr_details()
         if show_hr:

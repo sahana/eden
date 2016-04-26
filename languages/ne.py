@@ -725,7 +725,7 @@
 'Date of Birth': 'जन्म मिति',
 'Date Printed': 'मिति प्रीन्ट गरियो',
 'Date Received': 'मिति प्राप्त गरियो',
-'Date resigned': 'छोडेको मिति',
+'Date Resigned': 'छोडेको मिति',
 'Date/Time': 'मिति/समय',
 'Day': 'दिन',
 'De-duplicate': 'नक्कल प्रति बनाउनुहोस्',

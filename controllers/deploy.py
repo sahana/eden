@@ -87,9 +87,12 @@ def mission():
         else:
             # All other workflows return to the summary page
             s3.cancel = r.url(method="summary", component=None, id=0)
-            if not r.component and \
-               r.get_vars.get("~.status__belongs") == "2":
-                s3.crud_strings[r.tablename]["title_list"] = T("Active Missions")
+            if not r.component:
+                status = r.get_vars.get("~.status__belongs")
+                if status == "2":
+                    s3.crud_strings[r.tablename]["title_list"] = T("Active Missions")
+                elif status == "1":
+                    s3.crud_strings[r.tablename]["title_list"] = T("Closed Missions")
 
         return True
     s3.prep = prep
@@ -713,9 +716,23 @@ def email_channel():
 
         if not r.id:
             # Have we got a channel defined?
-            record = db(table.deleted == False).select(table.id,
-                                                       limitby=(0, 1)
-                                                       ).first()
+            query = (table.deleted == False) & \
+                    (table.enabled == True)
+            organisation_id = auth.user.organisation_id
+            if organisation_id:
+                query &= ((table.organisation_id == organisation_id) | \
+                          (table.organisation_id == None))
+            channels = db(query).select(table.id,
+                                        table.organisation_id,
+                                        )
+            if organisation_id and len(channels) > 1:
+                _channels = channels.find(lambda row: row.organisation_id == organisation_id)
+                if not _channels:
+                    _channels = channels.find(lambda row: row.organisation_id == None)
+                record = _channels.first()
+            else:
+                record = channels.first()
+
             if record:
                 r.id = record.id
                 r.method = "update"

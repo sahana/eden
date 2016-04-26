@@ -1064,7 +1064,7 @@
 'Date Requested': 'Хүсэлт гаргасан огноо',
 'Date Required': 'Шаардлагатай болсон огноо',
 'Date Required Until': 'Шаардлагатай хугацаа хүртэл',
-'Date resigned': 'Ажлаас халагдса огноо',
+'Date Resigned': 'Ажлаас халагдса огноо',
 'Date Sent': 'Илгээсэн огноо',
 'Date Taken': 'Хүлээн авсан',
 'Date Until': 'Хүртэлх хугацаа',

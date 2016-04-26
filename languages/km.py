@@ -683,7 +683,7 @@
 'Date must be %(min)s or later!': 'កាលបរិច្ឆេទ​ត្រូវតែ %(min)s ឬ​ក្រោយ​ពេលនេះ!',
 'Date must be between %(min)s and %(max)s!': 'កាលបរិច្ឆេទ​ត្រូវតែ​នៅ​ចន្លោះពី %(min)s ដល់ %(max)s!',
 'Date of Birth': 'ថ្ងៃខែឆ្នាំ​កំណើត',
-'Date resigned': 'កាលបរិច្ឆេទ​លាលែងការងារ',
+'Date Resigned': 'កាលបរិច្ឆេទ​លាលែងការងារ',
 'Date': 'កាលបរិច្ឆេទ',
 'Date/Time': 'កាលបរិច្ឆេទ/ពេលវេលា',
 'Day': 'ថ្ងៃ',

@@ -10,6 +10,7 @@ except ImportError:
 import s3menus as default
 
 red_cross_filter = {"organisation_type.name" : "Red Cross / Red Crescent"}
+ARCS = "Afghan Red Crescent Society"
 CRMADA = "Malagasy Red Cross Society"
 #HNRC = "Honduran Red Cross"
 IRCS = "Iraqi Red Crescent Society"
@@ -440,9 +441,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
                               vars={"~.status__belongs": "1"}),
                        ),
                        M("Training",
-                         c="deploy", f="training")(
+                         c="deploy", f="training", m="summary")(
                             M("Create", m="create"),
-                            M("Search Training"),
+                            M("Search Training", m="summary"),
                             M("Import Training Participants", m="import"),
                        ),
                        #M("Deployments",

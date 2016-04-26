@@ -1430,13 +1430,15 @@ class S3OptionsMenu(object):
     def member():
         """ Membership Management """
 
+        types = lambda i: current.deployment_settings.get_member_membership_types()
+
         return M(c="member")(
                     M("Members", f="membership", m="summary")(
                         M("Create", m="create"),
                         #M("Report", m="report"),
                         M("Import", f="person", m="import"),
                     ),
-                    M("Membership Types", f="membership_type")(
+                    M("Membership Types", f="membership_type", check=types)(
                         M("Create", m="create"),
                         #M("Import", m="import"),
                     ),

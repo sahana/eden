@@ -696,7 +696,7 @@
 'Date of Birth': 'تاریخ د زیږیدو',
 'Date Printed': 'د چاپ تاریخ',
 'Date Received': 'د حصول تاریخ',
-'Date resigned': 'د استعفا تاریخ',
+'Date Resigned': 'د استعفا تاریخ',
 'Date/Time': 'تاریخ/ وخت',
 'Day': 'ورز',
 'De-duplicate': 'نقلی',
