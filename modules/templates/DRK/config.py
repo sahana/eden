@@ -1894,23 +1894,24 @@ def config(settings):
 
                 if r.interactive and not r.id:
                     # Custom filter widgets
-                    from s3 import S3TextFilter, S3OptionsFilter, S3DateFilter, s3_get_filter_opts
-                    date_filter = S3DateFilter("date")
-                    date_filter.operator = ["eq"]
+                    from s3 import S3TextFilter, \
+                                   S3OptionsFilter, \
+                                   S3DateFilter
 
                     filter_widgets = [
                         S3TextFilter(["person_id$pe_label",
                                       "person_id$first_name",
+                                      "person_id$middle_name",
                                       "person_id$last_name",
                                       ],
                                       label = T("Search"),
                                       ),
                         S3OptionsFilter("status",
-                                        default = 2,
+                                        default = 1,
                                         cols = 4,
                                         options = s3db.dvr_allowance_status_opts,
                                         ),
-                        date_filter,
+                        S3DateFilter("date"),
                         S3DateFilter("paid_on"),
                         ]
                     resource.configure(filter_widgets = filter_widgets)
@@ -1922,11 +1923,10 @@ def config(settings):
 
                 # Custom list fields
                 list_fields = [(T("ID"), "person_id$pe_label"),
-                               "person_id$first_name",
-                               "person_id$last_name",
+                               "person_id",
                                "date",
-                               "amount",
                                "currency",
+                               "amount",
                                "status",
                                "comments",
                                ]
@@ -1939,6 +1939,19 @@ def config(settings):
 
             return result
         s3.prep = custom_prep
+
+        # Custom postp
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.method == "register":
+                from s3 import S3CustomController
+                S3CustomController._view("DRK", "register_case_event.html")
+            return output
+        s3.postp = custom_postp
 
         return attr
 

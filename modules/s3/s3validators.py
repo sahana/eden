@@ -481,10 +481,14 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def represent(number, precision=None):
+    def represent(number, precision=None, fixed=False):
         """
             Change the format of the number depending on the language
             Based on https://code.djangoproject.com/browser/django/trunk/django/utils/numberformat.py
+
+            @param number: the number
+            @param precision: the number of decimal places to show
+            @param fixed: show decimal places even if the decimal part is 0
         """
 
         if number is None:
@@ -500,10 +504,12 @@ class IS_FLOAT_AMOUNT(IS_FLOAT_IN_RANGE):
                 dec_part = dec_part[:precision]
         else:
             int_part, dec_part = str_number, ""
-        if int(dec_part) == 0:
+
+        if dec_part and int(dec_part) == 0 and not fixed:
             dec_part = ""
         elif precision is not None:
             dec_part = dec_part + ("0" * (precision - len(dec_part)))
+
         if dec_part:
             dec_part = DECIMAL_SEPARATOR + dec_part
 
