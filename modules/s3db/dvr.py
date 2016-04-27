@@ -2191,12 +2191,24 @@ class DVRCaseAllowanceModel(S3Model):
             msg_list_empty = T("No Allowance Information currently registered"),
             )
 
+        # Custom list fields
+        list_fields = ["person_id",
+                       "entitlement_period",
+                       "date",
+                       "currency",
+                       "amount",
+                       "status",
+                       "paid_on",
+                       "comments",
+                       ]
+
         # Table configuration
         configure(tablename,
                   deduplicate = S3Duplicate(primary = ("person_id",
                                                        "entitlement_period",
                                                        ),
                                             ),
+                  list_fields = list_fields,
                   onaccept = self.allowance_onaccept,
                   ondelete = self.allowance_ondelete,
                   onvalidation = self.allowance_onvalidation,
