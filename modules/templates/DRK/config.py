@@ -1987,6 +1987,77 @@ def config(settings):
     settings.customise_dvr_case_event_controller = customise_dvr_case_event_controller
 
     # -------------------------------------------------------------------------
+    def customise_org_facility_resource(r, tablename):
+
+        s3db = current.s3db
+
+        # Hide "code" field (not needed)
+        table = s3db.org_facility
+        field = table.code
+        field.readable = field.writable = False
+
+        # Location selector just needs country + address
+        from s3 import S3LocationSelector
+        field = table.location_id
+        field.widget = S3LocationSelector(levels = ["L0"],
+                                          show_address=True,
+                                          show_map = False,
+                                          )
+
+        # Custom list fields
+        list_fields = ["name",
+                       "site_facility_type.facility_type_id",
+                       "organisation_id",
+                       "location_id",
+                       "contact",
+                       "phone1",
+                       "phone2",
+                       "email",
+                       "website",
+                       "comments",
+                       ]
+
+        # Custom filter widgets
+        from s3 import S3TextFilter, S3OptionsFilter, s3_get_filter_opts
+        filter_widgets = [S3TextFilter(["name",
+                                        "organisation_id$name",
+                                        "organisation_id$acronym",
+                                        "comments",
+                                        ],
+                                        label = T("Search"),
+                                       ),
+                          S3OptionsFilter("site_facility_type.facility_type_id",
+                                          options = s3_get_filter_opts("org_facility_type",
+                                                                       translate = True,
+                                                                       ),
+                                          ),
+                          S3OptionsFilter("organisation_id",
+                                          ),
+                          ]
+
+        s3db.configure("org_facility",
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_org_facility_resource = customise_org_facility_resource
+
+    # -------------------------------------------------------------------------
+    def customise_org_facility_controller(**attr):
+
+        # Allow selection of all countries
+        current.deployment_settings.gis.countries = []
+
+        # Custom rheader+tabs
+        if current.request.controller == "org":
+            attr = dict(attr)
+            attr["rheader"] = drk_org_rheader
+
+        return attr
+
+    settings.customise_org_facility_controller = customise_org_facility_controller
+
+    # -------------------------------------------------------------------------
     def customise_project_task_resource(r, tablename):
         """
             Restrict list of assignees to just Staff/Volunteers
@@ -2390,6 +2461,45 @@ def drk_dvr_rheader(r, tabs=[]):
                                                          record=record,
                                                          )
 
+    return rheader
+
+# =============================================================================
+def drk_org_rheader(r, tabs=[]):
+    """ ORG custom resource headers """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    from s3 import s3_rheader_resource, S3ResourceHeader
+
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "org_facility":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        ]
+
+            rheader_fields = [["name", "email"],
+                              ["organisation_id", "phone1"],
+                              ["location_id", "phone2"],
+                              ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                         table=resource.table,
+                                                         record=record,
+                                                         )
     return rheader
 
 # END =========================================================================
