@@ -950,6 +950,10 @@
             </xsl:if>
 
             <!-- Job Roles that a deployable is credentialled for -->
+            <xsl:call-template name="splitList">
+                <xsl:with-param name="list" select="$DeployableRoles"/>
+                <xsl:with-param name="arg">deployablerole_ref</xsl:with-param>
+            </xsl:call-template>
 
             <!-- Teams -->
             <xsl:call-template name="splitList">

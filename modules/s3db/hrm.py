@@ -6717,7 +6717,8 @@ def hrm_human_resource_controller(extra_filter=None):
                 rappend("site_id")
 
             list_fields.extend(((T("Email"), "email.value"),
-                                (settings.get_ui_label_mobile_phone(), "phone.value")))
+                                (settings.get_ui_label_mobile_phone(), "phone.value")
+                                ))
 
             # Which levels of Hierarchy are we using?
             levels = current.gis.get_relevant_hierarchy_levels()

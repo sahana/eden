@@ -2419,6 +2419,8 @@ def config(settings):
     # -----------------------------------------------------------------------------
     def customise_hrm_human_resource_controller(**attr):
 
+        tablename = "hrm_human_resource"
+
         s3db = current.s3db
 
         # Special cases for different NS
@@ -2431,13 +2433,13 @@ def config(settings):
             from s3 import s3_set_default_filter
             s3_set_default_filter("~.organisation_id$region_id",
                                   user_region_and_children_default_filter,
-                                  tablename = "hrm_human_resource")
+                                  tablename = tablename)
         elif root_org != CRMADA: # CRMADA have too many branches which causes issues
             # Default Filter
             from s3 import s3_set_default_filter
             s3_set_default_filter("~.organisation_id",
                                   user_org_and_children_default_filter,
-                                  tablename = "hrm_human_resource")
+                                  tablename = tablename)
 
         if root_org == VNRC:
             vnrc = True
@@ -2446,11 +2448,8 @@ def config(settings):
             s3db.hrm_human_resource.site_id.represent = s3db.org_SiteRepresent(show_type = False)
             #settings.org.site_label = "Office/Center"
 
-        if controller == "vol":
-            if root_org == ARCS:
-                arcs = True
-                settings.pr.request_email = False
-                settings.pr.request_year_of_birth = True
+        elif root_org == ARCS:
+            arcs = True
 
         s3 = current.response.s3
 
@@ -2482,8 +2481,7 @@ def config(settings):
                     field.readable = field.writable = True
 
                 from s3 import S3OptionsFilter
-                filter_widgets = s3db.get_config("hrm_human_resource",
-                                                 "filter_widgets")
+                filter_widgets = s3db.get_config(tablename, "filter_widgets")
                 filter_widgets.insert(-1, S3OptionsFilter("training.course_id$course_sector.sector_id",
                                                           label = T("Training Sector"),
                                                           hidden = True,
@@ -2495,43 +2493,92 @@ def config(settings):
             if controller == "vol":
                 if arcs:
                     # ARCS have a custom Volunteer form
-                    from s3 import IS_ADD_PERSON_WIDGET2, S3SQLCustomForm, S3SQLInlineComponent
+                    from s3 import IS_ADD_PERSON_WIDGET2
+                    settings.pr.request_mobile_phone = False
+                    settings.pr.request_email = False
+                    #settings.pr.request_year_of_birth = True
+                    #settings.pr.separate_name_fields = 2
                     table.person_id.requires = IS_ADD_PERSON_WIDGET2(first_name_only = True)
                     table.code.label = T("Volunteer ID")
+                    from s3 import S3LocationSelector
+                    # NB Need to use alias if using this pre-filtered component
+                    s3db.pr_home_address_address.location_id.widget = S3LocationSelector(show_map = False)
                     # Emergency Contact Name isn't required
                     s3db.pr_contact_emergency.name.requires = None
+                    dtable = s3db.pr_person_details
+                    dtable.father_name.label = T("Father Name")
+                    dtable.grandfather_name.label = T("Grand Father Name")
+                    dtable.occupation.label = T("Job")
+                    s3db.pr_education.level_id.comment = None # Don't Add Education Levels inline
+                    s3db.pr_image.image.widget = None # ImageCropWidget doesn't work inline
+
+                    s3db.add_components(tablename,
+                                        pr_image = {"link": "pr_person",
+                                                    "joinby": "id",
+                                                    "key": "pe_id",
+                                                    "fkey": "pe_id",
+                                                    "pkey": "person_id",
+                                                    },
+                                        )
+
+                    from s3 import S3SQLCustomForm, S3SQLInlineComponent
                     crud_form = S3SQLCustomForm("organisation_id",
                                                 "code",
                                                 "person_id",
+                                                S3SQLInlineComponent("home_address",
+                                                                     label = T("Address"),
+                                                                     fields = [("", "location_id"),
+                                                                               ],
+                                                                     filterby = {"field": "type",
+                                                                                 "options": 1,
+                                                                                 },
+                                                                     link = False,
+                                                                     update_link = False,
+                                                                     multiple = False,
+                                                                     ),
+                                                # @ToDo: School & University
+                                                S3SQLInlineComponent("phone",
+                                                                     label = T("Phone Number"),
+                                                                     fields = (("", "value"),),
+                                                                     filterby = {"field": "contact_method",
+                                                                                 "options": "SMS",
+                                                                                 },
+                                                                     link = False,
+                                                                     update_link = False,
+                                                                     multiple = False,
+                                                                     ),
                                                 S3SQLInlineComponent("contact_emergency",
                                                                      label = T("Emergency Contact Number"),
                                                                      fields = [("", "phone"),
                                                                                ],
                                                                      link = False,
-                                                                     multiple = False,
-                                                                     ),
-                                                S3SQLInlineComponent("home_address",
-                                                                     label = T("Address"),
-                                                                     fields = [("", "location_id"),
-                                                                               ],
-                                                                     default = {"type": 1}, # Current Home Address
-                                                                     link = False,
+                                                                     update_link = False,
                                                                      multiple = False,
                                                                      ),
                                                 S3SQLInlineComponent("education",
-                                                                     label = T("Education"),
-                                                                     fields = [(T("Education Level"), "level_id"),
-                                                                               "institute",
+                                                                     label = T("Level of Education"),
+                                                                     fields = [("", "level_id"),
+                                                                               #"institute",
                                                                                ],
                                                                      link = False,
+                                                                     update_link = False,
                                                                      multiple = False,
                                                                      ),
-                                                "job_title_id",
-                                                "start_date",
+                                                #"job_title_id",
+                                                (T("Volunteer Start Date"), "start_date"),
+                                                # @ToDo: Trainings
                                                 "details.active",
                                                 (T("Remarks"), "comments"),
+                                                S3SQLInlineComponent("image",
+                                                                     label = T("Photo"),
+                                                                     fields = (("", "image"),),
+                                                                     link = False,
+                                                                     update_link = False,
+                                                                     multiple = False,
+                                                                     ),
                                                 )
-                    s3db.configure("hrm_human_resource",
+
+                    s3db.configure(tablename,
                                    crud_form = crud_form,
                                    )
 
@@ -2550,7 +2597,7 @@ def config(settings):
                                    "details.active",
                                    ]
 
-                    s3db.configure("hrm_human_resource",
+                    s3db.configure(tablename,
                                    list_fields = list_fields,
                                    )
 
@@ -2565,7 +2612,7 @@ def config(settings):
                                    (T("Training"), "training.course_id"),
                                    ]
 
-                    s3db.configure("hrm_human_resource",
+                    s3db.configure(tablename,
                                    list_fields = list_fields,
                                    )
 
@@ -2583,7 +2630,7 @@ def config(settings):
                         report_options["cols"].insert(pos, "details.volunteer_type")
 
                     # Add filter widget for volunteer type
-                    filter_widgets = s3db.get_config("hrm_human_resource", "filter_widgets")
+                    filter_widgets = s3db.get_config(tablename, "filter_widgets")
                     filter_widgets.insert(-1, S3OptionsFilter("details.volunteer_type",
                                                               hidden = True,
                                                               ))
@@ -2608,7 +2655,7 @@ def config(settings):
                                    "department_id",
                                    ]
 
-                    s3db.configure("hrm_human_resource",
+                    s3db.configure(tablename,
                                    list_fields = list_fields,
                                    )
 
@@ -2635,7 +2682,7 @@ def config(settings):
                                 (ctable.deleted != True)
                         courses = db(query).select(ctable.id)
                         course_ids = [c.id for c in courses]
-                        s3db.add_components("hrm_human_resource",
+                        s3db.add_components(tablename,
                                             hrm_training = {"link": "pr_person",
                                                             "joinby": "id",
                                                             "key": "id",
@@ -2651,7 +2698,7 @@ def config(settings):
                             r.resource._attach("training", hook)
 
                 # Exclude None-values for training course pivot axis
-                s3db.configure("hrm_human_resource",
+                s3db.configure(tablename,
                                report_exclude_empty = ("training.course_id",
                                                        ),
                                )
