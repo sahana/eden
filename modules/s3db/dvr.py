@@ -248,6 +248,8 @@ class DVRCaseModel(S3Model):
                                  }
 
         SITE = settings.get_org_site_label()
+        site_represent = self.org_SiteRepresent(show_link=False)
+
         default_organisation = settings.get_org_default_organisation()
         default_site = settings.get_org_default_site()
         permitted_facilities = current.auth.permitted_facilities(redirect_on_error=False)
@@ -331,9 +333,47 @@ class DVRCaseModel(S3Model):
                                      label = SITE,
                                      readable = not default_site,
                                      writable = not default_site,
-                                     represent = self.org_site_represent,
+                                     represent = site_represent,
                                      updateable = True,
                                      ),
+                     Field("origin_site_id", "reference org_site",
+                           label = T("Admission from"),
+                           requires = IS_EMPTY_OR(
+                                        IS_ONE_OF(db, "org_site.site_id",
+                                                  site_represent,
+                                                  sort = True,
+                                                  filterby = "instance_type",
+                                                  filter_opts = ("cr_shelter",
+                                                                 "org_office",
+                                                                 "org_facility",
+                                                                 ),
+                                                  not_filterby = "obsolete",
+                                                  not_filter_opts = (True,),
+                                                  )),
+                           represent = site_represent,
+                           # Enable in template if required
+                           readable = False,
+                           writable = False,
+                           ),
+                     Field("destination_site_id", "reference org_site",
+                           label = T("Transfer to"),
+                           requires = IS_EMPTY_OR(
+                                        IS_ONE_OF(db, "org_site.site_id",
+                                                  site_represent,
+                                                  sort = True,
+                                                  filterby = "instance_type",
+                                                  filter_opts = ("cr_shelter",
+                                                                 "org_office",
+                                                                 "org_facility",
+                                                                 ),
+                                                  not_filterby = "obsolete",
+                                                  not_filter_opts = (True,),
+                                                  )),
+                           represent = site_represent,
+                           # Enable in template if required
+                           readable = False,
+                           writable = False,
+                           ),
                      Field("archived", "boolean",
                            default = False,
                            label = T("Archived"),

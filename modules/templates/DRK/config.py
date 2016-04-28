@@ -977,6 +977,13 @@ def config(settings):
                 else:
                     absence_field = None
 
+                # Enable origin and destination site fields
+                ctable = s3db.dvr_case
+                field = ctable.origin_site_id
+                field.readable = field.writable = True
+                field = ctable.destination_site_id
+                field.readable = field.writable = True
+
                 # List modes
                 check_overdue = False
                 show_family_transferable = False
@@ -1148,6 +1155,8 @@ def config(settings):
                                         # Will always default & be hidden
                                         "dvr_case.site_id",
                                         (T("BFV Arrival"), "dvr_case.date"),
+                                        "dvr_case.origin_site_id",
+                                        "dvr_case.destination_site_id",
                                         (T("Case Status"), "dvr_case.status_id"),
                                         # Will always default & be hidden
                                         #"cr_shelter_registration.site_id",
