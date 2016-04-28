@@ -300,6 +300,11 @@ class DVRCaseModel(S3Model):
                              default = "now",
                              empty = False,
                              ),
+                     s3_date("closed_on",
+                             label = T("Case closed on"),
+                             # Automatically set onaccept
+                             writable = False,
+                             ),
                      s3_date("valid_until",
                              label = T("Valid until"),
                              # Enable in template if required
@@ -715,17 +720,31 @@ class DVRCaseModel(S3Model):
         else:
             return
 
+        # Get the case
+        ctable = s3db.dvr_case
+        stable = s3db.dvr_case_status
+        left = stable.on(stable.id == ctable.status_id)
+        query = (ctable.id == record_id)
+        row = db(query).select(ctable.id,
+                               ctable.person_id,
+                               ctable.closed_on,
+                               stable.is_closed,
+                               left = left,
+                               limitby = (0, 1),
+                               ).first()
+        if not row:
+            return
+
+        # Update closed_on date
+        case = row.dvr_case
+        if row.dvr_case_status.is_closed:
+            if not case.closed_on:
+                case.update_record(closed_on = current.request.utcnow.date())
+        elif case.closed_on:
+            case.update_record(closed_on = None)
+
         # Get the person ID
-        if "person_id" in form_vars:
-            person_id = form_vars.person_id
-        else:
-            table = s3db.dvr_case
-            query = (table.id == record_id)
-            row = db(query).select(table.person_id,
-                                   limitby = (0, 1)).first()
-            if not row:
-                return
-            person_id = row.person_id
+        person_id = case.person_id
 
         atable = s3db.dvr_case_appointment
         ttable = s3db.dvr_case_appointment_type
