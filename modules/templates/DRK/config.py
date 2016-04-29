@@ -1470,10 +1470,25 @@ def config(settings):
                     field = table.group_head
                     field.label = T("Head of Family")
 
+                    # Custom CRUD strings for this perspective
+                    s3.crud_strings["pr_group_membership"] = Storage(
+                        label_create = T("Add Family Member"),
+                        title_display = T("Family Member Details"),
+                        title_list = T("Family Members"),
+                        title_update = T("Edit Family Member"),
+                        label_list_button = T("List Family Members"),
+                        label_delete_button = T("Remove Family Member"),
+                        msg_record_created = T("Family Member added"),
+                        msg_record_modified = T("Family Member updated"),
+                        msg_record_deleted = T("Family Member removed"),
+                        msg_list_empty = T("No Family Members currently registered")
+                        )
+
                 list_fields = [(T("ID"), "person_id$pe_label"),
                                "person_id",
                                "person_id$date_of_birth",
                                "person_id$gender",
+                               "group_head",
                                (ROLE, "role_id"),
                                (T("Case Status"), "person_id$dvr_case.status_id"),
                                "person_id$dvr_case.transferable",

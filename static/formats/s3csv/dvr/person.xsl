@@ -21,6 +21,8 @@
          Appointment:XX.................optional.....Appointment,Status (Type = XX in column name, Status = cell in row. Multiple allowed. Options: done, Date)
 
          Family.........................optional.....pr_group.name
+         Head of Family.................optional.....pr_group_membership.group_head
+                                                     true|false
 
          Shelter Unit...................optional.....cr_shelter_unit.name
 
@@ -450,6 +452,9 @@
             <!-- Family -->
             <xsl:if test="col[@field='Family']!=''">
                 <resource name="pr_group_membership">
+                    <xsl:if test="col[@field='Head of Family']/text()='true'">
+                        <data field="group_head" value="true"/>
+                    </xsl:if>
                     <reference field="group_id" resource="pr_group">
                         <xsl:attribute name="tuid">
                             <xsl:value-of select="concat('Family:',col[@field='Family'])"/>
@@ -457,7 +462,7 @@
                     </reference>
                 </resource>
             </xsl:if>
-            
+
             <!-- Shelter Registration -->
             <xsl:if test="col[@field='Shelter Unit']!=''">
                 <resource name="cr_shelter_registration">
@@ -468,7 +473,7 @@
                     </reference>
                 </resource>
             </xsl:if>
-           
+
             <resource name="pr_person_details">
                 <xsl:if test="$MaritalStatus!=''">
                     <data field="marital_status">

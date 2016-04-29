@@ -2414,6 +2414,7 @@ class S3GroupModel(S3Model):
         row = db(table.id == record_id).select(table.id,
                                                table.person_id,
                                                table.group_id,
+                                               table.group_head,
                                                table.deleted,
                                                table.deleted_fk,
                                                gtable.id,
@@ -2479,6 +2480,13 @@ class S3GroupModel(S3Model):
 
             if group.group_type == 7:
                 # DVR Case Group
+
+                # Case groups should only have one group head
+                if not record.deleted and record.group_head:
+                    query = (table.group_id == group_id) & \
+                            (table.id != record.id) & \
+                            (table.group_head == True)
+                    db(query).update(group_head=False)
 
                 update_household_size = settings.get_dvr_household_size() == "auto"
                 recount = s3db.dvr_case_household_size
