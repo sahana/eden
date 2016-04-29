@@ -27,6 +27,8 @@ def download():
     tablename = filename.split(".", 1)[0]
     if "_" in tablename:
         table = s3db.table(tablename)
+        if table and not auth.s3_has_permission("read", tablename):
+            auth.permission.fail()
 
     return response.download(request, db)
 
