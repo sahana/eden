@@ -211,7 +211,9 @@ class DVRCaseModel(S3Model):
         # Table configuration
         configure(tablename,
                   # Allow imports to change the status code:
-                  deduplicate = S3Duplicate(primary = ("name",)),
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            ignore_deleted = True,
+                                            ),
                   onaccept = self.case_status_onaccept,
                   )
 
@@ -922,7 +924,8 @@ class DVRCaseFlagModel(S3Model):
 
         # Table configuration
         configure(tablename,
-                  deduplicate = S3Duplicate(),
+                  deduplicate = S3Duplicate(ignore_deleted = True,
+                                            ),
                   )
 
         # Reusable field

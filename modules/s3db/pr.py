@@ -2162,6 +2162,14 @@ class S3GroupModel(S3Model):
             msg_list_empty = T("No Group Member Roles currently defined"),
             )
 
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("group_type",),
+                                            ignore_deleted = True,
+                                            ),
+                  )
+
         # Reusable Field
         represent = S3Represent(lookup=tablename, translate=True)
         role_id = S3ReusableField("role_id", "reference %s" % tablename,
@@ -2197,6 +2205,7 @@ class S3GroupModel(S3Model):
                      # Enable in template if required
                      role_id(readable = False,
                              writable = False,
+                             ondelete = "SET NULL",
                              ),
                      Field("group_head", "boolean",
                            default = False,
@@ -2235,22 +2244,16 @@ class S3GroupModel(S3Model):
                 msg_record_deleted = T("Person removed from Group"),
                 msg_list_empty = T("This Group has no Members yet"))
 
-        text_fields = ["group_id$name",
-                       "person_id$first_name",
-                       "person_id$middle_name",
-                       "person_id$last_name",
-                       ]
-
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
-        for level in levels:
-            lfield = "location_id$%s" % level
-            # @ToDo:
-            #report_fields.append(lfield)
-            text_fields.append(lfield)
 
+        # Filter widgets
         filter_widgets = [
-            S3TextFilter("text_fields",
+            S3TextFilter(["group_id$name",
+                          "person_id$first_name",
+                          "person_id$middle_name",
+                          "person_id$last_name",
+                          ],
                           label = T("Search"),
                           comment = T("To search for a member, enter any portion of the name of the person or group. You may use % as wildcard. Press 'Search' without input to list all members."),
                           _class="filter-search",
@@ -2262,6 +2265,7 @@ class S3GroupModel(S3Model):
                              ),
             ]
 
+        # Table configuration
         configure(tablename,
                   context = {"person": "person_id",
                              },
