@@ -311,6 +311,12 @@ class DVRCaseModel(S3Model):
                              readable = False,
                              writable = False,
                              ),
+                     s3_date("stay_permit_until",
+                             label = T("Stay Permit until"),
+                             # Enable in template if required
+                             readable = False,
+                             writable = False,
+                             ),
                      s3_datetime("last_seen_on",
                                  label = T("Last seen on"),
                                  # Enable in template if required

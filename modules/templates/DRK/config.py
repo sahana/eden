@@ -963,6 +963,7 @@ def config(settings):
 
                 configure = resource.configure
                 table = r.table
+                ctable = s3db.dvr_case
 
                 # Used in both list_fields and rheader
                 table.absence = Field.Method("absence", drk_absence)
@@ -978,10 +979,16 @@ def config(settings):
                     absence_field = None
 
                 # Enable origin and destination site fields
-                ctable = s3db.dvr_case
                 field = ctable.origin_site_id
                 field.readable = field.writable = True
                 field = ctable.destination_site_id
+                field.readable = field.writable = True
+
+                # Expose expiration dates
+                field = ctable.valid_until
+                field.label = T("BÜMA valid until")
+                field.readable = field.writable = True
+                field = ctable.stay_permit_until
                 field.readable = field.writable = True
 
                 # List modes
@@ -1084,17 +1091,12 @@ def config(settings):
                             field.writable = False
                             field.label = T("Last Check-out")
 
-                        # Configure person_details fields
-                        ctable = s3db.pr_person_details
-
                         # Make marital status mandatory, remove "other"
-                        field = ctable.marital_status
+                        dtable = s3db.pr_person_details
+                        field = dtable.marital_status
                         options = dict(s3db.pr_marital_status_opts)
                         del options[9] # Remove "other"
                         field.requires = IS_IN_SET(options, zero=None)
-
-                        # Configure person fields
-                        table = resource.table
 
                         # Make gender mandatory, remove "unknown"
                         field = table.gender
@@ -1149,71 +1151,85 @@ def config(settings):
                         # Custom CRUD form
                         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
                         crud_form = S3SQLCustomForm(
-                                        #"dvr_case.reference",
-                                        # Will always default & be hidden
-                                        "dvr_case.organisation_id",
-                                        # Will always default & be hidden
-                                        "dvr_case.site_id",
-                                        (T("BFV Arrival"), "dvr_case.date"),
-                                        "dvr_case.origin_site_id",
-                                        "dvr_case.destination_site_id",
-                                        (T("Case Status"), "dvr_case.status_id"),
-                                        # Will always default & be hidden
-                                        #"cr_shelter_registration.site_id",
-                                        reg_shelter,
-                                        # @ ToDo: Automate this from the Case Status?
-                                        reg_unit_id,
-                                        reg_status,
-                                        reg_check_in_date,
-                                        reg_check_out_date,
-                                        (T("ID"), "pe_label"),
-                                        S3SQLInlineComponent(
-                                                "eo_number",
-                                                fields = [("", "value"),
-                                                          ],
-                                                filterby = {"field": "tag",
-                                                            "options": "EONUMBER",
-                                                            },
-                                                label = T("EasyOpt Number"),
-                                                multiple = False,
-                                                name = "eo_number",
-                                                ),
-                                        S3SQLInlineLink("case_flag",
-                                                        label = T("Flags"),
-                                                        field = "flag_id",
-                                                        help_field = "comments",
-                                                        cols = 3,
-                                                        ),
-                                        "last_name",
-                                        "first_name",
-                                        "date_of_birth",
-                                        "gender",
-                                        "person_details.nationality",
-                                        "person_details.occupation",
-                                        "person_details.marital_status",
-                                        S3SQLInlineComponent(
-                                                "contact",
-                                                fields = [("", "value"),
-                                                          ],
-                                                filterby = {"field": "contact_method",
-                                                            "options": "SMS",
-                                                            },
-                                                label = T("Mobile Phone"),
-                                                multiple = False,
-                                                name = "phone",
-                                                ),
-                                        "person_details.literacy",
-                                        S3SQLInlineComponent(
-                                                "case_language",
-                                                fields = ["language",
-                                                          "quality",
-                                                          "comments",
-                                                          ],
-                                                label = T("Language / Communication Mode"),
-                                                ),
-                                        "dvr_case.comments",
-                                        (T("Invalid"), "dvr_case.archived"),
-                                        )
+
+                                    # Case Details ----------------------------
+                                    (T("Case Status"), "dvr_case.status_id"),
+                                    S3SQLInlineLink("case_flag",
+                                                    label = T("Flags"),
+                                                    field = "flag_id",
+                                                    help_field = "comments",
+                                                    cols = 4,
+                                                    ),
+
+                                    # Person Details --------------------------
+                                    (T("ID"), "pe_label"),
+                                    "last_name",
+                                    "first_name",
+                                    "person_details.nationality",
+                                    "date_of_birth",
+                                    "gender",
+                                    "person_details.marital_status",
+
+                                    # Process Data ----------------------------
+                                    # Will always default & be hidden
+                                    "dvr_case.organisation_id",
+                                    # Will always default & be hidden
+                                    "dvr_case.site_id",
+                                    (T("BFV Arrival"), "dvr_case.date"),
+                                    "dvr_case.origin_site_id",
+                                    "dvr_case.destination_site_id",
+                                    S3SQLInlineComponent(
+                                            "eo_number",
+                                            fields = [("", "value"),
+                                                      ],
+                                            filterby = {"field": "tag",
+                                                        "options": "EONUMBER",
+                                                        },
+                                            label = T("EasyOpt Number"),
+                                            multiple = False,
+                                            name = "eo_number",
+                                            ),
+                                    "dvr_case.valid_until",
+                                    "dvr_case.stay_permit_until",
+
+                                    # Shelter Data ----------------------------
+                                    # Will always default & be hidden
+                                    #"cr_shelter_registration.site_id",
+                                    reg_shelter,
+                                    # @ ToDo: Automate this from the Case Status?
+                                    reg_unit_id,
+                                    reg_status,
+                                    reg_check_in_date,
+                                    reg_check_out_date,
+
+                                    # Other Details ---------------------------
+                                    "person_details.occupation",
+                                    S3SQLInlineComponent(
+                                            "contact",
+                                            fields = [("", "value"),
+                                                        ],
+                                            filterby = {"field": "contact_method",
+                                                        "options": "SMS",
+                                                        },
+                                            label = T("Mobile Phone"),
+                                            multiple = False,
+                                            name = "phone",
+                                            ),
+                                    "person_details.literacy",
+                                    S3SQLInlineComponent(
+                                            "case_language",
+                                            fields = ["language",
+                                                      "quality",
+                                                      "comments",
+                                                      ],
+                                            label = T("Language / Communication Mode"),
+                                            ),
+                                    "dvr_case.comments",
+
+                                    # Archived-flag ---------------------------
+                                    (T("Invalid"), "dvr_case.archived"),
+                                    )
+
                         configure(crud_form = crud_form,
                                   )
 
@@ -2420,6 +2436,7 @@ def drk_dvr_rheader(r, tabs=[]):
                                         "dvr_case.last_seen_on",
                                         "first_name",
                                         "last_name",
+                                        "shelter_registration.shelter_unit_id",
                                         ],
                                         represent = True,
                                         raw_data = True,
@@ -2430,17 +2447,18 @@ def drk_dvr_rheader(r, tabs=[]):
                     case = case[0]
                     archived = case["_row"]["dvr_case.archived"]
                     case_status = lambda row: case["dvr_case.status_id"]
-                    transferable = lambda row: case["dvr_case.transferable"]
                     household_size = lambda row: case["dvr_case.household_size"]
                     last_seen_on = lambda row: case["dvr_case.last_seen_on"]
                     name = lambda row: s3_fullname(row)
+                    shelter = lambda row: case["cr_shelter_registration.shelter_unit_id"]
+                    transferable = lambda row: case["dvr_case.transferable"]
                 else:
                     # Target record exists, but doesn't match filters
                     return None
 
                 rheader_fields = [[(T("ID"), "pe_label"),
                                    (T("Case Status"), case_status),
-                                   (T("Last seen on"), last_seen_on),
+                                   (T("Shelter"), shelter),
                                    ],
                                   [(T("Name"), name),
                                    (T("Transferable"), transferable),
@@ -2448,6 +2466,7 @@ def drk_dvr_rheader(r, tabs=[]):
                                    ],
                                   ["date_of_birth",
                                    (T("Size of Family"), household_size),
+                                   (T("Last seen on"), last_seen_on),
                                    ],
                                   ]
 
