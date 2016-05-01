@@ -2599,6 +2599,11 @@ def config(settings):
                                                     },
                                         )
 
+                    # Attach component (we're past resource initialization)
+                    hook = s3db.get_component("hrm_human_resource", "vol_training")
+                    if hook:
+                        r.resource._attach("vol_training", hook)
+
                     crud_form = S3SQLCustomForm("organisation_id",
                                                 "code",
                                                 "person_id",
