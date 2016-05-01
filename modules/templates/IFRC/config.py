@@ -2513,7 +2513,8 @@ def config(settings):
                 if arcs:
                     # ARCS have a custom Volunteer form
                     #from s3 import IS_ADD_PERSON_WIDGET2, IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
-                    from s3 import IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
+                    #from s3 import IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
+                    from s3 import S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
 
                     db = current.db
 
@@ -2537,26 +2538,26 @@ def config(settings):
                     dtable.occupation.label = T("Job")
                     s3db.pr_education.level_id.comment = None # Don't Add Education Levels inline
                     s3db.pr_image.image.widget = None # ImageCropWidget doesn't work inline
-                    ctable = s3db.hrm_course
-                    query = (ctable.organisation_id == current.auth.root_org()) & \
-                            (ctable.type == 2) & \
-                            (ctable.deleted != True)
-                    courses = db(query).select(ctable.id)
-                    course_ids = [c.id for c in courses]
-                    f = s3db.hrm_training.course_id
-                    f.requires = IS_ONE_OF(db, "hrm_course.id",
-                                           f.represent,
-                                           filterby = "id",
-                                           filter_opts = course_ids,
-                                           sort = True,
-                                           )
+                    #ctable = s3db.hrm_course
+                    #query = (ctable.organisation_id == current.auth.root_org()) & \
+                    #        (ctable.type == 2) & \
+                    #        (ctable.deleted != True)
+                    #courses = db(query).select(ctable.id)
+                    #course_ids = [c.id for c in courses]
+                    #f = s3db.hrm_training.course_id
+                    #f.requires = IS_ONE_OF(db, "hrm_course.id",
+                    #                       f.represent,
+                    #                       filterby = "id",
+                    #                       filter_opts = course_ids,
+                    #                       sort = True,
+                    #                       )
 
                     s3db.add_components(tablename,
-                                        hrm_training = {"name": "vol_training",
-                                                        "joinby": "person_id",
-                                                        "filterby": {"course_id": course_ids,
-                                                                     },
-                                                        },
+                                        #hrm_training = {"name": "vol_training",
+                                        #                "joinby": "person_id",
+                                        #                "filterby": {"course_id": course_ids,
+                                        #                             },
+                                        #                },
                                         pr_address = {"name": "perm_address",
                                                       "link": "pr_person",
                                                       "joinby": "id",
@@ -2658,14 +2659,15 @@ def config(settings):
                                                                      multiple = False,
                                                                      ),
                                                 (T("Volunteer Start Date"), "start_date"),
-                                                S3SQLInlineComponent("vol_training",
-                                                             label = T("Trainings"),
-                                                             fields = (("", "course_id"),
-                                                                       ("", "date"),
-                                                                        ),
-                                                             link = False,
-                                                             update_link = False,
-                                                             ),
+                                                S3SQLInlineComponent(#"vol_training",
+                                                                     "training",
+                                                                     label = T("Trainings"),
+                                                                     fields = (("", "course_id"),
+                                                                               ("", "date"),
+                                                                                ),
+                                                                     link = False,
+                                                                     update_link = False,
+                                                                     ),
                                                 "details.active",
                                                 (T("Remarks"), "comments"),
                                                 S3SQLInlineComponent("pr_image",
@@ -2706,7 +2708,8 @@ def config(settings):
                                                       hidden = True,
                                                       #none = True,
                                                       ),
-                                      S3OptionsFilter("vol_training.course_id",
+                                      S3OptionsFilter(#"vol_training.course_id",
+                                                      "training.course_id",
                                                       label = T("Training"),
                                                       hidden = True,
                                                       ),
@@ -2715,7 +2718,8 @@ def config(settings):
                     list_fields = ["person_id",
                                    "organisation_id",
                                    "details.active",
-                                   (T("Trainings"), "vol_training.course_id"),
+                                   #(T("Trainings"), "vol_training.course_id"),
+                                   (T("Trainings"), "training.course_id"),
                                    (T("Start Date"), "start_date"),
                                    (T("Phone"), "phone.value"),
                                    ]
@@ -2723,7 +2727,8 @@ def config(settings):
                     report_fields = ["organisation_id",
                                      "person_id",
                                      "person_id$gender",
-                                     (T("Training"), "vol_training.course_id"),
+                                     #(T("Training"), "vol_training.course_id"),
+                                     (T("Training"), "training.course_id"),
                                      "location_id$L1",
                                      "location_id$L2",
                                      (T("Age Group"), "person_id$age_group"),
@@ -2741,7 +2746,8 @@ def config(settings):
                                         methods = ("count", "list",),
                                         defaults = Storage(
                                             rows = "organisation_id",
-                                            cols = "vol_training.course_id",
+                                            #cols = "vol_training.course_id",
+                                            cols = "training.course_id",
                                             fact = "count(person_id)",
                                             )
                                         ),
@@ -3410,7 +3416,8 @@ def config(settings):
         # Special cases for different NS
         root_org = current.auth.root_org_name()
         if root_org == ARCS:
-            from s3 import IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
+            #from s3 import IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
+            from s3 import S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
 
             db = current.db
             s3db = current.s3db
@@ -3425,6 +3432,10 @@ def config(settings):
             f.readable = f.writable = True
             f = mtable.restart_date
             f.readable = f.writable = True
+            f = mtable.election
+            f.readable = f.writable = True
+            f = mtable.trainings
+            f.readable = f.writable = True
             mtable.comments.label = T("Remarks")
             s3db.pr_address.location_id.widget = S3LocationSelector(show_map=False)
             ptable = s3db.pr_person
@@ -3436,30 +3447,30 @@ def config(settings):
             #dtable.company.label = T("Place of Work")
             s3db.pr_education.level_id.comment = None # Don't Add Education Levels inline
             s3db.pr_image.image.widget = None # ImageCropWidget doesn't work inline
-            ctable = s3db.hrm_course
-            query = (ctable.organisation_id == current.auth.root_org()) & \
-                    (ctable.type == 4) & \
-                    (ctable.deleted != True)
-            courses = db(query).select(ctable.id)
-            course_ids = [c.id for c in courses]
-            f = s3db.hrm_training.course_id
-            f.requires = IS_ONE_OF(db, "hrm_course.id",
-                                   f.represent,
-                                   filterby = "id",
-                                   filter_opts = course_ids,
-                                   orderby = "hrm_course.name",
-                                   sort = True
-                                   )
+            #ctable = s3db.hrm_course
+            #query = (ctable.organisation_id == current.auth.root_org()) & \
+            #        (ctable.type == 4) & \
+            #        (ctable.deleted != True)
+            #courses = db(query).select(ctable.id)
+            #course_ids = [c.id for c in courses]
+            #f = s3db.hrm_training.course_id
+            #f.requires = IS_ONE_OF(db, "hrm_course.id",
+            #                       f.represent,
+            #                       filterby = "id",
+            #                       filter_opts = course_ids,
+            #                       orderby = "hrm_course.name",
+            #                       sort = True
+            #                       )
 
             s3db.add_components(tablename,
-                                hrm_training = {"link": "pr_person",
-                                                "joinby": "id",
-                                                "key": "id",
-                                                "fkey": "person_id",
-                                                "pkey": "person_id",
-                                                "filterby": {"course_id": course_ids,
-                                                             },
-                                                },
+                                #hrm_training = {"link": "pr_person",
+                                #                "joinby": "id",
+                                #                "key": "id",
+                                #                "fkey": "person_id",
+                                #                "pkey": "person_id",
+                                #                "filterby": {"course_id": course_ids,
+                                #                             },
+                                #                },
                                 pr_address = ({"name": "perm_address",
                                                "link": "pr_person",
                                                "joinby": "id",
@@ -3610,14 +3621,16 @@ def config(settings):
                                         (T("Monthly Membership Fee"), "membership_fee"),
                                         (T("Membership Fee Last Paid"), "membership_paid"),
                                         "membership_due",
-                                        S3SQLInlineComponent("training",
-                                                             label = T("Trainings"),
-                                                             fields = (("", "course_id"),
-                                                                       ("", "date"),
-                                                                        ),
-                                                             link = False,
-                                                             update_link = False,
-                                                             ),
+                                        "election",
+                                        "trainings",
+                                        #S3SQLInlineComponent("training",
+                                        #                     label = T("Trainings"),
+                                        #                     fields = (("", "course_id"),
+                                        #                               ("", "date"),
+                                        #                                ),
+                                        #                     link = False,
+                                        #                     update_link = False,
+                                        #                     ),
                                         "comments",
                                         S3SQLInlineComponent("image",
                                                              label = T("Photo"),
@@ -4474,7 +4487,8 @@ def config(settings):
             if arcs:
                 # Changes common to both Members & Volunteers
                 from gluon import IS_EMPTY_OR
-                from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector
+                #from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector
                 db = current.db
                 s3db.pr_address.location_id.widget = S3LocationSelector(show_map = False)
                 s3db.pr_education.level_id.comment = None # Don't Add Education Levels inline
@@ -4497,20 +4511,20 @@ def config(settings):
                 controller = r.controller
                 if controller == "vol":
                     crud_strings["pr_person"] = crud_strings["hrm_human_resource"]
-                    ctable = s3db.hrm_course
-                    ctable.type.default = 2
-                    query = (ctable.organisation_id == current.auth.root_org()) & \
-                            (ctable.type == 2) & \
-                            (ctable.deleted != True)
-                    courses = db(query).select(ctable.id)
-                    course_ids = [c.id for c in courses]
-                    f = s3db.hrm_training.course_id
-                    f.requires = IS_ONE_OF(db, "hrm_course.id",
-                                           f.represent,
-                                           filterby = "id",
-                                           filter_opts = course_ids,
-                                           sort = True,
-                                           )
+                    #ctable = s3db.hrm_course
+                    #ctable.type.default = 2
+                    #query = (ctable.organisation_id == current.auth.root_org()) & \
+                    #        (ctable.type == 2) & \
+                    #        (ctable.deleted != True)
+                    #courses = db(query).select(ctable.id)
+                    #course_ids = [c.id for c in courses]
+                    #f = s3db.hrm_training.course_id
+                    #f.requires = IS_ONE_OF(db, "hrm_course.id",
+                    #                       f.represent,
+                    #                       filterby = "id",
+                    #                       filter_opts = course_ids,
+                    #                       sort = True,
+                    #                       )
                     s3db.add_components("pr_person",
                                         hrm_human_resource = {"name": "volunteer",
                                                               "joinby": "person_id",
@@ -4518,11 +4532,11 @@ def config(settings):
                                                               "filterfor": ("2",),
                                                               "multiple": False,
                                                               },
-                                        hrm_training = {"name": "vol_training",
-                                                        "joinby": "person_id",
-                                                        "filterby": {"course_id": course_ids,
-                                                                     },
-                                                        },
+                                        #hrm_training = {"name": "vol_training",
+                                        #                "joinby": "person_id",
+                                        #                "filterby": {"course_id": course_ids,
+                                        #                             },
+                                        #                },
                                         pr_education = {"name": "current_education",
                                                         "joinby": "person_id",
                                                         "filterby": "current",
@@ -4588,12 +4602,13 @@ def config(settings):
                                                                      multiple = False,
                                                                      ),
                                                 (T("Volunteer Start Date"), "volunteer.start_date"),
-                                                S3SQLInlineComponent("vol_training",
-                                                             label = T("Trainings"),
-                                                             fields = (("", "course_id"),
-                                                                       ("", "date"),
-                                                                        ),
-                                                             ),
+                                                S3SQLInlineComponent("training",
+                                                                     #"vol_training",
+                                                                     label = T("Trainings"),
+                                                                     fields = (("", "course_id"),
+                                                                               ("", "date"),
+                                                                                ),
+                                                                     ),
                                                 S3SQLInlineComponent("volunteer_details",
                                                                      label = T("Active"),
                                                                      fields = (("", "active"),),
@@ -4617,20 +4632,29 @@ def config(settings):
 
                 elif controller == "member":
                     crud_strings["pr_person"] = crud_strings["member_membership"]
-                    ctable = s3db.hrm_course
-                    ctable.type.default = 4
-                    query = (ctable.organisation_id == current.auth.root_org()) & \
-                            (ctable.type == 4) & \
-                            (ctable.deleted != True)
-                    courses = db(query).select(ctable.id)
-                    course_ids = [c.id for c in courses]
-                    f = s3db.hrm_training.course_id
-                    f.requires = IS_ONE_OF(db, "hrm_course.id",
-                                           f.represent,
-                                           filterby = "id",
-                                           filter_opts = course_ids,
-                                           sort = True,
-                                           )
+                    mtable = s3db.member_membership
+                    f = mtable.leaving_reason
+                    f.readable = f.writable = True
+                    f = mtable.restart_date
+                    f.readable = f.writable = True
+                    f = mtable.election
+                    f.readable = f.writable = True
+                    f = mtable.trainings
+                    f.readable = f.writable = True
+                    #ctable = s3db.hrm_course
+                    #ctable.type.default = 4
+                    #query = (ctable.organisation_id == current.auth.root_org()) & \
+                    #        (ctable.type == 4) & \
+                    #        (ctable.deleted != True)
+                    #courses = db(query).select(ctable.id)
+                    #course_ids = [c.id for c in courses]
+                    #f = s3db.hrm_training.course_id
+                    #f.requires = IS_ONE_OF(db, "hrm_course.id",
+                    #                       f.represent,
+                    #                       filterby = "id",
+                    #                       filter_opts = course_ids,
+                    #                       sort = True,
+                    #                       )
                     f = s3db.pr_person_details.grandfather_name
                     f.readable = f.writable = True
                     components = r.resource.components
@@ -4639,11 +4663,11 @@ def config(settings):
                             components[c].multiple = False
                             break
                     s3db.add_components("pr_person",
-                                        hrm_training = {"name": "member_training",
-                                                        "joinby": "person_id",
-                                                        "filterby": {"course_id": course_ids,
-                                                                     },
-                                                        },
+                                        #hrm_training = {"name": "member_training",
+                                        #                "joinby": "person_id",
+                                        #                "filterby": {"course_id": course_ids,
+                                        #                             },
+                                        #                },
                                         pr_address = {"name": "temp_address",
                                                       "joinby": "pe_id",
                                                       "filterby": "type",
@@ -4711,19 +4735,21 @@ def config(settings):
                                                                      fields = (("", "phone"),),
                                                                      multiple = False,
                                                                      ),
-                                                "membership.start_date",
-                                                "membership.end_date",
-                                                "membership.leaving_reason",
-                                                "membership.restart_date",
+                                                (T("Date of Recruitment"), "membership.start_date"),
+                                                (T("Date of Dismissal"), "membership.end_date"),
+                                                (T("Reason for Dismissal"), "membership.leaving_reason"),
+                                                (T("Date of Re-recruitment"), "membership.restart_date"),
                                                 (T("Monthly Membership Fee"), "membership.membership_fee"),
                                                 (T("Membership Fee Last Paid"), "membership.membership_paid"),
                                                 "membership.membership_due",
-                                                S3SQLInlineComponent("member_training",
-                                                                     label = T("Trainings"),
-                                                                     fields = (("", "course_id"),
-                                                                               ("", "date"),
-                                                                                ),
-                                                                     ),
+                                                "membership.election",
+                                                "membership.trainings",
+                                                #S3SQLInlineComponent("member_training",
+                                                #                     label = T("Trainings"),
+                                                #                     fields = (("", "course_id"),
+                                                #                               ("", "date"),
+                                                #                                ),
+                                                #                     ),
                                                 "membership.comments",
                                                 S3SQLInlineComponent("image",
                                                                      label = T("Photo"),

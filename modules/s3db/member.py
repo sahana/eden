@@ -205,6 +205,18 @@ class S3MembersModel(S3Model):
                             readable = False,
                             writable = False,
                             ),
+                      Field("election",
+                            label = T("Participation in the Election as a"),
+                            # Expose in templates as needed:
+                            readable = False,
+                            writable = False,
+                            ),
+                      Field("trainings",
+                            label = T("Trainings"),
+                            # Expose in templates as needed:
+                            readable = False,
+                            writable = False,
+                            ),
                       s3_comments(),
                       # Location (from pr_address component)
                       self.gis_location_id(readable = False,
