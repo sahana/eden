@@ -309,6 +309,7 @@ def group_membership():
                     s3db.update_super(gtable, {"id": group_id})
                     table.insert(group_id = group_id,
                                  person_id = record_id,
+                                 group_head = True,
                                  )
                     group_ids = set((group_id,))
                 resource.add_filter(FS("person_id") != record_id)
