@@ -2805,6 +2805,18 @@ class S3Config(Storage):
         """
         return self.hrm.get("course_pass_marks", False)
 
+    def get_hrm_course_types(self):
+        """
+            Which Types to use for Courses
+            - allow all by default for prepop
+        """
+        T = current.T
+        return self.__lazy("hrm", "course_types", default={1: T("Staff"),
+                                                           2: T("Volunteers"),
+                                                           3: T("Deployables"),
+                                                           4: T("Members"),
+                                                           })
+
     def get_hrm_staff_label(self):
         """
             Label for 'Staff'

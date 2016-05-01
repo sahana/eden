@@ -8,6 +8,7 @@
          CSV fields:
          Code............................hrm_course.code
          Name............................hrm_course.name
+         Type............................hrm_course.type
          Organisation....................hrm_course.organisation_id
          Pass............................hrm_course.pass_mark
          Certificate.....................hrm_course_certificate.certificate_id
@@ -59,6 +60,7 @@
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="JobTitles" select="col[@field='Job Titles']"/>
         <xsl:variable name="Sectors" select="col[@field='Sectors']"/>
+        <xsl:variable name="Type" select="col[@field='Type']"/>
 
         <!-- Course -->
         <resource name="hrm_course">
@@ -72,6 +74,25 @@
                         </xsl:attribute>
                     </reference>
                 </resource>
+            </xsl:if>
+            <xsl:if test="$Type!=''">
+                <xsl:choose>
+                    <xsl:when test="$Type='Staff'">
+                        <data field="type"><xsl:text>1</xsl:text></data>
+                    </xsl:when>
+                    <xsl:when test="$Type='Volunteers'">
+                        <data field="type"><xsl:text>2</xsl:text></data>
+                    </xsl:when>
+                    <xsl:when test="$Type='Deployables'">
+                        <data field="type"><xsl:text>3</xsl:text></data>
+                    </xsl:when>
+                    <xsl:when test="$Type='Members'">
+                        <data field="type"><xsl:text>4</xsl:text></data>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <!-- No Type -->
+                    </xsl:otherwise>
+                </xsl:choose>
             </xsl:if>
             <xsl:if test="$OrgName!=''">
                 <reference field="organisation_id" resource="org_organisation">

@@ -3295,9 +3295,11 @@ class S3PersonImageModel(S3Model):
         url_small = URL(c="default", f="download", args=image)
 
         return DIV(A(IMG(_src=url_small,
-                         _height=size[1]),
-                         _href=url_full,
-                         _class="th"))
+                         _height=size[1],
+                         ),
+                     _href=url_full,
+                     _class="th",
+                     ))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -3721,6 +3723,11 @@ class S3PersonEducationModel(S3Model):
                            label = T("Grade"),
                            represent = lambda v: v or NONE,
                            ),
+                     Field("current", "boolean",
+                           default = False,
+                           label = T("Current?"),
+                           represent = s3_yes_no_represent,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -3779,6 +3786,7 @@ class S3PersonDetailsModel(S3Model):
         T = current.T
         gis = current.gis
         messages = current.messages
+        NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # ---------------------------------------------------------------------
@@ -3848,6 +3856,7 @@ class S3PersonDetailsModel(S3Model):
                                 ),
                           Field("place_of_birth",
                                 label = T("Place of Birth"),
+                                represent = lambda v: v or NONE,
                                 # Enable as-required in template
                                 readable = False,
                                 writable = False,
@@ -3864,6 +3873,7 @@ class S3PersonDetailsModel(S3Model):
                                 ),
                           Field("hometown",
                                 label = T("Home Town"),
+                                represent = lambda v: v or NONE,
                                 # Enable as-required in template
                                 readable = False,
                                 writable = False,
@@ -3887,34 +3897,42 @@ class S3PersonDetailsModel(S3Model):
                           # This field can either be used as a free-text version of religion, or to provide details of the 'other'
                           Field("religion_other",
                                 #label = T("Other Religion"),
+                                represent = lambda v: v or NONE,
                                 readable = False,
                                 writable = False,
                                 ),
                           Field("father_name",
                                 label = T("Name of Father"),
+                                represent = lambda v: v or NONE,
                                 ),
                           Field("mother_name",
                                 label = T("Name of Mother"),
+                                represent = lambda v: v or NONE,
                                 ),
                           Field("grandfather_name",
                                 label = T("Name of Grandfather"),
+                                represent = lambda v: v or NONE,
                                 readable = False,
                                 writable = False,
                                 ),
                           Field("grandmother_name",
                                 label = T("Name of Grandmother"),
+                                represent = lambda v: v or NONE,
                                 readable = False,
                                 writable = False,
                                 ),
                           Field("occupation", length=128, # Mayon Compatibility
                                 label = T("Profession"),
+                                represent = lambda v: v or NONE,
                                 ),
                           Field("company",
                                 label = T("Company"),
+                                represent = lambda v: v or NONE,
                                 # @ToDo: Autofill from hrm_human_resource Staff Organisation
                                 ),
                           Field("affiliations",
                                 label = T("Affiliations"),
+                                represent = lambda v: v or NONE,
                                 # @ToDo: Autofill from hrm_human_resource Volunteer Organisation
                                 ),
                           Field("criminal_record", "boolean",
