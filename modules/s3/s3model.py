@@ -830,6 +830,7 @@ class S3Model(object):
                     alias = get_alias(hooks, link)
                     if alias:
                         return alias
+        return None
 
     # -------------------------------------------------------------------------
     # Resource Methods

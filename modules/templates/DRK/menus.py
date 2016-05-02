@@ -189,6 +189,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Check-in overdue", c=("dvr", "pr"), f="person",
                           vars = {"closed": "0", "overdue": "1"},
                           ),
+                        M("Residents Report", c="dvr", f="site_activity",
+                          ),
                         ),
                     M("Activities", f="case_activity")(
                         M("Emergencies",

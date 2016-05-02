@@ -71,11 +71,13 @@ ADMINISTRATION,Administration,,cr,,,ALL,,,,,
 ADMINISTRATION,Administration,,,,cr_shelter_registration,ALL,,,,,Administration can manage shelter registration info
 ADMINISTRATION,Administration,,dvr,,,ALL,,,,,
 ADMINISTRATION,Administration,,dvr,case_event,,CREATE|READ|UPDATE,,,,,"Administration can create, read and update case events"
+ADMINISTRATION,Administration,,dvr,site_activity,,READ,,,,,Administration can download site activity reports
 ADMINISTRATION,Administration,,,,dvr_allowance,ALL,,,,,Administration have unrestricted access to allowance information
 ADMINISTRATION,Administration,,,,dvr_case_activity,ALL,,,,,Administration can manage activities
 ADMINISTRATION,Administration,,,,dvr_case_appointment,ALL,,,,,Administration have unrestricted access to case appointments
 ADMINISTRATION,Administration,,,,dvr_case_event,CREATE|READ|UPDATE,,,,,"Administration can create, read and update case events"
 ADMINISTRATION,Administration,,,,dvr_note,CREATE|READ,,,,,
+ADMINISTRATION,Administration,,,,dvr_site_activity,READ,,,,,Administration can download site activity reports
 ADMINISTRATION,Administration,,inv,,,ALL,,,,,
 ADMINISTRATION,Administration,,org,,,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage organisation data
 ADMINISTRATION,Administration,,,,org_organisation,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage organisation data
@@ -92,11 +94,13 @@ ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration,ALL,,,,,Head of adm
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration_history,READ,,,,,Head of administration can read check-in history
 ADMIN_HEAD,Head of Administration,,dvr,,,ALL,,,,,
 ADMIN_HEAD,Head of Administration,,dvr,case_event,,ALL,,,,,"Head of administration can create, read and update case events"
+ADMIN_HEAD,Head of Administration,,dvr,site_activity,,ALL,,,,,"Head of administration can create, read and update site activity reports"
 ADMIN_HEAD,Head of Administration,,,,dvr_allowance,ALL,,,,,Head of administration have unrestricted access to allowance information
 ADMIN_HEAD,Head of Administration,,,,dvr_case_activity,ALL,,,,,Head of administration can manage activities
 ADMIN_HEAD,Head of Administration,,,,dvr_case_appointment,ALL,,,,,Head fo administration have unrestricted access to case appointments
 ADMIN_HEAD,Head of Administration,,,,dvr_case_event,ALL,,,,,"Head of administration can create, read and update case events"
 ADMIN_HEAD,Head of Administration,,,,dvr_note,CREATE|READ,READ,,,,
+ADMIN_HEAD,Head of Administration,,,,dvr_site_activity,ALL,,,,,"Head of administration can create, read, update and delete site activity reports"
 ADMIN_HEAD,Head of Administration,,hrm,,,ALL,,,,,Head of administration has unrestricted access to staff module
 ADMIN_HEAD,Head of Administration,,hrm,index,,ALL,,,,,Head of administration has unrestricted access to staff module index controller
 ADMIN_HEAD,Head of Administration,,hrm,staff,,ALL,,,,,Head of administration has unrestricted access to staff data

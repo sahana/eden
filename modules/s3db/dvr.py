@@ -37,6 +37,7 @@ __all__ = ("DVRCaseModel",
            "DVRCaseEconomyInformationModel",
            "DVRCaseAllowanceModel",
            "DVRCaseEventModel",
+           "DVRSiteActivityModel",
            "dvr_case_default_status",
            "dvr_case_status_filter_opts",
            "dvr_case_household_size",
@@ -2828,6 +2829,140 @@ class DVRCaseEventModel(S3Model):
             # Update last_seen_on
             if person_id:
                 dvr_update_last_seen(person_id)
+
+# =============================================================================
+class DVRSiteActivityModel(S3Model):
+    """ Model to record the activity of a site over time """
+
+    names = ("dvr_site_activity",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+        settings = current.deployment_settings
+
+        crud_strings = s3.crud_strings
+
+        configure = self.configure
+        define_table = self.define_table
+
+        SITE = settings.get_org_site_label()
+        site_represent = self.org_SiteRepresent(show_link=False)
+
+        default_organisation = settings.get_org_default_organisation()
+        default_site = settings.get_org_default_site()
+        permitted_facilities = current.auth.permitted_facilities(redirect_on_error=False)
+
+        # ---------------------------------------------------------------------
+        # Site Activity
+        #
+        tablename = "dvr_site_activity"
+        define_table(tablename,
+                     self.super_link("site_id", "org_site",
+                                     default = default_site,
+                                     filterby = "site_id",
+                                     filter_opts = permitted_facilities,
+                                     label = SITE,
+                                     readable = not default_site,
+                                     writable = not default_site,
+                                     represent = site_represent,
+                                     updateable = True,
+                                     ),
+                     s3_date(future=0),
+                     Field("cases_new", "integer",
+                           default = 0,
+                           label = T("Number of New Cases"),
+                           requires = IS_INT_IN_RANGE(0, None),
+                           ),
+                     Field("cases_closed", "integer",
+                           default = 0,
+                           label = T("Number of Cases Closed"),
+                           requires = IS_INT_IN_RANGE(0, None),
+                           ),
+                     Field("old_total", "integer",
+                           default = 0,
+                           label = T("Total Cases (old)"),
+                           requires = IS_INT_IN_RANGE(0, None),
+                           ),
+                     Field("new_total", "integer",
+                           default = 0,
+                           label = T("Total Cases (new)"),
+                           requires = IS_INT_IN_RANGE(0, None),
+                           ),
+                     Field("report", "upload",
+                           autodelete = True,
+                           label = T("Report"),
+                           length = current.MAX_FILENAME_LENGTH,
+                           represent = self.report_represent,
+                           uploadfolder = os.path.join(current.request.folder,
+                                                       "uploads",
+                                                       "dvr",
+                                                       ),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Activity Report"),
+            title_display = T("Activity Report"),
+            title_list = T("Activity Reports"),
+            title_update = T("Edit Activity Report"),
+            label_list_button = T("List Activity Reports"),
+            label_delete_button = T("Delete Activity Report"),
+            msg_record_created = T("Activity Report created"),
+            msg_record_modified = T("Activity Report updated"),
+            msg_record_deleted = T("Activity Report deleted"),
+            msg_list_empty = T("No Activity Reports found"),
+        )
+
+        # Filter widgets
+        date_filter = S3DateFilter("date")
+        date_filter.operator = ["eq"]
+        filter_widgets = [date_filter]
+        if not default_site:
+            site_filter = S3OptionsFilter("site_id",
+                                          label = SITE,
+                                          )
+            filter_widgets.insert(0, site_filter)
+
+        # Table configuration
+        configure(tablename,
+                  filter_widgets = filter_widgets,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def report_represent(value):
+        """ File representation """
+
+        if value:
+            try:
+                # Read the filename from the file
+                filename = current.db.dvr_site_activity.report.retrieve(value)[0]
+            except IOError:
+                return current.T("File not found")
+            else:
+                return A(filename,
+                         _href=URL(c="default", f="download", args=[value]))
+        else:
+            return current.messages["NONE"]
 
 # =============================================================================
 def dvr_case_default_status():

@@ -41,7 +41,7 @@ from gluon.contenttype import contenttype
 from gluon.storage import Storage
 
 from ..s3codec import S3Codec
-from ..s3utils import s3_unicode, s3_strip_markup
+from ..s3utils import s3_str, s3_strip_markup, s3_unicode
 
 # =============================================================================
 class S3XLS(S3Codec):
@@ -119,7 +119,7 @@ class S3XLS(S3Codec):
         return (title, types, lfields, heading, rows)
 
     # -------------------------------------------------------------------------
-    def encode(self, data_source, **attr):
+    def encode(self, data_source, title=None, as_stream=False, **attr):
         """
             Export data as a Microsoft Excel spreadsheet
 
@@ -135,6 +135,10 @@ class S3XLS(S3Codec):
                                     types: {key: type},
                                     rows: [{key:value}],
                                     }
+            @param title: the title for the output document
+            @param as_stream: return the buffer (StringIO) rather than
+                              its contents (str), useful when the output
+                              is supposed to be stored locally
             @param attr: keyword parameters
 
             @keyword title: the main title of the report
@@ -172,6 +176,8 @@ class S3XLS(S3Codec):
 
         # Get the attributes
         title = attr.get("title")
+        if title is None:
+            title = current.T("Report")
         list_fields = attr.get("list_fields")
         group = attr.get("dt_group")
         use_colour = attr.get("use_colour", False)
@@ -248,12 +254,18 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             sheets.append(book.add_sheet("%s-%s" % (sheet_name, count)))
             count += 1
 
+        if callable(title_row):
+            # Calling with sheet None to get the number of title rows
+            title_row_length = title_row(None)
+        else:
+            title_row_length = 2
+
         # Add header row to all sheets, determine columns widths
         header_style = styles["header"]
         for sheet in sheets:
             # Move this down if a title row will be added
             if title_row:
-                header_row = sheet.row(2)
+                header_row = sheet.row(title_row_length)
             else:
                 header_row = sheet.row(0)
             column_widths = []
@@ -283,7 +295,7 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
                 sheet.col(write_col_index).width = width
                 col_index += 1
 
-        title = str(title)
+        title = s3_str(title)
 
         # Title row (optional, deployment setting)
         if title_row:
@@ -291,26 +303,31 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
             large_header_style = styles["large_header"]
             notes_style = styles["notes"]
             for sheet in sheets:
-                # First row => Title (standard = "title_list" CRUD string)
-                current_row = sheet.row(0)
-                if col_index > 0:
-                    sheet.write_merge(0, 0, 0, col_index, title,
-                                      large_header_style,
-                                      )
-                current_row.height = 500
-                # Second row => Export date/time
-                current_row = sheet.row(1)
-                current_row.write(0, "%s:" % T("Date Exported"), notes_style)
-                current_row.write(1, request.now, notes_style)
-                # Fix the size of the last column to display the date
-                if 16 * COL_WIDTH_MULTIPLIER > width:
-                    sheet.col(col_index).width = 16 * COL_WIDTH_MULTIPLIER
+                if callable(title_row):
+                    # Custom title rows
+                    title_row(sheet)
+                else:
+                    # First row => Title (standard = "title_list" CRUD string)
+                    current_row = sheet.row(0)
+                    if col_index > 0:
+                        sheet.write_merge(0, 0, 0, col_index,
+                                          title,
+                                          large_header_style,
+                                          )
+                    current_row.height = 500
+                    # Second row => Export date/time
+                    current_row = sheet.row(1)
+                    current_row.write(0, "%s:" % T("Date Exported"), notes_style)
+                    current_row.write(1, request.now, notes_style)
+                    # Fix the size of the last column to display the date
+                    if 16 * COL_WIDTH_MULTIPLIER > width:
+                        sheet.col(col_index).width = 16 * COL_WIDTH_MULTIPLIER
 
         # Initialize counters
         totalCols = col_index
         # Move the rows down if a title row is included
         if title_row:
-            row_index = 2
+            row_index = title_row_length
         else:
             row_index = 0
 
@@ -484,6 +501,9 @@ List Fields %s""" % (request.url, len(lfields), len(rows[0]), headers, lfields)
         output = StringIO()
         book.save(output)
         output.seek(0)
+
+        if as_stream:
+            return output
 
         # Response headers
         filename = "%s_%s.xls" % (request.env.server_name, title)

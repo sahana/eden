@@ -500,7 +500,6 @@ def allowance():
         record = r.record
         if record:
             table = r.table
-            readonly = []
             if record.status == 2:
                 # Can't change payment details if already paid
                 readonly = ["person_id",
@@ -510,11 +509,11 @@ def allowance():
                             "amount",
                             "currency",
                             ]
-            for fn in readonly:
-                if fn in table.fields:
-                    field = table[fn]
-                    field.writable = False
-                    field.comment = None
+                for fn in readonly:
+                    if fn in table.fields:
+                        field = table[fn]
+                        field.writable = False
+                        field.comment = None
         return True
     s3.prep = prep
 
@@ -644,6 +643,12 @@ def case_event():
                                  )
         return True
     s3.prep = prep
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def site_activity():
+    """ Site Activity Reports: RESTful CRUD Controller """
 
     return s3_rest_controller()
 
