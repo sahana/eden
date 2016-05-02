@@ -2851,17 +2851,56 @@ class DRKSiteActivityReport(object):
                                                              utc=True,
                                                              )
 
+        # Get family roles
+        gtable = s3db.pr_group
+        mtable = s3db.pr_group_membership
+        join = gtable.on(gtable.id == mtable.group_id)
+        query = (mtable.person_id.belongs(person_ids)) & \
+                (mtable.deleted != True) & \
+                (gtable.group_type == 7)
+        rows = db(query).select(mtable.person_id,
+                                mtable.group_head,
+                                mtable.role_id,
+                                join = join,
+                                )
+
+        # Bulk represent all possible family roles (to avoid repeated lookups)
+        represent = mtable.role_id.represent
+        rtable = s3db.pr_group_member_role
+        if hasattr(represent, "bulk"):
+            query = (rtable.group_type == 7) & (rtable.deleted != True)
+            roles = db(query).select(rtable.id)
+            role_ids = [role.id for role in roles]
+            represent.bulk(role_ids)
+
+        # Create a dict of {person_id: role}
+        roles = {}
+        HEAD_OF_FAMILY = T("Head of Family")
+        for row in rows:
+            person_id = row.person_id
+            role = row.role_id
+            if person_id in roles:
+                continue
+            if (row.group_head):
+                roles[person_id] = HEAD_OF_FAMILY
+            elif role:
+                roles[person_id] = represent(role)
+
+        # Field method to determine the family role
+        def family_role(row, roles=roles):
+            person_id = row["pr_person.id"]
+            return roles.get(person_id, "")
+
         # Dummy virtual fields to produce empty columns
         from s3dal import Field
-        empty = lambda row: ""
         ptable = s3db.pr_person
+        empty = lambda row: ""
         if not hasattr(ptable, "building"):
             ptable.building = Field.Method("building", empty)
         if not hasattr(ptable, "xray_place"):
             ptable.xray_place = Field.Method("xray_place", empty)
         if not hasattr(ptable, "family_role"):
-            # Dummy until implemented (@todo: implement it)
-            ptable.family_role = Field.Method("family_role", empty)
+            ptable.family_role = Field.Method("family_role", family_role)
 
         # List fields for the report
         list_fields = [(T("ID"), "pe_label"),
