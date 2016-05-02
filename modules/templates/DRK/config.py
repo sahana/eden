@@ -2068,6 +2068,20 @@ def config(settings):
                        addbtn = True,
                        )
 
+        crud_strings = current.response.s3.crud_strings
+        crud_strings["dvr_site_activity"] = Storage(
+            label_create = T("Create Residents Report"),
+            title_display = T("Residents Report"),
+            title_list = T("Residents Reports"),
+            title_update = T("Edit Residents Report"),
+            label_list_button = T("List Residents Reports"),
+            label_delete_button = T("Delete Residents Report"),
+            msg_record_created = T("Residents Report created"),
+            msg_record_modified = T("Residents Report updated"),
+            msg_record_deleted = T("Residents Report deleted"),
+            msg_list_empty = T("No Residents Reports found"),
+        )
+
     settings.customise_dvr_site_activity_resource = customise_dvr_site_activity_resource
 
     # -------------------------------------------------------------------------
@@ -2846,10 +2860,10 @@ class DRKSiteActivityReport(object):
         if not hasattr(ptable, "xray_place"):
             ptable.xray_place = Field.Method("xray_place", empty)
         if not hasattr(ptable, "family_role"):
-            # Dummy until implemented
+            # Dummy until implemented (@todo: implement it)
             ptable.family_role = Field.Method("family_role", empty)
 
-        # @todo: fix translations for labels
+        # List fields for the report
         list_fields = [(T("ID"), "pe_label"),
                        (T("Name"), "last_name"),
                        "first_name",
@@ -2923,14 +2937,6 @@ class DRKSiteActivityReport(object):
                   }
         result["report"] = report
 
-        ## @todo: remove this
-        #print "\n"
-        #for row in rows:
-            #for column in columns:
-                #label = headers.get(column)
-                #print label, ":", row[column]
-            #print "\n"
-
         return result
 
     # -------------------------------------------------------------------------
@@ -2990,7 +2996,6 @@ class DRKSiteActivityReport(object):
         filename = "Report_%s_%s.xls" % (self.site_id, str(self.date))
 
         # Store the report
-        # @todo: catch errors
         report_ = table.report.store(report, filename)
         record = {"site_id": self.site_id,
                   "old_total": data["old_total"],
@@ -3011,6 +3016,8 @@ class DRKSiteActivityReport(object):
         r.customise_resource("dvr_site_activity")
 
         if row:
+            # Trigger auto-delete of the previous file
+            row.update_record(report=None)
             # Update it
             success = row.update_record(**record)
             if success:
@@ -3049,7 +3056,7 @@ class DRKSiteActivityReport(object):
         if sheet is not None and data is not None:
 
             T = current.T
-            from s3 import S3DateTime, s3_str
+            from s3 import S3DateTime, s3_unicode
             output = (("Date", S3DateTime.date_represent(self.date, utc=True)),
                       ("Previous Total", data["old_total"]),
                       ("Admissions", data["ins"]),
@@ -3063,10 +3070,20 @@ class DRKSiteActivityReport(object):
 
             col_index = 3
             for label, value in output:
+                label_ = s3_unicode(T(label))
+                value_ = s3_unicode(value)
+
+                # Adjust column width
+                width = max(len(label_), len(value_))
+                sheet.col(col_index).width = max(width * 310, 2000)
+
+                # Write the label
                 current_row = sheet.row(0)
-                current_row.write(col_index, s3_str(T(label)), label_style)
+                current_row.write(col_index, label_, label_style)
+
+                # Write the data
                 current_row = sheet.row(1)
-                current_row.write(col_index, s3_str(value))
+                current_row.write(col_index, value_)
                 col_index += 1
 
         return length
