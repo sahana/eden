@@ -1368,7 +1368,7 @@
 'Import Volunteer Cluster Positions': 'ورود منصب های داوطلب گروه',
 'Import Volunteer Cluster Types': 'ورود انواع داوطلب گروه',
 'Import Volunteer Clusters': 'ورود گروه ها داوطلب',
-'Import Volunteers': 'ورود داوطلبین',
+'Import Volunteers': 'ورود رضاکاران',
 'Improved Production Techniques': 'تکنیک های تولید توسعه یافته',
 'In error': 'در خطا',
 'In order to be able to edit OpenStreetMap data from within %(name_short)s, you need to register for an account on the OpenStreetMap server.': 'شما باید یک حساب در سرور باز کردن سرک ثبت نام نمایید ، %(name_short)s جهت قابل تصحیح ساختن معلومات باز کردن نقشه سرک از',
