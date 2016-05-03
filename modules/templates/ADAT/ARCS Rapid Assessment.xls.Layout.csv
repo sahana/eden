@@ -1,7 +1,7 @@
 Template,Section,Posn,Method,Rules
 ARCS Rapid Assessment Form,1.0 Form Specification and Identification,1,1,[['STD-DATE', 'STD-TIME', 'STD-WHO'], ['STD-P-Code']]
 ARCS Rapid Assessment Form,2.0 Type of emergency and date(s) it/they occurred,2,1,"[[{'heading': '2.0 Type of emergency and date(s) it/they occurred'}], ['ARCS-1'], ['ARCS-2']]"
-ARCS Rapid Assessment Form,3.0 Affected Population (where applicable),3,1,"[[{'heading': '3.0 Affected Population (where applicable)'}], [{'heading': '3.3 Damage caused to Property'}], ['ARCS-25', 'ARCS-26'], ['ARCS-27'], ['ARCS-28'], ['ARCS-29'], ['ARCS-30'], [{'heading': '3.4 Damage to Infrastructure'}], ['ARCS-31'], ['ARCS-32'], ['ARCS-33']]"
+ARCS Rapid Assessment Form,3.0 Affected Population (where applicable),3,1,"[[{'heading': '3.0 Affected Population (where applicable)'}], ['ARCS-3'], ['ARCS-4'], ['ARCS-5'], ['ARCS-6'], ['ARCS-7'], ['ARCS-8'], ['ARCS-9'], ['ARCS-10'], ['ARCS-11'], ['ARCS-11'], [{'heading': '3.3 Damage caused to Property'}], ['ARCS-26'], ['ARCS-27'], ['ARCS-28'], [[{'labelLeft': 'True'}, 'ARCS-29']], ['ARCS-30'], [{'heading': '3.4 Damage to Infrastructure'}], ['ARCS-31'], ['ARCS-32'], ['ARCS-33']]"
 ARCS Rapid Assessment Form,4.0 Health,4,1,"[[{'heading': '4.0 Health'}], ['ARCS-34'], ['ARCS-35'], ['ARCS-36']]"
 ARCS Rapid Assessment Form,"5.0 Water, Sanitation and Hygiene",5,1,"[[{'heading': '5.0 Water, Sanitation and Hygiene'}], ['ARCS-37'], ['ARCS-38'], ['ARCS-39'], ['ARCS-40']]"
 ARCS Rapid Assessment Form,6.0 Food Accessibility,6,1,"[[{'heading': '6.0 Food Accessibility'}], ['ARCS-41'], ['ARCS-42'], ['ARCS-43'], ['ARCS-44'], ['ARCS-45'], ['ARCS-46']]"

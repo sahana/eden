@@ -898,7 +898,7 @@ class S3IncidentReportModel(S3Model):
         self.define_table(tablename,
                           self.super_link("doc_id", "doc_entity"),
                           # @ToDo: Use link tables?
-                          #self.event_event_id(ondelete = "CASCADE"),
+                          self.event_event_id(ondelete = "CASCADE"),
                           #self.event_incident_id(ondelete = "CASCADE"),
                           s3_datetime(default="now"),
                           Field("name", notnull=True,

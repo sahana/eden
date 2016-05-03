@@ -4571,7 +4571,7 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             It will only get the data from the db if it hasn't already been
             retrieved, or if the update flag is True
         """
-        if qstn_id != None:
+        if qstn_id is not None:
             if self.id != qstn_id:
                 self.id = qstn_id
                 # The id has changed so force an update
@@ -4581,22 +4581,24 @@ class S3QuestionTypeAbstractWidget(FormWidget):
             self.qstn_metadata = {}
             return
         if self.question is None or update:
-            db = current.db
-            s3 = current.response.s3
             # Get the question from the database
-            query = (self.qtable.id == self.id)
-            self.question = db(query).select(limitby=(0, 1)).first()
-            if self.question is None:
+            db = current.db
+            # @ToDo: Limit fields
+            question = db(self.qtable.id == self.id).select(limitby=(0, 1)
+                                                            ).first()
+            if question is None:
                 raise Exception("no question with id %s in database" % self.id)
             # Get the metadata from the database and store in qstn_metadata
-            self.question.name = s3.survey_qstn_name_represent(self.question.name)
-            query = (self.mtable.question_id == self.id)
-            self.rows = db(query).select()
-            for row in self.rows:
+            question.name = current.s3db.survey_qstn_name_represent(question.name)
+            self.question = question
+            # @ToDo: Limit fields
+            rows = db(self.mtable.question_id == self.id).select()
+            self.rows = rows
+            for row in rows:
                 # Remove any double quotes from around the data before storing
                 self.qstn_metadata[row.descriptor] = row.value.strip('"')
 
-    # -------------------------------------------------------------------------
+    # ------------------------------------------------------------------------
     def get(self, value, default=None):
         """
             This will return a single metadata value held by the widget
@@ -5835,9 +5837,10 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
                  ):
         T = current.T
         S3QuestionTypeAbstractWidget.__init__(self, question_id)
-        self.metalist.append("Parent")
-        self.metalist.append("Type")
-        self.metalist.append("Relation")
+        metalist = self.metalist
+        metalist.append("Parent")
+        metalist.append("Type")
+        metalist.append("Relation")
         try:
             self._store_metadata()
             type = self.get("Type")
@@ -5866,7 +5869,7 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
         """
             Method to format the value that has just been put on the database
         """
-        type = self.get("Type")
+        #type = self.get("Type")
         return self.realWidget().onaccept(value)
 
     # -------------------------------------------------------------------------
@@ -6226,16 +6229,19 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
                  question_id = None,
                  ):
         S3QuestionTypeAbstractWidget.__init__(self, question_id)
-        if self.question != None and "code" in self.question:
+        question = self.question
+        if question is not None and "code" in question:
             # Expect the parent code to be the same as the child with the number
             # removed. This means that the parent code must end with a hyphen.
-            end = self.question.code.rfind("-")+1
-            parentCode = self.question.code[0:end]
-            parentNumber = self.question.code[end:]
-            self.question.parentCode = parentCode
-            self.question.parentNumber = int(parentNumber)
+            code = question.code
+            end = code.rfind("-") + 1
+            question.parentCode = code[0:end]
+            question.parentNumber = int(code[end:])
         self.metalist.append("Type")
-        self.typeDescription = self.qstn_metadata["Type"]
+        try:
+            self.typeDescription = self.qstn_metadata["Type"]
+        except:
+            pass
         self.xlsWidgetSize = (0, 0)
 
     # -------------------------------------------------------------------------
@@ -6276,7 +6282,7 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
                       langDict={},
                       answerMatrix=None,
                       style={}
-                     ):
+                      ):
         """
             Dummy function that doesn't write anything to the matrix,
             because it is handled by the Grid question type
@@ -6382,7 +6388,7 @@ class survey_S3AnalysisPriority():
                           3:"#FFA500", # orange
                           4:"#FF0000", # red
                           5:"#880088", # purple
-                         },
+                          },
                  # Make Higher-priority show up more clearly
                  opacity={-1:0.5,
                            0:0.6,
@@ -6391,7 +6397,7 @@ class survey_S3AnalysisPriority():
                            3:0.7,
                            4:0.8,
                            5:0.8,
-                          },
+                           },
                  image={-1:"grey",
                          0:"blue",
                          1:"green",
@@ -6399,7 +6405,7 @@ class survey_S3AnalysisPriority():
                          3:"orange",
                          4:"red",
                          5:"purple",
-                        },
+                         },
                  desc={-1:"No Data",
                         0:"Very Low",
                         1:"Low",
@@ -6407,7 +6413,7 @@ class survey_S3AnalysisPriority():
                         3:"Medium High",
                         4:"High",
                         5:"Very High",
-                       },
+                        },
                  zero = True,
                  ):
         """
@@ -6432,7 +6438,7 @@ class survey_S3AnalysisPriority():
                     _alt=current.T(filename),
                     _height=12,
                     _width=12,
-                   )
+                    )
         return image
 
     # -------------------------------------------------------------------------

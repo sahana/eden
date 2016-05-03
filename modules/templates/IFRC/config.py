@@ -1541,6 +1541,22 @@ def config(settings):
     settings.customise_deploy_application_resource = customise_deploy_application_resource
 
     # -----------------------------------------------------------------------------
+    def customise_event_incident_report_resource(r, tablename):
+
+        # Special cases for different NS
+        root_org = current.auth.root_org_name()
+        if root_org == ARCS:
+            from s3 import S3LocationSelector
+
+            # Don't go back to Create form after submission
+            current.session.s3.rapid_data_entry = False
+
+            # Hide Street Address
+            current.s3db.event_incident_report.location_id.widget = S3LocationSelector()
+
+    settings.customise_event_incident_report_resource = customise_event_incident_report_resource
+
+    # -----------------------------------------------------------------------------
     def _is_asia_pacific(region_id=False):
         """
             Helper to determine if the user is in the Asia Pacific region
