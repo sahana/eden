@@ -2513,10 +2513,12 @@ def config(settings):
                 if arcs:
                     # ARCS have a custom Volunteer form
                     #from s3 import IS_ADD_PERSON_WIDGET2, IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
-                    #from s3 import IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
-                    from s3 import S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
+                    from s3 import IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
 
-                    db = current.db
+                    # Go back to Create form after submission
+                    current.session.s3.rapid_data_entry = True
+
+                    #db = current.db
 
                     settings.pr.request_mobile_phone = False
                     settings.pr.request_email = False
@@ -2536,7 +2538,14 @@ def config(settings):
                     dtable.father_name.label = T("Father Name")
                     dtable.grandfather_name.label = T("Grand Father Name")
                     dtable.occupation.label = T("Job")
-                    s3db.pr_education.level_id.comment = None # Don't Add Education Levels inline
+                    etable = s3db.pr_education
+                    etable.level_id.comment = None # Don't Add Education Levels inline
+                    f = etable.level_id
+                    f.requires = IS_ONE_OF(current.db, "pr_education_level.id",
+                                           f.represent,
+                                           filterby = "organisation_id",
+                                           filter_opts = (current.auth.root_org(),),
+                                           )
                     s3db.pr_image.image.widget = None # ImageCropWidget doesn't work inline
                     #ctable = s3db.hrm_course
                     #query = (ctable.organisation_id == current.auth.root_org()) & \
@@ -3416,10 +3425,12 @@ def config(settings):
         # Special cases for different NS
         root_org = current.auth.root_org_name()
         if root_org == ARCS:
-            #from s3 import IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
-            from s3 import S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
+            from s3 import IS_ONE_OF, S3LocationSelector, S3SQLCustomForm, S3SQLInlineComponent
 
-            db = current.db
+            # Go back to Create form after submission
+            current.session.s3.rapid_data_entry = True
+
+            #db = current.db
             s3db = current.s3db
             tablename = "member_membership"
 
@@ -3445,7 +3456,14 @@ def config(settings):
             dtable.father_name.label = T("Father Name")
             dtable.grandfather_name.label = T("Grand Father Name")
             #dtable.company.label = T("Place of Work")
-            s3db.pr_education.level_id.comment = None # Don't Add Education Levels inline
+            etable = s3db.pr_education
+            etable.level_id.comment = None # Don't Add Education Levels inline
+            f = etable.level_id
+            f.requires = IS_ONE_OF(current.db, "pr_education_level.id",
+                                   f.represent,
+                                   filterby = "organisation_id",
+                                   filter_opts = (current.auth.root_org(),),
+                                   )
             s3db.pr_image.image.widget = None # ImageCropWidget doesn't work inline
             #ctable = s3db.hrm_course
             #query = (ctable.organisation_id == current.auth.root_org()) & \
@@ -4487,11 +4505,17 @@ def config(settings):
             if arcs:
                 # Changes common to both Members & Volunteers
                 from gluon import IS_EMPTY_OR
-                #from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector
-                from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector
-                db = current.db
+                from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector
+                #db = current.db
                 s3db.pr_address.location_id.widget = S3LocationSelector(show_map = False)
-                s3db.pr_education.level_id.comment = None # Don't Add Education Levels inline
+                etable = s3db.pr_education
+                etable.level_id.comment = None # Don't Add Education Levels inline
+                f = etable.level_id
+                f.requires = IS_ONE_OF(current.db, "pr_education_level.id",
+                                       f.represent,
+                                       filterby = "organisation_id",
+                                       filter_opts = (current.auth.root_org(),),
+                                       )
                 s3db.pr_image.image.widget = None # ImageCropWidget doesn't work inline
                 s3db.add_components("pr_person",
                                     pr_address = {"name": "perm_address",

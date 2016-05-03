@@ -3736,6 +3736,8 @@ class S3Duplicate(object):
                               present in the import item
             @param ignore_case: ignore case for string/text fields
             @param ignore_deleted: do not match deleted records
+
+            @ToDo: Fuzzy option to do a LIKE search
         """
 
         if not primary:

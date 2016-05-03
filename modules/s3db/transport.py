@@ -668,7 +668,7 @@ class S3TransportModel(S3Model):
         # Table Configuration
         configure(tablename,
                   crud_form = crud_form,
-                  deduplicate = S3Duplicate(primary=("name",)),
+                  deduplicate = S3Duplicate(),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   )
