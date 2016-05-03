@@ -2851,6 +2851,16 @@ class DRKSiteActivityReport(object):
                                                              utc=True,
                                                              )
 
+        # Filtered component for family
+        s3db.add_components("pr_person",
+                            pr_group = {"name": "family",
+                                        "link": "pr_group_membership",
+                                        "joinby": "person_id",
+                                        "key": "group_id",
+                                        "filterby": {"group_type": 7},
+                                        },
+                            )
+
         # Get family roles
         gtable = s3db.pr_group
         mtable = s3db.pr_group_membership
@@ -2895,23 +2905,20 @@ class DRKSiteActivityReport(object):
         from s3dal import Field
         ptable = s3db.pr_person
         empty = lambda row: ""
-        if not hasattr(ptable, "building"):
-            ptable.building = Field.Method("building", empty)
         if not hasattr(ptable, "xray_place"):
             ptable.xray_place = Field.Method("xray_place", empty)
         if not hasattr(ptable, "family_role"):
             ptable.family_role = Field.Method("family_role", family_role)
 
         # List fields for the report
-        list_fields = [(T("ID"), "pe_label"),
+        list_fields = ["family.id",
+                       (T("ID"), "pe_label"),
                        (T("Name"), "last_name"),
                        "first_name",
                        "date_of_birth",
                        "gender",
                        "person_details.nationality",
-                       # @todo: implement this:
                        (T("Family Role"), "family_role"),
-                       (T("Building"), "building"),
                        (T("Room No."), "shelter_registration.shelter_unit_id"),
                        "case_flag_case.flag_id",
                        "dvr_case.comments",
@@ -2937,6 +2944,10 @@ class DRKSiteActivityReport(object):
         data = resource.select(list_fields,
                                represent = True,
                                raw_data = True,
+                               # Keep families together, eldest member first
+                               orderby = ["pr_family_group.id",
+                                          "pr_person.date_of_birth",
+                                          ],
                                )
 
         # Generate headers, labels, types for XLS report
@@ -2946,7 +2957,9 @@ class DRKSiteActivityReport(object):
         types = {}
         for rfield in rfields:
             colname = rfield.colname
-            if colname == "dvr_case_flag_case.flag_id":
+            if colname in ("dvr_case_flag_case.flag_id",
+                           "pr_family_group.id",
+                           ):
                 continue
             columns.append(colname)
             headers[colname] = rfield.label
@@ -3018,21 +3031,20 @@ class DRKSiteActivityReport(object):
         # Extract the data
         data = self.extract()
 
+        # Custom header for Excel Export (disabled for now)
+        #settings.base.xls_title_row = lambda sheet: self.summary(sheet, data)
+
         # Export as XLS
-        settings.base.xls_title_row = lambda sheet: self.summary(sheet, data)
+        title = current.T("Resident List")
         from s3.s3export import S3Exporter
         exporter = S3Exporter().xls
         report = exporter(data["report"],
-                          # @todo: produce a report title
-                          #title = "?",
+                          title = title,
                           as_stream = True,
                           )
 
         # Construct the filename
-        # @todo: translate "Report" in file name
-        # @todo: use site name in file name
-        # @todo: format date
-        filename = "Report_%s_%s.xls" % (self.site_id, str(self.date))
+        filename = "%s_%s_%s.xls" % (title, self.site_id, str(self.date))
 
         # Store the report
         report_ = table.report.store(report, filename)
