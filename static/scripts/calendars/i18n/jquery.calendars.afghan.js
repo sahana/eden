@@ -87,9 +87,9 @@
                 epochs: ['BHS', 'AHS'],
                 // Using anglicised Dari month names, transcriptions should match
                 // those in S3AfghanCalendar (modules/s3/s3datetime.py):
-                monthNames: ['Hamal', 'Tawr', 'Jawza', 'Saratan', 'Asad', 'Sonbola',
+                monthNames: ['Hamal', 'Sawr', 'Jawza', 'Saratan', 'Asad', 'Sonbola',
                              'Mizan', 'Aqrab', 'Qaws', 'Jadi', 'Dalw', 'Hut'],
-                monthNamesShort: ['Ham', 'Taw', 'Jaw', 'Sar', 'Asa', 'Son',
+                monthNamesShort: ['Ham', 'Saw', 'Jaw', 'Sar', 'Asa', 'Son',
                                   'Miz', 'Aqr', 'Qaw', 'Jad', 'Dal', 'Hut'],
                 dayNames: ['Yekshambe', 'Doshambe', 'Seshambe', 'Chæharshambe', 'Panjshambe', 'Jom\'e', 'Shambe'],
                 dayNamesShort: ['Yek', 'Do', 'Se', 'Chæ', 'Panj', 'Jom', 'Sha'],

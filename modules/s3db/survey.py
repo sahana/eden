@@ -5835,7 +5835,6 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
     def __init__(self,
                  question_id = None,
                  ):
-        T = current.T
         S3QuestionTypeAbstractWidget.__init__(self, question_id)
         metalist = self.metalist
         metalist.append("Parent")
@@ -5843,19 +5842,20 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
         metalist.append("Relation")
         try:
             self._store_metadata()
-            type = self.get("Type")
+            qtype = self.get("Type")
             parent = self.get("Parent")
-            if type is None or parent is None:
-                self.typeDescription = T("Link")
+            if qtype is None or parent is None:
+                self.typeDescription = current.T("Link")
             else:
-                self.typeDescription = T("%s linked to %s") % (type, parent)
+                self.typeDescription = current.T("%s linked to %s") % \
+                                                            (qtype, parent)
         except:
-            self.typeDescription = T("Link")
+            self.typeDescription = current.T("Link")
 
     # -------------------------------------------------------------------------
     def realWidget(self):
-        type = self.get("Type")
-        realWidget = survey_question_type[type]()
+        qtype = self.get("Type")
+        realWidget = survey_question_type[qtype]()
         realWidget.question = self.question
         realWidget.qstn_metadata = self.qstn_metadata
         return realWidget
@@ -5903,9 +5903,9 @@ class S3QuestionTypeLinkWidget(S3QuestionTypeAbstractWidget):
         """
             This will validate the data passed in to the widget
         """
-        result = S3QuestionTypeAbstractWidget.validate(self, valueList)
-        type = self.get("Type")
-        realWidget = survey_question_type[type]()
+        #result = S3QuestionTypeAbstractWidget.validate(self, valueList)
+        qtype = self.get("Type")
+        realWidget = survey_question_type[qtype]()
         return realWidget.validate(valueList, qstn_id)
 
 # =============================================================================
@@ -6013,8 +6013,8 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                 code = "%s%s" % (self.question["code"], codeNum)
                 codeNum += 1
                 childWidget = self.getChildWidget(code)
-                type = childWidget.get("Type")
-                realWidget = survey_question_type[type](childWidget.id)
+                qtype = childWidget.get("Type")
+                realWidget = survey_question_type[qtype](childWidget.id)
                 (cwidth, cheight) = realWidget.getWidgetSize(maxWidth)
                 lwidth += cwidth
                 if cheight > lheight:
@@ -6074,8 +6074,8 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                 code = "%s%s" % (self.question["code"], codeNum)
                 codeNum += 1
                 childWidget = self.getChildWidget(code)
-                type = childWidget.get("Type")
-                realWidget = survey_question_type[type](childWidget.id)
+                qtype = childWidget.get("Type")
+                realWidget = survey_question_type[qtype](childWidget.id)
                 realWidget.label = False
                 #realWidget.xlsMargin = (0,0)
                 col = endcol
@@ -6141,7 +6141,7 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                     if cell == "Blank":
                         continue
                     else:
-                        type = cell
+                        qtype = cell
                         code = "%s%s" % (parent_code, qstnNo)
                         qstnNo += 1
                         childMetadata = self.get(code)
@@ -6149,25 +6149,25 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
                             childMetadata = {}
                         else:
                             childMetadata = json.loads(childMetadata)
-                        childMetadata["Type"] = type
+                        childMetadata["Type"] = qtype
                         # web2py stomps all over a list so convert back to a string
                         # before inserting it on the database
                         metadata = json.dumps(childMetadata)
                         try:
-                            id = self.qtable.insert(name = name,
-                                                    code = code,
-                                                    type = "GridChild",
-                                                    metadata = metadata,
-                                                    )
+                            record_id = self.qtable.insert(name = name,
+                                                           code = code,
+                                                           type = "GridChild",
+                                                           metadata = metadata,
+                                                           )
                         except:
                             record = self.qtable(code = code)
-                            id = record.id
+                            record_id = record.id
                             record.update_record(name = name,
                                                  code = code,
                                                  type = "GridChild",
                                                  metadata = metadata,
                                                  )
-                        record = self.qtable(id)
+                        record = self.qtable(record_id)
                         current.s3db.survey_updateMetaData(record,
                                                            "GridChild",
                                                            childMetadata)
@@ -6209,9 +6209,10 @@ class S3QuestionTypeGridWidget(S3QuestionTypeAbstractWidget):
         question = current.db(table.code == code).select(table.id,
                                                          limitby=(0, 1)
                                                          ).first()
-        if question is None:
+        try:
+            cellWidget = survey_question_type["GridChild"](question.id)
+        except:
             raise Exception("no question with code %s in database" % code)
-        cellWidget = survey_question_type["GridChild"](question.id)
         return cellWidget
 
 # =============================================================================
@@ -6250,8 +6251,8 @@ class S3QuestionTypeGridChildWidget(S3QuestionTypeAbstractWidget):
 
     # -------------------------------------------------------------------------
     def realWidget(self):
-        type = self.get("Type")
-        realWidget = survey_question_type[type]()
+        qtype = self.get("Type")
+        realWidget = survey_question_type[qtype]()
         realWidget.question = self.question
         realWidget.qstn_metadata = self.qstn_metadata
         return realWidget
@@ -6500,7 +6501,7 @@ class S3AbstractAnalysis():
         self.valueList = []
         self.result = []
         self.type = type
-        self.qstnWidget = survey_question_type[self.type](question_id = question_id)
+        self.qstnWidget = survey_question_type[type](question_id = question_id)
         self.priorityGroup = "zero" # Ensures that it doesn't go negative
         self.priorityGroups = {"default" : [-1, -0.5, 0, 0.5, 1],
                                "standard" : [-2, -1, 0, 1, 2],
@@ -6965,13 +6966,13 @@ class S3NumericAnalysis(S3AbstractAnalysis):
         filteredData = {}
         if filterType == "Sum":
             for (key, valueList) in groupedData.items():
-                sum = 0
+                total = 0
                 for value in valueList:
                     try:
-                        sum += self.castRawAnswer(None, value)
+                        total += self.castRawAnswer(None, value)
                     except:
                         pass
-                filteredData[key] = sum
+                filteredData[key] = total
             return filteredData
         return groupedData
 
@@ -6993,18 +6994,21 @@ class S3OptionAnalysis(S3AbstractAnalysis):
     def basicResults(self):
         """ @todo: docstring """
 
-        self.cnt = 0
-        self.list = {}
+        cnt = 0
+        slist = {}
         for answer in self.valueList:
-            self.cnt += 1
-            if answer in self.list:
-                self.list[answer] += 1
+            cnt += 1
+            if answer in slist:
+                slist[answer] += 1
             else:
-                self.list[answer] = 1
-        self.listp = {}
-        if self.cnt != 0:
-            for (key, value) in self.list.items():
-                self.listp[key] = "%3.1f%%" % round((100.0 * value) / self.cnt, 1)
+                slist[answer] = 1
+        self.cnt = cnt
+        self.list = slist
+        listp = {}
+        if cnt != 0:
+            for (key, value) in slist.items():
+                listp[key] = "%3.1f%%" % round((100.0 * value) / cnt, 1)
+        self.listp = listp
 
     # -------------------------------------------------------------------------
     def drawChart(self,

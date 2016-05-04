@@ -2534,7 +2534,7 @@ def config(settings):
                     # Go back to Create form after submission
                     current.session.s3.rapid_data_entry = True
 
-                    #db = current.db
+                    db = current.db
 
                     settings.pr.request_mobile_phone = False
                     settings.pr.request_email = False
@@ -2556,11 +2556,12 @@ def config(settings):
                     dtable.occupation.label = T("Job")
                     etable = s3db.pr_education
                     etable.level_id.comment = None # Don't Add Education Levels inline
+                    organisation_id = current.auth.root_org()
                     f = etable.level_id
-                    f.requires = IS_ONE_OF(current.db, "pr_education_level.id",
+                    f.requires = IS_ONE_OF(db, "pr_education_level.id",
                                            f.represent,
                                            filterby = "organisation_id",
-                                           filter_opts = (current.auth.root_org(),),
+                                           filter_opts = (organisation_id,),
                                            )
                     s3db.pr_image.image.widget = None # ImageCropWidget doesn't work inline
                     #ctable = s3db.hrm_course
@@ -2569,13 +2570,15 @@ def config(settings):
                     #        (ctable.deleted != True)
                     #courses = db(query).select(ctable.id)
                     #course_ids = [c.id for c in courses]
-                    #f = s3db.hrm_training.course_id
-                    #f.requires = IS_ONE_OF(db, "hrm_course.id",
-                    #                       f.represent,
-                    #                       filterby = "id",
-                    #                       filter_opts = course_ids,
-                    #                       sort = True,
-                    #                       )
+                    f = s3db.hrm_training.course_id
+                    f.requires = IS_ONE_OF(db, "hrm_course.id",
+                                           f.represent,
+                                           #filterby = "id",
+                                           #filter_opts = course_ids,
+                                           filterby = "organisation_id",
+                                           filter_opts = (organisation_id,),
+                                           sort = True,
+                                           )
 
                     s3db.add_components(tablename,
                                         #hrm_training = {"name": "vol_training",
@@ -3333,8 +3336,8 @@ def config(settings):
 
         # Special cases for different NS
         root_org = current.auth.root_org_name()
-        if root_org in (IRCS, AURC, CRMADA):
-            # Australian  Iraqi RC use proper Logistics workflow
+        if root_org in (AURC, CRMADA, IRCS):
+            # Proper Logistics workflow
             settings.inv.direct_stock_edits = False
             current.s3db.configure("inv_inv_item",
                                    create = False,
@@ -3374,8 +3377,8 @@ def config(settings):
 
         # Special cases for different NS
         root_org = current.auth.root_org_name()
-        if root_org in (ARCS, AURC, CRMADA):
-            # Australian & Iraqi RC use proper Logistics workflow
+        if root_org in (AURC, CRMADA, IRCS):
+            # Proper Logistics workflow
             settings.inv.direct_stock_edits = False
         if root_org != NRCS:
             # Only Nepal RC use Warehouse Types
@@ -4522,15 +4525,16 @@ def config(settings):
                 # Changes common to both Members & Volunteers
                 from gluon import IS_EMPTY_OR
                 from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector
-                #db = current.db
+                db = current.db
                 s3db.pr_address.location_id.widget = S3LocationSelector(show_map = False)
                 etable = s3db.pr_education
                 etable.level_id.comment = None # Don't Add Education Levels inline
+                organisation_id = current.auth.root_org()
                 f = etable.level_id
-                f.requires = IS_ONE_OF(current.db, "pr_education_level.id",
+                f.requires = IS_ONE_OF(db, "pr_education_level.id",
                                        f.represent,
                                        filterby = "organisation_id",
-                                       filter_opts = (current.auth.root_org(),),
+                                       filter_opts = (organisation_id,),
                                        )
                 s3db.pr_image.image.widget = None # ImageCropWidget doesn't work inline
                 s3db.add_components("pr_person",
@@ -4558,13 +4562,15 @@ def config(settings):
                     #        (ctable.deleted != True)
                     #courses = db(query).select(ctable.id)
                     #course_ids = [c.id for c in courses]
-                    #f = s3db.hrm_training.course_id
-                    #f.requires = IS_ONE_OF(db, "hrm_course.id",
-                    #                       f.represent,
-                    #                       filterby = "id",
-                    #                       filter_opts = course_ids,
-                    #                       sort = True,
-                    #                       )
+                    f = s3db.hrm_training.course_id
+                    f.requires = IS_ONE_OF(db, "hrm_course.id",
+                                           f.represent,
+                                           #filterby = "id",
+                                           #filter_opts = course_ids,
+                                           filterby = "organisation_id",
+                                           filter_opts = (organisation_id,),
+                                           sort = True,
+                                           )
                     s3db.add_components("pr_person",
                                         hrm_human_resource = {"name": "volunteer",
                                                               "joinby": "person_id",

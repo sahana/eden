@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 {
+#'Profile': '',
+'Sawr': 'ثور',
 "Logout": "خروج",
 "First Aid": "کمک ها ی اولیه",
 "Community Based Disaster Preparedness": "آماده گی علیه حوادث به سطح جامعه",
