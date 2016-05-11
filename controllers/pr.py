@@ -122,6 +122,7 @@ def person():
             person_ids = session.s3.filter_staff
             session.s3.filter_staff = None
             r.resource.add_filter = (~(db.pr_person.id.belongs(person_ids)))
+
         elif r.interactive:
             if r.representation == "popup":
                 # Hide "pe_label" and "missing" fields in person popups
