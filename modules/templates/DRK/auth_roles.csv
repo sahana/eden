@@ -37,6 +37,7 @@ QUARTIER,Quartiermanager,,dvr,case_event,,CREATE|READ,,,,,Quartiermanager can cr
 QUARTIER,Quartiermanager,,,,dvr_case_event,CREATE,READ,,,,Quartiermanager can register case events and read those they created
 QUARTIER,Quartiermanager,,,,pr_person,READ,,,,,Quartiermanager can look up persons
 SECURITY,Security,,cr,shelter,,READ,,,,,
+SECURITY,Security,,,,cr_shelter,READ,,,,,Security can read shelter info
 SECURITY,Security,,dvr,case_event,,CREATE|READ,,,,,Security can create and read in tables required for case event registration
 SECURITY,Security,,,,dvr_case_event,CREATE,READ,,,,Security can register case events and read those they created
 SECURITY,Security,,dvr,note,,CREATE|READ,,,,,
@@ -44,6 +45,7 @@ SECURITY,Security,,,,dvr_note,CREATE|READ,,,,,
 SECURITY,Security,,,,pr_person,READ,,,,,Security can look up persons
 SECURITY,Security,,security,person,,CREATE|READ,,,,,
 MEDICAL,Medical,,cr,,,READ,,,,,
+MEDICAL,Medical,,,,cr_shelter,READ,,,,,Medical can read shelter info
 MEDICAL,Medical,,,,cr_shelter_registration,READ,,,,,Medical can read shelter registration info
 MEDICAL,Medical,,dvr,,,CREATE|READ|UPDATE,,,,,
 MEDICAL,Medical,,dvr,case_event,,CREATE|READ,,,,,Medical can create and read in tables required for case event registration
@@ -56,6 +58,7 @@ MEDICAL,Medical,,inv,,,READ,,,,,
 MEDICAL,Medical,,,,pr_person,READ,,,,,Medical can look up persons
 MEDICAL,Medical,,project,,,CREATE|READ|UPDATE,CREATE|READ|UPDATE|DELETE,,,,
 INFO_POINT,Info Point,,cr,,,READ,,,,,
+INFO_POINT,Info Point,,,,cr_shelter,READ,,,,,Infopoint can read shelter info
 INFO_POINT,Info Point,,,,cr_shelter_registration,READ,,,,,Infopoint can read shelter registration info
 INFO_POINT,Info Point,,dvr,,,READ,,,,,
 INFO_POINT,Info Point,,dvr,case_event,,CREATE|READ,,,,,Infopoint can create and read in tables required for case event registration
@@ -68,6 +71,7 @@ INFO_POINT,Info Point,,inv,,,READ,,,,,
 INFO_POINT,Info Point,,,,pr_person,READ,,,,,Infopoint can look up persons
 INFO_POINT,Info Point,,project,,,CREATE|READ|UPDATE,CREATE|READ|UPDATE|DELETE,,,,
 ADMINISTRATION,Administration,,cr,,,ALL,,,,,
+ADMINISTRATION,Administration,,,,cr_shelter,READ|UPDATE,,,,,Administration can modify shelter info
 ADMINISTRATION,Administration,,,,cr_shelter_registration,ALL,,,,,Administration can manage shelter registration info
 ADMINISTRATION,Administration,,dvr,,,ALL,,,,,
 ADMINISTRATION,Administration,,dvr,case_event,,CREATE|READ|UPDATE,,,,,"Administration can create, read and update case events"
@@ -90,6 +94,7 @@ ADMINISTRATION,Administration,,vol,,,READ|UPDATE,,,,,Administration can access t
 ADMINISTRATION,Administration,,vol,index,,READ,,,,,Administration can access the volunteer index controller
 ADMINISTRATION,Administration,,vol,volunteer,,READ|UPDATE,,,,,Administration can read and update volunteer records
 ADMIN_HEAD,Head of Administration,,cr,,,ALL,,,,,
+ADMIN_HEAD,Head of Administration,,,,cr_shelter,READ|UPDATE,,,,,Head of administration can modify shelter info
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration,ALL,,,,,Head of administration can manage shelter registration info
 ADMIN_HEAD,Head of Administration,,,,cr_shelter_registration_history,READ,,,,,Head of administration can read check-in history
 ADMIN_HEAD,Head of Administration,,dvr,,,ALL,,,,,
@@ -97,7 +102,7 @@ ADMIN_HEAD,Head of Administration,,dvr,case_event,,ALL,,,,,"Head of administrati
 ADMIN_HEAD,Head of Administration,,dvr,site_activity,,ALL,,,,,"Head of administration can create, read and update site activity reports"
 ADMIN_HEAD,Head of Administration,,,,dvr_allowance,ALL,,,,,Head of administration have unrestricted access to allowance information
 ADMIN_HEAD,Head of Administration,,,,dvr_case_activity,ALL,,,,,Head of administration can manage activities
-ADMIN_HEAD,Head of Administration,,,,dvr_case_appointment,ALL,,,,,Head fo administration have unrestricted access to case appointments
+ADMIN_HEAD,Head of Administration,,,,dvr_case_appointment,ALL,,,,,Head of administration have unrestricted access to case appointments
 ADMIN_HEAD,Head of Administration,,,,dvr_case_event,ALL,,,,,"Head of administration can create, read and update case events"
 ADMIN_HEAD,Head of Administration,,,,dvr_note,CREATE|READ,READ,,,,
 ADMIN_HEAD,Head of Administration,,,,dvr_site_activity,ALL,,,,,"Head of administration can create, read, update and delete site activity reports"
