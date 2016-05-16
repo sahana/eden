@@ -6,12 +6,12 @@
     @author: Mike Amy
 """
 
+from calendar import isleap
+from collections import OrderedDict
 from datetime import date, timedelta
 from math import floor
-from calendar import isleap
 
 from gluon import current
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 # @ToDo: Nasty!
 db = current.db
@@ -44,7 +44,7 @@ units_in_out = {
         "in": lambda precipitation_rate: precipitation_rate * 2592000.0,
         "out": lambda mm: mm / 2592000.0
     },
-    
+
     "%": {
         "in": lambda x: x / 100.0,
         "out": lambda x: x * 100.0
@@ -67,17 +67,17 @@ class DateMapping(object):
 
 def date_to_month_number(date):
     """This function converts a date to a month number.
-    
+
     See also year_month_to_month_number(year, month)
     """
     return year_month_to_month_number(date.year, date.month)
- 
+
 def year_month_to_month_number(year, month, day=None):
-    """Time periods are integers representing months in years, 
+    """Time periods are integers representing months in years,
     from 1960 onwards.
-    
+
     e.g. 0 = Jan 1960, 1 = Feb 1960, 12 = Jan 1961
-    
+
     This function converts a year and month to a month number.
     """
     return ((year-start_year) * 12) + (month-1) - start_month_0_indexed
@@ -93,7 +93,7 @@ def month_number_to_date(month_number):
 def rounded_date_to_month_number(date):
     """This function converts a date to a month number by rounding
     to the nearest 12th of a year.
-    
+
     See also date_to_month_number(year, month)
     """
     timetuple = date.timetuple()
@@ -148,11 +148,11 @@ daily = DateMapping(
 class Observed(object):
     code = "O"
 Observed.__name__ = "Observed Station"
-    
+
 class Gridded(object):
     code = "G"
 Gridded.__name__ = "Observed Gridded"
-    
+
 class Projected(object):
     code = "P"
 
@@ -164,25 +164,25 @@ for SampleTableType in sample_table_types:
 class SampleTable(object):
     # Samples always have places and time (periods)
     # This format is used for daily data and monthly aggregated data.
-    
-    # Performance matters, and we have lots of data, 
-    # so unnecessary bytes are shaved as follows: 
+
+    # Performance matters, and we have lots of data,
+    # so unnecessary bytes are shaved as follows:
 
     # 1. Sample tables don't need an id - the time and place is the key
     # 2. The smallest interval is one day, so time_period as smallint (65536)
-    #    instead of int, allows a 179 year range, from 1950 to 2129. 
-    #    Normally we'll be dealing with months however, where this is 
+    #    instead of int, allows a 179 year range, from 1950 to 2129.
+    #    Normally we'll be dealing with months however, where this is
     #    even less of an issue.
-    # 3. The value field type can be real, int, smallint, decimal etc. 
+    # 3. The value field type can be real, int, smallint, decimal etc.
     #    Double is overkill for climate data.
     #    Take care with decimal though - calculations may be slower.
-    
-    # These tables are not web2py tables as we don't want web2py messing with 
-    # them. The database IO is done directly to postgres for speed. 
+
+    # These tables are not web2py tables as we don't want web2py messing with
+    # them. The database IO is done directly to postgres for speed.
     # We don't want web2py messing with or complaining about the schemas.
     # It is likely we will need spatial database extensions i.e. PostGIS.
     # May be better to cluster places by region.
-        
+
     __date_mapper = {
         "daily": daily,
         "monthly": monthly
@@ -199,7 +199,7 @@ class SampleTable(object):
     def with_id(id):
         SampleTable_by_ids = SampleTable.__by_ids
         return SampleTable_by_ids[id]
-    
+
     @staticmethod
     def name_exists(name, error):
         if name in SampleTable.__names:
@@ -225,7 +225,7 @@ class SampleTable(object):
     def add_to_client_config_dict(config_dict):
         data_type_option_names = []
         for SampleTableType in sample_table_types:
-            data_type_option_names.append(SampleTableType.__name__)                
+            data_type_option_names.append(SampleTableType.__name__)
 
         parameter_names = []
         for name, sample_table in SampleTable.__names.iteritems():
@@ -235,10 +235,10 @@ class SampleTable(object):
             data_type_option_names = data_type_option_names,
             parameter_names = parameter_names
         )
-    
+
     def __init__(
-        sample_table, 
-        db, 
+        sample_table,
+        db,
         name, # please change to parameter_name
         date_mapping_name,
         field_type,
@@ -282,10 +282,10 @@ class SampleTable(object):
             (parameter_name, sample_table.type.code)
         ] = sample_table
         SampleTable.__names["%s %s" % (
-            sample_table.type.__name__, 
+            sample_table.type.__name__,
             parameter_name
         )] = sample_table
-    
+
     def __repr__(sample_table):
         return '%s %s' % (
             sample_table.type.__name__,
@@ -294,11 +294,11 @@ class SampleTable(object):
 
     def __str__(sample_table):
         return '"%s"' % repr(sample_table)
-    
+
     @staticmethod
     def table_name(id):
         return "climate_sample_table_%i" % id
-    
+
     def set_id(sample_table,id):
         sample_table.id = id
         sample_table.table_name = SampleTable.table_name(id)
@@ -306,12 +306,12 @@ class SampleTable(object):
     def find(
         sample_table,
         found,
-        not_found 
+        not_found
     ):
         db = sample_table.db
         existing_table_query = db(
             (db.climate_sample_table_spec.name == sample_table.parameter_name) &
-            (db.climate_sample_table_spec.sample_type_code == sample_table.type.code)      
+            (db.climate_sample_table_spec.sample_type_code == sample_table.type.code)
         )
         existing_table = existing_table_query.select().first()
         if existing_table is None:
@@ -321,7 +321,7 @@ class SampleTable(object):
                 existing_table_query,
                 SampleTable.table_name(existing_table.id),
             )
-    
+
     def create(sample_table, use_table_name):
         def create_table():
             db = sample_table.db
@@ -342,9 +342,9 @@ class SampleTable(object):
                   place_id integer NOT NULL,
                   time_period smallint NOT NULL,
                   value %(field_type)s NOT NULL,
-                  CONSTRAINT %(table_name)s_primary_key 
+                  CONSTRAINT %(table_name)s_primary_key
                       PRIMARY KEY (place_id, time_period),
-                  CONSTRAINT %(table_name)s_place_id_fkey 
+                  CONSTRAINT %(table_name)s_place_id_fkey
                       FOREIGN KEY (place_id)
                       REFERENCES climate_place (id) MATCH SIMPLE
                       ON UPDATE NO ACTION ON DELETE CASCADE
@@ -354,13 +354,13 @@ class SampleTable(object):
             use_table_name(sample_table.table_name)
 
         def complain_that_table_already_exists(
-            query, 
+            query,
             existing_table_name
         ):
             raise Exception(
                 "Table for %s %s already exists as '%s'" % (
                     sample_table.type.__name__,
-                    sample_table.parameter_name, 
+                    sample_table.parameter_name,
                     existing_table_name
                 )
             )
@@ -368,7 +368,7 @@ class SampleTable(object):
             not_found = create_table,
             found = complain_that_table_already_exists
         )
-        
+
     def create_indices(sample_table):
         db = sample_table.db
         for field in (
@@ -393,10 +393,10 @@ class SampleTable(object):
                     sample_table.sample_type_name,
                     sample_table.parameter_name,
                 )
-            ) 
-        
+            )
+
         def delete_table(
-            existing_table_query, 
+            existing_table_query,
             existing_table_name,
         ):
             existing_table_query.delete()
@@ -405,7 +405,7 @@ class SampleTable(object):
             )
             db.commit()
             use_table_name(existing_table_name)
-        
+
         return sample_table.find(
             not_found = complain_that_table_does_not_exist,
             found = delete_table
@@ -426,7 +426,7 @@ class SampleTable(object):
         except:
             print sql
             raise
-    
+
     def pull_real_time_data(sample_table):
         import_sql = (
             "SELECT AVG(value), station_id, obstime "
@@ -440,7 +440,7 @@ class SampleTable(object):
         )
 
     def csv_data(
-        sample_table, 
+        sample_table,
         place_id,
         date_from,
         date_to
@@ -449,7 +449,7 @@ class SampleTable(object):
         date_mapper = sample_table.date_mapper
         start_date_number = date_mapper.date_to_time_period(date_from)
         end_date_number = date_mapper.date_to_time_period(date_to)
-        
+
         data = [
             "date,"+sample_table.units_name
         ]
@@ -474,7 +474,7 @@ class SampleTable(object):
             )
         data.append("")
         return "\n".join(data)
-        
+
     def get_available_years(
         sample_table
     ):

@@ -41,6 +41,7 @@ __all__ = ("S3Msg",
 
 import base64
 import datetime
+import json
 import re
 import string
 import urllib
@@ -50,14 +51,6 @@ try:
     from cStringIO import StringIO    # Faster, where available
 except:
     from StringIO import StringIO
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 try:
     from lxml import etree

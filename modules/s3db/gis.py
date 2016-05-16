@@ -48,15 +48,10 @@ __all__ = ("S3LocationModel",
            "gis_rheader",
            )
 
+import json
 import os
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+from collections import OrderedDict
 
 from gluon import *
 from gluon.storage import Storage

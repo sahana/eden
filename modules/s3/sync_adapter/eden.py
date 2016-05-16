@@ -27,6 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import json
 import sys
 import urllib2
 import traceback
@@ -36,14 +37,6 @@ try:
 except ImportError:
     print >> sys.stderr, "ERROR: lxml module needed for XML handling"
     raise
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
 

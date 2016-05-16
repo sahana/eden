@@ -1,25 +1,14 @@
 # -*- coding: utf-8 -*-
 
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
+import json
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+from collections import OrderedDict
 
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
-from s3 import s3_str
-from s3 import FS
+
+from s3 import FS, s3_str
 
 def config(settings):
     """
@@ -91,7 +80,7 @@ def config(settings):
     # https://en.wikipedia.org/wiki/Filename
     # http://docs.attachmate.com/reflection/ftp/15.6/guide/en/index.htm?toc.htm?6503.htm
     settings.sync.upload_filename = "$s-%s" % ("recent_alert")
-    
+
     # Whether to tweet alerts
     settings.cap.post_to_twitter = True
 
@@ -256,7 +245,7 @@ def config(settings):
                     alert_id = int(record["id"])
                     atable = s3db.cap_alert
                     itable = s3db.cap_info
-        
+
                     arow = db(atable.id == alert_id).select(atable.status,
                                                             limitby=(0, 1)).first()
                     query = (itable.alert_id == alert_id) & \
@@ -367,7 +356,7 @@ def config(settings):
 
         # Custom prep
         standard_prep = s3.prep
-        def custom_prep(r):                    
+        def custom_prep(r):
             # Call standard prep
             if callable(standard_prep):
                 result = standard_prep(r)
@@ -835,7 +824,7 @@ def config(settings):
         headline = H2(T((s3_str(row["cap_info.headline"]))))
         id = T("ID: %(Identifier)s") % dict(Identifier = s3_str(row["cap_alert.identifier"]))
         body1 = \
-T("""%(Priority)s message %(MessageType)s 
+T("""%(Priority)s message %(MessageType)s
 in effect for %(AreaDescription)s""") % dict(\
                     Priority = s3_str(priority),
                     MessageType = s3_str(row["cap_alert.msg_type"]),
@@ -847,7 +836,7 @@ in effect for %(AreaDescription)s""") % dict(\
                  Urgency = s3_str(row["cap_info.urgency"]),
                  Certainty = s3_str(row["cap_info.certainty"]))
         body3 = \
-T("""Message %(Identifier)s: %(EventType)s (%(Category)s) issued by 
+T("""Message %(Identifier)s: %(EventType)s (%(Category)s) issued by
 %(SenderName)s sent at %(Date)s from %(Source)s""") % \
                  dict(Identifier = s3_str(row["cap_alert.identifier"]),
                       EventType = s3_str(event_type),
@@ -891,7 +880,7 @@ T("Alert is effective from %(Effective)s and expires on %(Expires)s") % \
                        BR(), BR(),
                        body7,
                        BR(), BR(),
-                       body8,                       
+                       body8,
                        BR())
 
     # -------------------------------------------------------------------------

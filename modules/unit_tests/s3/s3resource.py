@@ -5,9 +5,12 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3resource.py
 #
-import unittest
 import datetime
+import json
+import unittest
+
 from lxml import etree
+
 from gluon import *
 from gluon.storage import Storage
 
@@ -653,7 +656,6 @@ class ResourceImportTests(unittest.TestCase):
         resource = current.s3db.resource("pr_person")
         msg = resource.import_xml(xmltree)
 
-        from gluon.contrib import simplejson as json
         msg = json.loads(msg)
 
         assertEqual(msg["status"], "success")

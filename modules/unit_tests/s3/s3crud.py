@@ -5,6 +5,7 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3crud.py
 #
+import json
 import unittest
 from gluon import current
 from gluon.storage import Storage
@@ -47,7 +48,6 @@ class ValidateTests(unittest.TestCase):
         output = crud.validate(request)
 
         self.assertTrue(isinstance(output, basestring))
-        from gluon.contrib import simplejson as json
         data = json.loads(output)
         self.assertTrue(isinstance(data, dict))
         self.assertEqual(len(data), 2)
@@ -79,7 +79,6 @@ class ValidateTests(unittest.TestCase):
         output = crud.validate(request)
 
         self.assertTrue(isinstance(output, basestring))
-        from gluon.contrib import simplejson as json
         data = json.loads(output)
         self.assertTrue(isinstance(data, dict))
         self.assertEqual(len(data), 2)
@@ -111,7 +110,6 @@ class ValidateTests(unittest.TestCase):
         output = crud.validate(request)
 
         self.assertTrue(isinstance(output, basestring))
-        from gluon.contrib import simplejson as json
         data = json.loads(output)
         self.assertTrue(isinstance(data, dict))
         self.assertEqual(len(data), 1)
@@ -137,7 +135,6 @@ class ValidateTests(unittest.TestCase):
         output = crud.validate(request)
 
         self.assertTrue(isinstance(output, basestring))
-        from gluon.contrib import simplejson as json
         data = json.loads(output)
         self.assertTrue(isinstance(data, dict))
         self.assertEqual(len(data), 2)
@@ -181,7 +178,6 @@ class ValidateTests(unittest.TestCase):
 
         output = crud.validate(request)
         self.assertTrue(isinstance(output, basestring))
-        from gluon.contrib import simplejson as json
         data = json.loads(output)
         self.assertTrue(isinstance(data, dict))
         self.assertEqual(len(data), 2)

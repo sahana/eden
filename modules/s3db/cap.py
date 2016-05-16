@@ -41,7 +41,10 @@ __all__ = ("S3CAPModel",
            )
 
 import datetime
-import urllib2          # Needed for quoting & error handling on fetch
+import json
+import urllib2 # Needed for quoting & error handling on fetch
+
+from collections import OrderedDict
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -1600,11 +1603,11 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
             if form_vars_get("scope") == "Private" and not form_vars_get("addresses"):
                 form.errors["addresses"] = \
                     current.T("'Recipients' field mandatory in case of 'Private' scope")
-    
+
             if form_vars_get("scope") == "Restricted" and not form_vars_get("restriction"):
                 form.errors["restriction"] = \
                     current.T("'Restriction' field mandatory in case of 'Restricted' scope")
-    
+
             if form_vars_get("addresses") and not form_vars_get("scope"):
                 form.errors["scope"] = \
                     current.T("'Scope' field mandatory in case using 'Recipients' field")
@@ -1763,7 +1766,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                     return
 
                 duplicate = current.db(query).select(table.id,
-                                                     limitby=(0, 1)).first()                
+                                                     limitby=(0, 1)).first()
                 if duplicate:
                     item.id = duplicate.id
                     item.method = item.METHOD.UPDATE
@@ -1772,7 +1775,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
     @staticmethod
     def cap_area_onaccept(form):
         """
-            Link alert_id for CAP XML import 
+            Link alert_id for CAP XML import
         """
 
         form_vars = form.vars
@@ -1808,7 +1811,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
     @staticmethod
     def cap_area_location_onaccept(form):
         """
-            Link alert_id for non-template area 
+            Link alert_id for non-template area
         """
 
         form_vars = form.vars
@@ -1834,7 +1837,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
     def cap_area_tag_onaccept(form):
         """
             Link location if area_tag has SAME code
-            Link alert_id for non-template area 
+            Link alert_id for non-template area
         """
 
         form_vars = form.vars
@@ -1884,7 +1887,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
     @staticmethod
     def cap_resource_onaccept(form):
         """
-            Link alert_id for CAP XML import 
+            Link alert_id for CAP XML import
         """
 
         form_vars = form.vars
@@ -1906,12 +1909,12 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
     # -------------------------------------------------------------------------
     @staticmethod
     def cap_resource_onvalidation(form):
-        """ 
+        """
             For Image Upload
              NB not using document_onvalidation here because we are extracting
-             other values from the file like size and mime type 
+             other values from the file like size and mime type
         """
-        
+
         form_vars = form.vars
         image = form_vars.image
         if image is None:
@@ -1930,13 +1933,13 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                 stream.seek(0, os.SEEK_END)
                 file_size = stream.tell()
                 stream.seek(0)
-                
+
                 # extract mime_type
-                if image is not None:        
+                if image is not None:
                     data, mime_type = datatype.split(":")
                     form_vars.size = file_size
                     form_vars.mime_type = mime_type
-                
+
         elif isinstance(image, str):
             # Image = String => Update not a create, so file not in form
             return
@@ -3314,7 +3317,7 @@ class cap_CloneAlert(S3Method):
                     update_super(resource_table, resource_row_clone)
                     set_record_owner(resource_table, rid)
                     onaccept(resource_table, resource_row_clone)
-            
+
 
         output = current.xml.json_message(message=new_alert_id)
         current.response.headers["Content-Type"] = "application/json"

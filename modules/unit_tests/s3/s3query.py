@@ -5,11 +5,15 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3query.py
 #
-import unittest
 import datetime
+import json
+import unittest
+
 from lxml import etree
+
 from gluon import *
 from gluon.storage import Storage
+
 from s3 import *
 
 try:
@@ -1746,7 +1750,6 @@ class ResourceDataAccessTests(unittest.TestCase):
         resource = s3db.resource("org_organisation", uid="DATESTORG")
         jstr = resource.json(["name", "office.name"])
 
-        from gluon.contrib import simplejson as json
         data = json.loads(jstr)
         assertTrue(isinstance(data, list))
         assertEqual(len(data), 1)

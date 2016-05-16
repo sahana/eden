@@ -5,10 +5,10 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3xml.py
 #
+import json
 import unittest
-from gluon import *
-from gluon.contrib import simplejson as json
 
+from gluon import *
 try:
     from cStringIO import StringIO
 except:

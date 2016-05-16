@@ -5,10 +5,12 @@
 
 import unittest
 
+from collections import OrderedDict
+
 from gluon import *
 from gluon.storage import Storage
+
 from s3.s3widgets import S3OptionsMatrixWidget
-from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 # =============================================================================
 class TestS3OptionsMatrixWidget(unittest.TestCase):

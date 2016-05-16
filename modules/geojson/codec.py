@@ -2,21 +2,14 @@
 # GeoJSON. Copyright (C) 2007 Sean C. Gillies
 #
 # See ../LICENSE.txt
-# 
+#
 # Contact: Sean Gillies, sgillies@frii.com
 # ============================================================================
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
 import factory
-from mapping import Mapping, to_mapping
+import json
 
+from mapping import Mapping, to_mapping
 
 class GeoJSONEncoder(json.JSONEncoder):
 

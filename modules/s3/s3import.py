@@ -36,25 +36,18 @@ __all__ = ("S3Importer",
            )
 
 import cPickle
+import json
 import os
 import sys
 import urllib2          # Needed for error handling on fetch
 import uuid
+
 from copy import deepcopy
 from datetime import datetime
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
     from StringIO import StringIO
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
 try:
     from lxml import etree
 except ImportError:

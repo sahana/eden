@@ -29,13 +29,7 @@
 
 __all__ = ("S3Codec",)
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+import json
 
 from xml.sax.saxutils import escape, unescape
 

@@ -83,16 +83,9 @@ __all__ = ("S3ACLWidget",
            )
 
 import datetime
+import json
 import os
 import re
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 try:
     from dateutil.relativedelta import relativedelta

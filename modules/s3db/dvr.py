@@ -47,9 +47,12 @@ __all__ = ("DVRCaseModel",
            "dvr_rheader",
            )
 
+from collections import OrderedDict
+
 from gluon import *
 from gluon.storage import Storage
 from gluon.tools import callback
+
 from ..s3 import *
 from s3layouts import S3PopupLink
 

@@ -36,7 +36,7 @@
     @todo: remove unnecessary wrappers
     @todo: docstrings
 
-    @ToDo: col-cnt, row-cnt & Length metadata should be automatable 
+    @ToDo: col-cnt, row-cnt & Length metadata should be automatable
 """
 
 __all__ = ("S3SurveyTemplateModel",
@@ -81,18 +81,12 @@ __all__ = ("S3SurveyTemplateModel",
            "survey_T",
            )
 
+import json
+
 try:
     from cStringIO import StringIO    # Faster, where available
 except ImportError:
     from StringIO import StringIO
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except ImportError:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import *
 from gluon.storage import Storage
@@ -1486,7 +1480,7 @@ class S3SurveySeriesModel(S3Model):
                                 default = "en",
                                 label = T("Language"),
                                 # @ToDo: Dropdown of supported languages
-                                #requires = 
+                                #requires =
                                 ),
                           s3_date("start_date",
                                   label = T("Start Date"),

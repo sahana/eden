@@ -33,18 +33,11 @@
 """
 
 import datetime
+import json
 import os
 import re
 import sys
 import urllib2
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 try:
     from lxml import etree

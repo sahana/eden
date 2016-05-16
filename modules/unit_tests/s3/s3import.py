@@ -6,18 +6,11 @@
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3import.py
 #
 import datetime
+import json
 import unittest
 
 from gluon import *
 from gluon.storage import Storage
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from s3 import S3Duplicate, S3ImportItem, S3ImportJob, s3_meta_fields
 

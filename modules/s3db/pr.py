@@ -88,17 +88,11 @@ __all__ = ("S3PersonEntity",
            #"pr_filter_list_layout",
            )
 
+import json
 import os
 #import re
-from urllib import urlencode
 
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
+from urllib import urlencode
 
 from gluon import *
 from gluon.storage import Storage

@@ -36,16 +36,7 @@ __all__ = ("S3DeploymentModel",
            "deploy_response_select_mission",
            )
 
-try:
-    # try stdlib (Python 2.6)
-    import json
-except ImportError:
-    try:
-        # try external module
-        import simplejson as json
-    except:
-        # fallback to pure-Python module
-        import gluon.contrib.simplejson as json
+import json
 
 from gluon import *
 
@@ -125,7 +116,7 @@ class S3DeploymentModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        
+
         # Profile
         list_layout = deploy_MissionProfileLayout()
         alert_widget = dict(label = "Alerts",

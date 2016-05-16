@@ -34,17 +34,10 @@ __all__ = ("FaceBookAccount",
            "HumanitarianIDAccount",
            )
 
+import json
 import time
 import urllib
 import urllib2
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import current, HTTP, IS_SLUG
 from gluon.contrib.login_methods.oauth20_account import OAuthAccount

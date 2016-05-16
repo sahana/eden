@@ -2,15 +2,8 @@
 
 import datetime
 import hashlib
+import json
 from math import log10, floor, isnan
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 from gluon import current
 
@@ -29,7 +22,7 @@ def round_to_4_sd(x):
         return 0.0
     else:
         return round(x, -int(floor(log10(abs(x)))-3))
-                    
+
 def between(items, main, between, *a, **kw):
     # Loop with code that runs between main code
     generator = iter(items)
@@ -55,7 +48,7 @@ class MapPlugin(object):
                  client_config = {}
                  ):
         """
-            @param: client_config (optional) passes configuration dict 
+            @param: client_config (optional) passes configuration dict
                                              through to the client-side map plugin.
         """
 
@@ -79,7 +72,7 @@ class MapPlugin(object):
             raise
 
         self.env = env
-        self.year_min = year_min 
+        self.year_min = year_min
         self.year_max = year_max
         self.place_table = place_table
         self.robjects = robjects
@@ -98,7 +91,7 @@ class MapPlugin(object):
 
         def climate_URL(url):
             return "/%s/climate/%s" % (appname, url)
-        
+
         config_dict = dict(self.client_config,
                            year_min = self.year_min,
                            year_max = self.year_max,
@@ -127,7 +120,7 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
         env = self.env
         DSL = env.DSL
         expression = DSL.parse(query_expression)
-        understood_expression_string = str(expression)        
+        understood_expression_string = str(expression)
         units = DSL.units(expression)
         if units is None:
             analysis_strings = []
@@ -136,13 +129,13 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
             DSL.analysis(expression, analysis_out)
             raise MeaninglessUnitsException(
                 "\n".join(analysis_strings)
-            )                
-        
+            )
+
         def generate_map_overlay_data(file_path):
             R = self.R
             code = DSL.R_Code_for_values(expression, "place_id")
             values_by_place_data_frame = R(code)()
-            # R willfully removes empty data frame columns 
+            # R willfully removes empty data frame columns
             # which is ridiculous behaviour
             if isinstance(
                 values_by_place_data_frame,
@@ -155,7 +148,7 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
             else:
                 keys = values_by_place_data_frame.rx2("key")
                 values = values_by_place_data_frame.rx2("value")
-            
+
             overlay_data_file = None
             try:
                 overlay_data_file = open(file_path, "w")
@@ -169,11 +162,11 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
                 )
                 write('"units":"%s",' % units)
                 write('"grid_size":%f,' % min(grid_sizes(expression)))
-                
+
                 write('"keys":[')
                 write(",".join(map(str, keys)))
                 write('],')
-                
+
                 write('"values":[')
                 write(",".
                     join(
@@ -192,17 +185,17 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
                 raise
             finally:
                 overlay_data_file.close()
-            
+
         return get_cached_or_generated_file(
             hashlib.md5(understood_expression_string).hexdigest() + ".json",
             generate_map_overlay_data
         )
-    
+
     def get_csv_location_data(self, query_expression):
         env = self.env
         DSL = env.DSL
         expression = DSL.parse(query_expression)
-        understood_expression_string = str(expression)        
+        understood_expression_string = str(expression)
         units = DSL.units(expression)
         if units is None:
             analysis_strings = []
@@ -211,13 +204,13 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
             DSL.analysis(expression, analysis_out)
             raise MeaninglessUnitsException(
                 "\n".join(analysis_strings)
-            )                
-        
+            )
+
         def generate_map_csv_data(file_path):
             R = self.R
             code = DSL.R_Code_for_values(expression, "place_id")
             values_by_place_data_frame = R(code)()
-            # R willfully removes empty data frame columns 
+            # R willfully removes empty data frame columns
             # which is ridiculous behaviour
             if isinstance(
                 values_by_place_data_frame,
@@ -234,7 +227,7 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
             try:
                 csv_data_file = open(file_path, "w")
                 write = csv_data_file.write
-                
+
                 #min(grid_sizes(expression))
                 write("latitude,longitude,station_id,station_name,elevation,%s\n" % (units))
                 place_ids = {}
@@ -244,9 +237,9 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
                 ntable = db.climate_place_station_name
                 for place_row in db(
                     # only show Nepal
-                    (table.longitude > 79.5) & 
-                    (table.longitude < 88.5) & 
-                    (table.latitude > 26.0) & 
+                    (table.longitude > 79.5) &
+                    (table.longitude < 88.5) &
+                    (table.latitude > 26.0) &
                     (table.latitude < 30.7)
                 ).select(
                     table.id,
@@ -274,7 +267,7 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
                     write(
                         ",".join(
                             map(
-                                str, 
+                                str,
                                 (
                                     place.climate_place.latitude,
                                     place.climate_place.longitude,
@@ -293,12 +286,12 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
                 raise
             finally:
                 csv_data_file.close()
-            
+
         return get_cached_or_generated_file(
             hashlib.md5(understood_expression_string).hexdigest()+".csv",
             generate_map_csv_data
         )
-    
+
     def render_plots(self,
                      specs,
                      width,
@@ -306,13 +299,13 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
                      ):
         env = self.env
         DSL = env.DSL
-        
+
         def generate_chart(file_path):
             time_serieses = []
-            
+
             from scipy import stats
             regression_lines = []
-            
+
             R = self.R
             c = R("c")
             spec_names = []
@@ -345,7 +338,7 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
                 else:
                     grouping_key = "time_period"
                 code = DSL.R_Code_for_values(
-                    expression, 
+                    expression,
                     grouping_key,
                     "place_id IN (%s)" % ",".join(map(str, spec["place_ids"]))
                 )
@@ -371,21 +364,21 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
                         display_units = unit_string
                     else:
                         converter = units_in_out[display_units]["out"]
-                                        
+
                     linear_regression = R("{}")
-                    
+
                     previous_december_month_offset = [0,1][is_yearly_values and "Prev" in query_expression]
-                
+
                     def month_number_to_float_year(month_number):
                         year, month = month_number_to_year_month(month_number+previous_december_month_offset)
                         return year + (float(month-1) / 12)
-                        
+
                     converted_keys = map(month_number_to_float_year, keys)
-                    converted_values = map(converter, values) 
+                    converted_values = map(converter, values)
                     regression_lines.append(
                         stats.linregress(converted_keys, converted_values)
                     )
-                    
+
                     add = data.__setitem__
                     for key, value in zip(keys, values):
                         #print key, value
@@ -402,7 +395,7 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
                     end_year, end_month = month_number_to_year_month(
                         end_month_number + previous_december_month_offset
                     )
-                    
+
                     values = []
                     for month_number in range(
                         start_month_number,
@@ -413,7 +406,7 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
                             values.append(None)
                         else:
                             values.append(converter(data[month_number]))
-                    
+
                     if is_yearly_values:
                         time_serieses.append(
                             R("ts")(
@@ -439,7 +432,7 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
                 # label_step spaces out the x-axis marks sensibly based on
                 # width by not marking all of them.
                 ticks = (max_end - min_start) + 1
-                # ticks should be made at 1,2,3,4,6,12 month intervals 
+                # ticks should be made at 1,2,3,4,6,12 month intervals
                 # or 1, 2, 5, 10, 20, 50 year intervals
                 # depending on the usable width and the number of ticks
                 # ticks should be at least 15 pixels apart
@@ -474,7 +467,7 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
                 for year in range(start_year, end_year+1):
                     axis_points.append(year)
                     axis_labels.append(year)
-            
+
             display_units = display_units.replace("Celsius", "\xc2\xb0Celsius")
 
             R.png(
@@ -482,13 +475,13 @@ S3.gis.maps['%s'].registerPlugin(plugin);''' % map.id)
                 width = width,
                 height = height
             )
-            
+
             plot_chart = R("""
 function (
-    xlab, ylab, n, names, axis_points, 
-    axis_labels, axis_orientation, 
+    xlab, ylab, n, names, axis_points,
+    axis_labels, axis_orientation,
     plot_type,
-    width, height, 
+    width, height,
     total_margin_height,
     line_interspacing,
     ...
@@ -504,7 +497,7 @@ function (
     legend_line_count = sum(sapply(split_names, length))
     legend_height_inches <- grconvertY(
         -(
-            (legend_line_count * 11) + 
+            (legend_line_count * 11) +
             (length(wrapped_names) * 6) + 30
         ),
         "device",
@@ -525,7 +518,7 @@ function (
         )
     )
     axis(
-        1, 
+        1,
         at = axis_points,
         labels = axis_labels,
         las = axis_orientation
@@ -561,12 +554,12 @@ function (
                         stderr_str = "NaN"
                     else:
                         stderr_str = str(round_to_4_sd(p))
-                        
+
                     slope_str, intercept_str, r_str = map(
                         str,
                         map(round_to_4_sd, (slope, intercept, r))
                     )
-                
+
                     spec_names[i] += (
                         u"   {"
                             "y=%(slope_str)s x year %(add)s%(intercept_str)s, "
@@ -578,7 +571,7 @@ function (
                         locals(),
                         add = [u"+ ",u""][intercept_str.startswith("-")]
                     )
-                    
+
             plot_chart(
                 xlab = "",
                 ylab = display_units,
@@ -586,18 +579,18 @@ function (
                 names = spec_names,
                 axis_points = axis_points,
                 axis_labels = axis_labels,
-                axis_orientation = [0,2][show_months], 
-                plot_type= "lo"[is_yearly_values],               
+                axis_orientation = [0,2][show_months],
+                plot_type= "lo"[is_yearly_values],
                 width = width,
                 height = height,
                 # R uses Normalised Display coordinates.
-                # these have been found by recursive improvement 
+                # these have been found by recursive improvement
                 # they place the legend legibly. tested up to 8 lines
                 total_margin_height = 150,
                 line_interspacing = 1.8,
                 *time_serieses
             )
-            
+
             for regression_line, colour_number in zip(
                 regression_lines,
                 range(len(time_serieses))
@@ -614,7 +607,7 @@ function (
                         col = colour_number+1
                     )
             R("dev.off()")
-            
+
             import Image, ImageEnhance
 
             RGBA = "RGBA"
@@ -629,7 +622,7 @@ function (
                 alpha = ImageEnhance.Brightness(alpha).enhance(opacity)
                 image.putalpha(alpha)
                 return image
-                
+
             def scale_preserving_aspect_ratio(image, ratio):
                 return image.resize(
                     map(int, map(ratio.__mul__, image.size))
@@ -641,7 +634,7 @@ function (
                     mark = reduce_opacity(mark, opacity)
                 if image.mode != RGBA:
                     image = image.convert(RGBA)
-                # create a transparent layer the size of the 
+                # create a transparent layer the size of the
                 # image and draw the watermark in that layer.
                 layer = Image.new(RGBA, image.size, (0,0,0,0))
                 if position == 'tile':
@@ -673,8 +666,8 @@ function (
             watermark_image_path = os.path.join(
                 os.path.realpath("."),
                 "applications",
-                current.request.application, 
-                "static", "img", 
+                current.request.application,
+                "static", "img",
                 "Nepal-Government-Logo.png"
             )
             watermark_image = Image.open(watermark_image_path)
@@ -685,7 +678,7 @@ function (
             if isinstance(obj, (datetime.date, datetime.datetime, datetime.time)):
                 return obj.isoformat()[:19].replace("T"," ")
             else:
-                raise TypeError("%r is not JSON serializable" % (obj,)) 
+                raise TypeError("%r is not JSON serializable" % (obj,))
 
         return get_cached_or_generated_file(
             "".join((
@@ -707,7 +700,7 @@ function (
         def generate_places(file_path):
             "return all place data in JSON format"
             db = current.db
-            
+
             class Attribute(object):
                 def __init__(attribute, name, getter, convert, compressor):
                     def get(object, use):
@@ -717,13 +710,13 @@ function (
                     attribute.name = name
                     attribute.get = get
                     attribute.compressor = compressor
-                    
+
                 def __repr__(attribute):
                     return "@"+attribute.name
-                    
+
                 def compress(attribute, places, use_string):
                     attribute.compressor(attribute, places, use_string)
-            
+
             def similar_numbers(attribute, places, out):
                 out("[")
                 last_value = [0]
@@ -745,53 +738,53 @@ function (
                     lambda value: out(",")
                 )
                 out("]")
-                
+
             attributes = [
                 Attribute(
                     "id",
-                    lambda place: place.climate_place.id, 
+                    lambda place: place.climate_place.id,
                     int,
                     similar_numbers
                 ),
                 Attribute(
                     "longitude",
-                    lambda place: place.climate_place.longitude, 
+                    lambda place: place.climate_place.longitude,
                     round_to_4_sd,
                     similar_numbers
                 ),
                 Attribute(
                     "latitude",
-                    lambda place: place.climate_place.latitude, 
+                    lambda place: place.climate_place.latitude,
                     round_to_4_sd,
                     similar_numbers
                 ),
                 Attribute(
                     "elevation",
-                    lambda place: place.climate_place_elevation.elevation_metres, 
+                    lambda place: place.climate_place_elevation.elevation_metres,
                     int,
                     no_compression
                 ),
                 Attribute(
                     "station_id",
-                    lambda place: place.climate_place_station_id.station_id, 
+                    lambda place: place.climate_place_station_id.station_id,
                     int,
                     similar_numbers
                 ),
                 Attribute(
                     "station_name",
-                    lambda place: place.climate_place_station_name.name, 
+                    lambda place: place.climate_place_station_name.name,
                     lambda name: '"%s"' % name.replace("'", '"'),
                     no_compression
                 )
             ]
-            
+
             places_by_attribute_groups = {}
 
             for place_row in db(
                 # only show Nepal
-                (db.climate_place.longitude > 79.5) & 
-                (db.climate_place.longitude < 88.5) & 
-                (db.climate_place.latitude > 26.0) & 
+                (db.climate_place.longitude > 79.5) &
+                (db.climate_place.longitude < 88.5) &
+                (db.climate_place.latitude > 26.0) &
                 (db.climate_place.latitude < 30.7)
             ).select(
                 db.climate_place.id,
@@ -823,7 +816,7 @@ function (
                 except KeyError:
                     places_for_these_attributes = places_by_attribute_groups[attribute_group] = []
                 places_for_these_attributes.append(place_data)
-                
+
             places_strings = []
             out = places_strings.append
             out("[")
@@ -849,13 +842,13 @@ function (
                     lambda attribute: out(",")
                 )
                 out("]}")
-            
+
             between(
                 places_by_attribute_groups.iteritems(),
                 add_data_for_attribute_group,
                 lambda item: out(","),
             )
-                    
+
             out("]")
 
             file = open(file_path, "w")
@@ -863,19 +856,19 @@ function (
                 "".join(places_strings)
             )
             file.close()
-        
+
         return get_cached_or_generated_file(
             "places.json",
             generate_places
         )
-    
+
     # -------------------------------------------------------------------------
     @staticmethod
     def printable_map_image_file(command, url_prefix, query_string, width, height):
         def generate_printable_map_image(file_path):
             import urllib
             url = url_prefix + "?" + query_string + "&display_mode=print"
-                        
+
             # PyQT4 signals don't like not being run in the main thread
             # run in a subprocess to give it it's own thread
             subprocess_args = (
@@ -915,7 +908,7 @@ function (
             years.sort()
             file.write(str(years))
             file.close()
-        
+
         return get_cached_or_generated_file(
             hashlib.md5(sample_table_name + " years").hexdigest() + ".json",
             generate_years_json

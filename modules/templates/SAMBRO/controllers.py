@@ -14,8 +14,8 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3 import FS, S3CustomController, S3FilterForm, S3DateFilter, S3LocationFilter, S3OptionsFilter
-from s3 import s3_str
+from s3 import FS, S3CustomController, S3FilterForm, S3DateFilter, S3LocationFilter, S3OptionsFilter, s3_str
+
 THEME = "SAMBRO"
 
 # =============================================================================
@@ -261,7 +261,7 @@ class subscriptions(S3CustomController):
             filters.append(language_filters)
 
         if current.request.get_vars["option"] == "manage_recipient" and \
-           (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")):          
+           (has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")):
             from s3 import S3Represent
             recipient_filters = [S3OptionsFilter("id",
                                        label = T("People"),
@@ -884,7 +884,7 @@ $('#method_selector').change(function(){
                             (stable.owned_by_group == None) & \
                             (stable.owned_by_user == user_id)
                     db(query).update(comments=None)
-                
+
                 redirect(URL(c="pr", f="subscription"))
 
             if success_subscription:
@@ -912,7 +912,7 @@ $('#method_selector').change(function(){
                     (stable.pe_id == pe_id) & \
                     (stable.owned_by_group == None) & \
                     (stable.owned_by_user == current.auth.user.id)
-    
+
             left = ftable.on(ftable.id == stable.filter_id)
             row = db(query).select(stable.id,
                                    #stable.notify_on,
@@ -1481,9 +1481,9 @@ $('#method_selector').change(function(){
     def _get_group_pe_id(self, group_ids):
         """
             Get the PE-ID for list of group_ids
-    
+
             @param group_ids: the list of group_ids
-    
+
             @return: dictionary of pe_id and group_id
         """
 

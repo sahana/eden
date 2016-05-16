@@ -64,19 +64,9 @@ __all__ = ("single_phone_number_pattern",
            )
 
 import datetime
+import json
 import re
 import time
-
-JSONErrors = (NameError, TypeError, ValueError, AttributeError, KeyError)
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-        from gluon.contrib.simplejson.decoder import JSONDecodeError
-        JSONErrors += (JSONDecodeError,)
 
 from gluon import *
 #from gluon import current
@@ -86,6 +76,9 @@ from gluon.validators import Validator
 
 from s3datetime import S3DateTime
 from s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_validate
+
+DEFAULT = lambda: None
+JSONErrors = (NameError, TypeError, ValueError, AttributeError, KeyError)
 
 def translate(text):
     if text is None:
@@ -98,7 +91,6 @@ def translate(text):
 def options_sorter(x, y):
     return (s3_unicode(x[1]).upper() > s3_unicode(y[1]).upper() and 1) or -1
 
-DEFAULT = lambda: None
 # -----------------------------------------------------------------------------
 # Phone number requires
 # Multiple phone numbers can be separated by comma, slash, semi-colon.

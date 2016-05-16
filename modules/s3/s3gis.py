@@ -36,12 +36,15 @@ __all__ = ("GIS",
            )
 
 import datetime         # Needed for Feed Refresh checks & web2py version check
+import json
 import os
 import re
 import sys
 #import logging
 import urllib           # Needed for urlencoding
 import urllib2          # Needed for quoting & error handling on fetch
+
+from collections import OrderedDict
 try:
     from cStringIO import StringIO    # Faster, where available
 except:
@@ -54,21 +57,6 @@ except ImportError:
     raise
 
 KML_NAMESPACE = "http://earth.google.com/kml/2.2"
-
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
-
-try:
-    # Python 2.7
-    from collections import OrderedDict
-except:
-    # Python 2.6
-    from gluon.contrib.simplejson.ordered_dict import OrderedDict
 
 from gluon import *
 # Here are dependencies listed for reference:

@@ -5,16 +5,11 @@
 # To run this script use:
 # python web2py.py -S eden -M -R applications/eden/modules/unit_tests/s3/s3sync.py
 #
+import json
 import unittest
+
 from gluon import current
 from lxml import etree
-try:
-    import json # try stdlib (Python 2.6)
-except ImportError:
-    try:
-        import simplejson as json # try external module
-    except:
-        import gluon.contrib.simplejson as json # fallback to pure-Python module
 
 # =============================================================================
 class ExportMergeTests(unittest.TestCase):
