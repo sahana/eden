@@ -3032,7 +3032,7 @@ class DRKSiteActivityReport(object):
         data = self.extract()
 
         # Custom header for Excel Export (disabled for now)
-        #settings.base.xls_title_row = lambda sheet: self.summary(sheet, data)
+        settings.base.xls_title_row = lambda sheet: self.summary(sheet, data)
 
         # Export as XLS
         title = current.T("Resident List")
