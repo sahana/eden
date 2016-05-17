@@ -33,6 +33,7 @@ __all__ = ("S3CAPModel",
            "cap_rheader",
            "cap_alert_list_layout",
            "add_area_from_template",
+           "cap_expirydate",
            "cap_AssignArea",
            "cap_AreaRepresent",
            "cap_CloneAlert",
@@ -366,6 +367,7 @@ $.filterOptionsS3({
                      s3_datetime("sent",
                                  default = "now",
                                  writable = False,
+                                 represent = date_representation,
                                  ),
                      Field("status",
                            default = "Draft",
@@ -382,9 +384,7 @@ $.filterOptionsS3({
                            default = "Alert",
                            represent = lambda opt: \
                             cap_alert_msgType_code_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(cap_alert_msgType_code_opts)
-                                        ),
+                           requires = IS_IN_SET(cap_alert_msgType_code_opts),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The nature of the alert message"),
                                                            T("See options."))),
@@ -398,11 +398,7 @@ $.filterOptionsS3({
                            ),
                      Field("scope",
                            label = T("Scope"),
-                           represent = lambda opt: \
-                            cap_alert_scope_code_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(cap_alert_scope_code_opts)
-                                        ),
+                           requires = IS_IN_SET(cap_alert_scope_code_opts),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the intended distribution of the alert message"),
                                                            T("Who is this alert for?"))),
@@ -470,13 +466,11 @@ $.filterOptionsS3({
                                  ),
                      *s3_meta_fields())
 
-        list_fields = [(T("Sent"), "sent"),
-                       (T("Expires"), "info.expires"),
-                       "scope",
-                       "info.priority",
-                       "info.event_type_id",
+        list_fields = ["info.event_type_id",
+                       "msg_type",
+                       (T("Sent"), "sent"),
+                       "info.headline",
                        "info.sender_name",
-                       "area.name",
                        ]
 
         notify_fields = [(T("Identifier"), "identifier"),
@@ -717,6 +711,7 @@ $.filterOptionsS3({
                            ),
                      Field("color_code",
                            label = T("Color Code"),
+                           represent = warning_priority_color,
                            widget = S3ColorPickerWidget(options = {
                                         "showPaletteOnly": False,
                                     }),
@@ -742,10 +737,19 @@ $.filterOptionsS3({
             msg_list_empty = T("No Warning Priorities currently registered")
             )
 
+        list_fields = ["event_type_id",
+                       (T("Color"), "color_code"),
+                       "name",
+                       (T("Rank"), "priority_rank"),
+                       ]
+
         configure(tablename,
                   create_onaccept = self.cap_warning_priority_onaccept,
                   # Not needed since unique=True
                   #deduplicate = S3Duplicate(primary=("event_type_id", "name")),
+                  list_fields = list_fields,
+                  onvalidation = self.cap_warning_priority_onvalidation,
+                  orderby = "cap_warning_priority.event_type_id,cap_warning_priority.priority_rank desc",
                   )
 
         # ---------------------------------------------------------------------
@@ -788,6 +792,7 @@ $.filterOptionsS3({
                            ),
                      Field("category", "list:string", # 1 or more allowed
                            label = T("Category"),
+                           required = True,
                            represent = S3Represent(options = cap_info_category_opts,
                                                    multiple = True,
                                                    ),
@@ -923,7 +928,7 @@ $.filterOptionsS3({
                      s3_datetime("expires",
                                  label = T("Expires at"),
                                  past = 0,
-                                 default = self.cap_expirydate,
+                                 default = cap_expirydate(),
                                  comment = DIV(_class="tooltip",
                                                _title="%s|%s" % (T("The expiry time of the information of the alert message"),
                                                                  T("If this item is not provided, each recipient is free to enforce its own policy as to when the message is no longer in effect."))),
@@ -1230,7 +1235,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                            ),
                      Field("name",
                            label = T("Area Description"),
-                           required = True,
+                           requires = IS_NOT_EMPTY(),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The affected area of the alert message"),
                                                            T("A text description of the affected area."))),
@@ -1251,29 +1256,30 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                      self.event_type_id(comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Event Type of this predefined alert area"),
                                                                         T("Event Type relating to this predefined area."))),
-                                        script = '''
-                            $.filterOptionsS3({
-                             'trigger':'event_type_id',
-                             'target':'priority',
-                             'lookupPrefix': 'cap',
-                             'lookupResource': 'warning_priority',
-                             'lookupKey': 'event_type_id'
-                             })'''
+                            #            script = '''
+                            #$.filterOptionsS3({
+                            # 'trigger':'event_type_id',
+                            # 'target':'priority',
+                            # 'lookupPrefix': 'cap',
+                            # 'lookupResource': 'warning_priority',
+                            # 'lookupKey': 'event_type_id'
+                            # })'''
                      ),
                      # Only used for Templates
-                     Field("priority", "reference cap_warning_priority",
-                           label = T("Priority"),
-                           represent = priority_represent,
-                           requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(
-                                                  db, "cap_warning_priority.id",
-                                                  priority_represent
-                                                  ),
-                                       ),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Priority of the Event Type"),
-                                                           T("Defines the priority of the Event Type for this predefined area."))),
-                           ),
+                     # Enable this when required
+                     #Field("priority", "reference cap_warning_priority",
+                     #      label = T("Priority"),
+                     #      represent = priority_represent,
+                     #      requires = IS_EMPTY_OR(
+                     #                   IS_ONE_OF(
+                     #                             db, "cap_warning_priority.id",
+                     #                             priority_represent
+                     #                             ),
+                     #                  ),
+                     #      comment = DIV(_class="tooltip",
+                     #                    _title="%s|%s" % (T("Priority of the Event Type"),
+                     #                                      T("Defines the priority of the Event Type for this predefined area."))),
+                     #      ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -1294,6 +1300,8 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
         crud_form = S3SQLCustomForm("alert_id",
                                     "info_id",
                                     "is_template",
+                                    "event_type_id",
+                                    #"priority",
                                     "name",
                                     S3SQLInlineComponent("location",
                                                          name = "location",
@@ -1314,8 +1322,6 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                                                          ),
                                     "altitude",
                                     "ceiling",
-                                    "event_type_id",
-                                    "priority",
                                     )
 
         area_represent = cap_AreaRepresent(show_link=True)
@@ -1326,6 +1332,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                   #create_next = URL(f="area", args=["[id]", "location"]),
                   crud_form = crud_form,
                   deduplicate = self.cap_area_duplicate,
+                  mark_required = ("event_type_id",),
                   onaccept = self.cap_area_onaccept,
                   onvalidation = self.cap_area_onvalidation,
                   )
@@ -1488,11 +1495,11 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
             Generate a sender for a new form
         """
         try:
-            user_id = current.auth.user.id
+            user_email = current.auth.user.email
         except AttributeError:
             return ""
 
-        return "%s/%d" % (current.xml.domain, user_id)
+        return "%s" % user_email
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1502,17 +1509,6 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
         """
         return "%s@%s" % (current.xml.domain,
                           current.deployment_settings.get_base_public_url())
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def cap_expirydate():
-        """
-            Default Expiry date based on the expire offset
-        """
-
-        return current.request.utcnow + \
-               datetime.timedelta(days = current.deployment_settings.\
-                                  get_cap_expire_offset())
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1533,7 +1529,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                                limitby=(0, 1)).first()
         if row:
             return row.name
-        return None
+        return current.auth.user.username
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1614,6 +1610,25 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def cap_warning_priority_onvalidation(form):
+        """
+            Custom Form Validation
+        """
+
+        form_vars = form.vars
+        table = current.s3db.cap_warning_priority
+        query = (table.event_type_id == form_vars.event_type_id) & \
+                (table.urgency == form_vars.urgency) & \
+                (table.severity == form_vars.severity) & \
+                (table.certainty == form_vars.certainty) & \
+                (table.deleted != True)
+        row = current.db(query).select(table.id, limitby=(0, 1)).first()
+        if row:
+            form.errors["event_type_id"] = \
+current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Severity' is already available in database.")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def cap_info_onaccept(form):
         """
             After DB I/O
@@ -1663,13 +1678,17 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
             web = "%s%s" % (current.deployment_settings.get_base_public_url(),
                             URL(c="cap", f="alert", args=[alert_id]))
             form_vars_get = form_vars.get
+            form_effective = form_vars_get("effective", current.request.now)
+            form_expires = form_vars_get("effective", cap_expirydate())
+            form_onset = form_vars_get("onset", form_effective)
+
             idata = {"priority"       : form_vars_get("priority", None),
                      "urgency"        : form_vars_get("urgency", None),
                      "severity"       : form_vars_get("severity", None),
                      "certainty"      : form_vars_get("certainty", None),
-                     "effective"      : form_vars_get("effective", None),
-                     "onset"          : form_vars_get("onset", None),
-                     "expires"        : form_vars_get("expires", None),
+                     "effective"      : form_effective,
+                     "onset"          : form_onset,
+                     "expires"        : form_expires,
                      "web"            : web,
                      "event_type_id"  : form_vars_get("event_type_id", None),
                      }
@@ -1678,7 +1697,11 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
             rows = db(query).select(itable.id)
             for row in rows:
                 if int(row.id) == int(info_id):
-                    row.update_record(web=web)
+                    row.update_record(web=web,
+                                      effective=form_effective,
+                                      expires=form_expires,
+                                      onset=form_onset,
+                                      )
                 else:
                     row.update_record(**idata)
 
@@ -1693,6 +1716,14 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
         form_record = form.record
         if form_record and form_record.is_template == False:
             form_vars = form.vars
+            parameters = json.loads(form_vars.get("parameter"))
+            if parameters:
+                for parameter in parameters:
+                    if (parameter["key"] and not parameter["value"]) or \
+                       (parameter["value"] and not parameter["key"]):
+                        form.errors["parameter"] = \
+                            current.T("Name-Value Pair is incomplete.")
+
             if not form_vars.get("urgency"):
                 form.errors["urgency"] = \
                     current.T("'Urgency' field is mandatory")
@@ -1702,6 +1733,10 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
             if not form_vars.get("certainty"):
                 form.errors["certainty"] = \
                     current.T("'Certainty' field is mandatory")
+
+            if not form_vars.get("category"):
+                form.errors["category"] = \
+                    current.T("Atleast one category is required.")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1806,6 +1841,10 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
         if form_vars.get("ceiling") and not form_vars.get("altitude"):
             form.errors["altitude"] = \
                 current.T("'Altitude' field is mandatory if using 'Ceiling' field.")
+
+        if "event_type_id" in form_vars and form_vars.get("event_type_id") is None:
+            form.errors["event_type_id"] = \
+                current.T("'Event Type' field is mandatory for Predefined Area.")            
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1974,6 +2013,38 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                             style.append(sdata)
                             style = IS_JSONS3()(json.dumps(style))[0]
                             db(stable.id == row.id).update(style = style)
+
+# =============================================================================
+def cap_expirydate():
+    """
+        Default Expiry date based on the expire offset
+    """
+
+    return current.request.utcnow + \
+           datetime.timedelta(days = current.deployment_settings.\
+                              get_cap_expire_offset())
+
+# =============================================================================
+def date_representation(date):
+    """
+        Showing the date in human readable format
+    """
+
+    return date.strftime("%B %d, %Y at %H:%M:%S")
+
+# =============================================================================
+def warning_priority_color(color_code):
+    """
+        Shows actual color for hex color code
+
+        @param color_code: hex color code
+    """
+
+    if not color_code:
+        return current.messages["NONE"]
+
+    return DIV(_style="width:%(size)s;height:%(size)s;background-color:#%(color)s;" % \
+               dict(size="2em", color=color_code))
 
 # =============================================================================
 class S3CAPAreaNameModel(S3Model):
@@ -2182,25 +2253,42 @@ def cap_rheader(r):
                                                             utable.organisation_id,
                                                             limitby=(0, 1)).first()
                                     if row.organisation_id == row_.organisation_id:
-                                        msg_type_buttons = TAG[""](
-                                                TR(TD(A(T("Update Alert"),
-                                                        _data = "Update/%s" % r.id,
-                                                        _class = "action-btn cap-clone-update",
-                                                        ))),
-                                                TR(TD(A(T("Cancel Alert"),
-                                                        _data = "Cancel/%s" % r.id,
-                                                        _class = "action-btn cap-clone-update",
-                                                        ))),
-                                                TR(TD(A(T("Error Alert"),
-                                                        _data = "Error/%s" % r.id,
-                                                        _class = "action-btn cap-clone-update",
-                                                        ))),
-                                                TR(TD(A(T("All Clear"),
-                                                        _data = "AllClear/%s" % r.id,
-                                                        _class = "action-btn cap-clone-update",
-                                                        ))),
-                                                )
+                                        # Same organisation
+                                        msg_type = record.msg_type
+                                        if msg_type == "Alert" or msg_type == "Update":
+                                            msg_type_buttons = TAG[""](
+                                                    TR(TD(A(T("Update Alert"),
+                                                            _data = "Update/%s" % r.id,
+                                                            _class = "action-btn cap-clone-update",
+                                                            ))),
+                                                    TR(TD(A(T("Cancel Alert"),
+                                                            _data = "Cancel/%s" % r.id,
+                                                            _class = "action-btn cap-clone-update",
+                                                            ))),
+                                                    TR(TD(A(T("Error Alert"),
+                                                            _data = "Error/%s" % r.id,
+                                                            _class = "action-btn cap-clone-update",
+                                                            ))),
+                                                    TR(TD(A(T("All Clear"),
+                                                            _data = "AllClear/%s" % r.id,
+                                                            _class = "action-btn cap-clone-update",
+                                                            ))),
+                                                    )
+                                        elif msg_type == "Error":
+                                            msg_type_buttons = TAG[""](
+                                                    TR(TD(A(T("Update Alert"),
+                                                            _data = "Update/%s" % r.id,
+                                                            _class = "action-btn cap-clone-update",
+                                                            ))),
+                                                    TR(TD(A(T("All Clear"),
+                                                            _data = "AllClear/%s" % r.id,
+                                                            _class = "action-btn cap-clone-update",
+                                                            ))),
+                                                    )
+                                        else:
+                                            msg_type_buttons = None
                                     else:
+                                        # Different organisation
                                         msg_type_buttons = relay_alert
                                 else:
                                     msg_type_buttons = relay_alert
@@ -2973,7 +3061,7 @@ class cap_AssignArea(S3Method):
             list_fields = ["id",
                            "name",
                            "event_type_id",
-                           "priority",
+                           #"priority",
                            ]
 
             # Data table
@@ -3190,6 +3278,7 @@ class cap_CloneAlert(S3Method):
         alert_row_clone = alert_row.as_dict()
         del alert_row_clone["identifier"]
         alert_row_clone["msg_type"] = msg_type
+        alert_row_clone["sent"] = current.request.utcnow
         alert_row_clone["reference"] = ("%s,%s,%s") % (alert_row.sender,
                                                        alert_row.identifier,
                                 str(s3_utc(alert_row.sent)).replace(" ", "T"),

@@ -117,8 +117,6 @@ def config(settings):
     # Organisations
     # Enable the use of Organisation Branches
     settings.org.branches = True
-    # Show branches as tree rather than as table
-    settings.org.branches_tree_view = True
 
     # -------------------------------------------------------------------------
     def customise_msg_rss_channel_resource(r, tablename):
@@ -300,6 +298,7 @@ def config(settings):
                                        itable.category,
                                        itable.certainty,
                                        itable.contact,
+                                       itable.description,
                                        itable.effective,
                                        itable.expires,
                                        itable.event_type_id,
@@ -313,9 +312,9 @@ def config(settings):
                                        itable.web,
                                        atable.name,
                                        limitby=(0, 1)).first()
-                subject = "%s %s %s" % (T("SAHANA"),
-                                        settings.get_system_name_short(),
-                                        T("Alert Notification"))
+                subject = "[%s] %s %s" % (row.cap_info.sender_name,
+                                          itable.event_type_id.represent(row.cap_info.event_type_id),
+                                          itable.priority.represent(row.cap_info.priority))
                 email_content = "%s%s%s" % ("<html>", XML(get_html_email_content(row)), "</html>")
                 sms_content = get_sms_content(row)
                 count = len(addresses)
@@ -494,17 +493,16 @@ def config(settings):
                                           )
                 else:
                     # self subscription
-                    S3CRUD.action_buttons(r, update_url=URL(c="default", f="index",
-                                                            args=["subscriptions"],
-                                                            vars={"subscription_id": "[id]"}
-                                                            )
-                                          )
+                    url = URL(c="default", f="index",
+                              args=["subscriptions"],
+                              vars={"subscription_id": "[id]"})
+                    S3CRUD.action_buttons(r, update_url=url, read_url=url)
 
                 if "form" in output:
                     # Modify Add Button
                     if manage_recipient and role_check:
                         # Admin based subscription
-                        add_btn = A(T("Create Subscription"),
+                        add_btn = A(T("Add Recipient to List"),
                                     _class="action-btn",
                                     _href=URL(c="default", f="index",
                                               args=["subscriptions"],
@@ -795,6 +793,7 @@ def config(settings):
         itable = current.s3db.cap_info
         event_type_id = row["cap_info.event_type_id"]
         priority_id = row["cap_info.priority"]
+        response_type = row["cap_info.response_type"]
 
         if event_type_id and event_type_id != "-":
             if not isinstance(event_type_id, lazyT):
@@ -815,7 +814,8 @@ def config(settings):
 
         category = itable.category.represent(row["cap_info.category"])
 
-        response_type = itable.response_type.represent(row["cap_info.response_type"])
+        if not response_type: 
+            response_type = T("Unknown")
 
         subject = \
         T("%(Scope)s %(Status)s Alert") % \
@@ -844,8 +844,8 @@ T("""Message %(Identifier)s: %(EventType)s (%(Category)s) issued by
                       SenderName = s3_str(row["cap_info.sender_name"]),
                       Date = s3_str(row["cap_alert.sent"]),
                       Source = s3_str(row["cap_alert.source"]))
-        body4 = T("Alert Description: %(AreaDescription)s") % \
-                dict(AreaDescription = s3_str(row["cap_area.name"]))
+        body4 = T("Alert Description: %(AlertDescription)s") % \
+                dict(AlertDescription = s3_str(row["cap_info.description"]))
         body5 = T("Expected Response: %(ResponseType)s") % \
                 dict(ResponseType = s3_str(response_type))
         body6 = T("Instructions: %(Instruction)s") % \
