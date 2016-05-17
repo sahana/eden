@@ -138,7 +138,7 @@
     <xsl:template match="resource[@name='cap_info']">
         <info>
             <xsl:if test="data[@field='language']!=''">
-                <language><xsl:value-of select="data[@field='language']"/></language>
+                <language><xsl:value-of select="translate(data[@field='language']/@value, '&quot;', '')"/></language>
             </xsl:if>
 
             <xsl:if test="data[@field='category']">
@@ -706,8 +706,18 @@
 
         <xsl:choose>
             <xsl:when test="contains($key-value-col, $key-value-start-sep) and contains($key-value-col, $key-value-end-sep)">
-                <xsl:variable name="kvpairs">
+                <xsl:variable name="kvpairs_">
                     <xsl:value-of select="substring-before(substring-after($key-value-col, $key-value-start-sep), $key-value-end-sep)"/>
+                </xsl:variable>
+                <xsl:variable name="kvpairs">
+                    <xsl:choose>
+                        <xsl:when test="contains($kvpairs_, 'checked:')">
+                            <xsl:value-of select="normalize-space(substring-before($kvpairs_, ',checked:'))"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$kvpairs_"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
                 </xsl:variable>
                 <xsl:variable name="remaining-kv-pairs">
                     <xsl:value-of select="substring-after($key-value-col, $kvpairs)"/>

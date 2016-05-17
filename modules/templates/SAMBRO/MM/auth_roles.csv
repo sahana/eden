@@ -1,3 +1,0 @@
-uid,role,description,controller,function,table,uacl,oacl,hidden,system,protected,Notes
-ALERT_EDITOR,Alert Editor,,cap,template,,READ|CREATE|UPDATE,,,,,Use template to create actual alert
-ALERT_APPROVER,Alert Approver,,cap,template,,READ|CREATE|UPDATE,,,,,Use template to create actual alert

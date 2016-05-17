@@ -81,6 +81,8 @@ class index(S3CustomController):
             resource.add_filter(FS("scope") == "Public")
         # Only show Alerts which haven't expired
         resource.add_filter(FS("info.expires") >= request.utcnow)
+        # Change representation
+        resource.table.status.represent = None
         list_id = "cap_alert_datalist"
         list_fields = ["msg_type",
                        "info.headline",
@@ -1529,7 +1531,7 @@ class user_info(S3CustomController):
 
             response = {"r": roles,
                         "uid": user.id,
-                        "pe_id": user.pe_id,
+                        "pid": auth.s3_logged_in_person(),
                         "o": current.deployment_settings.get_cap_expire_offset(),
                         }
             current.response.headers["Content-Type"] = "application/json"
