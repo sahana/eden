@@ -17,6 +17,17 @@ def index():
     s3_redirect_default(URL(f="alert"))
 
 # -----------------------------------------------------------------------------
+def alert_history():
+    """
+        RESTful CRUD controller
+    """
+
+    output = s3_rest_controller("cap", "alert_history",
+                                rheader = s3db.cap_history_rheader,
+                                )
+    return output
+
+# -----------------------------------------------------------------------------
 def info_prep(r):
     """
         Preprocessor for CAP Info segments
@@ -1210,5 +1221,111 @@ def cap_AreaRowOptionsBuilder(alert_id, caller=None):
                                    row_["cap_area.name"])
 
         return cap_area_options
+
+# -----------------------------------------------------------------------------
+def compose():
+    if settings.has_module("msg") and \
+       auth.permission.has_permission("update", c="cap", f="alert"):
+        if request.get_vars.option == "notify_subscribers":
+            stable = s3db.pr_subscription
+            wptable = s3db.cap_warning_priority
+            wpquery = (wptable.deleted != True)
+            srows = db(stable.deleted != True).select(stable.pe_id)
+            wprows = db(wpquery).select(wptable.id, wptable.last_checked)
+            if not len(srows):
+                session.error = T("No subscriptions available!")
+                redirect(URL(f="index"))
+
+            if not len(wprows):
+                session.error = T("No priority options available!")
+                redirect(URL(f="index"))
+
+            pe_ids = []
+            for row in srows:
+                pe_ids.append(row.pe_id)
+            wprow = db(wpquery & (wptable.last_checked != None)).\
+                        select(wptable.last_checked,
+                               orderby = ~wptable.id, limitby=(0, 1)).first()
+            if wprow:
+                last_checked = wprow.last_checked
+            else:
+                last_checked = request.utcnow
+
+            filter = {"~.created_on__ge" : last_checked}
+            resource = s3db.resource("cap_warning_priority",
+                                     #filter = query,
+                                     vars = filter)
+            data = resource.select(["id"])
+            rows = data["rows"]
+            numrows = len(rows)
+            if not numrows:
+                for wprow in wprows:
+                    db(wptable.id == wprow.id).update(last_checked = request.utcnow)
+                session.error = T("No new options available")
+                redirect(URL(f="index"))
+            else:
+                # EMAIL Form
+                from s3dal import Field
+                from gluon.validators import IS_NOT_EMPTY
+                from gluon.sqlhtml import SQLFORM
+                title = T("Send message to subscribers about new available options")
+                fields = [Field("subject",
+                                label="Subject",
+                                requires=IS_NOT_EMPTY(),
+                                ),
+                          Field("message", "text",
+                                label="Message",
+                                requires=IS_NOT_EMPTY(),
+                                ),
+                          ]
+                from s3 import s3_mark_required
+                labels, required = s3_mark_required(fields)
+                s3.has_required = required
+
+                response.form_label_separator = ""
+                notify_form = SQLFORM.factory(formstyle = settings.get_ui_formstyle(),
+                                              submit_button = T("Submit"),
+                                              labels = labels,
+                                              separator = "",
+                                              table_name = "notify", # Dummy table name
+                                              _id="notifyform",
+                                              *fields
+                                              )
+
+                if notify_form.accepts(request.post_vars,
+                                       session,
+                                       formname = "notify_form",
+                                       keepvalues = False,
+                                       hideerror = False):
+                    # Process Notify Form
+                    form_vars = notify_form.vars
+                    send_by_pe_id = msg.send_by_pe_id
+                    if len(pe_ids) == 1:
+                        send_by_pe_id(pe_id=pe_ids[0],
+                                      subject=form_vars.subject,
+                                      message=form_vars.message,
+                                      )
+                        for wprow in wprows:
+                            db(wptable.id == wprow.id).update(last_checked = request.utcnow)
+                    else:
+                        for pe_id in pe_ids:
+                            send_by_pe_id(pe_id=pe_id,
+                                          subject=form_vars.subject,
+                                          message=form_vars.message,
+                                          )
+                        for wprow in wprows:
+                            db(wptable.id == wprow.id).update(last_checked = request.utcnow)
+                    session.confirmation = T("Subscribers notified!")
+                    redirect(URL(f="alert"))
+
+                output = dict(title = title,
+                              form = notify_form)
+                response.view = "cap/compose.html"
+                return output
+        else:
+            session.error = T("Bad Method")
+            redirect(URL(f="alert"))
+    else:
+        auth.permission.fail()
 
 # END =========================================================================
