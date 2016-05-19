@@ -8695,6 +8695,14 @@ def hrm_human_resource_filters(resource_type=None,
                       ]
     append_filter = filter_widgets.append
 
+    if module == "deploy" and current.auth.s3_has_role("ADMIN"):
+        dotable = current.s3db.deploy_organisation
+        deploying_orgs = current.db(dotable.deleted == False).count()
+        if deploying_orgs > 1:
+            append_filter(S3OptionsFilter("application.organisation_id",
+                                          label = T("Deployment Team"),
+                                          ))
+
     # Type filter (only if not pre-filtered)
     if not resource_type in ("staff", "volunteer"):
         append_filter(S3OptionsFilter("type",

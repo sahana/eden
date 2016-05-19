@@ -27,7 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3DeploymentModel",
+__all__ = ("S3DeploymentOrganisationModel",
+           "S3DeploymentModel",
            "S3DeploymentAlertModel",
            "deploy_rheader",
            "deploy_apply",
@@ -44,10 +45,36 @@ from ..s3 import *
 from s3layouts import S3PopupLink
 
 # =============================================================================
-class S3DeploymentModel(S3Model):
+class S3DeploymentOrganisationModel(S3Model):
+    """
+        Split into separate model to avoid circular deadlock in HRModel
+    """
 
     names = ("deploy_organisation",
-             "deploy_mission",
+             )
+
+    def model(self):
+
+        # ---------------------------------------------------------------------
+        # Organisation
+        # - which Organisations/Branches have deployment teams
+        #
+
+        tablename = "deploy_organisation"
+        self.define_table(tablename,
+                          self.org_organisation_id(),
+                          s3_comments(),
+                          *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
+
+# =============================================================================
+class S3DeploymentModel(S3Model):
+
+    names = ("deploy_mission",
              "deploy_mission_id",
              "deploy_mission_document",
              "deploy_mission_status_opts",
@@ -75,17 +102,6 @@ class S3DeploymentModel(S3Model):
 
         human_resource_id = self.hrm_human_resource_id
         organisation_id = self.org_organisation_id
-
-        # ---------------------------------------------------------------------
-        # Organisation
-        # - which Organisations/Branches have deployment teams
-        #
-
-        tablename = "deploy_organisation"
-        define_table(tablename,
-                     organisation_id(),
-                     s3_comments(),
-                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Mission
@@ -1433,12 +1449,6 @@ def deploy_member_filters(status=False):
                                                      },
                                           ))
 
-    if current.auth.s3_has_role("ADMIN"):
-        widgets.insert(2, S3OptionsFilter("application.organisation_id",
-                                          hidden = False,
-                                          label = T("Deployment Team"),
-                                          ))
-        
     return widgets
 
 # =============================================================================
