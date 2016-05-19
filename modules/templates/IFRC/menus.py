@@ -407,17 +407,27 @@ class S3OptionsMenu(default.S3OptionsMenu):
         user = current.auth.user
         organisation_id = user and user.organisation_id or None
         if organisation_id:
+            db = current.db
             s3db = current.s3db
             otable = s3db.org_organisation
             rtable = s3db.org_region
             query = (otable.id == organisation_id) & \
                     (otable.region_id == rtable.id)
-            region = current.db(query).select(rtable.name,
-                                              cache = s3db.cache,
-                                              limitby=(0, 1)
-                                              ).first()
+            region = db(query).select(rtable.name,
+                                      cache = s3db.cache,
+                                      limitby=(0, 1)
+                                      ).first()
             if region and region.name in ("Asia Pacific", "East Asia", "Pacific", "South Asia", "South East Asia"):
                 AP = True
+                gtable = s3db.pr_group
+                group = db(gtable.name == "RDRT Focal Points").select(gtable.id,
+                                                                      cache = s3db.cache,
+                                                                      limitby=(0, 1)
+                                                                      ).first()
+                if group:
+                    args = [group.id, "group_membership"]
+                else:
+                    args = "create"
 
         if AP:
             # Asia Pacific
@@ -427,6 +437,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("InBox",
                               c="deploy", f="email_inbox",
                             ),
+                            M("Focal Points",
+                              c="deploy", f="group",
+                              args = args,
+                              ),
                             M("Settings",
                               c="deploy", f="email_channel",
                               p="update", t="msg_email_channel",
@@ -457,6 +471,18 @@ class S3OptionsMenu(default.S3OptionsMenu):
                               p="create", t="deploy_application",
                               ),
                             M("Import Members", c="deploy", f="person", m="import"),
+                            M("Report by Region", c="deploy", f="human_resource", m="report",
+                              vars=Storage(rows = "organisation_id$region_id",
+                                           cols = "training.course_id",
+                                           fact = "count(person_id)",
+                                           ),
+                              ),
+                            M("Report by CCST / CO", c="deploy", f="human_resource", m="report",
+                              vars=Storage(rows = "organisation_id",
+                                           cols = "training.course_id",
+                                           fact = "count(person_id)",
+                                           ),
+                              ),
                        ),
                        M("Sectors",
                          c="deploy", f="job_title", restrict=["ADMIN"],

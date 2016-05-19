@@ -151,7 +151,7 @@ def human_resource():
     settings.hrm.use_skills = True
     settings.search.filter_manager = True
 
-    # Add deploy_alert_recipient as component so that we filter by it
+    # Add deploy_alert_recipient as component so that we can filter by it
     s3db.add_components("hrm_human_resource",
                         deploy_alert_recipient = "human_resource_id",
                         )
@@ -188,6 +188,73 @@ def person():
                                       csv_stylesheet = ("hrm", "person.xsl"),
                                       csv_template = ("deploy", "person"),
                                       )
+
+# -----------------------------------------------------------------------------
+def group():
+    """
+        Groups RESTful CRUD Controller
+            - used to control membership of a group cc'd on Alerts
+    """
+
+    def prep(r):
+        table = r.table
+        tablename = "pr_group"
+        s3db.configure(tablename,
+                       deletable = False,
+                       )
+
+        if r.component:
+            ctable = s3db.pr_group_membership
+            ctable.group_head.readable = ctable.group_head.writable = False
+            f = ctable.person_id
+            settings.pr.request_dob = False
+            settings.pr.request_gender = False
+            f.requires = s3base.IS_ADD_PERSON_WIDGET2()
+            f.widget = s3base.S3AddPersonWidget2(controller="deploy")
+            list_fields = ["person_id",
+                           "comments",
+                           ]
+            s3db.configure("pr_group_membership",
+                           list_fields = list_fields,
+                           )
+
+        elif not r.id:
+            # Have we got a group defined?
+            ltable = s3db.org_organisation_team
+            query = (table.deleted == False) & \
+                    (table.system == False) & \
+                    (table.group_type == 5)
+            organisation_id = auth.user.organisation_id
+            if organisation_id:
+                left = ltable.on((ltable.group_id == table.id) & \
+                                 ((ltable.organisation_id == organisation_id) | \
+                                  (ltable.organisation_id == None)))
+            else:
+                left = None
+            groups = db(query).select(table.id,
+                                      ltable.organisation_id,
+                                      left = left,
+                                      )
+            if organisation_id and len(groups) > 1:
+                _channels = groups.find(lambda row: row["org_organisation_team.organisation_id"] == organisation_id)
+                if not _channels:
+                    _channels = groups.find(lambda row: row["org_organisation_team.organisation_id"] == None)
+                record = _channels.first()
+            else:
+                record = groups.first()
+
+            if record:
+                record_id = record.id
+                r.id = record_id
+                r.resource.add_filter(table.id == record_id)
+                r.method = "update"
+            else:
+                r.method = "create"
+
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller("pr")
 
 # -----------------------------------------------------------------------------
 def application():
@@ -479,6 +546,7 @@ def alert():
                                    insertable = False,
                                    )
         else:
+            # No component
             if r.record:
                 if r.record.message_id:
                     # Already sent - so lock
@@ -672,7 +740,7 @@ def email_inbox():
                     r.custom_action = s3db.deploy_response_select_mission
             represent = lambda string: decode(string)
         elif not r.method and r.representation in ("html", "aadata"):
-            # Use custom data table method
+            # Use custom data table method to allow bulk deletion
             r.method = "inbox"
             r.custom_action = s3db.deploy_Inbox()
             represent = lambda string: s3base.s3_datatable_truncate(decode(string))
@@ -734,7 +802,9 @@ def email_channel():
                 record = channels.first()
 
             if record:
-                r.id = record.id
+                record_id = record.id
+                r.id = record_id
+                r.resource.add_filter(table.id == record_id)
                 r.method = "update"
             else:
                 r.method = "create"
@@ -755,11 +825,10 @@ def email_channel():
                                                                      T("If this is set to True then mails will be deleted from the server after downloading.")))
 
             # CRUD Strings
-            ADD_EMAIL_ACCOUNT = T("Add Email Account")
             s3.crud_strings[tablename] = Storage(
                 title_display = T("Email Settings"),
                 title_list = T("Email Accounts"),
-                label_create = ADD_EMAIL_ACCOUNT,
+                label_create = T("Create Email Account"),
                 title_update = T("Edit Email Settings"),
                 label_list_button = T("View Email Accounts"),
                 msg_record_created = T("Account added"),

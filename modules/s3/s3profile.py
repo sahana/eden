@@ -74,6 +74,7 @@ class S3Profile(S3CRUD):
 
                 # Render page
                 output = self.profile(r, **attr)
+                return output
 
             elif r.representation not in ("dl", "aadata"):
                 # Redirect to the List View
@@ -84,7 +85,6 @@ class S3Profile(S3CRUD):
                 r.error(404, current.ERROR.BAD_RECORD)
         else:
             r.error(405, current.ERROR.BAD_METHOD)
-        return output
 
     # -------------------------------------------------------------------------
     def profile(self, r, **attr):
@@ -128,7 +128,7 @@ class S3Profile(S3CRUD):
             output = {"item": datalist}
 
         elif r.representation == "aadata":
-            # Ajax-update of one datalist
+            # Ajax-update of one datatable
             index = r.get_vars.get("update", None)
             if index:
                 try:

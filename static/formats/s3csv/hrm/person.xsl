@@ -114,7 +114,7 @@
          Slot:XXXX......................optional.....Availability for Slot XXXX
 
          Extensions for deploy module:
-         Deployable.....................optional.....link to deployments module (true|false)
+         Deployable.....................optional.....link to deployments module (organisation name|true)
          Deployable Roles...............optional.....credentials (job_titles for which person is deployable)
          Deployments....................optional.....comma-separated list of Missions for which the person was deployed
 
@@ -229,6 +229,9 @@
     <xsl:key name="missions" match="row"
              use="col[@field='Deployments']"/>
 
+    <xsl:key name="orgs" match="row"
+             use="col[@field='Deployable']"/>
+
     <xsl:key name="orggroups" match="row"
              use="col[contains(document('../labels.xml')/labels/column[@name='OrgGroup']/match/text(),
                                concat('|', @field, '|'))]"/>
@@ -253,11 +256,19 @@
     <xsl:template match="/">
 
         <s3xml>
-            <!-- Import the organisation hierarchy -->
+            <!-- Import the Organisation hierarchy -->
             <xsl:for-each select="table/row[1]">
                 <xsl:call-template name="OrganisationHierarchy">
                     <xsl:with-param name="level">Organisation</xsl:with-param>
                     <xsl:with-param name="rows" select="//table/row"/>
+                </xsl:call-template>
+            </xsl:for-each>
+
+            <!-- Deployable Orgs -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('orgs',
+                                                                       col[@field='Deployable'])[1])]">
+                <xsl:call-template name="DeployableOrg">
+                    <xsl:with-param name="Field">Deployable</xsl:with-param>
                 </xsl:call-template>
             </xsl:for-each>
 
@@ -464,7 +475,7 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- Template to import the organisation hierarchy, to be called only once for the first row -->
+    <!-- Template to import the Organisation hierarchy, to be called only once for the first row -->
 
     <xsl:template name="OrganisationHierarchy">
 
@@ -1099,6 +1110,8 @@
         <xsl:param name="Status"/>
         <xsl:param name="type"/>
 
+        <xsl:variable name="Deployable" select="col[@field='Deployable']/text()"/>
+
         <resource name="hrm_human_resource">
 
             <!-- HR data -->
@@ -1170,10 +1183,30 @@
             </xsl:if>
 
             <!-- Mark as deployable -->
-            <xsl:if test="col[@field='Deployable'] = 'true' or col[@field='Deployable'] = 'True'">
-                <resource name="deploy_application">
-                    <data field="active" value="true"/>
-                </resource>
+            <xsl:if test="$Deployable!=''">
+                <xsl:choose>
+                    <xsl:when test="$Deployable = 'true' or $Deployable = 'True'">
+                        <resource name="deploy_application">
+                            <data field="active" value="true"/>
+                        </resource>
+                    </xsl:when>
+                    <xsl:when test="$Deployable = 'false' or $Deployable = 'False'">
+                        <!-- No-op -->
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <resource name="deploy_application">
+                            <data field="active" value="true"/>
+
+                            <!-- Link to Organisation -->
+                            <reference field="organisation_id" resource="org_organisation">
+                                <xsl:attribute name="tuid">
+                                    <xsl:value-of select="concat('ORG:', $Deployable)"/>
+                                </xsl:attribute>
+                            </reference>
+
+                        </resource>
+                    </xsl:otherwise>
+                </xsl:choose>
             </xsl:if>
 
             <!-- Deployments -->
@@ -2065,6 +2098,29 @@
             </resource>
         </xsl:if>
 
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="DeployableOrg">
+        <xsl:variable name="Deployable" select="col[@field='Deployable']"/>
+        <xsl:if test="$Deployable!=''">
+            <xsl:choose>
+                <xsl:when test="$Deployable = 'true' or $Deployable = 'True'">
+                    <!-- No-op -->
+                </xsl:when>
+                <xsl:when test="$Deployable = 'false' or $Deployable = 'False'">
+                    <!-- No-op -->
+                </xsl:when>
+                <xsl:otherwise>
+                    <resource name="org_organisation">
+                        <xsl:attribute name="tuid">
+                            <xsl:value-of select="concat('ORG:', $Deployable)"/>
+                        </xsl:attribute>
+                        <data field="name"><xsl:value-of select="$Deployable"/></data>
+                    </resource>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:if>
     </xsl:template>
 
     <!-- ****************************************************************** -->

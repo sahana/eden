@@ -2800,11 +2800,11 @@ class S3OrganisationTeamModel(S3Model):
         #
         tablename = "org_organisation_team"
         self.define_table(tablename,
-                          self.org_organisation_id(ondelete="CASCADE",
-                                                   empty=False,
+                          self.org_organisation_id(empty = False,
+                                                   ondelete = "CASCADE",
                                                    ),
-                          self.pr_group_id(ondelete="CASCADE",
-                                           empty=False,
+                          self.pr_group_id(empty = False,
+                                           ondelete = "CASCADE",
                                            ),
                           *s3_meta_fields())
 

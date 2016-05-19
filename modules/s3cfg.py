@@ -2595,19 +2595,18 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Deployments
     #
+    def get_deploy_cc_groups(self):
+        """
+            List of Group names that are cc'd on Alerts
+        """
+        return self.deploy.get("cc_groups", [])
+
     def get_deploy_hr_label(self):
         """
             Label for deployable Human Resources
             e.g. 'Staff', 'Volunteer' (CERT), 'Member' (RDRT)
         """
         return self.deploy.get("hr_label", "Staff")
-
-    def get_deploy_team_label(self):
-        """
-            Label for deployable Team
-            e.g. 'RDRT', 'RIT'
-        """
-        return self.deploy.get("team_label", "Deployable")
 
     def get_deploy_manual_recipients(self):
         """
@@ -2630,6 +2629,19 @@ class S3Config(Storage):
         """
 
         return self.deploy.get("responses_via_web", True)
+
+    def get_deploy_select_ratings(self):
+        """
+            Whether to have filters for Ratings when selecting deployables for an Alert
+        """
+        return self.deploy.get("select_ratings", False)
+
+    def get_deploy_team_label(self):
+        """
+            Label for deployable Team
+            e.g. 'RDRT', 'RIT'
+        """
+        return self.deploy.get("team_label", "Deployable")
 
     # -------------------------------------------------------------------------
     # DVR Options

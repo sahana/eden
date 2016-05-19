@@ -655,7 +655,13 @@ class S3HRModel(S3Model):
                                        "filterfor": ("1",),
                                        },
                                       ),
-                        # Skills
+                        # Experience & Skills
+                        hrm_appraisal = {"link": "pr_person",
+                                         "joinby": "id",
+                                         "key": "id",
+                                         "fkey": "person_id",
+                                         "pkey": "person_id",
+                                         },
                         hrm_certification = {"link": "pr_person",
                                              "joinby": "id",
                                              "key": "id",
@@ -668,30 +674,30 @@ class S3HRModel(S3Model):
                                           "fkey": "person_id",
                                           "pkey": "person_id",
                                           },
+                        hrm_contract = {"joinby": "human_resource_id",
+                                        "multiple": multiple_contracts,
+                                        },
                         hrm_credential = {"link": "pr_person",
                                           "joinby": "id",
                                           "key": "id",
                                           "fkey": "person_id",
                                           "pkey": "person_id",
                                           },
+                        pr_education = {"link": "pr_person",
+                                        "joinby": "id",
+                                        "key": "id",
+                                        "fkey": "person_id",
+                                        "pkey": "person_id",
+                                        },
                         hrm_experience = {"link": "pr_person",
                                           "joinby": "id",
                                           "key": "id",
                                           "fkey": "person_id",
                                           "pkey": "person_id",
                                           },
-                        hrm_salary = "human_resource_id",
                         hrm_insurance = "human_resource_id",
-                        hrm_contract = {"joinby": "human_resource_id",
-                                        "multiple": multiple_contracts,
-                                        },
+                        hrm_salary = "human_resource_id",
                         hrm_training = {"link": "pr_person",
-                                        "joinby": "id",
-                                        "key": "id",
-                                        "fkey": "person_id",
-                                        "pkey": "person_id",
-                                        },
-                        pr_education = {"link": "pr_person",
                                         "joinby": "id",
                                         "key": "id",
                                         "fkey": "person_id",
@@ -709,7 +715,7 @@ class S3HRModel(S3Model):
                                            "joinby": "human_resource_id",
                                            "key": "project_id",
                                            },
-                        # Application for Deployment
+                        # Application(s) for Deployment
                         deploy_application = "human_resource_id",
                         # Assignments
                         deploy_assignment = "human_resource_id",
@@ -1962,6 +1968,7 @@ class S3HRSkillModel(S3Model):
         db = current.db
         auth = current.auth
         request = current.request
+        folder = request.folder
         s3 = current.response.s3
         settings = current.deployment_settings
 
@@ -1979,7 +1986,6 @@ class S3HRSkillModel(S3Model):
 
         s3_string_represent = lambda s: s if s else NONE
 
-        # Shortcuts
         add_components = self.add_components
         configure = self.configure
         crud_strings = s3.crud_strings
@@ -2789,6 +2795,17 @@ class S3HRSkillModel(S3Model):
                            readable = course_pass_marks,
                            writable = course_pass_marks,
                            ),
+                     Field("file", "upload",
+                           autodelete = True,
+                           length = current.MAX_FILENAME_LENGTH,
+                           represent = self.hrm_training_file_represent,
+                           # upload folder needs to be visible to the download() function as well as the upload
+                           uploadfolder = os.path.join(folder,
+                                                       "uploads"),
+                           # Enable (& label) in templates as-required
+                           readable = False,
+                           writable = False,
+                           ),
                      Field.Method("job_title", hrm_training_job_title),
                      Field.Method("organisation", hrm_training_organisation),
                      s3_comments(),
@@ -3002,7 +3019,7 @@ class S3HRSkillModel(S3Model):
                            label = T("Scanned Copy"),
                            length = current.MAX_FILENAME_LENGTH,
                            # upload folder needs to be visible to the download() function as well as the upload
-                           uploadfolder = os.path.join(request.folder,
+                           uploadfolder = os.path.join(folder,
                                                        "uploads"),
                            ),
                      # This field can only be filled-out by specific roles
@@ -3336,6 +3353,23 @@ class S3HRSkillModel(S3Model):
         if duplicate:
             item.id = duplicate.id
             item.method = item.METHOD.UPDATE
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def hrm_training_file_represent(file):
+        """ File representation """
+
+        if file:
+            try:
+                # Read the filename from the file
+                filename = current.db.hrm_training.file.retrieve(file)[0]
+            except IOError:
+                return current.T("File not found")
+            else:
+                return A(filename,
+                         _href=URL(c="default", f="download", args=[file]))
+        else:
+            return current.messages["NONE"]
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -6495,7 +6529,6 @@ def hrm_human_resource_controller(extra_filter=None):
         if method in ("form", "lookup"):
             return True
 
-        # Profile
         elif method == "profile":
 
             # Adapt list_fields for pr_address
@@ -6564,7 +6597,6 @@ def hrm_human_resource_controller(extra_filter=None):
                             comments)
 
             # Configure widgets
-            # @todo: put into separate function
             contacts_widget = dict(label = "Contacts",
                                    label_create = "Add Contact",
                                    tablename = "pr_contact",
@@ -6668,7 +6700,6 @@ def hrm_human_resource_controller(extra_filter=None):
                            profile_widgets = profile_widgets,
                            )
 
-        # Summary
         elif method == "summary":
 
             # CRUD Strings

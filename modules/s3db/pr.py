@@ -291,10 +291,10 @@ class S3PersonEntity(S3Model):
         # Role (Affiliates Group)
         #
         role_types = {
-            1:T("Organization Units"),    # business hierarchy (reporting units)
-            2:T("Membership"),            # membership role
-            3:T("Association"),           # other non-reporting role
-            9:T("Other")                  # other role type
+            1: T("Organization Units"),  # business hierarchy (reporting units)
+            2: T("Membership"),          # membership role
+            3: T("Association"),         # other non-reporting role
+            9: T("Other")                # other role type
         }
         tablename = "pr_role"
         define_table(tablename,
@@ -311,7 +311,8 @@ class S3PersonEntity(S3Model):
                       Field("role_type", "integer",
                             requires = IS_IN_SET(role_types, zero=None),
                             represent = lambda opt: \
-                            role_types.get(opt, UNKNOWN_OPT)),
+                                role_types.get(opt, UNKNOWN_OPT),
+                            ),
                       # Role name
                       Field("role", notnull=True,
                             requires = IS_NOT_EMPTY(),
@@ -319,18 +320,20 @@ class S3PersonEntity(S3Model):
                       # Path, for faster lookups
                       Field("path",
                             readable = False,
-                            writable = False),
+                            writable = False,
+                            ),
                       # Type filter, type of entities which can have this role
                       Field("entity_type", "string",
                             requires = IS_EMPTY_OR(IS_IN_SET(pe_types,
                                                              zero=T("ANY"))),
                             represent = lambda opt: \
-                            pe_types.get(opt, UNKNOWN_OPT),
+                                pe_types.get(opt, UNKNOWN_OPT),
                             ),
                       # Subtype filter, if the entity type defines its own type
                       Field("sub_type", "integer",
                             readable = False,
-                            writable = False),
+                            writable = False,
+                            ),
                       *s3_meta_fields())
 
         # CRUD Strings
@@ -404,11 +407,11 @@ class S3PersonEntity(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return dict(pr_pe_types=pe_types,
-                    pr_pe_label=pr_pe_label,
-                    pr_role_types=role_types,
-                    pr_role_id=role_id,
-                    pr_pentity_represent=pr_pentity_represent
+        return dict(pr_pe_types = pe_types,
+                    pr_pe_label = pr_pe_label,
+                    pr_role_types = role_types,
+                    pr_role_id = role_id,
+                    pr_pentity_represent = pr_pentity_represent,
                     )
 
     # -------------------------------------------------------------------------

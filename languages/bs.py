@@ -1676,6 +1676,7 @@
 'Create Dead Body Report': 'Kreiraj izvještaj o mrtvim tijelima',
 'Create Department': 'Kreiraj odjeljenje',
 'Create Details': 'Kreiraj detalje',
+'Create Email Account': 'Kreiraj e-mail nalog',
 'Create Event': 'Kreiraj događaj',
 'Create Event Type': 'Kreiraj tip događaja',
 'Create Facility': 'Kreiraj objekat',

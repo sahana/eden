@@ -8,8 +8,8 @@
          CSV fields:
          Team Name.......................pr_group.name
          Description.....................pr_group.description
-         Organisation....................org_organisation_team.organsiation_id
-         Branch..........................org_organisation_team.organsiation_id
+         Organisation....................org_organisation_team.organisation_id
+         Branch..........................org_organisation_team.organisation_id
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -62,8 +62,15 @@
         <resource name="pr_group">
             <data field="name"><xsl:value-of select="$GroupName"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
-            <!-- Default to Relief team -->
-            <data field="group_type">3</data>
+            <xsl:choose>
+                <xsl:when test="col[@field='Type']!=''">
+                    <data field="group_type"><xsl:value-of select="col[@field='Type']"/></data>
+                </xsl:when>
+                <xsl:otherwise>
+                    <!-- Default to Relief team -->
+                    <data field="group_type">3</data>
+                </xsl:otherwise>
+            </xsl:choose>
 
             <!-- Link to Organisation -->
             <xsl:if test="$OrgName!=''">

@@ -1086,6 +1086,7 @@
 'Create Course': 'Aggiungi Corso',
 'Create Dead Body Report': 'Crea Report sul Cadavere',
 'Create Department': 'Crea Dipartimento',
+'Create Email Account': "Crea l'utenza email",
 'Create Event': 'Creazione Evento',
 'Create Event Type': 'Crea Tipo di Evento',
 'Create Facility': 'Crea Struttura',

@@ -46,7 +46,8 @@ from s3layouts import S3PopupLink
 # =============================================================================
 class S3DeploymentModel(S3Model):
 
-    names = ("deploy_mission",
+    names = ("deploy_organisation",
+             "deploy_mission",
              "deploy_mission_id",
              "deploy_mission_document",
              "deploy_mission_status_opts",
@@ -73,16 +74,32 @@ class S3DeploymentModel(S3Model):
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         human_resource_id = self.hrm_human_resource_id
+        organisation_id = self.org_organisation_id
+
+        # ---------------------------------------------------------------------
+        # Organisation
+        # - which Organisations/Branches have deployment teams
+        #
+
+        tablename = "deploy_organisation"
+        define_table(tablename,
+                     organisation_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
 
         # ---------------------------------------------------------------------
         # Mission
         #
+
         mission_status_opts = {1 : T("Closed"),
-                               2 : T("Open")
+                               2 : T("Open"),
                                }
+
         tablename = "deploy_mission"
         define_table(tablename,
                      super_link("doc_id", "doc_entity"),
+                     # Limit to deploy_organisation in template if-required
+                     organisation_id(),
                      Field("name",
                            label = T("Name"),
                            represent = self.deploy_mission_name_represent,
@@ -96,7 +113,6 @@ class S3DeploymentModel(S3Model):
                                           ),
                      # @ToDo: Link to event_type via event_id link table instead of duplicating
                      self.event_type_id(),
-                     self.org_organisation_id(),
                      Field("code", length = 24,
                            represent = lambda v: s3_unicode(v) if v else NONE,
                            ),
@@ -303,17 +319,36 @@ class S3DeploymentModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Application of human resources
-        # - agreement that an HR is generally available for assignments
-        # - can come with certain restrictions
+        # - agreement that an HR is available for assignments ('on the roster')
         #
+
+        # Categories for IFRC AP region
+        status_opts = \
+            {1 : "I",   # Qualified RDRT team member and ready for deployment:Passed RDRT Induction training (and specialized training); assessed (including re-assessment after deployment) and recommended for deployment
+             2 : "II",  # Passed RDRT Induction training; yet to deploy/assess
+             3 : "III", # Passed RDRT Specialist training; did not pass/not yet taken RDRT Induction training
+             4 : "IV",  # Attended RDRT Induction training, failed in assessment or re-assessment after deployment but still have potential for follow up training
+             5 : "V",   # ERU trained personnel, requires RDRT Induction training
+             }
+
         tablename = "deploy_application"
         define_table(tablename,
+                     organisation_id(),
                      human_resource_id(empty = False,
-                                       label = T(hr_label)),
+                                       label = T(hr_label),
+                                       ),
                      Field("active", "boolean",
                            default = True,
                            label = T("Roster Status"),
                            represent = lambda opt: T("active") if opt else T("inactive"),
+                           ),
+                     Field("status", "integer",
+                           default = 5,
+                           label = T("Category"),
+                           represent = lambda opt: \
+                                       status_opts.get(opt,
+                                                       UNKNOWN_OPT),
+                           requires = IS_IN_SET(status_opts),
                            ),
                      *s3_meta_fields())
 
@@ -433,11 +468,6 @@ class S3DeploymentModel(S3Model):
                   ondelete_cascade = \
                     self.deploy_assignment_experience_ondelete_cascade,
                   )
-
-        # ---------------------------------------------------------------------
-        # Assignment of assets
-        #
-        # @todo: deploy_asset_assignment
 
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
@@ -954,22 +984,24 @@ class S3DeploymentAlertModel(S3Model):
         if r.representation != "html" or not alert_id or r.component:
             raise HTTP(501, BADMETHOD)
 
+        auth = current.auth
+
         # Must have permission to update the alert in order to send it
-        authorised = current.auth.s3_has_permission("update", "deploy_alert",
-                                                    record_id = alert_id)
+        authorised = auth.s3_has_permission("update", "deploy_alert",
+                                            record_id = alert_id)
         if not authorised:
             r.unauthorised()
 
-        T = current.T
         record = r.record
-        # Always redirect to the Mission Profile
         mission_id = record.mission_id
+    
+        # Always redirect to the Mission Profile
         next_url = URL(f="mission", args=[mission_id, "profile"])
 
         # Check whether the alert has already been sent
         # - alerts should be read-only after creation
         if record.message_id:
-            current.session.error = T("This Alert has already been sent!")
+            current.session.error = current.T("This Alert has already been sent!")
             redirect(next_url)
 
         db = current.db
@@ -989,8 +1021,18 @@ class S3DeploymentAlertModel(S3Model):
             recipients = db(query).select(ltable.id,
                                           limitby=(0, 1)).first()
         if not recipients:
-            current.session.error = T("This Alert has no Recipients yet!")
+            current.session.error = current.T("This Alert has no Recipients yet!")
             redirect(next_url)
+
+        settings = current.deployment_settings
+
+        # cc: list(s)
+        cc_groups = settings.get_deploy_cc_groups()
+        if cc_groups:
+            # Lookup pe_ids
+            gtable = s3db.pr_group
+            cc_groups = db(gtable.name.belongs(cc_groups)).select(gtable.pe_id)
+            cc_groups = [g.pe_id for g in cc_groups]
 
         # Send Message
         message = record.body
@@ -1002,6 +1044,11 @@ class S3DeploymentAlertModel(S3Model):
                                            contact_method = "SMS",
                                            message=message,
                                            )
+            for g in cc_groups:
+                msg.send_by_pe_id(g.pe_id,
+                                  contact_method = "SMS",
+                                  message=message,
+                                  )
 
         elif contact_method == 9:
             # Send both
@@ -1026,6 +1073,11 @@ class S3DeploymentAlertModel(S3Model):
                                            contact_method = "SMS",
                                            message=message,
                                            )
+            for g in cc_groups:
+                msg.send_by_pe_id(g.pe_id,
+                                  contact_method = "SMS",
+                                  message=message,
+                                  )
 
             # Update the Alert to show it's been Sent
             db(table.id == id).update(message_id=message_id)
@@ -1038,7 +1090,7 @@ class S3DeploymentAlertModel(S3Model):
             message = "%s\n:mission_id:%s:" % (message, mission_id)
 
             # Lookup from_address
-            organisation_id = current.auth.user.organisation_id
+            organisation_id = auth.user.organisation_id
             ctable = s3db.msg_email_channel
             query = (ctable.deleted == False) & \
                     (ctable.enabled == True)
@@ -1049,7 +1101,7 @@ class S3DeploymentAlertModel(S3Model):
                                         ctable.server,
                                         )
             if not channels:
-                current.session.error = T("Need to configure an Email Address!")
+                current.session.error = current.T("Need to configure an Email Address!")
                 redirect(URL(f="email_channel"))
             elif organisation_id and len(channels) > 1:
                 _channels = channels.find(lambda row: row.organisation_id == organisation_id)
@@ -1066,8 +1118,14 @@ class S3DeploymentAlertModel(S3Model):
                                            message=message,
                                            from_address=from_address,
                                            )
+            for g in cc_groups:
+                msg.send_by_pe_id(g.pe_id,
+                                  subject=record.subject,
+                                  message=message,
+                                  from_address=from_address,
+                                  )
 
-        if current.deployment_settings.get_deploy_post_to_twitter():
+        if settings.get_deploy_post_to_twitter():
             # Post Alert to Twitter
             try:
                 import tweepy
@@ -1092,7 +1150,7 @@ class S3DeploymentAlertModel(S3Model):
         db(table.id == alert_id).update(**data)
 
         # Return to the Mission Profile
-        current.session.confirmation = T("Alert Sent")
+        current.session.confirmation = current.T("Alert Sent")
         redirect(next_url)
 
     # -------------------------------------------------------------------------
@@ -1253,8 +1311,8 @@ def deploy_rheader(r, tabs=[], profile=False):
                               )
                 rheader = DIV(H2(title),
                               TABLE(row1,
-                                    TR(label("created_on"),
-                                       value("created_on"),
+                                    TR(label("date"),
+                                       value("date"),
                                        label("status"),
                                        value("status"),
                                        ),
@@ -1315,7 +1373,7 @@ def deploy_mission_response_count(row):
         return 0
 
 # =============================================================================
-def deploy_member_filter(status=False):
+def deploy_member_filters(status=False):
     """
         Filter widgets for members (hrm_human_resource), used in
         custom methods for member selection, e.g. deploy_apply
@@ -1375,6 +1433,12 @@ def deploy_member_filter(status=False):
                                                      },
                                           ))
 
+    if current.auth.s3_has_role("ADMIN"):
+        widgets.insert(2, S3OptionsFilter("application.organisation_id",
+                                          hidden = False,
+                                          label = T("Deployment Team"),
+                                          ))
+        
     return widgets
 
 # =============================================================================
@@ -1606,8 +1670,10 @@ def deploy_apply(r, **attr):
                             row.update_record(active=True)
                             added += 1
                     else:
-                        atable.insert(human_resource_id=human_resource_id,
-                                      active=True)
+                        atable.insert(organisation_id = organisation_id,
+                                      human_resource_id = human_resource_id,
+                                      active = True,
+                                      )
                         added += 1
         current.session.confirmation = T("%(number)s %(team)s members added") % \
                                        dict(team = T(deploy_team),
@@ -1620,7 +1686,7 @@ def deploy_apply(r, **attr):
     elif r.http == "GET":
 
         # Filter widgets
-        filter_widgets = deploy_member_filter()
+        filter_widgets = deploy_member_filters()
 
         # List fields
         list_fields = ["id",
@@ -1782,8 +1848,9 @@ def deploy_alert_select_recipients(r, **attr):
 
     T = current.T
     s3db = current.s3db
-
     response = current.response
+    s3 = response.s3
+
     member_query = FS("application.active") != None
 
     if r.http == "POST":
@@ -1843,7 +1910,25 @@ def deploy_alert_select_recipients(r, **attr):
                              filter=member_query, vars=r.get_vars)
 
     # Filter widgets (including roster status)
-    filter_widgets = deploy_member_filter(status=True)
+    filter_widgets = deploy_member_filters(status=True)
+    if current.deployment_settings.get_deploy_select_ratings():
+        rating_opts = {1: 1,
+                       2: 2,
+                       3: 3,
+                       4: 4,
+                       }
+        filter_widgets.extend((S3OptionsFilter("training.grade",
+                                               label = T("Training Grade"),
+                                               options = rating_opts,
+                                               cols = 4,
+                                               ),
+                               S3OptionsFilter("appraisal.rating",
+                                               label = T("Deployment Rating"),
+                                               options = rating_opts,
+                                               cols = 4,
+                                               ),
+                               ))
+
     if filter_widgets and representation == "html":
         # Apply filter defaults
         resource.configure(filter_widgets = filter_widgets)
@@ -1881,6 +1966,7 @@ def deploy_alert_select_recipients(r, **attr):
         get_vars.update(dt_sorting)
     filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
     resource.add_filter(filter)
+    resource.add_filter(s3.filter)
     data = resource.select(list_fields,
                            start=0,
                            limit=limit,
@@ -1901,7 +1987,7 @@ def deploy_alert_select_recipients(r, **attr):
         resource.configure(deletable = False)
 
         #dt.defaultActionButtons(resource)
-        response.s3.no_formats = True
+        s3.no_formats = True
 
         # Data table (items)
         items = dt.html(totalrows,
@@ -1940,7 +2026,7 @@ def deploy_alert_select_recipients(r, **attr):
                                        _class="filter-form",
                                        _id="datatable-filter-form",
                                        )
-            fresource = current.s3db.resource(resource.tablename)
+            fresource = s3db.resource(resource.tablename)
             alias = resource.alias if r.component else None
             ff = filter_form.html(fresource,
                                   r.get_vars,

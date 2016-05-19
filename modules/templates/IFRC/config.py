@@ -1060,7 +1060,9 @@ def config(settings):
                 region_id = org.region_id
                 # Find Sub regions (just 1 level needed)
                 rtable = s3db.org_region
-                subregions = db(rtable.parent == region_id).select(rtable.id)
+                query = (rtable.parent == region_id) & \
+                        (rtable.deleted == False)
+                subregions = db(query).select(rtable.id)
                 if subregions:
                     region_ids = [region.id for region in subregions]
                     region_ids.append(region_id)
@@ -1477,81 +1479,6 @@ def config(settings):
     settings.customise_auth_user_controller = customise_auth_user_controller
 
     # -----------------------------------------------------------------------------
-    def customise_deploy_alert_resource(r, tablename):
-
-        from s3 import S3DateTime, S3SQLCustomForm
-
-        s3db = current.s3db
-
-        s3db.deploy_alert_recipient.human_resource_id.label = T("Member")
-
-        atable = s3db.deploy_alert
-        created_on = atable.modified_on
-        created_on.readable = True
-        created_on.label = T("Date")
-        created_on.represent = lambda d: S3DateTime.date_represent(d, utc=True)
-
-        crud_form = S3SQLCustomForm("mission_id",
-                                    "contact_method",
-                                    "subject",
-                                    "body",
-                                    "modified_on",
-                                    )
-
-        s3db.configure(tablename,
-                       crud_form = crud_form,
-                       list_fields = ["mission_id",
-                                      "contact_method",
-                                      "subject",
-                                      "body",
-                                      "alert_recipient.human_resource_id",
-                                      ],
-                       )
-
-        countries = _countries_for_region()
-        if countries:
-            # Limit Missions to just those from this region's countries
-            db = current.db
-            mtable = s3db.deploy_mission
-            missions = db(mtable.location_id.belongs(countries)).select(mtable.id)
-            missions = [m.id for m in missions]
-
-            field = atable.mission_id
-            current.response.s3.filter = (field.belongs(missions))
-
-            from s3 import IS_ONE_OF
-            field.requires = IS_ONE_OF(db, "deploy_mission.id",
-                                       field.represent,
-                                       filterby = "id",
-                                       filter_opts = missions,
-                                       sort=True)
-
-    settings.customise_deploy_alert_resource = customise_deploy_alert_resource
-
-    # -----------------------------------------------------------------------------
-    def customise_deploy_application_resource(r, tablename):
-
-        current.s3db[tablename].human_resource_id.label = T("Member")
-
-    settings.customise_deploy_application_resource = customise_deploy_application_resource
-
-    # -----------------------------------------------------------------------------
-    def customise_event_incident_report_resource(r, tablename):
-
-        # Special cases for different NS
-        root_org = current.auth.root_org_name()
-        if root_org == ARCS:
-            from s3 import S3LocationSelector
-
-            # Don't go back to Create form after submission
-            current.session.s3.rapid_data_entry = False
-
-            # Hide Street Address
-            current.s3db.event_incident_report.location_id.widget = S3LocationSelector()
-
-    settings.customise_event_incident_report_resource = customise_event_incident_report_resource
-
-    # -----------------------------------------------------------------------------
     def _is_asia_pacific(region_id=False):
         """
             Helper to determine if the user is in the Asia Pacific region
@@ -1624,6 +1551,8 @@ def config(settings):
                         (ctable.deleted == False)
                 countries = db(query).select(ctable.location_id)
                 countries = [c.location_id for c in countries]
+                # Cache countries for use in customise_resource is we lookup 1st in customise_controller
+                current.response.s3.countries = countries
                 return countries
 
         return []
@@ -1677,6 +1606,134 @@ def config(settings):
         # Default activity_type when creating experience records from assignments
         activity_type = s3db.hrm_experience.activity_type
         activity_type.default = activity_type.update = "rdrt"
+
+    # -----------------------------------------------------------------------------
+    def customise_deploy_alert_controller(**attr):
+
+        db = current.db
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        countries = _countries_for_region()
+        if countries:
+            # Filter Alerts to just those from this region's countries
+            # @ToDo: Switch to using mission_id$organisation_id
+            mtable = s3db.deploy_mission
+            missions = db(mtable.location_id.belongs(countries)).select(mtable.id)
+            missions = [m.id for m in missions]
+            # Cache missions for use in customise_resource
+            s3.missions = missions
+            s3.filter = (s3db.deploy_alert.mission_id.belongs(missions))
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.method == "select":
+                if _is_asia_pacific():
+                    settings.deploy.select_ratings = True
+
+                user_org_id = current.auth.user.organisation_id
+                if user_org_id:
+                    otable = s3db.org_organisation
+                    org = db(otable.id == user_org_id).select(otable.region_id,
+                                                              limitby=(0, 1),
+                                                              cache = s3db.cache,
+                                                              ).first()
+                    if org:
+                        region_id = org.region_id
+                        # Find Sub regions (just 1 level needed)
+                        rtable = s3db.org_region
+                        query = (rtable.parent == region_id) & \
+                                (rtable.deleted == False)
+                        subregions = db(query).select(rtable.id)
+                        if subregions:
+                            region_ids = [region.id for region in subregions]
+                            region_ids.append(region_id)
+                        else:
+                            region_ids = [region_id]
+                    s3.filter = ((s3db.hrm_human_resource.organisation_id == otable.id) & \
+                                 (otable.region_id.belongs(region_ids)))
+
+            elif r.method == "send":
+                settings.deploy.cc_groups = ["RDRT Focal Points"]
+
+            return result
+
+        s3.prep = custom_prep
+            
+        return attr
+
+    settings.customise_deploy_alert_controller = customise_deploy_alert_controller
+
+    # -----------------------------------------------------------------------------
+    def customise_deploy_alert_resource(r, tablename):
+
+        from s3 import S3DateTime, S3SQLCustomForm
+
+        s3db = current.s3db
+
+        s3db.deploy_alert_recipient.human_resource_id.label = T("Member")
+
+        atable = s3db.deploy_alert
+        created_on = atable.modified_on
+        created_on.readable = True
+        created_on.label = T("Date")
+        created_on.represent = lambda d: S3DateTime.date_represent(d, utc=True)
+
+        crud_form = S3SQLCustomForm("mission_id",
+                                    "contact_method",
+                                    "subject",
+                                    "body",
+                                    "modified_on",
+                                    )
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = ["mission_id",
+                                      "contact_method",
+                                      "subject",
+                                      "body",
+                                      "alert_recipient.human_resource_id",
+                                      ],
+                       )
+
+        s3 = current.response.s3
+        countries = s3.countries
+        if not countries:
+            # Not coming from deploy/alert controller so need to query
+            countries = _countries_for_region()
+        if countries:
+            # Limit Missions to just those from this region's countries
+            db = current.db
+            missions = s3.missions
+            if not missions:
+                # Not coming from deploy/alert controller so need to query
+                mtable = s3db.deploy_mission
+                missions = db(mtable.location_id.belongs(countries)).select(mtable.id)
+                missions = [m.id for m in missions]
+
+            from s3 import IS_ONE_OF
+            field = atable.mission_id
+            field.requires = IS_ONE_OF(db, "deploy_mission.id",
+                                       field.represent,
+                                       filterby = "id",
+                                       filter_opts = missions,
+                                       sort=True)
+
+    settings.customise_deploy_alert_resource = customise_deploy_alert_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_deploy_application_resource(r, tablename):
+
+        current.s3db[tablename].human_resource_id.label = T("Member")
+
+    settings.customise_deploy_application_resource = customise_deploy_application_resource
 
     # -----------------------------------------------------------------------------
     def customise_deploy_assignment_controller(**attr):
@@ -1763,6 +1820,7 @@ def config(settings):
         from gluon.html import DIV
 
         db = current.db
+        auth = current.auth
         s3db = current.s3db
         s3 = current.response.s3
         messages = current.messages
@@ -1776,7 +1834,28 @@ def config(settings):
         table = s3db.deploy_mission
         table.code.label = T("Appeal Code")
         table.event_type_id.label = T("Disaster Type")
-        table.organisation_id.readable = table.organisation_id.writable = False
+
+        dotable = s3db.deploy_organisation
+        deploying_orgs = db(dotable.deleted == False).select(dotable.organisation_id)
+        deploying_orgs = [o.organisation_id for o in deploying_orgs]
+
+        is_admin = auth.s3_has_role("ADMIN")
+        organisation_id = auth.user.organisation_id
+
+        from s3 import IS_ONE_OF
+        f = table.organisation_id
+        if not is_admin and organisation_id in deploying_orgs:
+            f.default = organisation_id
+            f.readable = f.writable = False
+            s3.filter = (f == organisation_id)
+        else:
+            f.requires = IS_ONE_OF(db, "org_organisation.id",
+                                   f.represent,
+                                   filterby = "id",
+                                   filter_opts = deploying_orgs,
+                                   orderby = "org_organisation.name",
+                                   sort = True
+                                   )
 
         # Restrict Location to just Countries
         from s3 import S3Represent, S3MultiSelectWidget
@@ -1787,14 +1866,14 @@ def config(settings):
         countries = _countries_for_region()
         if countries:
             # Limit to just this region's countries
-            from s3 import IS_ONE_OF
             field.requires = IS_ONE_OF(db, "gis_location.id",
                                        field.represent,
                                        filterby = "id",
                                        filter_opts = countries,
                                        sort=True)
             # Filter to just the user's region
-            s3.filter = (field.belongs(countries))
+            # (we filter on organisation_id now)
+            #s3.filter = (field.belongs(countries))
         else:
             # Allow all countries
             field.requires = s3db.gis_country_requires
@@ -1913,7 +1992,8 @@ def config(settings):
                 table.date.label = T("Date Created")
 
                 from s3 import S3SQLCustomForm, S3SQLInlineComponent
-                crud_form = S3SQLCustomForm("name",
+                crud_form = S3SQLCustomForm("organisation_id",
+                                            "name",
                                             "event_type_id",
                                             "location_id",
                                             "code",
@@ -1986,6 +2066,22 @@ def config(settings):
                                )
 
     settings.customise_deploy_response_resource = customise_deploy_response_resource
+
+    # -----------------------------------------------------------------------------
+    def customise_event_incident_report_resource(r, tablename):
+
+        # Special cases for different NS
+        root_org = current.auth.root_org_name()
+        if root_org == ARCS:
+            from s3 import S3LocationSelector
+
+            # Don't go back to Create form after submission
+            current.session.s3.rapid_data_entry = False
+
+            # Hide Street Address
+            current.s3db.event_incident_report.location_id.widget = S3LocationSelector()
+
+    settings.customise_event_incident_report_resource = customise_event_incident_report_resource
 
     # -----------------------------------------------------------------------------
     def poi_marker_fn(record):
@@ -2453,11 +2549,12 @@ def config(settings):
 
         tablename = "hrm_human_resource"
 
+        auth = current.auth
         s3db = current.s3db
 
         # Special cases for different NS
         arcs = vnrc = False
-        root_org = current.auth.root_org_name()
+        root_org = auth.root_org_name()
 
         controller = current.request.controller
         if controller == "deploy":
@@ -2551,7 +2648,7 @@ def config(settings):
                     dtable.occupation.label = T("Job")
                     etable = s3db.pr_education
                     etable.level_id.comment = None # Don't Add Education Levels inline
-                    organisation_id = current.auth.root_org()
+                    organisation_id = auth.root_org()
                     f = etable.level_id
                     f.requires = IS_ONE_OF(db, "pr_education_level.id",
                                            f.represent,
@@ -2560,7 +2657,7 @@ def config(settings):
                                            )
                     s3db.pr_image.image.widget = None # ImageCropWidget doesn't work inline
                     #ctable = s3db.hrm_course
-                    #query = (ctable.organisation_id == current.auth.root_org()) & \
+                    #query = (ctable.organisation_id == auth.root_org()) & \
                     #        (ctable.type == 2) & \
                     #        (ctable.deleted != True)
                     #courses = db(query).select(ctable.id)
@@ -2855,9 +2952,22 @@ def config(settings):
 
             elif controller == "deploy":
                 # Custom settings for RDRT
+
+                from s3 import FS
+
+                db = current.db
+
+                is_admin = auth.s3_has_role("ADMIN")
+                if not is_admin:
+                    organisation_id = auth.user.organisation_id
+                    dotable = s3db.deploy_organisation
+                    deploying_orgs = db(dotable.deleted == False).select(dotable.organisation_id)
+                    deploying_orgs = [o.organisation_id for o in deploying_orgs]
+                    if organisation_id in deploying_orgs:
+                        r.resource.add_filter(FS("application.organisation_id") == organisation_id)
+
                 AP = _is_asia_pacific()
                 if AP:
-                    db = current.db
                     otable = s3db.org_organisation
                     org = db(otable.name == AP_ZONE).select(otable.id,
                                                             limitby=(0, 1),
@@ -2898,7 +3008,6 @@ def config(settings):
                                )
 
                 # Custom profile widgets for hrm_competency ("skills"):
-                from s3 import FS
                 subsets = (("Computer", "Computer Skills", "Add Computer Skills"),
                            ("Language", "Language Skills", "Add Language Skills"),
                            )
@@ -2960,7 +3069,7 @@ def config(settings):
                                        "icon": "user",
                                        })
 
-                # Remove unneeded filter widgets
+                # Remove unnecessary filter widgets
                 filters = []
                 append_widget = filters.append
                 filter_widgets = get_config("filter_widgets")
@@ -2974,7 +3083,7 @@ def config(settings):
 
                 from s3 import S3OptionsFilter
 
-                # Add gender-filter
+                # Add gender filter
                 gender_opts = dict(s3db.pr_gender_opts)
                 del gender_opts[1]
                 append_widget(S3OptionsFilter("person_id$gender",
@@ -3234,12 +3343,17 @@ def config(settings):
 
             # Grades 1-4
             course_grade_opts = (1, 2, 3, 4)
-            field = s3db.hrm_training.grade
+            field = ttable.grade
             field.readable = field.writable = True
             field.represent = None
             from gluon import IS_EMPTY_OR, IS_IN_SET
             field.requires = IS_EMPTY_OR(IS_IN_SET(course_grade_opts,
                                                    zero=None))
+
+            # Upload Performance Appraisal
+            field = ttable.file
+            field.readable = field.writable = True
+            field.label = T("Performance Appraisal")
 
             # Customise Filter Widgets
             filter_widgets = s3db.get_config(tablename, "filter_widgets")
@@ -3794,12 +3908,15 @@ def config(settings):
             organisation_id = current.auth.user.organisation_id
             if organisation_id:
                 # Filter InBox by Channel
-                from s3.s3query import FS
-                s3.filter &= (FS("channel_id$organisation_id") == organisation_id)
+                #from s3 import FS
+                s3db = current.s3db
+                table = s3db.msg_email_channel
+                current.response.s3.filter &= ((table.organisation_id == organisation_id) & \
+                                               (table.channel_id == s3db.msg_email.channel_id))
 
         return attr
 
-    settings.customise_member_membership_type_controller = customise_member_membership_type_controller
+    settings.customise_msg_email_controller = customise_msg_email_controller
 
     # -----------------------------------------------------------------------------
     def customise_org_capacity_assessment_controller(**attr):
