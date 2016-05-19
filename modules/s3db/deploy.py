@@ -820,15 +820,20 @@ class S3DeploymentAlertModel(S3Model):
                            ),
                      s3_date("date_alert_sent",
                              default = "now",
-                             label = T("Date Alert Sent")),
+                             label = T("Date Alert Sent"),
+                             ),
                      s3_date("date_cvs_sent",
-                             label = T("Date CVs sent to DM")),
+                             label = T("Date CVs sent to DM"),
+                             ),
                      s3_date("date_approval_meeting",
-                             label = T("Date DM talked to President")),
+                             label = T("Date DM talked to President"),
+                             ),
                      s3_date("date_approved",
-                             label = T("Date President approved")),
+                             label = T("Date President approved"),
+                             ),
                      s3_date("date_selected",
-                             label = T("Date Applicant selected")),
+                             label = T("Date Applicant selected"),
+                             ),
                      # Link to the Message once sent
                      message_id(readable = False,
                                 writable = False,
@@ -1205,7 +1210,7 @@ class S3DeploymentAlertModel(S3Model):
         # Update doc_id in all attachments (if any)
         dtable = s3db.doc_document
         ltable = s3db.deploy_mission_document
-        query = (ltable.message_id == response.message_id) & \
+        query = (ltable.message_id == message_id) & \
                 (dtable.id == ltable.document_id) & \
                 (ltable.deleted == False) & \
                 (dtable.deleted == False)
@@ -1631,13 +1636,35 @@ def deploy_apply(r, **attr):
         r.unauthorised()
 
     T = current.T
+    db = current.db
+    auth = current.auth
     s3db = current.s3db
 
     get_vars = r.get_vars
     response = current.response
+    s3 = response.s3
     settings = current.deployment_settings
 
     deploy_team = settings.get_deploy_team_label()
+
+    otable = s3db.org_organisation
+    dotable = s3db.deploy_organisation
+    query = (dotable.deleted == False) & \
+            (dotable.organisation_id == otable.id)
+    deploying_orgs = db(query).select(otable.id,
+                                      otable.name,
+                                      )
+    deploying_orgs = dict([(o.id, o.name) for o in deploying_orgs])
+
+    is_admin = auth.s3_has_role("ADMIN")
+    organisation_id = auth.user.organisation_id
+
+    if not is_admin and organisation_id in deploying_orgs:
+        # Default to this organisation_id
+        pass
+    else:
+        # Manually choose the Deployment Organisation (or leave unset)
+        organisation_id = None
 
     if r.http == "POST":
         added = 0
@@ -1649,7 +1676,6 @@ def deploy_apply(r, **attr):
             else:
                 selected = []
 
-            db = current.db
             atable = s3db.deploy_application
             if selected:
                 # Handle exclusion filter
@@ -1663,6 +1689,9 @@ def deploy_apply(r, **attr):
                                               filter=query, vars=filters)
                     rows = hresource.select(["id"], as_rows=True)
                     selected = [str(row.id) for row in rows]
+
+                if not organisation_id:
+                    organisation_id = post_vars.get("organisation_id")
 
                 query = (atable.human_resource_id.belongs(selected)) & \
                         (atable.deleted != True)
@@ -1759,7 +1788,16 @@ def deploy_apply(r, **attr):
                                   deletable = False,
                                   read_url = profile_url,
                                   update_url = profile_url)
-            response.s3.no_formats = True
+            s3.no_formats = True
+
+            # Selection of Deploying Organisation
+            if not organisation_id and len(deploying_orgs) > 1:
+                opts = [OPTION(v, _value=k) for k, v in deploying_orgs.iteritems()]
+                form = SELECT(*opts, _id="deploy_application_organisation_id",
+                                     _name="organisation_id")
+                s3.scripts.append("/%s/static/scripts/S3/s3.deploy.js" % r.application)
+            else:
+                form = ""
 
             # Data table (items)
             items = dt.html(totalrows,
@@ -1811,10 +1849,12 @@ def deploy_apply(r, **attr):
             else:
                 ff = ""
 
-            output = dict(items = items,
+            output = dict(form = form,
+                          items = items,
+                          list_filter_form = ff,
                           title = T("Add %(team)s Members") % \
                                     dict(team = T(deploy_team)),
-                          list_filter_form = ff)
+                          )
 
             response.view = "list_filter.html"
             return output
