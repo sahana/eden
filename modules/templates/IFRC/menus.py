@@ -478,7 +478,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                            ),
                               ),
                             M("Report by CCST / CO", c="deploy", f="human_resource", m="report",
-                              vars=Storage(rows = "organisation_id",
+                              vars=Storage(rows = "organisation_id$root_organisation$supported_by.name",
                                            cols = "training.course_id",
                                            fact = "count(person_id)",
                                            ),

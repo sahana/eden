@@ -35,6 +35,7 @@ __all__ = ("S3OrganisationModel",
            "S3OrganisationGroupPersonModel",
            "S3OrganisationGroupTeamModel",
            "S3OrganisationLocationModel",
+           "S3OrganisationOrganisationModel",
            "S3OrganisationResourceModel",
            "S3OrganisationSectorModel",
            "S3OrganisationServiceModel",
@@ -735,6 +736,24 @@ class S3OrganisationModel(S3Model):
                                             "link": "org_organisation_branch",
                                             "joinby": "branch_id",
                                             "key": "organisation_id",
+                                            "actuate": "embed",
+                                            "autocomplete": "name",
+                                            "autodelete": False,
+                                            },
+                                           # 'Supported' Organisations
+                                           #{"name": "supported",
+                                           # "link": "org_organisation_organisation",
+                                           # "joinby": "parent_id",
+                                           # "key": "organisation_id",
+                                           # "actuate": "embed",
+                                           # "autocomplete": "name",
+                                           # "autodelete": True,
+                                           # },
+                                           # 'Supporting' Organisation
+                                           {"name": "supported_by",
+                                            "link": "org_organisation_organisation",
+                                            "joinby": "organisation_id",
+                                            "key": "parent_id",
                                             "actuate": "embed",
                                             "autocomplete": "name",
                                             "autodelete": False,
@@ -1914,6 +1933,41 @@ class S3OrganisationLocationModel(S3Model):
                                                             ),
                                                  ),
                        )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3OrganisationOrganisationModel(S3Model):
+    """
+        Link table between Organisations & Organisations
+        - can be used to provide non-hierarchical relationships
+        e.g. "Supports" (as used by IFRC offices for National Societies)
+        To report on the full hierarchy of branches, can use the root_organisation field
+    """
+
+    names = ("org_organisation_organisation",)
+
+    def model(self):
+
+        #T = current.T
+        organisation_id = self.org_organisation_id
+
+        # ---------------------------------------------------------------------
+        # Link table between Organisations & Organisations
+        #
+        tablename = "org_organisation_organisation"
+        self.define_table(tablename,
+                          organisation_id("parent_id",
+                                          empty = False,
+                                          ondelete = "CASCADE",
+                                          ),
+                          organisation_id(empty = False,
+                                          ondelete = "CASCADE",
+                                          ),
+                          # Add this later if 2 or more usecases need to share this same table within a single template
+                          #role_id(),
+                          *s3_meta_fields())
 
         # Pass names back to global scope (s3.*)
         return {}

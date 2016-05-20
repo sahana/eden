@@ -6619,6 +6619,7 @@ def hrm_human_resource_controller(extra_filter=None):
             credentials_widget = dict(# @ToDo: deployment_setting for Labels
                                       label = "Sectors",
                                       label_create = "Add Sector",
+                                      create_controller = c,
                                       type = "datalist",
                                       tablename = "hrm_credential",
                                       filter = FS("person_id") == person_id,
@@ -6628,6 +6629,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                       )
             skills_widget = dict(label = "Skills",
                                  label_create = "Add Skill",
+                                 create_controller = c,
                                  type = "datalist",
                                  tablename = "hrm_competency",
                                  filter = FS("person_id") == person_id,
@@ -6637,6 +6639,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                  )
             trainings_widget = dict(label = "Trainings",
                                     label_create = "Add Training",
+                                    create_controller = c,
                                     type = "datalist",
                                     tablename = "hrm_training",
                                     filter = FS("person_id") == person_id,
@@ -6646,6 +6649,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                     )
             experience_widget = dict(label = "Experience",
                                      label_create = "Add New Experience",
+                                     create_controller = c,
                                      type = "datalist",
                                      tablename = "hrm_experience",
                                      filter = FS("person_id") == person_id,
