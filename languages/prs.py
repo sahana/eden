@@ -29,7 +29,7 @@
 "Human Immunodeficiency Virus Refresher": "ویروس /ایدز کورس مجدد",
 "Community Based Health First Aid": "کمک های اولیه وصحت برای جامعه",
 "Community Based Health First Aid Refresher": "کمک های اولیه وصحت برای جامعه کورس مجدد",
-#"Water and Sanitation": "",
+"Water and Sanitation Refresher": "حفظ الصحه و آب کورس مجدد",
 "Secondary school": "مکتب متوسطه",
 "Primary school": "مکتب ابتدائیه",
 "High school": "بکلوریا",

@@ -27,7 +27,7 @@
 "Human Immunodeficiency Virus Refresher": "ويروس/ ايډز تجددي کورسونه",
 "Community Based Health First Aid": "ټولنې ته لومړنۍ مرستې او روغتيا",
 "Community Based Health First Aid Refresher": "ټولنې ته لومړنۍ مرستې او روغتيا تجددي کورسونه",
-#"Water and Sanitation": "",
+"Water and Sanitation Refresher": "اوبه او د فاضله اوبو سیستم تجددي کورسونه",
 "Secondary school": "منځينی ښونڅی",
 "Primary school": "ابتدائیه ښونڅی",
 "High school": "بکلوریا",
