@@ -130,6 +130,7 @@ class S3Msg(object):
                              "WORK_PHONE":  T("Work phone"),
                              "IRC":         T("IRC handle"),
                              "GITHUB":      T("Github Repo"),
+                             "GCM":         T("Google Cloud Messaging"),
                              "LINKEDIN":    T("LinkedIn Profile"),
                              "BLOG":        T("Blog"),
                              "OTHER":       T("Other")
@@ -804,6 +805,60 @@ class S3Msg(object):
 
         if chainrun:
             self.process_outbox(contact_method)
+
+    # -------------------------------------------------------------------------
+    # Google Cloud Messaging Push
+    # -------------------------------------------------------------------------
+    def gcm_push(self, title=None, uri=None, message=None, registration_ids=None, channel_id=None):
+        """
+            Push the message relating to google cloud messaging server
+
+            @param title: The title for notification
+            @param message: The message to be sent to GCM server
+            @param api_key: The API key for GCM server
+            @param registration_ids: The list of id that will be notified
+            @param channel_id: The specific channel_id to use for GCM push
+        """
+
+        if not title or not uri or not message or not len(registration_ids):
+            return
+
+        from gcm import GCM
+        gcmtable = current.s3db.msg_gcm_channel
+        if channel_id:
+            query = (gcmtable.channel_id == channel_id)
+        else:
+            query = (gcmtable.enabled == True) & (gcmtable.deleted != True)
+
+        row = current.db(query).select(gcmtable.api_key,
+                                       limitby=(0, 1)).first()
+        try:
+            gcm = GCM(row.api_key)
+        except Exception as e:
+            current.log.error("No API Key configured for GCM: ", e)
+        else:
+            try:
+                # @ToDo: Store notification in outbox if-required
+                # @ToDo: Implement other methods for GCM as required
+                # See: https://github.com/geeknam/python-gcm
+                notification = {"title": title,
+                                "message": message,
+                                "uri": uri,
+                                }
+                response = gcm.json_request(registration_ids=registration_ids,
+                                            data=notification)
+            except Exception as e:
+                current.log.error("Google Cloud Messaging Error", e)
+            else:
+                if "errors" in response:
+                    for error, reg_ids in response["errors"].items():
+                        for reg_id in reg_ids:
+                            current.log.error("Google Cloud Messaging Error: %s for Registration ID %s" % (error, reg_id))
+                # @ToDo: Handle for canonical when required
+                #if "canonical" in response:
+                #    for reg_id, canonical_id in response["canonical"].items():
+                        # @ToDo: Replace registration_id with canonical_id
+        return
 
     # -------------------------------------------------------------------------
     # Send Email
