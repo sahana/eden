@@ -962,6 +962,10 @@ $('#method_selector').change(function(){
                 for k, v in filters:
                     if v is None:
                         continue
+                    if k == "info.language__belongs":
+                        k = "language__belongs"
+                    if k == "info.priority__belongs":
+                        k = "priority__belongs"
                     if k in get_vars:
                         if type(get_vars[k]) is list:
                             get_vars[k].append(v)
@@ -1002,7 +1006,7 @@ $('#method_selector').change(function(){
         ftable = s3db.pr_filter
         output = {}
         get_vars = {}
-        if pe_id is not None and subscription_id is not None:
+        if pe_id and subscription_id:
             query = (stable.id == subscription_id) & \
                     (stable.deleted != True) & \
                     (stable.pe_id == pe_id)
@@ -1021,6 +1025,10 @@ $('#method_selector').change(function(){
                     for k, v in filters:
                         if v is None:
                             continue
+                        if k == "info.language__belongs":
+                            k = "language__belongs"
+                        if k == "info.priority__belongs":
+                            k = "priority__belongs"
                         if k in get_vars:
                             if type(get_vars[k]) is list:
                                 get_vars[k].append(v)
@@ -1092,6 +1100,11 @@ $('#method_selector').change(function(){
         # Private alert are not sent through subscription
         filters = subscription.get("filters")
         filters = json.loads(filters)
+        for filter in filters:
+            if filter[0] == "language__belongs":
+                filter[0] = "info.language__belongs"
+            if filter[0] == "priority__belongs":
+                filter[0] = "info.priority__belongs"
         scope_filter = ["scope__belongs", "Public,Restricted"]
         filters.append(scope_filter)
         filters = json.dumps(filters)
@@ -1223,12 +1236,16 @@ $('#method_selector').change(function(){
 
         filters = subscription.get("filters")
         filters = json.loads(filters)
+        for filter in filters:
+            if filter[0] == "language__belongs":
+                filter[0] = "info.language__belongs"
+            if filter[0] == "priority__belongs":
+                filter[0] = "info.priority__belongs"
         scope_filter = ["scope__belongs", "Public,Restricted"]
         filters.append(scope_filter)
-        filters = json.dumps(filters)
-        filters_ = json.loads(filters)
-        filters_ = [filter_ for filter_ in filters_
-                    if filter_[0] != "id__belongs"]
+            
+        filters_ = [filter for filter in filters
+                    if filter[0] != "id__belongs"]
         filters_ = json.dumps(filters_)
         if filter_id is None:
             success = ftable.insert(pe_id=pe_id, query=filters_)

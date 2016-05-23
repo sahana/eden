@@ -347,6 +347,8 @@ class S3Notifications(object):
         subject = get_config("notify_subject")
         if not subject:
             subject = settings.get_msg_notify_subject()
+        if callable(subject):
+            subject = subject(resource, data, meta_data)
 
         from string import Template
         subject = Template(subject).safe_substitute(S="%(systemname)s",
