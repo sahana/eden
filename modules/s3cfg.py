@@ -2441,6 +2441,13 @@ class S3Config(Storage):
 
         return self.cap.get("same_code")
 
+    def get_cap_show_notification_menu(self):
+        """
+            Whether to show the menu to notify subscribers of new subscription options
+        """
+
+        return self.cap.get("show_notification_menu", False)
+
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #

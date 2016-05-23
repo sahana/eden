@@ -165,6 +165,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
         cap_editors = lambda i: s3_has_role("ALERT_EDITOR") or \
                                 s3_has_role("ALERT_APPROVER")
 
+        if current.deployment_settings.get_cap_show_notification_menu():
+            notify_menu = M("Notify Subscribers of new options",
+                            c="cap",
+                            f="compose",
+                            vars={"option": "notify_subscribers"},
+                            check=cap_editors,
+                            )
+        else:
+            notify_menu = None
+
         return M(c="cap")(
                     M("Manage Recipients",
                       c="pr",
@@ -175,8 +185,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Manage Recipient Groups",
                       c="pr",
                       f="group",
-                      check=cap_editors,
                       ),
+                    notify_menu,
                     M("Alerts", f="alert",
                       check=cap_editors)(
                         M("Create", m="create"),
