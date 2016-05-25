@@ -1094,6 +1094,7 @@
 'Date Created': 'Erstellt am',
 'Date Due': 'Fällig am',
 'Date for Follow-up': 'Wiedervorlage am',
+'Date is required when marking the appointment as completed': 'Datumsangabe erforderlich wenn der Termin als beendet markiert werden soll',
 'Date Joined': 'Eintrittsdatum',
 'Date Modified': 'Geändert am',
 'Date Published': 'Veröffentlicht am',
