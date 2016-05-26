@@ -1647,6 +1647,7 @@ class DVRCaseAppointmentModel(S3Model):
         """
             Validate appointment form
                 - Future appointments can not be set to completed
+                - Undated appointments can not be set to completed
 
             @param form: the FORM
         """
@@ -1656,10 +1657,11 @@ class DVRCaseAppointmentModel(S3Model):
         date = formvars.get("date")
         status = formvars.get("status")
 
-        if date and str(status) == "4" and \
-           date > current.request.utcnow.date():
-
-            form.errors["status"] = current.T("Appointments with future dates can not be marked as completed")
+        if str(status) == "4":
+            if date is None:
+                form.errors["date"] = current.T("Date is required when marking the appointment as completed")
+            elif date > current.request.utcnow.date():
+                form.errors["status"] = current.T("Appointments with future dates can not be marked as completed")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1710,8 +1712,7 @@ class DVRCaseAppointmentModel(S3Model):
         if settings.get_dvr_appointments_update_case_status() and \
            s3_str(formvars.get("status")) == "4":
 
-            # Get the case status to be set when appointment is completed today
-            today = current.request.utcnow.date()
+            # Get the case status to be set when appointment is completed
             ttable = s3db.dvr_case_appointment_type
             query = (table.id == record_id) & \
                     (table.deleted != True) & \
@@ -1727,6 +1728,9 @@ class DVRCaseAppointmentModel(S3Model):
                 # want to override this when closing appointments
                 # restrospectively):
                 date = row.dvr_case_appointment.date
+                if not date:
+                    # Assume today if no date given
+                    date = current.request.utcnow.date()
                 status_id = row.dvr_case_appointment_type.status_id
                 query = (table.person_id == person_id)
                 if case_id:
