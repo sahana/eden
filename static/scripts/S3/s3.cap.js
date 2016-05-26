@@ -86,7 +86,9 @@
         // Show the restriction field if scope is restricted otherwise hide by default
         if ($('#cap_alert_scope').val() == 'Restricted') {
         	restriction_row.show();
+            recipient_row.hide();
         } else {
+            recipient_row.hide();
         	restriction_row.hide();
         }
         // On change in scope
@@ -101,8 +103,8 @@
                     recipient_row.show();
                     break;
                 case 'Restricted':
+                    recipient_row.hide();
                     restriction_row.show();
-                    recipient_row.show();
                     break;
                 case 'Private':
                     restriction_row.hide();
@@ -111,6 +113,10 @@
                 	}
                     recipient_row.show();
                     break;
+                case '':
+                    recipient_row.hide();
+                    restriction_row.hide();
+                    break;   
             }
         });
 

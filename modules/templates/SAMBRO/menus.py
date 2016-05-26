@@ -61,25 +61,49 @@ class S3MainMenu(default.S3MainMenu):
         auth = current.auth
         has_role = auth.s3_has_role
         if auth.s3_logged_in():
+            alerting_menu = MM("Alerting", c="cap", f="alert")
+            mapping_menu = MM("Mapping", c="gis", f="index")
+            recipient_menu = MM("Manage Recipients", c="pr", f="subscription",
+                                vars={"option": "manage_recipient"})
             if has_role("ADMIN"):
                 # Full set
                 # @ToDo: Add menu entries for "Create RSS Feed for CAP" & "Create RSS Feed for CMS"
-                return super(S3MainMenu, cls).menu_modules()
+                return [homepage(),
+                        alerting_menu,
+                        mapping_menu,
+                        recipient_menu,
+                        MM("Person Registry", c="pr", f="person"),
+                        MM("Organizations", c="org", f="organisation"),
+                        MM("Event Types", c="event", f="event_type"),
+                        ]
             else:
+                view_menu = MM("View Alerts", c="cap", f="alert")
                 # Publisher sees minimal options
                 menus_ = [homepage(),
                           ]
 
                 if has_role("MAP_ADMIN"):
-                    menus_.extend([homepage("cap"),
-                                  homepage("gis"),
+                    menus_.extend([view_menu,
+                                   mapping_menu,
                                   ])
-                elif has_role("ALERT_EDITOR") or \
-                     has_role("ALERT_APPROVER"):
-                    menus_.append(homepage("cap"),
-                                  )
+                elif has_role("ALERT_EDITOR"):
+                    menus_.extend([alerting_menu,
+                                   recipient_menu,
+                                   ])
+                elif has_role("ALERT_APPROVER"):
+                    menus_.extend([alerting_menu,
+                                   recipient_menu,
+                                   MM("Approve Alerts", c="cap", f="alert", m="review"),
+                                   MM("View Approved Alerts", c="cap", f="alert",
+                                      vars={"~.approved_by__ne": None}
+                                      ),
+                                   MM("Incomplete Alerts", c="cap", f="alert", m="review",
+                                      vars={"status": "incomplete"}
+                                      )
+                                   ])
                 else:
-                    menus_ = menus_
+                    # Authenticated Users
+                    menus_.append(view_menu)
 
                 return menus_
 
@@ -165,18 +189,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         cap_editors = lambda i: s3_has_role("ALERT_EDITOR") or \
                                 s3_has_role("ALERT_APPROVER")
 
-        return M(c="cap")(
-                    M("Manage Recipients",
-                      c="pr",
-                      f="subscription",
-                      vars={"option": "manage_recipient"},
-                      check=cap_editors,
-                      ),
-                    M("Manage Recipient Groups",
-                      c="pr",
-                      f="group",
-                      check=cap_editors,
-                      ),
+        return M(c="cap", check=cap_editors)(
                     M("Alerts", f="alert",
                       check=cap_editors)(
                         M("Create", m="create"),
@@ -198,5 +211,42 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import from CSV", m="import", p="create"),
                     ),
                 )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def event():
+        """ EVENT / Event Module """
+
+        return M()(
+                    M("Event Types", c="event", f="event_type")(
+                        M("Create", m="create"),
+                        M("Import", m="import", p="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def pr():
+        """ PR / Person Registry """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        if current.request.vars.option == "manage_recipient":
+            return M(c="pr", restrict=ADMIN)(
+                        M("Manage Recipients", f="subscription",
+                              vars={"option": "manage_recipient"})(
+                            M("Add Recipient to List", c="default", f="index",
+                              m="subscriptions", vars={"option": "manage_recipient"})
+                        )
+                    )
+        else:
+            return M(c="pr", restrict=ADMIN)(
+                        M("Persons", f="person")(
+                            M("Create", m="create"),
+                        ),
+                        M("Groups", f="group")(
+                            M("Create", m="create"),
+                        ),
+                    )
 
 # END =========================================================================

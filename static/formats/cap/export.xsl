@@ -138,7 +138,7 @@
     <xsl:template match="resource[@name='cap_info']">
         <info>
             <xsl:if test="data[@field='language']!=''">
-                <language><xsl:value-of select="data[@field='language']"/></language>
+                <language><xsl:value-of select="translate(data[@field='language']/@value, '&quot;', '')"/></language>
             </xsl:if>
 
             <xsl:if test="data[@field='category']">

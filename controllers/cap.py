@@ -93,6 +93,11 @@ def alert():
         else:
             unexpired_ids = "*"
 
+        if unexpired_ids == "*":
+            default_filter = None
+        else:
+            default_filter = unexpired_ids
+
         filter_widgets = s3db.get_config(tablename, "filter_widgets")
         filter_widgets.insert(0, S3OptionsFilter("info.id",
                                                  label = T("Expiration"),
@@ -103,13 +108,17 @@ def alert():
                                                          ]),
                                                  cols = 3,
                                                  multiple = False,
+                                                 default = default_filter,
                                                  ))
         # No need to put them back - the edit happens in-place
         #s3db.configure(tablename,
         #               filter_widgets = filter_widgets,
         #               )
 
-        if r.representation == "dl":
+        if r.representation == "html":
+            r.table.msg_type.represent = None
+
+        elif r.representation == "dl":
             # DataList: match list_layout
             list_fields = ["msg_type",
                            "info.headline",
@@ -169,22 +178,35 @@ def alert():
         #                   )
 
         if r.id:
+            atable = r.table
+
             if r.record.is_template:
                 redirect(URL(c="cap", f="template",
                              args = request.args,
                              vars = request.vars))
+
+            # Don't show event_type_id and template once created
+            # If the user used the wrong event type,
+            # then they should "Cancel" that alert and start a new one
+            atable.event_type_id.readable = False
+            atable.event_type_id.writable = False
+            atable.template_id.readable = False
+            atable.template_id.writable = False
+
             if r.record.approved_by is not None:
                 # Once approved, don't allow to edit
                 # Don't allow to delete
                 s3db.configure(tablename,
-                               editable=False,
-                               deletable=False,
-                               insertable=False,
+                               editable = False,
+                               deletable = False,
+                               insertable = False,
                                )
             if r.record.reference is not None:
                 # Don't show template_id for Updated/Cancelled/Error/Relay Alert
-                r.table.template_id.readable = False
-                r.table.template_id.writable = False
+                atable.template_id.readable = False
+                atable.template_id.writable = False
+                atable.msg_type.writable = False
+
             if settings.get_cap_restrict_fields():
                 if r.record.msg_type in ("Update", "Cancel", "Error"):
                     # Use case for change in msg_type
@@ -210,7 +232,56 @@ def alert():
         if r.interactive:
 
             if not r.component:
-                if r.method == "profile":
+                if r.get_vars["~.approved_by__ne"] == "None":
+                    list_fields = ["info.event_type_id",
+                                   "msg_type",
+                                   (T("Sent"), "sent"),
+                                   "info.headline",
+                                   "info.sender_name",
+                                   "approved_by",
+                                   ]
+
+                    s3db.configure(tablename,
+                                   filter_widgets = None,
+                                   insertable = False,
+                                   list_fields = list_fields,
+                                   )
+
+                if r.method == "review":
+                    alert_id = r.id
+                    if alert_id:
+                        itable = s3db.cap_info
+                        artable = s3db.cap_area
+                        irow = db(itable.alert_id == alert_id).select(itable.id,
+                                                                      limitby=(0, 1)).first()
+                        arow = db(artable.alert_id == alert_id).select(artable.id,
+                                                                       limitby=(0, 1)).first()
+                        if not irow or not arow:
+                            # This is incomplete alert
+                            session.warning = T("This Alert is incomplete! You can complete it now.")
+                            redirect(URL(c="cap", f="alert", args=[alert_id]))
+                    else:
+                        if r.get_vars["status"] == "incomplete":
+                            # Show incomplete alerts, ie. without info and area segment
+                            s3.filter = (s3base.FS("info.id") == None)
+                            s3.filter = (s3base.FS("area.id") == None)
+                            url = URL(c="cap", f="alert", args=["[id]"])
+                            s3base.S3CRUD.action_buttons(r, update_url=url, read_url=url)
+                        elif not r.get_vars:
+                            # Filter those alerts having at least info and area segment
+                            s3.filter = (s3base.FS("info.id") != None)
+                            s3.filter = (s3base.FS("area.id") != None)
+                        list_fields = ["info.event_type_id",
+                                       "msg_type",
+                                       (T("Sent"), "sent"),
+                                       "info.headline",
+                                       "info.sender_name",
+                                       "created_by",
+                                       ]
+                        s3db.configure(tablename,
+                                       list_fields = list_fields,
+                                       )
+                elif r.method == "profile":
                     # Provide a nice display of the Alert details
 
                     # Hide the side menu
@@ -313,13 +384,16 @@ def alert():
                         # Default bounds
                         bbox = {}
 
-                    label = TAG[""](SPAN("%s :: " % T("Area"),
-                                         _class="cap-label upper"
-                                         ),
-                                    SPAN(area.name,
-                                         _class="cap-value"
-                                         ),
-                                    )
+                    if area and area.name:
+                        label = TAG[""](SPAN("%s :: " % T("Area"),
+                                             _class="cap-label upper"
+                                             ),
+                                        SPAN(area.name,
+                                             _class="cap-value"
+                                             ),
+                                        )
+                    else:
+                        label = ""
                     map_widget = dict(label = label,
                                       type = "map",
                                       #context = "alert",
@@ -332,43 +406,48 @@ def alert():
                     table = r.table
 
                     def custom_widget_fn_1(r, **attr):
-                        return DIV(DIV(SPAN("%s :: " % T("Headline"),
-                                            _class="cap-label upper"
+                        fn_1 = DIV()
+                        fn_1_append = fn_1.append
+                        if info.headline:
+                            fn_1_append(DIV(SPAN("%s :: " % T("Headline"),
+                                                 _class="cap-label upper"
                                             ),
-                                       SPAN(info.headline,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(" "),
-                                   DIV(SPAN("%s :: " % T("Description"),
-                                            _class="cap-label upper"
-                                            ),
-                                       SPAN(info.description,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Response Type"),
-                                            _class="cap-label upper"
-                                            ),
-                                       SPAN(" ".join(info.response_type) if info.response_type is not None else None,
-                                            _class="cap-strong"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Instructions"),
-                                            _class="cap-label upper"
-                                            ),
-                                       SPAN(info.instruction,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   )
+                                            SPAN(info.headline,
+                                                 _class="cap-value"
+                                                 ),
+                                            ))
+                        if info.description:
+                            fn_1_append(DIV(SPAN("%s :: " % T("Description"),
+                                                 _class="cap-label upper"
+                                                 ),
+                                            SPAN(info.description,
+                                                 _class="cap-value"
+                                                 )
+                                            ))
+                        if info.response_type:
+                            fn_1_append(DIV(SPAN("%s :: " % T("Response Type"),
+                                                 _class="cap-label upper"
+                                                 ),
+                                            SPAN(" ".join(info.response_type),
+                                                 _class="cap-strong"
+                                                 ),
+                                            ))
+                        if info.instruction:
+                            fn_1_append(DIV(SPAN("%s :: " % T("Instructions"),
+                                                 _class="cap-label upper"
+                                                 ),
+                                            SPAN(info.instruction,
+                                                 _class="cap-value"
+                                                 ),
+                                            ))
+                        return fn_1
 
                     custom_widget_1 = dict(type = "custom",
                                            fn = custom_widget_fn_1,
                                            )
 
                     def custom_widget_fn_2(r, **attr):
-                        return DIV(DIV(SPAN("%s " % T("Information"),
+                        fn_2 = DIV(DIV(SPAN("%s " % T("Information"),
                                             _class="cap-value upper"
                                             ),
                                        SPAN("%s :: " % T("Event"),
@@ -384,13 +463,6 @@ def alert():
                                             _class="cap-label"
                                             ),
                                        SPAN(itable.language.represent(info.language),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Category"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.category.represent(info.category),
                                             _class="cap-value"
                                             ),
                                        ),
@@ -415,13 +487,6 @@ def alert():
                                             _class="cap-value"
                                             ),
                                        ),
-                                   DIV(SPAN("%s :: " % T("Audience"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(info.audience,
-                                            _class="cap-value"
-                                            ),
-                                       ),
                                    DIV(SPAN("%s :: " % T("Effective Date"),
                                             _class="cap-label"
                                             ),
@@ -443,13 +508,6 @@ def alert():
                                             _class="cap-value"
                                             ),
                                        ),
-                                   DIV(SPAN("%s :: " % T("Sender"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(info.sender_name,
-                                            _class="cap-value"
-                                            ),
-                                       ),
                                    DIV(SPAN("%s :: " % T("Information URL"),
                                             _class="cap-label"
                                             ),
@@ -464,24 +522,52 @@ def alert():
                                             _class="cap-value"
                                             ),
                                        ),
-                                   DIV(SPAN("%s :: " % T("Parameters"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.parameter.represent(info.parameter),
-                                            _class="cap-value"
-                                            ),
-                                       ),
                                    )
+                        fn_2_insert = fn_2.insert
+                        if info.category:
+                            fn_2_insert(3, DIV(SPAN("%s :: " % T("Category"),
+                                                    _class="cap-label"
+                                                    ),
+                                               SPAN(itable.category.represent(info.category),
+                                                    _class="cap-value"
+                                                    )
+                                               ))
+                        if info.audience:
+                            fn_2_insert(7, DIV(SPAN("%s :: " % T("Audience"),
+                                                    _class="cap-label"
+                                                    ),
+                                               SPAN(info.audience,
+                                                    _class="cap-value"
+                                                    )
+                                               ))
+                        if info.sender_name:
+                            fn_2_insert(11, DIV(SPAN("%s :: " % T("Sender"),
+                                                     _class="cap-label"
+                                                     ),
+                                                SPAN(info.sender_name,
+                                                     _class="cap-value"
+                                                     )
+                                                ))
+                        if info.parameter and info.parameter != "[]":
+                            fn_2.append(DIV(SPAN("%s :: " % T("Parameters"),
+                                                 _class="cap-label"
+                                                 ),
+                                            SPAN(itable.parameter.represent(info.parameter),
+                                                 _class="cap-value"
+                                                 )
+                                            ))
+                            
+                        return fn_2
 
                     custom_widget_2 = dict(type = "custom",
                                            fn = custom_widget_fn_2,
                                            )
 
                     def custom_widget_fn_3(r, **attr):
-                        return DIV(DIV(SPAN(T("Alert Qualifiers"),
-                                            _class="cap-value upper"
-                                            ),
-                                       ),
+                        fn_3 =  DIV(DIV(SPAN(T("Alert Qualifiers"),
+                                             _class="cap-value upper"
+                                             ),
+                                        ),
                                    DIV(_class="underline"
                                        ),
                                    DIV(SPAN("%s :: " % T("Sender ID"),
@@ -508,21 +594,14 @@ def alert():
                                    DIV(SPAN("%s :: " % T("Message Type"),
                                             _class="cap-label"
                                             ),
-                                       SPAN(table.msg_type.represent(record.msg_type),
+                                       SPAN(record.msg_type,
                                             _class="cap-value"
                                             ),
                                        ),
                                    DIV(SPAN("%s :: " % T("Scope"),
                                             _class="cap-label"
                                             ),
-                                       SPAN(table.scope.represent(record.scope),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Handling Code"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(table.codes.represent(record.codes),
+                                       SPAN(record.scope,
                                             _class="cap-value"
                                             ),
                                        ),
@@ -547,13 +626,16 @@ def alert():
                                             _class="cap-value"
                                             ),
                                        ),
-                                   DIV(_class="underline"
-                                       ),
-                                   DIV(SPAN(T("Resources"),
-                                            _class="cap-value upper"
-                                            ),
-                                       ),
                                    )
+                        if record.codes:
+                            fn_3.insert(7, DIV(SPAN("%s :: " % T("Handling Code"),
+                                                    _class="cap-label"
+                                                    ),
+                                               SPAN(table.codes.represent(record.codes),
+                                                    _class="cap-value"
+                                                    ),
+                                               ))
+                        return fn_3
 
                     custom_widget_3 = dict(type = "custom",
                                            fn = custom_widget_fn_3,
@@ -634,16 +716,16 @@ def alert():
                 list_fields = ["name",
                                "altitude",
                                "ceiling",
-                               "location.location_id",
+                               (T("Polygon"), "location.location_id"),
+                               "tag.tag",
+                               (T("Geocode Value"), "tag.value"),
                                ]
                 s3db.configure("cap_area",
                                list_fields = list_fields,
                                )
 
-                for f in ("event_type_id", "priority"):
-                    # Do not show for the actual area
-                    field = atable[f]
-                    field.writable = field.readable = False
+                # Do not show for the actual area
+                atable.event_type_id.writable = atable.event_type_id.readable = False
 
                 translate = settings.get_L10n_translate_cap_area()
                 if translate:
@@ -730,7 +812,7 @@ def alert():
                                        "template_settings",
                                        ))
                 fields = [itable[f] for f in itable.fields
-                                    if f not in unwanted_fields]
+                          if f not in unwanted_fields]
                 rows = db(itable.alert_id == alert.template_id).select(*fields)
                 for row in rows:
                     row_clone = row.as_dict()
@@ -990,6 +1072,7 @@ def template():
                            "info.headline",
                            "info.response_type",
                            "info.sender_name",
+                           "info.parameter",
                            ]
 
             s3db.configure(tablename,
@@ -1042,14 +1125,34 @@ def area():
         # Area create from this controller is template
         artable.is_template.default = True
 
-        response.s3.crud_strings["cap_area"].title_list = T("Predefined Areas")
+        response.s3.crud_strings["cap_area"] = Storage(
+            label_create = T("Create Predefined Area"),
+            title_display = T("Predefined Area"),
+            title_list = T("Predefined Areas"),
+            title_update = T("Edit Predefined Area"),
+            title_upload = T("Import Predefined Areas"),
+            label_list_button = T("List Predefined Areas"),
+            label_delete_button = T("Delete Predefined Area"),
+            msg_record_created = T("Predefined Area created"),
+            msg_record_modified = T("Predefined Area modified"),
+            msg_record_deleted = T("Predefined Area deleted"),
+            msg_list_empty = T("No Predefined Areas to show"))
+
+        list_fields = ["name",
+                       "event_type_id",
+                       #"priority",
+                       ]
+
+        s3db.configure("cap_area",
+                       list_fields = list_fields,
+                       )
 
         if r.representation == "json":
             list_fields = ["id",
                            "name",
                            "event_type_id",
                            (T("Event Type"), "event_type_id$name"),
-                           "priority",
+                           #"priority",
                            "altitude",
                            "ceiling",
                            "location.location_id",
@@ -1082,6 +1185,25 @@ def warning_priority():
     """
         RESTful CRUD controller
     """
+
+    def prep(r):
+        if r.representation == "json":
+            # This is for the dropdown options for the priority
+            list_fields = ["id",
+                           "priority_rank",
+                           "color_code",
+                           "severity",
+                           "certainty",
+                           "urgency",
+                           "event_type_id",
+                           "event_code",
+                           "name",
+                           ]
+            s3db.configure("cap_warning_priority",
+                           list_fields = list_fields,
+                           )
+        return True
+    s3.prep = prep
 
     return s3_rest_controller()
 
