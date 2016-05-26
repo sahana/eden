@@ -3359,7 +3359,7 @@ class S3KeyValueWidget(ListWidget):
         Allows for input of key-value pairs and stores them as list:string
     """
 
-    def __init__(self, key_label=None, value_label=None):
+    def __init__(self, key_label=None, value_label=None, checkbox_label=None):
         """
             Returns a widget with key-value fields
         """
@@ -3368,6 +3368,7 @@ class S3KeyValueWidget(ListWidget):
 
         self.key_label = key_label or T("Key")
         self.value_label = value_label or T("Value")
+        self.checkbox_label = checkbox_label
 
     def __call__(self, field, value, **attributes):
         T = current.T
@@ -3382,8 +3383,8 @@ class S3KeyValueWidget(ListWidget):
         attributes["_class"] = _class
 
         script = SCRIPT(
-'''jQuery(document).ready(function(){jQuery('#%s').kv_pairs('%s','%s')})''' % \
-    (_id, self.key_label, self.value_label))
+'''jQuery(document).ready(function(){jQuery('#%s').kv_pairs('%s','%s','%s')})''' % \
+    (_id, self.key_label, self.value_label, self.checkbox_label))
 
         if not value:
             value = "[]"

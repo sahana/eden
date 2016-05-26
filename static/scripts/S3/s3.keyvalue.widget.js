@@ -1,5 +1,5 @@
 (function ($, undefined) {
-    $.fn.kv_pairs = function (key_label, value_label) {
+    $.fn.kv_pairs = function (key_label, value_label, checkbox_label) {
         var $self = $(this),
             $list = $('<ul></ul>'),
             id = $(this).attr('id');
@@ -16,25 +16,36 @@
         key_label = ' ' + key_label + ': ';
         value_label = ' ' + value_label + ': ';
         $more = $('<a>+</a>').css('cursor', 'pointer').click(cleanup);
+        if (checkbox_label != 'None') {
+            var $checkbox_label = $('<label for="' + checkbox_label + '">' + checkbox_label + '</label>');
+        }
 
         // handler util
         function cleanup() {
             kvs = [];
             $list.find('li').each(function () {
                 var k = $(this).find('.key').eq(0).val(),
-                    v = $(this).find('.value').eq(0).val();
+                    v = $(this).find('.value').eq(0).val(),
+                    c = $(this).find('.checkbox').eq(0).prop('checked');
 
                 if (k === '' && v === '') $(this).remove();
-                else kvs[kvs.length] = {key: k, value: v};
+                else kvs[kvs.length] = {key: k, value: v, checked: c};
             });
 
             var $item = $('<li></li>'),
                 $key = $('<input class="key" value="" />'),
                 $value = $('<input class="value" value="" />');
+            if (checkbox_label != 'None') {
+                var $checkbox = $('<input type="checkbox" class="checkbox" name="' + checkbox_label +'"/>'),
+                    $checkbox_label = $('<label for="' + checkbox_label + '">' + checkbox_label + '</label>');
+            }
 
             $value.blur(cleanup);
+            if ($checkbox) {
+                $checkbox.blur(cleanup);
+            }
 
-            $item.append(key_label, $key, value_label, $value, ' ', $more);
+            $item.append(key_label, $key, value_label, $value, ' ', $checkbox, $checkbox_label, ' ', $more);
             $list.append($item);
 
             $key.focus();
@@ -50,6 +61,15 @@
                 $item = $('<li></li>').attr('id', id + '-' + i),
                 $key = $('<input class="key" value="' + (item.key || '') + '" />'),
                 $value = $('<input class="value" value="' + (item.value || '') + '" />');
+            if (checkbox_label != 'None') {
+                var $checkbox_label = $('<label for="' + checkbox_label + '">' + checkbox_label + '</label>');
+                if (item.checked) {
+                    var $checkbox = $('<input type="checkbox" class="checkbox" checked name="' + checkbox_label +'"/>');
+                } else {
+                    var $checkbox = $('<input type="checkbox" class="checkbox" name="' + checkbox_label +'"/>');
+                }                
+            }
+                
 
             if (immutable) {
                 if (immutable & 1) {
@@ -73,8 +93,11 @@
             }
 
             $value.blur(cleanup);
+            if ($checkbox) {
+                $checkbox.blur(cleanup);
+            }
 
-            $item.append(key_label, $key, value_label, $value, ' ', $more, ' ', $help);
+            $item.append(key_label, $key, value_label, $value, ' ', $checkbox, $checkbox_label, ' ', $more, ' ', $help);
             $list.append($item);
         }
 
