@@ -29,6 +29,11 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = ("S3Report",
+           "S3PivotTable",
+           )
+
+import datetime
 import json
 import os
 import re
@@ -49,12 +54,11 @@ from s3utils import s3_flatlist, s3_has_foreign_key, s3_unicode, S3MarkupStrippe
 from s3xml import S3XMLFormat
 from s3validators import IS_NUMBER
 
-layer_pattern = re.compile("([a-zA-Z]+)\((.*)\)\Z")
-
 # Compact JSON encoding
 DEFAULT = lambda: None
 SEPARATORS = (",", ":")
 
+LAYER = re.compile("([a-zA-Z]+)\((.*)\)\Z")
 FACT = re.compile(r"([a-zA-Z]+)\(([a-zA-Z0-9_.$:\,~]+)\),*(.*)\Z")
 SELECTOR = re.compile(r"^[a-zA-Z0-9_.$:\~]+\Z")
 
@@ -689,7 +693,7 @@ class S3ReportForm(object):
         T = current.T
 
         SHOW_TOTALS = T("Show totals")
-        FACT = T("Report of")
+        REPORT = T("Report of")
         ROWS = T("Grouped by")
         COLS = T("and")
 
@@ -715,7 +719,7 @@ class S3ReportForm(object):
                                           get_vars=get_vars,
                                           widget_id=layer_id)
         formfields.append((layer_id + "-row",
-                           label(FACT, _for=layer_id),
+                           label(REPORT, _for=layer_id),
                            layer_widget,
                            "",
                            ))
@@ -971,7 +975,7 @@ class S3ReportForm(object):
         else:
             layer = ""
         if layer:
-            match = layer_pattern.match(layer)
+            match = LAYER.match(layer)
             if match is None:
                 layer = ""
             else:
@@ -2024,9 +2028,14 @@ class S3PivotTable(object):
 
         if not rfield:
             return
+
         ftype = rfield.ftype
+
         sortby = "value"
-        if ftype == "integer":
+        key = lambda item: item[index][sortby]
+
+        if ftype in ("integer", "string"):
+            # Sort option keys by their representation
             requires = rfield.requires
             if isinstance(requires, (tuple, list)):
                 requires = requires[0]
@@ -2034,10 +2043,22 @@ class S3PivotTable(object):
                 requires = requires.other
             if isinstance(requires, IS_IN_SET):
                 sortby = "text"
+
         elif ftype[:9] == "reference":
+            # Sort foreign keys by their representation
             sortby = "text"
-        items.sort(key=lambda item: item[index][sortby])
-        return
+
+        elif ftype == "date":
+            # Can't compare date objects to None
+            mindate = datetime.date.min
+            key = lambda item: item[index][sortby] or mindate
+
+        elif ftype == "datetime":
+            # Can't compare datetime objects to None
+            mindate = datetime.datetime.min
+            key = lambda item: item[index][sortby] or mindate
+
+        items.sort(key=key)
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -2273,7 +2294,6 @@ class S3PivotTable(object):
         # Compute overall total
         self.totals[layer] = fact.compute(all_values, totals=True)
         self.values[layer] = all_values
-        return
 
     # -------------------------------------------------------------------------
     def _get_fields(self, fields=None):
@@ -2333,7 +2353,6 @@ class S3PivotTable(object):
                         cols: rfields[cols].colname
                                 if cols and cols in rfields else None,
                         }
-        return
 
     # -------------------------------------------------------------------------
     def _represent_method(self, field):
