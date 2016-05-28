@@ -70,7 +70,7 @@ def config(settings):
     # Notifications
 
     # Template for the subject line in update notifications
-    settings.msg.notify_subject = "%s $s %s" % (T("SAHANA"), T("Alert Notification"))
+    #settings.msg.notify_subject = "%s $s %s" % (T("SAHANA"), T("Alert Notification"))
 
     # Notifications format
     settings.msg.notify_email_format = "html"
@@ -107,6 +107,12 @@ def config(settings):
     settings.cap.languages = languages
     # Translate the cap_area name
     settings.L10n.translate_cap_area = True
+
+    # Date Format
+    settings.L10n.date_format = "%B %d, %Y"
+
+    # Time Format
+    settings.L10n.time_format = "%H:%M:%S"
 
     # -------------------------------------------------------------------------
     # Messaging
@@ -219,6 +225,14 @@ def config(settings):
                                )
 
     settings.customise_org_organisation_resource = customise_org_organisation_resource
+
+    # -------------------------------------------------------------------------
+    def customise_pr_person_resource(r, tablename):
+
+        # On-delete option
+        current.s3db.pr_person_id.attr.ondelete = "SET NULL"
+
+    settings.customise_pr_person_resource = customise_pr_person_resource
 
     # -------------------------------------------------------------------------
     def customise_cap_alert_resource(r, tablename):
@@ -425,14 +439,14 @@ def config(settings):
                        (T("Methods"), "method"),
                        ]
         manage_recipient = current.request.get_vars["option"] == "manage_recipient"
-        role_check = has_role("ALERT_EDITOR") or has_role("ALERT_APPROVER")
+        role_check = has_role("ADMIN")
 
         if manage_recipient and role_check:
-                # Admin based subscription
-                s3.filter = (stable.deleted != True) & \
-                            (stable.owned_by_group != None)
-                list_fields.insert(0, (T("People/Groups"), "pe_id"))
-                s3.crud_strings["pr_subscription"].title_list = T("Admin Controlled Subscriptions")
+            # Admin based subscription
+            s3.filter = (stable.deleted != True) & \
+                        (stable.owned_by_group != None)
+            list_fields.insert(0, (T("People/Groups"), "pe_id"))
+            s3.crud_strings["pr_subscription"].title_list = T("Admin Controlled Subscriptions")
         else:
             # Self Subscription
             s3.filter = (stable.deleted != True) & \
@@ -598,6 +612,34 @@ def config(settings):
 
     settings.msg.notify_renderer = custom_msg_render
 
+    # -----------------------------------------------------------------------------
+    def custom_msg_notify_subject(resource, data, meta_data):
+        """
+            Custom Method to subject for the email
+            @param resource: the S3Resource
+            @param data: the data returned from S3Resource.select
+            @param meta_data: the meta data for the notification
+        """
+
+        rows = data["rows"]
+        subject = "%s $s %s" % (T("SAHANA"), T("Alert Notification"))
+        if len(rows) == 1:
+            # Since if there are more than one row, the single email has content
+            # for all rows
+            from s3 import s3_utc
+            last_check_time = meta_data["last_check_time"]
+            db = current.db
+            atable = current.s3db.cap_alert
+            row_ = db(atable.id == rows[0]["cap_alert.id"]).select(atable.approved_on,
+                                                                   limitby=(0, 1)).first()
+            if row_ and row_.approved_on is not None:
+                if s3_utc(row_.approved_on) >= last_check_time:
+                    subject = get_email_subject(rows[0])
+
+        return subject
+
+    settings.msg.notify_subject = custom_msg_notify_subject
+
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
     # @ToDo: Have the system automatically enable migrate if a module is enabled
@@ -759,11 +801,11 @@ def config(settings):
                                                         etable.name,
                                                         limitby=(0, 1)).first()
                             event_type = row_.name
-                        elif prefix == "priority__belongs":
+                        elif prefix == "info.priority__belongs":
                             priorities_id = [int(s3_str(value)) for value in values]
                             rows_ = db(ptable.id.belongs(priorities_id)).select(ptable.name)
                             priorities = [row_.name for row_ in rows_]
-                        elif prefix == "language__belongs":
+                        elif prefix == "info.language__belongs":
                             languages = [s3_str(value) for value in values]
                     if event_type is not None:
                         display_text = "<b>%s:</b> %s" % (T("Event Type"), event_type)
@@ -882,6 +924,36 @@ T("Alert is effective from %(Effective)s and expires on %(Expires)s") % \
                        BR(), BR(),
                        body8,
                        BR())
+
+    # -------------------------------------------------------------------------
+    def get_email_subject(row):
+        """
+            prepare the subject for Email
+        """
+
+        from gluon.languages import lazyT
+        itable = current.s3db.cap_info
+        event_type_id = row["cap_info.event_type_id"]
+        priority_id = row["cap_info.priority"]
+
+        if not isinstance(event_type_id, lazyT):
+            event_type = itable.event_type_id.represent(event_type_id)
+        else:
+            event_type = event_type_id
+
+        if priority_id and priority_id != "-":
+            if not isinstance(priority_id, lazyT):
+                priority = itable.priority.represent(priority_id)
+            else:
+                priority = priority_id
+        else:
+            priority = T("None")
+
+        subject = "[%s] %s %s" % (s3_str(row["cap_info.sender_name"]),
+                                  event_type,
+                                  priority)
+
+        return subject
 
     # -------------------------------------------------------------------------
     def get_sms_content(row):

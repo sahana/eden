@@ -5,7 +5,7 @@
     <!-- **********************************************************************
          CAP Export Templates
 
-         Copyright (c) 2011-15 Sahana Software Foundation
+         Copyright (c) 2011-16 Sahana Software Foundation
 
          Permission is hereby granted, free of charge, to any person
          obtaining a copy of this software and associated documentation
@@ -84,14 +84,14 @@
             </xsl:if>
 
             <scope>
-                <xsl:value-of select="translate(data[@field='scope']/@value, '&quot;', '')"/>
+                <xsl:value-of select="data[@field='scope']"/>
             </scope>
 
             <xsl:if test="data[@field='scope']='Restricted'">
                 <restriction><xsl:value-of select="data[@field='restriction']"/></restriction>
             </xsl:if>
 
-            <xsl:if test="data[@field='addresses']">
+            <xsl:if test="data[@field='addresses']/@value!='[]'">
                 <addresses>
                     <xsl:call-template name="make-space-delimited">
                         <xsl:with-param name="string">
@@ -137,6 +137,7 @@
     <!-- cap_info -->
     <xsl:template match="resource[@name='cap_info']">
         <info>
+            <xsl:variable name="info_uuid" select="@uuid"/>
             <xsl:if test="data[@field='language']!=''">
                 <language><xsl:value-of select="translate(data[@field='language']/@value, '&quot;', '')"/></language>
             </xsl:if>
@@ -253,15 +254,27 @@
                 	<value><xsl:value-of select="reference[@field='priority']"/></value>
                 </parameter>
             </xsl:if>
+            
+            <xsl:for-each select="../resource[@name='cap_info_parameter'][reference[@field='info_id' and @uuid=$info_uuid]]">
+                <parameter>
+                    <valueName>
+                        <xsl:value-of select="data[@field='name']"/>
+                    </valueName>
+                    <value>
+                        <xsl:value-of select="data[@field='value']"/>
+                    </value>
+                </parameter>
+            </xsl:for-each>
 
-            <xsl:if test="data[@field='parameter']">
+            <!-- Not used -->
+            <!--<xsl:if test="data[@field='parameter']">
                 <xsl:call-template name="key-value-pairs">
                     <xsl:with-param name="string">
                         <xsl:value-of select="translate(data[@field='parameter']/@value, '&quot;[\]', '')"/>
                     </xsl:with-param>
                     <xsl:with-param name="arg">parameter</xsl:with-param>
                 </xsl:call-template>
-            </xsl:if>
+            </xsl:if>-->
 
             <parameter>
                 <valueName>tweet</valueName>

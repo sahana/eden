@@ -67,7 +67,7 @@ def public():
         Filtered version of the Alerts controller
     """
 
-    s3.filter = (s3base.FS("scope") == "Public")
+    s3.filter = (FS("scope") == "Public")
 
     return alert()
 
@@ -233,6 +233,10 @@ def alert():
 
             if not r.component:
                 if r.get_vars["~.approved_by__ne"] == "None":
+                    response.s3.crud_strings["cap_alert"].title_list = T("Approved Alerts")
+                    url = URL(c="cap", f="alert", args=["[id]", "profile"])
+                    s3base.S3CRUD.action_buttons(r, deletable=False, editable=False,
+                                                 read_url = url)
                     list_fields = ["info.event_type_id",
                                    "msg_type",
                                    (T("Sent"), "sent"),
@@ -263,14 +267,14 @@ def alert():
                     else:
                         if r.get_vars["status"] == "incomplete":
                             # Show incomplete alerts, ie. without info and area segment
-                            s3.filter = (s3base.FS("info.id") == None)
-                            s3.filter = (s3base.FS("area.id") == None)
+                            s3.filter = (FS("info.id") == None) | (FS("area.id") == None)
+                            response.s3.crud_strings["cap_alert"].title_list = T("Incomplete Alerts")
                             url = URL(c="cap", f="alert", args=["[id]"])
                             s3base.S3CRUD.action_buttons(r, update_url=url, read_url=url)
                         elif not r.get_vars:
                             # Filter those alerts having at least info and area segment
-                            s3.filter = (s3base.FS("info.id") != None)
-                            s3.filter = (s3base.FS("area.id") != None)
+                            s3.filter = (FS("info.id") != None) & (FS("area.id") != None)
+                            response.s3.crud_strings["cap_alert"].title_list = T("Review Alerts")
                         list_fields = ["info.event_type_id",
                                        "msg_type",
                                        (T("Sent"), "sent"),
@@ -314,7 +318,8 @@ def alert():
                     # Info
                     # @ToDo: handle multiple languages
                     itable = s3db.cap_info
-                    info = db(itable.alert_id == alert_id).select(itable.language,
+                    info = db(itable.alert_id == alert_id).select(itable.id,
+                                                                  itable.language,
                                                                   itable.category,
                                                                   itable.event_type_id,
                                                                   itable.response_type,
@@ -331,9 +336,13 @@ def alert():
                                                                   itable.instruction,
                                                                   itable.contact,
                                                                   itable.web,
-                                                                  itable.parameter,
+                                                                  #itable.parameter,
                                                                   limitby=(0, 1)
                                                                   ).first()
+                    if info.id:
+                        ptable = s3db.cap_info_parameter
+                        parameters = db(ptable.info_id == info.id).select(ptable.name,
+                                                                          ptable.value)
 
                     # Area
                     # @ToDo: handle multiple areas
@@ -548,11 +557,16 @@ def alert():
                                                      _class="cap-value"
                                                      )
                                                 ))
-                        if info.parameter and info.parameter != "[]":
+                        if len(parameters):
+                            parameter_text = []
+                            for parameter in parameters:
+                                para = "%s: %s" % (parameter.name, parameter.value)
+                                parameter_text.append(para)
+                            
                             fn_2.append(DIV(SPAN("%s :: " % T("Parameters"),
                                                  _class="cap-label"
                                                  ),
-                                            SPAN(itable.parameter.represent(info.parameter),
+                                            SPAN(", ".join(parameter_text),
                                                  _class="cap-value"
                                                  )
                                             ))
@@ -707,7 +721,7 @@ def alert():
                                   "audience",
                                   "event_code",
                                   "sender_name",
-                                  "parameter",
+                                  #"parameter",
                                   ):
                             itable[f].writable = False
 
@@ -793,8 +807,14 @@ def alert():
                       (itable.deleted != True)
             irows_ = db(iquery_).select(itable.template_info_id)
 
+            parameter_table = s3db.cap_info_parameter
+            
             if alert and not \
                (set([irow.id for irow in irows]) == set([irow_.template_info_id for irow_ in irows_])):
+
+                parameter_query_ = (parameter_table.alert_id == alert.template_id) & \
+                                   (parameter_table.deleted != True)
+
                 # Clone all cap_info entries from the alert template
                 # If already created dont copy again
                 unwanted_fields = set(("deleted_rb",
@@ -813,6 +833,9 @@ def alert():
                                        ))
                 fields = [itable[f] for f in itable.fields
                           if f not in unwanted_fields]
+
+                parameter_fields = [parameter_table[f] for f in parameter_table.fields
+                                    if f not in unwanted_fields]
                 rows = db(itable.alert_id == alert.template_id).select(*fields)
                 for row in rows:
                     row_clone = row.as_dict()
@@ -823,7 +846,18 @@ def alert():
                     row_clone["effective"] = request.utcnow
                     row_clone["expires"] = s3db.cap_expiry_date()
                     row_clone["sender_name"] = s3db.cap_sender_name()
-                    itable.insert(**row_clone)
+                    new_info_id = itable.insert(**row_clone)
+
+                    # Copy info_parameter as well
+                    parameter_query = parameter_query_ & \
+                                      (parameter_table.info_id == row.id)
+                    parameter_rows =db(parameter_query).select(*parameter_fields)
+                    for parameter_row in parameter_rows:
+                        parameter_row_clone = parameter_row.as_dict()
+                        del parameter_row_clone["id"]
+                        parameter_row_clone["alert_id"] = lastid
+                        parameter_row_clone["info_id"] = new_info_id
+                        parameter_table.insert(**parameter_row_clone)
 
                 # Clone all cap_resource entries from the alert template
                 # First get the info_id
@@ -920,7 +954,6 @@ def info():
                            "description",
                            "instruction",
                            "contact",
-                           "parameter",
                            ]
 
             s3db.configure("cap_info",
@@ -953,6 +986,32 @@ def info():
 
     output = s3_rest_controller(rheader = s3db.cap_rheader)
     return output
+
+# -----------------------------------------------------------------------------
+def info_parameter():
+    """
+        RESTful CRUD controller
+    """
+
+    def prep(r):
+        if r.representation == "json":
+            list_fields = ["id",
+                           "alert_id",
+                           "info_id",
+                           "name",
+                           "value",
+                           "mobile",
+                           ]
+        
+            s3db.configure("cap_info_parameter",
+                           list_fields = list_fields,
+                           )
+        else:
+            return
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def template():
@@ -1072,7 +1131,6 @@ def template():
                            "info.headline",
                            "info.response_type",
                            "info.sender_name",
-                           "info.parameter",
                            ]
 
             s3db.configure(tablename,
