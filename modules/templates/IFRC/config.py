@@ -1640,30 +1640,20 @@ def config(settings):
                 if _is_asia_pacific():
                     settings.deploy.select_ratings = True
 
-                user_org_id = current.auth.user.organisation_id
-                if user_org_id:
-                    otable = s3db.org_organisation
-                    org = db(otable.id == user_org_id).select(otable.region_id,
-                                                              limitby=(0, 1),
-                                                              cache = s3db.cache,
-                                                              ).first()
-                    if org:
-                        region_id = org.region_id
-                        # Find Sub regions (just 1 level needed)
-                        rtable = s3db.org_region
-                        query = (rtable.parent == region_id) & \
-                                (rtable.deleted == False)
-                        subregions = db(query).select(rtable.id)
-                        if subregions:
-                            region_ids = [region.id for region in subregions]
-                            region_ids.append(region_id)
-                        else:
-                            region_ids = [region_id]
-                    s3.filter = ((s3db.hrm_human_resource.organisation_id == otable.id) & \
-                                 (otable.region_id.belongs(region_ids)))
+                auth = current.auth
+                is_admin = auth.s3_has_role("ADMIN")
+                if not is_admin:
+                    organisation_id = auth.user.organisation_id
+                    dotable = s3db.deploy_organisation
+                    deploying_orgs = db(dotable.deleted == False).select(dotable.organisation_id)
+                    deploying_orgs = [o.organisation_id for o in deploying_orgs]
+                    if organisation_id in deploying_orgs:
+                        from s3 import FS
+                        r.resource.add_filter(FS("application.organisation_id") == organisation_id)
 
             elif r.method == "send":
-                settings.deploy.cc_groups = ["RDRT Focal Points"]
+                if _is_asia_pacific():
+                    settings.deploy.cc_groups = ["RDRT Focal Points"]
 
             return result
 
@@ -3133,10 +3123,10 @@ def config(settings):
                                "person_id$date_of_birth",
                                "person_id$gender",
                                "person_id$person_details.nationality",
-                               (T("Passport Number"), "person_id$passport.value"),
-                               (T("Passport Issuer"), "person_id$passport.ia_name"),
-                               (T("Passport Date"), "person_id$passport.valid_from"),
-                               (T("Passport Expires"), "person_id$passport.valid_until"),
+                               #(T("Passport Number"), "person_id$passport.value"),
+                               #(T("Passport Issuer"), "person_id$passport.ia_name"),
+                               #(T("Passport Date"), "person_id$passport.valid_from"),
+                               #(T("Passport Expires"), "person_id$passport.valid_until"),
                                (T("Emergency Contacts"), "person_id$contact_emergency.id"),
                                "person_id$physical_description.blood_type",
                                ]

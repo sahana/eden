@@ -112,6 +112,7 @@
          Availability...................optional.....Availability dropdown
          Availability Comments..........optional.....Availability Comments
          Slot:XXXX......................optional.....Availability for Slot XXXX
+         Comments.......................optional.....hrm_human_resource.comments
 
          Extensions for deploy module:
          Deployable.....................optional.....link to deployments module (organisation name|true)
@@ -1139,6 +1140,10 @@
                     <!-- Leave XML blank to default to 'Active' -->
                 </xsl:otherwise>
             </xsl:choose>
+
+            <xsl:if test="col[@field='Comments']!=''">
+                <data field="comments"><xsl:value-of select="col[@field='Comments']"/></data>
+            </xsl:if>
 
             <!-- Link to Department -->
             <xsl:call-template name="Department">
