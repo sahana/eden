@@ -71,6 +71,7 @@ class S3CAPModel(S3Model):
              "cap_warning_priority",
              "cap_info",
              "cap_info_represent",
+             "cap_info_parameter",
              "cap_resource",
              "cap_area",
              "cap_area_id",
@@ -291,6 +292,7 @@ class S3CAPModel(S3Model):
                            writable = True,
                            ),
                      self.event_type_id(empty = False,
+                                        ondelete = "SET NULL",
                                         label = T("Event Type"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Event Type of the alert message"),
@@ -308,7 +310,7 @@ $.filterOptionsS3({
                      ),
                      Field("template_id", "reference cap_alert",
                            label = T("Template"),
-                           ondelete = "RESTRICT",
+                           ondelete = "SET NULL",
                            represent = self.cap_template_represent,
                            requires = IS_EMPTY_OR(
                                          IS_ONE_OF(db, "cap_alert.id",
@@ -367,7 +369,6 @@ $.filterOptionsS3({
                      s3_datetime("sent",
                                  default = "now",
                                  writable = False,
-                                 represent = date_representation,
                                  ),
                      Field("status",
                            default = "Draft",
@@ -554,6 +555,7 @@ $.filterOptionsS3({
                                         "joinby": "alert_id",
                                         },
                        cap_info = "alert_id",
+                       cap_info_parameter = "alert_id",
                        cap_resource = "alert_id",
                        )
 
@@ -668,6 +670,7 @@ $.filterOptionsS3({
                                                            T("The actual name for the warning priority, for eg. Typhoons in Philippines have five priority names (PSWS# 1, PSWS# 2, PSWS# 3, PSWS# 4 and PSWS# 5)"))),
                            ),
                      self.event_type_id(empty=False,
+                                        ondelete = "SET NULL",
                                         label = T("Event Type"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Event Type"),
@@ -765,7 +768,7 @@ $.filterOptionsS3({
                            writable = False,
                            ),
                      Field("template_info_id", "reference cap_info",
-                           ondelete = "RESTRICT",
+                           ondelete = "SET NULL",
                            readable = False,
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "cap_info.id",
@@ -792,7 +795,7 @@ $.filterOptionsS3({
                            ),
                      Field("category", "list:string", # 1 or more allowed
                            label = T("Category"),
-                           required = True,
+                           required = IS_NOT_EMPTY(),
                            represent = S3Represent(options = cap_info_category_opts,
                                                    multiple = True,
                                                    ),
@@ -812,6 +815,7 @@ $.filterOptionsS3({
                            ),
                      self.event_type_id(empty = False,
                                         readable = False,
+                                        ondelete = "SET NULL",
                                         label = T("Event Type"),
                                         comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Event Type of the alert message"),
@@ -971,15 +975,15 @@ $.filterOptionsS3({
                                          _title="%s|%s" % (T("A URL associating additional information with the alert message"),
                                                            T("A full, absolute URI for an HTML page or other text resource with additional or reference information regarding this alert."))),
                            ),
-                     Field("parameter", "text",
-                           default = settings.get_cap_parameters(),
-                           label = T("Parameters"),
-                           represent = S3KeyValueWidget.represent,
-                           widget = S3KeyValueWidget(),
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("A system-specific additional parameter associated with the alert message"),
-                                                           T("Any system-specific datum, in the form of key-value pairs."))),
-                           ),
+                     #Field("parameter", "text",
+                     #      default = settings.get_cap_parameters(),
+                     #      label = T("Parameters"),
+                     #      represent = S3KeyValueWidget.represent,
+                     #      widget = S3KeyValueWidget(),
+                     #      comment = DIV(_class="tooltip",
+                     #                    _title="%s|%s" % (T("A system-specific additional parameter associated with the alert message"),
+                     #                                      T("Any system-specific datum, in the form of key-value pairs."))),
+                     #      ),
                      *s3_meta_fields())
 
         if crud_strings["cap_template_info"]:
@@ -1015,8 +1019,46 @@ $.filterOptionsS3({
                                   sortby = "identifier",
                                   )
 
+        crud_form = S3SQLCustomForm("alert_id",
+                                    "is_template",
+                                    "template_info_id",
+                                    # Not used
+                                    #"template_settings",
+                                    "language",
+                                    "category",
+                                    "event",
+                                    "event_type_id",
+                                    "response_type",
+                                    "priority",
+                                    "urgency",
+                                    "severity",
+                                    "certainty",
+                                    "audience",
+                                    "event_code",
+                                    "effective",
+                                    "onset",
+                                    "expires",
+                                    "sender_name",
+                                    "headline",
+                                    "description",
+                                    "instruction",
+                                    "contact",
+                                    "web",
+                                    S3SQLInlineComponent("info_parameter",
+                                                         name = "info_parameter",
+                                                         label = T("Parameter"),
+                                                         fields = ["name",
+                                                                   "value",
+                                                                   "mobile",
+                                                                   ],
+                                                         comment = DIV(_class="tooltip",
+                                                                       _title="%s|%s" % (T("A system-specific additional parameter associated with the alert message"),
+                                                                                         T("Any system-specific datum, in the form of key-value pairs."))),
+                                                         ),
+                                    )
+
         configure(tablename,
-                  #create_next = URL(f="info", args=["[id]", "area"]),
+                  crud_form = crud_form,
                   # Required Fields
                   mark_required = ("urgency", "severity", "certainty",),
                   onaccept = self.cap_info_onaccept,
@@ -1025,9 +1067,34 @@ $.filterOptionsS3({
 
         # Components
         add_components(tablename,
+                       cap_info_parameter = "info_id",
                        cap_resource = "info_id",
                        cap_area = "info_id",
                        )
+
+        # ---------------------------------------------------------------------
+        # CAP Info Parameters
+        tablename = "cap_info_parameter"
+        define_table(tablename,
+                     alert_id(),
+                     info_id(),
+                     Field("name",
+                           label = T("Name"),
+                           ),
+                     Field("value",
+                           label = T("Value"),
+                           ),
+                     Field("mobile", "boolean",
+                           default = False,
+                           label = T("Mobile"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  onaccept = self.cap_info_parameter_onaccept,
+                  onvalidation = self.cap_info_parameter_onvalidation,
+                  )
 
         # ---------------------------------------------------------------------
         # CAP Resource segments
@@ -1219,7 +1286,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                      # From which template area is the area assigned from
                      # Used for internationalisation
                      Field("template_area_id", "reference cap_area",
-                           ondelete = "RESTRICT",
+                           ondelete = "SET NULL",
                            readable = False,
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "cap_area.id",
@@ -1253,7 +1320,8 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                                                            T("must not be used except in combination with the 'altitude' element. The ceiling measure is in feet above mean sea level."))),
                            ),
                      # Only used for Templates
-                     self.event_type_id(comment = DIV(_class="tooltip",
+                     self.event_type_id(ondelete = "SET NULL",
+                                        comment = DIV(_class="tooltip",
                                                       _title="%s|%s" % (T("Event Type of this predefined alert area"),
                                                                         T("Event Type relating to this predefined area."))),
                             #            script = '''
@@ -1442,8 +1510,8 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                      *s3_meta_fields())
 
         configure(tablename,
-                  onaccept = self.cap_area_tag_onaccept,
                   deduplicate = S3Duplicate(primary=("area_id", "tag", "value")),
+                  onaccept = self.cap_area_tag_onaccept,
                   )
 
         # ---------------------------------------------------------------------
@@ -1655,7 +1723,7 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                                                itable.event,
                                                itable.event_type_id,
                                                itable.event_code,
-                                               itable.parameter,
+                                               #itable.parameter,
                                                limitby=(0, 1)).first()
         if info:
             alert_id = info.alert_id
@@ -1666,14 +1734,14 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                 set_.update(event = current.db.cap_info.event_type_id.\
                             represent(info.event_type_id))
             event_code = info.event_code
-            parameter = info.parameter
+            #parameter = info.parameter
             # For prepopulating
             if event_code and ("|{" in event_code or "||" in event_code):
                 fstring = json_formatter(event_code)
                 set_.update(event_code = fstring)
-            if parameter and ("|{" in parameter or "||" in parameter):
-                fstring = json_formatter(parameter)
-                set_.update(parameter = fstring)
+            #if parameter and ("|{" in parameter or "||" in parameter):
+            #    fstring = json_formatter(parameter)
+            #    set_.update(parameter = fstring)
 
             web = "%s%s" % (current.deployment_settings.get_base_public_url(),
                             URL(c="cap", f="alert", args=[alert_id]))
@@ -1716,13 +1784,13 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
         form_record = form.record
         if form_record and form_record.is_template == False:
             form_vars = form.vars
-            parameters = json.loads(form_vars.get("parameter"))
-            if parameters:
-                for parameter in parameters:
-                    if (parameter["key"] and not parameter["value"]) or \
-                       (parameter["value"] and not parameter["key"]):
-                        form.errors["parameter"] = \
-                            current.T("Name-Value Pair is incomplete.")
+            #parameters = json.loads(form_vars.get("parameter"))
+            #if parameters:
+            #    for parameter in parameters:
+            #        if (parameter["key"] and not parameter["value"]) or \
+            #           (parameter["value"] and not parameter["key"]):
+            #            form.errors["parameter"] = \
+            #                current.T("Name-Value Pair is incomplete.")
 
             if not form_vars.get("urgency"):
                 form.errors["urgency"] = \
@@ -1771,6 +1839,41 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                                 URL(c="cap", f="alert", args=[alert_id]))
                 message = current.T("This alert that you requested to review has been approved:\n\n%s") % url
                 current.msg.send_by_pe_id(pe_id, subject, message)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_info_parameter_onaccept(form):
+        """
+            Link alert_id to cap_info_parameter table
+        """
+
+        form_vars = form.vars
+        info_id = form_vars.get("info_id", None)
+        if not info_id:
+            return
+
+        db = current.db
+        itable = db.cap_info
+
+        irow = db(itable.id == info_id).select(itable.alert_id,
+                                               limitby=(0, 1)).first()
+        alert_id = irow.alert_id
+        if alert_id:
+            db(db.cap_info_parameter.id == form_vars.id).update(alert_id = alert_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_info_parameter_onvalidation(form):
+        """
+            Custom Form Validation
+        """
+
+        form_vars = form.vars
+        parameter_name = form_vars.get("name")
+        parameter_value = form_vars.get("value")
+        if (parameter_name and not parameter_value) or \
+           (parameter_value and not parameter_name):
+            form.errors["name"] = current.T("Name-Value Pair is incomplete.")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2023,14 +2126,6 @@ def cap_expirydate():
     return current.request.utcnow + \
            datetime.timedelta(days = current.deployment_settings.\
                               get_cap_expire_offset())
-
-# =============================================================================
-def date_representation(date):
-    """
-        Showing the date in human readable format
-    """
-
-    return date.strftime("%B %d, %Y at %H:%M:%S")
 
 # =============================================================================
 def warning_priority_color(color_code):
@@ -3273,7 +3368,7 @@ class cap_CloneAlert(S3Method):
         alert_fields = [alert_table[f] for f in alert_table.fields
                         if f not in unwanted_fields]
         alert_query = (alert_table.id == alert_id) & \
-                      accessible_query("read", alert_table)
+                       accessible_query("read", alert_table)
         alert_row = db(alert_query).select(*alert_fields, limitby=(0, 1)).first()
         alert_row_clone = alert_row.as_dict()
         del alert_row_clone["identifier"]
@@ -3298,9 +3393,15 @@ class cap_CloneAlert(S3Method):
             info_fields = [info_table[f] for f in info_table.fields
                            if f not in unwanted_fields_]
             info_query = (info_table.alert_id == alert_id) &\
-                         accessible_query("read", info_table)
+                          accessible_query("read", info_table)
             info_rows = db(info_query).select(*info_fields)
             if info_rows:
+                info_parameter_table = s3db.cap_info_parameter
+                info_parameter_table_insert = info_parameter_table.insert
+                info_parameter_accessible = accessible_query("read", info_parameter_table)
+                info_parameter_fields = [info_parameter_table[f] for f in info_parameter_table.fields
+                                         if f not in unwanted_fields]
+                info_parameter_query_ = (info_parameter_table.alert_id == alert_id)
                 for info_row in info_rows:
                     info_id = info_row.id
                     info_row_clone = info_row.as_dict()
@@ -3314,6 +3415,24 @@ class cap_CloneAlert(S3Method):
                     audit("create", "cap", "info", record=new_info_id)
                     set_record_owner(info_table, new_info_id)
                     onaccept(info_table, info_row_clone)
+
+                    # Copy the info parameters
+                    info_parameter_query = info_parameter_query_ & \
+                                           (info_parameter_table.info_id == info_id) & \
+                                           info_parameter_accessible
+                    info_parameter_rows = db(info_parameter_query).select(*info_parameter_fields)
+                    for info_parameter_row in info_parameter_rows:
+                        info_parameter_row_clone = info_parameter_row.as_dict()
+                        info_parameter_row_clone.update(alert_id = new_alert_id,
+                                                        info_id = new_info_id)
+                        new_info_parameter_id = info_parameter_table_insert(**info_parameter_row_clone)
+                        # Post-process create
+                        info_parameter_row_clone["id"] = new_info_parameter_id
+                        audit("create", "cap", "info_parameter",
+                              record=new_info_parameter_id)
+                        set_record_owner(info_parameter_table, new_info_parameter_id)
+                        onaccept(info_parameter_table, info_parameter_row_clone)
+                    
         if has_permission("create", area_table):
             # Copy the area segment
             area_fields = [area_table[f] for f in area_table.fields

@@ -308,7 +308,7 @@
                     <xsl:value-of select="cap:contact" />
                 </data>
             </xsl:if>
-            <xsl:if test="cap:parameter!=''">
+            <!--<xsl:if test="cap:parameter!=''">
                 <data field="parameter">
                     <xsl:attribute name="value">
                         <xsl:text>[</xsl:text>
@@ -325,10 +325,25 @@
                         <xsl:text>]</xsl:text>
                     </xsl:attribute>
                 </data>
+            </xsl:if>-->
+            <xsl:if test="cap:parameter!=''">
+                <xsl:apply-templates select="cap:parameter" />
             </xsl:if>
 
             <xsl:apply-templates select="cap:resource" />
             <xsl:apply-templates select="cap:area" />
+        </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template match="cap:parameter">
+        <resource name="cap_info_parameter">                    
+            <data field="name">
+                <xsl:value-of select="cap:valueName" />
+            </data>
+            <data field="value">
+                <xsl:value-of select="cap:value" />
+            </data>            
         </resource>
     </xsl:template>
 

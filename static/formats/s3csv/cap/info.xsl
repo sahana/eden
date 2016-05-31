@@ -13,14 +13,11 @@
          Event Type..................string.............CAP template info event
          Response Type....comma-separated string........CAP template info response_type
          Audience....................string.............CAP template info audience
-         Event Code.............list:key-value pair.....CAP template info event_code
          Sender Name.................string.............CAP template info sender_name
          Headline....................string.............CAP template info headline
          Description.................string.............CAP template info description
          Instruction.................string.............CAP template info instruction
          Contact.....................string.............CAP template info contact
-         The parameters field looks like this in xml
-         <data field="parameter" value=""[{\"key\":\"para-key1\",\"value\":\"para-value1\"}]""/>
          Parameters..............key-value pair.........CAP template info parameter
 
     *********************************************************************** -->
@@ -93,7 +90,8 @@
                 </data>
             </xsl:if>
             <!-- Event Code -->
-            <xsl:variable name="EventCode" select="col[@field='Event Code']"/>
+            <!-- Enable when we being to use this -->
+            <!--<xsl:variable name="EventCode" select="col[@field='Event Code']"/>
             <xsl:variable name="EventCode-string">
                 <xsl:value-of select="translate($EventCode, '[{}]', '')"/>
             </xsl:variable>
@@ -118,7 +116,7 @@
                         </xsl:attribute>
                     </data>
                 </xsl:otherwise>
-            </xsl:choose>
+            </xsl:choose>-->
             <!-- Sender Name -->
             <xsl:variable name="SenderName" select="col[@field='Sender Name']/text()"/>
             <xsl:if test="$SenderName!=''">
@@ -156,28 +154,13 @@
             </xsl:if>
             <!-- Parameter -->
             <xsl:variable name="Parameter-string" select="col[@field='Parameters']"/>
-            <xsl:choose>
-                <xsl:when test="$Parameter-string!=''">
-                    <data field="parameter">
-                        <xsl:attribute name="value">
-                            <xsl:text>[</xsl:text>
-                            <xsl:call-template name="key-value-String">
-                                <xsl:with-param name="key-value">
-                                    <xsl:value-of select="$Parameter-string"/>
-                                </xsl:with-param>
-                            </xsl:call-template>
-                            <xsl:text>]</xsl:text>
-                        </xsl:attribute>
-                    </data> 
-                </xsl:when>
-                <xsl:otherwise>
-                    <data field="parameter">
-                        <xsl:attribute name="value">
-                            <xsl:text>[]</xsl:text>
-                        </xsl:attribute>
-                    </data>
-                </xsl:otherwise>
-            </xsl:choose>
+            <xsl:if test="$Parameter-string!=''">
+                <xsl:call-template name="parameter-String">
+                    <xsl:with-param name="key-value">
+                        <xsl:value-of select="$Parameter-string"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:if>
             <!-- Event Type -->
             <xsl:variable name="EventTypeName" select="col[@field='Event Type']"/>
             <xsl:if test="$EventTypeName!=''">
@@ -298,6 +281,76 @@
             </xsl:choose>
         </xsl:if>
     
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="parameter-String">
+    
+        <xsl:param name="key-value"/>
+        <xsl:param name="sep" select="','"/>
+        <xsl:param name="kv-sep" select="'&quot;&#58;&quot;'"/>
+        
+        <xsl:if test="$kv-sep">
+            <xsl:choose>
+                <xsl:when test="contains($key-value, $sep) and contains($key-value, $kv-sep)">
+                    <xsl:variable name="head">
+                        <xsl:value-of select="substring-before($key-value, $sep)"/>
+                    </xsl:variable>
+                    <xsl:variable name="key">
+                        <xsl:value-of select="substring-before($head, $kv-sep)"/>
+                    </xsl:variable>
+                    <xsl:variable name="value">
+                        <xsl:value-of select="substring-after($head, $kv-sep)"/>
+                    </xsl:variable>
+                    <xsl:variable name="tail">
+                        <xsl:value-of select="substring-after($key-value, $sep)"/>
+                    </xsl:variable>
+                    <xsl:call-template name="info-parameter-construct">
+                        <xsl:with-param name="key" select="normalize-space(translate($key, '&quot;', ''))"/>
+                        <xsl:with-param name="value" select="normalize-space(translate($value, '&quot;', ''))"/>
+                    </xsl:call-template>
+                    <xsl:call-template name="parameter-String">
+                        <xsl:with-param name="key-value" select="$tail"/>
+                        <xsl:with-param name="sep" select="$sep"/>
+                        <xsl:with-param name="kv-sep" select="$kv-sep"/>
+                    </xsl:call-template>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:variable name="key">
+                        <xsl:value-of select="substring-before($key-value, $kv-sep)"/>
+                    </xsl:variable>
+                    <xsl:variable name="value">
+                        <xsl:value-of select="substring-after($key-value, $kv-sep)"/>
+                    </xsl:variable>
+                    <xsl:call-template name="info-parameter-construct">
+                        <xsl:with-param name="key" select="normalize-space(translate($key, '&quot;', ''))"/>
+                        <xsl:with-param name="value" select="normalize-space(translate($value, '&quot;', ''))"/>
+                    </xsl:call-template>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:if>
+    
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="info-parameter-construct">
+        
+        <xsl:param name="key" />
+        <xsl:param name="value" />
+        
+        <resource name="cap_info_parameter">
+            <data field="name">
+                <xsl:value-of select="$key" />
+            </data>
+            <data field="value">
+                <xsl:value-of select="$value" />
+            </data>
+            <data field="mobile">
+                <xsl:attribute name="value">
+                    <xsl:text>true</xsl:text>
+                </xsl:attribute>
+            </data>
+        </resource>
     </xsl:template>
     
 </xsl:stylesheet>

@@ -87,12 +87,9 @@ class S3MainMenu(default.S3MainMenu):
                                    mapping_menu,
                                   ])
                 elif has_role("ALERT_EDITOR"):
-                    menus_.extend([alerting_menu,
-                                   recipient_menu,
-                                   ])
+                    menus_.append(alerting_menu)
                 elif has_role("ALERT_APPROVER"):
                     menus_.extend([alerting_menu,
-                                   recipient_menu,
                                    MM("Approve Alerts", c="cap", f="alert", m="review"),
                                    MM("View Approved Alerts", c="cap", f="alert",
                                       vars={"~.approved_by__ne": None}

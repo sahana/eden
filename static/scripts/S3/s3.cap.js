@@ -206,7 +206,10 @@
                     		if ($f.val() != '') {
                     			restriction_row.show();
                     		}
-                    	}
+                    	} else {
+                            recipient_row.show();
+                            restriction_row.hide();
+                        }
                     case 'undefined':
                         // change field only if locked or overwrite flag is set
                         if ($f.is(':text') || $f.is('textarea') || $f.is('select')) {
