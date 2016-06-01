@@ -17,6 +17,17 @@ def index():
     s3_redirect_default(URL(f="alert"))
 
 # -----------------------------------------------------------------------------
+def alert_history():
+    """
+        RESTful CRUD controller
+    """
+
+    output = s3_rest_controller("cap", "alert_history",
+                                rheader = s3db.cap_history_rheader,
+                                )
+    return output
+
+# -----------------------------------------------------------------------------
 def info_prep(r):
     """
         Preprocessor for CAP Info segments
@@ -233,7 +244,7 @@ def alert():
 
             if not r.component:
                 if r.get_vars["~.approved_by__ne"] == "None":
-                    response.s3.crud_strings["cap_alert"].title_list = T("Approved Alerts")
+                    s3.crud_strings["cap_alert"].title_list = T("Approved Alerts")
                     url = URL(c="cap", f="alert", args=["[id]", "profile"])
                     s3base.S3CRUD.action_buttons(r, deletable=False, editable=False,
                                                  read_url = url)
@@ -268,13 +279,13 @@ def alert():
                         if r.get_vars["status"] == "incomplete":
                             # Show incomplete alerts, ie. without info and area segment
                             s3.filter = (FS("info.id") == None) | (FS("area.id") == None)
-                            response.s3.crud_strings["cap_alert"].title_list = T("Incomplete Alerts")
+                            s3.crud_strings["cap_alert"].title_list = T("Incomplete Alerts")
                             url = URL(c="cap", f="alert", args=["[id]"])
                             s3base.S3CRUD.action_buttons(r, update_url=url, read_url=url)
                         elif not r.get_vars:
                             # Filter those alerts having at least info and area segment
                             s3.filter = (FS("info.id") != None) & (FS("area.id") != None)
-                            response.s3.crud_strings["cap_alert"].title_list = T("Review Alerts")
+                            s3.crud_strings["cap_alert"].title_list = T("Review Alerts")
                         list_fields = ["info.event_type_id",
                                        "msg_type",
                                        (T("Sent"), "sent"),
@@ -665,7 +676,7 @@ def alert():
                                                       ),
                                    )
 
-                    response.s3.stylesheets.append("../themes/default/cap.css")
+                    s3.stylesheets.append("../themes/default/cap.css")
 
                 elif r.method == "assign":
                     translate = settings.get_L10n_translate_cap_area()
@@ -991,6 +1002,7 @@ def info():
 def info_parameter():
     """
         RESTful CRUD controller
+            should only be accessed from mobile client
     """
 
     def prep(r):
@@ -1183,7 +1195,7 @@ def area():
         # Area create from this controller is template
         artable.is_template.default = True
 
-        response.s3.crud_strings["cap_area"] = Storage(
+        s3.crud_strings["cap_area"] = Storage(
             label_create = T("Create Predefined Area"),
             title_display = T("Predefined Area"),
             title_list = T("Predefined Areas"),

@@ -1,7 +1,1 @@
-{{T = current.T}}{{from s3 import s3_str}}
-{{if new is not None:}}{{for record in new_records:}}{{new_alert_record=dict(record)}}
-{{new_alert_message = T("""New Alert: %(Status)s %(MessageType)s for %(AreaDescription)s with %(Priority)s priority %(EventType)s issued by %(SenderName)s. Msg:%(Identifier)s sent on %(Date)s""") \
-% dict(Status=s3_str(new_alert_record[T("Status")]), MessageType=s3_str(new_alert_record[T("Message Type")]), AreaDescription=s3_str(new_alert_record[T("Area Description")]),\
-Priority=s3_str(new_alert_record[T("Priority")]), EventType=s3_str(new_alert_record[T("Event")]), SenderName=s3_str(new_alert_record[T("Sender's name")]),\
-Identifier=s3_str(new_alert_record[T("Identifier")]), Date=s3_str(new_alert_record[T("Date")]))}}
-{{=XML(new_alert_message)}}{{pass}}{{pass}}
+{{if new is not None:}}{{for record in new_records:}}{{=XML(record)}}{{pass}}{{pass}}

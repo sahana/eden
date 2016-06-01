@@ -578,7 +578,8 @@ def config(settings):
                         append_column = record.append
                         for colname, label in labels:
                             append_column((label, row[colname]))
-                        append_record(record)
+                        sms_content = get_sms_content(row)
+                        append_record(sms_content)
 
             if "new" in notify_on and len(new):
                 output["new"] = len(new)
@@ -980,8 +981,7 @@ T("Alert is effective from %(Effective)s and expires on %(Expires)s") % \
             priority = T("None")
 
         sms_body = \
-T("""%(Status)s %(MessageType)s for %(AreaDescription)s with %(Priority)s
-priority %(EventType)s issued by %(SenderName)s at %(Date)s (ID:%(Identifier)s)""") % \
+T("""%(Status)s %(MessageType)s for %(AreaDescription)s with %(Priority)s priority %(EventType)s issued by %(SenderName)s at %(Date)s (ID:%(Identifier)s) \n\n""") % \
             dict(Status = s3_str(row["cap_alert.status"]),
                  MessageType = s3_str(row["cap_alert.msg_type"]),
                  AreaDescription = s3_str(row["cap_area.name"]),
@@ -991,6 +991,6 @@ priority %(EventType)s issued by %(SenderName)s at %(Date)s (ID:%(Identifier)s)"
                  Date = s3_str(row["cap_alert.sent"]),
                  Identifier = s3_str(row["cap_alert.identifier"]))
 
-        return sms_body
+        return s3_str(sms_body)
 
 # END =========================================================================
