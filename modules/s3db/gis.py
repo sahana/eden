@@ -2649,6 +2649,7 @@ class S3LayerEntityModel(S3Model):
                      # Optionally restrict to a specific Record
                      Field("record_id", "integer",
                            label = T("Record"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, 999999999)),
                            ),
                      Field("aggregate", "boolean",
                            default = False,
@@ -2767,6 +2768,11 @@ class S3LayerEntityModel(S3Model):
                          (ltable.base == True) & \
                          (ltable.id != form_vars.id)
                 db(query).update(base = False)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def gis_style_onvalidation(form):
+        pass
 
     # ---------------------------------------------------------------------
     @staticmethod
