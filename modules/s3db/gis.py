@@ -2769,11 +2769,6 @@ class S3LayerEntityModel(S3Model):
                          (ltable.id != form_vars.id)
                 db(query).update(base = False)
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def gis_style_onvalidation(form):
-        pass
-
     # ---------------------------------------------------------------------
     @staticmethod
     def gis_style_postprocess(form):

@@ -486,13 +486,16 @@ def course():
     def prep(r):
         if mode is not None:
             auth.permission.fail()
+        if r.component_name == "training":
+            s3.crud_strings["hrm_training"].label_create = T("Add Trainee")
         return True
     s3.prep = prep
 
     if not auth.s3_has_role(ADMIN) and not s3.filter:
         s3.filter = auth.filter_by_root_org(s3db.hrm_course)
 
-    output = s3_rest_controller(rheader=s3db.hrm_rheader)
+    output = s3_rest_controller(rheader = s3db.hrm_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------

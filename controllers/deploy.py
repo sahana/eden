@@ -254,7 +254,8 @@ def group():
         return True
     s3.prep = prep
 
-    return s3_rest_controller("pr")
+    return s3_rest_controller("pr", "group",
+                              )
 
 # -----------------------------------------------------------------------------
 def application():

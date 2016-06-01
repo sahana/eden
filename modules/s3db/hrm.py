@@ -2540,6 +2540,8 @@ class S3HRSkillModel(S3Model):
                                      },
                        # Format for filter_widget
                        hrm_course_sector = "course_id",
+                       # Trainees
+                       hrm_training = "course_id",
                        )
 
         # =========================================================================
@@ -6112,6 +6114,7 @@ def hrm_rheader(r, tabs=[], profile=False):
         # Tabs
         tabs = [(T("Course Details"), None),
                 (T("Course Certificates"), "course_certificate"),
+                (T("Trainees"), "training"),
                 ]
         rheader_tabs = s3_rheader_tabs(r, tabs)
         rheader = DIV(TABLE(TR(TH("%s: " % table.name.label),
@@ -6496,7 +6499,7 @@ def hrm_group_controller():
                                      csv_stylesheet = ("hrm", "group.xsl"),
                                      csv_template = "group",
                                      rheader = lambda r: \
-                                        s3db.pr_rheader(r, tabs=tabs)
+                                        s3db.pr_rheader(r, tabs=tabs),
                                      )
 
     return output
