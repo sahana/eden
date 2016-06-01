@@ -86,8 +86,6 @@ class S3MainMenu(default.S3MainMenu):
                     menus_.extend([view_menu,
                                    mapping_menu,
                                   ])
-                elif has_role("ALERT_EDITOR"):
-                    menus_.append(alerting_menu)
                 elif has_role("ALERT_APPROVER"):
                     menus_.extend([alerting_menu,
                                    MM("Approve Alerts", c="cap", f="alert", m="review"),
@@ -98,6 +96,8 @@ class S3MainMenu(default.S3MainMenu):
                                       vars={"status": "incomplete"}
                                       )
                                    ])
+                elif has_role("ALERT_EDITOR"):
+                    menus_.append(alerting_menu)
                 else:
                     # Authenticated Users
                     menus_.append(view_menu)
