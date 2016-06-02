@@ -33,6 +33,7 @@ __all__ = ("S3ChannelModel",
            "S3EmailModel",
            "S3FacebookModel",
            "S3MCommonsModel",
+           "S3GCMModel",
            "S3ParsingModel",
            "S3RSSModel",
            "S3SMSModel",
@@ -83,6 +84,7 @@ class S3ChannelModel(S3Model):
         #
         channel_types = Storage(msg_email_channel = T("Email (Inbound)"),
                                 msg_facebook_channel = T("Facebook"),
+                                msg_gcm_channel = T("Google Cloud Messaging"),
                                 msg_mcommons_channel = T("Mobile Commons (Inbound)"),
                                 msg_rss_channel = T("RSS Feed"),
                                 msg_sms_modem_channel = T("SMS Modem"),
@@ -897,6 +899,79 @@ class S3MCommonsModel(S3ChannelModel):
 
         # ---------------------------------------------------------------------
         return {}
+
+# =============================================================================
+class S3GCMModel(S3ChannelModel):
+    """
+        Google Cloud Messaging
+            Channels
+
+        https://developers.google.com/cloud-messaging/
+    """
+
+    names = ("msg_gcm_channel",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        set_method = self.set_method
+
+        # ---------------------------------------------------------------------
+        # GCM Channels
+        #
+        tablename = "msg_gcm_channel"
+        self.define_table(tablename,
+                          # Instance
+                          self.super_link("channel_id", "msg_channel"),
+                          Field("name"),
+                          Field("description"),
+                          Field("enabled", "boolean",
+                                default = True,
+                                label = T("Enabled?"),
+                                represent = s3_yes_no_represent,
+                                ),
+                          #Field("login", "boolean",
+                          #      default = False,
+                          #      label = T("Use for Login?"),
+                          #      represent = s3_yes_no_represent,
+                          #      ),
+                          Field("api_key",
+                                notnull = True,
+                                ),
+                          *s3_meta_fields())
+
+        self.configure(tablename,
+                       onaccept = self.msg_gcm_channel_onaccept,
+                       super_entity = "msg_channel",
+                       )
+
+        set_method("msg", "gcm_channel",
+                   method = "enable",
+                   action = self.msg_channel_enable_interactive)
+
+        set_method("msg", "gcm_channel",
+                   method = "disable",
+                   action = self.msg_channel_disable_interactive)
+
+        #set_method("msg", "gcm_channel",
+        #           method = "poll",
+        #           action = self.msg_channel_poll)
+
+        # ---------------------------------------------------------------------
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def msg_gcm_channel_onaccept(form):
+
+        if form.vars.enabled:
+            # Ensure only a single account enabled
+            current.db(current.s3db.msg_gcm_channel.id != form.vars.id).update(enabled = False)
+
+        # Normal onaccept processing
+        S3ChannelModel.channel_onaccept(form)
 
 # =============================================================================
 class S3ParsingModel(S3Model):

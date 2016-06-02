@@ -149,7 +149,7 @@ class S3MainMenu(default.S3MainMenu):
                             MM("Manage Users", f="user"),
                             MM("Database", c="appadmin", f="index"),
                             MM("Error Tickets", f="errors"),
-                            MM("Synchronization", c="sync", f="index"),
+                            #MM("Synchronization", c="sync", f="index"),
                          )
         else:
             menu_admin = None
@@ -218,6 +218,18 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Event Types", c="event", f="event_type")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def org():
+        """ ORG / Organization Registry """
+
+        return M(c="org")(
+                    M("Organizations", f="organisation")(
+                        M("Create", m="create"),
+                        M("Import", m="import")
                     ),
                 )
 
