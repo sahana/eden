@@ -125,11 +125,11 @@ def alert():
         #s3db.configure(tablename,
         #               filter_widgets = filter_widgets,
         #               )
-
-        if r.representation == "html":
+        representation = r.representation
+        if representation == "html"  or representation == "aadata":
             r.table.msg_type.represent = None
 
-        elif r.representation == "dl":
+        elif representation == "dl":
             # DataList: match list_layout
             list_fields = ["msg_type",
                            "info.headline",
@@ -149,7 +149,7 @@ def alert():
                            list_fields = list_fields,
                            )
 
-        elif r.representation == "json":
+        elif representation == "json":
             # @ToDo: fix JSON representation's ability to use component list_fields
             list_fields = ["id",
                            "identifier",

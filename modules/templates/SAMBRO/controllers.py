@@ -111,8 +111,9 @@ class index(S3CustomController):
             current.response.s3.crud_strings["cap_alert"].msg_no_match = T("No Current Alerts match these filters.")
 
         ajax_url = URL(c="cap", f=fn, args="datalist.dl", vars={"list_id": list_id})
+        #@ToDo: Implement pagination properly
         output[list_id] = datalist.html(ajaxurl = ajax_url,
-                                        pagesize = None,
+                                        pagesize = 0,
                                         )
 
         # @ToDo: Options are currently built from the full-set rather than the filtered set
@@ -482,6 +483,10 @@ class subscriptions(S3CustomController):
                    ("SMS", T("SMS")),
                    ("FTP", T("FTP")),
                    ]
+
+        if not (request.get_vars["option"] == "manage_recipient" and \
+           has_role("ADMIN")):
+            methods.append(("GCM", T("GCM")))
 
         method_options = Storage(name = "method", requires = IS_IN_SET(methods))
 

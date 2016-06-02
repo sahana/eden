@@ -83,6 +83,18 @@ if settings.has_module("cap"):
 
     tasks["cap_ftp_sync"] = cap_ftp_sync
 
+    # -------------------------------------------------------------------------
+    def cap_gcm(title, uri, message, registration_ids, user_id=None):
+        """ Push the data relating to google cloud messaging server """
+
+        if user_id:
+            # Authenticate
+            auth.s3_impersonate(user_id)
+
+        msg.gcm_push(title, uri, message, eval(registration_ids))
+
+    tasks["cap_gcm"] = cap_gcm
+
 # -----------------------------------------------------------------------------
 if settings.has_module("doc"):
 
