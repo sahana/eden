@@ -3,6 +3,7 @@ ANONYMOUS,Anonymous,Unauthenticated visitors and new users during registration,c
 ANONYMOUS,Anonymous,,cms,page,,,READ,,,,,
 ANONYMOUS,Anonymous,,,,cms_post,,READ,,,,,
 ANONYMOUS,Anonymous,,,,doc_document,,READ,,,,,
+ANONYMOUS,Anonymous,,gis,,,,READ,,,,,
 ANONYMOUS,Anonymous,,gis,index,,,READ,,,,,
 ANONYMOUS,Anonymous,,gis,location,,,READ,,,,,
 ANONYMOUS,Anonymous,,gis,proxy,,,READ,,,,,
@@ -25,11 +26,11 @@ ANONYMOUS,Anonymous,,,,gis_layer_xyz,,READ,,,,,
 ANONYMOUS,Anonymous,,,,hrm_human_resource,,READ,,,,,
 ANONYMOUS,Anonymous,,,,hrm_job_title,,READ,,,,,
 ANONYMOUS,Anonymous,,org,,,,READ,,,,,
-ANONYMOUS,Anonymous,,org,organisation,,,READ|CREATE,,,,,
+ANONYMOUS,Anonymous,,org,organisation,,,READ|CREATE,,,,,can create organisations during registration
 ANONYMOUS,Anonymous,,,,org_facility,,READ,,,,,
 ANONYMOUS,Anonymous,,,,org_facility_type,,READ,,,,,
-ANONYMOUS,Anonymous,,,,org_organisation,,READ|CREATE,,,,,
-ANONYMOUS,Anonymous,,,,org_organisation_organisation_type,,READ,,,,,
+ANONYMOUS,Anonymous,,,,org_organisation,,READ|CREATE,,,,,can create organisations during registration
+ANONYMOUS,Anonymous,,,,org_organisation_organisation_type,,READ|CREATE,,,,,can select organisation type during registration
 ANONYMOUS,Anonymous,,,,org_organisation_type,,READ,,,,,
 ANONYMOUS,Anonymous,,,,org_sector,,READ,,,,,
 ANONYMOUS,Anonymous,,,,org_sector_organisation,,READ,,,,,
@@ -58,7 +59,8 @@ ANONYMOUS,Anonymous,,,,supply_item_pack,,READ,,,,,
 AUTHENTICATED,Authenticated,Authenticated Users,cms,newsfeed,,,READ,,,,,
 AUTHENTICATED,Authenticated,,cms,page,,,READ,,,,,
 AUTHENTICATED,Authenticated,,,,cms_post,,READ,,,,,
-AUTHENTICATED,Authenticated,,,,doc_document,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Can upload documents, and update/delete the documents they uploaded"
+AUTHENTICATED,Authenticated,,,,doc_document,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
+ANONYMOUS,Authenticated,,gis,,,,READ,,,,,
 AUTHENTICATED,Authenticated,,gis,index,,,READ,,,,,
 AUTHENTICATED,Authenticated,,gis,location,,,READ,,,,,
 AUTHENTICATED,Authenticated,,gis,proxy,,,READ,,,,,
@@ -80,25 +82,25 @@ AUTHENTICATED,Authenticated,,,,gis_layer_wms,,READ,,,,,
 AUTHENTICATED,Authenticated,,,,gis_layer_xyz,,READ,,,,,
 AUTHENTICATED,Authenticated,,,,hrm_human_resource,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 AUTHENTICATED,Authenticated,,,,hrm_job_title,,READ,,,,,
-AUTHENTICATED,Authenticated,,org,,,,READ,,,,,Fallback for all org controllers
+AUTHENTICATED,Authenticated,,org,,,,READ,,,,,
 AUTHENTICATED,Authenticated,,org,organisation,,,READ|CREATE,READ|CREATE|UPDATE,,,,
-AUTHENTICATED,Authenticated,,,,org_facility,,READ|CREATE,READ|CREATE|UPDATE,,,,Can create facilities and update the records they created
+AUTHENTICATED,Authenticated,,,,org_facility,,READ|CREATE,READ|CREATE|UPDATE,,,,
 AUTHENTICATED,Authenticated,,,,org_facility_type,,READ,,,,,
-AUTHENTICATED,Authenticated,,,,org_organisation,,READ|CREATE,READ|CREATE|UPDATE,,,,Can create organisations and update the records they created
-AUTHENTICATED,Authenticated,,,,org_organisation_organisation_type,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Can link organisations to organisation types, and remove the links they created"
+AUTHENTICATED,Authenticated,,,,org_organisation,,READ|CREATE,READ|CREATE|UPDATE,,,,
+AUTHENTICATED,Authenticated,,,,org_organisation_organisation_type,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 AUTHENTICATED,Authenticated,,,,org_organisation_type,,READ,,,,,
 AUTHENTICATED,Authenticated,,,,org_sector,,READ,,,,,
-AUTHENTICATED,Authenticated,,,,org_sector_organisation,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Can link organisations to sectors, and remove the links they created"
+AUTHENTICATED,Authenticated,,,,org_sector_organisation,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 AUTHENTICATED,Authenticated,,,,org_service,,READ,,,,,
-AUTHENTICATED,Authenticated,,,,org_service_location,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Can create service locations, and update/delete the records they created"
-AUTHENTICATED,Authenticated,,,,org_service_organisation,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Can link organisations to service types, and remove the links they created"
-AUTHENTICATED,Authenticated,,,,org_site_facility_type,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Can link facilities to facility types, and remove the links they created"
+AUTHENTICATED,Authenticated,,,,org_service_location,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
+AUTHENTICATED,Authenticated,,,,org_service_organisation,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
+AUTHENTICATED,Authenticated,,,,org_site_facility_type,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 AUTHENTICATED,Authenticated,,,,pr_person,,READ,READ|UPDATE,,,,
-AUTHENTICATED,Authenticated,,,,pr_contact,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Can create contact information, and update/delete the records they created"
+AUTHENTICATED,Authenticated,,,,pr_contact,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 AUTHENTICATED,Authenticated,,project,,,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
-AUTHENTICATED,Authenticated,,,,project_activity,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Can create activities, and update/delete the records they created"
-AUTHENTICATED,Authenticated,,,,project_activity_activity_type,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,"Can link activities to activity types, and remove the links they created"
-AUTHENTICATED,Authenticated,,,,project_activity_organisation,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,?
+AUTHENTICATED,Authenticated,,,,project_activity,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
+AUTHENTICATED,Authenticated,,,,project_activity_activity_type,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
+AUTHENTICATED,Authenticated,,,,project_activity_organisation,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 AUTHENTICATED,Authenticated,,,,project_activity_type,,READ,,,,,
 AUTHENTICATED,Authenticated,,,,project_hazard,,READ,,,,,
 AUTHENTICATED,Authenticated,,,,project_hazard_project,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
