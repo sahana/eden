@@ -1616,16 +1616,23 @@ def config(settings):
         s3db = current.s3db
         s3 = current.response.s3
 
-        countries = _countries_for_region()
-        if countries:
-            # Filter Alerts to just those from this region's countries
-            # @ToDo: Switch to using mission_id$organisation_id
-            mtable = s3db.deploy_mission
-            missions = db(mtable.location_id.belongs(countries)).select(mtable.id)
-            missions = [m.id for m in missions]
-            # Cache missions for use in customise_resource
-            s3.missions = missions
-            s3.filter = (s3db.deploy_alert.mission_id.belongs(missions))
+        auth = current.auth
+        is_admin = auth.s3_has_role("ADMIN")
+
+        if not is_admin:
+            organisation_id = auth.user.organisation_id
+            dotable = s3db.deploy_organisation
+            deploying_orgs = db(dotable.deleted == False).select(dotable.organisation_id)
+            deploying_orgs = [o.organisation_id for o in deploying_orgs]
+
+            if organisation_id in deploying_orgs:
+                # Filter Alerts to just those from this region's countries
+                mtable = s3db.deploy_mission
+                missions = db(mtable.organisation_id == organisation_id).select(mtable.id)
+                missions = [m.id for m in missions]
+                # Cache missions for use in customise_resource
+                s3.missions = missions
+                s3.filter = (s3db.deploy_alert.mission_id.belongs(missions))
 
         # Custom prep
         standard_prep = s3.prep
@@ -1640,16 +1647,9 @@ def config(settings):
                 if _is_asia_pacific():
                     settings.deploy.select_ratings = True
 
-                auth = current.auth
-                is_admin = auth.s3_has_role("ADMIN")
-                if not is_admin:
-                    organisation_id = auth.user.organisation_id
-                    dotable = s3db.deploy_organisation
-                    deploying_orgs = db(dotable.deleted == False).select(dotable.organisation_id)
-                    deploying_orgs = [o.organisation_id for o in deploying_orgs]
-                    if organisation_id in deploying_orgs:
-                        from s3 import FS
-                        r.resource.add_filter(FS("application.organisation_id") == organisation_id)
+                if not is_admin and organisation_id in deploying_orgs:
+                    from s3 import FS
+                    r.resource.add_filter(FS("application.organisation_id") == organisation_id)
 
             elif r.method == "send":
                 if _is_asia_pacific():
@@ -1668,6 +1668,7 @@ def config(settings):
 
         from s3 import S3DateTime, S3SQLCustomForm
 
+        db = current.db
         s3db = current.s3db
 
         s3db.deploy_alert_recipient.human_resource_id.label = T("Member")
@@ -1695,28 +1696,33 @@ def config(settings):
                                       ],
                        )
 
-        s3 = current.response.s3
-        countries = s3.countries
-        if not countries:
-            # Not coming from deploy/alert controller so need to query
-            countries = _countries_for_region()
-        if countries:
-            # Limit Missions to just those from this region's countries
-            db = current.db
-            missions = s3.missions
-            if not missions:
-                # Not coming from deploy/alert controller so need to query
-                mtable = s3db.deploy_mission
-                missions = db(mtable.location_id.belongs(countries)).select(mtable.id)
-                missions = [m.id for m in missions]
+        auth = current.auth
+        is_admin = auth.s3_has_role("ADMIN")
 
-            from s3 import IS_ONE_OF
-            field = atable.mission_id
-            field.requires = IS_ONE_OF(db, "deploy_mission.id",
-                                       field.represent,
-                                       filterby = "id",
-                                       filter_opts = missions,
-                                       sort=True)
+        if not is_admin:
+            organisation_id = auth.user.organisation_id
+            dotable = s3db.deploy_organisation
+            deploying_orgs = db(dotable.deleted == False).select(dotable.organisation_id)
+            deploying_orgs = [o.organisation_id for o in deploying_orgs]
+
+            if organisation_id in deploying_orgs:
+                # Limit Missions to just those for this deploying_org
+                missions = current.response.s3.missions
+                if not missions:
+                    # Not coming from deploy/alert controller so need to query
+                    mtable = s3db.deploy_mission
+                    query = (mtable.organisation_id == organisation_id) & \
+                            (mtable.deleted == False)
+                    missions = db(query).select(mtable.id)
+                    missions = [m.id for m in missions]
+
+                from s3 import IS_ONE_OF
+                field = atable.mission_id
+                field.requires = IS_ONE_OF(db, "deploy_mission.id",
+                                           field.represent,
+                                           filterby = "id",
+                                           filter_opts = missions,
+                                           sort=True)
 
     settings.customise_deploy_alert_resource = customise_deploy_alert_resource
 
