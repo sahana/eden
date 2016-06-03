@@ -1649,7 +1649,7 @@ def config(settings):
 
                 if not is_admin and organisation_id in deploying_orgs:
                     from s3 import FS
-                    r.resource.add_filter(FS("application.organisation_id") == organisation_id)
+                    s3.member_query = (FS("application.organisation_id") == organisation_id)
 
             elif r.method == "send":
                 if _is_asia_pacific():

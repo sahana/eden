@@ -1901,7 +1901,7 @@ def deploy_alert_select_recipients(r, **attr):
     response = current.response
     s3 = response.s3
 
-    member_query = FS("application.active") != None
+    member_query = s3.member_query or (FS("application.active") != None)
 
     if r.http == "POST":
 
