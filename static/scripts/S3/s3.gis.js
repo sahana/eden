@@ -3619,6 +3619,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         defaults[key] = '';
                     }
                     _.defaults(attributes, defaults);*/
+                    // Since this is single feature case, feature should have single id
+	            if (attributes.id.constructor === Array) {
+		        attributes.id = attributes.id[0];
+		    }
                     popup_url = template(attributes);
                     contents += "<li><a href='javascript:S3.gis.loadClusterPopup(" + "\"" + map_id + "\", \"" + popup_url + "\", \"" + popup_id + "\"" + ")'>" + name + "</a></li>";
                 } else {
@@ -3730,6 +3734,10 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         defaults[key] = '';
                     }
                     _.defaults(attributes, defaults);*/
+                    // Since this is single feature case, feature should have single id
+		    if (feature.attributes.id.constructor === Array) {
+		        feature.attributes.id = feature.attributes.id[0];
+		    }
                     popup_url = template(feature.attributes);
                 } else {
                     // Popup contents are built from the attributes

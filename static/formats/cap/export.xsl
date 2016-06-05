@@ -243,15 +243,15 @@
 
             <xsl:if test="reference[@field='event_type_id']!=''">
             	<parameter>
-                	<valueName>event type</valueName>
-                	<value><xsl:value-of select="reference[@field='event_type_id']"/></value>
+                    <valueName>sahana:event type</valueName>
+                    <value><xsl:value-of select="reference[@field='event_type_id']"/></value>
                 </parameter>
             </xsl:if>
 
             <xsl:if test="reference[@field='priority']!=''">
             	<parameter>
-                	<valueName>warning priority</valueName>
-                	<value><xsl:value-of select="reference[@field='priority']"/></value>
+                    <valueName>sahana:warning priority</valueName>
+                    <value><xsl:value-of select="reference[@field='priority']"/></value>
                 </parameter>
             </xsl:if>
             
@@ -277,13 +277,41 @@
             </xsl:if>-->
 
             <parameter>
-                <valueName>tweet</valueName>
+                <valueName>layer:tweet</valueName>
                 <value>
                     <xsl:value-of select="translate(../data[@field='status']/@value, '&quot;', '')"/><xsl:text>: </xsl:text><xsl:value-of select="data[@field='headline']"/>
                     <xsl:text>&#x0A;</xsl:text>
                     <xsl:text>Sender: </xsl:text><xsl:value-of select="../data[@field='sender']"/>
                     <xsl:text>&#x0A;</xsl:text>
                     <xsl:text>Website: </xsl:text><xsl:value-of select="concat(data[@field='web'], '/profile')"/>
+                </value>
+            </parameter>
+
+            <parameter>
+                <valueName>layer:sms</valueName>
+                <value>
+                    <xsl:value-of select="translate(../data[@field='status']/@value, '&quot;', '')"/>
+		    <xsl:text>&#160;</xsl:text><xsl:value-of select="translate(../data[@field='msg_type']/@value, '&quot;', '')"/>
+                    <xsl:text>&#160;for&#160;</xsl:text>
+		    <xsl:value-of select="../resource[@name='cap_area']/data[@field='name']"/>
+		    <xsl:text>&#160;with&#160;</xsl:text>
+		    <xsl:choose>
+		        <xsl:when test="reference[@field='priority']!=''">
+			    <xsl:value-of select="reference[@field='priority']"/>
+			</xsl:when>
+			<xsl:otherwise>
+			    <xsl:text>Unknown</xsl:text>
+			</xsl:otherwise>
+		    </xsl:choose>
+		    <xsl:text>&#160;priority&#160;</xsl:text>
+		    <xsl:value-of select="reference[@field='event_type_id']"/>
+		    <xsl:text>&#160;issued&#160;by&#160;</xsl:text>
+		    <xsl:value-of select="data[@field='sender_name']"/>
+		    <xsl:text>&#160;at&#160;</xsl:text>
+		    <xsl:value-of select="../data[@field='sent']/@value"/>
+		    <xsl:text>&#160;(ID:</xsl:text>
+		    <xsl:value-of select="../data[@field='identifier']"/>
+                    <xsl:text>)</xsl:text>
                 </value>
             </parameter>
 

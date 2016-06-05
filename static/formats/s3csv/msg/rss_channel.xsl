@@ -8,6 +8,7 @@
          CSV fields:
          Name............................msg_rss_channel.name
          URL.............................msg_rss_channel.url
+         Type............................msg_rss_channel.type
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -27,6 +28,7 @@
         <resource name="msg_rss_channel">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="url"><xsl:value-of select="col[@field='URL']"/></data>
+            <data field="type"><xsl:value-of select="col[@field='Type']"/></data>
         </resource>
 
     </xsl:template>
