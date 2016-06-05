@@ -1320,6 +1320,12 @@ class S3RSSModel(S3ChannelModel):
                            label = T("ETag"),
                            writable = False
                            ),
+                     # Enable this when required in the template
+                     # Used by SAMBRO to separate the RSS for cap or cms
+                     Field("type",
+                           readable = False,
+                           writable = False,
+                           ),
                      *s3_meta_fields())
 
         self.configure(tablename,

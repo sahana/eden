@@ -1325,9 +1325,15 @@ def twitter_channel():
 
     # CRUD Strings
     s3.crud_strings[tablename] = Storage(
+        title_display = T("Twitter account Details"),
+        title_list = T("Twitter accounts"),
+        label_create = T("Add Twitter account"),
         title_update = T("Edit Twitter account"),
+        label_list_button = T("View Twitter accounts"),
+        msg_record_created = T("Twitter account added"),
+        msg_record_deleted = T("Twitter account deleted"),
         msg_record_modified = T("Twitter account updated"),
-    )
+        msg_list_empty = T("No Twitter accounts currently defined"))
 
     def prep(r):
         oauth_consumer_key = settings.msg.twitter_oauth_consumer_key
