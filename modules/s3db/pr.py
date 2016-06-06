@@ -424,12 +424,12 @@ class S3PersonEntity(S3Model):
             @param attr: request attributes
         """
 
-        _vars = current.request.get_vars
+        get_vars = current.request.get_vars
 
         # JQueryUI Autocomplete uses "term"
         # old JQuery Autocomplete uses "q"
         # what uses "value"?
-        value = _vars.term or _vars.value or _vars.q or None
+        value = get_vars.term or get_vars.value or get_vars.q or None
 
         if not value:
             output = current.xml.json_message(False, 400,
@@ -438,11 +438,11 @@ class S3PersonEntity(S3Model):
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = value.lower()
+        value = s3_unicode(value).lower()
 
-        limit = int(_vars.limit or 0)
+        limit = int(get_vars.limit or 0)
 
-        types = _vars.get("types")
+        types = get_vars.get("types")
         if types:
             types = types.split(",")
         else:
@@ -450,112 +450,107 @@ class S3PersonEntity(S3Model):
             types = ("pr_person", "pr_group")
 
         s3db = current.s3db
+        response = current.response
+
         resource = r.resource
+
+        # Representation without PE recognition label
         table = resource.table
         table.pe_id.represent = pr_PersonEntityRepresent(show_label=False)
-
-        response = current.response
 
         # Query comes in pre-filtered to accessible & deletion_status
         # Respect response.s3.filter
         default_filter = response.s3.filter
-        resource.add_filter(default_filter)
 
         items = []
 
         if "pr_person" in types:
+
             # Persons
-            ptable = s3db.pr_person
-            field = ptable.first_name
-            field2 = ptable.middle_name
-            field3 = ptable.last_name
+            entity = "pe_id:pr_person"
+
+            first_name = FS("%s.first_name" % entity).lower()
+            middle_name = FS("%s.middle_name" % entity).lower()
+            last_name = FS("%s.last_name" % entity).lower()
 
             if " " in value:
-                value1, value2 = value.split(" ", 1)
-                value2 = value2.strip()
-                query = (field.lower().like(value1 + "%")) & \
-                        (field2.lower().like(value2 + "%")) | \
-                        (field3.lower().like(value2 + "%"))
+                first, last = value.split(" ", 1)
+                first = "%s%%" % first
+                last = "%s%%" % last.strip()
+                query = (first_name.like(first)) & \
+                        ((middle_name.like(last)) | \
+                         (last_name.like(last)))
             else:
-                value = value.strip()
-                query = ((field.lower().like(value + "%")) | \
-                        (field2.lower().like(value + "%")) | \
-                        (field3.lower().like(value + "%")))
-            # Add the Join
-            query &= (ptable.pe_id == table.pe_id)
+                value = "%s%%" % value.strip()
+                query = (first_name.like(value)) | \
+                        (middle_name.like(value)) | \
+                        (last_name.like(value))
+
+            resource.clear_query()
+            resource.add_filter(default_filter)
             resource.add_filter(query)
 
             data = resource.select(fields=["pe_id"],
-                                   limit=limit,
-                                   represent=True,
-                                   show_links=False,
+                                   limit = limit,
+                                   raw_data = True,
+                                   represent = True,
+                                   show_links = False,
                                    )
-            ids = data["ids"]
-            rows = data["rows"]
-            i = 0
-            people = []
-            pappend = people.append
-            for row in rows:
-                pappend((ids[i], row["pr_pentity.pe_id"]))
-                i += 1
-            items.extend(people)
+
+            items.extend(data.rows)
 
         if "pr_group" in types:
+
             # Add Groups
-            gtable = s3db.pr_group
-            field = gtable.name
-            query = field.lower().like("%" + value + "%")
+            entity = "pe_id:pr_group"
+
+            field = FS("%s.name" % entity).lower()
+            query = field.like("%%%s%%" % value)
+
             resource.clear_query()
             resource.add_filter(default_filter)
-            # Add the Join
-            query &= (gtable.pe_id == table.pe_id)
             resource.add_filter(query)
 
             data = resource.select(fields=["pe_id"],
-                                   limit=limit,
-                                   represent=True,
-                                   show_links=False,
+                                   limit = limit,
+                                   raw_data = True,
+                                   represent = True,
+                                   show_links = False,
                                    )
-            ids = data["ids"]
-            rows = data["rows"]
-            i = 0
-            groups = []
-            gappend = groups.append
-            for row in rows:
-                gappend((ids[i], row["pr_pentity.pe_id"]))
-                i += 1
-            items.extend(groups)
+
+            items.extend(data.rows)
 
         if "org_organisation" in types:
+
             # Add Organisations
-            otable = s3db.org_organisation
-            field = otable.name
-            query = field.lower().like("%" + value + "%")
+            entity = "pe_id:org_organisation"
+
+            field = FS("%s.name" % entity).lower()
+            query = field.like("%%%s%%" % value)
+
             resource.clear_query()
             resource.add_filter(default_filter)
-            # Add the Join
-            query &= (otable.pe_id == table.pe_id)
             resource.add_filter(query)
 
             data = resource.select(fields=["pe_id"],
-                                   limit=limit,
-                                   represent=True,
-                                   show_links=False,
+                                   limit = limit,
+                                   raw_data = True,
+                                   represent = True,
+                                   show_links = False,
                                    )
-            ids = data["ids"]
-            rows = data["rows"]
-            i = 0
-            orgs = []
-            oappend = orgs.append
-            for row in rows:
-                oappend((ids[i], row["pr_pentity.pe_id"]))
-                i += 1
-            items.extend(orgs)
 
-        items = [{"id" : item[0],
-                  "name" : item[1]
-                  } for item in items ]
-        output = json.dumps(items, separators=SEPARATORS)
+            items.extend(data.rows)
+
+        result = []
+        append = result.append
+        for item in items:
+            raw = item["_row"]
+            append({"id": raw["pr_pentity.pe_id"],
+                    "name": item["pr_pentity.pe_id"],
+                    })
+
+        output = json.dumps(result, separators=SEPARATORS)
+
         response.headers["Content-Type"] = "application/json"
         return output
 
