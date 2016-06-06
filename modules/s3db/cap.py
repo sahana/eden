@@ -1225,7 +1225,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
         list_fields = ["resource_desc",
                        "image",
-                       "document",
+                       "document.file",
                        ]
 
         configure(tablename,
@@ -1953,7 +1953,7 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
 
         if "event_type_id" in form_vars and form_vars.get("event_type_id") is None:
             form.errors["event_type_id"] = \
-                current.T("'Event Type' field is mandatory for Predefined Area.")            
+                current.T("'Event Type' field is mandatory for Predefined Area.")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4204,7 +4204,7 @@ def clone(r, record=None, **attr):
                                                        alert_row.identifier,
                                 str(s3_utc(alert_row.sent)).replace(" ", "T"),
                                                        )
-    
+
         new_alert_id = alert_table.insert(**alert_row_clone)
         # Post-process create
         alert_row_clone["id"] = new_alert_id
@@ -4287,7 +4287,7 @@ def clone(r, record=None, **attr):
                               record=new_info_parameter_id)
                         set_record_owner(info_parameter_table, new_info_parameter_id)
                         onaccept(info_parameter_table, info_parameter_row_clone)
-                
+
     if has_permission("create", area_table):
         # Copy the area segment
         area_fields = [area_table[f] for f in area_table.fields
@@ -4329,7 +4329,7 @@ def clone(r, record=None, **attr):
                     set_record_owner(area_history_table, new_area_id)
                 else:
                     area_row_clone["alert_id"] = new_alert_id
-    
+
                     new_area_id = area_table_insert(**area_row_clone)
                     # Post-process create
                     area_row_clone["id"] = new_area_id
@@ -4381,7 +4381,7 @@ def clone(r, record=None, **attr):
                         del tag_row_clone["area_id"]
                         tag_row_clone["alert_history_id"] = new_alert_id
                         tag_row_clone["area_history_id"] = new_area_id
-    
+
                         new_tag_id = tag_history_table.insert(**tag_row_clone)
                         # Post-process create
                         tag_row_clone["id"] = new_tag_id
@@ -4390,7 +4390,7 @@ def clone(r, record=None, **attr):
                     else:
                         tag_row_clone.update(alert_id = new_alert_id,
                                              area_id = new_area_id)
-    
+
                         new_tag_id = tag_table_insert(**tag_row_clone)
                         # Post-process create
                         tag_row_clone["id"] = new_tag_id

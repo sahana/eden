@@ -8044,8 +8044,9 @@ class S3RoleManager(S3Method):
 
                 # Roles selector
                 gtable = settings.table_group
-                query = (gtable.deleted != True) & \
-                        (~(gtable.id.belongs(unassignable)))
+                query = (~(gtable.id.belongs(unassignable))) & \
+                        (gtable.hidden != True) & \
+                        (gtable.deleted != True)
                 rows = db(query).select(gtable.id, gtable.role)
                 select_grp = SELECT(OPTION(_value=None, _selected="selected"),
                                     _name="group_id")
