@@ -1,2 +1,2 @@
 UUID,Name,Region Country,Default Country,Zoom,Lat,Lon,Projection,LatMin,LatMax,LonMin,LonMax,Marker
-SITE_DEFAULT,Default,,PH,6,12.567606,122.419227,900913,4,21,114,130,marker_red
+SITE_DEFAULT,Default,PH,PH,6,12.567606,122.419227,900913,4,21,114,130,marker_red
