@@ -75,13 +75,13 @@ ADMINISTRATION,Administration,,,,cr_shelter,READ|UPDATE,,,,,Administration can m
 ADMINISTRATION,Administration,,,,cr_shelter_registration,ALL,,,,,Administration can manage shelter registration info
 ADMINISTRATION,Administration,,dvr,,,ALL,,,,,
 ADMINISTRATION,Administration,,dvr,case_event,,CREATE|READ|UPDATE,,,,,"Administration can create, read and update case events"
-ADMINISTRATION,Administration,,dvr,site_activity,,READ,,,,,Administration can download site activity reports
+ADMINISTRATION,Administration,,dvr,site_activity,,CREATE|READ|UPDATE,,,,,Administration can create and download site activity reports
 ADMINISTRATION,Administration,,,,dvr_allowance,ALL,,,,,Administration have unrestricted access to allowance information
 ADMINISTRATION,Administration,,,,dvr_case_activity,ALL,,,,,Administration can manage activities
 ADMINISTRATION,Administration,,,,dvr_case_appointment,ALL,,,,,Administration have unrestricted access to case appointments
 ADMINISTRATION,Administration,,,,dvr_case_event,CREATE|READ|UPDATE,,,,,"Administration can create, read and update case events"
 ADMINISTRATION,Administration,,,,dvr_note,CREATE|READ,,,,,
-ADMINISTRATION,Administration,,,,dvr_site_activity,READ,,,,,Administration can download site activity reports
+ADMINISTRATION,Administration,,,,dvr_site_activity,CREATE|READ|UPDATE,,,,,Administration can create and download site activity reports
 ADMINISTRATION,Administration,,inv,,,ALL,,,,,
 ADMINISTRATION,Administration,,org,,,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage organisation data
 ADMINISTRATION,Administration,,,,org_organisation,CREATE|READ|UPDATE|DELETE,,,,,Administration can manage organisation data

@@ -2004,7 +2004,7 @@ def config(settings):
                 resource.configure(list_fields = list_fields,
                                    insertable = False,
                                    deletable = False,
-                                   updatable = False,
+                                   #editable = False,
                                    )
 
             return result
@@ -2061,6 +2061,7 @@ def config(settings):
         s3db.configure("dvr_site_activity",
                        listadd = False,
                        addbtn = True,
+                       editable = False,
                        )
 
         crud_strings = current.response.s3.crud_strings
