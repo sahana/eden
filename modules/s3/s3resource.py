@@ -4966,6 +4966,19 @@ class S3ResourceData(object):
         # separately)
         self.aqueries = aqueries = {}
 
+        # Retain the current accessible-context of the parent
+        # resource in reverse component joins:
+        parent = resource.parent
+        if parent and parent.accessible_query is not None:
+            method = []
+            if parent._approved:
+                method.append("read")
+            if parent._unapproved:
+                method.append("review")
+            aqueries[parent.tablename] = parent.accessible_query(method,
+                                                                 parent.table,
+                                                                 )
+
         # Joins (inner/left)
         tablename = table._tablename
         self.ijoins = ijoins = S3Joins(tablename)
