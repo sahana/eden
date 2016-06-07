@@ -228,7 +228,7 @@ def config(settings):
         row = db(query).select(count).first()
         children = row[count]
 
-        CHILDREN = TR(TD(T("How many Children")),
+        CHILDREN = TR(TD(T("Number of Children")),
                          TD(children),
                          )
 
@@ -250,7 +250,7 @@ def config(settings):
                                 join = join,
                                 )
         families = len(rows)
-        FAMILIES = TR(TD(T("How many Families")),
+        FAMILIES = TR(TD(T("Number of Families")),
                          TD(families),
                          )
 
