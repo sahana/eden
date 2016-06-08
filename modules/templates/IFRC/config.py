@@ -5547,6 +5547,7 @@ def config(settings):
             budget.update_record(name = project.name)
         except:
             # unique=True violation
+            db.rollback()
             budget.update_record(name = "Budget for %s" % project.name)
 
         mtable = s3db.budget_monitoring
