@@ -66,6 +66,9 @@ class FaceBookAccount(OAuthAccount):
         self.GraphAPI = GraphAPI
         self.GraphAPIError = GraphAPIError
 
+        request = current.request
+        settings = current.deployment_settings
+
         scope = "email,user_about_me," \
                 "user_location,user_photos," \
                 "user_relationships,user_birthday,user_website," \
