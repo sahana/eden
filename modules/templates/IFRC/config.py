@@ -5544,6 +5544,7 @@ def config(settings):
         if not budget:
             return
 
+        # Build Budget Name from Project Name
         project_name = project.name
 
         # Check for duplicates
@@ -5554,9 +5555,12 @@ def config(settings):
                                      ).first()
 
         if not duplicate:
-            budget.update_record(name = project_name)
+            budget_name = project_name[:128]
         else:
-            budget.update_record(name = "Budget for %s" % project_name)
+            # Need another Unique name
+            import uuid
+            budget_name = "%s %s" % (project_name[:91], uuid.uuid4())
+        budget.update_record(name = budget_name)
 
         mtable = s3db.budget_monitoring
         exists = db(mtable.budget_entity_id == budget_entity_id).select(mtable.id,

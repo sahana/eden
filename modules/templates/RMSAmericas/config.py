@@ -2370,11 +2370,24 @@ def config(settings):
                                   ).first()
         if not budget:
             return
-        try:
-            budget.update_record(name = project.name)
-        except:
-            # unique=True violation
-            budget.update_record(name = "Budget for %s" % project.name)
+
+        # Build Budget Name from Project Name
+        project_name = project.name
+
+        # Check for duplicates
+        query = (btable.name == project_name) & \
+                (btable.id != budget.id)
+        duplicate = db(query).select(btable.id,
+                                     limitby=(0, 1)
+                                     ).first()
+
+        if not duplicate:
+            budget_name = project_name[:128]
+        else:
+            # Need another Unique name
+            import uuid
+            budget_name = "%s %s" % (project_name[:91], uuid.uuid4())
+        budget.update_record(name = budget_name)name = "Budget for %s" % project.name)
 
         mtable = s3db.budget_monitoring
         exists = db(mtable.budget_entity_id == budget_entity_id).select(mtable.id,
