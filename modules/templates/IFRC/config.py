@@ -309,7 +309,7 @@ def config(settings):
     BRCS = "Bangladesh Red Crescent Society"
     CRMADA = "Malagasy Red Cross Society"
     CVTL = "Timor-Leste Red Cross Society (Cruz Vermelha de Timor-Leste)"
-    IFRC = "International Federation of Red Cross and Red Crescent Societies"
+    #IFRC = "International Federation of Red Cross and Red Crescent Societies"
     IRCS = "Iraqi Red Crescent Society"
     NRCS = "Nepal Red Cross Society"
     NZRC = "New Zealand Red Cross"
@@ -2026,17 +2026,17 @@ def config(settings):
                                crud_form = crud_form,
                                )
 
-            if not r.component and r.method == "create":
-                # Org is always IFRC
-                otable = s3db.org_organisation
-                query = (otable.name == IFRC)
-                organisation = db(query).select(otable.id,
-                                                limitby = (0, 1),
-                                                ).first()
-                try:
-                    r.table.organisation_id.default = organisation.id
-                except:
-                    current.log.error("Cannot find org %s - prepop not done?" % IFRC)
+            #if not r.component and r.method == "create":
+            #    # Org is always IFRC
+            #    otable = s3db.org_organisation
+            #    query = (otable.name == IFRC)
+            #    organisation = db(query).select(otable.id,
+            #                                    limitby = (0, 1),
+            #                                    ).first()
+            #    try:
+            #        r.table.organisation_id.default = organisation.id
+            #    except:
+            #        current.log.error("Cannot find org %s - prepop not done?" % IFRC)
 
             return result
         s3.prep = custom_prep
