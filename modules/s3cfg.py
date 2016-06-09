@@ -2599,7 +2599,7 @@ class S3Config(Storage):
         """
             List of Group names that are cc'd on Alerts
         """
-        return self.deploy.get("cc_groups", [])
+        return self.__lazy("deploy", "cc_groups", default=[])
 
     def get_deploy_hr_label(self):
         """

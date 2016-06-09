@@ -1091,6 +1091,15 @@ def config(settings):
 
     settings.auth.realm_entity_types = auth_realm_entity_types
 
+    def deploy_cc_groups(default):
+        """ Which Groups to cc: on Deployment Alerts """
+
+        if _is_asia_pacific():
+            return ["RDRT Focal Points"]
+        return default
+
+    settings.deploy.cc_groups = deploy_cc_groups
+
     def hide_third_gender(default):
         """ Whether to hide the third person gender """
 
@@ -1651,10 +1660,6 @@ def config(settings):
                     from s3 import FS
                     s3.member_query = (FS("application.organisation_id") == organisation_id)
 
-            elif r.method == "send":
-                if _is_asia_pacific():
-                    settings.deploy.cc_groups = ["RDRT Focal Points"]
-
             return result
 
         s3.prep = custom_prep
@@ -1679,8 +1684,11 @@ def config(settings):
         created_on.label = T("Date")
         created_on.represent = lambda d: S3DateTime.date_represent(d, utc=True)
 
+        atable.cc.label = T("cc: Focal Points?")
+
         crud_form = S3SQLCustomForm("mission_id",
                                     "contact_method",
+                                    "cc",
                                     "subject",
                                     "body",
                                     "modified_on",

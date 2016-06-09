@@ -781,6 +781,8 @@ class S3DeploymentAlertModel(S3Model):
         # Alert
         # - also the PE representing its Recipients
         #
+        cc_groups = settings.get_deploy_cc_groups()
+
         tablename = "deploy_alert"
         define_table(tablename,
                      self.super_link("pe_id", "pr_pentity"),
@@ -798,15 +800,25 @@ class S3DeploymentAlertModel(S3Model):
                         ),
                      s3_date("date_requested",
                              default = "now",
-                             label = T("Date Requested")),
+                             label = T("Date Requested"),
+                             ),
                      s3_date("expected_start_date",
-                             label = T("Expected Start Date")),
+                             label = T("Expected Start Date"),
+                             ),
                      Field("contact_method", "integer",
                            default = 1,
                            label = T("Send By"),
                            represent = lambda opt: \
                             contact_method_opts.get(opt, NONE),
                            requires = IS_IN_SET(contact_method_opts),
+                           ),
+                     Field("cc", "boolean",
+                           default = True,
+                           # Define in template if-required
+                           #label = T("cc: Group?"),
+                           represent = s3_yes_no_represent,
+                           readable = cc_groups,
+                           writable = cc_groups,
                            ),
                      Field("subject", length=78,    # RFC 2822
                            label = T("Subject"),
@@ -1048,12 +1060,15 @@ class S3DeploymentAlertModel(S3Model):
         settings = current.deployment_settings
 
         # cc: list(s)
-        cc_groups = settings.get_deploy_cc_groups()
-        if cc_groups:
-            # Lookup pe_ids
-            gtable = s3db.pr_group
-            cc_groups = db(gtable.name.belongs(cc_groups)).select(gtable.pe_id)
-            cc_groups = [g.pe_id for g in cc_groups]
+        if record.cc:
+            cc_groups = settings.get_deploy_cc_groups()
+            if cc_groups:
+                # Lookup pe_ids
+                gtable = s3db.pr_group
+                cc_groups = db(gtable.name.belongs(cc_groups)).select(gtable.pe_id)
+                cc_groups = [g.pe_id for g in cc_groups]
+        else:
+            cc_groups = []
 
         # Send Message
         message = record.body
@@ -1278,6 +1293,13 @@ def deploy_rheader(r, tabs=[], profile=False):
         else:
             send_button = ""
 
+        if settings.get_deploy_cc_groups():
+            cc = TR(TH("%s: " % table.cc.label),
+                    s3_yes_no_represent(record.cc),
+                    )
+        else:
+            cc = ""
+
         # Tabs
         tabs = [(T("Message"), None),
                 (T("Recipients (%(number)s Total)") %
@@ -1297,6 +1319,7 @@ def deploy_rheader(r, tabs=[], profile=False):
                             TR(TH("%s: " % table.subject.label),
                                record.subject
                                ),
+                            cc,
                             ), rheader_tabs, _class="alert-rheader")
 
     elif resourcename == "mission":
