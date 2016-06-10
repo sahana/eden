@@ -729,7 +729,8 @@ def config(settings):
             from s3 import S3DateFilter, \
                            S3LocationFilter, \
                            S3OptionsFilter, \
-                           S3TextFilter
+                           S3TextFilter, \
+                           s3_get_filter_opts
             filter_widgets = [
                 S3TextFilter(["name",
                               "description",
@@ -741,8 +742,12 @@ def config(settings):
                                  ),
                 S3OptionsFilter("sector_project.sector_id",
                                 label = T("Sector"),
-                                location_filter = True,
-                                none = True,
+                                header = True,
+                                options = s3_get_filter_opts("org_sector",
+                                                             location_filter = True,
+                                                             none = True,
+                                                             translate = True,
+                                                             ),
                                 ),
                 S3OptionsFilter("hazard_project.hazard_id",
                                 label = T("Hazard"),
@@ -922,28 +927,71 @@ def config(settings):
                                               multiple = False,
                                               )
 
-        crud_form = S3SQLCustomForm("project_id",
-                                    organisation_id,
-                                    "name",
-                                    #S3SQLInlineLink("activity_type",
-                                    #                field = "activity_type_id",
-                                    #                label = T("Activity Types"),
-                                    #                ),
-                                    S3SQLInlineComponent("distribution",
-                                                         fields = ["parameter_id",
-                                                                   "value",
-                                                                   "comments",
-                                                                   ],
-                                                         label = T("Distributed Supplies"),
-                                                         ),
-                                    "location_id",
-                                    "date",
-                                    "end_date",
-                                    "status_id",
-                                    "comments",
-                                    )
+        if r.interactive:
 
-        # Custom list fields
+            # Custom filter widgets
+            from s3 import S3DateFilter, \
+                           S3LocationFilter, \
+                           S3OptionsFilter, \
+                           S3TextFilter, \
+                           s3_get_filter_opts
+
+            filter_widgets = [
+                S3TextFilter(["name",
+                              ],
+                              label = T("Search"),
+                              comment = T("Search for an Activity by its description."),
+                              ),
+                S3LocationFilter("location_id",
+                                 ),
+                S3OptionsFilter("status_id",
+                                options = s3_get_filter_opts("project_status",
+                                                             none = True,
+                                                             translate = True,
+                                                             ),
+                                ),
+                S3OptionsFilter("distribution.parameter_id",
+                                label = T("Distributed Items"),
+                                options = s3_get_filter_opts("supply_distribution_item",
+                                                             key = "parameter_id",
+                                                             ),
+                                hidden = True,
+                                ),
+                S3DateFilter("date",
+                             hidden = True,
+                             ),
+                S3DateFilter("end_date",
+                             hidden = True,
+                             ),
+                ]
+
+            # Custom CRUD form
+            crud_form = S3SQLCustomForm("project_id",
+                                        organisation_id,
+                                        "name",
+                                        #S3SQLInlineLink("activity_type",
+                                        #                field = "activity_type_id",
+                                        #                label = T("Activity Types"),
+                                        #                ),
+                                        S3SQLInlineComponent("distribution",
+                                                             fields = ["parameter_id",
+                                                                       "value",
+                                                                       "comments",
+                                                                       ],
+                                                             label = T("Distributed Supplies"),
+                                                             ),
+                                        "location_id",
+                                        "date",
+                                        "end_date",
+                                        "status_id",
+                                        "comments",
+                                        )
+            s3db.configure("project_activity",
+                           filter_widgets = filter_widgets,
+                           crud_form = crud_form,
+                           )
+
+        # Custom list fields (must be outside of r.interactive)
         list_fields = ["project_id",
                        "name",
                        "location_id",
@@ -956,7 +1004,6 @@ def config(settings):
             list_fields.insert(1, "activity_organisation.organisation_id")
 
         s3db.configure("project_activity",
-                       crud_form = crud_form,
                        list_fields = list_fields,
                        )
 

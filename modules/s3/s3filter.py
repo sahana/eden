@@ -3172,6 +3172,7 @@ def s3_get_filter_opts(tablename,
                        fieldname = "name",
                        location_filter = False,
                        org_filter = False,
+                       key = "id",
                        none = False,
                        translate = False,
                        ):
@@ -3189,12 +3190,14 @@ def s3_get_filter_opts(tablename,
         @param fieldname: the name of the field to represent options with
         @param location_filter: whether to filter the values by location
         @param org_filter: whether to filter the values by root_org
+        @param key: the option key field (if not "id", e.g. a super key)
         @param none: whether to include an option for None
         @param translate: whether to translate the values
     """
 
     auth = current.auth
     table = current.s3db.table(tablename)
+
     if auth.s3_has_permission("read", table):
         query = auth.s3_accessible_query("read", table)
         if "deleted" in table.fields:
@@ -3210,16 +3213,16 @@ def s3_get_filter_opts(tablename,
                           (table.organisation_id == None))
             #else:
             #    query &= (table.organisation_id == None)
-        rows = current.db(query).select(table.id,
+        rows = current.db(query).select(table[key],
                                         table[fieldname],
                                         # Options are sorted later
                                         #orderby = table[fieldname]
                                         )
         if translate:
             T = current.T
-            opts = dict((row.id, T(row[fieldname])) for row in rows)
+            opts = dict((row[key], T(row[fieldname])) for row in rows)
         else:
-            opts = dict((row.id, row[fieldname]) for row in rows)
+            opts = dict((row[key], row[fieldname]) for row in rows)
         if none:
             opts[None] = current.messages["NONE"]
     else:
