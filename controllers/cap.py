@@ -100,14 +100,10 @@ def alert():
         rows = db(itable.expires >= request.utcnow).select(itable.id,
                                                            orderby=itable.id)
         if rows:
-            unexpired_ids = ",".join([str(row.id) for row in rows])
+            unexpired_ids = default_filter = ",".join([str(row.id) for row in rows])
         else:
             unexpired_ids = "*"
-
-        if unexpired_ids == "*":
             default_filter = None
-        else:
-            default_filter = unexpired_ids
 
         filter_widgets = s3db.get_config(tablename, "filter_widgets")
         filter_widgets.insert(0, S3OptionsFilter("info.id",
@@ -126,7 +122,7 @@ def alert():
         #               filter_widgets = filter_widgets,
         #               )
         representation = r.representation
-        if representation == "html"  or representation == "aadata":
+        if representation in ("html", "aadata"):
             r.table.msg_type.represent = None
 
         elif representation == "dl":
@@ -433,9 +429,10 @@ def alert():
                                                  _class="cap-label upper"
                                             ),
                                             SPAN(info.headline,
-                                                 _class="cap-value"
+                                                 _class="cap-value cap-bold cap-large"
                                                  ),
                                             ))
+                            fn_1_append(BR())
                         if info.description:
                             fn_1_append(DIV(SPAN("%s :: " % T("Description"),
                                                  _class="cap-label upper"
@@ -444,6 +441,7 @@ def alert():
                                                  _class="cap-value"
                                                  )
                                             ))
+                            fn_1_append(BR())
                         if info.response_type:
                             fn_1_append(DIV(SPAN("%s :: " % T("Response Type"),
                                                  _class="cap-label upper"
@@ -452,6 +450,7 @@ def alert():
                                                  _class="cap-strong"
                                                  ),
                                             ))
+                            fn_1_append(BR())
                         if info.instruction:
                             fn_1_append(DIV(SPAN("%s :: " % T("Instructions"),
                                                  _class="cap-label upper"
@@ -535,13 +534,6 @@ def alert():
                                             _class="cap-value"
                                             ),
                                        ),
-                                   DIV(SPAN("%s :: " % T("Contact Info"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(info.contact,
-                                            _class="cap-value"
-                                            ),
-                                       ),
                                    )
                         fn_2_insert = fn_2.insert
                         if info.category:
@@ -568,6 +560,14 @@ def alert():
                                                      _class="cap-value"
                                                      )
                                                 ))
+                        if info.contact:
+                            fn_2_insert(13, DIV(SPAN("%s :: " % T("Contact Info"),
+                                                     _class="cap-label"
+                                                     ),
+                                                SPAN(info.contact,
+                                                     _class="cap-value"
+                                                     ),
+                                                ))
                         if len(parameters):
                             parameter_text = []
                             for parameter in parameters:
@@ -581,7 +581,6 @@ def alert():
                                                  _class="cap-value"
                                                  )
                                             ))
-                            
                         return fn_2
 
                     custom_widget_2 = dict(type = "custom",
@@ -630,20 +629,6 @@ def alert():
                                             _class="cap-value"
                                             ),
                                        ),
-                                   DIV(SPAN("%s :: " % T("Note"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(record.note,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Reference ID"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(record.reference,
-                                            _class="cap-value"
-                                            ),
-                                       ),
                                    DIV(SPAN("%s :: " % T("Incident IDs"),
                                             _class="cap-label"
                                             ),
@@ -652,11 +637,28 @@ def alert():
                                             ),
                                        ),
                                    )
+                        fn_3_insert = fn_3.insert
                         if record.codes:
-                            fn_3.insert(7, DIV(SPAN("%s :: " % T("Handling Code"),
+                            fn_3_insert(7, DIV(SPAN("%s :: " % T("Handling Code"),
                                                     _class="cap-label"
                                                     ),
                                                SPAN(table.codes.represent(record.codes),
+                                                    _class="cap-value"
+                                                    ),
+                                               ))
+                        if record.note:
+                            fn_3_insert(8, DIV(SPAN("%s :: " % T("Note"),
+                                                    _class="cap-label"
+                                                    ),
+                                               SPAN(record.note,
+                                                    _class="cap-value"
+                                                    ),
+                                               ))
+                        if record.reference:
+                            fn_3_insert(9, DIV(SPAN("%s :: " % T("Reference ID"),
+                                                    _class="cap-label"
+                                                    ),
+                                               SPAN(record.reference,
                                                     _class="cap-value"
                                                     ),
                                                ))
@@ -895,6 +897,16 @@ def alert():
                 r.next = URL(c="cap", f="alert", args=[lastid, "info", "create"])
 
         if r.interactive:
+            if not r.component and not r.method:
+                read_url = URL(args="[id]")
+                s3_action_buttons(r, read_url=read_url)
+                profile_button = {"url": URL(args=["[id]", "profile"]),
+                                  "_class": "action-btn",
+                                  "_target": "_blank",
+                                  "label": str(T("View Profile"))
+                                  }
+                s3.actions.insert(1, profile_button)
+
             if get_vars.get("_next"):
                 r.next = get_vars.get("_next")
 

@@ -72,7 +72,7 @@ class S3MainMenu(default.S3MainMenu):
                         alerting_menu,
                         mapping_menu,
                         recipient_menu,
-                        MM("Person Registry", c="pr", f="person"),
+                        MM("Users", c="pr", f="person"),
                         MM("Organizations", c="org", f="organisation"),
                         MM("Event Types", c="event", f="event_type"),
                         ]
@@ -178,6 +178,31 @@ class S3OptionsMenu(default.S3OptionsMenu):
         underscore prefix).
     """
 
+    # -------------------------------------------------------------------------
+    def admin(self):
+        """ ADMIN menu """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+        settings_messaging = self.settings_messaging()
+
+        return M(restrict=[ADMIN])(
+                    M("Settings", c="admin", f="setting")(
+                        settings_messaging,
+                    ),
+                    M("User Management", c="admin", f="user")(
+                        M("Create User", m="create"),
+                        M("List All Users"),
+                        M("Import Users", m="import"),
+                        M("List All Roles", f="role"),
+                        M("List All Organization Approvers & Whitelists", f="organisation"),
+                    ),
+                    M("Database", c="appadmin", f="index")(
+                        M("Raw Database access", c="appadmin", f="index")
+                    ),
+                    M("Error Tickets", c="admin", f="errors")
+                )
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def cap():
         """ CAP menu """

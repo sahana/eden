@@ -1656,6 +1656,10 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                 current.db(current.s3db.cap_alert.id == form_vars.id).update(
                                                         approved_by = user.id)
 
+        if "import_feed" in current.request.args:            
+            # Update created_by field as this would allow to relay alert,i.e. msg_type=Alert
+            current.db(current.s3db.cap_alert.id == form_vars.id).update(created_by = None)
+
     # -------------------------------------------------------------------------
     @staticmethod
     def cap_alert_onvalidation(form):
@@ -3825,6 +3829,7 @@ class CAPImportFeed(S3Method):
                 # @ToDo:
                 #username = form_vars_get("username", None)
                 #password = form_vars_get("password", None)
+                ignore_errors = form_vars_get("ignore_errors", None)
                 try:
                     file = fetch(url)
                 except urllib2.URLError:
@@ -3841,21 +3846,32 @@ class CAPImportFeed(S3Method):
                 tree = xml.parse(File)
 
                 resource = current.s3db.resource("cap_alert")
-                s3xml = xml.transform(tree, stylesheet_path=stylesheet,
-                                      name=resource.name)
+                s3xml = xml.transform(tree,
+                                      stylesheet_path = stylesheet,
+                                      name = resource.name)
                 try:
-                    resource.import_xml(s3xml,
-                                        ignore_errors=form_vars_get("ignore_errors", None))
+                    response_ = resource.import_xml(s3xml,
+                                                    ignore_errors = ignore_errors)
                 except:
                     response.error = str(sys.exc_info()[1])
                 else:
-                    import_count = resource.import_count
-                    if import_count:
-                        response.confirmation = "%s %s" % \
-                            (import_count,
-                             T("Alerts successfully imported."))
+                    reply = eval(response_)
+                    if reply["statuscode"] == "200":
+                        if "created" in reply:
+                            alert_id = reply["created"][0]
+                        elif "updated" in reply:
+                            alert_id = reply["updated"][0]
+                        response.confirmation = T("Alert successfully imported.")
+                        redirect(URL(c="cap", f="alert", args=[alert_id]))
                     else:
-                        response.information = T("No Alerts available.")
+                        response.information = "%s" % (reply["message"])
+                    #import_count = resource.import_count
+                    #if import_count:
+                    #    response.confirmation = "%s %s" % \
+                    #        (import_count,
+                    #         T("Alerts successfully imported."))
+                    #else:
+                    #    response.information = T("No Alerts available.")
 
             return output
 

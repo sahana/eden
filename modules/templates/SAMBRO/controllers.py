@@ -110,7 +110,10 @@ class index(S3CustomController):
         if numrows == 0:
             current.response.s3.crud_strings["cap_alert"].msg_no_match = T("No Current Alerts match these filters.")
 
-        ajax_url = URL(c="cap", f=fn, args="datalist.dl", vars={"list_id": list_id})
+        ajax_url = URL(c="cap", f=fn, args="datalist.dl",
+                       vars={"list_id": list_id,
+                             "info.expires__gt": request.utcnow,
+                             "~.approved_by__ne": None})
         #@ToDo: Implement pagination properly
         output[list_id] = datalist.html(ajaxurl = ajax_url,
                                         pagesize = 0,

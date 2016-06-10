@@ -21,3 +21,9 @@
 h4.profile-sub-header{
     background-color: #fff !important;
 }
+.cap-bold {
+	font-weight: bold;
+}
+.cap-large {
+	font-size: large;
+}

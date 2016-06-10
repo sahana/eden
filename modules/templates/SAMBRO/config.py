@@ -282,7 +282,7 @@ def config(settings):
                                                 itable.event_type_id.represent(row_.cap_info.event_type_id),
                                                 itable.priority.represent(row_.cap_info.priority),
                                                 )
-                        async_task("cap_gcm", args=[title,
+                        async_task("msg_gcm", args=[title,
                                                     "%s/%s" % (s3_str(row_.cap_info.web), "profile"),
                                                     s3_str(row_.cap_info.headline),
                                                     json.dumps(registration_ids),
@@ -314,16 +314,15 @@ def config(settings):
                             except tweepy.error.TweepError, e:
                                 current.log.debug("Sending tweets failed: %s" % e)
 
-            # Send out private alerts to addresses
             # @ToDo: Check for LEFT join when required
             # this is ok for now since every Alert should have an Info & an Area
             # @ToDo: Handle multi-lingual alerts when required
-            if record["scope"] == "Private":
+            addresses = record["addresses"]
+            if len(addresses):
                 atable = s3db.cap_area
                 gtable = s3db.pr_group
                 send_by_pe_id = current.msg.send_by_pe_id
 
-                addresses = record["addresses"]
                 query = (table.id == alert_id) & \
                         (itable.alert_id == table.id) & \
                         (itable.deleted != True) & \
