@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 { 
-#'Profile': 'مشخصات',
+'Profile': 'مشخصات',
 'Sawr': 'ثور',
 "Logout": "خروج",
 "First Aid": "کمک ها ی اولیه",
@@ -46,9 +46,9 @@
 "Father Name": "ولد",
 "Grand Father Name": "ولدیت",
 "ID Number": "نمبر تذکيره",
-"Job": "وظیفه ",
+"Job": "وظیفه",
 "Monthly Membership Fee": "پول پرداخت شده ماهوارحق العضویت",
-"Permanent Address": "سکونت اصلي ",
+"Permanent Address": "سکونت اصلي",
 "Photo": "محل نصب فوتو",
 "Place of Work": "محل وظیفه",
 "Province": "ولایت",
