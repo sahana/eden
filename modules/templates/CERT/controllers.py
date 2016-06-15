@@ -36,7 +36,7 @@ class index(S3CustomController):
                                "label": T("View"),
                                },
                               {"args": "create",
-                               "icon": "plus-sign",
+                               "icon": "plus",
                                "label": T("Create"),
                                }]
                   },
@@ -50,7 +50,7 @@ class index(S3CustomController):
                                "label": T("View"),
                                },
                               {"args": "create",
-                               "icon": "plus-sign",
+                               "icon": "plus",
                                "label": T("Create"),
                                }]
                   },
@@ -64,12 +64,12 @@ class index(S3CustomController):
                                "label": T("View"),
                                },
                               {"args": "create",
-                               "icon": "plus-sign",
+                               "icon": "plus",
                                "label": T("Create"),
                                }]
                   },
                  {"title": T("Messaging"),
-                  "icon": "envelope-alt",
+                  "icon": "envelope-o",
                   "description": T("Send Email, SMS and Twitter messages to your Volunteers."),
                   "module": "msg",
                   "function": "Index",
@@ -81,7 +81,7 @@ class index(S3CustomController):
                                },
                               {"function": "compose",
                                "args": None,
-                               "icon": "plus-sign",
+                               "icon": "plus",
                                "label": T("Compose"),
                                }]
                   },
