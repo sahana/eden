@@ -4211,6 +4211,7 @@
 'Population and number of households': 'Popolazione e il numero di famiglie',
 'Population Availability (Day and Night)': 'Disponibilità di Popolazione (giorno e notte)',
 'Population Availability (Night)': 'Disponibilità di Popolazione (Notte)',
+'Population Movement': 'Spostamento della popolazione',
 'Population movement': 'Spostamento della popolazione',
 'Population Statistic added': 'Statistica della popolazione aggiunta',
 'Population Statistic deleted': 'Statistica della popolazione eliminata',

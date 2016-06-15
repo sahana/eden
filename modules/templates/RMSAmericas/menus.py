@@ -66,7 +66,7 @@ class S3MainMenu(default.S3MainMenu):
             return has_role(ORG_ADMIN) or \
                    has_role("training_coordinator") or \
                    has_role("training_assistant") or \
-                   has_role("surge_manager") or \
+                   has_role("surge_capacity_manager") or \
                    has_role("disaster_manager")
 
         def inv(item):
@@ -133,7 +133,7 @@ class S3MainMenu(default.S3MainMenu):
 
         # For some reason the deploy menu is displaying even if users have NONE access to deploy!
         # @ToDo: We will need to allow RIT members some basic access to the module
-        if has_role("surge_manager") or has_role("disaster_manager"):
+        if has_role("surge_capacity_manager") or has_role("disaster_manager"):
             menu.append(
                 homepage("deploy", name="RIT", f="mission", m="summary",
                          vars={"~.status__belongs": "2"})(
