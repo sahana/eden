@@ -84,6 +84,9 @@ def config(settings):
     # Whether to tweet alerts
     settings.cap.post_to_twitter = True
 
+    # Whether to post alerts in facebook?
+    settings.cap.post_to_facebook = True
+
     # -------------------------------------------------------------------------
     # L10n (Localization) settings
     languages = OrderedDict([
@@ -130,21 +133,22 @@ def config(settings):
         # @ToDo: We won't be able to automate this as we have 2 sorts, so will need the user to select manually
         # Can we add a component for the parser for S3CSV imports?
 
-        # UX: separate menu items distinguished via get_var
-        # @ToDo: Add menu entries for "Create RSS Feed for CAP" & "Create RSS Feed for CMS"
-        type = current.request.get_vars.get("type", None)
-        if type == "cap":
-            fn = "parse_rss_2_cap"
-        else:
-            fn = "parse_rss_2_cms"
-
         s3db = current.s3db
         def onaccept(form):
             # Normal onaccept
             s3db.msg_channel_onaccept(form)
-            _id = form.vars.id
             db = current.db
             table = db.msg_rss_channel
+            form_vars = form.vars
+            _id = form_vars.get("id", None)
+            form_type = form_vars.get("type", None)
+            type = current.request.get_vars.get("type", None)
+            if type == "cap" or form_type == "cap":
+                fn = "parse_rss_2_cap"
+                db(table.id == _id).update(type = "cap")
+            else:
+                fn = "parse_rss_2_cms"
+                db(table.id == _id).update(type = "cms")
             channel_id = db(table.id == _id).select(table.channel_id,
                                                     limitby=(0, 1)).first().channel_id
             # Link to Parser
@@ -164,6 +168,73 @@ def config(settings):
                        )
 
     settings.customise_msg_rss_channel_resource = customise_msg_rss_channel_resource
+
+    # -------------------------------------------------------------------------
+    def customise_msg_rss_channel_controller(**attr):
+
+        s3 = current.response.s3
+        table = current.s3db.msg_rss_channel        
+        type = current.request.get_vars.get("type", None)
+        if type == "cap":
+            # CAP RSS Channel
+            s3.filter = (table.type == "cap")
+            s3.crud_strings["msg_rss_channel"] = Storage(
+                label_create = T("Add CAP Feed"),
+                title_display = T("CAP Feed"),
+                title_list = T("CAP Feeds"),
+                title_update = T("Edit CAP Feed"),
+                label_list_button = T("List CAP Feeds"),
+                label_delete_button = T("Delete CAP Feed"),
+                msg_record_created = T("CAP Feed created"),
+                msg_record_modified = T("CAP Feed modified"),
+                msg_record_deleted = T("CAP Feed deleted"),
+                msg_list_empty = T("No CAP Feed to show"))
+        else:
+            # CMS RSS Channel
+            s3.filter = (table.type == "cms")
+
+        # Custom postp
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            if r.interactive and isinstance(output, dict):
+                # Modify Open Button
+                if type == "cap":
+                    # CAP RSS Channel
+                    update_url = URL(c="msg", f="rss_channel",
+                                     args=["[id]", "update"],
+                                     vars={"type": "cap"})
+                    delete_url= URL(c="msg", f="rss_channel",
+                                    args=["[id]", "delete"],
+                                    vars={"type": "cap"})
+                    action_buttons = s3.actions
+                    for action_button in action_buttons:
+                        if "_class" in action_button:
+                            if action_button["_class"] == "action-btn edit":
+                                action_button["url"] = update_url
+                                continue
+                            elif action_button["_class"] == "delete-btn":
+                                action_button["url"] = delete_url
+                                continue
+
+                    if "form" in output:
+                        # Modify Add Button
+                        add_btn = A(T("Add CAP Feed"),
+                                    _class="action-btn",
+                                    _href=URL(args=["create"],
+                                              vars={"type": "cap"})
+                                    )
+                        output["showadd_btn"] = add_btn
+
+            return output
+        s3.postp = custom_postp
+
+        return attr
+
+    settings.customise_msg_rss_channel_controller = customise_msg_rss_channel_controller
 
     # -------------------------------------------------------------------------
     def customise_msg_twitter_channel_resource(r, tablename):
@@ -249,19 +320,41 @@ def config(settings):
             # Sync FTP Repository
             async_task("cap_ftp_sync")
 
+            # @ToDo: Check for LEFT join when required
+            # this is ok for now since every Alert should have an Info & an Area
+            # @ToDo: Handle multi-lingual alerts when required
             alert_id = int(record["id"])
             table = s3db.cap_alert
             itable = s3db.cap_info
+            atable = s3db.cap_area
             query_ = (table.id == alert_id) & \
                      (table.deleted != True) & \
                      (itable.alert_id == table.id) & \
-                     (itable.deleted != True)
-            rows_ = db(query_).select(table.status,
+                     (itable.deleted != True) & \
+                     (atable.alert_id == table.id) & \
+                     (atable.deleted != True)
+            rows_ = db(query_).select(table.identifier,
+                                      table.msg_type,
+                                      table.scope,
+                                      table.sent,
+                                      table.source,
+                                      table.status,
+                                      itable.category,
+                                      itable.certainty,
+                                      itable.contact,
+                                      itable.description,
+                                      itable.effective,
+                                      itable.expires,
                                       itable.event_type_id,
                                       itable.headline,
+                                      itable.instruction,
                                       itable.priority,
+                                      itable.response_type,
                                       itable.sender_name,
-                                      itable.web)
+                                      itable.severity,
+                                      itable.urgency,
+                                      itable.web,
+                                      atable.name)
 
             if record["scope"] != "Private" and len(rows_):
                 # Google Cloud Messaging
@@ -282,7 +375,7 @@ def config(settings):
                                                 itable.event_type_id.represent(row_.cap_info.event_type_id),
                                                 itable.priority.represent(row_.cap_info.priority),
                                                 )
-                        async_task("cap_gcm", args=[title,
+                        async_task("msg_gcm", args=[title,
                                                     "%s/%s" % (s3_str(row_.cap_info.web), "profile"),
                                                     s3_str(row_.cap_info.headline),
                                                     json.dumps(registration_ids),
@@ -297,6 +390,7 @@ def config(settings):
                         # @ToDo: shorten url
                         # @ToDo: Handle the multi-message nicely?
                         # @ToDo: Send resource url with tweet
+                        send_tweet = current.msg.send_tweet
                         for row_ in rows_:
                             twitter_text = \
     ("""%(Status)s: %(Headline)s
@@ -310,53 +404,26 @@ def config(settings):
                                                    Profile = "/profile",
                                                    )
                             try:
-                                current.msg.send_tweet(text=twitter_text)
+                                send_tweet(text=twitter_text)
                             except tweepy.error.TweepError, e:
                                 current.log.debug("Sending tweets failed: %s" % e)
 
-            # Send out private alerts to addresses
-            # @ToDo: Check for LEFT join when required
-            # this is ok for now since every Alert should have an Info & an Area
-            # @ToDo: Handle multi-lingual alerts when required
-            if record["scope"] == "Private":
-                atable = s3db.cap_area
+                # Facebook Post
+                if settings.get_cap_post_to_facebook():
+                    # @ToDo: post resources too?
+                    post_to_facebook = current.msg.post_to_facebook
+                    for row_ in rows_:
+                        content = get_facebook_content(row_),
+                        try:
+                            post_to_facebook(text=content)
+                        except Exception, e:
+                            current.log.debug("Posting Alert to Facebook failed: %s" % e)
+
+            addresses = record["addresses"]
+            if len(addresses):
                 gtable = s3db.pr_group
                 send_by_pe_id = current.msg.send_by_pe_id
 
-                addresses = record["addresses"]
-                query = (table.id == alert_id) & \
-                        (itable.alert_id == table.id) & \
-                        (itable.deleted != True) & \
-                        (atable.alert_id == table.id) & \
-                        (atable.deleted != True)
-                row = db(query).select(table.identifier,
-                                       table.msg_type,
-                                       table.scope,
-                                       table.sent,
-                                       table.source,
-                                       table.status,
-                                       itable.category,
-                                       itable.certainty,
-                                       itable.contact,
-                                       itable.description,
-                                       itable.effective,
-                                       itable.expires,
-                                       itable.event_type_id,
-                                       itable.headline,
-                                       itable.instruction,
-                                       itable.priority,
-                                       itable.response_type,
-                                       itable.sender_name,
-                                       itable.severity,
-                                       itable.urgency,
-                                       itable.web,
-                                       atable.name,
-                                       limitby=(0, 1)).first()
-                subject = "[%s] %s %s" % (row.cap_info.sender_name,
-                                          itable.event_type_id.represent(row.cap_info.event_type_id),
-                                          itable.priority.represent(row.cap_info.priority))
-                email_content = "%s%s%s" % ("<html>", XML(get_html_email_content(row)), "</html>")
-                sms_content = get_sms_content(row)
                 count = len(addresses)
                 if count == 1:
                     query = (gtable.id == addresses[0])
@@ -364,12 +431,23 @@ def config(settings):
                     query = (gtable.id.belongs(addresses))
                 rows = db(query).select(gtable.pe_id,
                                         limitby = (0, count))
-                for row_ in rows:
-                    send_by_pe_id(row_.pe_id, subject, email_content)
-                    try:
-                        send_by_pe_id(row_.pe_id, subject, sms_content, contact_method="SMS")
-                    except ValueError:
-                        current.log.error("No SMS Handler defined!")
+
+                for row in rows_:
+                    priority = itable.priority.represent(row.cap_info.priority)
+                    if priority == current.messages["NONE"]:
+                        priority = T("Alert")
+                    subject = "[%s] %s %s" % (row.cap_info.sender_name,
+                                              itable.event_type_id.represent(row.cap_info.event_type_id),
+                                              priority)
+                    email_content = "%s%s%s" % ("<html>", XML(get_html_email_content(row)), "</html>")
+                    sms_content = get_sms_content(row)
+    
+                    for row_ in rows:
+                        send_by_pe_id(row_.pe_id, subject, email_content)
+                        try:
+                            send_by_pe_id(row_.pe_id, subject, sms_content, contact_method="SMS")
+                        except ValueError:
+                            current.log.error("No SMS Handler defined!")
 
         s3db.configure(tablename,
                        onapprove = onapprove,
@@ -879,7 +957,7 @@ def config(settings):
             else:
                 priority = priority_id
         else:
-            priority = T("None")
+            priority = T("Alert")
 
         category = itable.category.represent(row["cap_info.category"])
 
@@ -974,7 +1052,7 @@ T("Alert is effective from %(Effective)s and expires on %(Expires)s") % \
             else:
                 priority = priority_id
         else:
-            priority = T("None")
+            priority = T("Alert")
 
         subject = "[%s] %s %s" % (s3_str(row["cap_info.sender_name"]),
                                   event_type,
@@ -1004,7 +1082,7 @@ T("Alert is effective from %(Effective)s and expires on %(Expires)s") % \
             else:
                 priority = priority_id
         else:
-            priority = T("None")
+            priority = T("Unknown")
 
         sms_body = \
 T("""%(Status)s %(MessageType)s for %(AreaDescription)s with %(Priority)s priority %(EventType)s issued by %(SenderName)s at %(Date)s (ID:%(Identifier)s) \n\n""") % \
@@ -1018,5 +1096,102 @@ T("""%(Status)s %(MessageType)s for %(AreaDescription)s with %(Priority)s priori
                  Identifier = s3_str(row["cap_alert.identifier"]))
 
         return s3_str(sms_body)
+
+    # -------------------------------------------------------------------------
+    def get_facebook_content(row):
+        """
+            prepare the content for facebook post
+        """
+
+        from gluon.languages import lazyT
+        itable = current.s3db.cap_info
+        event_type_id = row["cap_info.event_type_id"]
+        priority_id = row["cap_info.priority"]
+        response_type = row["cap_info.response_type"]
+
+        if event_type_id and event_type_id != "-":
+            if not isinstance(event_type_id, lazyT):
+                event_type = itable.event_type_id.represent(event_type_id)
+            else:
+                event_type = event_type_id
+        else:
+            event_type = T("None")
+
+        if priority_id and \
+           priority_id != "-":
+            if not isinstance(priority_id, lazyT):
+                priority = itable.priority.represent(priority_id)
+            else:
+                priority = priority_id
+        else:
+            priority = T("Alert")
+
+        category = itable.category.represent(row["cap_info.category"])
+
+        if not response_type: 
+            response_type = T("Unknown")
+
+        subject = \
+        T("%(Scope)s %(Status)s Alert") % \
+            dict(Scope = s3_str(row["cap_alert.scope"]),
+                 Status = s3_str(row["cap_alert.status"]))
+        headline = T((s3_str(row["cap_info.headline"])))
+        id = T("ID: %(Identifier)s") % dict(Identifier = s3_str(row["cap_alert.identifier"]))
+        body1 = \
+T("""%(Priority)s message %(MessageType)s in effect for %(AreaDescription)s""") % dict(\
+                    Priority = s3_str(priority),
+                    MessageType = s3_str(row["cap_alert.msg_type"]),
+                    AreaDescription = s3_str(row["cap_area.name"]))
+        body2 = \
+        T("This %(Severity)s %(EventType)s is %(Urgency)s and is %(Certainty)s") %\
+            dict(Severity = s3_str(row["cap_info.severity"]),
+                 EventType = s3_str(event_type),
+                 Urgency = s3_str(row["cap_info.urgency"]),
+                 Certainty = s3_str(row["cap_info.certainty"]))
+        body3 = \
+T("""Message %(Identifier)s: %(EventType)s (%(Category)s) issued by
+%(SenderName)s sent at %(Date)s from %(Source)s""") % \
+                 dict(Identifier = s3_str(row["cap_alert.identifier"]),
+                      EventType = s3_str(event_type),
+                      Category = s3_str(category),
+                      SenderName = s3_str(row["cap_info.sender_name"]),
+                      Date = s3_str(row["cap_alert.sent"]),
+                      Source = s3_str(row["cap_alert.source"]))
+        body4 = T("Alert Description: %(AlertDescription)s") % \
+                dict(AlertDescription = s3_str(row["cap_info.description"]))
+        if row["cap_info.instruction"]:
+            body5 = T("Expected Response: %(ResponseType)s\n\nInstructions: %(Instruction)s") % \
+                    dict(ResponseType = s3_str(response_type),
+                         Instruction = s3_str(row["cap_info.instruction"]))
+        else:
+            body5 = T("Expected Response: %(ResponseType)s") % \
+                    dict(ResponseType = s3_str(response_type))
+        body7 = \
+T("Alert is effective from %(Effective)s and expires on %(Expires)s") % \
+                dict(Effective = s3_str(row["cap_info.effective"]),
+                     Expires = s3_str(row["cap_info.expires"]))
+        if row["cap_info.contact"]:
+            body8 = T("For more details visit %(URL)s or contact %(Contact)s") % \
+                    dict(URL = s3_str(row["cap_info.web"]),
+                         Contact = s3_str(row["cap_info.contact"]))
+        else:
+            body8 = T("For more details visit %(URL)s") % \
+                    dict(URL = s3_str(row["cap_info.web"]))
+        body9 = T("VIEW ALERT ON THE WEB: %(profile)s") % \
+                dict(profile = "%s/%s" % ((s3_str(row["cap_info.web"])), "profile"))
+        facebook_content = \
+"%(subject)s\n%(headline)s\n%(id)s\n\n%(body1)s\n\n%(body2)s\n\n%(body3)s\n\n%(body4)s\n\n%(body5)s\n\n%(body7)s\n\n%(body8)s\n\n%(body9)s" % \
+        dict(subject = subject,
+             headline = headline,
+             id = id,
+             body1 = body1,
+             body2 = body2,
+             body3 = body3,
+             body4 = body4,
+             body5 = body5,
+             body7 = body7,
+             body8 = body8,
+             body9 = body9)
+        return s3_str(facebook_content)
 
 # END =========================================================================

@@ -279,6 +279,10 @@ cap_info_certainty_opts = OrderedDict([
     ("Unknown", T("Certainty unknown")),
 ])
 
+# CAP info language complete list
+represent_languages = IS_ISO639_2_LANGUAGE_CODE.language_codes()
+represent_languages.append(("en-US", "English"))
+
 # =============================================================================
 class S3CAPModel(S3Model):
     """
@@ -499,6 +503,12 @@ $.filterOptionsS3({
                                  readable = False,
                                  writable = False,
                                  ),
+                     # To separate the external CAP Alert
+                     Field("external", "boolean",
+                           default = False,
+                           readable = False,
+                           writable = False,
+                           ),
                      *s3_meta_fields())
 
         list_fields = ["info.event_type_id",
@@ -572,6 +582,7 @@ $.filterOptionsS3({
                   context = {"location": "location.location_id",
                              },
                   create_onaccept = self.cap_alert_create_onaccept,
+                  deduplicate = S3Duplicate(primary=("identifier")),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   list_layout = cap_alert_list_layout,
@@ -787,8 +798,7 @@ $.filterOptionsS3({
                      Field("language",
                            default = "en-US",
                            label = T("Language"),
-                           represent = lambda opt: languages.get(opt,
-                                                                 UNKNOWN_OPT),
+                           represent = S3Represent(options = dict(represent_languages)),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(languages)
                                         ),
@@ -1062,6 +1072,7 @@ $.filterOptionsS3({
 
         configure(tablename,
                   crud_form = crud_form,
+                  deduplicate = S3Duplicate(primary=("alert_id", "language")),
                   # Required Fields
                   mark_required = ("urgency", "severity", "certainty",),
                   onaccept = self.cap_info_onaccept,
@@ -1096,7 +1107,7 @@ $.filterOptionsS3({
 
         configure(tablename,
                   onaccept = self.cap_info_parameter_onaccept,
-                  onvalidation = self.cap_info_parameter_onvalidation,
+                  #onvalidation = self.cap_info_parameter_onvalidation,
                   )
 
         # ---------------------------------------------------------------------
@@ -1649,12 +1660,23 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
             Auto-approve Templates
         """
 
+        db = current.db
         form_vars = form.vars
+        request = current.request
+        table = current.s3db.cap_alert
+        query = (table.id == form_vars.id)
+        alert = db(query).select(table.mci, limitby=(0, 1)).first()
+            
         if form_vars.get("is_template"):
             user = current.auth.user
             if user:
-                current.db(current.s3db.cap_alert.id == form_vars.id).update(
-                                                        approved_by = user.id)
+                db(query).update(approved_by = user.id)
+
+        # mci==0 -> original copies from system
+        if (alert and alert.mci != 0) or \
+            "import_feed" in request.args or \
+            (request.function == "rss_channel" and request.get_vars.type == "cap"):
+            current.db(current.s3db.cap_alert.id == form_vars.id).update(external = True)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1808,6 +1830,14 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
             if not form_vars.get("category"):
                 form.errors["category"] = \
                     current.T("Atleast one category is required.")
+
+        alert_id = form.vars.get("alert_id", None)
+        atable = current.s3db.cap_alert
+        alert = current.db(atable.id == alert_id).select(atable.mci,
+                                                         limitby=(0, 1)).first()
+        if alert and alert.mci != 0:
+            # Not internal alerts
+            current.s3db.cap_info.language.requires = IS_IN_SET(dict(represent_languages))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2388,8 +2418,7 @@ class S3CAPHistoryModel(S3Model):
                                       ),
                      Field("language",
                            label = T("Language"),
-                           represent = lambda opt: languages.get(opt,
-                                                                 UNKNOWN_OPT),
+                           represent = S3Represent(options = dict(represent_languages)),
                            requires = IS_EMPTY_OR(
                                         IS_IN_SET(languages)
                                         ),
@@ -3103,54 +3132,57 @@ def cap_rheader(r):
                                                 _data = "%s/%s" % (record.msg_type, r.id),
                                                 _class = "action-btn cap-clone-update",
                                                 )
-                                if record.created_by:
-                                    utable = db.auth_user
-                                    row = db(utable.id == record.created_by).select(\
-                                                            utable.organisation_id,
-                                                            limitby=(0, 1)).first()
-                                    row_ = db(utable.id == current.auth.user.id).select(\
-                                                            utable.organisation_id,
-                                                            limitby=(0, 1)).first()
-                                    if row.organisation_id == row_.organisation_id:
-                                        # Same organisation
-                                        msg_type = record.msg_type
-                                        if msg_type == "Alert" or msg_type == "Update":
-                                            msg_type_buttons = TAG[""](
-                                                    TR(TD(A(T("Update Alert"),
-                                                            _data = "Update/%s" % r.id,
-                                                            _class = "action-btn cap-clone-update",
-                                                            ))),
-                                                    TR(TD(A(T("Cancel Alert"),
-                                                            _data = "Cancel/%s" % r.id,
-                                                            _class = "action-btn cap-clone-update",
-                                                            ))),
-                                                    TR(TD(A(T("Error Alert"),
-                                                            _data = "Error/%s" % r.id,
-                                                            _class = "action-btn cap-clone-update",
-                                                            ))),
-                                                    TR(TD(A(T("All Clear"),
-                                                            _data = "AllClear/%s" % r.id,
-                                                            _class = "action-btn cap-clone-update",
-                                                            ))),
-                                                    )
-                                        elif msg_type == "Error":
-                                            msg_type_buttons = TAG[""](
-                                                    TR(TD(A(T("Update Alert"),
-                                                            _data = "Update/%s" % r.id,
-                                                            _class = "action-btn cap-clone-update",
-                                                            ))),
-                                                    TR(TD(A(T("All Clear"),
-                                                            _data = "AllClear/%s" % r.id,
-                                                            _class = "action-btn cap-clone-update",
-                                                            ))),
-                                                    )
-                                        else:
-                                            msg_type_buttons = None
-                                    else:
-                                        # Different organisation
-                                        msg_type_buttons = relay_alert
-                                else:
+                                if record.external:
                                     msg_type_buttons = relay_alert
+                                else:
+                                    if record.created_by:
+                                        utable = db.auth_user
+                                        row = db(utable.id == record.created_by).select(\
+                                                                utable.organisation_id,
+                                                                limitby=(0, 1)).first()
+                                        row_ = db(utable.id == current.auth.user.id).select(\
+                                                                utable.organisation_id,
+                                                                limitby=(0, 1)).first()
+                                        if row.organisation_id == row_.organisation_id:
+                                            # Same organisation
+                                            msg_type = record.msg_type
+                                            if msg_type == "Alert" or msg_type == "Update":
+                                                msg_type_buttons = TAG[""](
+                                                        TR(TD(A(T("Update Alert"),
+                                                                _data = "Update/%s" % r.id,
+                                                                _class = "action-btn cap-clone-update",
+                                                                ))),
+                                                        TR(TD(A(T("Cancel Alert"),
+                                                                _data = "Cancel/%s" % r.id,
+                                                                _class = "action-btn cap-clone-update",
+                                                                ))),
+                                                        TR(TD(A(T("Error Alert"),
+                                                                _data = "Error/%s" % r.id,
+                                                                _class = "action-btn cap-clone-update",
+                                                                ))),
+                                                        TR(TD(A(T("All Clear"),
+                                                                _data = "AllClear/%s" % r.id,
+                                                                _class = "action-btn cap-clone-update",
+                                                                ))),
+                                                        )
+                                            elif msg_type == "Error":
+                                                msg_type_buttons = TAG[""](
+                                                        TR(TD(A(T("Update Alert"),
+                                                                _data = "Update/%s" % r.id,
+                                                                _class = "action-btn cap-clone-update",
+                                                                ))),
+                                                        TR(TD(A(T("All Clear"),
+                                                                _data = "AllClear/%s" % r.id,
+                                                                _class = "action-btn cap-clone-update",
+                                                                ))),
+                                                        )
+                                            else:
+                                                msg_type_buttons = None
+                                        else:
+                                            # Different organisation
+                                            msg_type_buttons = relay_alert
+                                    else:
+                                        msg_type_buttons = relay_alert
 
                     tabs = [(T("Alert Details"), None),
                             (T("Information"), "info"),
@@ -3621,7 +3653,7 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
         last = TAG[""](BR(),
                        description,
                        BR(),
-                       ", ".join(response_type),
+                       ", ".join(response_type) if response_type is not None else None,
                        BR(),
                        sender,
                        BR(),
@@ -3841,21 +3873,32 @@ class CAPImportFeed(S3Method):
                 tree = xml.parse(File)
 
                 resource = current.s3db.resource("cap_alert")
-                s3xml = xml.transform(tree, stylesheet_path=stylesheet,
-                                      name=resource.name)
+                s3xml = xml.transform(tree,
+                                      stylesheet_path = stylesheet,
+                                      name = resource.name)
                 try:
-                    resource.import_xml(s3xml,
-                                        ignore_errors=form_vars_get("ignore_errors", None))
+                    response_ = resource.import_xml(s3xml,
+                                                    ignore_errors = form_vars_get("ignore_errors", None))
                 except:
                     response.error = str(sys.exc_info()[1])
                 else:
-                    import_count = resource.import_count
-                    if import_count:
-                        response.confirmation = "%s %s" % \
-                            (import_count,
-                             T("Alerts successfully imported."))
+                    reply = eval(response_)
+                    if reply["statuscode"] == "200":
+                        if "created" in reply:
+                            alert_id = reply["created"][0]
+                        elif "updated" in reply:
+                            alert_id = reply["updated"][0]
+                        response.confirmation = T("Alert successfully imported.")
+                        redirect(URL(c="cap", f="alert", args=[alert_id]))
                     else:
-                        response.information = T("No Alerts available.")
+                        response.information = "%s" % (reply["message"])
+                    #import_count = resource.import_count
+                    #if import_count:
+                    #    response.confirmation = "%s %s" % \
+                    #        (import_count,
+                    #         T("Alerts successfully imported."))
+                    #else:
+                    #    response.information = T("No Alerts available.")
 
             return output
 
@@ -4190,6 +4233,7 @@ def clone(r, record=None, **attr):
         del alert_row_clone["template_id"]
         del alert_row_clone["template_title"]
         del alert_row_clone["template_settings"]
+        del alert_row_clone["external"]
         new_alert_id = alert_history_table.insert(**alert_row_clone)
         # Post-process create
         alert_row_clone["id"] = new_alert_id
@@ -4200,6 +4244,7 @@ def clone(r, record=None, **attr):
         del alert_row_clone["identifier"]
         alert_row_clone["msg_type"] = msg_type
         alert_row_clone["sent"] = current.request.utcnow
+        alert_row_clone["external"] = False
         alert_row_clone["reference"] = ("%s,%s,%s") % (alert_row.sender,
                                                        alert_row.identifier,
                                 str(s3_utc(alert_row.sent)).replace(" ", "T"),

@@ -254,7 +254,6 @@ class S3Parser(object):
             return
 
         channel_id = record.channel_id
-
         alert_table = s3db.cap_alert
         info_table = s3db.cap_info
 
@@ -308,11 +307,13 @@ class S3Parser(object):
             try:
                 file = fetch(url)
             except urllib2.URLError:
-                response.error = str(sys.exc_info()[1])
-                return output
+                import sys
+                current.response.error = str(sys.exc_info()[1])
+                return
             except urllib2.HTTPError:
-                response.error = str(sys.exc_info()[1])
-                return output
+                import sys
+                current.response.error = str(sys.exc_info()[1])
+                return
             File = StringIO(file)
 
             # Import via XSLT
