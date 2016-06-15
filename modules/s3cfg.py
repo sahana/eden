@@ -1750,6 +1750,7 @@ class S3Config(Storage):
             Standard icon set, one of:
             - "font-awesome"
             - "foundation"
+            - "font-awesome3"
         """
         return self.ui.get("icons", "font-awesome")
 
@@ -4383,6 +4384,7 @@ class S3Config(Storage):
             resolved = set()
         seen = resolved.add
 
+        resolve = self.resolve_profile
         result = []
 
         def append(item):
@@ -4392,15 +4394,21 @@ class S3Config(Storage):
                     if options:
                         option = options.get(item[9:])
                         if option:
-                            result.extend(self.resolve_profile(options,
-                                                               option,
-                                                               resolved=resolved))
+                            result.extend(resolve(options,
+                                                  option,
+                                                  resolved=resolved,
+                                                  ))
                 else:
                     result.append(item)
             return
 
         if default:
-            append("template:mandatory")
+            if "default/base" in setting:
+                # Always first
+                append("default/base")
+            if options:
+                # Always second
+                append("template:mandatory")
         if setting is not None:
             if not isinstance(setting, (tuple, list)):
                 setting = (setting,)

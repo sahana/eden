@@ -57,9 +57,16 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "OCHAROCCA"
+
+    # Formstyles
     settings.ui.formstyle_row = "bootstrap"
     settings.ui.formstyle = "bootstrap"
     settings.ui.filter_formstyle = "bootstrap"
+
+    # Icons
+    settings.ui.icons = "font-awesome3"
+
+    # Maps
     #settings.gis.map_height = 600
     #settings.gis.map_width = 854
 

@@ -417,7 +417,7 @@ def alert():
                     map_widget = dict(label = label,
                                       type = "map",
                                       #context = "alert",
-                                      icon = "icon-map",
+                                      icon = "globe",
                                       #height = 383,
                                       #width = 568,
                                       bbox = bbox,
@@ -573,7 +573,7 @@ def alert():
                             for parameter in parameters:
                                 para = "%s: %s" % (parameter.name, parameter.value)
                                 parameter_text.append(para)
-                            
+
                             fn_2.append(DIV(SPAN("%s :: " % T("Parameters"),
                                                  _class="cap-label"
                                                  ),
@@ -581,7 +581,7 @@ def alert():
                                                  _class="cap-value"
                                                  )
                                             ))
-                            
+
                         return fn_2
 
                     custom_widget_2 = dict(type = "custom",
@@ -819,7 +819,7 @@ def alert():
             irows_ = db(iquery_).select(itable.template_info_id)
 
             parameter_table = s3db.cap_info_parameter
-            
+
             if alert and not \
                (set([irow.id for irow in irows]) == set([irow_.template_info_id for irow_ in irows_])):
 
@@ -952,7 +952,7 @@ def info():
             table.language.represent = None
             table.category.represent = None
             table.response_type.represent = None
-            
+
             list_fields = ["alert_id",
                            "language",
                            "category",
@@ -1014,7 +1014,7 @@ def info_parameter():
                            "value",
                            "mobile",
                            ]
-        
+
             s3db.configure("cap_info_parameter",
                            list_fields = list_fields,
                            )

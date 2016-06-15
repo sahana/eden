@@ -20,6 +20,9 @@
 #title .title-links a {
     margin-right: 1rem;
 }
+#title .title-links a i {
+    margin-right: 0.3rem;
+}
 #contact_message {
     height: 7rem;
 }

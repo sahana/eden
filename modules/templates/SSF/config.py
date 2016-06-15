@@ -27,6 +27,7 @@ def config(settings):
     settings.base.theme = "SSF"
 
     # UI
+    settings.ui.icons = "font-awesome3"
     settings.ui.custom_icons = {
         "watch": "icon-eye-open",
         "unwatch": "icon-eye-close",

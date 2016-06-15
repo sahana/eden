@@ -132,6 +132,9 @@ def config(settings):
 
     # =============================================================================
     # UI Settings
+    # Icons
+    settings.ui.icons = "font-awesome3"
+
     # Enable this for a UN-style deployment
     settings.ui.cluster = True
 

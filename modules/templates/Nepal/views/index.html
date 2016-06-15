@@ -11,13 +11,13 @@
  {{for menu in menus:}}
   <div class='large-3 columns'>
     <a href='{{=URL(c=menu["module"], f=menu["function"], args=menu.get("args",None))}}'>
-     <h2><i class='icon-{{=menu["icon"]}} menu'></i></h2>
+     <h2><i class='fa fa-{{=menu["icon"]}} menu'></i></h2>
      <h2>{{=menu["title"]}}</h2>
     </a>
     <div class='menu_buttons'>
-      {{for button in menu["buttons"]:}} 
+      {{for button in menu["buttons"]:}}
        <a href='{{=URL(c=button.get("controller", menu["module"]), f=button.get("function", menu["function"]), args=button["args"])}}' class='button small secondary {{=button["args"]}}'>
-        <i class='icon-{{=button["icon"]}}'></i> {{=button["label"]}}</a>
+        <i class='fa fa-{{=button["icon"]}}'></i> {{=button["label"]}}</a>
       {{pass}}
     </div>
     <p>{{=menu["description"]}}</p>

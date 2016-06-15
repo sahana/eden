@@ -110,9 +110,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     # Custom icon classes
     settings.ui.custom_icons = {
-        "news": "icon-info",
-        "needs": "icon-list",
-        "organisations": "icon-group",
+        "news": "fa fa-info",
+        "needs": "fa fa-list",
+        "organisations": "fa fa-group",
     }
 
     # -------------------------------------------------------------------------
