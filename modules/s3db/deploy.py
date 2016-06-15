@@ -350,6 +350,7 @@ class S3DeploymentModel(S3Model):
         tablename = "deploy_application"
         define_table(tablename,
                      organisation_id(),
+                     # @ToDo: This makes a lot more sense as person_id not human_resource_id
                      human_resource_id(empty = False,
                                        label = T(hr_label),
                                        ),
@@ -455,7 +456,8 @@ class S3DeploymentModel(S3Model):
 
         assignment_id = S3ReusableField("assignment_id",
                                         "reference %s" % tablename,
-                                        ondelete = "CASCADE")
+                                        ondelete = "CASCADE",
+                                        )
 
         # ---------------------------------------------------------------------
         # Link Assignments to Appraisals
@@ -1994,7 +1996,17 @@ def deploy_alert_select_recipients(r, **attr):
                        3: 3,
                        4: 4,
                        }
-        filter_widgets.extend((S3OptionsFilter("training.grade",
+        filter_widgets.extend((S3OptionsFilter("application.status",
+                                               label = T("Category"),
+                                               options = {1: "I",
+                                                          2: "II",
+                                                          3: "III",
+                                                          4: "IV",
+                                                          5: "V",
+                                                          },
+                                               cols = 5,
+                                               ),
+                               S3OptionsFilter("training.grade",
                                                label = T("Training Grade"),
                                                options = rating_opts,
                                                cols = 4,
