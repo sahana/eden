@@ -655,7 +655,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         #M("InBox",
                         #  c="deploy", f="email_inbox",
                         #),
-                        M("Settings",
+                        M("Twitter Settings",
                           #c="deploy", f="email_channel",
                           #p="update", t="msg_email_channel",
                           c="deploy", f="twitter_channel",
