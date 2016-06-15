@@ -1798,10 +1798,10 @@ class S3TwitterModel(S3Model):
         password_widget = S3PasswordWidget()
         tablename = "msg_twitter_channel"
         define_table(tablename,
-                     #Instance
+                     # Instance
                      self.super_link("channel_id", "msg_channel"),
-                     # @ToDo: Allow different Twitter accounts for different PEs (Orgs / Teams)
-                     #self.pr_pe_id(),
+                     # @ToDo: Allow different Twitter accounts for different Orgs
+                     #self.org_organisation_id(),
                      Field("name",
                            label = T("Name"),
                            ),
