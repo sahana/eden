@@ -4372,6 +4372,228 @@ label.error {
     left: auto;
   }
 }
+/* line 208, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar {
+  width: 100%;
+  font-size: 0;
+  display: inline-block;
+  background: #FFFFFF;
+}
+/* line 39, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar > * {
+  text-align: center;
+  font-size: 1rem;
+  width: 25%;
+  margin: 0 auto;
+  display: block;
+  padding: 1.25rem;
+  float: left;
+}
+/* line 48, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar > * i, .icon-bar > * img {
+  display: block;
+  margin: 0 auto;
+}
+/* line 52, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar > * i + label, .icon-bar > * img + label {
+  margin-top: .0625rem;
+}
+/* line 57, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar > * i {
+  font-size: 1.875rem;
+  vertical-align: middle;
+}
+/* line 62, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar > * img {
+  width: 1.875rem;
+  height: 1.875rem;
+}
+/* line 70, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.label-right > * i, .icon-bar.label-right > * img {
+  margin: 0 .0625rem 0 0;
+  display: inline-block;
+}
+/* line 74, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.label-right > * i + label, .icon-bar.label-right > * img + label {
+  margin-top: 0;
+}
+/* line 79, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.label-right > * label {
+  display: inline-block;
+}
+/* line 82, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.vertical.label-right > * {
+  text-align: left;
+}
+/* line 86, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.vertical, .icon-bar.small-vertical {
+  height: 100%;
+  width: auto;
+}
+/* line 90, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.vertical .item, .icon-bar.small-vertical .item {
+  width: auto;
+  margin: auto;
+  float: none;
+}
+@media only screen and (min-width: 40.063em) {
+  /* line 97, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.medium-vertical {
+    height: 100%;
+    width: auto;
+  }
+  /* line 102, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.medium-vertical .item {
+    width: auto;
+    margin: auto;
+    float: none;
+  }
+}
+@media only screen and (min-width: 64.063em) {
+  /* line 109, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.large-vertical {
+    height: 100%;
+    width: auto;
+  }
+  /* line 114, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.large-vertical .item {
+    width: auto;
+    margin: auto;
+    float: none;
+  }
+}
+/* line 131, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar > * {
+  font-size: 1rem;
+  padding: 1.25rem;
+}
+/* line 137, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar > * i + label, .icon-bar > * img + label {
+  margin-top: .0625rem;
+}
+/* line 142, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar > * i {
+  font-size: 1.875rem;
+}
+/* line 146, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar > * img {
+  width: 1.875rem;
+  height: 1.875rem;
+}
+/* line 168, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar > *:hover {
+  background: #FAFAFA;
+}
+/* line 170, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar > * label {
+  color: #333333;
+}
+/* line 172, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar > * i {
+  color: #333333;
+}
+
+/* line 223, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.two-up .item {
+  width: 50%;
+}
+/* line 224, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.two-up.vertical .item, .icon-bar.two-up.small-vertical .item {
+  width: auto;
+}
+@media only screen and (min-width: 40.063em) {
+  /* line 225, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.two-up.medium-vertical .item {
+    width: auto;
+  }
+}
+@media only screen and (min-width: 64.063em) {
+  /* line 230, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.two-up.large-vertical .item {
+    width: auto;
+  }
+}
+/* line 237, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.three-up .item {
+  width: 33.3333%;
+}
+/* line 238, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.three-up.vertical .item, .icon-bar.three-up.small-vertical .item {
+  width: auto;
+}
+@media only screen and (min-width: 40.063em) {
+  /* line 239, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.three-up.medium-vertical .item {
+    width: auto;
+  }
+}
+@media only screen and (min-width: 64.063em) {
+  /* line 244, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.three-up.large-vertical .item {
+    width: auto;
+  }
+}
+/* line 251, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.four-up .item {
+  width: 25%;
+}
+/* line 252, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.four-up.vertical .item, .icon-bar.four-up.small-vertical .item {
+  width: auto;
+}
+@media only screen and (min-width: 40.063em) {
+  /* line 253, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.four-up.medium-vertical .item {
+    width: auto;
+  }
+}
+@media only screen and (min-width: 64.063em) {
+  /* line 258, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.four-up.large-vertical .item {
+    width: auto;
+  }
+}
+/* line 265, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.five-up .item {
+  width: 20%;
+}
+/* line 266, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.five-up.vertical .item, .icon-bar.five-up.small-vertical .item {
+  width: auto;
+}
+@media only screen and (min-width: 40.063em) {
+  /* line 267, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.five-up.medium-vertical .item {
+    width: auto;
+  }
+}
+@media only screen and (min-width: 64.063em) {
+  /* line 272, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.five-up.large-vertical .item {
+    width: auto;
+  }
+}
+/* line 279, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.six-up .item {
+  width: 16.66667%;
+}
+/* line 280, ../../themes/foundation/scss/components/_icon-bar.scss */
+.icon-bar.six-up.vertical .item, .icon-bar.six-up.small-vertical .item {
+  width: auto;
+}
+@media only screen and (min-width: 40.063em) {
+  /* line 281, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.six-up.medium-vertical .item {
+    width: auto;
+  }
+}
+@media only screen and (min-width: 64.063em) {
+  /* line 286, ../../themes/foundation/scss/components/_icon-bar.scss */
+  .icon-bar.six-up.large-vertical .item {
+    width: auto;
+  }
+}
+
 @-webkit-keyframes rotate {
   from {
     -webkit-transform: rotate(0deg);

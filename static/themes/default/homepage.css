@@ -2,100 +2,70 @@
 
 /* Home page specific */
 
-.menu_box {
-    border: 1px solid #006699;
-    padding: 10px;
-    margin-top: 10px;
-    width: intrinsic;           /* Safari/WebKit uses a non-standard name */
-    width: -moz-max-content;    /* Firefox/Gecko */
-    width: -webkit-max-content; /* Chrome */
-}
-#menu_box_center {
-    margin: 0 auto;
-    width: 640px;
-}
-#menu_box_center .menu_box h3  {
-    border-bottom: 0;
-    font-size: 1.4em;
-    text-align: center;
-}
-#menu_box_1 {
-    width: auto;
-    float: left;
-}
-
 #login_box {
-    width: 450px;
-    float: left;
-    clear: left;
+    width: 90%;
 }
-#menu_box_center #login_box div {
-    padding: 0;
-}
-#menu_box_center #login_box input[size="62"] {
-    width: 300px;
+#login_box form.auth_login {
+    padding: 0.75rem;
 }
 
-.menu_div,
-.div_arrow {
-    float: left;
-    width: auto;
+#login_box #submit_record__row .controls > div:first-child {
+    display: flex;
+    flex-wrap: wrap;
+}
+#login_box #submit_record__row .controls .button,
+#login_box #submit_record__row .controls .action-lnk {
+    margin-left: 0;
+    margin-right: 1rem;
+}
+#login_box #submit_record__row .controls .action-lnk {
+    padding-top: 1rem;
 }
 
-#facility_box {
+.menu-box {
+    border: 1px solid #ccc;
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+#facility-box {
     width: auto;
     float: right;
     clear: left;
     margin-right: 9px;
 }
-#facility_box img {
+#facility-box img {
     margin: 0;
 }
-#manage_facility_box {
-    width: 450px;
-}
-#manage_facility_box a {
-    margin-left: 10px;
-}
 
-#org_box {
-    width: 450px;
-    clear: left;
+#manage-facility-box {
+    width: 100%;
 }
-#org_box #org_dt_wrapper {
-    margin-top: 10px;
+#manage-facility-box > select {
+    margin-bottom: 0.75rem;
+    margin-right: 0.75rem;
 }
-#org_box #org_dt_processing {
-    margin-top: 5px;
-}
-
-.div_arrow {
-    padding: 0 15px;
-    margin-top: 80px;
-}
-.menu-btn-l {
-    overflow: hidden;
-    background: url(../../img/menu_box-lstretch.png) no-repeat;
-    display: block;
-    height: 50px;
-    text-decoration: none;
-}
-.menu-btn-r {
-    margin: 0;
-    padding: 15px 15px 15px 15px;
-    overflow: hidden;
-    background: url(../../img/menu_box-r.png) no-repeat scroll top right;
-    display: block;
-    white-space:nowrap;
+#manage-facility-btn {
+    min-width: 2.5rem;
     text-align: center;
-/*     font-size: 1.3em; */
 }
 
-#login_form,
-#register_form {
-    clear: both;
-    padding: 10px 0 10px 0;
+#org-box {
+    width: 100%;
+    padding-bottom: 2.25rem;
+    margin-bottom: 1.25rem;
 }
+#add-org-btn {
+    float: right;
+    margin-top: 0.4rem;
+}
+#org_dt_wrapper {
+    margin-top: 0.75rem;
+}
+#org_dt_filter input {
+    margin-left: 0.25rem;
+}
+
 #about{
     clear: both;
     padding: 10px;

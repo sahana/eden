@@ -103,8 +103,8 @@ $column-gutter: rem-calc(20);
 // $warning-color: #f08a24;
 // $info-color: #a0d3e8;
 
-// $white       : #FFFFFF;
-// $ghost       : #FAFAFA;
+$white       : #FFFFFF;
+$ghost       : #FAFAFA;
 // $snow        : #F9F9F9;
 // $vapor       : #F6F6F6;
 // $white-smoke : #F5F5F5;
@@ -119,7 +119,7 @@ $column-gutter: rem-calc(20);
 // $steel       : #666666;
 // $charcoal    : #555555;
 // $tuatara     : #444444;
-// $oil         : #333333;
+$oil         : #333333;
 // $jet         : #222222;
 // $black       : #000000;
 
@@ -683,11 +683,11 @@ $column-gutter: rem-calc(20);
 
 // We use these to style the icon-bar and items
 // $include-html-icon-bar-classes: $include-html-classes;
-// $icon-bar-bg: $oil;
-// $icon-bar-font-color: $white;
+$icon-bar-bg: $white;
+$icon-bar-font-color: $oil;
 // $icon-bar-font-size: 1rem;
-// $icon-bar-hover-color: $primary-color;
-// $icon-bar-icon-color: $white;
+$icon-bar-hover-color: $ghost;
+$icon-bar-icon-color: $oil;
 // $icon-bar-icon-size: 1.875rem;
 // $icon-bar-image-width: 1.875rem;
 // $icon-bar-image-height: 1.875rem;

@@ -365,9 +365,7 @@ class S3BreadcrumbsLayout(S3NavigationItem):
 # =============================================================================
 class S3HomepageMenuLayout(S3NavigationItem):
     """
-        Layout for homepage menu
-
-        @todo: better design, robust/responsive CSS, utilize Foundation!
+        Layout for homepage menus
     """
 
     @staticmethod
@@ -384,59 +382,56 @@ class S3HomepageMenuLayout(S3NavigationItem):
 
         if item.enabled and item.visible:
             items = item.render_components()
+
             if item.parent is None:
-                # Top level (menu box)
-                arrow = "/%s/static/img/arrow_blue_right.png" % current.request.application
+                # The menu itself
+                
+                number_of_links = 0
+                
                 components = []
                 append = components.append
-                number_of_links = 0
                 for submenu in items:
                     append(submenu)
-                    if item.opts.arrows:
-                        append(DIV(IMG(_src=arrow), _class="div_arrow"))
                     number_of_links += len(submenu.elements("a"))
-
+                    
+                # Hide the entire menu if it doesn't contain any links
                 if not number_of_links:
-                    # Hide the entire menu if it doesn't contain any links
                     return None
-                elif item.label:
-                    components.insert(0, H3(item.label))
-                if item.opts.arrows:
-                    # Remove the last arrow
-                    components = components[:-1]
-                menu = DIV(TAG[""](components),
+                    
+                title = H3(item.label) if item.label else ""
+                menu = DIV(title,
+                           DIV(TAG[""](components),
+                               _class = "icon-bar five-up",
+                               ),
                            _id = item.attr._id,
                            _class = item.attr._class,
                            )
-                menu.add_class("menu_box")
+                           
                 return menu
+                
             else:
-                if item.components:
-                    # Branch node (submenu, menu div)
-                    _class = item.attr._class
-                    if not _class:
-                        _class = "menu_div"
-                    return DIV(H3(item.label),
-                               TAG[""](items),
-                               _id = item.attr._id,
-                               _class=_class,
-                               )
+                # A menu item
+                _class = item.attr._class
+                if _class:
+                    _class = "%s item" % _class
                 else:
-                    # Leaf node (menu item)
-                    if item.opts.icon:
-                        # Icon-type item
-                        return A(IMG(_src=item.opts.icon),
-                                 _href=item.url(),
-                                 _title=item.label,
-                                 )
-                    else:
-                        # Button-type item
-                        return A(DIV(item.label,
-                                     _class="menu-btn-r",
-                                     ),
-                                 _class="menu-btn-l",
-                                 _href=item.url(),
-                                 )
+                    _class = "item"
+                _id = item.attr._id
+
+                icon = item.opts.icon
+                if icon:
+                    return A(ICON(icon),
+                             LABEL(item.label),
+                             _class = _class,
+                             _href = item.url(),
+                             _id = _id,
+                             )
+                else:
+                    return A(LABEL(item.label),
+                             _class = _class,
+                             _href = item.url(),
+                             _id = _id,
+                             )
         else:
             return None
 
