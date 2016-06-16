@@ -3,7 +3,7 @@
     <cap:identifier>MyanmarDMH-2.49.0.0.104.0-20150910-058-alert</cap:identifier>
     <cap:sender>dmh.gov.mm</cap:sender>
     <cap:sent>2015-09-10T02:29:56+00:00</cap:sent>
-    <cap:status>Draft</cap:status>
+    <cap:status>Test</cap:status>
     <cap:msgType>Alert</cap:msgType>
     <cap:source>sambro-server@dmh.gov.mm</cap:source>
     <cap:scope>Restricted</cap:scope>

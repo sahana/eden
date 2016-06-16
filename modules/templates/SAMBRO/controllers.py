@@ -1117,7 +1117,7 @@ $('#method_selector').change(function(){
         scope_filter = ["scope__belongs", "Public,Restricted"]
         system_alert_filter = ["external__ne", "True"]
         filters.append(scope_filter)
-        filter.append(system_alert_filter)
+        filters.append(system_alert_filter)
         filters = json.dumps(filters)
 
         if not filter_id:
