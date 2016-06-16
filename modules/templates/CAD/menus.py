@@ -65,7 +65,7 @@ class S3MainMenu(default.S3MainMenu):
 
         return [homepage(),
                 MM("Feed", c="cms", f="newsfeed", m="datalist",
-                   icon="icon-news",
+                   icon="news",
                    ),
                 MM("Dashboard", c="event", f="event", m="summary"),
                 MM("Incidents", c="event", f="incident", m="summary"),

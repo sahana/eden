@@ -249,6 +249,8 @@ def config(settings):
     # Uncomment to disable responsive behavior of datatables
     settings.ui.datatables_responsive = False
 
+    # Icons
+    settings.ui.icons = "font-awesome3"
     settings.ui.custom_icons = {
         "male": "icon-male",
         "female": "icon-female",
@@ -1663,7 +1665,7 @@ def config(settings):
             return result
 
         s3.prep = custom_prep
-            
+
         return attr
 
     settings.customise_deploy_alert_controller = customise_deploy_alert_controller
@@ -3421,7 +3423,7 @@ def config(settings):
             Update the status of AP RDRT members based on their
             Trainings & Deployments
         """
-    
+
         db = current.db
         s3db = current.s3db
 

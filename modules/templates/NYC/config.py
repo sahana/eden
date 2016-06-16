@@ -50,7 +50,9 @@ def config(settings):
     settings.gis.postcode_selector = False
     # Enable this to change the label for 'Postcode'
     #settings.ui.label_postcode = "ZIP Code"
-    # Custom icon classes
+
+    # Icons
+    settings.ui.icons = "font-awesome3"
     settings.ui.custom_icons = {
         "alert": "icon-alert",
         "event": "icon-event",

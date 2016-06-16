@@ -101,6 +101,7 @@ def alert():
                                                            orderby=itable.id)
         unexpired_ids = default_filter = ",".join([str(row.id) for row in rows]) or None
 
+
         rows = db(table.external == True).select(table.id,
                                                  orderby=table.id)
         external_alerts = ",".join([str(row.id) for row in rows]) or None
@@ -749,7 +750,6 @@ def alert():
             irows_ = db(iquery_).select(itable.template_info_id)
 
             parameter_table = s3db.cap_info_parameter
-            
             if alert and not \
                (set([irow.id for irow in irows]) == set([irow_.template_info_id for irow_ in irows_])):
 
@@ -891,7 +891,6 @@ def info():
             table.language.represent = None
             table.category.represent = None
             table.response_type.represent = None
-            
             list_fields = ["alert_id",
                            "language",
                            "category",
@@ -953,7 +952,7 @@ def info_parameter():
                            "value",
                            "mobile",
                            ]
-        
+
             s3db.configure("cap_info_parameter",
                            list_fields = list_fields,
                            )

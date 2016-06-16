@@ -65,8 +65,15 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "Syria"
+
+    # Formstyles
     settings.ui.formstyle_row = "bootstrap"
     settings.ui.formstyle = "bootstrap"
+
+    # Icons
+    settings.ui.icons = "font-awesome3"
+
+    # Map
     settings.gis.map_height = 400
     #settings.gis.map_width = 854
     # Use a non-default fillColor for Clustered points

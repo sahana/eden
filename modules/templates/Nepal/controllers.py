@@ -74,7 +74,7 @@ class index(S3CustomController):
                                "label": T("View"),
                                },
                               {"args": "create",
-                               "icon": "plus-sign",
+                               "icon": "plus",
                                "label": T("Create"),
                                }]
                   },
@@ -88,12 +88,12 @@ class index(S3CustomController):
                                "label": T("View"),
                                },
                               {"args": "create",
-                               "icon": "plus-sign",
+                               "icon": "plus",
                                "label": T("Create"),
                                }]
                   },
                  {"title": T("Hospitals"),
-                  "icon": "h-sign",
+                  "icon": "hospital-o",
                   "description": T("List of Hospitals."),
                   "module": "hms",
                   "function": "hospital",
@@ -102,7 +102,7 @@ class index(S3CustomController):
                                "label": T("View"),
                                },
                               {"args": "create",
-                               "icon": "plus-sign",
+                               "icon": "plus",
                                "label": T("Create"),
                                }]
                   },
@@ -116,7 +116,7 @@ class index(S3CustomController):
                                "label": T("View"),
                                },
                               {"args": "create",
-                               "icon": "plus-sign",
+                               "icon": "plus",
                                "label": T("Create"),
                                }]
                   },
@@ -131,7 +131,7 @@ class index(S3CustomController):
                                "label": T("View"),
                                },
                               {"args": "create",
-                               "icon": "plus-sign",
+                               "icon": "plus",
                                "label": T("Create"),
                                }]
                   },
@@ -146,7 +146,7 @@ class index(S3CustomController):
                                "label": T("View"),
                                },
                               {"args": "create",
-                               "icon": "plus-sign",
+                               "icon": "plus",
                                "label": T("Create"),
                                }]
                   },

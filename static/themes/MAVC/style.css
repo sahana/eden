@@ -753,7 +753,7 @@ div.tabs span.tab_other a:hover {
 /* line 60, ../scss/custom/_menus.scss */
 .top-bar-section li.has-dropdown.not-click.label-icon > a {
   padding-bottom: 0.5rem !important;
-  padding-top: 0.3rem !important;
+  padding-top: 0.5rem !important;
 }
 /* line 63, ../scss/custom/_menus.scss */
 .top-bar-section li.has-dropdown.not-click.label-icon > a i {

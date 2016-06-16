@@ -10,7 +10,7 @@
 #home .row,
 #home .panel {
     margin: 0 auto;
-    max-width: 980px;
+    max-width: 1024px;
 }
 
 i.menu {
@@ -19,6 +19,7 @@ i.menu {
     text-align: center;
     display: block;
     margin-bottom: -0.5rem;
+    padding-bottom: 0.5rem;
 }
 
 .menu_buttons {

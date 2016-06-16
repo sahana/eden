@@ -69,6 +69,7 @@ def config(settings):
     settings.ui.use_button_icons = True
 
     # Custom icon classes
+    settings.ui.icons = "font-awesome3"
     settings.ui.custom_icons = {
         "alert": "icon-alert",
         "building": "icon-building",

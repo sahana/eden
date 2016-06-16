@@ -87,8 +87,14 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "CRMT"
+
+    # Formstyles
     settings.ui.formstyle = "foundation_2col"
     #settings.ui.report_formstyle = "foundation_inline"
+
+    # Icons
+    settings.ui.icons = "foundation"
+
     settings.ui.hide_report_options = False
     settings.ui.inline_component_layout = CRMTSubFormLayout
     settings.ui.read_label = "" # replaced with icon

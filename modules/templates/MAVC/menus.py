@@ -83,7 +83,7 @@ class S3MainMenu(default.S3MainMenu):
                 login_next = request.get_vars["_next"]
 
             self_registration = settings.get_security_self_registration()
-            menu_personal = MM(icon="icon-cog", link=False)(
+            menu_personal = MM(icon="administration", link=False)(
                         MM("Register", c="default", f="user",
                            m="register",
                            check = self_registration,

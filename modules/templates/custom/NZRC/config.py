@@ -690,6 +690,7 @@ def config(settings):
                                               orderby=htable.date)
         if programmes:
             # Ignore up to 3 months of records
+            import datetime
             three_months_prior = (now - datetime.timedelta(days=92))
             end = max(programmes.last().date, three_months_prior.date())
             last_year = end - datetime.timedelta(days=365)

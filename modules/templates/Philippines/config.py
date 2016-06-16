@@ -77,8 +77,15 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "Philippines"
+
+    # Formstyles
     settings.ui.formstyle_row = "bootstrap"
     settings.ui.formstyle = "bootstrap"
+
+    # Icons
+    settings.ui.icons = "font-awesome3"
+
+    # Maps
     #settings.gis.map_height = 600
     #settings.gis.map_width = 854
 
@@ -123,7 +130,7 @@ def config(settings):
     # -----------------------------------------------------------------------------
     # Finance settings
     settings.fin.currencies = {
-        "PHP" : "Philippine Pesos"),
+        "PHP" : "Philippine Pesos",
         #"EUR" : "Euros",
         #"GBP" : "Great British Pounds",
         "USD" : "United States Dollars",

@@ -182,6 +182,9 @@ def config(settings):
     settings.ui.formstyle = "table"
     settings.ui.filter_formstyle = "table_inline"
 
+    # Icons
+    settings.ui.icons = "font-awesome3"
+
     settings.gis.map_height = 600
     settings.gis.map_width = 869
     # Display Resources recorded to Admin-Level Locations on the map

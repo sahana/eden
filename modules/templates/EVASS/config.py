@@ -418,17 +418,24 @@ def customise_pr_person_resource(r, tablename):
 def customise_cr_shelter_resource(r, tablename):
 
     s3db = current.s3db
+    T = current.T
+
     from s3 import S3HierarchyWidget
+
     table = s3db.cr_shelter
     table.capacity_day.writable = False
     table.capacity_night.writable = False
+
     table.capacity_day.label = T("Evacuees Capacity (Day and Night)")
     table.capacity_night.label = T("Evacuees Capacity (Night only)")
     table.available_capacity_day.label = T("Evacuees Available Capacity (Day and Night)")
     table.available_capacity_night.label = T("Evacuees Available Capacity (Night only)")
     table.population_day.label = T("Evacuees Current Population (Day and Night)")
     table.population_night.label = T("Evacuees Current Population (Night only)")
-    table.cr_shelter_environment_id.readable = s3db.cr_shelter.cr_shelter_environment_id.writable = True
+
+    table.cr_shelter_environment_id.readable = \
+    table.cr_shelter_environment_id.writable = True
+
     node_represent = s3db.org_OrganisationRepresent(parent=False)
     org_widget = S3HierarchyWidget(lookup="org_organisation",
                                    represent=node_represent,
