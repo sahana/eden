@@ -39,6 +39,7 @@ __all__ = ("S3CAPModel",
            "cap_AssignArea",
            "cap_AreaRepresent",
            "cap_CloneAlert",
+           "cap_AlertProfileWidget",
            #"cap_gis_location_xml_post_parse",
            #"cap_gis_location_xml_post_render",
            )
@@ -279,6 +280,10 @@ cap_info_certainty_opts = OrderedDict([
     ("Unknown", T("Certainty unknown")),
 ])
 
+# CAP info language complete list
+represent_languages = IS_ISO639_2_LANGUAGE_CODE.language_codes()
+represent_languages.append(("en-US", "English"))
+
 # =============================================================================
 class S3CAPModel(S3Model):
     """
@@ -499,6 +504,12 @@ $.filterOptionsS3({
                                  readable = False,
                                  writable = False,
                                  ),
+                     # To separate the external CAP Alert
+                     Field("external", "boolean",
+                           default = True,
+                           readable = False,
+                           writable = False,
+                           ),
                      *s3_meta_fields())
 
         list_fields = ["info.event_type_id",
@@ -572,6 +583,7 @@ $.filterOptionsS3({
                   context = {"location": "location.location_id",
                              },
                   create_onaccept = self.cap_alert_create_onaccept,
+                  deduplicate = S3Duplicate(primary=("identifier")),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   list_layout = cap_alert_list_layout,
@@ -787,11 +799,8 @@ $.filterOptionsS3({
                      Field("language",
                            default = "en-US",
                            label = T("Language"),
-                           represent = lambda opt: languages.get(opt,
-                                                                 UNKNOWN_OPT),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(languages)
-                                        ),
+                           represent = S3Represent(options = dict(represent_languages)),
+                           requires = IS_IN_SET(languages),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the language of the information"),
                                                            T("Code Values: Natural language identifier per [RFC 3066]. If not present, an implicit default value of 'en-US' will be assumed. Edit settings.cap.languages in 000_config.py to add more languages. See <a href=\"%s\">here</a> for a full list.") % "http://www.i18nguy.com/unicode/language-identifiers.html")),
@@ -1062,6 +1071,7 @@ $.filterOptionsS3({
 
         configure(tablename,
                   crud_form = crud_form,
+                  deduplicate = S3Duplicate(primary=("alert_id", "language")),
                   # Required Fields
                   mark_required = ("urgency", "severity", "certainty",),
                   onaccept = self.cap_info_onaccept,
@@ -1096,7 +1106,7 @@ $.filterOptionsS3({
 
         configure(tablename,
                   onaccept = self.cap_info_parameter_onaccept,
-                  onvalidation = self.cap_info_parameter_onvalidation,
+                  #onvalidation = self.cap_info_parameter_onvalidation,
                   )
 
         # ---------------------------------------------------------------------
@@ -1679,6 +1689,10 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                 form.errors["scope"] = \
                     current.T("'Scope' field mandatory in case using 'Recipients' field")
 
+            if form_vars_get("status") == "Draft":
+                form.errors["status"] = \
+                    current.T("Cannot issue 'Draft' alerts!")
+
     # -------------------------------------------------------------------------
     @staticmethod
     def cap_warning_priority_onvalidation(form):
@@ -1808,6 +1822,14 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
             if not form_vars.get("category"):
                 form.errors["category"] = \
                     current.T("Atleast one category is required.")
+
+        alert_id = form.vars.get("alert_id", None)
+        atable = current.s3db.cap_alert
+        alert = current.db(atable.id == alert_id).select(atable.external,
+                                                         limitby=(0, 1)).first()
+        if alert and alert.external:
+            # Not internal alerts
+            current.s3db.cap_info.language.requires = IS_IN_SET(dict(represent_languages))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2388,11 +2410,8 @@ class S3CAPHistoryModel(S3Model):
                                       ),
                      Field("language",
                            label = T("Language"),
-                           represent = lambda opt: languages.get(opt,
-                                                                 UNKNOWN_OPT),
-                           requires = IS_EMPTY_OR(
-                                        IS_IN_SET(languages)
-                                        ),
+                           represent = S3Represent(options = dict(represent_languages)),
+                           requires = IS_IN_SET(languages),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the language of the information"),
                                                            T("Code Values: Natural language identifier per [RFC 3066]. If not present, an implicit default value of 'en-US' will be assumed. Edit settings.cap.languages in 000_config.py to add more languages. See <a href=\"%s\">here</a> for a full list.") % "http://www.i18nguy.com/unicode/language-identifiers.html")),
@@ -3103,54 +3122,57 @@ def cap_rheader(r):
                                                 _data = "%s/%s" % (record.msg_type, r.id),
                                                 _class = "action-btn cap-clone-update",
                                                 )
-                                if record.created_by:
-                                    utable = db.auth_user
-                                    row = db(utable.id == record.created_by).select(\
-                                                            utable.organisation_id,
-                                                            limitby=(0, 1)).first()
-                                    row_ = db(utable.id == current.auth.user.id).select(\
-                                                            utable.organisation_id,
-                                                            limitby=(0, 1)).first()
-                                    if row.organisation_id == row_.organisation_id:
-                                        # Same organisation
-                                        msg_type = record.msg_type
-                                        if msg_type == "Alert" or msg_type == "Update":
-                                            msg_type_buttons = TAG[""](
-                                                    TR(TD(A(T("Update Alert"),
-                                                            _data = "Update/%s" % r.id,
-                                                            _class = "action-btn cap-clone-update",
-                                                            ))),
-                                                    TR(TD(A(T("Cancel Alert"),
-                                                            _data = "Cancel/%s" % r.id,
-                                                            _class = "action-btn cap-clone-update",
-                                                            ))),
-                                                    TR(TD(A(T("Error Alert"),
-                                                            _data = "Error/%s" % r.id,
-                                                            _class = "action-btn cap-clone-update",
-                                                            ))),
-                                                    TR(TD(A(T("All Clear"),
-                                                            _data = "AllClear/%s" % r.id,
-                                                            _class = "action-btn cap-clone-update",
-                                                            ))),
-                                                    )
-                                        elif msg_type == "Error":
-                                            msg_type_buttons = TAG[""](
-                                                    TR(TD(A(T("Update Alert"),
-                                                            _data = "Update/%s" % r.id,
-                                                            _class = "action-btn cap-clone-update",
-                                                            ))),
-                                                    TR(TD(A(T("All Clear"),
-                                                            _data = "AllClear/%s" % r.id,
-                                                            _class = "action-btn cap-clone-update",
-                                                            ))),
-                                                    )
-                                        else:
-                                            msg_type_buttons = None
-                                    else:
-                                        # Different organisation
-                                        msg_type_buttons = relay_alert
-                                else:
+                                if record.external:
                                     msg_type_buttons = relay_alert
+                                else:
+                                    if record.created_by:
+                                        utable = db.auth_user
+                                        row = db(utable.id == record.created_by).select(\
+                                                                utable.organisation_id,
+                                                                limitby=(0, 1)).first()
+                                        row_ = db(utable.id == current.auth.user.id).select(\
+                                                                utable.organisation_id,
+                                                                limitby=(0, 1)).first()
+                                        if row.organisation_id == row_.organisation_id:
+                                            # Same organisation
+                                            msg_type = record.msg_type
+                                            if msg_type == "Alert" or msg_type == "Update":
+                                                msg_type_buttons = TAG[""](
+                                                        TR(TD(A(T("Update Alert"),
+                                                                _data = "Update/%s" % r.id,
+                                                                _class = "action-btn cap-clone-update",
+                                                                ))),
+                                                        TR(TD(A(T("Cancel Alert"),
+                                                                _data = "Cancel/%s" % r.id,
+                                                                _class = "action-btn cap-clone-update",
+                                                                ))),
+                                                        TR(TD(A(T("Error Alert"),
+                                                                _data = "Error/%s" % r.id,
+                                                                _class = "action-btn cap-clone-update",
+                                                                ))),
+                                                        TR(TD(A(T("All Clear"),
+                                                                _data = "AllClear/%s" % r.id,
+                                                                _class = "action-btn cap-clone-update",
+                                                                ))),
+                                                        )
+                                            elif msg_type == "Error":
+                                                msg_type_buttons = TAG[""](
+                                                        TR(TD(A(T("Update Alert"),
+                                                                _data = "Update/%s" % r.id,
+                                                                _class = "action-btn cap-clone-update",
+                                                                ))),
+                                                        TR(TD(A(T("All Clear"),
+                                                                _data = "AllClear/%s" % r.id,
+                                                                _class = "action-btn cap-clone-update",
+                                                                ))),
+                                                        )
+                                            else:
+                                                msg_type_buttons = None
+                                        else:
+                                            # Different organisation
+                                            msg_type_buttons = relay_alert
+                                    else:
+                                        msg_type_buttons = relay_alert
 
                     tabs = [(T("Alert Details"), None),
                             (T("Information"), "info"),
@@ -3621,7 +3643,7 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
         last = TAG[""](BR(),
                        description,
                        BR(),
-                       ", ".join(response_type),
+                       ", ".join(response_type) if response_type is not None else None,
                        BR(),
                        sender,
                        BR(),
@@ -3841,21 +3863,33 @@ class CAPImportFeed(S3Method):
                 tree = xml.parse(File)
 
                 resource = current.s3db.resource("cap_alert")
-                s3xml = xml.transform(tree, stylesheet_path=stylesheet,
-                                      name=resource.name)
+                s3xml = xml.transform(tree,
+                                      stylesheet_path = stylesheet,
+                                      name = resource.name)
                 try:
                     resource.import_xml(s3xml,
-                                        ignore_errors=form_vars_get("ignore_errors", None))
+                                        ignore_errors = form_vars_get("ignore_errors", None))
                 except:
                     response.error = str(sys.exc_info()[1])
+                    return output
                 else:
-                    import_count = resource.import_count
-                    if import_count:
-                        response.confirmation = "%s %s" % \
-                            (import_count,
-                             T("Alerts successfully imported."))
+                    if not resource.error:
+                        if len(resource.import_created):
+                            alert_id = resource.import_created[0]
+                        elif len(resource.import_updated):
+                            alert_id = resource.import_updated[0]
+                        response.confirmation = T("Alert successfully imported.")
+                        redirect(URL(c="cap", f="alert", args=[alert_id]))
                     else:
-                        response.information = T("No Alerts available.")
+                        response.information = resource.error
+                        return output
+                    #import_count = resource.import_count
+                    #if import_count:
+                    #    response.confirmation = "%s %s" % \
+                    #        (import_count,
+                    #         T("Alerts successfully imported."))
+                    #else:
+                    #    response.information = T("No Alerts available.")
 
             return output
 
@@ -4190,6 +4224,7 @@ def clone(r, record=None, **attr):
         del alert_row_clone["template_id"]
         del alert_row_clone["template_title"]
         del alert_row_clone["template_settings"]
+        del alert_row_clone["external"]
         new_alert_id = alert_history_table.insert(**alert_row_clone)
         # Post-process create
         alert_row_clone["id"] = new_alert_id
@@ -4200,6 +4235,7 @@ def clone(r, record=None, **attr):
         del alert_row_clone["identifier"]
         alert_row_clone["msg_type"] = msg_type
         alert_row_clone["sent"] = current.request.utcnow
+        alert_row_clone["external"] = False
         alert_row_clone["reference"] = ("%s,%s,%s") % (alert_row.sender,
                                                        alert_row.identifier,
                                 str(s3_utc(alert_row.sent)).replace(" ", "T"),
@@ -4514,5 +4550,93 @@ class cap_AreaRepresent(S3Represent):
             return self.default
 
         return s3_str(name)
+
+# -----------------------------------------------------------------------------
+class cap_AlertProfileWidget(object):
+    """ Custom profile widget builder """
+
+    def __init__(self, title, label=None, value=None):
+
+        self.title = title
+        self.label = label
+        self.value = value
+
+    # -------------------------------------------------------------------------
+    def __call__(self, f):
+        """ 
+            Widget builder
+            @param f: the calling function
+        """
+
+        def widget(r, **attr):
+            components = f(r, **attr)
+            components = [c for c in components if c is not None]
+            title = self.title
+            if title:
+                label = self.label
+                value = self.value
+                if label and value:
+                    title_ = DIV(SPAN("%s " % T(title),
+                                      _class="cap-value upper"
+                                      ),
+                                 SPAN("%s :: " % T(label),
+                                      _class="cap-label upper"
+                                      ),
+                                 SPAN(value,
+                                      _class="cap-strong"
+                                      ),
+                                 )
+                else:
+                    title_ = DIV(SPAN(T(title),
+                                      _class="cap-value upper"),
+                                 )
+
+                header = TAG[""](title_,
+                                 DIV(_class="underline"),
+                                 )
+                output = DIV(header, *components)
+            else:
+                output = DIV(components)
+            return output
+
+        return widget
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def component(label, value,
+                  represent = None,
+                  uppercase = False,
+                  strong = False,
+                  hide_empty = True,
+                  headline = False,
+                  ):
+        """
+            Component builder
+            @param label: name for the component label
+            @param value: value for the component 
+            @param uppercase: whether to display label in upper case
+            @param strong: whether to display with strong color
+            @param hide_empty: whether to hide empty records
+            @param headline: is headline?
+        """
+
+        if not value and hide_empty:
+            return None
+        else:
+            if represent:
+                value = represent(value)
+            label_class = "cap-label"
+            if uppercase:
+                label_class = "%s upper" % label_class
+            value_class = "cap-value"
+            if strong:
+                value_class = "cap-strong"
+            elif headline:
+                value_class = "%s cap-headline" % value_class
+            output = DIV(SPAN("%s :: " % T(label), _class=label_class),
+                         SPAN(value, _class=value_class),
+                         )
+
+            return output
 
 # END =========================================================================

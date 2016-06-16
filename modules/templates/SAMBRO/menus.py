@@ -65,29 +65,36 @@ class S3MainMenu(default.S3MainMenu):
             mapping_menu = MM("Mapping", c="gis", f="index")
             recipient_menu = MM("Manage Recipients", c="pr", f="subscription",
                                 vars={"option": "manage_recipient"})
+            alert_hub_menu = MM("Alert Hub", c="cap", f="alert",
+                                vars={"~.external": True})
             if has_role("ADMIN"):
                 # Full set
                 # @ToDo: Add menu entries for "Create RSS Feed for CAP" & "Create RSS Feed for CMS"
                 return [homepage(),
                         alerting_menu,
+                        alert_hub_menu,
                         mapping_menu,
                         recipient_menu,
-                        MM("Person Registry", c="pr", f="person"),
+                        MM("Persons", c="pr", f="person"),
                         MM("Organizations", c="org", f="organisation"),
                         MM("Event Types", c="event", f="event_type"),
                         ]
             else:
-                view_menu = MM("View Alerts", c="cap", f="alert")
+                view_menu = [MM("View Alerts", c="cap", f="alert"),
+                             alert_hub_menu,
+                             ]
                 # Publisher sees minimal options
                 menus_ = [homepage(),
                           ]
 
                 if has_role("MAP_ADMIN"):
                     menus_.extend([view_menu,
+                                   alert_hub_menu,
                                    mapping_menu,
                                   ])
                 elif has_role("ALERT_APPROVER"):
                     menus_.extend([alerting_menu,
+                                   alert_hub_menu,
                                    MM("Approve Alerts", c="cap", f="alert", m="review"),
                                    MM("View Approved Alerts", c="cap", f="alert",
                                       vars={"~.approved_by__ne": None}
@@ -97,7 +104,8 @@ class S3MainMenu(default.S3MainMenu):
                                       )
                                    ])
                 elif has_role("ALERT_EDITOR"):
-                    menus_.append(alerting_menu)
+                    menus_.extend([alerting_menu,
+                                   alert_hub_menu])
                 else:
                     # Authenticated Users
                     menus_.append(view_menu)
@@ -178,6 +186,31 @@ class S3OptionsMenu(default.S3OptionsMenu):
         underscore prefix).
     """
 
+    # -------------------------------------------------------------------------
+    def admin(self):
+        """ ADMIN menu """
+
+        ADMIN = current.session.s3.system_roles.ADMIN
+        settings_messaging = self.settings_messaging()
+
+        return M(restrict=[ADMIN])(
+                    M("Settings", c="admin", f="setting")(
+                        settings_messaging,
+                    ),
+                    M("User Management", c="admin", f="user")(
+                        M("Create User", m="create"),
+                        M("List All Users"),
+                        M("Import Users", m="import"),
+                        M("List All Roles", f="role"),
+                        M("List All Organization Approvers & Whitelists", f="organisation"),
+                    ),
+                    M("Database", c="appadmin", f="index")(
+                        M("Raw Database access", c="appadmin", f="index")
+                    ),
+                    M("Error Tickets", c="admin", f="errors")
+                )
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def cap():
         """ CAP menu """
@@ -257,5 +290,36 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Create", m="create"),
                         ),
                     )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def settings_messaging(cls):
+        """ Messaging settings menu items:
+
+            These items are used in multiple menus, but each item instance can
+            always only belong to one parent, so we need to re-instantiate
+            with the same parameters, and therefore this is defined as a
+            function here.
+
+            This separates the RSS containing CAP Feeds or CMS Feeds
+        """
+
+        return [
+            M("Email Channels (Inbound)", c="msg", f="email_channel"),
+            M("Facebook Channels", c="msg", f="facebook_channel"),
+            M("RSS Channels", link=False)(
+                M("Create RSS Feed for CAP", c="msg", f="rss_channel", vars={"type": "cap"}),
+                M("Create RSS Feed for CMS", c="msg", f="rss_channel"),
+            ),
+            M("SMS Outbound Gateways", c="msg", f="sms_outbound_gateway")(
+                M("SMS Modem Channels", c="msg", f="sms_modem_channel"),
+                M("SMS SMTP Channels", c="msg", f="sms_smtp_channel"),
+                M("SMS WebAPI Channels", c="msg", f="sms_webapi_channel"),
+            ),
+            M("Mobile Commons Channels", c="msg", f="mcommons_channel"),
+            M("Twilio Channels", c="msg", f="twilio_channel"),
+            M("Twitter Channels", c="msg", f="twitter_channel"),
+            M("Parsers", c="msg", f="parser"),
+        ]
 
 # END =========================================================================

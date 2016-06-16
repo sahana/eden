@@ -90,27 +90,28 @@ def alert():
 
     def prep(r):
         from s3 import S3OptionsFilter
+        table = r.table
         itable = s3db.cap_info
+
         rows = db(itable.expires < request.utcnow).select(itable.id,
                                                           orderby=itable.id)
-        if rows:
-            expired_ids = ",".join([str(row.id) for row in rows])
-        else:
-            expired_ids = "*"
+        expired_ids = ",".join([str(row.id) for row in rows]) or None
+
         rows = db(itable.expires >= request.utcnow).select(itable.id,
                                                            orderby=itable.id)
-        if rows:
-            unexpired_ids = ",".join([str(row.id) for row in rows])
-        else:
-            unexpired_ids = "*"
+        unexpired_ids = default_filter = ",".join([str(row.id) for row in rows]) or None
 
-        if unexpired_ids == "*":
-            default_filter = None
-        else:
-            default_filter = unexpired_ids
+        rows = db(table.external == True).select(table.id,
+                                                 orderby=table.id)
+        external_alerts = ",".join([str(row.id) for row in rows]) or None
+
+        rows = db(table.external != True).select(table.id,
+                                                 orderby=table.id)
+        internal_alerts = default_alert = ",".join([str(row.id) for row in rows]) or None
 
         filter_widgets = s3db.get_config(tablename, "filter_widgets")
-        filter_widgets.insert(0, S3OptionsFilter("info.id",
+        filter_widgets_insert = filter_widgets.insert
+        filter_widgets_insert(0, S3OptionsFilter("info.id",
                                                  label = T("Expiration"),
                                                  options = OrderedDict(
                                                         [(expired_ids, T("Expired")),
@@ -121,13 +122,24 @@ def alert():
                                                  multiple = False,
                                                  default = default_filter,
                                                  ))
+        filter_widgets_insert(1, S3OptionsFilter("id",
+                                                 label = T("Source"),
+                                                 options = OrderedDict(
+                                                        [(internal_alerts, T("Internal")),
+                                                         (external_alerts, T("External")),
+                                                         ("*", T("All")),
+                                                         ]),
+                                                 cols = 3,
+                                                 multiple = False,
+                                                 default = default_alert,
+                                                 ))
         # No need to put them back - the edit happens in-place
         #s3db.configure(tablename,
         #               filter_widgets = filter_widgets,
         #               )
         representation = r.representation
-        if representation == "html"  or representation == "aadata":
-            r.table.msg_type.represent = None
+        if representation in ("html", "aadata"):
+            table.msg_type.represent = None
 
         elif representation == "dl":
             # DataList: match list_layout
@@ -189,7 +201,6 @@ def alert():
         #                   )
 
         if r.id:
-            atable = r.table
 
             if r.record.is_template:
                 redirect(URL(c="cap", f="template",
@@ -199,29 +210,25 @@ def alert():
             # Don't show event_type_id and template once created
             # If the user used the wrong event type,
             # then they should "Cancel" that alert and start a new one
-            atable.event_type_id.readable = False
-            atable.event_type_id.writable = False
-            atable.template_id.readable = False
-            atable.template_id.writable = False
+            table.event_type_id.readable = False
+            table.event_type_id.writable = False
+            table.template_id.readable = False
+            table.template_id.writable = False
 
             if r.record.approved_by is not None:
                 # Once approved, don't allow to edit
                 # Don't allow to delete
                 s3db.configure(tablename,
-                               editable = False,
                                deletable = False,
+                               editable = False,                               
                                insertable = False,
                                )
             if r.record.reference is not None:
-                # Don't show template_id for Updated/Cancelled/Error/Relay Alert
-                atable.template_id.readable = False
-                atable.template_id.writable = False
-                atable.msg_type.writable = False
+                table.msg_type.writable = False
 
             if settings.get_cap_restrict_fields():
                 if r.record.msg_type in ("Update", "Cancel", "Error"):
                     # Use case for change in msg_type
-                    atable = r.table
                     for f in ("template_id",
                               "sender",
                               "status",
@@ -235,13 +242,14 @@ def alert():
                               "reference",
                               "incidents",
                               ):
-                        atable[f].writable = False
+                        table[f].writable = False
         else:
-            r.resource.add_filter(r.table.is_template == False)
+            r.resource.add_filter(table.is_template == False)
             s3.formats["cap"] = r.url() # .have added by JS
 
         if r.interactive:
-
+            # Internal Alerts
+            table.external.default = False
             if not r.component:
                 if r.get_vars["~.approved_by__ne"] == "None":
                     s3.crud_strings["cap_alert"].title_list = T("Approved Alerts")
@@ -261,11 +269,50 @@ def alert():
                                    insertable = False,
                                    list_fields = list_fields,
                                    )
+                elif r.get_vars["~.external"] == "True":
+                    query = (table.id == itable.alert_id) & \
+                            (table.external == True) & \
+                            (table.is_template != True) & \
+                            (table.deleted != True)
+                    rows = db(query).select(itable.sender_name,
+                                            groupby=itable.sender_name)
+                    sender_options = {}
+                    from s3 import s3_str
+                    for row in rows:
+                        sender_name = row.sender_name
+                        sender_options[sender_name] = s3_str(T(sender_name))
+
+                    rows = db(query).select(itable.event_type_id,
+                                            groupby=itable.event_type_id)
+                    event_type_options = {}
+                    for row in rows:
+                        event_type_id = row.event_type_id
+                        event_type_options[event_type_id] = itable.event_type_id.represent(event_type_id)
+                    filter_widgets = [
+                        S3OptionsFilter("info.sender_name",
+                                        label = T("Sender"),
+                                        options = sender_options,
+                                        ),
+                        S3OptionsFilter("info.event_type_id",
+                                        options = event_type_options,
+                                        ),
+                        ]
+                    s3.crud_strings["cap_alert"].title_list = T("Alerts Hub")
+                    s3base.S3CRUD.action_buttons(r, deletable=False)
+                    profile_button = {"url": URL(args=["[id]", "profile"]),
+                                      "_class": "action-btn",
+                                      "_target": "_blank",
+                                      "label": str(T("View Profile"))
+                                      }
+                    s3.actions.insert(1, profile_button)
+
+                    s3db.configure(tablename,
+                                   filter_widgets = filter_widgets,
+                                   )
 
                 if r.method == "review":
                     alert_id = r.id
                     if alert_id:
-                        itable = s3db.cap_info
                         artable = s3db.cap_area
                         irow = db(itable.alert_id == alert_id).select(itable.id,
                                                                       limitby=(0, 1)).first()
@@ -328,7 +375,6 @@ def alert():
 
                     # Info
                     # @ToDo: handle multiple languages
-                    itable = s3db.cap_info
                     info = db(itable.alert_id == alert_id).select(itable.id,
                                                                   itable.language,
                                                                   itable.category,
@@ -423,256 +469,142 @@ def alert():
                                       bbox = bbox,
                                       )
 
-                    table = r.table
-
-                    def custom_widget_fn_1(r, **attr):
-                        fn_1 = DIV()
-                        fn_1_append = fn_1.append
-                        if info.headline:
-                            fn_1_append(DIV(SPAN("%s :: " % T("Headline"),
-                                                 _class="cap-label upper"
-                                            ),
-                                            SPAN(info.headline,
-                                                 _class="cap-value"
-                                                 ),
-                                            ))
-                        if info.description:
-                            fn_1_append(DIV(SPAN("%s :: " % T("Description"),
-                                                 _class="cap-label upper"
-                                                 ),
-                                            SPAN(info.description,
-                                                 _class="cap-value"
-                                                 )
-                                            ))
-                        if info.response_type:
-                            fn_1_append(DIV(SPAN("%s :: " % T("Response Type"),
-                                                 _class="cap-label upper"
-                                                 ),
-                                            SPAN(" ".join(info.response_type),
-                                                 _class="cap-strong"
-                                                 ),
-                                            ))
-                        if info.instruction:
-                            fn_1_append(DIV(SPAN("%s :: " % T("Instructions"),
-                                                 _class="cap-label upper"
-                                                 ),
-                                            SPAN(info.instruction,
-                                                 _class="cap-value"
-                                                 ),
-                                            ))
-                        return fn_1
-
-                    custom_widget_1 = dict(type = "custom",
-                                           fn = custom_widget_fn_1,
-                                           )
-
-                    def custom_widget_fn_2(r, **attr):
-                        fn_2 = DIV(DIV(SPAN("%s " % T("Information"),
-                                            _class="cap-value upper"
-                                            ),
-                                       SPAN("%s :: " % T("Event"),
-                                            _class="cap-label upper"
-                                            ),
-                                       SPAN(itable.event_type_id.represent(info.event_type_id),
-                                            _class="cap-strong"
-                                            ),
-                                       ),
-                                   DIV(_class="cap-label underline"
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Language"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.language.represent(info.language),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Urgency"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.urgency.represent(info.urgency),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Severity"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.severity.represent(info.severity),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Certainty"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.certainty.represent(info.certainty),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Effective Date"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.effective.represent(info.effective),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Onset Date"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.onset.represent(info.onset),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Expiry Date"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(itable.expires.represent(info.expires),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Information URL"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(info.web,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Contact Info"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(info.contact,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   )
-                        fn_2_insert = fn_2.insert
-                        if info.category:
-                            fn_2_insert(3, DIV(SPAN("%s :: " % T("Category"),
-                                                    _class="cap-label"
-                                                    ),
-                                               SPAN(itable.category.represent(info.category),
-                                                    _class="cap-value"
-                                                    )
-                                               ))
-                        if info.audience:
-                            fn_2_insert(7, DIV(SPAN("%s :: " % T("Audience"),
-                                                    _class="cap-label"
-                                                    ),
-                                               SPAN(info.audience,
-                                                    _class="cap-value"
-                                                    )
-                                               ))
-                        if info.sender_name:
-                            fn_2_insert(11, DIV(SPAN("%s :: " % T("Sender"),
-                                                     _class="cap-label"
-                                                     ),
-                                                SPAN(info.sender_name,
-                                                     _class="cap-value"
-                                                     )
-                                                ))
+                    widget = s3db.cap_AlertProfileWidget
+                    component = widget.component
+    
+                    @widget(None)
+                    def alert_widget(r, **attr):
+                        return (
+                          component("Headline", info.headline,
+                                    uppercase = True,
+                                    headline = True,
+                                    ),
+                          component("Description", info.description,
+                                    uppercase = True,
+                                    ),
+                          component("Response Type", ", ".join(info.response_type)
+                                    if info.response_type else None,
+                                    uppercase = True,
+                                    strong = True,
+                                    hide_empty = True,
+                                    ),
+                          component("Instructions", info.instruction,
+                                    uppercase = True,
+                                    ),
+                        )
+    
+                    @widget("Information",
+                            label = "Event",
+                            value = itable.event_type_id.represent(info.event_type_id),
+                            )
+                    def info_widget(r, **attr):
+    
                         if len(parameters):
-                            parameter_text = []
-                            for parameter in parameters:
-                                para = "%s: %s" % (parameter.name, parameter.value)
-                                parameter_text.append(para)
-                            
-                            fn_2.append(DIV(SPAN("%s :: " % T("Parameters"),
-                                                 _class="cap-label"
-                                                 ),
-                                            SPAN(", ".join(parameter_text),
-                                                 _class="cap-value"
-                                                 )
-                                            ))
-                            
-                        return fn_2
-
-                    custom_widget_2 = dict(type = "custom",
-                                           fn = custom_widget_fn_2,
-                                           )
-
-                    def custom_widget_fn_3(r, **attr):
-                        fn_3 =  DIV(DIV(SPAN(T("Alert Qualifiers"),
-                                             _class="cap-value upper"
-                                             ),
-                                        ),
-                                   DIV(_class="underline"
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Sender ID"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(record.sender,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Sent Date/Time"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(table.sent.represent(record.sent),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Message Status"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(table.status.represent(record.status),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Message Type"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(record.msg_type,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Scope"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(record.scope,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Note"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(record.note,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Reference ID"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(record.reference,
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   DIV(SPAN("%s :: " % T("Incident IDs"),
-                                            _class="cap-label"
-                                            ),
-                                       SPAN(table.incidents.represent(record.incidents),
-                                            _class="cap-value"
-                                            ),
-                                       ),
-                                   )
-                        if record.codes:
-                            fn_3.insert(7, DIV(SPAN("%s :: " % T("Handling Code"),
-                                                    _class="cap-label"
-                                                    ),
-                                               SPAN(table.codes.represent(record.codes),
-                                                    _class="cap-value"
-                                                    ),
-                                               ))
-                        return fn_3
-
-                    custom_widget_3 = dict(type = "custom",
-                                           fn = custom_widget_fn_3,
-                                           )
-
+                            params = ", ".join("%s: %s" % (p.name, p.value)
+                                               for p in parameters)
+                        else:
+                            params = None
+    
+                        return (
+                            component("Language",
+                                      info.language,
+                                      represent = itable.language.represent,
+                                      ),
+                            component("Category",
+                                      info.category,
+                                      represent = itable.category.represent,
+                                      ),
+                            component("Urgency",
+                                      info.urgency,
+                                      represent = itable.urgency.represent,
+                                      ),
+                            component("Severity",
+                                      info.severity,
+                                      represent = itable.severity.represent,
+                                      ),
+                            component("Certainty",
+                                      info.certainty,
+                                      represent = itable.certainty.represent,
+                                      ),
+                            component("Audience",
+                                      info.audience,
+                                      ),
+                            component("Effective Date",
+                                      info.effective,
+                                      represent = itable.effective.represent,
+                                      ),
+                            component("Onset Date",
+                                      info.onset,
+                                      represent = itable.onset.represent,
+                                      ),
+                            component("Expiry Date",
+                                      info.expires,
+                                      represent = itable.expires.represent,
+                                      ),
+                            component("Information URL",
+                                      info.web,
+                                      ),
+                            component("Sender",
+                                      info.sender_name,
+                                      ),
+                            component("Contact Info",
+                                      info.contact,
+                                      ),
+                            component("Parameters",
+                                      params,
+                                      ),
+                        )
+    
+                    @widget("Alert Qualifiers")
+                    def qualifiers_widget(r, **attr):
+    
+                        return (
+                            component("Sender ID",
+                                      record.sender,
+                                      ),
+                            component("Sent Date/Time",
+                                      record.sent,
+                                      represent = table.sent.represent,
+                                      ),
+                            component("Message Status",
+                                      record.status,
+                                      represent = table.status.represent,
+                                      ),
+                            component("Message Type",
+                                      record.msg_type,
+                                      ),
+                            component("Handling Code",
+                                      record.codes,
+                                      represent = table.codes.represent,
+                                      ),
+                            component("Scope",
+                                      record.scope,
+                                      ),
+                            component("Note",
+                                      record.note,
+                                      ),
+                            component("Reference ID",
+                                      record.reference,
+                                      ),
+                            component("Incident IDs",
+                                      record.incidents,
+                                      represent = table.incidents.represent,
+                                      ),
+                        )
+    
                     s3db.configure(tablename,
                                    profile_header = profile_header,
                                    profile_layers = (layer,),
-                                   profile_widgets = (custom_widget_1,
+                                   profile_widgets = ({"type": "custom",
+                                                       "fn": alert_widget,
+                                                       },
                                                       map_widget,
-                                                      custom_widget_2,
-                                                      custom_widget_3,
+                                                      {"type": "custom",
+                                                       "fn": info_widget,
+                                                       },
+                                                      {"type": "custom",
+                                                       "fn": qualifiers_widget,
+                                                       },
                                                       ),
                                    )
 
@@ -699,19 +631,18 @@ def alert():
                                               ),)
 
             elif r.component_name == "info":
-                itable = r.component.table
                 # Do not show this as overwritten in onaccept
                 itable.web.readable = False
                 itable.web.writable = False
 
                 alert_id = request.args(0)
+
                 # Check for prepopulate
                 if alert_id:
-                    atable = r.table
                     itable.web.default = settings.get_base_public_url()+\
                                          URL(c="cap", f="alert", args=alert_id)
-                    row = db(atable.id == alert_id).select(atable.event_type_id,
-                                                           limitby=(0, 1)).first()
+                    row = db(table.id == alert_id).select(table.event_type_id,
+                                                          limitby=(0, 1)).first()
                     itable.event_type_id.default = row.event_type_id
 
                 if r.record.approved_by is not None:
@@ -787,7 +718,6 @@ def alert():
                 tid = post_vars["template_id"]
                 if tid:
                     # Read template and copy locked fields to post_vars
-                    table = db.cap_alert
                     template = db(table.id == tid).select(table.template_settings,
                                                           limitby=(0, 1)).first()
                     try:
@@ -895,6 +825,15 @@ def alert():
                 r.next = URL(c="cap", f="alert", args=[lastid, "info", "create"])
 
         if r.interactive:
+            if not r.component and not r.method:
+                s3_action_buttons(r, read_url=URL(args="[id]"))
+                profile_button = {"url": URL(args=["[id]", "profile"]),
+                                  "_class": "action-btn",
+                                  "_target": "_blank",
+                                  "label": str(T("View Profile"))
+                                  }
+                s3.actions.insert(1, profile_button)
+
             if get_vars.get("_next"):
                 r.next = get_vars.get("_next")
 

@@ -56,7 +56,7 @@ class index(S3CustomController):
                               "id"        : "search_results",
                               "layer_id"  : layer_id,
                               # @ToDo: Make the filter update timestamp on refresh in the client side
-                              "filter"    : "~.info.expires__gt=%s" % request.utcnow,
+                              "filter"    : "~.info.expires__gt=%s&~.external__ne=True" % request.utcnow,
                               # We activate in callback after ensuring URL is updated for current filter status
                               "active"    : False,
                               }]
@@ -81,6 +81,8 @@ class index(S3CustomController):
             resource.add_filter(FS("scope") == "Public")
         # Only show Alerts which haven't expired
         resource.add_filter(FS("info.expires") >= request.utcnow)
+        # Only show locally generated Alerts
+        resource.add_filter(FS("external") != True)
         # Change representation
         resource.table.status.represent = None
         list_id = "cap_alert_datalist"
@@ -110,7 +112,11 @@ class index(S3CustomController):
         if numrows == 0:
             current.response.s3.crud_strings["cap_alert"].msg_no_match = T("No Current Alerts match these filters.")
 
-        ajax_url = URL(c="cap", f=fn, args="datalist.dl", vars={"list_id": list_id})
+        ajax_url = URL(c="cap", f=fn, args="datalist.dl",
+                       vars={"list_id": list_id,
+                             "info.expires__gt": request.utcnow,
+                             "~.approved_by__ne": None,
+                             "~.external__ne": True})
         #@ToDo: Implement pagination properly
         output[list_id] = datalist.html(ajaxurl = ajax_url,
                                         pagesize = 0,
@@ -1109,7 +1115,9 @@ $('#method_selector').change(function(){
             if filter[0] == "priority__belongs":
                 filter[0] = "info.priority__belongs"
         scope_filter = ["scope__belongs", "Public,Restricted"]
+        system_alert_filter = ["external__ne", "True"]
         filters.append(scope_filter)
+        filter.append(system_alert_filter)
         filters = json.dumps(filters)
 
         if not filter_id:
@@ -1245,7 +1253,9 @@ $('#method_selector').change(function(){
             if filter[0] == "priority__belongs":
                 filter[0] = "info.priority__belongs"
         scope_filter = ["scope__belongs", "Public,Restricted"]
+        system_alert_filter = ["external__ne", "True"]
         filters.append(scope_filter)
+        filters.append(system_alert_filter)
 
         filters_ = [filter for filter in filters
                     if filter[0] != "id__belongs"]

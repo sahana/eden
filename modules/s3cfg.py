@@ -2441,6 +2441,13 @@ class S3Config(Storage):
 
         return self.cap.get("same_code")
 
+    def get_cap_post_to_facebook(self):
+        """
+            Whether to post the alerts in facebook
+        """
+
+        return self.cap.get("post_to_facebook", False)
+
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #
