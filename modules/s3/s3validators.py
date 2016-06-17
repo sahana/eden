@@ -3267,7 +3267,8 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                  select = DEFAULT,
                  sort = False,
                  translate = False,
-                 zero = ""):
+                 zero = "",
+                 ):
         """
             Constructor
 
@@ -3282,6 +3283,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                               explicit select=None)
             @param zero: use this label for the empty-option (default="")
         """
+
         super(IS_ISO639_2_LANGUAGE_CODE, self).__init__(
                                                 self.language_codes(),
                                                 error_message = error_message,
@@ -3368,7 +3370,7 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
               no 'families' or Old
         """
 
-        return [#("aar", "Afar"),
+        lang = [#("aar", "Afar"),
                 ("aa", "Afar"),
                 #("abk", "Abkhazian"),
                 ("ab", "Abkhazian"),
@@ -4039,6 +4041,12 @@ class IS_ISO639_2_LANGUAGE_CODE(IS_IN_SET):
                 ("zun", "Zuni"),
                 #("zxx", "No linguistic content; Not applicable"),
                 ("zza", "Zaza; Dimili; Dimli; Kirdki; Kirmanjki; Zazaki"),
-                 ]
+                ]
+
+        extra_codes = current.deployment_settings.get_L10n_extra_codes()
+        if extra_codes:
+            lang += extra_codes
+
+        return lang
 
 # END =========================================================================

@@ -280,10 +280,6 @@ cap_info_certainty_opts = OrderedDict([
     ("Unknown", T("Certainty unknown")),
 ])
 
-# CAP info language complete list
-represent_languages = IS_ISO639_2_LANGUAGE_CODE.language_codes()
-represent_languages.append(("en-US", "English"))
-
 # =============================================================================
 class S3CAPModel(S3Model):
     """
@@ -773,7 +769,8 @@ $.filterOptionsS3({
 
         # ---------------------------------------------------------------------
         # CAP info segment
-        languages = settings.get_cap_languages()
+        settings.L10n.extra_codes = [("en-US", "English"),
+                                     ]
         tablename = "cap_info"
         define_table(tablename,
                      alert_id(),
@@ -799,8 +796,10 @@ $.filterOptionsS3({
                      Field("language",
                            default = "en-US",
                            label = T("Language"),
-                           represent = S3Represent(options = dict(represent_languages)),
-                           requires = IS_IN_SET(languages),
+                           represent = IS_ISO639_2_LANGUAGE_CODE.represent_local,
+                           requires = IS_ISO639_2_LANGUAGE_CODE(select = settings.get_cap_languages(),
+                                                                translate = True,
+                                                                ),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the language of the information"),
                                                            T("Code Values: Natural language identifier per [RFC 3066]. If not present, an implicit default value of 'en-US' will be assumed. Edit settings.cap.languages in 000_config.py to add more languages. See <a href=\"%s\">here</a> for a full list.") % "http://www.i18nguy.com/unicode/language-identifiers.html")),
@@ -1821,15 +1820,7 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
 
             if not form_vars.get("category"):
                 form.errors["category"] = \
-                    current.T("Atleast one category is required.")
-
-        alert_id = form.vars.get("alert_id", None)
-        atable = current.s3db.cap_alert
-        alert = current.db(atable.id == alert_id).select(atable.external,
-                                                         limitby=(0, 1)).first()
-        if alert and alert.external:
-            # Not internal alerts
-            current.s3db.cap_info.language.requires = IS_IN_SET(dict(represent_languages))
+                    current.T("At least one category is required.")
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2402,7 +2393,8 @@ class S3CAPHistoryModel(S3Model):
 
         # ---------------------------------------------------------------------
         # CAP Info History Table
-        languages = settings.get_cap_languages()
+        settings.L10n.extra_codes = [("en-US", "English"),
+                                     ]
         tablename = "cap_info_history"
         define_table(tablename,
                      alert_history_id(readable = False,
@@ -2410,8 +2402,10 @@ class S3CAPHistoryModel(S3Model):
                                       ),
                      Field("language",
                            label = T("Language"),
-                           represent = S3Represent(options = dict(represent_languages)),
-                           requires = IS_IN_SET(languages),
+                           represent = IS_ISO639_2_LANGUAGE_CODE.represent_local,
+                           requires = IS_ISO639_2_LANGUAGE_CODE(select = settings.get_cap_languages(),
+                                                                translate = True,
+                                                                ),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the language of the information"),
                                                            T("Code Values: Natural language identifier per [RFC 3066]. If not present, an implicit default value of 'en-US' will be assumed. Edit settings.cap.languages in 000_config.py to add more languages. See <a href=\"%s\">here</a> for a full list.") % "http://www.i18nguy.com/unicode/language-identifiers.html")),
@@ -2937,7 +2931,6 @@ class S3CAPAreaNameModel(S3Model):
     def model(self):
 
         T = current.T
-        l10n_languages = current.deployment_settings.get_L10n_languages()
 
         # ---------------------------------------------------------------------
         # Local Names
@@ -2949,9 +2942,10 @@ class S3CAPAreaNameModel(S3Model):
                                            ),
                           Field("language",
                                 label = T("Language"),
-                                represent = lambda opt: l10n_languages.get(opt,
-                                                current.messages.UNKNOWN_OPT),
-                                requires = IS_ISO639_2_LANGUAGE_CODE(),
+                                represent = IS_ISO639_2_LANGUAGE_CODE.represent_local,
+                                requires = IS_ISO639_2_LANGUAGE_CODE(select = current.deployment_settings.get_cap_languages(),
+                                                                     translate = True,
+                                                                     ),
                                 ),
                           Field("name_l10n",
                                 label = T("Local Name"),

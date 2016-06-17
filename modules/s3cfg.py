@@ -1419,6 +1419,13 @@ class S3Config(Storage):
     def get_L10n_display_toolbar(self):
         return self.L10n.get("display_toolbar", True)
 
+    def get_L10n_extra_codes(self):
+        """
+            Extra codes for IS_ISO639_2_LANGUAGE_CODE
+            e.g. CAP needs to add "en-US"
+        """
+        return self.L10n.get("extra_codes", None)
+
     def get_L10n_languages(self):
         return self.L10n.get("languages")
 
