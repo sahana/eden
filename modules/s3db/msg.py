@@ -606,6 +606,7 @@ class S3EmailModel(S3ChannelModel):
                      Field("password", "password", length=64,
                            readable = False,
                            requires = IS_NOT_EMPTY(),
+                           widget = S3PasswordWidget(),
                            ),
                      # Set true to delete messages from the remote
                      # inbox after fetching them.
@@ -737,6 +738,7 @@ class S3FacebookModel(S3ChannelModel):
                      Field("app_secret", "password", length=64,
                            readable = False,
                            requires = IS_NOT_EMPTY(),
+                           widget = S3PasswordWidget(),
                            ),
                      # Optional
                      Field("page_id", "bigint",
@@ -873,6 +875,7 @@ class S3MCommonsModel(S3ChannelModel):
                      Field("password", "password",
                            readable = False,
                            requires = IS_NOT_EMPTY(),
+                           widget = S3PasswordWidget(),
                            ),
                      Field("query"),
                      Field("timestmp", "datetime",
@@ -1639,7 +1642,10 @@ class S3SMSOutboundModel(S3Model):
                            ),
                      # If using HTTP Auth (e.g. Mobile Commons)
                      Field("username"),
-                     Field("password"),
+                     Field("password", "password",
+                           readable = False,
+                           widget = S3PasswordWidget(),
+                           ),
                      Field("enabled", "boolean",
                            default = True,
                            ),
@@ -1762,6 +1768,7 @@ class S3TwilioModel(S3ChannelModel):
                      Field("auth_token", "password", length=64,
                            readable = False,
                            requires = IS_NOT_EMPTY(),
+                           widget = S3PasswordWidget(),
                            ),
                      *s3_meta_fields())
 
@@ -1844,18 +1851,22 @@ class S3TwitterModel(S3Model):
                      # Get these from https://apps.twitter.com
                      Field("consumer_key", "password",
                            label = T("Consumer Key"),
+                           readable = False,
                            widget = password_widget,
                            ),
                      Field("consumer_secret", "password",
                            label = T("Consumer Secret"),
+                           readable = False,
                            widget = password_widget,
                            ),
                      Field("access_token", "password",
                            label = T("Access Token"),
+                           readable = False,
                            widget = password_widget,
                            ),
                      Field("access_token_secret", "password",
                            label = T("Access Token Secret"),
+                           readable = False,
                            widget = password_widget,
                            ),
                      *s3_meta_fields())
