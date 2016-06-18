@@ -200,13 +200,19 @@ def alert():
         #                   xml_post_parse = s3db.cap_gis_location_xml_post_parse,
         #                   xml_post_render = s3db.cap_gis_location_xml_post_render,
         #                   )
-
+        record = r.record
         if r.id:
 
-            if r.record.is_template:
+            if record.is_template:
                 redirect(URL(c="cap", f="template",
                              args = request.args,
                              vars = request.vars))
+
+            if record.external != True:
+                table.addresses.represent = S3Represent(lookup = "pr_group",
+                                                        fields = ["name"],
+                                                        multiple = True,
+                                                        )
 
             # Don't show event_type_id and template once created
             # If the user used the wrong event type,
@@ -216,7 +222,7 @@ def alert():
             table.template_id.readable = False
             table.template_id.writable = False
 
-            if r.record.approved_by is not None:
+            if record.approved_by is not None:
                 # Once approved, don't allow to edit
                 # Don't allow to delete
                 s3db.configure(tablename,
@@ -224,11 +230,11 @@ def alert():
                                editable = False,                               
                                insertable = False,
                                )
-            if r.record.reference is not None:
+            if record.reference is not None:
                 table.msg_type.writable = False
 
             if settings.get_cap_restrict_fields():
-                if r.record.msg_type in ("Update", "Cancel", "Error"):
+                if record.msg_type in ("Update", "Cancel", "Error"):
                     # Use case for change in msg_type
                     for f in ("template_id",
                               "sender",
@@ -308,7 +314,10 @@ def alert():
                     s3.actions.insert(1, profile_button)
 
                     s3db.configure(tablename,
+                                   deletable = False,
+                                   editable = False,
                                    filter_widgets = filter_widgets,
+                                   insertable = False,                                  
                                    )
 
                 if r.method == "review":
@@ -351,7 +360,6 @@ def alert():
                     current.menu.options = None
 
                     # Header
-                    record = r.record
                     profile_header = DIV(SPAN(SPAN("%s :: " % T("Message ID"),
                                                    _class="cap-label upper"
                                                    ),
@@ -632,6 +640,14 @@ def alert():
                                               ),)
 
             elif r.component_name == "info":
+                # Filter the langauge options
+                itable.language.requires = IS_ISO639_2_LANGUAGE_CODE(\
+                                            zero=None,
+                                            translate=True,
+                                            select=settings.get_cap_languages())
+                itable.language.comment = DIV(_class="tooltip",
+                                              _title="%s|%s" % (T("Denotes the language of the information"),
+                                                                T("Code Values: Natural language identifier per [RFC 3066]. If not present, an implicit default value of 'en-US' will be assumed. Edit settings.cap.languages in 000_config.py to add more languages. See <a href=\"%s\">here</a> for a full list.") % "http://www.i18nguy.com/unicode/language-identifiers.html"))
                 # Do not show this as overwritten in onaccept
                 itable.web.readable = False
                 itable.web.writable = False
@@ -646,7 +662,7 @@ def alert():
                                                           limitby=(0, 1)).first()
                     itable.event_type_id.default = row.event_type_id
 
-                if r.record.approved_by is not None:
+                if record.approved_by is not None:
                     # Once approved, don't allow info segment to edit
                     # Don't allow to delete
                     s3db.configure("cap_info",
@@ -655,7 +671,7 @@ def alert():
                                    insertable = False,
                                    )
                 if settings.get_cap_restrict_fields():
-                    if r.record.msg_type in ("Update", "Cancel", "Error"):
+                    if record.msg_type in ("Update", "Cancel", "Error"):
                         # Use case for change in msg_type
                         for f in ("language",
                                   "category",
@@ -694,7 +710,7 @@ def alert():
                         cap_area_options = cap_AreaRowOptionsBuilder(r.id)
                         atable.name.represent = S3Represent(options=cap_area_options)
 
-                if r.record.approved_by is not None:
+                if record.approved_by is not None:
                     # Once approved, don't allow area segment to edit
                     # Don't allow to delete
                     s3db.configure("cap_area",
@@ -704,7 +720,7 @@ def alert():
                                    )
 
             elif r.component_name == "resource":
-                if r.record.approved_by is not None:
+                if record.approved_by is not None:
                     # Once approved, don't allow resource segment to edit
                     # Don't allow to delete
                     s3db.configure("cap_resource",

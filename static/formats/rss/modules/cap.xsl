@@ -24,7 +24,7 @@
                     </xsl:call-template>
                 </xsl:variable>
                 <xsl:choose>
-                	<xsl:when test="translate(data[@field='scope']/@value, '&quot;', '') = 'Public'">
+                    <xsl:when test="data[@field='scope'] = 'Public'">
                     	<xsl:value-of select="concat(../@url,'/cap/public/', $alert-id, '.cap')"/>
                 	</xsl:when>
                 	<xsl:otherwise>

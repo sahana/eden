@@ -87,6 +87,9 @@ def config(settings):
     # Whether to post alerts in facebook?
     settings.cap.post_to_facebook = True
 
+    # ALlow RSS to use links of entry if link fails
+    settings.cap.rss_use_links = True
+
     # -------------------------------------------------------------------------
     # L10n (Localization) settings
     languages = OrderedDict([

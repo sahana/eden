@@ -3,7 +3,7 @@
 <h1>{{=title}}</h1>
 <div class='subscribe-button'>
 {{fn = "alert" if current.auth.s3_logged_in() else "public"}}
-  <a href='/{{=appname}}/cap/{{=fn}}.rss' target='_blank'><i class='icon-rss'></i>{{=T("RSS Feeds")}}</a>
+  <a href='/{{=appname}}/cap/{{=fn}}.rss' target='_blank'><i class='fa fa-rss'></i>{{=T("RSS Feeds")}}</a>
 </div>
 <div class='large-3 columns'>
 <fieldset>

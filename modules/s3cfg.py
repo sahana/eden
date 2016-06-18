@@ -2456,6 +2456,12 @@ class S3Config(Storage):
 
         return self.cap.get("post_to_facebook", False)
 
+    def get_cap_rss_use_links(self):
+        """
+            Whether to use links of entry element if link fail
+        """
+        return self.cap.get("rss_use_links", False)
+
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #
