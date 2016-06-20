@@ -579,7 +579,7 @@ $.filterOptionsS3({
                   context = {"location": "location.location_id",
                              },
                   create_onaccept = self.cap_alert_create_onaccept,
-                  deduplicate = S3Duplicate(primary=("identifier")),
+                  deduplicate = S3Duplicate(primary=("identifier",)),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   list_layout = cap_alert_list_layout,
