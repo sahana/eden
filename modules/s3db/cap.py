@@ -371,7 +371,6 @@ $.filterOptionsS3({
                            requires = IS_MATCH('^[^,<&\s]+$',
                                                error_message=T("Cannot be empty and Must not include spaces, commas, or restricted characters (< and &).")),
                            # Dont Allow to change the identifier
-                           readable = True,
                            writable = False,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("A unique identifier of the alert message"),
@@ -771,6 +770,8 @@ $.filterOptionsS3({
         # ---------------------------------------------------------------------
         # CAP info segment
         settings.L10n.extra_codes = [("en-US", "English"),
+                                     ("en-CA", "Canadian English"),
+                                     ("fr-CA", "Canadian French"),
                                      ]
         tablename = "cap_info"
         define_table(tablename,
@@ -2401,8 +2402,7 @@ class S3CAPHistoryModel(S3Model):
                      Field("language",
                            label = T("Language"),
                            represent = IS_ISO639_2_LANGUAGE_CODE.represent_local,
-                           requires = IS_ISO639_2_LANGUAGE_CODE(select = settings.get_cap_languages(),
-                                                                translate = True,
+                           requires = IS_ISO639_2_LANGUAGE_CODE(translate = True,
                                                                 zero = None,
                                                                 ),
                            comment = DIV(_class="tooltip",

@@ -209,6 +209,7 @@ def alert():
                              vars = request.vars))
 
             if record.external != True:
+                from s3 import S3Represent
                 table.addresses.represent = S3Represent(lookup = "pr_group",
                                                         fields = ["name"],
                                                         multiple = True,

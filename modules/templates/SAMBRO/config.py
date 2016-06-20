@@ -229,11 +229,13 @@ def config(settings):
                                        ),
                                   dict(label=s3_str(T("Subscribe")),
                                        _class="action-btn",
-                                       url=URL(args=["[id]", "enable"]),
+                                       url=URL(args=["[id]", "enable"],
+                                               vars={"type": "cap"}),
                                        restrict = restrict_e),
                                   dict(label=s3_str(T("Unsubscribe")),
                                        _class="action-btn",
-                                       url = URL(args = ["[id]", "disable"]),
+                                       url = URL(args = ["[id]", "disable"],
+                                                 vars={"type": "cap"}),
                                        restrict = restrict_d),
                                    ]
 
@@ -241,7 +243,8 @@ def config(settings):
                         # No Scheduler Running
                         s3.actions += [dict(label=s3_str(T("Poll")),
                                             _class="action-btn",
-                                            url = URL(args = ["[id]", "poll"]),
+                                            url = URL(args = ["[id]", "poll"],
+                                                      vars={"type": "cap"}),
                                             restrict = restrict_d)
                                        ]
 
