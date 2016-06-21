@@ -1229,7 +1229,7 @@
                                     var startPoint = new OpenLayers.Geometry.Point(startX, startY);
                                     var endPoint = new OpenLayers.Geometry.Point(maxX, startY);
                                     var radius = new OpenLayers.Geometry.LineString([startPoint, endPoint]);
-                                    var lengthMeter = parseFloat(radius.getLength() * 0.001); // in kilometer
+                                    var lengthMeter = parseFloat(radius.getLength()); // in meter
                                     //var lengthMeter = parseFloat(radius.getGeodesicLength());
 
                                     // Store radius

@@ -94,11 +94,12 @@
                     <xsl:value-of select="cap:restriction" />
                 </data>
             </xsl:if>
-            <xsl:if test="cap:addresses!=''">
-                <data field="addresses"> <!-- further in python code -->
-                    <xsl:value-of select="cap:addresses" />
+            <!--@ToDo-->
+            <!--<xsl:if test="cap:addresses!=''">-->
+                <!--<data field="addresses">--> <!-- further in python code -->
+                    <!--<xsl:value-of select="cap:addresses" />
                 </data>
-            </xsl:if>
+            </xsl:if>-->
             <xsl:if test="cap:code!=''">
                 <data field="codes">
                     <xsl:attribute name="value">
@@ -406,12 +407,16 @@
                     <xsl:value-of select="cap:ceiling" />
                 </data>
             </xsl:if>
-            <xsl:apply-templates select="cap:polygon">
-                <xsl:with-param name="name" select="$areaDesc"/>
-            </xsl:apply-templates>
-            <xsl:apply-templates select="cap:circle">
-                <xsl:with-param name="name" select="$areaDesc"/>
-            </xsl:apply-templates>
+	     <xsl:if test="cap:polygon!=''">
+                 <xsl:apply-templates select="cap:polygon">
+		     <xsl:with-param name="name" select="$areaDesc"/>
+		 </xsl:apply-templates>
+	     </xsl:if>
+	     <xsl:if test="cap:circle!=''">
+	         <xsl:apply-templates select="cap:circle">
+	             <xsl:with-param name="name" select="$areaDesc"/>
+	         </xsl:apply-templates>
+	     </xsl:if>
             <xsl:apply-templates select="cap:geocode" />
         </resource>
     </xsl:template>
@@ -458,7 +463,7 @@
                     
                     <data field="radius">
                         <!-- Radius comes in as km, so convert to m -->
-                        <xsl:value-of select="number($radius) * 0.001"/>
+                        <xsl:value-of select="number($radius) * 1000"/>
                     </data>
                 </resource>
             </reference>
