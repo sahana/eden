@@ -260,6 +260,8 @@ def alert():
             table.external.default = False
             if not r.component:
                 if r.get_vars["~.approved_by__ne"] == "None":
+                    # Filter to internal alerts
+                    r.resource.add_filter(table.external != True)
                     s3.crud_strings["cap_alert"].title_list = T("Approved Alerts")
                     url = URL(c="cap", f="alert", args=["[id]", "profile"])
                     s3base.S3CRUD.action_buttons(r, deletable=False, editable=False,
@@ -322,6 +324,7 @@ def alert():
                                    )
 
                 if r.method == "review":
+                    r.resource.add_filter(table.external != True)
                     alert_id = r.id
                     if alert_id:
                         artable = s3db.cap_area

@@ -3795,53 +3795,69 @@ class CAPImportFeed(S3Method):
 
             title = T("Import from Feed URL")
 
-            # @ToDo: use Formstyle
-            form = FORM(
-                    TABLE(
-                        TR(TD(DIV(B("%s:" % T("URL")),
-                                  SPAN(" *", _class="req"))),
-                           TD(INPUT(_type="text", _name="url",
-                                    _id="url", _value="")),
-                           TD(),
-                           ),
-                        TR(TD(B("%s: " % T("User"))),
-                           TD(INPUT(_type="text", _name="user",
-                                    _id="user", _value="")),
-                           TD(),
-                           ),
-                        TR(TD(B("%s: " % T("Password"))),
-                           TD(INPUT(_type="text", _name="password",
-                                    _id="password", _value="")),
-                           TD(),
-                           ),
-                        TR(TD(B("%s: " % T("Ignore Errors?"))),
-                           TD(INPUT(_type="checkbox", _name="ignore_errors",
-                                    _id="ignore_errors")),
-                           TD(),
-                           ),
-                        TR(TD(),
-                           TD(INPUT(_type="submit", _value=T("Import"))),
-                           TD(),
-                           )
-                        )
-                    )
+            fields = [Field("url",
+                            label=T("URL"),
+                            requires=[IS_NOT_EMPTY(),
+                                      IS_URL(),
+                                      ],
+                            comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("URL of the alert"),
+                                                           T("The URL from which the alert should be imported!"))),
+                            ),
+                      Field("user",
+                            label=T("Username"),
+                            comment = DIV(_class="tooltip",
+                                          _title="%s|%s" % (T("Username"),
+                                                            T("Optional username for HTTP Basic Authentication."))),
+                            ),
+                      Field("password",
+                            label=T("Password"),
+                            widget = S3PasswordWidget(),
+                            comment = DIV(_class="tooltip",
+                                          _title="%s|%s" % (T("Password"),
+                                                            T("Optional password for HTTP Basic Authentication."))),
+                            ),
+                      Field("ignore_errors", "boolean",
+                            label=T("Ignore Errors?"),
+                            represent = s3_yes_no_represent,                            
+                            comment = DIV(_class="tooltip",
+                                          _title="%s|%s" % (T("Ignore Errors"),
+                                                            T("skip invalid record silently?"))),
+                            ),
+                      ]
+            labels, required = s3_mark_required(fields)
+            response.s3.has_required = required
+
+            response.form_label_separator = ""
+            form = SQLFORM.factory(formstyle = current.deployment_settings.get_ui_formstyle(),
+                                   submit_button = T("Import"),
+                                   labels = labels,
+                                   separator = "",
+                                   table_name = "import_alert", # Dummy table name
+                                   _id="importform",
+                                   *fields
+                                   )
 
             response.view = "create.html"
             output = dict(title=title,
                           form=form)
 
-            if form.accepts(r.post_vars, current.session):
+            if form.accepts(r.post_vars,
+                            current.session,
+                            formname="import_form"):
 
                 form_vars_get = form.vars.get
                 url = form_vars_get("url", None)
-                if not url:
-                    response.error = T("URL is required")
-                    return output
-                # @ToDo:
-                #username = form_vars_get("username", None)
-                #password = form_vars_get("password", None)
+                username = form_vars_get("user", None)
+                password = form_vars_get("password", None)
+
+                request = urllib2.Request(url)
+                if username and password:
+                    import base64
+                    base64string = base64.encodestring("%s:%s" % (username, password))
+                    request.add_header("Authorization", "Basic %s" % base64string)
                 try:
-                    file = fetch(url)
+                    file = urllib2.urlopen(request).read()
                 except urllib2.URLError:
                     response.error = str(sys.exc_info()[1])
                     return output
@@ -3852,16 +3868,11 @@ class CAPImportFeed(S3Method):
                 File = StringIO(file)
                 stylesheet = os.path.join(r.folder, "static", "formats",
                                           "cap", "import.xsl")
-                xml = current.xml
-                tree = xml.parse(File)
-
                 resource = current.s3db.resource("cap_alert")
-                s3xml = xml.transform(tree,
-                                      stylesheet_path = stylesheet,
-                                      name = resource.name)
                 try:
-                    resource.import_xml(s3xml,
-                                        ignore_errors = form_vars_get("ignore_errors", None))
+                    resource.import_xml(File,
+                                        stylesheet=stylesheet,
+                                        ignore_errors=form_vars_get("ignore_errors", False))
                 except:
                     response.error = str(sys.exc_info()[1])
                     return output

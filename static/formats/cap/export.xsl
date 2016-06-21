@@ -412,7 +412,7 @@
                 </xsl:variable>
                 <circle>
                     <!-- Convert radius from m to km -->
-                    <xsl:value-of select="concat($lat, ',', $lon, ' ', $radius * 1000)"/>
+                    <xsl:value-of select="concat($lat, ',', $lon, ' ', $radius * 0.001)"/>
                 </circle>
             </xsl:when>
             <xsl:when test="starts-with($wkt,'&#34;POLYGON')">
