@@ -14,7 +14,17 @@
                 <xsl:value-of select="./resource[@name='cap_info']/data[@field='headline']/text()"/>
             </title>
             <description>
-                <xsl:value-of select="./resource[@name='cap_info']/data[@field='description']/text()"/>
+                <xsl:if test="./resource[@name='cap_area']/data[@field='name']/text()">
+                    <strong>Alert Location: </strong><xsl:value-of select="./resource[@name='cap_area']/data[@field='name']/text()"/>
+                </xsl:if>
+                <br />
+                <xsl:if test="./resource[@name='cap_info']/data[@field='description']/text()">
+                    <strong>Alert Description: </strong><xsl:value-of select="./resource[@name='cap_info']/data[@field='description']/text()"/>
+                </xsl:if>
+                <br />
+                <xsl:if test="./resource[@name='cap_info']/data[@field='sender_name']/text()">
+                    <strong>Issued By: </strong><xsl:value-of select="./resource[@name='cap_info']/data[@field='sender_name']/text()"/>
+                </xsl:if>                
             </description>
             <link>
             	<!--alert-id substring after last character "/" --> 
@@ -34,7 +44,7 @@
             	</xsl:choose>
             </link>
             <pubDate>
-                <xsl:value-of select="./data[@field='sent']/@value"/>
+                <xsl:value-of select="./data[@field='sent']/text()"/>
             </pubDate>
             <category>
                 <xsl:value-of select="./resource[@name='cap_info']/data[@field='category']/text()"/>
