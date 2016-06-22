@@ -8,7 +8,8 @@
     <!-- cap_info -->
     <!-- @ToDo: Handle multiple info -->
     <xsl:template match="resource[@name='cap_alert']" mode="contents">
-        <xsl:if test="./data[@field='is_template' and @value='false'] or ./data[@field='external' and @value='false']">
+        <!-- filter non-template internal alerts that are approved -->
+        <xsl:if test="./data[@field='is_template' and @value='false'] and ./data[@field='external' and @value='false'] and ./data[@field='approved_on']">
             <title>
                 <xsl:value-of select="./resource[@name='cap_info']/data[@field='headline']/text()"/>
             </title>
