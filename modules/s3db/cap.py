@@ -4240,6 +4240,7 @@ def clone(r, record=None, **attr):
         alert_row_clone["msg_type"] = msg_type
         alert_row_clone["sent"] = current.request.utcnow
         alert_row_clone["external"] = False
+        alert_row_clone["approved_on"] = None
         alert_row_clone["reference"] = ("%s,%s,%s") % (alert_row.sender,
                                                        alert_row.identifier,
                                 str(s3_utc(alert_row.sent)).replace(" ", "T"),
