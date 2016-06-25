@@ -250,6 +250,12 @@ class S3DeploymentModel(S3Model):
                   create_next = profile,
                   delete_next = URL(c="deploy", f="mission", args="summary"),
                   create_onaccept = self.deploy_mission_create_onaccept,
+                  list_fields = ["name",
+                                 "date",
+                                 "location_id",
+                                 "event_type_id",
+                                 "status",
+                                 ],
                   orderby = "deploy_mission.date desc",
                   profile_cols = 1,
                   profile_header = lambda r: \
