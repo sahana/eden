@@ -3102,9 +3102,10 @@ def cap_rheader(r):
                                 # For Alert Approver
                                 if has_permission("approve", "cap_alert"):
                                     action_btn = A(T("Review Alert"),
-                                                   _href = URL(args = [record.id,
-                                                                       "review"
-                                                                       ],
+                                                   _href = URL(f = "notify_approver",
+                                                               vars = {"cap_alert.id": record.id,
+                                                                       "options": "review",
+                                                                       },
                                                                ),
                                                    _class = "action-btn",
                                                    )

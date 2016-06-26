@@ -1265,8 +1265,9 @@ def notify_approver():
                 for user_id in user_ids:
                     pe_append(user_pe_id(int(user_id)))
                 subject = "%s: Alert Approval Required" % settings.get_system_name_short()
+                review_url = URL(c="cap", f="alert", args=[alert_id, "review"])
                 url = "%s%s" % (settings.get_base_public_url(),
-                                URL(c="cap", f="alert", args=[alert_id, "review"]))
+                                review_url)
                 message = "You are requested to take action on this alert:\n\n%s" % url
                 msg.send_by_pe_id(pe_ids, subject, message)
                 try:
@@ -1274,6 +1275,8 @@ def notify_approver():
                 except ValueError:
                     current.log.error("No SMS Handler defined!")
                 session.confirmation = T("Alert Approval Notified")
+                if get_vars.get("options") == "review":
+                    redirect(review_url)
         else:
             session.error = T("Alert already approved")
 
