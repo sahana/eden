@@ -115,7 +115,7 @@ def config(settings):
     settings.L10n.translate_cap_area = True
 
     # Date Format
-    settings.L10n.date_format = "%a, %d %B %Y"
+    #settings.L10n.date_format = "%a, %d %B %Y"
 
     # Time Format
     settings.L10n.time_format = "%H:%M:%S"
