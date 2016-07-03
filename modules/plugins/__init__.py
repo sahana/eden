@@ -153,9 +153,15 @@ class PluginLoader(object):
         except (ImportError, AttributeError):
             # This may not be a plugin at all => remove from registry
             if new:
-                log.debug("Skipping invalid plugin '%s'" % name)
+                log.debug("Plugin '%s' not found" % name)
             registry.pop(name, None)
             return False
+        except SyntaxError:
+            if new:
+                log.error("Skipping invalid plugin '%s'" % name)
+            if current.response.s3.debug:
+                raise
+            version, status = "invalid", False
 
         if version is None:
             # Update version info if plugin has been reloaded
@@ -164,7 +170,7 @@ class PluginLoader(object):
             except (ImportError, AttributeError):
                 version = "unknown"
 
-        if not callable(setup):
+        if status and not callable(setup):
             # Is a module => find setup function
             try:
                 setup = setup.setup
@@ -182,6 +188,8 @@ class PluginLoader(object):
                 setup()
             except Exception:
                 log.error("Plugin '%s' setup failed" % name)
+                if current.response.s3.debug:
+                    raise
                 status = False
 
         # Update the registry
