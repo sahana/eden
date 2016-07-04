@@ -102,6 +102,9 @@ from s3profile import *
 # Summary
 from s3summary import *
 
+# Dashboards
+from s3dashboard import *
+
 # Synchronization
 from s3sync import *
 
