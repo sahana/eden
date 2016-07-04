@@ -991,6 +991,8 @@ def config(settings):
 
         if not response_type: 
             response_type = T("Unknown")
+        elif isinstance(response_type, list):
+            response_type = ", ".join(response_type)
 
         subject = \
         T("%(Scope)s %(Status)s Alert") % \
@@ -1030,7 +1032,7 @@ T("Alert is effective from %(Effective)s and expires on %(Expires)s") % \
                 dict(Effective = s3_str(row["cap_info.effective"]),
                      Expires = s3_str(row["cap_info.expires"]))
         body8 = T("For more details visit %(URL)s or contact %(Contact)s") % \
-                dict(URL = s3_str(row["cap_info.web"]),
+                dict(URL = "%s/%s" % (s3_str(row["cap_info.web"]), "profile"),
                      Contact = s3_str(row["cap_info.contact"]))
         body9 = A(T("VIEW ALERT ON THE WEB"),
                     _href = "%s/%s" % (s3_str(row["cap_info.web"]), "profile"))
@@ -1157,6 +1159,8 @@ T("""%(Status)s %(MessageType)s for %(AreaDescription)s with %(Priority)s priori
 
         if not response_type: 
             response_type = T("Unknown")
+        elif isinstance(response_type, list):
+            response_type = ", ".join(response_type)
 
         facebook_content = [
                 T("%(scope)s %(status)s Alert") % \
@@ -1199,12 +1203,12 @@ T("""%(Status)s %(MessageType)s for %(AreaDescription)s with %(Priority)s priori
                  "expires": s3_str(row["cap_info.expires"]),
                  },
                 T("For more details visit %(url)s or contact %(contact)s") % \
-                {"url": s3_str(row["cap_info.web"]),
+                {"url": "%s/%s" % (s3_str(row["cap_info.web"]), "profile"),
                  "contact": s3_str(row["cap_info.contact"]),
                  }
                 if row["cap_info.contact"] else
                 T("For more details visit %(url)s") % \
-                {"url": s3_str(row["cap_info.web"])},
+                {"url": "%s/%s" % (s3_str(row["cap_info.web"]), "profile")},
                 T("VIEW ALERT ON THE WEB: %(profile)s") % \
                 {"profile": "%s/%s" % ((s3_str(row["cap_info.web"])), "profile")}
                 ]

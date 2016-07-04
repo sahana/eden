@@ -64,7 +64,7 @@
 
     function get_template_fields(table) {
         if (table == 'cap_alert') {
-            return ('sender,sent,status,msg_type,source,scope,' +
+            return ('sent,status,msg_type,source,scope,' +
                     'restriction,addresses,codes,note,reference,' +
                     'incidents').split(',');
 
