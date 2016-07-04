@@ -583,11 +583,12 @@ $.filterOptionsS3({
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   list_layout = cap_alert_list_layout,
-                  list_orderby = "cap_info.expires desc",
+                  #list_orderby = "cap_alert.sent desc",
                   notify_fields = notify_fields,
                   onapprove = self.cap_alert_approve,
                   onvalidation = self.cap_alert_onvalidation,
-                  orderby = "cap_info.expires desc",
+                  # Order with most recent Alert first
+                  orderby = "cap_alert.sent desc",
                   )
 
         # Components
@@ -1758,8 +1759,13 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
             #    fstring = json_formatter(parameter)
             #    set_.update(parameter = fstring)
 
+            row = db(atable.id == alert_id).select(atable.scope, limitby=(0, 1)).first()
+            if row and row.scope == "Public":
+                fn = "public"
+            else:
+                fn = "alert"
             web = "%s%s" % (current.deployment_settings.get_base_public_url(),
-                            URL(c="cap", f="alert", args=[alert_id]))
+                            URL(c="cap", f=fn, args=[alert_id]))
             form_vars_get = form_vars.get
             form_effective = form_vars_get("effective", current.request.now)
             form_expires = form_vars_get("expires", cap_expirydate())
@@ -1774,6 +1780,8 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                      "expires"        : form_expires,
                      "web"            : web,
                      "event_type_id"  : form_vars_get("event_type_id", None),
+                     "category"       : form_vars_get("category", None),
+                     "response_type"  : form_vars_get("response_type", None),
                      }
             query = (itable.deleted != True) & \
                     (itable.alert_id == alert_id)
@@ -4628,6 +4636,9 @@ class cap_AlertProfileWidget(object):
         if not value and hide_empty:
             return None
         else:
+            if isinstance(value, list):
+                value = ", ".join(value)
+
             if represent:
                 value = represent(value)
             label_class = "cap-label"
@@ -4638,6 +4649,7 @@ class cap_AlertProfileWidget(object):
                 value_class = "cap-strong"
             elif headline:
                 value_class = "%s cap-headline" % value_class
+
             output = DIV(SPAN("%s :: " % T(label), _class=label_class),
                          SPAN(value, _class=value_class),
                          )

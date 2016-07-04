@@ -388,38 +388,41 @@ def alert():
                     alert_id = record.id
 
                     # Info
-                    # @ToDo: handle multiple languages
-                    info = db(itable.alert_id == alert_id).select(itable.id,
-                                                                  itable.language,
-                                                                  itable.category,
-                                                                  itable.event_type_id,
-                                                                  itable.response_type,
-                                                                  itable.urgency,
-                                                                  itable.severity,
-                                                                  itable.certainty,
-                                                                  itable.audience,
-                                                                  itable.effective,
-                                                                  itable.onset,
-                                                                  itable.expires,
-                                                                  itable.sender_name,
-                                                                  itable.headline,
-                                                                  itable.description,
-                                                                  itable.instruction,
-                                                                  itable.contact,
-                                                                  itable.web,
-                                                                  #itable.parameter,
-                                                                  limitby=(0, 1)
-                                                                  ).first()
-                    if info.id:
-                        ptable = s3db.cap_info_parameter
-                        parameters = db(ptable.info_id == info.id).select(ptable.name,
-                                                                          ptable.value)
+                    # Fields to extract
+                    resource = r.resource
+                    fields = ["info.id",
+                              "info.category",
+                              "info.event_type_id",
+                              "info.response_type",
+                              "info.urgency",
+                              "info.severity",
+                              "info.certainty",
+                              "info.audience",
+                              "info.effective",
+                              "info.onset",
+                              "info.expires",
+                              "info.sender_name",
+                              "info.headline",
+                              "info.description",
+                              "info.instruction",
+                              "info.contact",
+                              "info.web",
+                              "info_parameter.name",
+                              "info_parameter.value",
+                              "area.name",
+                              ]
 
-                    # Area
-                    # @ToDo: handle multiple areas
-                    atable = s3db.cap_area
-                    area = db(atable.alert_id == alert_id).select(atable.name,
-                                                                  limitby=(0, 1)).first()
+                    # Extract the data
+                    data = resource.select(fields, raw_data=True)
+                    info = data["rows"][0]
+                    if info:
+                        ptable = s3db.cap_info_parameter
+                        if isinstance(info["cap_info.id"], list):
+                            query = (ptable.info_id.belongs(info["cap_info.id"]))
+                        else:
+                            query = (ptable.info_id == info["cap_info.id"])
+                        parameters = db(query).select(ptable.name,
+                                                      ptable.value)
 
                     # Map
                     ftable = s3db.gis_layer_feature
@@ -464,11 +467,14 @@ def alert():
                         # Default bounds
                         bbox = {}
 
-                    if area and area.name:
+                    area_name = info["cap_area.name"]
+                    if area_name:
                         label = TAG[""](SPAN("%s :: " % T("Area"),
                                              _class="cap-label upper"
                                              ),
-                                        SPAN(area.name,
+                                        SPAN(", ".join(area_name)
+                                             if isinstance(area_name, list)
+                                             else area_name,
                                              _class="cap-value"
                                              ),
                                         )
@@ -489,80 +495,76 @@ def alert():
                     @widget(None)
                     def alert_widget(r, **attr):
                         return (
-                          component("Headline", info.headline,
+                          component("Headline", info["cap_info.headline"],
                                     uppercase = True,
                                     headline = True,
                                     ),
-                          component("Description", info.description,
+                          component("Description", info["cap_info.description"],
                                     uppercase = True,
                                     ),
-                          component("Response Type", ", ".join(info.response_type)
-                                    if info.response_type else None,
+                          component("Response Type", info["cap_info.response_type"]
+                                    if info["cap_info.response_type"] else None,
                                     uppercase = True,
                                     strong = True,
                                     hide_empty = True,
                                     ),
-                          component("Instructions", info.instruction,
+                          component("Instructions", info["cap_info.instruction"],
                                     uppercase = True,
                                     ),
                         )
-    
+
                     @widget("Information",
                             label = "Event",
-                            value = itable.event_type_id.represent(info.event_type_id),
+                            value = itable.event_type_id.represent(info["cap_info.event_type_id"]),
                             )
                     def info_widget(r, **attr):
-    
+
                         if len(parameters):
                             params = ", ".join("%s: %s" % (p.name, p.value)
                                                for p in parameters)
                         else:
                             params = None
-    
+
                         return (
-                            component("Language",
-                                      info.language,
-                                      represent = itable.language.represent,
-                                      ),
                             component("Category",
-                                      info.category,
+                                      info["cap_info.category"],
                                       represent = itable.category.represent,
                                       ),
                             component("Urgency",
-                                      info.urgency,
+                                      info["cap_info.urgency"],
                                       represent = itable.urgency.represent,
                                       ),
                             component("Severity",
-                                      info.severity,
+                                      info["cap_info.severity"],
                                       represent = itable.severity.represent,
                                       ),
                             component("Certainty",
-                                      info.certainty,
+                                      info["cap_info.certainty"],
                                       represent = itable.certainty.represent,
                                       ),
                             component("Audience",
-                                      info.audience,
+                                      info["cap_info.audience"],
                                       ),
                             component("Effective Date",
-                                      info.effective,
+                                      info["cap_info.effective"],
                                       represent = itable.effective.represent,
                                       ),
                             component("Onset Date",
-                                      info.onset,
+                                      info["cap_info.onset"],
                                       represent = itable.onset.represent,
                                       ),
                             component("Expiry Date",
-                                      info.expires,
+                                      info["cap_info.expires"],
                                       represent = itable.expires.represent,
                                       ),
                             component("Information URL",
-                                      info.web,
+                                      info["cap_info.web"],
                                       ),
                             component("Sender",
-                                      info.sender_name,
+                                      info["cap_info.sender_name"],
                                       ),
                             component("Contact Info",
-                                      info.contact,
+                                      info["cap_info.contact"],
                                       ),
                             component("Parameters",
                                       params,
@@ -661,10 +663,15 @@ def alert():
 
                 # Check for prepopulate
                 if alert_id:
-                    itable.web.default = settings.get_base_public_url()+\
-                                         URL(c="cap", f="alert", args=alert_id)
-                    row = db(table.id == alert_id).select(table.event_type_id,
+                    row = db(table.id == alert_id).select(table.scope,
+                                                          table.event_type_id,
                                                           limitby=(0, 1)).first()
+                    if row and row.scope == "Public":
+                        fn = "public"
+                    else:
+                        fn = "alert"
+                    itable.web.default = settings.get_base_public_url()+\
+                                         URL(c="cap", f=fn, args=alert_id)
                     itable.event_type_id.default = row.event_type_id
 
                 if record.approved_by is not None:
@@ -798,6 +805,12 @@ def alert():
 
                 parameter_fields = [parameter_table[f] for f in parameter_table.fields
                                     if f not in unwanted_fields]
+                scope_row = db(table.id == lastid).select(table.scope,
+                                                          limitby=(0, 1)).first()
+                if scope_row and scope_row.scope == "Public":
+                    fn = "public"
+                else:
+                    fn = "alert"
                 rows = db(itable.alert_id == alert.template_id).select(*fields)
                 for row in rows:
                     row_clone = row.as_dict()
@@ -808,6 +821,8 @@ def alert():
                     row_clone["effective"] = request.utcnow
                     row_clone["expires"] = s3db.cap_expiry_date()
                     row_clone["sender_name"] = s3db.cap_sender_name()
+                    row_clone["web"] = settings.get_base_public_url() + \
+                                        URL(c="cap", f=fn, args=lastid)
                     new_info_id = itable.insert(**row_clone)
 
                     # Copy info_parameter as well
@@ -828,7 +843,7 @@ def alert():
                 rtable = s3db.cap_resource
                 r_unwanted_fields = set(s3base.s3_all_meta_field_names())
                 rfields = [rtable[f] for f in rtable.fields
-                                     if f not in r_unwanted_fields]
+                           if f not in r_unwanted_fields]
                 rows_ = db(rtable.alert_id == alert.template_id).select(*rfields)
                 for row in rows_:
                     row_clone = row.as_dict()
@@ -1057,10 +1072,15 @@ def template():
             alert_id = request.args(0)
             # Check for prepopulate
             if alert_id:
-                itable.web.default = settings.get_base_public_url()+\
-                                     URL(c="cap", f="alert", args=alert_id)
-                row = db(atable.id == alert_id).select(atable.event_type_id,
+                row = db(atable.id == alert_id).select(atable.scope,
+                                                       atable.event_type_id,
                                                        limitby=(0, 1)).first()
+                if row and row.scope == "Public":
+                    fn = "public"
+                else:
+                    fn = "alert"
+                itable.web.default = settings.get_base_public_url()+\
+                                     URL(c="cap", f=fn, args=alert_id)
                 itable.event_type_id.default = row.event_type_id
 
         elif r.component_name == "resource":
