@@ -1464,7 +1464,7 @@ class S3EventAlertModel(S3Model):
             label_delete_button = T("Delete Recipient"),
             msg_record_created = T("Recipient added"),
             msg_record_modified = T("Recipient Details updated"),
-            msg_record_deleted = T("Recipient deleted"),
+            msg_record_deleted = T("Recipient removed"),
             msg_list_empty = T("No Recipients currently defined"))
 
         # Pass names back to global scope (s3.*)

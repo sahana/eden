@@ -11,4 +11,7 @@ def config(settings):
 
     settings.base.system_name = T("Maldives Warning and Situational-Awareness System")
 
+    # Default Language
+    settings.L10n.default_language = "dv"
+
 # END =========================================================================

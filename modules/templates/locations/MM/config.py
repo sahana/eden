@@ -18,8 +18,8 @@ def config(settings):
 
     # L10n (Localization) settings
     settings.L10n.languages["my"] = "မြန်မာစာ"
-    # Default Language
-    settings.L10n.default_language = "my"
+    # Default Language (put this in custom template if-required)
+    #settings.L10n.default_language = "my"
     # Default timezone for users
     settings.L10n.utc_offset = "+0630"
     # Default Country Code for telephone numbers
