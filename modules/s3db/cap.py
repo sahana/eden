@@ -27,7 +27,8 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3CAPModel",
+__all__ = ("get_cap_options",
+           "S3CAPModel",
            "S3CAPHistoryModel",
            "S3CAPAreaNameModel",
            "cap_alert_is_template",
@@ -59,226 +60,238 @@ from gluon.storage import Storage
 from gluon.tools import fetch
 from ..s3 import *
 
-T = current.T
-# ---------------------------------------------------------------------
-# List of Incident Categories -- copied from irs module <--
-# @ToDo: Switch to using event_incident_type
-#
-# The keys are based on the Canadian ems.incident hierarchy, with a
-# few extra general versions added to 'other'
-# The values are meant for end-users, so can be customised as-required
-# NB It is important that the meaning of these entries is not changed
-# as otherwise this hurts our ability to do synchronisation
-# Entries can be hidden from user view in the controller.
-# Additional sets of 'translations' can be added to the tuples.
-cap_incident_type_opts = {
-    "animalHealth.animalDieOff": T("Animal Die Off"),
-    "animalHealth.animalFeed": T("Animal Feed"),
-    "aviation.aircraftCrash": T("Aircraft Crash"),
-    "aviation.aircraftHijacking": T("Aircraft Hijacking"),
-    "aviation.airportClosure": T("Airport Closure"),
-    "aviation.airspaceClosure": T("Airspace Closure"),
-    "aviation.noticeToAirmen": T("Notice to Airmen"),
-    "aviation.spaceDebris": T("Space Debris"),
-    "civil.demonstrations": T("Demonstrations"),
-    "civil.dignitaryVisit": T("Dignitary Visit"),
-    "civil.displacedPopulations": T("Displaced Populations"),
-    "civil.emergency": T("Civil Emergency"),
-    "civil.looting": T("Looting"),
-    "civil.publicEvent": T("Public Event"),
-    "civil.riot": T("Riot"),
-    "civil.volunteerRequest": T("Volunteer Request"),
-    "crime": T("Crime"),
-    "crime.bomb": T("Bomb"),
-    "crime.bombExplosion": T("Bomb Explosion"),
-    "crime.bombThreat": T("Bomb Threat"),
-    "crime.dangerousPerson": T("Dangerous Person"),
-    "crime.drugs": T("Drugs"),
-    "crime.homeCrime": T("Home Crime"),
-    "crime.illegalImmigrant": T("Illegal Immigrant"),
-    "crime.industrialCrime": T("Industrial Crime"),
-    "crime.poisoning": T("Poisoning"),
-    "crime.retailCrime": T("Retail Crime"),
-    "crime.shooting": T("Shooting"),
-    "crime.stowaway": T("Stowaway"),
-    "crime.terrorism": T("Terrorism"),
-    "crime.vehicleCrime": T("Vehicle Crime"),
-    "fire": T("Fire"),
-    "fire.forestFire": T("Forest Fire"),
-    "fire.hotSpot": T("Hot Spot"),
-    "fire.industryFire": T("Industry Fire"),
-    "fire.smoke": T("Smoke"),
-    "fire.urbanFire": T("Urban Fire"),
-    "fire.wildFire": T("Wild Fire"),
-    "flood": T("Flood"),
-    "flood.damOverflow": T("Dam Overflow"),
-    "flood.flashFlood": T("Flash Flood"),
-    "flood.highWater": T("High Water"),
-    "flood.overlandFlowFlood": T("Overland Flow Flood"),
-    "flood.tsunami": T("Tsunami"),
-    "geophysical.avalanche": T("Avalanche"),
-    "geophysical.earthquake": T("Earthquake"),
-    "geophysical.lahar": T("Lahar"),
-    "geophysical.landslide": T("Landslide"),
-    "geophysical.magneticStorm": T("Magnetic Storm"),
-    "geophysical.meteorite": T("Meteorite"),
-    "geophysical.pyroclasticFlow": T("Pyroclastic Flow"),
-    "geophysical.pyroclasticSurge": T("Pyroclastic Surge"),
-    "geophysical.volcanicAshCloud": T("Volcanic Ash Cloud"),
-    "geophysical.volcanicEvent": T("Volcanic Event"),
-    "hazardousMaterial": T("Hazardous Material"),
-    "hazardousMaterial.biologicalHazard": T("Biological Hazard"),
-    "hazardousMaterial.chemicalHazard": T("Chemical Hazard"),
-    "hazardousMaterial.explosiveHazard": T("Explosive Hazard"),
-    "hazardousMaterial.fallingObjectHazard": T("Falling Object Hazard"),
-    "hazardousMaterial.infectiousDisease": T("Infectious Disease (Hazardous Material)"),
-    "hazardousMaterial.poisonousGas": T("Poisonous Gas"),
-    "hazardousMaterial.radiologicalHazard": T("Radiological Hazard"),
-    "health.infectiousDisease": T("Infectious Disease"),
-    "health.infestation": T("Infestation"),
-    "ice.iceberg": T("Iceberg"),
-    "ice.icePressure": T("Ice Pressure"),
-    "ice.rapidCloseLead": T("Rapid Close Lead"),
-    "ice.specialIce": T("Special Ice"),
-    "marine.marineSecurity": T("Marine Security"),
-    "marine.nauticalAccident": T("Nautical Accident"),
-    "marine.nauticalHijacking": T("Nautical Hijacking"),
-    "marine.portClosure": T("Port Closure"),
-    "marine.specialMarine": T("Special Marine"),
-    "meteorological.blizzard": T("Blizzard"),
-    "meteorological.blowingSnow": T("Blowing Snow"),
-    "meteorological.drought": T("Drought"),
-    "meteorological.dustStorm": T("Dust Storm"),
-    "meteorological.fog": T("Fog"),
-    "meteorological.freezingDrizzle": T("Freezing Drizzle"),
-    "meteorological.freezingRain": T("Freezing Rain"),
-    "meteorological.freezingSpray": T("Freezing Spray"),
-    "meteorological.hail": T("Hail"),
-    "meteorological.hurricane": T("Hurricane"),
-    "meteorological.rainFall": T("Rain Fall"),
-    "meteorological.snowFall": T("Snow Fall"),
-    "meteorological.snowSquall": T("Snow Squall"),
-    "meteorological.squall": T("Squall"),
-    "meteorological.stormSurge": T("Storm Surge"),
-    "meteorological.thunderstorm": T("Thunderstorm"),
-    "meteorological.tornado": T("Tornado"),
-    "meteorological.tropicalStorm": T("Tropical Storm"),
-    "meteorological.waterspout": T("Waterspout"),
-    "meteorological.winterStorm": T("Winter Storm"),
-    "missingPerson": T("Missing Person"),
-    # http://en.wikipedia.org/wiki/Amber_Alert
-    "missingPerson.amberAlert": T("Child Abduction Emergency"),
-    "missingPerson.missingVulnerablePerson": T("Missing Vulnerable Person"),
-    # http://en.wikipedia.org/wiki/Silver_Alert
-    "missingPerson.silver": T("Missing Senior Citizen"),
-    "publicService.emergencySupportFacility": T("Emergency Support Facility"),
-    "publicService.emergencySupportService": T("Emergency Support Service"),
-    "publicService.schoolClosure": T("School Closure"),
-    "publicService.schoolLockdown": T("School Lockdown"),
-    "publicService.serviceOrFacility": T("Service or Facility"),
-    "publicService.transit": T("Transit"),
-    "railway.railwayAccident": T("Railway Accident"),
-    "railway.railwayHijacking": T("Railway Hijacking"),
-    "roadway.bridgeClosure": T("Bridge Closed"),
-    "roadway.hazardousRoadConditions": T("Hazardous Road Conditions"),
-    "roadway.roadwayAccident": T("Road Accident"),
-    "roadway.roadwayClosure": T("Road Closed"),
-    "roadway.roadwayDelay": T("Road Delay"),
-    "roadway.roadwayHijacking": T("Road Hijacking"),
-    "roadway.roadwayUsageCondition": T("Road Usage Condition"),
-    "roadway.trafficReport": T("Traffic Report"),
-    "temperature.arcticOutflow": T("Arctic Outflow"),
-    "temperature.coldWave": T("Cold Wave"),
-    "temperature.flashFreeze": T("Flash Freeze"),
-    "temperature.frost": T("Frost"),
-    "temperature.heatAndHumidity": T("Heat and Humidity"),
-    "temperature.heatWave": T("Heat Wave"),
-    "temperature.windChill": T("Wind Chill"),
-    "wind.galeWind": T("Gale Wind"),
-    "wind.hurricaneForceWind": T("Hurricane Force Wind"),
-    "wind.stormForceWind": T("Storm Force Wind"),
-    "wind.strongWind": T("Strong Wind"),
-    "other.buildingCollapsed": T("Building Collapsed"),
-    "other.peopleTrapped": T("People Trapped"),
-    "other.powerFailure": T("Power Failure"),
-}
+# =============================================================================
+def get_cap_options():
 
-# CAP alert Status Code (status)
-cap_alert_status_code_opts = OrderedDict([
-    ("Actual", T("Actual - actionable by all targeted recipients")),
-    ("Exercise", T("Exercise - only for designated participants (decribed in note)")),
-    ("System", T("System - for internal functions")),
-    ("Test", T("Test - testing, all recipients disregard")),
-    ("Draft", T("Draft - not actionable in its current form")),
-])
-# CAP alert message type (msgType)
-# NB AllClear is not in msgType as of CAP 1.2, but they target to move it to
-# msgType instead of responseType in CAP 2.0
-cap_alert_msgType_code_opts = OrderedDict([
-    ("Alert", T("Alert: Initial information requiring attention by targeted recipients")),
-    ("Update", T("Update: Update and supercede earlier message(s)")),
-    ("Cancel", T("Cancel: Cancel earlier message(s)")),
-    ("Ack", T("Ack: Acknowledge receipt and acceptance of the message(s)")),
-    ("Error", T("Error: Indicate rejection of the message(s)")),
-    ("AllClear", T("AllClear - The subject event no longer poses a threat")),
-])
-# CAP alert scope
-cap_alert_scope_code_opts = OrderedDict([
-    ("Public", T("Public - unrestricted audiences")),
-    ("Restricted", T("Restricted - to users with a known operational requirement (described in restriction)")),
-    ("Private", T("Private - only to specified addresses (mentioned as recipients)"))
-])
-# CAP info categories
-cap_info_category_opts = OrderedDict([
-    ("Geo", T("Geo - Geophysical (inc. landslide)")),
-    ("Met", T("Met - Meteorological (inc. flood)")),
-    ("Safety", T("Safety - General emergency and public safety")),
-    ("Security", T("Security - Law enforcement, military, homeland and local/private security")),
-    ("Rescue", T("Rescue - Rescue and recovery")),
-    ("Fire", T("Fire - Fire suppression and rescue")),
-    ("Health", T("Health - Medical and public health")),
-    ("Env", T("Env - Pollution and other environmental")),
-    ("Transport", T("Transport - Public and private transportation")),
-    ("Infra", T("Infra - Utility, telecommunication, other non-transport infrastructure")),
-    ("CBRNE", T("CBRNE - Chemical, Biological, Radiological, Nuclear or High-Yield Explosive threat or attack")),
-    ("Other", T("Other - Other events")),
-])
-# CAP info response type
-cap_info_responseType_opts = OrderedDict([
-    ("Shelter", T("Shelter - Take shelter in place or per instruction")),
-    ("Evacuate", T("Evacuate - Relocate as instructed in the instruction")),
-    ("Prepare", T("Prepare - Make preparations per the instruction")),
-    ("Execute", T("Execute - Execute a pre-planned activity identified in instruction")),
-    ("Avoid", T("Avoid - Avoid the subject event as per the instruction")),
-    ("Monitor", T("Monitor - Attend to information sources as described in instruction")),
-    ("Assess", T("Assess - Evaluate the information in this message.")),
-    ("AllClear", T("AllClear - The subject event no longer poses a threat")),
-    ("None", T("None - No action recommended")),
-])
-# CAP info urgency
-cap_info_urgency_opts = OrderedDict([
-    ("Immediate", T("Immediate - Response action should be taken immediately")),
-    ("Expected", T("Expected - Response action should be taken soon (within next hour)")),
-    ("Future", T("Future - Responsive action should be taken in the near future")),
-    ("Past", T("Past - Responsive action is no longer required")),
-    ("Unknown", T("Unknown")),
-])
-# CAP info severity
-cap_info_severity_opts = OrderedDict([
-    ("Extreme", T("Extreme - Extraordinary threat to life or property")),
-    ("Severe", T("Severe - Significant threat to life or property")),
-    ("Moderate", T("Moderate - Possible threat to life or property")),
-    ("Minor", T("Minor - Minimal to no known threat to life or property")),
-    ("Unknown", T("Severity unknown")),
-])
-# CAP info certainty
-cap_info_certainty_opts = OrderedDict([
-    ("Observed", T("Observed: determined to have occurred or to be ongoing")),
-    ("Likely", T("Likely (p > ~50%)")),
-    ("Possible", T("Possible but not likely (p <= ~50%)")),
-    ("Unlikely", T("Unlikely - Not expected to occur (p ~ 0)")),
-    ("Unknown", T("Certainty unknown")),
-])
+    # List of Incident Categories -- copied from irs module <--
+    # @ToDo: Switch to using event_incident_type
+    #
+    # The keys are based on the Canadian ems.incident hierarchy, with a
+    # few extra general versions added to 'other'
+    # The values are meant for end-users, so can be customised as-required
+    # NB It is important that the meaning of these entries is not changed
+    # as otherwise this hurts our ability to do synchronisation
+    # Entries can be hidden from user view in the controller.
+    # Additional sets of 'translations' can be added to the tuples.
+    T = current.T
+    cap_options = {}
+    cap_options["cap_incident_type_opts"] = {
+        "animalHealth.animalDieOff": T("Animal Die Off"),
+        "animalHealth.animalFeed": T("Animal Feed"),
+        "aviation.aircraftCrash": T("Aircraft Crash"),
+        "aviation.aircraftHijacking": T("Aircraft Hijacking"),
+        "aviation.airportClosure": T("Airport Closure"),
+        "aviation.airspaceClosure": T("Airspace Closure"),
+        "aviation.noticeToAirmen": T("Notice to Airmen"),
+        "aviation.spaceDebris": T("Space Debris"),
+        "civil.demonstrations": T("Demonstrations"),
+        "civil.dignitaryVisit": T("Dignitary Visit"),
+        "civil.displacedPopulations": T("Displaced Populations"),
+        "civil.emergency": T("Civil Emergency"),
+        "civil.looting": T("Looting"),
+        "civil.publicEvent": T("Public Event"),
+        "civil.riot": T("Riot"),
+        "civil.volunteerRequest": T("Volunteer Request"),
+        "crime": T("Crime"),
+        "crime.bomb": T("Bomb"),
+        "crime.bombExplosion": T("Bomb Explosion"),
+        "crime.bombThreat": T("Bomb Threat"),
+        "crime.dangerousPerson": T("Dangerous Person"),
+        "crime.drugs": T("Drugs"),
+        "crime.homeCrime": T("Home Crime"),
+        "crime.illegalImmigrant": T("Illegal Immigrant"),
+        "crime.industrialCrime": T("Industrial Crime"),
+        "crime.poisoning": T("Poisoning"),
+        "crime.retailCrime": T("Retail Crime"),
+        "crime.shooting": T("Shooting"),
+        "crime.stowaway": T("Stowaway"),
+        "crime.terrorism": T("Terrorism"),
+        "crime.vehicleCrime": T("Vehicle Crime"),
+        "fire": T("Fire"),
+        "fire.forestFire": T("Forest Fire"),
+        "fire.hotSpot": T("Hot Spot"),
+        "fire.industryFire": T("Industry Fire"),
+        "fire.smoke": T("Smoke"),
+        "fire.urbanFire": T("Urban Fire"),
+        "fire.wildFire": T("Wild Fire"),
+        "flood": T("Flood"),
+        "flood.damOverflow": T("Dam Overflow"),
+        "flood.flashFlood": T("Flash Flood"),
+        "flood.highWater": T("High Water"),
+        "flood.overlandFlowFlood": T("Overland Flow Flood"),
+        "flood.tsunami": T("Tsunami"),
+        "geophysical.avalanche": T("Avalanche"),
+        "geophysical.earthquake": T("Earthquake"),
+        "geophysical.lahar": T("Lahar"),
+        "geophysical.landslide": T("Landslide"),
+        "geophysical.magneticStorm": T("Magnetic Storm"),
+        "geophysical.meteorite": T("Meteorite"),
+        "geophysical.pyroclasticFlow": T("Pyroclastic Flow"),
+        "geophysical.pyroclasticSurge": T("Pyroclastic Surge"),
+        "geophysical.volcanicAshCloud": T("Volcanic Ash Cloud"),
+        "geophysical.volcanicEvent": T("Volcanic Event"),
+        "hazardousMaterial": T("Hazardous Material"),
+        "hazardousMaterial.biologicalHazard": T("Biological Hazard"),
+        "hazardousMaterial.chemicalHazard": T("Chemical Hazard"),
+        "hazardousMaterial.explosiveHazard": T("Explosive Hazard"),
+        "hazardousMaterial.fallingObjectHazard": T("Falling Object Hazard"),
+        "hazardousMaterial.infectiousDisease": T("Infectious Disease (Hazardous Material)"),
+        "hazardousMaterial.poisonousGas": T("Poisonous Gas"),
+        "hazardousMaterial.radiologicalHazard": T("Radiological Hazard"),
+        "health.infectiousDisease": T("Infectious Disease"),
+        "health.infestation": T("Infestation"),
+        "ice.iceberg": T("Iceberg"),
+        "ice.icePressure": T("Ice Pressure"),
+        "ice.rapidCloseLead": T("Rapid Close Lead"),
+        "ice.specialIce": T("Special Ice"),
+        "marine.marineSecurity": T("Marine Security"),
+        "marine.nauticalAccident": T("Nautical Accident"),
+        "marine.nauticalHijacking": T("Nautical Hijacking"),
+        "marine.portClosure": T("Port Closure"),
+        "marine.specialMarine": T("Special Marine"),
+        "meteorological.blizzard": T("Blizzard"),
+        "meteorological.blowingSnow": T("Blowing Snow"),
+        "meteorological.drought": T("Drought"),
+        "meteorological.dustStorm": T("Dust Storm"),
+        "meteorological.fog": T("Fog"),
+        "meteorological.freezingDrizzle": T("Freezing Drizzle"),
+        "meteorological.freezingRain": T("Freezing Rain"),
+        "meteorological.freezingSpray": T("Freezing Spray"),
+        "meteorological.hail": T("Hail"),
+        "meteorological.hurricane": T("Hurricane"),
+        "meteorological.rainFall": T("Rain Fall"),
+        "meteorological.snowFall": T("Snow Fall"),
+        "meteorological.snowSquall": T("Snow Squall"),
+        "meteorological.squall": T("Squall"),
+        "meteorological.stormSurge": T("Storm Surge"),
+        "meteorological.thunderstorm": T("Thunderstorm"),
+        "meteorological.tornado": T("Tornado"),
+        "meteorological.tropicalStorm": T("Tropical Storm"),
+        "meteorological.waterspout": T("Waterspout"),
+        "meteorological.winterStorm": T("Winter Storm"),
+        "missingPerson": T("Missing Person"),
+        # http://en.wikipedia.org/wiki/Amber_Alert
+        "missingPerson.amberAlert": T("Child Abduction Emergency"),
+        "missingPerson.missingVulnerablePerson": T("Missing Vulnerable Person"),
+        # http://en.wikipedia.org/wiki/Silver_Alert
+        "missingPerson.silver": T("Missing Senior Citizen"),
+        "publicService.emergencySupportFacility": T("Emergency Support Facility"),
+        "publicService.emergencySupportService": T("Emergency Support Service"),
+        "publicService.schoolClosure": T("School Closure"),
+        "publicService.schoolLockdown": T("School Lockdown"),
+        "publicService.serviceOrFacility": T("Service or Facility"),
+        "publicService.transit": T("Transit"),
+        "railway.railwayAccident": T("Railway Accident"),
+        "railway.railwayHijacking": T("Railway Hijacking"),
+        "roadway.bridgeClosure": T("Bridge Closed"),
+        "roadway.hazardousRoadConditions": T("Hazardous Road Conditions"),
+        "roadway.roadwayAccident": T("Road Accident"),
+        "roadway.roadwayClosure": T("Road Closed"),
+        "roadway.roadwayDelay": T("Road Delay"),
+        "roadway.roadwayHijacking": T("Road Hijacking"),
+        "roadway.roadwayUsageCondition": T("Road Usage Condition"),
+        "roadway.trafficReport": T("Traffic Report"),
+        "temperature.arcticOutflow": T("Arctic Outflow"),
+        "temperature.coldWave": T("Cold Wave"),
+        "temperature.flashFreeze": T("Flash Freeze"),
+        "temperature.frost": T("Frost"),
+        "temperature.heatAndHumidity": T("Heat and Humidity"),
+        "temperature.heatWave": T("Heat Wave"),
+        "temperature.windChill": T("Wind Chill"),
+        "wind.galeWind": T("Gale Wind"),
+        "wind.hurricaneForceWind": T("Hurricane Force Wind"),
+        "wind.stormForceWind": T("Storm Force Wind"),
+        "wind.strongWind": T("Strong Wind"),
+        "other.buildingCollapsed": T("Building Collapsed"),
+        "other.peopleTrapped": T("People Trapped"),
+        "other.powerFailure": T("Power Failure"),
+    }
+
+    # CAP alert Status Code (status)
+    cap_options["cap_alert_status_code_opts"] = OrderedDict([
+        ("Actual", T("Actual - actionable by all targeted recipients")),
+        ("Exercise", T("Exercise - only for designated participants (decribed in note)")),
+        ("System", T("System - for internal functions")),
+        ("Test", T("Test - testing, all recipients disregard")),
+        ("Draft", T("Draft - not actionable in its current form")),
+    ])
+
+    # CAP alert message type (msgType)
+    # NB AllClear is not in msgType as of CAP 1.2, but they target to move it to
+    # msgType instead of responseType in CAP 2.0
+    cap_options["cap_alert_msg_type_code_opts"] = OrderedDict([
+        ("Alert", T("Alert: Initial information requiring attention by targeted recipients")),
+        ("Update", T("Update: Update and supercede earlier message(s)")),
+        ("Cancel", T("Cancel: Cancel earlier message(s)")),
+        ("Ack", T("Ack: Acknowledge receipt and acceptance of the message(s)")),
+        ("Error", T("Error: Indicate rejection of the message(s)")),
+        ("AllClear", T("AllClear - The subject event no longer poses a threat")),
+    ])
+
+    # CAP alert scope
+    cap_options["cap_alert_scope_code_opts"] = OrderedDict([
+        ("Public", T("Public - unrestricted audiences")),
+        ("Restricted", T("Restricted - to users with a known operational requirement (described in restriction)")),
+        ("Private", T("Private - only to specified addresses (mentioned as recipients)"))
+    ])
+
+    # CAP info categories
+    cap_options["cap_info_category_opts"] = OrderedDict([
+        ("Geo", T("Geo - Geophysical (inc. landslide)")),
+        ("Met", T("Met - Meteorological (inc. flood)")),
+        ("Safety", T("Safety - General emergency and public safety")),
+        ("Security", T("Security - Law enforcement, military, homeland and local/private security")),
+        ("Rescue", T("Rescue - Rescue and recovery")),
+        ("Fire", T("Fire - Fire suppression and rescue")),
+        ("Health", T("Health - Medical and public health")),
+        ("Env", T("Env - Pollution and other environmental")),
+        ("Transport", T("Transport - Public and private transportation")),
+        ("Infra", T("Infra - Utility, telecommunication, other non-transport infrastructure")),
+        ("CBRNE", T("CBRNE - Chemical, Biological, Radiological, Nuclear or High-Yield Explosive threat or attack")),
+        ("Other", T("Other - Other events")),
+    ])
+
+    # CAP info response type
+    cap_options["cap_info_response_type_opts"] = OrderedDict([
+        ("Shelter", T("Shelter - Take shelter in place or per instruction")),
+        ("Evacuate", T("Evacuate - Relocate as instructed in the instruction")),
+        ("Prepare", T("Prepare - Make preparations per the instruction")),
+        ("Execute", T("Execute - Execute a pre-planned activity identified in instruction")),
+        ("Avoid", T("Avoid - Avoid the subject event as per the instruction")),
+        ("Monitor", T("Monitor - Attend to information sources as described in instruction")),
+        ("Assess", T("Assess - Evaluate the information in this message.")),
+        ("AllClear", T("AllClear - The subject event no longer poses a threat")),
+        ("None", T("None - No action recommended")),
+    ])
+
+    # CAP info urgency
+    cap_options["cap_info_urgency_opts"] = OrderedDict([
+        ("Immediate", T("Immediate - Response action should be taken immediately")),
+        ("Expected", T("Expected - Response action should be taken soon (within next hour)")),
+        ("Future", T("Future - Responsive action should be taken in the near future")),
+        ("Past", T("Past - Responsive action is no longer required")),
+        ("Unknown", T("Unknown")),
+    ])
+
+    # CAP info severity
+    cap_options["cap_info_severity_opts"] = OrderedDict([
+        ("Extreme", T("Extreme - Extraordinary threat to life or property")),
+        ("Severe", T("Severe - Significant threat to life or property")),
+        ("Moderate", T("Moderate - Possible threat to life or property")),
+        ("Minor", T("Minor - Minimal to no known threat to life or property")),
+        ("Unknown", T("Severity unknown")),
+    ])
+
+    # CAP info certainty
+    cap_options["cap_info_certainty_opts"] = OrderedDict([
+        ("Observed", T("Observed: determined to have occurred or to be ongoing")),
+        ("Likely", T("Likely (p > ~50%)")),
+        ("Possible", T("Possible but not likely (p <= ~50%)")),
+        ("Unlikely", T("Unlikely - Not expected to occur (p ~ 0)")),
+        ("Unknown", T("Certainty unknown")),
+    ])
+
+    return cap_options
 
 # =============================================================================
 class S3CAPModel(S3Model):
@@ -310,9 +323,11 @@ class S3CAPModel(S3Model):
 
     def model(self):
 
+        T = current.T
         db = current.db
         settings = current.deployment_settings
 
+        cap_options = get_cap_options()
         add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
@@ -379,10 +394,10 @@ $.filterOptionsS3({
                      # @ToDo: Switch to using event_incident_type_id
                      Field("incidents", "list:string",
                            label = T("Incidents"),
-                           represent = S3Represent(options = cap_incident_type_opts,
+                           represent = S3Represent(options = cap_options["cap_incident_type_opts"],
                                                    multiple = True),
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET(cap_incident_type_opts,
+                                        IS_IN_SET(cap_options["cap_incident_type_opts"],
                                                   multiple = True,
                                                   sort = True,
                                                   )),
@@ -407,9 +422,9 @@ $.filterOptionsS3({
                      Field("status",
                            default = "Draft",
                            label = T("Status"),
-                           represent = lambda opt: \
-                            cap_alert_status_code_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_IN_SET(cap_alert_status_code_opts),
+                           represent = S3Represent(options = cap_options["cap_alert_status_code_opts"],
+                                                   ),
+                           requires = IS_IN_SET(cap_options["cap_alert_status_code_opts"]),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the appropriate handling of the alert message"),
                                                            T("See options."))),
@@ -417,9 +432,9 @@ $.filterOptionsS3({
                      Field("msg_type",
                            label = T("Message Type"),
                            default = "Alert",
-                           represent = lambda opt: \
-                            cap_alert_msgType_code_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_IN_SET(cap_alert_msgType_code_opts),
+                           represent = S3Represent(options = cap_options["cap_alert_msg_type_code_opts"],
+                                                   ),
+                           requires = IS_IN_SET(cap_options["cap_alert_msg_type_code_opts"]),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The nature of the alert message"),
                                                            T("See options."))),
@@ -433,7 +448,7 @@ $.filterOptionsS3({
                            ),
                      Field("scope",
                            label = T("Scope"),
-                           requires = IS_IN_SET(cap_alert_scope_code_opts),
+                           requires = IS_IN_SET(cap_options["cap_alert_scope_code_opts"]),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the intended distribution of the alert message"),
                                                            T("Who is this alert for?"))),
@@ -552,7 +567,7 @@ $.filterOptionsS3({
                          ),
             S3OptionsFilter("info.category",
                             label = T("Category"),
-                            options = cap_info_category_opts,
+                            options = cap_options["cap_info_category_opts"],
                             hidden = True,
                             ),
             S3OptionsFilter("info.event_type_id",
@@ -685,7 +700,7 @@ $.filterOptionsS3({
                            ),
                      Field("urgency",
                            label = T("Urgency"),
-                           requires = IS_IN_SET(cap_info_urgency_opts),
+                           requires = IS_IN_SET(cap_options["cap_info_urgency_opts"]),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the urgency of the subject event of the alert message"),
                                                            T("The urgency, severity, and certainty of the information collectively distinguish less emphatic from more emphatic messages." +
@@ -697,7 +712,7 @@ $.filterOptionsS3({
                            ),
                      Field("severity",
                            label = T("Severity"),
-                           requires = IS_IN_SET(cap_info_severity_opts),
+                           requires = IS_IN_SET(cap_options["cap_info_severity_opts"]),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the severity of the subject event of the alert message"),
                                                            T("The urgency, severity, and certainty elements collectively distinguish less emphatic from more emphatic messages." +
@@ -709,7 +724,7 @@ $.filterOptionsS3({
                            ),
                      Field("certainty",
                            label = T("Certainty"),
-                           requires = IS_IN_SET(cap_info_certainty_opts),
+                           requires = IS_IN_SET(cap_options["cap_info_certainty_opts"]),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the certainty of the subject event of the alert message"),
                                                            T("The urgency, severity, and certainty elements collectively distinguish less emphatic from more emphatic messages." +
@@ -807,10 +822,10 @@ $.filterOptionsS3({
                      Field("category", "list:string", # 1 or more allowed
                            label = T("Category"),
                            required = IS_NOT_EMPTY(),
-                           represent = S3Represent(options = cap_info_category_opts,
+                           represent = S3Represent(options = cap_options["cap_info_category_opts"],
                                                    multiple = True,
                                                    ),
-                           requires = IS_IN_SET(cap_info_category_opts,
+                           requires = IS_IN_SET(cap_options["cap_info_category_opts"],
                                                 multiple = True,
                                                 ),
                            widget = S3MultiSelectWidget(selectedList = 10),
@@ -842,10 +857,10 @@ $.filterOptionsS3({
                      ),
                      Field("response_type", "list:string", # 0 or more allowed
                            label = T("Response Type"),
-                           represent = S3Represent(options = cap_info_responseType_opts,
+                           represent = S3Represent(options = cap_options["cap_info_response_type_opts"],
                                                    multiple = True,
                                                    ),
-                           requires = IS_IN_SET(cap_info_responseType_opts,
+                           requires = IS_IN_SET(cap_options["cap_info_response_type_opts"],
                                                 multiple = True),
                            widget = S3MultiSelectWidget(selectedList = 10),
                            comment = DIV(_class="tooltip",
@@ -866,11 +881,11 @@ $.filterOptionsS3({
                            ),
                      Field("urgency",
                            label = T("Urgency"),
-                           represent = lambda opt: \
-                            cap_info_urgency_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = cap_options["cap_info_urgency_opts"],
+                                                   ),
                            # Empty For Template, checked onvalidation hook
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET(cap_info_urgency_opts)),
+                                        IS_IN_SET(cap_options["cap_info_urgency_opts"])),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the urgency of the subject event of the alert message"),
                                                            T("The urgency, severity, and certainty of the information collectively distinguish less emphatic from more emphatic messages." +
@@ -882,11 +897,11 @@ $.filterOptionsS3({
                            ),
                      Field("severity",
                            label = T("Severity"),
-                           represent = lambda opt: \
-                            cap_info_severity_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = cap_options["cap_info_severity_opts"],
+                                                   ),
                            # Empty For Template, checked onvalidation hook
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET(cap_info_severity_opts)),
+                                        IS_IN_SET(cap_options["cap_info_severity_opts"])),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the severity of the subject event of the alert message"),
                                                            T("The urgency, severity, and certainty elements collectively distinguish less emphatic from more emphatic messages." +
@@ -898,11 +913,11 @@ $.filterOptionsS3({
                            ),
                      Field("certainty",
                            label = T("Certainty"),
-                           represent = lambda opt: \
-                            cap_info_certainty_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = cap_options["cap_info_certainty_opts"],
+                                                   ),
                            # Empty For Template, checked onvalidation hook
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET(cap_info_certainty_opts)),
+                                        IS_IN_SET(cap_options["cap_info_certainty_opts"])),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the certainty of the subject event of the alert message"),
                                                            T("The urgency, severity, and certainty elements collectively distinguish less emphatic from more emphatic messages." +
@@ -1534,7 +1549,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                     cap_area_id = area_id,
                     cap_area_represent = area_represent,
                     cap_info_represent = info_represent,
-                    cap_info_category_opts = cap_info_category_opts,
+                    cap_info_category_opts = cap_options["cap_info_category_opts"],
                     cap_expiry_date = self.cap_expirydate,
                     cap_sender_name = self.cap_sendername,
                     cap_template_represent = self.cap_template_represent,
@@ -1739,7 +1754,7 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                                                itable.event,
                                                itable.event_type_id,
                                                itable.event_code,
-                                               #itable.parameter,
+                                               itable.audience,
                                                limitby=(0, 1)).first()
         if info:
             alert_id = info.alert_id
@@ -1758,6 +1773,9 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
             #if parameter and ("|{" in parameter or "||" in parameter):
             #    fstring = json_formatter(parameter)
             #    set_.update(parameter = fstring)
+            audience = info.audience
+            if not audience or audience == current.messages["NONE"]:
+                set_.update(audience = None)
 
             row = db(atable.id == alert_id).select(atable.scope, limitby=(0, 1)).first()
             if row and row.scope == "Public":
@@ -2181,9 +2199,11 @@ class S3CAPHistoryModel(S3Model):
 
     def model(self):
 
+        T = current.T
         db = current.db
         settings = current.deployment_settings
 
+        cap_options = get_cap_options()
         add_components = self.add_components
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
@@ -2209,10 +2229,10 @@ class S3CAPHistoryModel(S3Model):
                            ),
                      Field("incidents", "list:string",
                            label = T("Incidents"),
-                           represent = S3Represent(options = cap_incident_type_opts,
+                           represent = S3Represent(options = cap_options["cap_incident_type_opts"],
                                                    multiple = True),
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET(cap_incident_type_opts,
+                                        IS_IN_SET(cap_options["cap_incident_type_opts"],
                                                   multiple = True,
                                                   sort = True,
                                                   )),
@@ -2232,19 +2252,19 @@ class S3CAPHistoryModel(S3Model):
                      s3_datetime("sent"),
                      Field("status",
                            label = T("Status"),
-                           represent = lambda opt: \
-                            cap_alert_status_code_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_IN_SET(cap_alert_status_code_opts),
+                           represent = S3Represent(options = cap_options["cap_alert_status_code_opts"],
+                                                   ),
+                           requires = IS_IN_SET(cap_options["cap_alert_status_code_opts"]),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the appropriate handling of the alert message"),
                                                            T("See options."))),
                            ),
                      Field("msg_type",
                            label = T("Message Type"),
-                           represent = lambda opt: \
-                            cap_alert_msgType_code_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = cap_options["cap_alert_msg_type_code_opts"],
+                                                   ),
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET(cap_alert_msgType_code_opts)
+                                        IS_IN_SET(cap_options["cap_alert_msg_type_code_opts"])
                                         ),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The nature of the alert message"),
@@ -2258,10 +2278,10 @@ class S3CAPHistoryModel(S3Model):
                            ),
                      Field("scope",
                            label = T("Scope"),
-                           represent = lambda opt: \
-                            cap_alert_scope_code_opts.get(opt, UNKNOWN_OPT),
+                           represent = S3Represent(options = cap_options["cap_alert_scope_code_opts"],
+                                                   ),
                            requires = IS_EMPTY_OR(
-                                        IS_IN_SET(cap_alert_scope_code_opts)
+                                        IS_IN_SET(cap_options["cap_alert_scope_code_opts"])
                                         ),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the intended distribution of the alert message"),
@@ -2337,7 +2357,7 @@ class S3CAPHistoryModel(S3Model):
                          ),
             S3OptionsFilter("info_history.category",
                             label = T("Category"),
-                            options = cap_info_category_opts,
+                            options = cap_options["cap_info_category_opts"],
                             hidden = True,
                             ),
             S3OptionsFilter("info_history.event",
@@ -2419,10 +2439,10 @@ class S3CAPHistoryModel(S3Model):
                            ),
                      Field("category", "list:string",
                            label = T("Category"),
-                           represent = S3Represent(options = cap_info_category_opts,
+                           represent = S3Represent(options = cap_options["cap_info_category_opts"],
                                                    multiple = True,
                                                    ),
-                           requires = IS_IN_SET(cap_info_category_opts,
+                           requires = IS_IN_SET(cap_options["cap_info_category_opts"],
                                                 multiple = True,
                                                 ),
                            widget = S3MultiSelectWidget(selectedList = 10),
@@ -2438,10 +2458,10 @@ class S3CAPHistoryModel(S3Model):
                            ),
                      Field("response_type", "list:string",
                            label = T("Response Type"),
-                           represent = S3Represent(options = cap_info_responseType_opts,
+                           represent = S3Represent(options = cap_options["cap_info_response_type_opts"],
                                                    multiple = True,
                                                    ),
-                           requires = IS_IN_SET(cap_info_responseType_opts,
+                           requires = IS_IN_SET(cap_options["cap_info_response_type_opts"],
                                                 multiple = True),
                            widget = S3MultiSelectWidget(selectedList = 10),
                            comment = DIV(_class="tooltip",
@@ -2456,9 +2476,9 @@ class S3CAPHistoryModel(S3Model):
                            ),
                      Field("urgency",
                            label = T("Urgency"),
-                           represent = lambda opt: \
-                            cap_info_urgency_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_IN_SET(cap_info_urgency_opts),
+                           represent = S3Represent(options = cap_options["cap_info_urgency_opts"],
+                                                   ),
+                           requires = IS_IN_SET(cap_options["cap_info_urgency_opts"]),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the urgency of the subject event of the alert message"),
                                                            T("The urgency, severity, and certainty of the information collectively distinguish less emphatic from more emphatic messages." +
@@ -2470,9 +2490,9 @@ class S3CAPHistoryModel(S3Model):
                            ),
                      Field("severity",
                            label = T("Severity"),
-                           represent = lambda opt: \
-                            cap_info_severity_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_IN_SET(cap_info_severity_opts),
+                           represent = S3Represent(options = cap_options["cap_info_severity_opts"],
+                                                   ),
+                           requires = IS_IN_SET(cap_options["cap_info_severity_opts"]),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the severity of the subject event of the alert message"),
                                                            T("The urgency, severity, and certainty elements collectively distinguish less emphatic from more emphatic messages." +
@@ -2484,9 +2504,9 @@ class S3CAPHistoryModel(S3Model):
                            ),
                      Field("certainty",
                            label = T("Certainty"),
-                           represent = lambda opt: \
-                            cap_info_certainty_opts.get(opt, UNKNOWN_OPT),
-                           requires = IS_IN_SET(cap_info_certainty_opts),
+                           represent = S3Represent(options = cap_options["cap_info_certainty_opts"],
+                                                   ),
+                           requires = IS_IN_SET(cap_options["cap_info_certainty_opts"]),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the certainty of the subject event of the alert message"),
                                                            T("The urgency, severity, and certainty elements collectively distinguish less emphatic from more emphatic messages." +
@@ -4588,6 +4608,7 @@ class cap_AlertProfileWidget(object):
             if title:
                 label = self.label
                 value = self.value
+                T = current.T
                 if label and value:
                     title_ = DIV(SPAN("%s " % T(title),
                                       _class="cap-value upper"
@@ -4626,7 +4647,8 @@ class cap_AlertProfileWidget(object):
         """
             Component builder
             @param label: name for the component label
-            @param value: value for the component 
+            @param value: value for the component
+            @param represent: representation used for the value
             @param uppercase: whether to display label in upper case
             @param strong: whether to display with strong color
             @param hide_empty: whether to hide empty records
@@ -4637,10 +4659,23 @@ class cap_AlertProfileWidget(object):
             return None
         else:
             if isinstance(value, list):
-                value = ", ".join(value)
+                nvalue = []
+                for value_ in value:
+                    if value_:
+                        if represent:
+                            nvalue.append(represent(value_))
+                        else:
+                            nvalue.append(value_)
+                if len(nvalue):
+                    nvalue = ", ".join(nvalue)
+                else:
+                    return None
+            else:
+                if represent:
+                    nvalue = represent(value)
+                else:
+                    nvalue = value
 
-            if represent:
-                value = represent(value)
             label_class = "cap-label"
             if uppercase:
                 label_class = "%s upper" % label_class
@@ -4650,8 +4685,8 @@ class cap_AlertProfileWidget(object):
             elif headline:
                 value_class = "%s cap-headline" % value_class
 
-            output = DIV(SPAN("%s :: " % T(label), _class=label_class),
-                         SPAN(value, _class=value_class),
+            output = DIV(SPAN("%s :: " % current.T(label), _class=label_class),
+                         SPAN(nvalue, _class=value_class),
                          )
 
             return output
