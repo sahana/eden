@@ -697,17 +697,19 @@ def s3_fullname(person=None, pe_id=None, truncate=True):
         @param truncate: truncate the name to max 24 characters
     """
 
-    db = current.db
-    ptable = db.pr_person
-
     record = None
     query = None
+
     if isinstance(person, (int, long)) or str(person).isdigit():
-        query = (ptable.id == person)# & (ptable.deleted != True)
+        db = current.db
+        ptable = db.pr_person
+        query = (ptable.id == person)
     elif person is not None:
         record = person
     elif pe_id is not None:
-        query = (ptable.pe_id == pe_id)# & (ptable.deleted != True)
+        db = current.db
+        ptable = db.pr_person
+        query = (ptable.pe_id == pe_id)
 
     if not record and query is not None:
         record = db(query).select(ptable.first_name,
