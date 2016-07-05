@@ -18,8 +18,8 @@ def config(settings):
 
     # L10n (Localization) settings
     settings.L10n.languages["tl"] = "Tagalog"
-    # Default Language
-    settings.L10n.default_language = "tl"
+    # Default Language (put this in custom template if-required)
+    #settings.L10n.default_language = "tl"
     # Default timezone for users
     settings.L10n.utc_offset = "+0800"
     # Default Country Code for telephone numbers

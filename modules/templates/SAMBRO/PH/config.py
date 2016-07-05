@@ -11,6 +11,9 @@ def config(settings):
 
     settings.base.system_name = T("Philippines Warning and Situational-Awareness System")
 
+    # Default Language
+    settings.L10n.default_language = "tl"
+
     # for creating location from SAME geocodes
     settings.cap.same_code = "PSGC"
 
