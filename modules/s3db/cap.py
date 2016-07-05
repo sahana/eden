@@ -59,7 +59,6 @@ from gluon.storage import Storage
 from gluon.tools import fetch
 from ..s3 import *
 
-T = current.T
 # ---------------------------------------------------------------------
 # List of Incident Categories -- copied from irs module <--
 # @ToDo: Switch to using event_incident_type
@@ -310,6 +309,7 @@ class S3CAPModel(S3Model):
 
     def model(self):
 
+        T = current.T
         db = current.db
         settings = current.deployment_settings
 
@@ -1739,7 +1739,7 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                                                itable.event,
                                                itable.event_type_id,
                                                itable.event_code,
-                                               #itable.parameter,
+                                               itable.audience,
                                                limitby=(0, 1)).first()
         if info:
             alert_id = info.alert_id
@@ -1758,6 +1758,9 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
             #if parameter and ("|{" in parameter or "||" in parameter):
             #    fstring = json_formatter(parameter)
             #    set_.update(parameter = fstring)
+            audience = info.audience
+            if not audience or audience == current.messages["NONE"]:
+                set_.update(audience = None)
 
             row = db(atable.id == alert_id).select(atable.scope, limitby=(0, 1)).first()
             if row and row.scope == "Public":
@@ -2181,6 +2184,7 @@ class S3CAPHistoryModel(S3Model):
 
     def model(self):
 
+        T = current.T
         db = current.db
         settings = current.deployment_settings
 
@@ -4588,6 +4592,7 @@ class cap_AlertProfileWidget(object):
             if title:
                 label = self.label
                 value = self.value
+                T = current.T
                 if label and value:
                     title_ = DIV(SPAN("%s " % T(title),
                                       _class="cap-value upper"
@@ -4637,10 +4642,18 @@ class cap_AlertProfileWidget(object):
             return None
         else:
             if isinstance(value, list):
-                value = ", ".join(value)
-
-            if represent:
-                value = represent(value)
+                for i, value_ in enumerate(value):
+                    if not value_:
+                        value.remove(value_)
+                    elif represent:
+                        value[i] = represent(value_)
+                if len(value):
+                    value = ", ".join(value)
+                else:
+                    return None
+            else:
+                if represent:
+                    value = represent(value)
             label_class = "cap-label"
             if uppercase:
                 label_class = "%s upper" % label_class
@@ -4650,7 +4663,7 @@ class cap_AlertProfileWidget(object):
             elif headline:
                 value_class = "%s cap-headline" % value_class
 
-            output = DIV(SPAN("%s :: " % T(label), _class=label_class),
+            output = DIV(SPAN("%s :: " % current.T(label), _class=label_class),
                          SPAN(value, _class=value_class),
                          )
 
