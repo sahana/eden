@@ -430,6 +430,7 @@ class S3Migration(object):
             location = settings.get_template_location()
             exists = os_path.exists
             for view in ["create.html",
+                         "dashboard.html",
                          #"delete.html",
                          "display.html",
                          "iframe.html",

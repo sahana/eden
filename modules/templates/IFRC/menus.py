@@ -404,7 +404,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
         """ RDRT Alerting and Deployments """
 
         AP = False
-        user = current.auth.user
+        auth = current.auth
+        user = auth.user
         organisation_id = user and user.organisation_id or None
         if organisation_id:
             db = current.db
@@ -431,6 +432,23 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         if AP:
             # Asia Pacific
+
+            # Is the user an RDRT Member?
+            person_id = auth.s3_logged_in_person()
+            atable = s3db.deploy_application
+            htable = s3db.hrm_human_resource
+            query = (atable.human_resource_id == htable.id) & \
+                    (htable.person_id == person_id)
+            member = db(query).select(htable.id,
+                                      limitby = (0, 1),
+                                      ).first()
+            if member:
+                profile = M("My RDRT Profile",
+                            c="deploy", f="human_resource", args=[member.id, "profile"],
+                            )
+            else:
+                profile = None
+
             return M()(M("Alerts",
                          c="deploy", f="alert")(
                             M("Create", m="create"),
@@ -446,6 +464,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                               p="update", t="msg_email_channel",
                               ),
                        ),
+                       profile,
                        M("Missions",
                          c="deploy", f="mission", m="summary")(
                             M("Create", m="create"),
