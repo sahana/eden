@@ -582,7 +582,14 @@ class S3Represent(object):
 
         # Initialize theset
         if self.options is not None:
-            self.theset = self.options
+            if self.translate:
+                T = current.T
+                self.theset = dict((opt, T(label))
+                                   if isinstance(label, basestring) else (opt, label)
+                                   for opt, label in self.options.items()
+                                   )
+            else:
+                self.theset = self.options
         else:
             self.theset = {}
 
