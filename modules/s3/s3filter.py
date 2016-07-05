@@ -1770,7 +1770,15 @@ class S3OptionsFilter(S3FilterWidget):
 
         if options is not None:
             # Custom dict of {value:label} => use this label
-            opt_list = options.items()
+            if opts.get("translate"):
+                # Translate the labels
+                opt_list = [(opt, T(label))
+                            if isinstance(label, basestring) else (opt, label)
+                            for opt, label in options.items()
+                            ]
+            else:
+                opt_list = options.items()
+
 
         elif callable(represent):
             # Callable representation function:
