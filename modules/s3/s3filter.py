@@ -1427,17 +1427,25 @@ class S3OptionsFilter(S3FilterWidget):
         @keyword selectedList: number of selected items to show before
                                 collapsing into number of items
                                 (with "multiselect" widget)
-        @keyword no_opts: text to show if no options available
-        @keyword resource: alternative resource to look up options
-        @keyword lookup: field in the alternative resource to look up
-        @keyword options: fixed set of options (of {value: label} or
-                          a callable that returns one)
         @keyword size: maximum size of multi-letter options groups
                        (with "groupedopts" widget)
         @keyword help_field: field in the referenced table to display on
                              hovering over a foreign key option
                              (with "groupedopts" widget)
+
+        @keyword no_opts: text to show if no options available
         @keyword none: label for explicit None-option in many-to-many fields
+
+        @keyword resource: alternative resource to look up options
+        @keyword lookup: field in the alternative resource to look up
+        @keyword represent: custom represent for looked-up options
+                            (overrides field representation method)
+
+        @keyword options: fixed set of options (of {value: label} or
+                          a callable that returns one)
+        @keyword translate: translate the option labels in the fixed set
+                            (looked-up option sets will use the
+                            field representation method instead)
     """
 
     _class = "options-filter"
