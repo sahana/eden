@@ -814,6 +814,9 @@ def alert():
                 rows = db(itable.alert_id == alert.template_id).select(*fields)
                 for row in rows:
                     row_clone = row.as_dict()
+                    audience = row_clone["audience"]
+                    if not audience or audience == messages["None"]:
+                        audience = None
                     del row_clone["id"]
                     row_clone["alert_id"] = lastid
                     row_clone["template_info_id"] = row.id
@@ -823,6 +826,7 @@ def alert():
                     row_clone["sender_name"] = s3db.cap_sender_name()
                     row_clone["web"] = settings.get_base_public_url() + \
                                         URL(c="cap", f=fn, args=lastid)
+                    row_clone["audience"] = audience
                     new_info_id = itable.insert(**row_clone)
 
                     # Copy info_parameter as well
@@ -1269,7 +1273,8 @@ def notify_approver():
         if not alert_id and not auth.s3_has_permission("update", atable,
                                                        record_id=alert_id):
             auth.permission.fail()
-        row = db(atable.id == alert_id).select(atable.approved_by,
+        row = db(atable.id == alert_id).select(atable.created_by,
+                                               atable.approved_by,
                                                limitby=(0, 1)).first()
         if not row.approved_by:
             # Get the user ids for the role alert_approver
@@ -1278,6 +1283,13 @@ def notify_approver():
                                                         agtable.id,
                                                         limitby=(0, 1)).first()
             if group_row:
+                utable = db.auth_user
+                user_row = db(utable.id == row.created_by).select(utable.first_name,
+                                                                  utable.last_name,
+                                                                  limitby=(0, 1)).first()
+                last_name = user_row.last_name
+                if not last_name:
+                    last_name = ""
                 user_pe_id = auth.s3_user_pe_id
                 user_ids = auth.s3_group_members(group_row.id) # List of user_ids
                 pe_ids = [] # List of pe_ids
@@ -1287,7 +1299,16 @@ def notify_approver():
                 subject = "%s: Alert Approval Required" % settings.get_system_name_short()
                 url = "%s%s" % (settings.get_base_public_url(),
                                 URL(c="cap", f="alert", args=[alert_id, "review"]))
-                message = "You are requested to take action on this alert:\n\n%s" % url
+                message = """
+Hello Editor,
+%(first_name)s %(last_name)s has created the alert message.
+Your action is required to approve or reject the message.
+Please go to %(url)s to complete the actions.\n
+Remember to verify the content before approving by using Edit button.""" % \
+                        {"first_name": user_row.first_name,
+                         "last_name": last_name,
+                         "url": url,
+                         }
                 msg.send_by_pe_id(pe_ids, subject, message)
                 try:
                     msg.send_by_pe_id(pe_ids, subject, message, contact_method = "SMS")
