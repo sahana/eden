@@ -815,7 +815,7 @@ def alert():
                 for row in rows:
                     row_clone = row.as_dict()
                     audience = row_clone["audience"]
-                    if not audience or audience == messages["None"]:
+                    if not audience or audience == messages["NONE"]:
                         audience = None
                     del row_clone["id"]
                     row_clone["alert_id"] = lastid
