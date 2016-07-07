@@ -65,11 +65,8 @@ class S3DashboardContext(object):
         # @todo: implement
         self.filters = {}
 
-        # Request info
-        request = current.request if r is None else r
-
-        self.http = current.request.env.request_method
-        self.representation = s3_get_extension(request) or DEFAULT_FORMAT
+        # Parse request info
+        self._parse()
 
     # -------------------------------------------------------------------------
     def error(self, status, message, _next=None):
@@ -160,6 +157,25 @@ class S3DashboardContext(object):
             raise AttributeError
         return value
 
+    # -------------------------------------------------------------------------
+    def _parse(self, r=None):
+        """
+            Parse the request info
+
+            @param r: the web2py Request, falls back to current.request
+        """
+
+        request = current.request if r is None else r
+
+        args = request.args
+        if len(args) > 0:
+            self.command = args[0]
+
+        self.agent = request.get_vars.get("agent")
+
+        self.http = current.request.env.request_method
+        self.representation = s3_get_extension(request) or DEFAULT_FORMAT
+
 # =============================================================================
 class S3DashboardConfig(object):
     """
@@ -190,26 +206,30 @@ class S3DashboardConfig(object):
 
         if isinstance(layout, dict):
             config = layout
+            title = config.get("title", current.T("Dashboard"))
             layout = config.get("layout")
             widgets = config.get("widgets", widgets)
             default = config.get("default", default)
             configurable = config.get("configurable", configurable)
 
-        # The configuration ID
+        # Configuration ID
         # - None means the hardcoded default
         self.config_id = None
 
-        # The layout
+        # Page Title
+        self.title = title
+
+        # Layout
         if layout is None:
             layout = DEFAULT_LAYOUT
         self.layout = layout
 
-        # The available widgets
+        # Available Widgets
         if not widgets:
             widgets = {}
         self.available_widgets = widgets
 
-        # The active widgets
+        # Active Widgets
         if not default:
             default = []
         self.active_widgets = default
@@ -335,9 +355,7 @@ class S3DashboardLayout(object):
             @return: the output dict for the view
         """
 
-        return {"title": current.T("Dashboard"),
-                "contents": "",
-                }
+        return ""
 
     # -------------------------------------------------------------------------
     def render_channel(self, key, **attr):
@@ -436,9 +454,7 @@ class S3DashboardBoxesLayout(S3DashboardLayout):
                         ),
                     )
 
-        return {"title": T("Dashboard"),
-                "contents": contents,
-                }
+        return contents
 
 
 # =============================================================================
@@ -545,10 +561,10 @@ class S3Dashboard(object):
                     agent_id = widget_config.get("agent_id")
 
                 # Instantiate the agent
-                agent = widget.create_agent(agent_id,
-                                            config = widget_config,
-                                            context = context,
-                                            )
+                agent = widget._create_agent(agent_id,
+                                             config = widget_config,
+                                             context = context,
+                                             )
 
                 # Register the agent
                 agents[agent_id] = agent
@@ -563,8 +579,8 @@ class S3Dashboard(object):
             @return: the output for the view
         """
 
+        # @todo: dispatch commands to agents
         # @todo: handle the side menu (if any)
-        # @todo: dispatch methods to agents
 
         context = self.context
 
@@ -587,6 +603,10 @@ class S3Dashboard(object):
         config = self.config
         context = self.context
 
+        output = {"title": config.title,
+                  "contents": "",
+                  }
+
         # Inject JavaScript (before the widgets inject theirs)
         # @todo
 
@@ -600,9 +620,10 @@ class S3Dashboard(object):
         # Render the contents with the layout
         contents = layout.render(context)
 
-        # @todo: make sure contents is a dict
-        # @todo: make sure the contents dict has "contents" and "title" elements
-        # @todo: default title and contents
+        if isinstance(contents, dict):
+            output.update(contents)
+        else:
+            output["contents"] = contents
 
         # Inject CSS (after the widgets inserted theirs)
         # @todo
@@ -611,7 +632,7 @@ class S3Dashboard(object):
         # @todo: allow per-template views (to support other themes)
         current.response.view = "dashboard.html"
 
-        return contents
+        return output
 
     # -------------------------------------------------------------------------
     def get_active_layout(self, config):
@@ -631,6 +652,54 @@ class S3Dashboard(object):
             layout = layout[-1]
 
         return layout(config)
+
+# =============================================================================
+class delegated(object):
+    """
+        Decorator for widget methods that shall be exposed in the web API.
+
+        Delegated methods will be available as URL commands, so that
+        client-side scripts can send Ajax requests directly to their
+        agent:
+
+        /my/dashboard/[command]?agent=[agent-id]
+
+        Delegated methods will be executed in the context of the agent
+        rather than of the widget (therefore "delegated"), so that they
+        have access to the agent configuration.
+
+        Pattern:
+
+        @delegated
+        def example(agent, context):
+
+            # Accessing the agent config:
+            config = agent.config
+
+            # Accessing the widget context (=self):
+            widget = agent.widget
+
+            # Accessing other agents of the same widget:
+            agents = widget.agents
+
+            # do something with the context, return output
+            return {"output": "something"}
+    """
+
+    def __init__(self, function):
+        self.function = function
+
+    def __call__(self, function):
+        self.function = function
+        return self
+
+    def execute(self, agent, context):
+        function = self.function
+        if callable(function):
+            output = function(agent, context)
+        else:
+            output = function
+        return output
 
 # =============================================================================
 class S3DashboardAgent(object):
@@ -655,14 +724,43 @@ class S3DashboardAgent(object):
         self.agent_id = agent_id
         self.widget = widget
 
+        # @todo: expose widget.options and widget.defaults for delegated functions
+
         self.config = config
 
     # -------------------------------------------------------------------------
     def __call__(self, context):
         """
-            Dispatch Ajax requests (replace S3DashboardWidget.__call__)
+            Dispatch Ajax requests
+
+            @todo: process config-commands internally
+            @todo: execute other commands through do-method
         """
         pass
+
+    # -------------------------------------------------------------------------
+    def do(self, command, context):
+        """
+            Execute a delegated widget method
+
+            @param command: the name of the delegated widget method
+            @param context: the S3DashboardContext
+        """
+
+        widget = self.widget
+
+        msg = "%s does not expose a '%s' method"
+        exception = lambda: NotImplementedError(msg % (widget.__class__.__name__,
+                                                       command,
+                                                       ))
+        try:
+            method = getattr(widget, command)
+        except AttributeError:
+            raise exception()
+        if type(method) is not delegated:
+            raise exception()
+
+        return method.execute(self, context)
 
     # -------------------------------------------------------------------------
     def render_widget(self, layout, context):
@@ -754,7 +852,7 @@ class S3DashboardWidget(object):
         self.agents = {}
 
     # -------------------------------------------------------------------------
-    def create_agent(self, agent_id, config=None, context=None):
+    def _create_agent(self, agent_id, config=None, context=None):
         """
             Create an agent for this widget
 
