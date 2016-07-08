@@ -35,6 +35,8 @@ __all__ = ("S3Dashboard",
            "S3DashboardWidget",
            )
 
+import json
+
 from gluon import *
 
 from s3utils import s3_get_extension
@@ -184,7 +186,7 @@ class S3DashboardConfig(object):
         - can load and store configurations (@todo)
         - can determine the active configuration (@todo)
         - can parse default configuration
-        - renders the configuration GUI and handles its requests (@todo)
+        - builds the configuration GUI and handles its requests (@todo)
     """
 
     def __init__(self,
@@ -241,7 +243,7 @@ class S3DashboardConfig(object):
 class S3DashboardChannel(object):
     """
         A dashboard channel
-        (=a section of the dashboard where widgets can be rendered)
+        (=a section of the dashboard where widgets can be added)
     """
 
     def __init__(self):
@@ -259,7 +261,6 @@ class S3DashboardChannel(object):
             @param widget: the widget XML (e.g. DIV instance)
             @param position: the position of the widget in the channel,
                              if there are multiple widgets in the channel
-                             (lowest value is rendered first)
         """
 
         widgets = self.widgets
@@ -272,12 +273,11 @@ class S3DashboardChannel(object):
     def __iter__(self):
         """
             Iterate over the widgets in this channel, in order of their
-            position (lowest position value is rendered first); used in
-            layouts to render the channel contents
+            positions; used in layouts to build the channel contents.
 
-            NB widgets without explicit position (=None), or multiple
-               widgets with the same position, will be returned in the
-               order in which they have been added to this channel
+            @note: Widgets without explicit position (=None), or multiple
+                   widgets at the same position, will be returned in the
+                   order in which they have been added to the channel.
         """
 
         widgets = self.widgets
@@ -295,9 +295,9 @@ class S3DashboardChannel(object):
     def __len__(self):
         """
             Number of widgets in this channel, useful for sizing of
-            container elements in layouts
+            container elements in layouts:
 
-            number_of_widgets = len(channel)
+                - number_of_widgets = len(channel)
         """
 
         total = sum(len(widgets) for widgets in self.widgets.values())
@@ -320,10 +320,29 @@ class S3DashboardLayout(object):
     # -------------------------------------------------------------------------
     # Methods to be implemented in subclasses
     # -------------------------------------------------------------------------
+    def build(self, context):
+        """
+            Build the layout with the contents added by agents
+            - to be implemented in subclasses
+
+            @param context: the current S3DashboardContext
+
+            @return: the dashboard contents, usually a TAG instance,
+                     alternatively a dict for the view (for custom
+                     views)
+
+            @note: can override current.response.view to use a
+                   specific view template (default is dashboard.html)
+        """
+
+        return ""
+
+    # -------------------------------------------------------------------------
     def add_widget(self, widget, channel=DEFAULT, position=None):
         """
-            Add contents to layout
-            - can be overridden in subclasses
+            Add contents to layout,
+            - can be overwritten in subclasses (e.g. to dynamically
+              create channels)
 
             @param contents: the contents to insert
             @param channel: the channel where to insert the contents,
@@ -345,25 +364,16 @@ class S3DashboardLayout(object):
             channel_.add_widget(widget, position=position)
 
     # -------------------------------------------------------------------------
-    def render(self, context):
-        """
-            Render the contents, build the output dict for the view
-            - to be implemented in subclasses
-
-            @param context: the current S3DashboardContext
-
-            @return: the output dict for the view
-        """
-
-        return ""
-
+    # Helpers
     # -------------------------------------------------------------------------
-    def render_channel(self, key, **attr):
+    def build_channel(self, key, **attr):
         """
-            Render a single channel, usually called by render()
-            - can be overridden in subclass
+            Build a single channel, usually called by build()
 
             @param key: the channel key
+            @param attr: HTML attributes for the channel
+
+            @return: the XML for the channel, usually a DIV instance
         """
 
         widgets = default = XML("&nbsp;")
@@ -416,19 +426,18 @@ class S3DashboardBoxesLayout(S3DashboardLayout):
     DEFAULT_CHANNEL = "C"
 
     # -------------------------------------------------------------------------
-    def render(self, context):
+    def build(self, context):
         """
-            Render the contents, build the output dict for the view
-            - to be implemented in subclasses
+            Build the layout with the contents added by agents
 
             @param context: the current S3DashboardContext
 
-            @return: the output dict for the view
+            @return: the dashboard contents (TAG)
         """
 
         T = current.T
 
-        channel = self.render_channel
+        channel = self.build_channel
 
         contents = TAG[""](
                     DIV(channel("N",
@@ -470,7 +479,7 @@ class S3DashboardGridLayout(S3DashboardLayout):
 # =============================================================================
 class S3Dashboard(object):
     """
-        Class to render and manage dashboards
+        Class to build and manage dashboards
 
         def my_controller():
 
@@ -572,9 +581,13 @@ class S3Dashboard(object):
         return agents
 
     # -------------------------------------------------------------------------
-    def __call__(self):
+    def __call__(self, **attr):
         """
             Dispatch requests - this method is called by the controller.
+
+            @param attr: keyword arguments from the controller
+
+            @keyword _id: the node ID for the dashboard (default: "dashboard")
 
             @return: the output for the view
         """
@@ -586,7 +599,7 @@ class S3Dashboard(object):
 
         if context.http == "GET":
             if context.representation == "html":
-                output = self.render()
+                output = self.build(**attr)
             else:
                 context.error(415, current.ERROR.BAD_FORMAT)
         else:
@@ -595,42 +608,46 @@ class S3Dashboard(object):
         return output
 
     # -------------------------------------------------------------------------
-    def render(self):
+    def build(self, **attr):
         """
-            Method to produce the dashboard
+            Build the dashboard and all its contents
+
+            @param attr: keyword arguments from the controller
+
+            @return: the output dict for the view
         """
 
         config = self.config
         context = self.context
 
+        dashboard_id = attr.get("_id", "dashboard")
+
         output = {"title": config.title,
                   "contents": "",
+                  "dashboard_id": dashboard_id,
                   }
 
-        # Inject JavaScript (before the widgets inject theirs)
-        # @todo
+        # Inject JavaScript
+        # - before building the widgets, so that widgets can subclass
+        self.inject_script(dashboard_id, options={})
 
         # Instantiate the layout for the active config
         layout = self.get_active_layout(config)
 
-        # Render the widgets
+        # Build the widgets
         for agent in self.agents.values():
-            agent.render_widget(layout, context)
+            agent.add_widget(layout, context)
 
-        # Render the contents with the layout
-        contents = layout.render(context)
+        # Set the view
+        current.response.view = "dashboard.html"
+
+        # Build the layout
+        contents = layout.build(context)
 
         if isinstance(contents, dict):
             output.update(contents)
         else:
             output["contents"] = contents
-
-        # Inject CSS (after the widgets inserted theirs)
-        # @todo
-
-        # Set the view
-        # @todo: allow per-template views (to support other themes)
-        current.response.view = "dashboard.html"
 
         return output
 
@@ -652,6 +669,37 @@ class S3Dashboard(object):
             layout = layout[-1]
 
         return layout(config)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inject_script(dashboard_id, options=None):
+
+        s3 = current.response.s3
+
+        scripts = s3.scripts
+        appname = current.request.application
+
+        # Inject UI widget script
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.ui.dashboard.js" % appname
+            if script not in scripts:
+                scripts.append(script)
+        else:
+            # @todo: add minify-config
+            script = "/%s/static/scripts/S3/s3.ui.dashboard.js" % appname
+            #script = "/%s/static/scripts/S3/s3.ui.dashboard.min.js" % appname
+            if script not in scripts:
+                scripts.append(script)
+
+        # Inject widget instantiation
+        if not options:
+            options = {}
+        script = """$("#%(dashboard_id)s").dashboardController(%(options)s)""" % \
+                    {"dashboard_id": dashboard_id,
+                     "options": json.dumps(options),
+                     }
+        s3.jquery_ready.append(script)
+
 
 # =============================================================================
 class delegated(object):
@@ -724,8 +772,6 @@ class S3DashboardAgent(object):
         self.agent_id = agent_id
         self.widget = widget
 
-        # @todo: expose widget.options and widget.defaults for delegated functions
-
         self.config = config
 
     # -------------------------------------------------------------------------
@@ -763,7 +809,7 @@ class S3DashboardAgent(object):
         return method.execute(self, context)
 
     # -------------------------------------------------------------------------
-    def render_widget(self, layout, context):
+    def add_widget(self, layout, context):
         """
             Build the widget XML for the context, and add it to the layout
         """
@@ -776,6 +822,9 @@ class S3DashboardAgent(object):
                                   config,
                                   context = context,
                                   )
+
+        # Add script file
+        prototype._load_script()
 
         # Determine channel and position from config
         channel = config.get("channel", DEFAULT)
@@ -803,15 +852,68 @@ class S3DashboardWidget(object):
             @param context: the S3DashboardContext
             @param config: the active widget configuration
 
-            @return: a DIV instance
+            @return: a DIV instance, with agent_id as node ID
         """
 
         # Base class just renders some static XML
         contents = config.get("xml", "")
+
+        self.inject_script(agent_id)
+
         return DIV(XML(contents),
                    _class = "db-generic",
                    _id = agent_id,
                    )
+
+    # -------------------------------------------------------------------------
+    def get_script_path(self, debug=False):
+        """
+            Get the path to the script file for this widget, can be
+            implemented in subclasses to override the default.
+
+            @param debug: whether running in debug mode or not
+
+            @return: path relative to static/scripts,
+                     None if no separate script file required
+        """
+
+        #if debug:
+        #    return "S3/mywidget.js"
+        #else:
+        #    return "S3/mywidget.min.js"
+
+        # No separate script file required for base class
+        return None
+
+    # -------------------------------------------------------------------------
+    # Helpers
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inject_script(agent_id,
+                      widget_class="dashboardWidget",
+                      options=None):
+        """
+            Helper method to inject the init script for a particular agent,
+            usually called by widget() method.
+
+            @param agent_id: the agent ID
+            @param widget_class: the widget class to instantiate
+            @param options: JSON-serializable dict of options to pass
+                            to the widget instance
+        """
+
+        s3 = current.response.s3
+
+        if not agent_id or not widget_class:
+            return
+        if not options:
+            options = {}
+        script = """$("#%(agent_id)s").%(widget_class)s(%(options)s)""" % \
+                    {"agent_id": agent_id,
+                     "widget_class": widget_class,
+                     "options": json.dumps(options),
+                     }
+        s3.jquery_ready.append(script)
 
     # -------------------------------------------------------------------------
     # Base class methods
@@ -850,6 +952,7 @@ class S3DashboardWidget(object):
         self.on_create_agent = on_create_agent
 
         self.agents = {}
+        self.script_loaded = False
 
     # -------------------------------------------------------------------------
     def _create_agent(self, agent_id, config=None, context=None):
@@ -884,5 +987,29 @@ class S3DashboardWidget(object):
                 on_create_agent(agent, context)
 
         return agent
+
+    # -------------------------------------------------------------------------
+    def _load_script(self):
+        """
+            Add the script file to s3.scripts, called when an agent
+            builds the widget
+        """
+
+        if self.script_loaded:
+            return
+
+        s3 = current.response.s3
+        scripts = s3.scripts
+
+        path = self.get_script_path(debug=s3.debug)
+        if path:
+            appname = current.request.application
+
+            # Add script to s3.scripts
+            script = "/%s/static/scripts/%s" % (appname, path)
+            if script not in scripts:
+                scripts.append(script)
+
+        self.script_loaded = True
 
 # END =========================================================================
