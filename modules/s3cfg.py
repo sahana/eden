@@ -2462,6 +2462,12 @@ class S3Config(Storage):
         """
         return self.cap.get("rss_use_links", False)
 
+    def get_cap_use_ack(self):
+        """
+            Whether CAP Alerts have workflow for Acknowledgement
+        """
+        return self.cap.get("use_ack", False)
+
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #
