@@ -631,7 +631,7 @@ $('#method_selector').change(function(){
             # Fixed method
             subscription["method"] = formvars.method
             # Fixed Notify On and Frequency
-            subscription["notify_on"] = ["new"]
+            subscription["notify_on"] = ["upd"]
             subscription["frequency"] = "immediately"
             # Alternatively, with notify and frequency selector
             #subscription["notify_on"] = listify(formvars.notify_on)

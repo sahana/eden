@@ -28,6 +28,14 @@ def alert_history():
     return output
 
 # -----------------------------------------------------------------------------
+def alert_ack():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def info_prep(r):
     """
         Preprocessor for CAP Info segments

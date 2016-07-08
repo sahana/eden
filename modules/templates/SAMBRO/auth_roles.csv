@@ -11,6 +11,7 @@ AUTHENTICATED,Authenticated,,org,,,READ,,,,,
 AUTHENTICATED,Authenticated,,sync,repository,,CREATE,READ|UPDATE|DELETE,,,,
 AUTHENTICATED,Authenticated,,cap,warning_priority,,READ,,,,,For subscriptions
 AUTHENTICATED,Authenticated,,pr,subscription,,READ|CREATE,READ|UPDATE|DELETE,,,,Subscription Settings
+AUTHENTICATED,Authenticated,,cap,alert_ack,,READ,READ|UPDATE,,,,Can edit their own record
 MAP_ADMIN,Map Admin,,gis,,,ALL,,,,,
 MAP_ADMIN,Map Admin,,cap,area,,READ|CREATE|UPDATE|DELETE,,,,,
 ALERT_EDITOR,Alert Editor,Can create the CAP Message and submit that for approval,cap,alert,,READ|CREATE|UPDATE,,,,,

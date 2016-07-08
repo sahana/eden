@@ -7,6 +7,7 @@ from collections import OrderedDict
 from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
+from gluon.languages import lazyT
 
 from s3 import FS, s3_str
 
@@ -89,6 +90,9 @@ def config(settings):
 
     # ALlow RSS to use links of entry if link fails
     settings.cap.rss_use_links = True
+
+    # SAMBRO supports ack workflow
+    settings.cap.use_ack = True
 
     # -------------------------------------------------------------------------
     # L10n (Localization) settings
@@ -350,41 +354,26 @@ def config(settings):
 
             # @ToDo: Check for LEFT join when required
             # this is ok for now since every Alert should have an Info & an Area
-            # @ToDo: Handle multi-lingual alerts when required
             alert_id = int(record["id"])
             table = s3db.cap_alert
             itable = s3db.cap_info
             atable = s3db.cap_area
-            query_ = (table.id == alert_id) & \
-                     (table.deleted != True) & \
-                     (itable.alert_id == table.id) & \
-                     (itable.deleted != True) & \
-                     (atable.alert_id == table.id) & \
-                     (atable.deleted != True)
-            rows_ = db(query_).select(table.identifier,
-                                      table.msg_type,
-                                      table.scope,
-                                      table.sent,
-                                      table.source,
-                                      table.status,
-                                      itable.category,
-                                      itable.certainty,
-                                      itable.contact,
-                                      itable.description,
-                                      itable.effective,
-                                      itable.expires,
-                                      itable.event_type_id,
-                                      itable.headline,
-                                      itable.instruction,
-                                      itable.priority,
-                                      itable.response_type,
-                                      itable.sender_name,
-                                      itable.severity,
-                                      itable.urgency,
-                                      itable.web,
-                                      atable.name)
+            query = (table.id == alert_id) & \
+                    (table.deleted != True) & \
+                    (itable.alert_id == table.id) & \
+                    (itable.deleted != True) & \
+                    (atable.alert_id == table.id) & \
+                    (atable.deleted != True)
+            resource = s3db.resource("cap_alert", filter=query)
+            # Fields to extract
+            fields = resource.list_fields(key="notify_fields")
+            # Extract the data
+            data = resource.select(fields,
+                                   raw_data=True)
+            # Single row as we are filtering for particular alert_id
+            arow = data["rows"][0]
 
-            if record["scope"] != "Private" and len(rows_):
+            if record["scope"] != "Private" and data["numrows"] > 0:
                 # Google Cloud Messaging
                 stable = s3db.pr_subscription
                 ctable = s3db.pr_contact
@@ -398,16 +387,13 @@ def config(settings):
                 rows = db(query).select(ctable.value)
                 if len(rows):
                     registration_ids = [s3_str(row.value) for row in rows]
-                    for row_ in rows_:
-                        title = "[%s] %s %s" % (row_.cap_info.sender_name,
-                                                itable.event_type_id.represent(row_.cap_info.event_type_id),
-                                                itable.priority.represent(row_.cap_info.priority),
-                                                )
-                        async_task("msg_gcm", args=[title,
-                                                    "%s/%s" % (s3_str(row_.cap_info.web), "profile"),
-                                                    s3_str(row_.cap_info.headline),
-                                                    json.dumps(registration_ids),
-                                                    ])
+                    title = get_email_subject(arow, system=False)
+                    async_task("msg_gcm", args=[title,
+                                                "%s/%s" % (s3_str(arow["cap_info.web"]), "profile"),
+                                                s3_str(get_formatted_value(arow["cap_info.headline"],
+                                                                           system=False)),
+                                                json.dumps(registration_ids),
+                                                ])
                 # Twitter Post
                 if settings.get_cap_post_to_twitter():
                     try:
@@ -415,65 +401,80 @@ def config(settings):
                     except ImportError:
                         current.log.debug("tweepy module needed for sending tweets")
                     else:
-                        # @ToDo: shorten url
-                        # @ToDo: Handle the multi-message nicely?
-                        # @ToDo: Send resource url with tweet
-                        send_tweet = current.msg.send_tweet
-                        for row_ in rows_:
-                            twitter_text = \
-    ("""%(Status)s: %(Headline)s
-    %(SENDER)s: %(SenderName)s
-    %(WEBSITE)s: %(Website)s%(Profile)s""") % dict(Status = row_.cap_alert.status,
-                                                   Headline = s3_str(row_.cap_info.headline),
-                                                   SENDER = T("Sender"),
-                                                   SenderName = s3_str(row_.cap_info.sender_name),
-                                                   WEBSITE = T("Website"),
-                                                   Website = row_.cap_info.web,
-                                                   Profile = "/profile",
-                                                   )
-                            try:
-                                send_tweet(text=twitter_text)
-                            except tweepy.error.TweepError, e:
-                                current.log.debug("Sending tweets failed: %s" % e)
+                        twitter_text = \
+("""%(status)s Alert: %(headline)s
+%(sender)s: %(sender_name)s
+%(website)s: %(Website)s%(profile)s""") % {"status": s3_str(T(arow["cap_alert.status"])),
+                                           "headline": s3_str(get_formatted_value(arow["cap_info.headline"],
+                                                                                  system=False)),
+                                           "sender": s3_str(T("Sender")),
+                                           "sender_name": s3_str(get_formatted_value(arow["cap_info.sender_name"],
+                                                                                     system=False)),
+                                           "website": s3_str(T("Website")),
+                                           "Website": s3_str(arow["cap_info.web"]),
+                                           "profile": "/profile",
+                                           }
+                        try:
+                            # @ToDo: shorten url
+                            # @ToDo: Handle the multi-message nicely?
+                            # @ToDo: Send resource url with tweet
+                            current.msg.send_tweet(text=s3_str(twitter_text))
+                        except tweepy.error.TweepError, e:
+                            current.log.debug("Sending tweets failed: %s" % e)
 
                 # Facebook Post
                 if settings.get_cap_post_to_facebook():
                     # @ToDo: post resources too?
-                    post_to_facebook = current.msg.post_to_facebook
-                    for row_ in rows_:
-                        content = get_facebook_content(row_),
-                        try:
-                            post_to_facebook(text=content)
-                        except Exception, e:
-                            current.log.debug("Posting Alert to Facebook failed: %s" % e)
+                    content = get_facebook_content(arow)
+                    try:
+                        current.msg.post_to_facebook(text=content)
+                    except Exception, e:
+                        current.log.debug("Posting Alert to Facebook failed: %s" % e)
 
             addresses = record["addresses"]
             if len(addresses):
+                # First Responders
                 gtable = s3db.pr_group
+                mtable = s3db.pr_group_membership
+                ptable = s3db.pr_person
                 send_by_pe_id = current.msg.send_by_pe_id
-
+                get_user_id = current.auth.s3_get_user_id
+                query_ = (gtable.id == mtable.group_id) & \
+                         (mtable.person_id == ptable.id) & \
+                         (gtable.deleted != True) &\
+                         (mtable.deleted != True) &\
+                         (ptable.deleted != True)
                 count = len(addresses)
                 if count == 1:
-                    query = (gtable.id == addresses[0])
+                    query = query_ & (gtable.id == addresses[0])
                 else:
-                    query = (gtable.id.belongs(addresses))
-                rows = db(query).select(gtable.pe_id,
-                                        limitby = (0, count))
-
-                for row in rows_:
-                    priority = itable.priority.represent(row.cap_info.priority)
-                    if priority == current.messages["NONE"]:
-                        priority = T("Alert")
-                    subject = "[%s] %s %s" % (row.cap_info.sender_name,
-                                              itable.event_type_id.represent(row.cap_info.event_type_id),
-                                              priority)
-                    email_content = "%s%s%s" % ("<html>", XML(get_html_email_content(row)), "</html>")
-                    sms_content = get_sms_content(row)
-    
-                    for row_ in rows:
-                        send_by_pe_id(row_.pe_id, subject, email_content)
+                    query = query_ & (gtable.id.belongs(addresses))
+                rows = db(query).select(ptable.pe_id)
+                subject = get_email_subject(arow, system=False)
+                if settings.get_cap_use_ack():
+                    for row in rows:
+                        ack_id = create_ack(alert_id, get_user_id(pe_id=row.pe_id))
+                        email_content = "%s%s%s" % ("<html>",
+                                                    XML(get_html_email_content(arow,
+                                                                    ack_id=ack_id,
+                                                                    system=False)),
+                                                    "</html>")
+                        sms_content = get_sms_content(arow, ack_id=ack_id, system=False)
+                        send_by_pe_id(row.pe_id, subject, email_content)
                         try:
-                            send_by_pe_id(row_.pe_id, subject, sms_content, contact_method="SMS")
+                            send_by_pe_id(row.pe_id, subject, sms_content, contact_method="SMS")
+                        except ValueError:
+                            current.log.error("No SMS Handler defined!")
+                else:
+                    html_content = get_html_email_content(arow, system=False)
+                    email_content = "%s%s%s" % ("<html>",
+                                                XML(html_content),
+                                                "</html>")
+                    sms_content = get_sms_content(arow, system=False)
+                    for row in rows:
+                        send_by_pe_id(row.pe_id, subject, email_content)
+                        try:
+                            send_by_pe_id(row.pe_id, subject, sms_content, contact_method="SMS")
                         except ValueError:
                             current.log.error("No SMS Handler defined!")
 
@@ -687,42 +688,31 @@ def config(settings):
         rows = data["rows"]
         rfields = data["rfields"]
         output = {}
-        new = [] # Alerts are updated by creating new alerts and setting status to update
+        upd = [] # upd as the created alerts might be approved after some time, check is also done
 
         db = current.db
         atable = current.s3db.cap_alert
         if format == "text":
             # For SMS
-            labels = []
-            append = labels.append
-
-            append_record = new.append
-            for rfield in rfields:
-                if rfield.ftype != "id":
-                    append((rfield.colname, rfield.label))
-
+            append_record = upd.append
             for row in rows:
                 row_ = db(atable.id == row["cap_alert.id"]).select(atable.approved_on,
                                                                    limitby=(0, 1)).first()
                 if row_ and row_.approved_on is not None:
                     if s3_utc(row_.approved_on) >= last_check_time:
-                        record = []
-                        append_column = record.append
-                        for colname, label in labels:
-                            append_column((label, row[colname]))
                         sms_content = get_sms_content(row)
                         append_record(sms_content)
 
-            if "new" in notify_on and len(new):
-                output["new"] = len(new)
-                output["new_records"] = new
+            if "upd" in notify_on and len(upd):
+                output["upd"] = len(upd)
+                output["upd_records"] = upd
             else:
-                output["new"] = None
+                output["upd"] = None
         else:
             # HTML emails
             elements = []
             append = elements.append
-            append_record = new.append
+            append_record = upd.append
 
             for row in rows:
                 row_ = db(atable.id == row["cap_alert.id"]).select(atable.approved_on,
@@ -734,11 +724,11 @@ def config(settings):
                         append(container)
                         append(BR())
                         append_record(container)
-            if "new" in notify_on and len(new):
-                output["new"] = len(new)
-                output["new_records"] = DIV(*elements)
+            if "upd" in notify_on and len(upd):
+                output["upd"] = len(upd)
+                output["upd_records"] = DIV(*elements)
             else:
-                output["new"] = None
+                output["upd"] = None
 
         output.update(meta_data)
         return output
@@ -959,185 +949,21 @@ def config(settings):
             return filter_options
 
     # -------------------------------------------------------------------------
-    def get_html_email_content(row):
+    def get_html_email_content(row, ack_id=None, system=True):
         """
             prepare the content for html email
+
+            @param row: the row from which the email will be constructed
+            @param ack_id: cap_alert_ack.id for including the acknowledgement link
+            @param system: is this system notification email or email for first responders
         """
 
-        from gluon.languages import lazyT
         itable = current.s3db.cap_info
         event_type_id = row["cap_info.event_type_id"]
         priority_id = row["cap_info.priority"]
         response_type = row["cap_info.response_type"]
-
-        if event_type_id and event_type_id != "-":
-            if not isinstance(event_type_id, lazyT):
-                event_type = itable.event_type_id.represent(event_type_id)
-            else:
-                event_type = event_type_id
-        else:
-            event_type = T("None")
-
-        if priority_id and \
-           priority_id != "-":
-            if not isinstance(priority_id, lazyT):
-                priority = itable.priority.represent(priority_id)
-            else:
-                priority = priority_id
-        else:
-            priority = T("Alert")
-
-        category = itable.category.represent(row["cap_info.category"])
-
-        if not response_type: 
-            response_type = T("Unknown")
-        elif isinstance(response_type, list):
-            response_type = ", ".join(response_type)
-
-        subject = \
-        T("%(Scope)s %(Status)s Alert") % \
-            dict(Scope = s3_str(row["cap_alert.scope"]),
-                 Status = s3_str(row["cap_alert.status"]))
-        headline = H2(T((s3_str(row["cap_info.headline"]))))
-        id = T("ID: %(Identifier)s") % dict(Identifier = s3_str(row["cap_alert.identifier"]))
-        body1 = \
-T("""%(Priority)s message %(MessageType)s
-in effect for %(AreaDescription)s""") % dict(\
-                    Priority = s3_str(priority),
-                    MessageType = s3_str(row["cap_alert.msg_type"]),
-                    AreaDescription = s3_str(row["cap_area.name"]))
-        body2 = \
-        T("This %(Severity)s %(EventType)s is %(Urgency)s and is %(Certainty)s") %\
-            dict(Severity = s3_str(row["cap_info.severity"]),
-                 EventType = s3_str(event_type),
-                 Urgency = s3_str(row["cap_info.urgency"]),
-                 Certainty = s3_str(row["cap_info.certainty"]))
-        body3 = \
-T("""Message %(Identifier)s: %(EventType)s (%(Category)s) issued by
-%(SenderName)s sent at %(Date)s from %(Source)s""") % \
-                 dict(Identifier = s3_str(row["cap_alert.identifier"]),
-                      EventType = s3_str(event_type),
-                      Category = s3_str(category),
-                      SenderName = s3_str(row["cap_info.sender_name"]),
-                      Date = s3_str(row["cap_alert.sent"]),
-                      Source = s3_str(row["cap_alert.source"]))
-        body4 = T("Alert Description: %(AlertDescription)s") % \
-                dict(AlertDescription = s3_str(row["cap_info.description"]))
-        body5 = T("Expected Response: %(ResponseType)s") % \
-                dict(ResponseType = s3_str(response_type))
-        body6 = T("Instructions: %(Instruction)s") % \
-                dict(Instruction=s3_str(row["cap_info.instruction"]))
-        body7 = \
-T("Alert is effective from %(Effective)s and expires on %(Expires)s") % \
-                dict(Effective = s3_str(row["cap_info.effective"]),
-                     Expires = s3_str(row["cap_info.expires"]))
-        body8 = T("For more details visit %(URL)s or contact %(Contact)s") % \
-                dict(URL = "%s/%s" % (s3_str(row["cap_info.web"]), "profile"),
-                     Contact = s3_str(row["cap_info.contact"]))
-        body9 = A(T("VIEW ALERT ON THE WEB"),
-                    _href = "%s/%s" % (s3_str(row["cap_info.web"]), "profile"))
-        return TAG[""](HR(), BR(),
-                       body9,
-                       BR(), BR(),
-                       subject, headline,
-                       BR(),
-                       id,
-                       BR(), BR(),
-                       body1,
-                       BR(),
-                       body2,
-                       BR(), BR(),
-                       body3,
-                       BR(), BR(),
-                       body4,
-                       BR(), BR(),
-                       body5,
-                       BR(), BR(),
-                       body6,
-                       BR(), BR(),
-                       body7,
-                       BR(), BR(),
-                       body8,
-                       BR())
-
-    # -------------------------------------------------------------------------
-    def get_email_subject(row):
-        """
-            prepare the subject for Email
-        """
-
-        from gluon.languages import lazyT
-        itable = current.s3db.cap_info
-        event_type_id = row["cap_info.event_type_id"]
-        priority_id = row["cap_info.priority"]
-
-        if not isinstance(event_type_id, lazyT):
-            event_type = itable.event_type_id.represent(event_type_id)
-        else:
-            event_type = event_type_id
-
-        if priority_id and priority_id != "-":
-            if not isinstance(priority_id, lazyT):
-                priority = itable.priority.represent(priority_id)
-            else:
-                priority = priority_id
-        else:
-            priority = T("Alert")
-
-        subject = "[%s] %s %s" % (s3_str(row["cap_info.sender_name"]),
-                                  event_type,
-                                  priority)
-
-        return subject
-
-    # -------------------------------------------------------------------------
-    def get_sms_content(row):
-        """
-            prepare the content for SMS
-        """
-
-        from gluon.languages import lazyT
-        itable = current.s3db.cap_info
-        event_type_id = row["cap_info.event_type_id"]
-        priority_id = row["cap_info.priority"]
-
-        if not isinstance(event_type_id, lazyT):
-            event_type = itable.event_type_id.represent(event_type_id)
-        else:
-            event_type = event_type_id
-
-        if priority_id and priority_id != "-":
-            if not isinstance(priority_id, lazyT):
-                priority = itable.priority.represent(priority_id)
-            else:
-                priority = priority_id
-        else:
-            priority = T("Unknown")
-
-        sms_body = \
-T("""%(Status)s %(MessageType)s for %(AreaDescription)s with %(Priority)s priority %(EventType)s issued by %(SenderName)s at %(Date)s (ID:%(Identifier)s) \n\n""") % \
-            dict(Status = s3_str(row["cap_alert.status"]),
-                 MessageType = s3_str(row["cap_alert.msg_type"]),
-                 AreaDescription = s3_str(row["cap_area.name"]),
-                 Priority = s3_str(priority),
-                 EventType = s3_str(event_type),
-                 SenderName = s3_str(row["cap_info.sender_name"]),
-                 Date = s3_str(row["cap_alert.sent"]),
-                 Identifier = s3_str(row["cap_alert.identifier"]))
-
-        return s3_str(sms_body)
-
-    # -------------------------------------------------------------------------
-    def get_facebook_content(row):
-        """
-            prepare the content for facebook post
-        """
-
-        from gluon.languages import lazyT
-        itable = current.s3db.cap_info
-        event_type_id = row["cap_info.event_type_id"]
-        priority_id = row["cap_info.priority"]
-        response_type = row["cap_info.response_type"]
+        instruction = row["cap_info.instruction"]
+        description = row["cap_info.description"]
 
         if event_type_id and event_type_id != current.messages["NONE"]:
             if not isinstance(event_type_id, lazyT):
@@ -1155,24 +981,227 @@ T("""%(Status)s %(MessageType)s for %(AreaDescription)s with %(Priority)s priori
         else:
             priority = T("Alert")
 
-        category = itable.category.represent(row["cap_info.category"])
+        email_content = TAG[""](HR(), BR(),
+                         A(T("VIEW ALERT ON THE WEB"),
+                           _href = "%s/%s" % (s3_str(row["cap_info.web"]), "profile")),
+                         BR(), BR(),
+                         T("%(scope)s %(status)s Alert") % \
+                         {"scope": s3_str(row["cap_alert.scope"]),
+                          "status": s3_str(row["cap_alert.status"]),
+                          },
+                         H2(T(s3_str(get_formatted_value(row["cap_info.headline"],
+                                                         system=system)))),
+                         BR(),
+                         T("ID: %(identifier)s") % \
+                         {"identifier": s3_str(row["cap_alert.identifier"])},
+                         BR(), BR(),
+                         T("""%(priority)s message %(message_type)s in effect for %(area_description)s""") % \
+                         {"priority": s3_str(priority),
+                          "message_type": s3_str(row["cap_alert.msg_type"]),
+                          "area_description": s3_str(get_formatted_value(row["cap_area.name"],
+                                                                         system=system)),
+                         },
+                         BR(),
+                         T("This %(severity)s %(event_type)s is %(urgency)s and is %(certainty)s") %\
+                         {"severity": s3_str(row["cap_info.severity"]),
+                          "event_type": s3_str(event_type),
+                          "urgency": s3_str(row["cap_info.urgency"]),
+                          "certainty": s3_str(row["cap_info.certainty"]),
+                          },
+                         BR(), BR(),
+                         T("""Message %(identifier)s: %(event_type)s (%(category)s) issued by %(sender_name)s sent at %(date)s from %(source)s""") % \
+                         {"identifier": s3_str(row["cap_alert.identifier"]),
+                          "event_type": s3_str(event_type),
+                          "category": s3_str(get_formatted_value(row["cap_info.category"],
+                                                                 represent = itable.category.represent,
+                                                                 system=system)),
+                          "sender_name": s3_str(get_formatted_value(row["cap_info.sender_name"],
+                                                                    system=system)),
+                          "date": s3_str(get_formatted_value(row["cap_alert.sent"],
+                                                             represent = current.s3db.cap_alert.sent.represent,
+                                                             system=system)),
+                          "source": s3_str(row["cap_alert.source"]),
+                          },
+                         BR(),
+                         BR() if description else "",
+                         T("Alert Description: %(alert_description)s") % \
+                         {"alert_description": s3_str(get_formatted_value(description,
+                                                                          system=system))}
+                         if description else "",
+                         BR() if description else "",
+                         BR(),
+                         BR() if response_type else "",
+                         T("Expected Response: %(response_type)s") % \
+                         {"response_type": s3_str(get_formatted_value(response_type,
+                                                                      represent = itable.response_type.represent,
+                                                                      system=system)),
+                          }
+                         if response_type else "",
+                         BR() if response_type else "",
+                         BR(),
+                         BR() if instruction else "",
+                         T("Instructions: %(instruction)s") % \
+                         {"instruction": s3_str(get_formatted_value(instruction, system=system))}
+                         if instruction else "",
+                         BR() if instruction else "",
+                         BR(),
+                         T("Alert is effective from %(effective)s and expires on %(expires)s") % \
+                         {"effective": s3_str(get_formatted_value(row["cap_info.effective"],
+                                                                  represent = itable.effective.represent,
+                                                                  system=system)),
+                          "expires": s3_str(get_formatted_value(row["cap_info.expires"],
+                                                                represent = itable.expires.represent,
+                                                                system=system)),
+                          },
+                         BR(), BR(),
+                         T("For more details visit %(url)s or contact %(contact)s") % \
+                         {"url": "%s/%s" % ((s3_str(row["cap_info.web"])), "profile"),
+                          "contact": s3_str(row["cap_info.contact"]),
+                          },
+                         BR(), BR(),
+                         T("To acknowledge the alert, use the following link: %(ack_link)s") % \
+                         {"ack_link": "%s%s" % (current.deployment_settings.get_base_public_url(),
+                                                URL(c="cap", f="alert_ack", args=[ack_id, "update"])),
+                          } if ack_id else "",
+                         )
 
-        if not response_type: 
-            response_type = T("Unknown")
-        elif isinstance(response_type, list):
-            response_type = ", ".join(response_type)
+        return email_content
+
+    # -------------------------------------------------------------------------
+    def get_email_subject(row, system=True):
+        """
+            prepare the subject for Email
+        """
+
+        itable = current.s3db.cap_info
+        event_type_id = row["cap_info.event_type_id"]
+        priority_id = row["cap_info.priority"]
+
+        if event_type_id and event_type_id != current.messages["NONE"]:
+            if not isinstance(event_type_id, lazyT):
+                event_type = itable.event_type_id.represent(event_type_id)
+            else:
+                event_type = event_type_id
+        else:
+            event_type = T("None")
+
+        if priority_id and priority_id != current.messages["NONE"]:
+            if not isinstance(priority_id, lazyT):
+                priority = itable.priority.represent(priority_id)
+            else:
+                priority = priority_id
+        else:
+            priority = T("Alert")
+
+        subject = "[%s] %s %s" % (get_formatted_value(row["cap_info.sender_name"],
+                                                      system=system),
+                                  event_type,
+                                  priority)
+
+        return subject
+
+    # -------------------------------------------------------------------------
+    def get_sms_content(row, ack_id=None, system=True):
+        """
+            prepare the content for SMS
+
+            @param row: the row from which the sms will be constructed
+            @param ack_id: cap_alert_ack.id for including the acknowledgement link
+            @param system: is this system notification email or email for first responders
+        """
+
+        itable = current.s3db.cap_info
+        event_type_id = row["cap_info.event_type_id"]
+        priority_id = row["cap_info.priority"]
+
+        if not isinstance(event_type_id, lazyT):
+            event_type = itable.event_type_id.represent(event_type_id)
+        else:
+            event_type = event_type_id
+
+        if priority_id and priority_id != "-":
+            if not isinstance(priority_id, lazyT):
+                priority = itable.priority.represent(priority_id)
+            else:
+                priority = priority_id
+        else:
+            priority = T("Unknown")
+
+        if ack_id:
+            sms_body = \
+T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s priority %(event_type)s issued by %(sender_name)s at %(date)s (ID:%(identifier)s) \nTo acknowledge the alert, click: %(ack_link)s \n\n""") % \
+                {"status": s3_str(row["cap_alert.status"]),
+                 "message_type": s3_str(row["cap_alert.msg_type"]),
+                 "area_description": s3_str(get_formatted_value(row["cap_area.name"],
+                                                                system=system)),
+                 "priority": s3_str(priority),
+                 "event_type": s3_str(event_type),
+                 "sender_name": s3_str(get_formatted_value(row["cap_info.sender_name"],
+                                                           system=system)),
+                 "date": s3_str(row["cap_alert.sent"]),
+                 "identifier": s3_str(row["cap_alert.identifier"]),
+                 "ack_link": "%s%s" % (current.deployment_settings.get_base_public_url(),
+                                       URL(c="cap", f="alert_ack", args=[ack_id, "update"])),
+                 }
+        else:
+            sms_body = \
+T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s priority %(event_type)s issued by %(sender_name)s at %(date)s (ID:%(identifier)s) \n\n""") % \
+                {"status": s3_str(row["cap_alert.status"]),
+                 "message_type": s3_str(row["cap_alert.msg_type"]),
+                 "area_description": s3_str(get_formatted_value(row["cap_area.name"],
+                                                                system=system)),
+                 "priority": s3_str(priority),
+                 "event_type": s3_str(event_type),
+                 "sender_name": s3_str(get_formatted_value(row["cap_info.sender_name"],
+                                                           system=system)),
+                 "date": s3_str(row["cap_alert.sent"]),
+                 "identifier": s3_str(row["cap_alert.identifier"]),
+                 }
+
+        return s3_str(sms_body)
+
+    # -------------------------------------------------------------------------
+    def get_facebook_content(row, system=False):
+        """
+            prepare the content for facebook post
+        """
+
+        itable = current.s3db.cap_info
+        event_type_id = row["cap_info.event_type_id"]
+        priority_id = row["cap_info.priority"]
+        response_type = row["cap_info.response_type"]
+        instruction = row["cap_info.instruction"]
+        description = row["cap_info.description"]
+
+        if event_type_id and event_type_id != current.messages["NONE"]:
+            if not isinstance(event_type_id, lazyT):
+                event_type = itable.event_type_id.represent(event_type_id)
+            else:
+                event_type = event_type_id
+        else:
+            event_type = T("None")
+
+        if priority_id and priority_id != current.messages["NONE"]:
+            if not isinstance(priority_id, lazyT):
+                priority = itable.priority.represent(priority_id)
+            else:
+                priority = priority_id
+        else:
+            priority = T("Alert")
 
         facebook_content = [
                 T("%(scope)s %(status)s Alert") % \
                 {"scope": s3_str(row["cap_alert.scope"]),
                  "status": s3_str(row["cap_alert.status"]),
                  },
-                T((s3_str(row["cap_info.headline"]))),
+                T((s3_str(get_formatted_value(row["cap_info.headline"],
+                                              system=system)))),
                 T("ID: %(identifier)s") % {"identifier": s3_str(row["cap_alert.identifier"])},
                 T("""%(priority)s message %(message_type)s in effect for %(area_description)s""") % \
                 {"priority": s3_str(priority),
                  "message_type": s3_str(row["cap_alert.msg_type"]),
-                 "area_description": s3_str(row["cap_area.name"]),
+                 "area_description": s3_str(get_formatted_value(row["cap_area.name"],
+                                                                system=system)),
                  },
                 T("This %(severity)s %(event_type)s is %(urgency)s and is %(certainty)s") % \
                 {"severity": s3_str(row["cap_info.severity"]),
@@ -1183,36 +1212,98 @@ T("""%(Status)s %(MessageType)s for %(AreaDescription)s with %(Priority)s priori
                 T("""Message %(identifier)s: %(event_type)s (%(category)s) issued by %(sender_name)s sent at %(date)s from %(source)s""") % \
                 {"identifier": s3_str(row["cap_alert.identifier"]),
                  "event_type": s3_str(event_type),
-                 "category": s3_str(category),
-                 "sender_name": s3_str(row["cap_info.sender_name"]),
-                 "date": s3_str(row["cap_alert.sent"]),
+                 "category": s3_str(get_formatted_value(row["cap_info.category"],
+                                                        represent = itable.category.represent,
+                                                        system=system)),
+                 "sender_name": s3_str(get_formatted_value(row["cap_info.sender_name"],
+                                                           system=system)),
+                 "date": s3_str(get_formatted_value(row["cap_alert.sent"],
+                                                    represent = current.s3db.cap_alert.sent.represent,
+                                                    system=system)),
                  "source": s3_str(row["cap_alert.source"]),
                  },
                 T("Alert Description: %(alert_description)s") % \
-                {"alert_description": s3_str(row["cap_info.description"]),
-                 },
-                T("Expected Response: %(response_type)s\n\nInstructions: %(instruction)s") % \
-                {"response_type": s3_str(response_type),
-                 "instruction": s3_str(row["cap_info.instruction"]),
-                 }
-                if row["cap_info.instruction"] else
+                {"alert_description": s3_str(get_formatted_value(description,
+                                                                 system=system)),
+                 } if description else "",
                 T("Expected Response: %(response_type)s") % \
-                {"response_type": s3_str(response_type)},
+                {"response_type": s3_str(get_formatted_value(response_type,
+                                                             represent = itable.response_type.represent,
+                                                             system=system)),
+                 } if response_type else "",
+                T("Instruction: %(instruction)s") % \
+                {"instruction": s3_str(get_formatted_value(instruction, system=system))}
+                if instruction else "",
                 T("Alert is effective from %(effective)s and expires on %(expires)s") % \
-                {"effective": s3_str(row["cap_info.effective"]),
-                 "expires": s3_str(row["cap_info.expires"]),
+                {"effective": s3_str(get_formatted_value(row["cap_info.effective"],
+                                                         represent = itable.effective.represent,
+                                                         system=system)),
+                 "expires": s3_str(get_formatted_value(row["cap_info.expires"],
+                                                       represent = itable.expires.represent,
+                                                       system=system)),
                  },
                 T("For more details visit %(url)s or contact %(contact)s") % \
-                {"url": "%s/%s" % (s3_str(row["cap_info.web"]), "profile"),
-                 "contact": s3_str(row["cap_info.contact"]),
+                {"url": "%s/%s" % ((s3_str(row["cap_info.web"])), "profile"),
+                 "contact": s3_str(get_formatted_value(row["cap_info.contact"], system=system)),
                  }
                 if row["cap_info.contact"] else
                 T("For more details visit %(url)s") % \
-                {"url": "%s/%s" % (s3_str(row["cap_info.web"]), "profile")},
-                T("VIEW ALERT ON THE WEB: %(profile)s") % \
-                {"profile": "%s/%s" % ((s3_str(row["cap_info.web"])), "profile")}
+                {"url": "%s/%s" % ((s3_str(row["cap_info.web"])), "profile")}
                 ]
 
-        return "\n\n".join(s3_str(item) for item in facebook_content)
+        return "\n\n".join(s3_str(item) for item in facebook_content if item!="")
+
+    # -------------------------------------------------------------------------
+    def create_ack(alert_id, user_id):
+        """
+            Create a specific acknowledgement
+            @param alert_id: The particular alert ID for acknowledging
+            @param user_id: The user ID who owns the record
+
+            @todo: use location where the alert is targeted for
+        """
+
+        ack_data = {"alert_id": alert_id,
+                    "owned_by_user": int(user_id),
+                    }
+        ack_table = current.s3db.cap_alert_ack
+        ack_id = ack_table.insert(**ack_data)
+        current.auth.s3_set_record_owner(ack_table, ack_id)
+        # Uncomment this when there is onaccept hook
+        #s3db.onaccept(ack_table, dict(id=ack_id))
+
+        return ack_id
+
+    # -------------------------------------------------------------------------
+    def get_formatted_value(value, represent=None, system=True):
+        """ For non-system notification returns the formatted represented value
+        """
+
+        if not value:
+            return None
+        else:
+            if system:
+                # For system notification value is already properly formatted for representation
+                return value
+            else:
+                if isinstance(value, list):
+                    nvalue = []
+                    for value_ in value:
+                        if value_:
+                            if represent:
+                                nvalue.append(represent(value_))
+                            else:
+                                nvalue.append(value_)
+                    if len(nvalue):
+                        nvalue = ", ".join(nvalue)
+                    else:
+                        return None
+                else:
+                    if represent:
+                        nvalue = represent(value)
+                    else:
+                        nvalue = value
+
+                return nvalue
 
 # END =========================================================================
