@@ -1722,8 +1722,12 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
         if not current.deployment_settings.get_cap_identifier_suffix():
             row = db(table.id == form_vars.id).select(table.identifier,
+                                                      table.external,
                                                       limitby=(0, 1)).first()
-            db(table.id == form_vars.id).update(identifier = "%s%s" % (row.identifier, form_vars.msg_type))
+            if not row.external:
+                db(table.id == form_vars.id).update(identifier = "%s%s" % \
+                                                            (row.identifier,
+                                                             form_vars.msg_type))
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2090,14 +2094,21 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
         if tag and same_code:
             if tag == "SAME":
                 # SAME tag referes to some location_id in CAP
-                ttable = current.s3db.gis_location_tag
+                s3db = current.s3db
+                ttable = s3db.gis_location_tag
+                gtable = s3db.gis_location
 
+                # It is possible for there to be two polygons for the same SAME
+                # code since polygon change over time, even if the code remains
+                # the same. Hence the historic polygon is excluded as (gtable.end_date == None)
                 tquery = (ttable.tag == same_code) & \
                          (ttable.value == form_vars.get("value")) & \
-                         (ttable.deleted != True)
-                trow = db(tquery).select(ttable.location_id,
-                                         limitby=(0, 1)).first()
-                if trow:
+                         (ttable.deleted != True) & \
+                         (ttable.location_id == gtable.id) & \
+                         (gtable.end_date == None) & \
+                         (gtable.deleted != True)
+                trows = db(tquery).select(ttable.location_id)
+                for trow in trows:
                     # Match
                     ltable = db.cap_area_location
                     ldata = {"area_id": area_id,
