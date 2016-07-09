@@ -264,8 +264,9 @@ def alert():
             s3.formats["cap"] = r.url() # .have added by JS
 
         if r.interactive:
-            # Internal Alerts
-            table.external.default = False
+            if r.method not in ("import", "import_feed"):
+                # Internal Alerts
+                table.external.default = False
             if not r.component:
                 if r.get_vars["~.approved_by__ne"] == "None":
                     # Filter to internal alerts
