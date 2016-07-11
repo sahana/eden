@@ -22,9 +22,11 @@
         /**
          * Default options
          *
-         * @todo document options
+         * @prop {string} ajaxURL - URL for dashboard agent Ajax requests
          */
         options: {
+
+            ajaxURL: null
 
         },
 
@@ -50,6 +52,7 @@
 
             // @todo: remove
             s3_debug("dashboard initialized");
+            s3_debug("dashboard ajaxURL=" + this.options.ajaxURL);
         },
 
         /**

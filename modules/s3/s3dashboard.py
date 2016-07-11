@@ -58,7 +58,6 @@ class S3DashboardContext(object):
 
         # @todo: add request owner info (to select the active config)
         # @todo: extract the URL method (like default/dashboard/[method])
-        # @todo: extract the agent-id (?agent=agent-id)
 
         # Context variables
         self.shared = {}
@@ -170,9 +169,16 @@ class S3DashboardContext(object):
         request = current.request if r is None else r
 
         args = request.args
-        if len(args) > 0:
-            self.command = args[0]
 
+        command = None
+        if len(args) > 0:
+            command = args[0]
+            if "." in command:
+                command = command.split(".", 1)[0]
+        if command:
+            self.command = command
+
+        # @todo: support multiple agent IDs (for bulk requests)
         self.agent = request.get_vars.get("agent")
 
         self.http = current.request.env.request_method
@@ -592,20 +598,62 @@ class S3Dashboard(object):
             @return: the output for the view
         """
 
-        # @todo: dispatch commands to agents
         # @todo: handle the side menu (if any)
 
         context = self.context
 
-        if context.http == "GET":
-            if context.representation == "html":
-                output = self.build(**attr)
-            else:
-                context.error(415, current.ERROR.BAD_FORMAT)
-        else:
-            context.error(405, current.ERROR.BAD_METHOD)
+        agent_id = context.agent
+        http = context.http
+        command = context.command
 
-        return output
+        status, msg = None, None
+
+        if not agent_id:
+            # Global request
+            if http == "GET":
+                if command:
+                    # Global command
+                    output, error = self.do(command, context)
+                    if error:
+                        status, msg = error
+                else:
+                    # Build dashboard
+                    if context.representation == "html":
+                        output = self.build(**attr)
+                    else:
+                        status, msg = 415, current.ERROR.BAD_FORMAT
+            elif http == "POST":
+                if command:
+                    # Global command
+                    output, error = self.do(command, context)
+                    if error:
+                        status, msg = error
+                else:
+                    # POST requires command
+                    status, msg = 405, current.ERROR.BAD_METHOD
+            else:
+                status, msg = 405, current.ERROR.BAD_METHOD
+
+        elif type(agent_id) is list:
+            # Multi-agent request (bulk status check)
+            # @todo: implement
+            status, msg = 501, current.ERROR.NOT_IMPLEMENTED
+
+        else:
+            # Single-agent request
+            agent = self.agents.get(agent_id)
+            if agent:
+                # Call the agent
+                output, error = agent(context)
+                if error:
+                    status, msg = error
+            else:
+                status, msg = 404, current.ERROR.BAD_RESOURCE
+
+        if status:
+            context.error(status, msg)
+        else:
+            return output
 
     # -------------------------------------------------------------------------
     def build(self, **attr):
@@ -627,9 +675,15 @@ class S3Dashboard(object):
                   "dashboard_id": dashboard_id,
                   }
 
+        # Script Options
+        ajax_url = URL(args=[], vars={})
+
+        script_options = {"ajaxURL": ajax_url,
+                          }
+
         # Inject JavaScript
         # - before building the widgets, so that widgets can subclass
-        self.inject_script(dashboard_id, options={})
+        self.inject_script(dashboard_id, options=script_options)
 
         # Instantiate the layout for the active config
         layout = self.get_active_layout(config)
@@ -650,6 +704,22 @@ class S3Dashboard(object):
             output["contents"] = contents
 
         return output
+
+    # -------------------------------------------------------------------------
+    def do(self, command, context):
+        """
+            Execute a dashboard global command
+
+            @param command: the command
+            @param context: the current S3DashboardContext
+
+            @todo: implement global commands
+        """
+
+        output = None
+        error = (501, current.ERROR.NOT_IMPLEMENTED)
+
+        return output, error
 
     # -------------------------------------------------------------------------
     def get_active_layout(self, config):
@@ -779,10 +849,44 @@ class S3DashboardAgent(object):
         """
             Dispatch Ajax requests
 
-            @todo: process config-commands internally
-            @todo: execute other commands through do-method
+            @param context: the current S3DashboardContext
+
+            @return: tuple (output, error), where:
+                     - "output" is the output of the command execution
+                     - "error" is a tuple (http_status, message), or None
         """
-        pass
+
+        command = context.command
+        representation = context.representation
+
+        output = None
+        error = None
+
+        if command:
+            if command in ("config", "authorize"):
+                # Agent command
+                # @todo: implement agent commands
+                error = (501, current.ERROR.NOT_IMPLEMENTED)
+            else:
+                # Delegated command
+                try:
+                    output = self.do(command, context)
+                except NotImplementedError:
+                    error = (501, current.ERROR.NOT_IMPLEMENTED)
+        else:
+            if context.http == "GET":
+                if representation in ("html", "iframe"):
+                    # Return the widget XML
+                    output = self.widget.widget(self.agent_id,
+                                                self.config,
+                                                context = context,
+                                                )
+                else:
+                    error = (415, current.ERROR.BAD_FORMAT)
+            else:
+                error = (405, current.ERROR.BAD_METHOD)
+
+        return output, error
 
     # -------------------------------------------------------------------------
     def do(self, command, context):
