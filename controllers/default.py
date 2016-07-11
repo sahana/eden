@@ -64,50 +64,6 @@ def register_validation(form):
     return
 
 # =============================================================================
-def dashboard():
-   """
-       Experimental: controller for dashboards (for pattern testing)
-   """
-
-   from s3 import S3Dashboard, \
-                  S3DashboardWidget
-
-   config = {# The default layout
-             "layout": "boxes",
-             # Available Widgets
-             "widgets": {
-                 "generic": S3DashboardWidget(
-                     label = "Static HTML",
-                     defaults = {"xml": P("This is the default"),
-                                 },
-                 ),
-              },
-             # Default Configuration
-             "default": [
-                   {"widget": "generic",
-                    "channel": "N",
-                    "position": 0,
-                    # using default xml
-                   },
-                   {"widget": "generic",
-                    "channel": "C",
-                    "position": 0,
-                    "xml": P("This is an example"),
-                   },
-                   {"widget": "generic",
-                    "channel": "E",
-                    "position": 0,
-                    "xml": P("And this is another example"),
-                   },
-              ],
-             # Is user-configurable?
-             "configurable": True,
-             }
-
-   dashboard = S3Dashboard(config)
-   return dashboard()
-
-# =============================================================================
 def index():
     """ Main Home Page """
 
