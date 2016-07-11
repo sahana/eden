@@ -23,9 +23,10 @@ def download():
         session.error("Need to specify the file to download!")
         redirect(URL(f="index"))
 
-    # Load the Model
+    # Check Permissions
     tablename = filename.split(".", 1)[0]
     if "_" in tablename:
+        # Load the Model
         table = s3db.table(tablename)
         if table and not auth.s3_has_permission("read", tablename):
             auth.permission.fail()
