@@ -9,6 +9,8 @@ from gluon import *
 from gluon.storage import Storage
 from s3.s3forms import *
 
+from unit_tests import run_suite
+
 # =============================================================================
 class InlineLinkTests(unittest.TestCase):
 
@@ -63,18 +65,6 @@ class InlineLinkTests(unittest.TestCase):
         self.assertEqual(errors.link_defaultcomponent, msg)
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

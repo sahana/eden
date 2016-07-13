@@ -46,6 +46,8 @@
 import unittest
 import timeit
 
+from unit_tests import run_suite
+
 # =============================================================================
 #@unittest.skip("Comment or remove this line in modules/unit_tests/eden/benchmark.py to activate this test")
 class S3PerformanceTests(unittest.TestCase):
@@ -278,18 +280,6 @@ class S3PerformanceTests(unittest.TestCase):
         current.auth.override = False
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

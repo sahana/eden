@@ -3,12 +3,14 @@
 # Layouts Unit Tests
 #
 # To run this script use:
-# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/modules/s3layouts.py
+# python web2py.py -S eden -M -R applications/eden/modules/unit_tests/modules/s3layouts_tests.py
 #
 import unittest
 
 from gluon import current
-from s3.s3layouts import homepage, S3PopupLink
+from s3layouts import *
+
+from unit_tests import run_suite
 
 # =============================================================================
 class LayoutTests(unittest.TestCase):
@@ -70,18 +72,6 @@ class LayoutTests(unittest.TestCase):
         auth.s3_impersonate(None)
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner().run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

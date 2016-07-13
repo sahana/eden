@@ -14,6 +14,8 @@ try:
 except:
     from StringIO import StringIO
 
+from unit_tests import run_suite
+
 # =============================================================================
 class ValidateTests(unittest.TestCase):
     """ Test S3CRUD/validate """
@@ -189,18 +191,6 @@ class ValidateTests(unittest.TestCase):
         self.assertTrue(isinstance(role["value"], int))
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

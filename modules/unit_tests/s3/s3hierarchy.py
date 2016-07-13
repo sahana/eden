@@ -14,6 +14,8 @@ from s3.s3utils import *
 from s3.s3rest import s3_request
 from s3 import FS, S3Hierarchy, S3HierarchyFilter, s3_meta_fields
 
+from unit_tests import run_suite
+
 # =============================================================================
 class S3HierarchyTests(unittest.TestCase):
     """ Tests for standard hierarchies """
@@ -2080,18 +2082,6 @@ class S3TypeOfTests(unittest.TestCase):
                         msg = "%s != %s" % (query, expected_query))
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

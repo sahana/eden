@@ -169,6 +169,7 @@ class S3DashboardContext(object):
         request = current.request if r is None else r
 
         args = request.args
+        get_vars = request.get_vars
 
         command = None
         if len(args) > 0:
@@ -178,10 +179,29 @@ class S3DashboardContext(object):
         if command:
             self.command = command
 
-        # @todo: support multiple agent IDs (for bulk requests)
-        self.agent = request.get_vars.get("agent")
+        # Dashboard controller can explicitly mark requests as bulk
+        # even with a single agent ID (e.g. if the dashboard happens
+        # to only have one widget) - either by appending a comma to
+        # the agent ID, or by specifying ?bulk=1
+        bulk = get_vars.get("bulk")
+        bulk = True if bulk and bulk.lower() in ("1", "true") else False
 
-        self.http = current.request.env.request_method
+        agent_id = request.get_vars.get("agent")
+        if agent_id:
+            if type(agent_id) is list:
+                agent_id = ",".join(agent_id)
+            if "," in agent_id:
+                bulk = True
+                agent_id = set([s.strip() for s in agent_id.split(",")])
+                agent_id.discard("")
+                agent_id = list(agent_id)
+            elif bulk:
+                agent_id = [agent_id]
+            self.agent = agent_id
+
+        self.bulk = bulk
+
+        self.http = current.request.env.request_method or "GET"
         self.representation = s3_get_extension(request) or DEFAULT_FORMAT
 
 # =============================================================================
@@ -634,7 +654,7 @@ class S3Dashboard(object):
             else:
                 status, msg = 405, current.ERROR.BAD_METHOD
 
-        elif type(agent_id) is list:
+        elif context.bulk:
             # Multi-agent request (bulk status check)
             # @todo: implement
             status, msg = 501, current.ERROR.NOT_IMPLEMENTED

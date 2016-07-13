@@ -12,6 +12,8 @@ from s3.s3datetime import S3Calendar
 from s3.s3fields import *
 from s3.s3validators import *
 
+from unit_tests import run_suite
+
 # =============================================================================
 class ISLatTest(unittest.TestCase):
     """
@@ -1030,18 +1032,6 @@ class IS_UTC_DATE_Tests(unittest.TestCase):
         assertTrue(msg.find("2011-11-20") != -1)
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(

@@ -1,6 +1,7 @@
 from unit_tests.s3.s3aaa import *
 from unit_tests.s3.s3cfg import *
 from unit_tests.s3.s3crud import *
+from unit_tests.s3.s3dashboard import *
 from unit_tests.s3.s3datatable import *
 from unit_tests.s3.s3datetime import *
 from unit_tests.s3.s3fields import *

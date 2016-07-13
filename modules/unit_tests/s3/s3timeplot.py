@@ -15,6 +15,8 @@ from s3.s3timeplot import *
 from s3.s3timeplot import tp_datetime
 from s3.s3query import FS
 
+from unit_tests import run_suite
+
 # =============================================================================
 class EventTests(unittest.TestCase):
     """ Tests for S3TimeSeriesEvent class """
@@ -1831,18 +1833,6 @@ class FactParserTests(unittest.TestCase):
                                 (i, j, fact.interval, interval))
 
 # =============================================================================
-def run_suite(*test_classes):
-    """ Run the test suite """
-
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
-    for test_class in test_classes:
-        tests = loader.loadTestsFromTestCase(test_class)
-        suite.addTests(tests)
-    if suite is not None:
-        unittest.TextTestRunner(verbosity=2).run(suite)
-    return
-
 if __name__ == "__main__":
 
     run_suite(
