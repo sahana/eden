@@ -144,7 +144,7 @@
 	        }
         });
 
-        $form.find('[name=urgency],[name=severity],[name=certainty]').change(function() {
+        /*$form.find('[name=urgency],[name=severity],[name=certainty]').change(function() {
             var p = S3.cap_priorities,
                 len = p.length;
             for (var i=0; i< len; i++) {
@@ -169,7 +169,7 @@
 
             $form.find('[name=priority]').val('Undefined')
                  .css('border', '2px solid gray');
-        });
+        });*/
 
         function load_template_data(data, overwrite) {
             var tablename = get_table($form),

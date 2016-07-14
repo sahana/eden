@@ -230,7 +230,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create",
                           restrict=["ADMIN"]),
                     ),
-                    M("Warning Priorities", f="warning_priority",
+                    M("Warning Classifications", f="warning_priority",
                       restrict=["ADMIN"])(
                         M("Create", m="create"),
                         M("Import from CSV", m="import", p="create"),
