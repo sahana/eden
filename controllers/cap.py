@@ -787,7 +787,7 @@ def alert():
             irows_ = db(iquery_).select(itable.template_info_id)
 
             parameter_table = s3db.cap_info_parameter
-            if alert and not \
+            if alert.template_id and not \
                (set([irow.id for irow in irows]) == set([irow_.template_info_id for irow_ in irows_])):
 
                 parameter_query_ = (parameter_table.alert_id == alert.template_id) & \
@@ -881,7 +881,13 @@ def alert():
                                   "_target": "_blank",
                                   "label": str(T("View Profile"))
                                   }
+                cap_button = {"url": URL(args=["[id].cap"]),
+                              "_class": "action-btn",
+                              "_target": "_blank",
+                              "label": str(T("View CAP File"))
+                              }
                 s3.actions.insert(1, profile_button)
+                s3.actions.insert(2, cap_button)
 
             if get_vars.get("_next"):
                 r.next = get_vars.get("_next")
@@ -1062,6 +1068,7 @@ def template():
             field.requires = None
         atable.template_title.requires = IS_NOT_EMPTY()
         atable.status.readable = atable.status.writable = False
+        atable.addresses.readable = atable.addresses.writable = False
 
         if r.component_name == "info":
             itable = r.component.table

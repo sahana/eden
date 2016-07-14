@@ -1908,10 +1908,10 @@ class S3CRUD(S3Method):
             if self._permitted("approve"):
 
                 approve = FORM(INPUT(_value=T("Approve"),
-                                    _type="submit",
-                                    _name="approve-btn",
-                                    _id="approve-btn",
-                                    _class="action-btn"))
+                                     _type="submit",
+                                     _name="approve-btn",
+                                     _id="approve-btn",
+                                     _class="action-btn"))
 
                 reject = FORM(INPUT(_value=T("Reject"),
                                     _type="submit",

@@ -495,7 +495,7 @@ $.filterOptionsS3({
                      Field("reference", #"list:reference cap_alert",
                            label = T("Reference"),
                            writable = False,
-                           readable = False,
+                           #readable = False,
                            #represent = S3Represent(lookup = tablename,
                            #                        fields = ["msg_type", "sent", "sender"],
                            #                        field_sep = " - ",
@@ -1799,7 +1799,8 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
         atable = db.cap_alert
         itable = db.cap_info
 
-        info = db(itable.id == info_id).select(itable.alert_id,
+        info = db(itable.id == info_id).select(itable.language,
+                                               itable.alert_id,
                                                itable.event,
                                                itable.event_type_id,
                                                itable.event_code,
@@ -1825,6 +1826,8 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
             audience = info.audience
             if not audience or audience == current.messages["NONE"]:
                 set_.update(audience = None)
+            if info.language == "en":
+                set_.update(language = "en-US")
 
             row = db(atable.id == alert_id).select(atable.scope, limitby=(0, 1)).first()
             if row and row.scope == "Public":
@@ -2015,19 +2018,21 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
             # Predefined Area
             return
 
-        info_id = form_vars.get("info_id", None)
-        if info_id:
-            # CAP XML
-            # Add the alert_id to this component of component
-            # to make it a direct component for UI purposes
-            db = current.db
-            itable = db.cap_info
-            item = db(itable.id == info_id).select(itable.alert_id,
-                                                   limitby=(0, 1)).first()
-            alert_id = item.alert_id
+        db = current.db
+        alert_id = form_vars.get("alert_id", None)
+        if not alert_id:
+            info_id = form_vars.get("info_id", None)
+            if info_id:
+                # CAP XML
+                # Add the alert_id to this component of component
+                # to make it a direct component for UI purposes
+                itable = db.cap_info
+                item = db(itable.id == info_id).select(itable.alert_id,
+                                                       limitby=(0, 1)).first()
+                alert_id = item.alert_id or None
 
-            if alert_id:
-                db(db.cap_area.id == form_vars.id).update(alert_id = alert_id)
+        if alert_id:
+            db(db.cap_area.id == form_vars.id).update(alert_id = alert_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2057,11 +2062,12 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
             return
 
         db = current.db
-        atable = db.cap_area
-
-        row = db(atable.id == area_id).select(atable.alert_id,
-                                              limitby=(0, 1)).first()
-        alert_id = row.alert_id
+        alert_id = form_vars.get("alert_id", None)
+        if not alert_id:
+            atable = db.cap_area
+            row = db(atable.id == area_id).select(atable.alert_id,
+                                                  limitby=(0, 1)).first()
+            alert_id = row.alert_id or None
         if alert_id:
             # This is not template area
             # NB Template area are not linked with alert_id
@@ -3151,13 +3157,13 @@ def cap_rheader(r):
                     if not row:
                         error = DIV(T("You need to create at least one alert information item in order to be able to broadcast this alert!"),
                                     _class="error")
-                        export_btn = ""
+                        #export_btn = ""
                     else:
                         error = ""
-                        export_btn = A(DIV(_class="export_cap_large"),
-                                       _href=URL(c="cap", f="alert", args=["%s.cap" % alert_id]),
-                                       _target="_blank",
-                                       )
+                        #export_btn = A(DIV(_class="export_cap_large"),
+                        #               _href=URL(c="cap", f="alert", args=["%s.cap" % alert_id]),
+                        #               _target="_blank",
+                        #               )
 
                         has_permission = current.auth.s3_has_permission
                         # Display 'Submit for Approval', 'Publish Alert' or
@@ -3178,7 +3184,7 @@ def cap_rheader(r):
                                                            vars = {"cap_alert.id": record.id,
                                                                    },
                                                            ),
-                                               _class = "action-btn confirm-btn"
+                                               _class = "action-btn confirm-btn button tiny"
                                                )
                                 current.response.s3.jquery_ready.append(
 '''S3.confirmClick('.confirm-btn','%s')''' % T("Do you want to submit the alert for approval?"))
@@ -3190,7 +3196,7 @@ def cap_rheader(r):
                                                                        "review"
                                                                        ],
                                                                ),
-                                                   _class = "action-btn",
+                                                   _class = "action-btn button tiny",
                                                    )
 
                         if record.approved_by is not None:
@@ -3281,7 +3287,7 @@ def cap_rheader(r):
                                                 _href=URL(c="cap", f="alert",
                                                           args=[alert_id, "update"]))),
                                            ),
-                                        TR(export_btn)
+                                        #TR(export_btn)
                                         ),
                                   rheader_tabs,
                                   error
@@ -4313,13 +4319,19 @@ def clone(r, record=None, **attr):
         del alert_row_clone["template_title"]
         del alert_row_clone["template_settings"]
         del alert_row_clone["external"]
+        try:
+            user_email = auth.user.email
+        except AttributeError:
+            user_email = ""
+        alert_row_clone["sender"] = "%s" % user_email
+
         new_alert_id = alert_history_table.insert(**alert_row_clone)
         # Post-process create
         alert_row_clone["id"] = new_alert_id
         audit("create", "cap", "alert_history", record=new_alert_id)
         set_record_owner(alert_history_table, new_alert_id)
     else:
-        # Change of msg_type use-case
+        # Change of msg_type use-case or relay alert
         del alert_row_clone["identifier"]
         alert_row_clone["msg_type"] = msg_type
         alert_row_clone["sent"] = current.request.utcnow
@@ -4329,6 +4341,11 @@ def clone(r, record=None, **attr):
                                                        alert_row.identifier,
                                 str(s3_utc(alert_row.sent)).replace(" ", "T"),
                                                        )
+        try:
+            user_email = auth.user.email
+        except AttributeError:
+            user_email = ""
+        alert_row_clone["sender"] = "%s" % user_email
 
         new_alert_id = alert_table.insert(**alert_row_clone)
         # Post-process create
