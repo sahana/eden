@@ -32,6 +32,7 @@
 """
 
 __all__ = ("S3Dashboard",
+           "S3DashboardConfig",
            "S3DashboardWidget",
            )
 
@@ -215,6 +216,8 @@ class S3DashboardConfig(object):
         - builds the configuration GUI and handles its requests (@todo)
     """
 
+    DEFAULT_LAYOUT = "boxes"
+
     def __init__(self,
                  layout,
                  widgets=None,
@@ -229,8 +232,6 @@ class S3DashboardConfig(object):
             @param default: the default configuration (=list of widget configs)
             @param configurable: whether this dashboard is user-configurable
         """
-
-        DEFAULT_LAYOUT = "boxes"
 
         if isinstance(layout, dict):
             config = layout
@@ -249,7 +250,7 @@ class S3DashboardConfig(object):
 
         # Layout
         if layout is None:
-            layout = DEFAULT_LAYOUT
+            layout = self.DEFAULT_LAYOUT
         self.layout = layout
 
         # Available Widgets
@@ -264,6 +265,42 @@ class S3DashboardConfig(object):
 
         # Is this dashboard user-configurable?
         self.configurable = configurable
+        self.loaded = True if not configurable else False
+
+    # -------------------------------------------------------------------------
+    def load(self, context):
+        """
+            Load the current active configuration for the context
+
+            @param context: the current S3DashboardContext
+        """
+
+        if not self.configurable:
+            return
+
+        table = current.s3db.s3_dashboard
+        query = (table.controller == context.controller) & \
+                (table.function == context.function) & \
+                (table.active == True) & \
+                (table.deleted != True)
+        row = current.db(query).select(table.id,
+                                       table.layout,
+                                       table.title,
+                                       table.widgets,
+                                       limitby = (0, 1),
+                                       ).first()
+
+        if row:
+            if row.title:
+                self.title = row.title
+
+            self.layout = row.layout
+
+            widgets = row.widgets
+            if type(widgets) is list:
+                self.active_widgets = widgets
+
+            self.config_id = row.id
 
 # =============================================================================
 class S3DashboardChannel(object):
@@ -548,8 +585,8 @@ class S3Dashboard(object):
 
         if not isinstance(config, S3DashboardConfig):
             config = S3DashboardConfig(config)
+        self._config = config
 
-        self.config = config
         self.context = S3DashboardContext()
 
         available_layouts = dict(self.layouts)
@@ -558,6 +595,21 @@ class S3Dashboard(object):
         self.available_layouts = available_layouts
 
         self._agents = None
+
+    # -------------------------------------------------------------------------
+    @property
+    def config(self):
+        """
+            Lazy property to load the current configuration from the database
+
+            @return: the S3DashboardConfig
+        """
+
+        config = self._config
+        if not config.loaded:
+            config.load(self.context)
+
+        return config
 
     # -------------------------------------------------------------------------
     @property
@@ -594,6 +646,8 @@ class S3Dashboard(object):
                     agent_id = "db-none-%s" % index
                 else:
                     agent_id = widget_config.get("agent_id")
+                if not agent_id:
+                    continue
 
                 # Instantiate the agent
                 agent = widget._create_agent(agent_id,

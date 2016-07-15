@@ -27,7 +27,9 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3HierarchyModel",)
+__all__ = ("S3HierarchyModel",
+           "S3DashboardModel",
+           )
 
 from gluon import *
 from ..s3 import *
@@ -40,7 +42,7 @@ class S3HierarchyModel(S3Model):
 
     def model(self):
 
-        # -------------------------------------------------------------------------
+        # ---------------------------------------------------------------------
         # Stored Object Hierarchy
         #
         tablename = "s3_hierarchy"
@@ -63,5 +65,97 @@ class S3HierarchyModel(S3Model):
 
         return {}
 
+# =============================================================================
+class S3DashboardModel(S3Model):
+    """ Model for stored dashboard configurations """
+
+    names = ("s3_dashboard",)
+
+    def model(self):
+
+        define_table = self.define_table
+        configure = self.configure
+
+        # ---------------------------------------------------------------------
+        # Stored Dashboard Configuration
+        #
+        tablename = "s3_dashboard"
+        define_table(tablename,
+                     Field("controller", length = 64,
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("function", length = 512,
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("layout",
+                           default = S3DashboardConfig.DEFAULT_LAYOUT,
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("title",
+                           ),
+                     Field("widgets", "json",
+                           requires = IS_JSONS3(),
+                           ),
+                     Field("active", "boolean",
+                           default = True,
+                           ),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  onaccept = self.dashboard_onaccept,
+                  )
+
+        # ---------------------------------------------------------------------
+        # Link Dashboard Config <=> Person Entity
+        #
+        # @todo
+
+        # ---------------------------------------------------------------------
+        # Return global names to s3.*
+        #
+        return {}
+
+    # -------------------------------------------------------------------------
+    def defaults(self):
+        """ Safe defaults if module is disabled """
+
+        return {}
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def dashboard_onaccept(form):
+        """
+            On-accept routine for dashboard configurations
+                - make sure there is at most one active config for the same
+                  controller/function
+        """
+
+        db = current.db
+
+        try:
+            record_id = form.vars.id
+        except AttributeError:
+            return
+
+        table = current.s3db.s3_dashboard
+        query = table.id == record_id
+
+        row = db(query).select(table.id,
+                               table.controller,
+                               table.function,
+                               table.active,
+                               limitby = (0, 1),
+                               ).first()
+        if not row:
+            return
+
+        if row.active:
+            # Deactivate all other configs for the same controller/function
+            query = (table.controller == row.controller) & \
+                    (table.function == row.function) & \
+                    (table.id != row.id) & \
+                    (table.active == True) & \
+                    (table.deleted != True)
+            db(query).update(active = False)
 
 # END =========================================================================

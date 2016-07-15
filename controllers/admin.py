@@ -1163,4 +1163,14 @@ def result_roles():
         file_list_roles.append(link)
     return dict(file_list_roles=file_list_roles)
 
+# =============================================================================
+# Configurations
+# =============================================================================
+def dashboard():
+    """
+        Dashboard Configurations
+    """
+
+    return s3_rest_controller("s3", "dashboard")
+
 # END =========================================================================
