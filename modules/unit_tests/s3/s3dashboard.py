@@ -225,6 +225,86 @@ class S3DashboardContextTests(unittest.TestCase):
         context = S3DashboardContext()
         self.assertEqual(context.representation, "html")
 
+    # -------------------------------------------------------------------------
+    def testSharedWrite(self):
+        """ Verify item pattern to write shared context dict """
+
+        context = S3DashboardContext()
+
+        context["test"] = "ABC"
+        self.assertTrue("test" in context.shared)
+        self.assertEqual(context.shared["test"], "ABC")
+
+    # -------------------------------------------------------------------------
+    def testSharedRead(self):
+        """ Verify item pattern to read shared context dict """
+
+        context = S3DashboardContext()
+
+        context.shared["test"] = "XYZ"
+        self.assertEqual(context["test"], "XYZ")
+
+        # Verify KeyError raised when attempting to access nonexistent item
+        with self.assertRaises(KeyError):
+            context["nonexistent"]
+
+    # -------------------------------------------------------------------------
+    def testSharedGet(self):
+        """ Verify get() method to read shared context dict """
+
+        assertEqual = self.assertEqual
+
+        context = S3DashboardContext()
+
+        context.shared["test"] = "XYZ"
+
+        assertEqual(context.get("test"), "XYZ")
+        assertEqual(context.get("nonexistent"), None)
+
+        default = lambda: None
+        self.assertTrue(context.get("nonexistent", default) is default)
+
+    # -------------------------------------------------------------------------
+    def testSharedDelete(self):
+        """ Verify deletion of shared context items """
+
+        context = S3DashboardContext()
+
+        context.shared["test"] = "XYZ"
+
+        # Verify deletion of item
+        del context["test"]
+        self.assertNotIn("test", context.shared)
+
+        # Verify KeyError raised when attempting to delete nonexistent item
+        with self.assertRaises(KeyError):
+            del context["test"]
+
+    # -------------------------------------------------------------------------
+    def testAttributeFallback(self):
+        """ Verify attribute access falls back to current request """
+
+        request = current.request
+
+        assertIn = self.assertIn
+        assertNotIn = self.assertNotIn
+        assertTrue = self.assertTrue
+
+        fallback = request.args
+        override = ["override"]
+
+        context = S3DashboardContext(request)
+
+        # Check fallback
+        assertNotIn("args", context.__dict__)
+        assertTrue(context.args is fallback)
+
+        # Check override
+        context.args = override
+        assertIn("args", context.__dict__)
+        assertTrue(request.args is fallback)
+        assertTrue(context.args is override)
+
 # =============================================================================
 if __name__ == "__main__":
 
