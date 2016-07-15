@@ -48,3 +48,34 @@ except ImportError:
         # even older web2py
         from gluon.dal import Field, SQLCustomType
         from gluon.dal import Expression, Query, Row, Rows, Table
+
+from gluon import current
+
+# =============================================================================
+class S3DAL(object):
+    """ Adapter class for backwards-incompatible PyDAL changes """
+
+    def __init__(self):
+
+        adapter = current.db._adapter
+
+        try:
+            dialect = adapter.dialect
+
+        except AttributeError:
+            # PyDAL <= 16.03
+            self.INVERT = adapter.INVERT
+            self.COMMA = adapter.COMMA
+            self.OR = adapter.OR
+            self.CONTAINS = adapter.CONTAINS
+            self.AGGREGATE = adapter.AGGREGATE
+
+        else:
+            # current PyDAL
+            self.INVERT = dialect.invert
+            self.COMMA = dialect.comma
+            self.OR = dialect._or
+            self.CONTAINS = dialect.contains
+            self.AGGREGATE = dialect.aggregate
+
+# END =========================================================================

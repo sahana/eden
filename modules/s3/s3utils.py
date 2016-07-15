@@ -47,7 +47,7 @@ from gluon.storage import Storage
 from gluon.languages import lazyT
 from gluon.tools import addrow
 
-from s3dal import Expression, Row
+from s3dal import Expression, Row, S3DAL
 from s3datetime import ISOFORMAT, s3_decode_iso_datetime
 
 URLSCHEMA = re.compile("((?:(())(www\.([^/?#\s]*))|((http(s)?|ftp):)"
@@ -1362,8 +1362,10 @@ def s3_orderby_fields(table, orderby, expr=False):
         return
 
     db = current.db
-    COMMA = db._adapter.COMMA
-    INVERT = db._adapter.INVERT
+
+    adapter = S3DAL()
+    COMMA = adapter.COMMA
+    INVERT = adapter.INVERT
 
     if isinstance(orderby, str):
         items = orderby.split(",")

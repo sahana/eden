@@ -60,7 +60,7 @@ from gluon.validators import IS_EMPTY_OR
 from gluon.storage import Storage
 from gluon.tools import callback
 
-from s3dal import Expression, Field, Row, Rows, Table
+from s3dal import Expression, Field, Row, Rows, Table, S3DAL
 from s3data import S3DataTable, S3DataList
 from s3datetime import s3_format_datetime
 from s3fields import S3Represent, s3_all_meta_field_names
@@ -4016,6 +4016,10 @@ class S3AxisFilter(object):
             r = None
 
         op = qdict["op"]
+        if op:
+            # Convert operator name to standard uppercase name
+            # without underscore prefix
+            op = op.upper().strip("_")
 
         if "tablename" in l:
             if l["tablename"] in tablenames:
@@ -5450,6 +5454,7 @@ class S3ResourceData(object):
         ijoins = self.ijoins
 
         tables = set()
+        adapter = S3DAL()
 
         if orderby:
 
@@ -5467,10 +5472,10 @@ class S3ResourceData(object):
                 if type(item) is Expression:
                     f = item.first
                     op = item.op
-                    if op == db._adapter.AGGREGATE:
+                    if op == adapter.AGGREGATE:
                         # Already an aggregation
                         expression = item
-                    elif isinstance(f, Field) and op == db._adapter.INVERT:
+                    elif isinstance(f, Field) and op == adapter.INVERT:
                         direction = "desc"
                     else:
                         # Other expression - not supported

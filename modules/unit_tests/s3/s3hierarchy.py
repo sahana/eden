@@ -9,7 +9,7 @@ import unittest
 
 from lxml import etree
 
-from s3dal import Field, Query
+from s3dal import Field, Query, S3DAL
 from s3.s3utils import *
 from s3.s3rest import s3_request
 from s3 import FS, S3Hierarchy, S3HierarchyFilter, s3_meta_fields
@@ -1259,6 +1259,7 @@ class S3TypeOfTests(unittest.TestCase):
         current.auth.override = True
 
         db = current.db
+        self.adapter = S3DAL()
 
         if not hasattr(self, "rows"):
             rows = db(db.typeof_hierarchy.id>0).select()
@@ -1728,6 +1729,7 @@ class S3TypeOfTests(unittest.TestCase):
         """
 
         db = current.db
+        adapter = self.adapter
 
         uids = self.uids
         resource = current.s3db.resource("typeof_hierarchy_reference")
@@ -1747,8 +1749,8 @@ class S3TypeOfTests(unittest.TestCase):
                                              ))
         found = self.inspect_multi_query(query,
                                          field = table.typeof_hierarchy_multi_id,
-                                         conjunction = db._adapter.OR,
-                                         op = db._adapter.CONTAINS)
+                                         conjunction = adapter.OR,
+                                         op = adapter.CONTAINS)
 
         self.assertEqual(found, expected)
 
@@ -1760,6 +1762,7 @@ class S3TypeOfTests(unittest.TestCase):
         """
 
         db = current.db
+        adapter = self.adapter
 
         uids = self.uids
         resource = current.s3db.resource("typeof_hierarchy_reference")
@@ -1779,8 +1782,8 @@ class S3TypeOfTests(unittest.TestCase):
                                              ))
         found = self.inspect_multi_query(query,
                                          field = table.typeof_hierarchy_multi_id,
-                                         conjunction = db._adapter.OR,
-                                         op = db._adapter.CONTAINS)
+                                         conjunction = adapter.OR,
+                                         op = adapter.CONTAINS)
 
         self.assertEqual(found, expected)
 
@@ -1792,6 +1795,7 @@ class S3TypeOfTests(unittest.TestCase):
         """
 
         db = current.db
+        adapter = self.adapter
 
         uids = self.uids
         resource = current.s3db.resource("typeof_hierarchy_reference")
@@ -1821,8 +1825,8 @@ class S3TypeOfTests(unittest.TestCase):
                                              ))
         found = self.inspect_multi_query(query,
                                          field = table.typeof_hierarchy_multi_id,
-                                         conjunction = db._adapter.OR,
-                                         op = db._adapter.CONTAINS)
+                                         conjunction = adapter.OR,
+                                         op = adapter.CONTAINS)
 
         self.assertEqual(found, expected)
 
@@ -1834,6 +1838,8 @@ class S3TypeOfTests(unittest.TestCase):
         """
 
         db = current.db
+        adapter = self.adapter
+
         uids = self.uids
 
         # Remove hierarchy setting
@@ -1849,8 +1855,8 @@ class S3TypeOfTests(unittest.TestCase):
         expected = set(uids[uid] for uid in ("HIERARCHY1",))
         found = self.inspect_multi_query(query,
                                          field = table.typeof_hierarchy_multi_id,
-                                         conjunction = db._adapter.OR,
-                                         op = db._adapter.CONTAINS)
+                                         conjunction = adapter.OR,
+                                         op = adapter.CONTAINS)
 
         self.assertEqual(found, expected)
 
@@ -1865,8 +1871,8 @@ class S3TypeOfTests(unittest.TestCase):
                                              ))
         found = self.inspect_multi_query(query,
                                          field = table.typeof_hierarchy_multi_id,
-                                         conjunction = db._adapter.OR,
-                                         op = db._adapter.CONTAINS)
+                                         conjunction = adapter.OR,
+                                         op = adapter.CONTAINS)
 
         self.assertEqual(found, expected)
 

@@ -7651,7 +7651,11 @@ class Layer(object):
                 if style:
                     style_dict = style.style
                     if isinstance(style_dict, basestring):
-                        # Matryoshka?
+                        # Matryoshka (=double-serialized JSON)?
+                        # - should no longer happen, but a (now-fixed) bug
+                        #   regularly produced double-serialized JSON, so
+                        #   catching it here to keep it working with legacy
+                        #   databases:
                         try:
                             style_dict = json.loads(style_dict)
                         except ValueError:

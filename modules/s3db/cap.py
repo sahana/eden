@@ -2211,8 +2211,6 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                 for row in rows:
                     style = row.style
                     if style:
-                        if isinstance(style, basestring):
-                            style = json.loads(style)
                         sdata = dict(prop = "priority",
                                      fill = color_code,
                                      fillOpacity = 0.4,
@@ -2220,7 +2218,6 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                                      )
                         if sdata not in style:
                             style.append(sdata)
-                            style = IS_JSONS3()(json.dumps(style))[0]
                             db(stable.id == row.id).update(style = style)
 
 # =============================================================================
@@ -3909,7 +3906,7 @@ class CAPImportFeed(S3Method):
                             ),
                       Field("ignore_errors", "boolean",
                             label=T("Ignore Errors?"),
-                            represent = s3_yes_no_represent,                            
+                            represent = s3_yes_no_represent,
                             comment = DIV(_class="tooltip",
                                           _title="%s|%s" % (T("Ignore Errors"),
                                                             T("skip invalid record silently?"))),
@@ -4669,7 +4666,7 @@ class cap_AlertProfileWidget(object):
 
     # -------------------------------------------------------------------------
     def __call__(self, f):
-        """ 
+        """
             Widget builder
             @param f: the calling function
         """

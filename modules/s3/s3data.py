@@ -38,7 +38,7 @@ from gluon import current
 from gluon.html import *
 from gluon.storage import Storage
 
-from s3dal import Expression
+from s3dal import Expression, S3DAL
 from s3utils import s3_orderby_fields, s3_unicode, s3_set_extension
 
 # =============================================================================
@@ -108,8 +108,11 @@ class S3DataTable(object):
             # Resolve orderby expression into column names
             orderby_dirs = {}
             orderby_cols = []
+
+            adapter = S3DAL()
+            INVERT = adapter.INVERT
+
             append = orderby_cols.append
-            INVERT = current.db._adapter.INVERT
             for f in s3_orderby_fields(None, orderby, expr=True):
                 if type(f) is Expression:
                     colname = str(f.first)

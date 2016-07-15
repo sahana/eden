@@ -2802,7 +2802,6 @@ class S3LayerEntityModel(S3Model):
             style["fillOpacity"] = opacity
         else:
             opacity = 1
-        style = json.dumps(style, separators=SEPARATORS)
 
         db = current.db
         s3db = current.s3db
@@ -4627,14 +4626,6 @@ class S3PoIModel(S3Model):
 
         db = current.db
         s3db = current.s3db
-        try:
-            if "dumps" in db._adapter.driver_auto_json:
-                style = value
-            #else:
-            #    Use the JSON version
-        except:
-            # Use the JSON version
-            pass
 
         # Lookup the PoI Type
         table = s3db.gis_poi_type
@@ -4715,14 +4706,6 @@ class S3PoIModel(S3Model):
                        "externalGraphic": "img/markers/%s" % marker
                        }
                 sappend(cat)
-
-        #try:
-        #    driver_auto_json = current.db._adapter.driver_auto_json
-        #except:
-        #    current.log.warning("Update Web2Py to 2.9.11 to get native JSON support")
-        #    driver_auto_json = []
-        #if "dumps" not in driver_auto_json:
-        #    style = json.dumps(style, separators=SEPARATORS)
 
         # Find correct Layer record
         ltable = s3db.gis_layer_feature

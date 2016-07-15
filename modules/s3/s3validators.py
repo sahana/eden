@@ -79,6 +79,7 @@ from s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_validate
 
 DEFAULT = lambda: None
 JSONErrors = (NameError, TypeError, ValueError, AttributeError, KeyError)
+SEPARATORS = (",", ":")
 
 def translate(text):
     if text is None:
@@ -113,49 +114,80 @@ s3_phone_requires = IS_MATCH(multi_phone_number_pattern,
 # =============================================================================
 class IS_JSONS3(Validator):
     """
-    Web2Py IS_JSON validator extended for CSV imports
-    Example:
-        Used as::
+        Similar to web2py's IS_JSON validator, but extended to handle
+        single quotes in dict keys (=invalid JSON) from CSV imports.
 
-            INPUT(_type='text', _name='name',
-                requires=IS_JSON(error_message="This is not a valid json input")
+        Example:
 
-            >>> IS_JSON()('{"a": 100}')
+            INPUT(_type='text', _name='name', requires=IS_JSONS3())
+
+            >>> IS_JSONS3()('{"a": 100}')
             ({u'a': 100}, None)
 
-            >>> IS_JSON()('spam1234')
+            >>> IS_JSONS3()('spam1234')
             ('spam1234', 'invalid json')
     """
 
-    def __init__(self, error_message="Invalid JSON"):
-        try:
-            self.driver_auto_json = current.db._adapter.driver_auto_json
-        except:
-            current.log.warning("Update Web2Py to 2.9.11 to get native JSON support")
-            self.driver_auto_json = []
+    def __init__(self,
+                 native_json=False,
+                 error_message="Invalid JSON"):
+        """
+            Constructor
+
+            @param native_json: return the JSON string rather than
+                                a Python object (e.g. when the field
+                                is "string" type rather than "json")
+            @param error_message: the error message
+        """
+
+        self.native_json = native_json
         self.error_message = error_message
 
     # -------------------------------------------------------------------------
     def __call__(self, value):
-        # Convert CSV import format to valid JSON
-        value = value.replace("'", "\"")
-        try:
-            if "dumps" in self.driver_auto_json:
-                json.loads(value) # raises error in case of malformed JSON
-                return (value, None) #  the serialized value is not passed
+        """
+            Validator, validates a string and converts it into db format
+        """
+
+        error = lambda v, e: (v, "%s: %s" % (current.T(self.error_message), e))
+
+        if current.response.s3.bulk:
+            # CSV import produces invalid JSON (single quotes),
+            # which would still be valid Python though, so try
+            # using ast to decode, then re-dumps as valid JSON:
+            import ast
+            try:
+                value_ = json.dumps(ast.literal_eval(value),
+                                    separators = SEPARATORS,
+                                    )
+            except JSONErrors + (SyntaxError,), e:
+                return error(value, e)
+            if self.native_json:
+                return (value_, None)
             else:
-                return (json.loads(value), None)
-        except JSONErrors, e:
-            return (value, "%s: %s" % (current.T(self.error_message), e))
+                return (json.loads(value_), None)
+        else:
+            # Coming from UI, so expect valid JSON
+            try:
+                if self.native_json:
+                    json.loads(value) # raises error in case of malformed JSON
+                    return (value, None) #  the serialized value is not passed
+                else:
+                    return (json.loads(value), None)
+            except JSONErrors, e:
+                return error(value, e)
 
     # -------------------------------------------------------------------------
     def formatter(self, value):
-        if value is None:
-            return None
-        if "loads" in self.driver_auto_json:
+        """
+            Formatter, converts the db format into a string
+        """
+
+        if value is None or \
+           self.native_json and isinstance(value, basestring):
             return value
         else:
-            return json.dumps(value)
+            return json.dumps(value, separators = SEPARATORS)
 
 # =============================================================================
 class IS_LAT(Validator):
