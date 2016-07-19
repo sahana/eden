@@ -176,6 +176,7 @@
 'Add Data to Theme Layer': 'Aggiungi dati al livello tema',
 'Add Disaster Victims': 'Aggiungi Vittime del Disastro',
 'Add Distribution.': 'Aggiungi distribuzione.',
+'Add Document': 'Aggiungi Documento',
 'Add Donor': 'Aggiungi Donatore',
 'Add Education Detail': 'Aggiungi Dettagli Istruzione',
 'Add Education Level': 'Aggiungere Livello Istruzione',

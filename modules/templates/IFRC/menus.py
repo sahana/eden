@@ -403,7 +403,6 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def deploy():
         """ RDRT Alerting and Deployments """
 
-        AP = False
         auth = current.auth
         user = auth.user
         organisation_id = user and user.organisation_id or None
@@ -419,130 +418,138 @@ class S3OptionsMenu(default.S3OptionsMenu):
                                       limitby=(0, 1)
                                       ).first()
             if region and region.name in ("Asia Pacific", "East Asia", "Pacific", "South Asia", "South East Asia"):
-                AP = True
-                gtable = s3db.pr_group
-                group = db(gtable.name == "RDRT Focal Points").select(gtable.id,
-                                                                      cache = s3db.cache,
-                                                                      limitby=(0, 1)
-                                                                      ).first()
-                if group:
-                    args = [group.id, "group_membership"]
+                # Asia-Pacific
+
+                # Is the user an RDRT Member?
+                person_id = auth.s3_logged_in_person()
+                atable = s3db.deploy_application
+                htable = s3db.hrm_human_resource
+                query = (atable.human_resource_id == htable.id) & \
+                        (htable.person_id == person_id)
+                member = db(query).select(htable.id,
+                                          limitby = (0, 1),
+                                          ).first()
+                if member:
+                    profile = M("My RDRT Profile",
+                                c="deploy", f="human_resource", args=[member.id, "profile"],
+                                )
                 else:
-                    args = "create"
+                    profile = None
 
-        if AP:
-            # Asia Pacific
-
-            # Is the user an RDRT Member?
-            person_id = auth.s3_logged_in_person()
-            atable = s3db.deploy_application
-            htable = s3db.hrm_human_resource
-            query = (atable.human_resource_id == htable.id) & \
-                    (htable.person_id == person_id)
-            member = db(query).select(htable.id,
-                                      limitby = (0, 1),
-                                      ).first()
-            if member:
-                profile = M("My RDRT Profile",
-                            c="deploy", f="human_resource", args=[member.id, "profile"],
-                            )
-            else:
-                profile = None
-
-            return M()(M("Alerts",
-                         c="deploy", f="alert")(
-                            M("Create", m="create"),
-                            M("InBox",
+                if auth.s3_has_role("RDRT_ADMIN"):
+                    gtable = s3db.pr_group
+                    group = db(gtable.name == "RDRT Focal Points").select(gtable.id,
+                                                                          cache = s3db.cache,
+                                                                          limitby=(0, 1)
+                                                                          ).first()
+                    if group:
+                        args = [group.id, "group_membership"]
+                    else:
+                        args = "create"
+                    focal_points = M("Focal Points",
+                                     c="deploy", f="group",
+                                     args = args,
+                                     )
+                    inbox = M("InBox",
                               c="deploy", f="email_inbox",
-                            ),
-                            M("Focal Points",
-                              c="deploy", f="group",
-                              args = args,
-                              ),
-                            M("Settings",
-                              c="deploy", f="email_channel",
-                              p="update", t="msg_email_channel",
-                              ),
-                       ),
-                       profile,
-                       M("Missions",
-                         c="deploy", f="mission", m="summary")(
-                            M("Create", m="create"),
-                            M("Active Missions", m="summary",
-                              vars={"~.status__belongs": "2"}),
-                            M("Closed Missions", m="summary",
-                              vars={"~.status__belongs": "1"}),
-                       ),
-                       M("Training",
-                         c="deploy", f="training", m="summary")(
-                            M("Create", m="create"),
-                            M("Search Training", m="summary"),
-                            M("Import Training Participants", m="import"),
-                       ),
-                       #M("Deployments",
-                       #  c="deploy", f="assignment", m="summary"
-                       #),
-                       M("RDRT Members",
-                         c="deploy", f="human_resource", m="summary")(
-                            M("Find RDRT"),
-                            M("Add Member",
-                              c="deploy", f="application", m="select",
-                              p="create", t="deploy_application",
-                              ),
-                            M("Import Members", c="deploy", f="person", m="import"),
-                            M("Report by Region", c="deploy", f="human_resource", m="report",
-                              vars=Storage(rows = "organisation_id$region_id",
-                                           cols = "training.course_id",
-                                           fact = "count(person_id)",
-                                           ),
-                              ),
-                            M("Report by CCST / CO", c="deploy", f="human_resource", m="report",
-                              vars=Storage(rows = "organisation_id$root_organisation$supported_by.name",
-                                           cols = "training.course_id",
-                                           fact = "count(person_id)",
-                                           ),
-                              ),
-                       ),
-                       M("Sectors",
-                         c="deploy", f="job_title", restrict=["ADMIN"],
-                       ),
-                       #M("Online Manual", c="deploy", f="index"),
-                   )
-        else:
-            # Africa
-            return M()(M("Missions",
-                         c="deploy", f="mission", m="summary")(
-                            M("Create", m="create"),
-                            M("Active Missions", m="summary",
-                              vars={"~.status__belongs": "2"}),
-                       ),
-                       M("Alerts",
-                         c="deploy", f="alert")(
-                            M("Create", m="create"),
-                            M("InBox",
-                              c="deploy", f="email_inbox",
-                            ),
-                            M("Settings",
-                              c="deploy", f="email_channel",
-                              p="update", t="msg_email_channel",
-                              ),
-                       ),
-                       M("Deployments",
-                         c="deploy", f="assignment", m="summary"
-                       ),
-                       M("Sectors",
-                         c="deploy", f="job_title", restrict=["ADMIN"],
-                       ),
-                       M("RDRT Members",
-                         c="deploy", f="human_resource", m="summary")(
-                            M("Add Member",
-                              c="deploy", f="application", m="select",
-                              p="create", t="deploy_application",
-                              ),
-                            M("Import Members", c="deploy", f="person", m="import"),
-                       ),
-                       M("Online Manual", c="deploy", f="index"),
-                   )
+                              )
+                    training = M("Training",
+                                 c="deploy", f="training", m="summary")(
+                                    M("Create", m="create"),
+                                    M("Search Training", m="summary"),
+                                    M("Import Training Participants", m="import"),
+                                 )
+                    members = M("RDRT Members",
+                                 c="deploy", f="human_resource", m="summary")(
+                                    M("Find RDRT"),
+                                    M("Add Member",
+                                      c="deploy", f="application", m="select",
+                                      p="create", t="deploy_application",
+                                      ),
+                                    M("Import Members", c="deploy", f="person", m="import"),
+                                    M("Report by Region", c="deploy", f="human_resource", m="report",
+                                      vars=Storage(rows = "organisation_id$region_id",
+                                                   cols = "training.course_id",
+                                                   fact = "count(person_id)",
+                                                   ),
+                                      ),
+                                    M("Report by CCST / CO", c="deploy", f="human_resource", m="report",
+                                      vars=Storage(rows = "organisation_id$root_organisation$supported_by.name",
+                                                   cols = "training.course_id",
+                                                   fact = "count(person_id)",
+                                                   ),
+                                      ),
+                               )
+                else:
+                    focal_points = None
+                    inbox = None
+                    training = None
+                    members = None
+
+                return M()(M("Alerts",
+                             c="deploy", f="alert")(
+                                M("Create", m="create"),
+                                inbox,
+                                focal_points,
+                                M("Settings",
+                                  c="deploy", f="email_channel",
+                                  p="update", t="msg_email_channel",
+                                  ),
+                           ),
+                           profile,
+                           M("Missions",
+                             c="deploy", f="mission", m="summary")(
+                                M("Create", m="create"),
+                                M("Active Missions", m="summary",
+                                  vars={"~.status__belongs": "2"}),
+                                M("Closed Missions", m="summary",
+                                  vars={"~.status__belongs": "1"}),
+                           ),
+                           training,
+                           #M("Deployments",
+                           #  c="deploy", f="assignment", m="summary"
+                           #),
+                           members,
+                           M("Sectors",
+                             c="deploy", f="job_title", restrict=["ADMIN"],
+                           ),
+                           #M("Online Manual", c="deploy", f="index"),
+                       )
+
+        # Africa (Default)
+        return M()(M("Missions",
+                     c="deploy", f="mission", m="summary")(
+                        M("Create", m="create"),
+                        M("Active Missions", m="summary",
+                          vars={"~.status__belongs": "2"}),
+                   ),
+                   M("Alerts",
+                     c="deploy", f="alert")(
+                        M("Create", m="create"),
+                        M("InBox",
+                          c="deploy", f="email_inbox",
+                        ),
+                        M("Settings",
+                          c="deploy", f="email_channel",
+                          p="update", t="msg_email_channel",
+                          ),
+                   ),
+                   M("Deployments",
+                     c="deploy", f="assignment", m="summary"
+                   ),
+                   M("Sectors",
+                     c="deploy", f="job_title", restrict=["ADMIN"],
+                   ),
+                   M("RDRT Members",
+                     c="deploy", f="human_resource", m="summary")(
+                        M("Add Member",
+                          c="deploy", f="application", m="select",
+                          p="create", t="deploy_application",
+                          ),
+                        M("Import Members", c="deploy", f="person", m="import"),
+                   ),
+                   M("Online Manual", c="deploy", f="index"),
+               )
 
     # -------------------------------------------------------------------------
     @staticmethod

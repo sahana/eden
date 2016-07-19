@@ -149,6 +149,7 @@
 'Add Credentials': 'Incluir Referências',
 'Add Disaster Victims': 'Incluir Vítimas de Desastre',
 'Add Distribution.': 'Incluir distribuição.',
+'Add Document': 'Incluir Documento',
 'Add Donor': 'Incluir doador',
 'Add Flood Report': 'Incluir Relatório Enchente',
 'Add Group Member': 'Incluir Membro do Grupo',

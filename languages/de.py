@@ -158,6 +158,7 @@
 'Add Credentials': 'Qualifikationen hinzufügen',
 'Add Disaster Victims': 'Katastrophenopfer hinzufügen',
 'Add Distribution.': 'Verteilung hinzufügen.',
+'Add Document': 'Dokument hinzufügen',
 'Add Donor': 'Spender hinzufügen',
 'Add Family Member': 'Familienmitglied hinzufügen',
 'Add Flood Report': 'Flut Bericht hinzufügen',
