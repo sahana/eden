@@ -143,6 +143,7 @@
 'Add Credentials': 'Добавить идентификационные данные',
 'Add Disaster Victims': 'Добавить жертв бедствий',
 'Add Distribution.': 'Добавить распределения.',
+'Add Document': 'Добавить документ',
 'Add Donor': 'Добавить Доноров',
 'Add Flood Report': 'Добавить Наводнениями Отчета',
 'Add Group Member': 'Добавление члена группы',

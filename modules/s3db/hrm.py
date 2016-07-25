@@ -6651,7 +6651,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                     #list_layout = hrm_training_list_layout,
                                     )
             experience_widget = dict(label = "Experience",
-                                     label_create = "Add New Experience",
+                                     label_create = "Add Experience",
                                      create_controller = c,
                                      type = "datalist",
                                      tablename = "hrm_experience",
@@ -6661,7 +6661,7 @@ def hrm_human_resource_controller(extra_filter=None):
                                      #list_layout = hrm_experience_list_layout,
                                      )
             docs_widget = dict(label = "Documents",
-                               label_create = "Add New Document",
+                               label_create = "Add Document",
                                type = "datalist",
                                tablename = "doc_document",
                                filter = FS("doc_id") == record.doc_id,

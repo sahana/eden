@@ -165,6 +165,7 @@
 'Add Disaster Assessments': 'Гамшгийн үнэлгээ нэмэх',
 'Add Distribution': 'Түгээлт нэмэх',
 'Add Distribution Item': 'Түгээх бараа нэмэх',
+'Add Document': 'Шинэ бичиг баримт нэмэх',
 'Add Education Detail': 'Боловсролын дэлгэрэнгүй мэдээлэл нэмэх',
 'Add Educational Achievements': 'Боловсролын гаргасан амжилт нэмэх',
 'Add Email Settings': 'Э-майл тохиргоо нэмэх',

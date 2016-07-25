@@ -254,6 +254,7 @@
 'Add Disaster Assessments': 'Ajouter des évaluations de catastrophe naturelle',
 'Add Disaster Victims': 'Ajouter les victimes des catastrophes',
 'Add Distribution': 'Ajouter distribution',
+'Add Document': 'Ajouter document',
 'Add Donor': 'Ajouter des donateurs',
 'Add Educational Achievements': "Ajouter des réalisations liées à l'éducation",
 'Add Email Settings': 'Ajouter des paramètres de courrier électronique',

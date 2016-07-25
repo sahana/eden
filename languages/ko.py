@@ -141,6 +141,7 @@
 'Add Credentials': '권한 정보 추가',
 'Add Disaster Victims': '피해 희생 추가',
 'Add Distribution.': '분배 추가.',
+'Add Document': '새 문서 추가',
 'Add Donor': '추가 공여',
 'Add Flood Report': '플러드 보고서 추가',
 'Add Group Member': '그룹 구성원 추가',

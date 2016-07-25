@@ -363,12 +363,12 @@ def contact_emergency():
             elif access == "2":
                 method = "public_contacts"
             s3db.configure("pr_contact_emergency",
-                           create_next=URL(c=controller,
-                                           f="person",
-                                           args=[person_id, method]),
-                           update_next=URL(c=controller,
-                                           f="person",
-                                           args=[person_id, method])
+                           create_next = URL(c=controller,
+                                             f="person",
+                                             args=[person_id, method]),
+                           update_next = URL(c=controller,
+                                             f="person",
+                                             args=[person_id, method])
                            )
             if r.method == "create":
                 table = s3db.pr_person

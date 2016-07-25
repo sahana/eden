@@ -103,6 +103,7 @@
 'Add Credentials': 'Adicionar Credenciais',
 'Add Disaster Victims': 'Adicionar Vítimas de Desastre/Catástrofe',
 'Add Distribution.': 'Adicionar Distribuição',
+'Add Document': 'Adicionar Documento',
 'Add Donor': 'Adicionar Doador/Dador',
 'Add Flood Report': 'Adicionar Relatório de Inundação',
 'Add Group Member': 'Adicionar Membro de Grupo',

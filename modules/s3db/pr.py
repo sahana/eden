@@ -7834,7 +7834,7 @@ class pr_EmergencyContactListLayout(S3DataListLayout):
         render_column = self.render_column
         for rfield in rfields:
             if rfield.colname in fields:
-                column = self.render_column(item_id, rfield, record)
+                column = render_column(item_id, rfield, record)
                 if column:
                     append(column)
         return DIV(DIV(body, _class="media-body"), _class="media")

@@ -91,7 +91,12 @@ def config(settings):
         PID = "person_id"
 
         # Owner Entity Foreign Key
-        realm_entity_fks = dict(pr_contact = [("org_organisation", EID),
+        realm_entity_fks = dict(hrm_competency = PID,
+                                hrm_credential = PID,
+                                hrm_experience = PID,
+                                hrm_human_resource = SID,
+                                hrm_training = PID,
+                                pr_contact = [("org_organisation", EID),
                                               ("po_household", EID),
                                               ("pr_person", EID),
                                               ],
@@ -105,16 +110,14 @@ def config(settings):
                                 pr_education = PID,
                                 pr_group = OID,
                                 pr_note = PID,
-                                hrm_human_resource = SID,
-                                hrm_training = PID,
                                 inv_recv = SID,
                                 inv_send = SID,
                                 inv_track_item = "track_org_id",
                                 inv_adj_item = "adj_id",
-                                req_req_item = "req_id",
                                 org_capacity_assessment_data = "assessment_id",
                                 po_household = "area_id",
                                 po_organisation_area = "area_id",
+                                req_req_item = "req_id",
                                 )
 
         # Default Foreign Keys (ordered by priority)
@@ -3112,13 +3115,14 @@ def config(settings):
                                                          },
                                               ))
 
-                # Representation of emergency contacts
-                from s3 import S3Represent
-                field = s3db.pr_contact_emergency.id
-                field.represent = S3Represent(lookup="pr_contact_emergency",
-                                              fields=("name", "relationship", "phone"),
-                                              labels=emergency_contact_represent,
-                                              )
+                if r.method != "profile":
+                    # Representation of emergency contacts (breaks the update_url construction in render_toolbox)
+                    from s3 import S3Represent
+                    field = s3db.pr_contact_emergency.id
+                    field.represent = S3Represent(lookup = "pr_contact_emergency",
+                                                  fields = ("name", "relationship", "phone"),
+                                                  labels = emergency_contact_represent,
+                                                  )
 
                 # Custom list fields for RDRT
                 phone_label = settings.get_ui_label_mobile_phone()
