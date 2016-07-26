@@ -39,6 +39,9 @@
 
             this.id = dashboardID;
             dashboardID += 1;
+
+            // Namespace for events
+            this.namespace = '.dashboard';
         },
 
         /**
@@ -76,9 +79,67 @@
         },
 
         /**
+         * Get or set the current config-mode status
+         *
+         * @param {boolean} mode - true to turn config mode on,
+         *                         false to turn config mode off,
+         *                         undefined to return the current status
+         */
+        configMode: function(mode) {
+
+            var el = this.element,
+                ns = this.namespace,
+                modeSwitch = $('.db-config');
+
+            if (typeof mode === 'undefined') {
+
+                // Return the current status
+                var status = modeSwitch.data('mode');
+                if (status == 'on') {
+                    mode = true;
+                } else {
+                    mode = false;
+                }
+
+            } else if (mode) {
+
+                // Turn config mode on
+                modeSwitch.data('mode', 'on');
+                modeSwitch.find('.db-config-on').hide();
+                modeSwitch.find('.db-config-off').show().removeClass('hide');
+
+                // Trigger openConfig event
+                el.trigger('openConfig' + ns);
+
+            } else {
+
+                // Turn config mode off
+                modeSwitch.data('mode', 'off');
+                modeSwitch.find('.db-config-off').hide();
+                modeSwitch.find('.db-config-on').show().removeClass('hide');
+
+                // Trigger closeConfig event
+                el.trigger('closeConfig' + ns);
+            }
+            return mode;
+        },
+
+        /**
          * Bind events to generated elements (after refresh)
          */
         _bindEvents: function() {
+
+            var ns = this.namespace,
+                self = this;
+
+            // Config mode switches
+            $('.db-config-on').bind('click' + ns, function() {
+                self.configMode(true);
+            });
+            $('.db-config-off').bind('click' + ns, function() {
+                self.configMode(false);
+            });
+
             return true;
         },
 
@@ -86,10 +147,17 @@
          * Unbind events (before refresh)
          */
         _unbindEvents: function() {
+
+            var ns = this.namespace;
+
+            $('.dashboard-config').unbind(ns);
+
             return true;
         }
     });
 })(jQuery);
+
+// ----------------------------------------------------------------------------
 
 (function($, undefined) {
 

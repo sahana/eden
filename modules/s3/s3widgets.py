@@ -8720,6 +8720,7 @@ class ICON(I):
             "delivery": "fa-thumbs-up",
             "deploy": "fa-plus",
             "deployed": "fa-check",
+            "done": "fa-check",
             "down": "fa-caret-down",
             "edit": "fa-edit",
             "exclamation": "fa-exclamation",

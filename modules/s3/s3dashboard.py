@@ -41,6 +41,7 @@ import json
 from gluon import *
 
 from s3utils import s3_get_extension
+from s3widgets import ICON
 
 DEFAULT = lambda: None
 DEFAULT_FORMAT = "html"
@@ -744,9 +745,21 @@ class S3Dashboard(object):
 
         dashboard_id = attr.get("_id", "dashboard")
 
+        # Switch for config mode
+        hide = " hide" if not config.configurable else ""
+        switch = SPAN(ICON("settings",
+                           _class = "db-config-on%s" % hide,
+                           ),
+                      ICON("done",
+                           _class = "db-config-off hide"),
+                      _class = "db-config",
+                      data = {"mode": "off"},
+                      )
+
         output = {"title": config.title,
                   "contents": "",
                   "dashboard_id": dashboard_id,
+                  "switch": switch,
                   }
 
         # Script Options

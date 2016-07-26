@@ -1663,3 +1663,18 @@ button.toggle-text {
     width: 350px;
     height: 130px;
 }
+
+.db-config {
+    padding-top: 0.2rem;
+    float: right;
+}
+body.rtl .db-config {
+    float: left;
+}
+.db-config-on,
+.db-config-off {
+    cursor: pointer;
+}
+.db-config-off {
+    color: green;
+}
