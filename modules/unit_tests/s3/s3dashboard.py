@@ -10,9 +10,113 @@ import unittest
 from gluon import current
 from gluon.storage import Storage
 
-from s3.s3dashboard import S3DashboardContext
+from s3.s3dashboard import S3DashboardAgent, \
+                           S3DashboardContext, \
+                           S3DashboardWidget, \
+                           delegated
 
 from unit_tests import run_suite
+
+# =============================================================================
+class S3DashboardAgentTests(unittest.TestCase):
+
+    # -------------------------------------------------------------------------
+    class DummyWidget(S3DashboardWidget):
+        """ Dummy subclass for testing """
+
+        @delegated
+        def command(agent, context):
+            """ An agent command implemented by the widget """
+
+            config = agent.config
+
+            # Build return value from config and context
+            return {"param": "%s,%s" % (config.get("param"),
+                                        context.get("param"),
+                                        ),
+                    }
+
+        def not_delegated():
+            """ Some other internal method of the widget """
+
+            # Agent should never execute this
+            raise RuntimeError
+
+    # -------------------------------------------------------------------------
+    def setUp(self):
+
+        self.widget = self.DummyWidget(defaults = {"param": "default"})
+
+    # -------------------------------------------------------------------------
+    def testDelegation(self):
+        """ Verify execution of delegated widget method """
+
+        # The widget
+        widget = self.widget
+
+        # Create an agent for the widget
+        agent = widget.create_agent("agent",
+                                    config = {"param": "live",
+                                              },
+                                    )
+
+        # Dummy context
+        context = {"param": "test"}
+
+        # Verify execution of delegated method
+        output = agent.do("command", context)
+        self.assertIn("param", output)
+        self.assertEqual(output["param"], "live,test")
+
+    # -------------------------------------------------------------------------
+    def testDelegationMultipleAgents(self):
+        """ Verify execution of delegated widget method with multiple agents """
+
+        assertIn = self.assertIn
+        assertEqual = self.assertEqual
+
+        num_agents = 4
+
+        # The widget
+        widget = self.widget
+        create_agent = widget.create_agent
+
+        # Create an array of agents for the widget
+        agents = []
+        append = agents.append
+        for i in xrange(num_agents):
+            agent = create_agent("agent%s" % i,
+                                 config = {"param": "live%s" % i},
+                                 )
+            append(agent)
+        assertEqual(len(widget.agents), num_agents)
+
+        # Dummy context
+        context = {"param": "test"}
+
+        # Verify execution of delegated method
+        for i, agent in enumerate(agents):
+            output = agent.do("command", context)
+            assertIn("param", output)
+            assertEqual(output["param"], "live%s,test" % i)
+
+    # -------------------------------------------------------------------------
+    def testInvalidDelegation(self):
+        """ Verify error handling for delegated widget methods """
+
+        # The widget
+        widget = self.widget
+
+        # Create an agent for the widget
+        agent = widget.create_agent("agent")
+
+        # Attempt to execute a nonexistent widget method should raise exception
+        with self.assertRaises(NotImplementedError):
+            agent.do("nonexistent", {})
+
+        # Attempt to execute a non-delegated widget method should raise exception
+        with self.assertRaises(NotImplementedError):
+            agent.do("not_delegated", {})
 
 # =============================================================================
 class S3DashboardContextTests(unittest.TestCase):
@@ -310,6 +414,7 @@ if __name__ == "__main__":
 
     run_suite(
         S3DashboardContextTests,
+        S3DashboardAgentTests,
     )
 
 # END ========================================================================

@@ -651,10 +651,10 @@ class S3Dashboard(object):
                     continue
 
                 # Instantiate the agent
-                agent = widget._create_agent(agent_id,
-                                             config = widget_config,
-                                             context = context,
-                                             )
+                agent = widget.create_agent(agent_id,
+                                            config = widget_config,
+                                            context = context,
+                                            )
 
                 # Register the agent
                 agents[agent_id] = agent
@@ -1146,7 +1146,7 @@ class S3DashboardWidget(object):
         self.script_loaded = False
 
     # -------------------------------------------------------------------------
-    def _create_agent(self, agent_id, config=None, context=None):
+    def create_agent(self, agent_id, config=None, context=None):
         """
             Create an agent for this widget
 
