@@ -1636,7 +1636,7 @@ class S3Request(object):
             # override the custom settings when loaded later)
             db = current.db
             if tablename not in db:
-                db.table(tablename)
+                current.s3db.table(tablename)
             customise = current.deployment_settings.customise_resource(tablename)
             if customise:
                 customise(self, tablename)
