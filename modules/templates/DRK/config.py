@@ -2098,6 +2098,10 @@ def config(settings):
                                           show_map = False,
                                           )
 
+        field = table.obsolete
+        field.label = T("Inactive")
+        field.represent = lambda opt: T("Inactive") if opt else current.messages["NONE"]
+
         # Custom list fields
         list_fields = ["name",
                        "site_facility_type.facility_type_id",
@@ -2107,7 +2111,8 @@ def config(settings):
                        "phone1",
                        "phone2",
                        "email",
-                       "website",
+                       #"website",
+                       "obsolete",
                        "comments",
                        ]
 
@@ -2127,9 +2132,17 @@ def config(settings):
                                           ),
                           S3OptionsFilter("organisation_id",
                                           ),
+                          S3OptionsFilter("obsolete",
+                                          options = {False: T("No"),
+                                                     True: T("Yes"),
+                                                     },
+                                          default = [False],
+                                          cols = 2,
+                                          )
                           ]
 
         s3db.configure("org_facility",
+                       #deletable = False,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        )

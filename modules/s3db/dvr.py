@@ -355,6 +355,7 @@ class DVRCaseModel(S3Model):
                                      ),
                      Field("origin_site_id", "reference org_site",
                            label = T("Admission from"),
+                           ondelete = "RESTRICT",
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
                                                   site_represent,
@@ -374,6 +375,7 @@ class DVRCaseModel(S3Model):
                            ),
                      Field("destination_site_id", "reference org_site",
                            label = T("Transfer to"),
+                           ondelete = "RESTRICT",
                            requires = IS_EMPTY_OR(
                                         IS_ONE_OF(db, "org_site.site_id",
                                                   site_represent,
