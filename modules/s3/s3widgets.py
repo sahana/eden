@@ -8741,6 +8741,7 @@ class ICON(I):
             "location": "fa-globe",
             "mail": "fa-envelope-o",
             "map-marker": "fa-map-marker",
+            "move": "fa-arrows",
             "news": "fa-info",
             "offer": "fa-truck",
             "organisation": "fa-institution",

@@ -1008,11 +1008,21 @@ class S3DashboardAgent(object):
         config = self.config
         prototype = self.widget
 
-        # Produce the widget XML
-        widget = prototype.widget(self.agent_id,
-                                  config,
-                                  context = context,
-                                  )
+        # Produce the contents XML
+        contents = prototype.widget(self.agent_id,
+                                    config,
+                                    context = context,
+                                    )
+
+        # Get the config bar
+        configbar = prototype.configbar()
+
+        # Construct the widget
+        widget = DIV(configbar,
+                     contents,
+                     _class = "db-widget",
+                     _id = self.agent_id,
+                     )
 
         # Add script file
         prototype._load_script()
@@ -1043,18 +1053,17 @@ class S3DashboardWidget(object):
             @param context: the S3DashboardContext
             @param config: the active widget configuration
 
-            @return: a DIV instance, with agent_id as node ID
+            @return: an XmlComponent with the widget contents,
+                     the outer DIV will be added by the agent
         """
 
         # Base class just renders some static XML
         contents = config.get("xml", "")
 
+        # Inject the JavaScript components
         self.inject_script(agent_id)
 
-        return DIV(XML(contents),
-                   _class = "db-generic",
-                   _id = agent_id,
-                   )
+        return XML(contents)
 
     # -------------------------------------------------------------------------
     def get_script_path(self, debug=False):
@@ -1105,6 +1114,25 @@ class S3DashboardWidget(object):
                      "options": json.dumps(options),
                      }
         s3.jquery_ready.append(script)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def configbar():
+        """
+            Build the widget configuration task bar
+
+            @return: the XML for the task bar
+        """
+
+        return DIV(SPAN(ICON("move"),
+                        _class="db-configbar-left",
+                        ),
+                   SPAN(ICON("delete"),
+                        ICON("settings"),
+                        _class="db-configbar-right",
+                        ),
+                   _class = "db-configbar",
+                   )
 
     # -------------------------------------------------------------------------
     # Base class methods

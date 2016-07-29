@@ -81,8 +81,7 @@
         /**
          * Get or set the current config-mode status
          *
-         * @param {boolean} mode - true to turn config mode on,
-         *                         false to turn config mode off,
+         * @param {boolean} mode - true|false to turn config mode on/off,
          *                         undefined to return the current status
          */
         configMode: function(mode) {
@@ -108,18 +107,29 @@
                 modeSwitch.find('.db-config-on').hide();
                 modeSwitch.find('.db-config-off').show().removeClass('hide');
 
+                // Turn on config mode for all widgets
+                el.find('.db-widget').each(function() {
+                    $(this).dashboardWidget('configMode', true);
+                });
+
                 // Trigger openConfig event
                 el.trigger('openConfig' + ns);
 
             } else {
+
+                // Trigger closeConfig event
+                el.trigger('closeConfig' + ns);
+
+                // Turn off config mode for all widgets
+                el.find('.db-widget').each(function() {
+                    $(this).dashboardWidget('configMode', false);
+                });
 
                 // Turn config mode off
                 modeSwitch.data('mode', 'off');
                 modeSwitch.find('.db-config-off').hide();
                 modeSwitch.find('.db-config-on').show().removeClass('hide');
 
-                // Trigger closeConfig event
-                el.trigger('closeConfig' + ns);
             }
             return mode;
         },
@@ -183,8 +193,6 @@
          */
         _create: function() {
 
-            var el = $(this.element);
-
             this.id = dashboardWidgetID;
             dashboardWidgetID += 1;
         },
@@ -215,11 +223,37 @@
          */
         refresh: function() {
 
-            var opts = this.options;
+            var el = $(this.element),
+                opts = this.options;
 
             this._unbindEvents();
 
+            // Identify the config-bar
+            this.configBar = el.find('.db-configbar');
+
             this._bindEvents();
+        },
+
+        /**
+         * Get or set the current config-mode status
+         *
+         * @param {bool} mode - true|false to turn config mode on/off,
+         *                      undefined to return the current status
+         */
+        configMode: function(mode) {
+
+            var el = $(this.element);
+
+            if (typeof mode === 'undefined') {
+                mode = this.configBar.is(':visible');
+            } else if (mode) {
+                this.configBar.show();
+                el.addClass('db-config-active');
+            } else {
+                this.configBar.hide();
+                el.removeClass('db-config-active');
+            }
+            return mode;
         },
 
         /**
