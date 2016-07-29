@@ -367,6 +367,7 @@ def dojs(dogis = False, warnings = True):
                      "sync",
                      "timeline",
                      "ui.contacts",
+                     "ui.dashboard",
                      "ui.embeddedcomponent",
                      "ui.locationselector",
                      "work",

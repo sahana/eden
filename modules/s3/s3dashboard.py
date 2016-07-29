@@ -842,9 +842,7 @@ class S3Dashboard(object):
             if script not in scripts:
                 scripts.append(script)
         else:
-            # @todo: add minify-config
-            script = "/%s/static/scripts/S3/s3.ui.dashboard.js" % appname
-            #script = "/%s/static/scripts/S3/s3.ui.dashboard.min.js" % appname
+            script = "/%s/static/scripts/S3/s3.ui.dashboard.min.js" % appname
             if script not in scripts:
                 scripts.append(script)
 
