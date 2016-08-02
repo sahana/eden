@@ -3906,6 +3906,13 @@ class DVRRegisterCaseEvent(S3Method):
                 else:
                     person_data = name
 
+                # Add family details
+                details = self.get_household_size(person.id,
+                                                  dob = person.date_of_birth,
+                                                  )
+                if details:
+                    output["d"] = {"d": details}
+
                 output["p"] = s3_str(person_data)
                 output["l"] = person.pe_label
 
@@ -3961,6 +3968,22 @@ class DVRRegisterCaseEvent(S3Method):
 
             @return: tuple (widget_id, submit_label)
         """
+
+        T = current.T
+
+        # Extend form with household size info
+        if person:
+            details = self.get_household_size(person.id,
+                                              dob = person.date_of_birth,
+                                              )
+        else:
+            details = ""
+        formfields.extend([Field("details",
+                                 label = T("Family"),
+                                 writable = False,
+                                 ),
+                           ])
+        data["details"] = details
 
         widget_id = "case-event-form"
         submit = current.T("Register")
@@ -4252,6 +4275,106 @@ class DVRRegisterCaseEvent(S3Method):
                 person = rows[0]
 
         return person
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def get_household_size(person_id, dob=False, formatted=True):
+        """
+            Helper function to calculate the household size
+            (counting only members with active cases)
+
+            @param person_id: the person record ID
+            @param dob: the date of birth of that person (if known)
+            @param formatted: return household size info as string
+
+            @return: household size info as string if formatted=True,
+                     otherwise tuple (number_of_adults, number_of_children)
+        """
+
+        db = current.db
+
+        s3db = current.s3db
+        ptable = s3db.pr_person
+        gtable = s3db.pr_group
+        mtable = s3db.pr_group_membership
+        ctable = s3db.dvr_case
+        stable = s3db.dvr_case_status
+
+        from dateutil.relativedelta import relativedelta
+        now = current.request.utcnow.date()
+
+        # Default result
+        adults, children = 1, 0
+
+        # Count the person in question
+        if dob is False:
+            query = (ptable.id == person_id)
+            row = db(query).select(ptable.date_of_birth,
+                                    limitby = (0, 1),
+                                    ).first()
+            if row:
+                dob = row.date_of_birth
+        if dob:
+            age = relativedelta(now, dob).years
+            if age < 18:
+                adults, children = 0, 1
+
+        # Household members which have already been counted
+        members = set([person_id])
+        counted = members.add
+
+        # Get all case groups this person belongs to
+        query = ((mtable.person_id == person_id) & \
+                 (mtable.deleted != True) & \
+                 (gtable.id == mtable.group_id) & \
+                 (gtable.group_type == 7))
+        rows = db(query).select(gtable.id)
+        group_ids = set(row.id for row in rows)
+
+        if group_ids:
+            join = [ptable.on(ptable.id == mtable.person_id),
+                    ctable.on((ctable.person_id == ptable.id) & \
+                              (ctable.archived != True) & \
+                              (ctable.deleted != True)),
+                    ]
+            left = [stable.on(stable.id == ctable.status_id),
+                    ]
+            query = (mtable.group_id.belongs(group_ids)) & \
+                    (mtable.deleted != True) & \
+                    (stable.is_closed != True)
+            rows = db(query).select(ptable.id,
+                                    ptable.date_of_birth,
+                                    join = join,
+                                    left = left,
+                                    )
+
+            for row in rows:
+                person, dob = row.id, row.date_of_birth
+                if person not in members:
+                    age = relativedelta(now, dob).years if dob else None
+                    if age and age < 18:
+                        children += 1
+                    else:
+                        adults += 1
+                    counted(person)
+
+        if not formatted:
+            return adults, children
+
+        T = current.T
+        template = "%(number)s %(label)s"
+        details = []
+        if adults:
+            label = T("Adults") if adults != 1 else T("Adult")
+            details.append(template % {"number": adults,
+                                       "label": label,
+                                       })
+        if children:
+            label = T("Children") if children != 1 else T("Child")
+            details.append(template % {"number": children,
+                                       "label": label,
+                                       })
+        return ", ".join(details)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -4612,10 +4735,10 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
 
         # Additional form fields for payments
         formfields.extend([Field("details",
-                                label = T("Pending Payments"),
-                                writable = False,
-                                represent = self.payment_data_represent,
-                                ),
+                                 label = T("Pending Payments"),
+                                 writable = False,
+                                 represent = self.payment_data_represent,
+                                 ),
                            Field("date",
                                  label = T("Payment Date"),
                                  writable = False,
