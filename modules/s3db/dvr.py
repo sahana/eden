@@ -4352,7 +4352,7 @@ class DVRRegisterCaseEvent(S3Method):
                 person, dob = row.id, row.date_of_birth
                 if person not in members:
                     age = relativedelta(now, dob).years if dob else None
-                    if age and age < 18:
+                    if age is not None and age < 18:
                         children += 1
                     else:
                         adults += 1
