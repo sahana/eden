@@ -192,7 +192,7 @@ class S3Parser(object):
             try:
                 series_id = series.id
             except:
-                raise "News Series not present in CMS module"
+                raise KeyError("News Series not present in CMS module")
 
             post_id = post_table.insert(title = record.title,
                                         body = body,
@@ -345,7 +345,7 @@ class S3Parser(object):
                             # Basic Authentication
                             auth_handler = urllib2.HTTPBasicAuthHandler()
                             auth_handler.add_password(None, channel.url, username, password)
-                
+
                         if channel.etag:
                             # http://pythonhosted.org/feedparser/http-etag.html
                             # NB This won't help for a server like Drupal 7 set to not allow caching & hence generating a new ETag/Last Modified each request!
@@ -363,7 +363,7 @@ class S3Parser(object):
                                                         status=d.bozo_exception.message,
                                                         period=(300, 3600))
                             return
-                
+
                         # Update ETag/Last-polled
                         now = current.request.utcnow
                         data = dict(date=now)
@@ -393,7 +393,7 @@ class S3Parser(object):
                                                 current.log.error("Getting content from link failed: %s" % e)
                                             else:
                                                 File = StringIO(file)
-                        
+
                                                 # Import via XSLT
                                                 resource = s3db.resource("cap_alert")
                                                 stylesheet = os.path.join(current.request.folder, "static", "formats", "cap", "import.xsl")
@@ -404,7 +404,7 @@ class S3Parser(object):
                                         current.log.error("Getting content from link failed: %s" % e)
                                     else:
                                         File = StringIO(file)
-                            
+
                                         # Import via XSLT
                                         resource = s3db.resource("cap_alert")
                                         stylesheet = os.path.join(current.request.folder, "static", "formats", "cap", "import.xsl")
@@ -419,7 +419,7 @@ class S3Parser(object):
                 return
             else:
                 File = StringIO(file)
-    
+
                 # Import via XSLT
                 resource = s3db.resource("cap_alert")
                 stylesheet = os.path.join(current.request.folder, "static", "formats", "cap", "import.xsl")
@@ -479,7 +479,7 @@ class S3Parser(object):
             try:
                 series_id = series.id
             except:
-                raise "News Series not present in CMS module"
+                raise KeyError("News Series not present in CMS module")
 
             post_id = post_table.insert(#title = record.title,
                                         body = body,

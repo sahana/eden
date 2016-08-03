@@ -571,7 +571,7 @@ class S3Notifications(object):
                 if created_on_colname:
                     try:
                         created_on = row["_row"][created_on_colname]
-                    except KeyError, AttributeError:
+                    except (KeyError, AttributeError):
                         pass
                     else:
                         if s3_utc(created_on) >= last_check_time:
@@ -605,7 +605,7 @@ class S3Notifications(object):
                 if created_on_colname:
                     try:
                         created_on = row["_row"][created_on_colname]
-                    except KeyError, AttributeError:
+                    except (KeyError, AttributeError):
                         pass
                     else:
                         if s3_utc(created_on) >= last_check_time:
