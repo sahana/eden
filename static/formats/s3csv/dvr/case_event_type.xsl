@@ -11,6 +11,7 @@
          Name........................string..........Type Name
          Default.....................string..........is default type
                                                      true|false
+         Minimum Interval............number..........minimum interval (hours)
          Comments....................string..........Comments
 
     *********************************************************************** -->
@@ -52,6 +53,13 @@
                     </xsl:choose>
                 </xsl:attribute>
             </data>
+
+            <xsl:variable name="MinimumInterval" select="col[@field='Minimum Interval']/text()"/>
+            <xsl:if test="$MinimumInterval!=''">
+                <data field="min_interval">
+                    <xsl:value-of select="$MinimumInterval"/>
+                </data>
+            </xsl:if>
 
             <data field="comments">
                 <xsl:value-of select="col[@field='Comments']/text()"/>

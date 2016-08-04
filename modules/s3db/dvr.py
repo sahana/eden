@@ -2471,8 +2471,16 @@ class DVRCaseEventModel(S3Model):
                                                           T("The type of appointments which are completed with this type of event"),
                                                           ),
                                       ),
-
                         ),
+                     Field("min_interval", "double",
+                           label = T("Minimum Interval (Hours)"),
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Minimum Interval (Hours)"),
+                                                             T("Minimum interval between two consecutive registrations of this event type for the same person"),
+                                                             ),
+                                         ),
+                           requires = IS_FLOAT_IN_RANGE(0.0, None),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -3764,8 +3772,8 @@ class DVRRegisterCaseEvent(S3Method):
         T = current.T
 
         formvars = form.vars
-        pe_label = formvars.get("label").strip()
 
+        pe_label = formvars.get("label").strip()
         person = self.get_person(pe_label)
         if person is None:
             form.errors["label"] = T("No person found with this ID number")
@@ -3781,14 +3789,29 @@ class DVRRegisterCaseEvent(S3Method):
 
         # Validate the event type (if not default)
         type_id = None
-        event_code = formvars.get("event_code")
+        try:
+            request_vars = form.request_vars
+        except AttributeError:
+            event_code = None
+        else:
+            event_code = request_vars.get("event")
         if event_code:
             event_type = self.get_event_type(event_code)
             if not event_type:
-                form.errors["event_code"] = T("Invalid event code")
+                form.errors["event"] = \
+                current.response.error = T("Invalid event code")
             else:
                 type_id = event_type.id
         formvars.type_id = type_id
+
+        # Check whether event type is blocked due to minimum interval
+        if type_id and callable(self.check_intervals):
+            blocked = self.check_intervals(person.id,
+                                           type_id = type_id,
+                                           )
+            if type_id in blocked:
+                msg, earliest = blocked[type_id]
+                form.errors["event"] = current.response.error = msg
 
     # -------------------------------------------------------------------------
     def accept(self, r, form, event_type=None):
@@ -4121,6 +4144,7 @@ class DVRRegisterCaseEvent(S3Method):
                                             table.code,
                                             table.name,
                                             table.is_default,
+                                            table.min_interval,
                                             table.comments,
                                             )
             for row in rows:
@@ -4130,6 +4154,80 @@ class DVRRegisterCaseEvent(S3Method):
             self.event_types = event_types
 
         return self.event_types
+
+    # -------------------------------------------------------------------------
+    def check_intervals(self, person_id, type_id=None):
+        """
+            Check minimum intervals between consecutive registrations
+            of the same event type
+
+            @param person_id: the person record ID
+            @param type_id: check only this event type (rather than all types)
+
+            @return: a dict with blocked event types
+                     {type_id: (error_message, blocked_until_datetime)}
+        """
+
+        s3db = current.s3db
+        db = current.db
+        T = current.T
+
+        output = {}
+
+        table = s3db.dvr_case_event
+        event_type_id = table.type_id
+
+        # Get event types to check
+        event_types = self.get_event_types()
+        if not type_id:
+            check = set(type_id for type_id, row in event_types.items()
+                        if row.min_interval and type_id != "_default"
+                        )
+            if len(check) == 1:
+                type_query = (event_type_id == check[0])
+            elif check:
+                type_query = event_type_id.belongs(check)
+            else:
+                # No types to check
+                return output
+        else:
+            event_type = event_types.get(type_id)
+            if event_type and event_type.min_interval:
+                # Check single event type
+                type_query = (event_type_id == type_id)
+            else:
+                return output
+
+        # Get the last events for these types for this person
+        query = (table.person_id == person_id) & \
+                type_query & \
+                (table.deleted != True)
+        timestamp = table.date.max()
+        rows = db(query).select(event_type_id,
+                                timestamp,
+                                groupby = event_type_id,
+                                )
+
+        # Check intervals
+        import datetime
+        now = current.request.utcnow
+        represent = table.date.represent
+
+        for row in rows:
+            type_id_ = row[event_type_id]
+            event_type = event_types[type_id_]
+            interval = event_type.min_interval
+            latest = row[timestamp]
+            if latest:
+                earliest = latest + datetime.timedelta(hours=interval)
+                if earliest > now:
+                    msg = T("%(event)s already registered on %(timestamp)s") % \
+                                {"event": T(event_type.name),
+                                 "timestamp": represent(latest),
+                                 }
+                    output[type_id_] = (msg, earliest)
+
+        return output
 
     # -------------------------------------------------------------------------
     # Common methods
@@ -4485,6 +4583,9 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
     # Action to check flag restrictions for
     ACTION = "payment"
 
+    # Do not check minimum intervals for consecutive registrations
+    check_intervals = False
+
     # -------------------------------------------------------------------------
     # Configuration
     # -------------------------------------------------------------------------
@@ -4509,7 +4610,7 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
         """
 
         # Only one type of event
-        return Storage(code="PAYMENT")
+        return Storage(id=None, code="PAYMENT")
 
     # -------------------------------------------------------------------------
     def accept(self, r, form, event_type=None):
