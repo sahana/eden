@@ -3578,9 +3578,11 @@ class DVRRegisterCaseEvent(S3Method):
                 pe_label = person.pe_label
                 request_vars["label"] = pe_label
 
-        # Get flag and permission info
+        # Get person details, waiting intervals, flag and permission info
         flags = []
+        intervals = {}
         if person:
+            # Person details
             name = s3_fullname(person)
             dob = person.date_of_birth
             if dob:
@@ -3588,6 +3590,21 @@ class DVRRegisterCaseEvent(S3Method):
                 person_data = "%s (%s %s)" % (name, T("Date of Birth"), dob)
             else:
                 person_data = name
+
+            # Blocking periods for events
+            event_types = self.get_event_types()
+            blocked = self.get_blocked_events(person.id)
+            for type_id, info in blocked.items():
+                event_type = event_types.get(type_id)
+                if not event_type:
+                    continue
+                code = event_type.code
+                msg, dt = info
+                intervals[code] = (s3_str(msg),
+                                   "%sZ" % s3_encode_iso_datetime(dt),
+                                   )
+
+            # Flag info
             flag_info = dvr_get_flag_instructions(person.id,
                                                   action = self.ACTION,
                                                   )
@@ -3641,6 +3658,7 @@ class DVRRegisterCaseEvent(S3Method):
                   "actionable": json.dumps(actionable),
                   "permitted": json.dumps(permitted),
                   "flags": json.dumps(flags),
+                  "intervals": json.dumps(intervals),
                   }
 
         # Additional form data
@@ -3804,11 +3822,11 @@ class DVRRegisterCaseEvent(S3Method):
                 type_id = event_type.id
         formvars.type_id = type_id
 
-        # Check whether event type is blocked due to minimum interval
-        if type_id and callable(self.check_intervals):
-            blocked = self.check_intervals(person.id,
-                                           type_id = type_id,
-                                           )
+        # Check whether event type is blocked for this person
+        if type_id:
+            blocked = self.get_blocked_events(person.id,
+                                              type_id = type_id,
+                                              )
             if type_id in blocked:
                 msg, earliest = blocked[type_id]
                 form.errors["event"] = current.response.error = msg
@@ -3921,6 +3939,7 @@ class DVRRegisterCaseEvent(S3Method):
             check = data.get("c")
             if check:
 
+                # Person details
                 name = s3_fullname(person)
                 dob = person.date_of_birth
                 if dob:
@@ -3928,23 +3947,40 @@ class DVRRegisterCaseEvent(S3Method):
                     person_data = "%s (%s %s)" % (name, T("Date of Birth"), dob)
                 else:
                     person_data = name
+                output["p"] = s3_str(person_data)
+                output["l"] = person.pe_label
 
-                # Add family details
+                # Family details
                 details = self.get_household_size(person.id,
                                                   dob = person.date_of_birth,
                                                   )
                 if details:
                     output["d"] = {"d": details}
 
-                output["p"] = s3_str(person_data)
-                output["l"] = person.pe_label
-
+                # Flag Info
                 info = flag_info["info"]
                 for flagname, instructions in info:
                     flags.append({"n": s3_str(T(flagname)),
                                   "i": s3_str(T(instructions)),
                                   })
+
+                # Blocking periods for events
+                event_types = self.get_event_types()
+                blocked = self.get_blocked_events(person.id)
+                intervals = {}
+                for type_id, info in blocked.items():
+                    event_type = event_types.get(type_id)
+                    if not event_type:
+                        continue
+                    code = event_type.code
+                    msg, dt = info
+                    intervals[code] = (s3_str(msg),
+                                       "%sZ" % s3_encode_iso_datetime(dt),
+                                       )
+                output["i"] = intervals
             else:
+                # Check event code and permission
+                type_id = None
                 event_code = data.get("t")
                 if not event_code:
                     alert = T("No event type specified")
@@ -3955,7 +3991,20 @@ class DVRRegisterCaseEvent(S3Method):
                     if not event_type:
                         alert = T("Invalid event type %s" % event_code)
                     else:
-                        success = self.register_event(person.id, event_type.id)
+                        type_id = event_type.id
+
+                if type_id:
+                    # Check whether event type is blocked for this person
+                    person_id = person.id
+                    blocked = self.get_blocked_events(person_id,
+                                                      type_id = type_id,
+                                                      )
+                    if type_id in blocked:
+                        # Event type is currently blocked for this person
+                        alert = blocked[type_id][0]
+                    else:
+                        # Ok - register the event
+                        success = self.register_event(person.id, type_id)
                         if success:
                             message = T("Event registered")
                         else:
@@ -4184,7 +4233,7 @@ class DVRRegisterCaseEvent(S3Method):
                         if row.min_interval and type_id != "_default"
                         )
             if len(check) == 1:
-                type_query = (event_type_id == check[0])
+                type_query = (event_type_id == list(check)[0])
             elif check:
                 type_query = event_type_id.belongs(check)
             else:
@@ -4271,7 +4320,7 @@ class DVRRegisterCaseEvent(S3Method):
                                     )
             return rows[0] if rows else None
 
-        pe_label = data["label"]
+        pe_label = data["label"].strip()
         if pe_label:
             person = person_(pe_label)
         if person:
@@ -4473,6 +4522,26 @@ class DVRRegisterCaseEvent(S3Method):
                                        "label": label,
                                        })
         return ", ".join(details)
+
+    # -------------------------------------------------------------------------
+    def get_blocked_events(self, person_id, type_id=None):
+        """
+            Check minimum intervals for event registration and return
+            all currently blocked events
+
+            @param person_id: the person record ID
+            @param type_id: check only this event type (rather than all)
+
+            @return: a dict of blocked event types:
+                     {type_id: (reason, blocked_until)}
+        """
+
+        check_intervals = self.check_intervals
+        if check_intervals and callable(check_intervals):
+            blocked = check_intervals(person_id, type_id=type_id)
+        else:
+            blocked = {}
+        return blocked
 
     # -------------------------------------------------------------------------
     @staticmethod

@@ -61,6 +61,15 @@
             this.eventType = form.find('input[type="hidden"][name="event"]');
             this.actionDetails = form.find('input[type="hidden"][name="actions"]');
 
+            // Get blocked events from hidden input
+            var intervals = form.find('input[type="hidden"][name="intervals"]').val();
+            if (intervals) {
+                this.blockedEvents = JSON.parse(intervals);
+            } else {
+                this.blockedEvents = {};
+            }
+            this.blockingMessage = null;
+
             this.refresh();
         },
 
@@ -105,6 +114,11 @@
                 this._hideDetails();
             }
 
+            // Check blocked events at start
+            if (!this._checkBlockedEvents()) {
+                this._toggleSubmit(false);
+            }
+
             // Focus on label input at start
             var labelInput = $(prefix + '_label');
             labelInput.focus().val(labelInput.val());
@@ -119,8 +133,13 @@
 
             this._clearAlert();
 
-            var prefix = this.idPrefix,
-                label = $(prefix + '_label').val();
+            var form = $(this.element),
+                prefix = this.idPrefix,
+                labelInput = $(prefix + '_label'),
+                label = labelInput.val().trim();
+
+            // Update label input with trimmed value
+            labelInput.val(label);
 
             if (!label) {
                 return;
@@ -134,6 +153,7 @@
                 throbber = $('<div class="inline-throbber">').insertAfter(personInfo),
                 self = this;
 
+            // Clear action details
             this._clearDetails();
 
             // Send the ajax request
@@ -191,7 +211,15 @@
                             self._updateDetails(data.d, actionable);
                         }
 
-                        // Enable submit if we have a valid event type
+                        // Update blocked events
+                        self.blockedEvents = data.i || {};
+                        // ...also update hidden input
+                        form.find('input[type="hidden"][name="intervals"]')
+                            .val(JSON.stringify(self.blockedEvents));
+
+                        // Attempt to enable submit if we have a valid event type
+                        // - this will automatically check whether the registration is
+                        //   permitted, actionable and not blocked due to minimum intervals
                         if (self.eventType.val()) {
                             self._toggleSubmit(true);
                         }
@@ -296,12 +324,32 @@
         },
 
         /**
-        * Helper function to hide any alert messages that are currently shown
-        */
-        _clearAlert: function() {
+         * Helper method to check for blocked events and show message
+         */
+        _checkBlockedEvents: function() {
 
-            $('.alert-error, .alert-warning, .alert-info, .alert-success').fadeOut('fast');
-            $('.error_wrapper').fadeOut('fast').remove();
+            // Get current event type and blocked events
+            var event = this.eventType.val(),
+                blocked = this.blockedEvents,
+                info = blocked[event];
+
+            // Remove existing message, if any
+            if (this.blockingMessage) {
+                this.blockingMessage.remove();
+            }
+            if (info) {
+                // Check the date
+                var message = '<div class="small-12 columns">' + info[0] + '</div>',
+                    date = new Date(info[1]),
+                    now = new Date();
+                if (date > now) {
+                    // Event registration is blocked, show message and return
+                    this.blockingMessage = $(message).css({color:'red'})
+                                                     .prependTo($('#submit_record__row'));
+                    return false;
+                }
+            }
+            return true;
         },
 
         /**
@@ -421,6 +469,7 @@
             $(prefix + '_details__row .controls').empty();
             $(prefix + '_date__row .controls').empty();
             $(prefix + '_comments').val('');
+
         },
 
         /**
@@ -460,6 +509,11 @@
                     }
                 }
 
+                // Check blocked events
+                if (permitted && actionable) {
+                    actionable = this._checkBlockedEvents();
+                }
+
                 // Only enable submit if permitted and actionable
                 if (permitted && actionable) {
                     buttons.reverse();
@@ -474,6 +528,15 @@
         },
 
         /**
+        * Helper function to hide any alert messages that are currently shown
+        */
+        _clearAlert: function() {
+
+            $('.alert-error, .alert-warning, .alert-info, .alert-success').fadeOut('fast');
+            $('.error_wrapper').fadeOut('fast').remove();
+        },
+
+        /**
         * Helper function to remove the person data and empty the label input,
         * also re-enabling the ID check button while hiding the registration button
         *
@@ -485,10 +548,22 @@
             var form = $(this.element),
                 prefix = this.idPrefix;
 
+            // Remove all throbbers
+            $('.inline-throbber').remove();
+
             // Clear alerts
             if (!keepAlerts) {
                 this._clearAlert();
             }
+
+            // Clear blocked events and message
+            this.blockedEvents = {};
+            if (this.blockingMessage) {
+                this.blockingMessage.remove();
+            }
+            // ...also update hidden input
+            form.find('input[type="hidden"][name="intervals"]')
+                .val(JSON.stringify(this.blockedEvents));
 
             // Reset flag info and permission info
             this.flagInfo.val('[]');
@@ -541,6 +616,7 @@
 
             // Toggle event type selector
             eventTypeToggle.bind('click' + ns, function() {
+                self._clearAlert();
                 if (eventTypeSelector.hasClass('hide')) {
                     eventTypeSelector.hide().removeClass('hide').slideDown();
                 } else {
