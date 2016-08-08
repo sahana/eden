@@ -59,10 +59,11 @@
             this.permissionInfo = form.find('input[type=hidden][name=permitted]');
             this.actionableInfo = form.find('input[type=hidden][name=actionable]');
             this.eventType = form.find('input[type="hidden"][name="event"]');
+            this.blockingInfo = form.find('input[type="hidden"][name="intervals"]');
             this.actionDetails = form.find('input[type="hidden"][name="actions"]');
 
             // Get blocked events from hidden input
-            var intervals = form.find('input[type="hidden"][name="intervals"]').val();
+            var intervals = this.blockingInfo.val();
             if (intervals) {
                 this.blockedEvents = JSON.parse(intervals);
             } else {
@@ -213,9 +214,7 @@
 
                         // Update blocked events
                         self.blockedEvents = data.i || {};
-                        // ...also update hidden input
-                        form.find('input[type="hidden"][name="intervals"]')
-                            .val(JSON.stringify(self.blockedEvents));
+                        self.blockingInfo.val(JSON.stringify(self.blockedEvents));
 
                         // Attempt to enable submit if we have a valid event type
                         // - this will automatically check whether the registration is
@@ -466,10 +465,22 @@
 
             this._hideDetails();
 
+            // Reset flag info and permission info
+            this.flagInfo.val('[]');
+            this.permissionInfo.val('false');
+            $(prefix + '_flaginfo__row .controls').empty();
+
+            // Remove action details, date and comments
             $(prefix + '_details__row .controls').empty();
             $(prefix + '_date__row .controls').empty();
             $(prefix + '_comments').val('');
 
+            // Remove blocked events and message
+            this.blockedEvents = {};
+            if (this.blockingMessage) {
+                this.blockingMessage.remove();
+            }
+            this.blockingInfo.val(JSON.stringify(this.blockedEvents));
         },
 
         /**
@@ -545,8 +556,7 @@
         */
         _clearForm: function(keepAlerts, keepLabel) {
 
-            var form = $(this.element),
-                prefix = this.idPrefix;
+            var prefix = this.idPrefix;
 
             // Remove all throbbers
             $('.inline-throbber').remove();
@@ -556,19 +566,6 @@
                 this._clearAlert();
             }
 
-            // Clear blocked events and message
-            this.blockedEvents = {};
-            if (this.blockingMessage) {
-                this.blockingMessage.remove();
-            }
-            // ...also update hidden input
-            form.find('input[type="hidden"][name="intervals"]')
-                .val(JSON.stringify(this.blockedEvents));
-
-            // Reset flag info and permission info
-            this.flagInfo.val('[]');
-            this.permissionInfo.val('false');
-
             // Clear ID label
             if (!keepLabel) {
                 $(prefix + '_label').val('');
@@ -576,7 +573,6 @@
 
             // Hide person info
             $(prefix + '_person__row .controls').hide().empty();
-            $(prefix + '_flaginfo__row .controls').empty();
 
             // Clear details
             this._clearDetails();
