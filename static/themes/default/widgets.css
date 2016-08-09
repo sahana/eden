@@ -1711,6 +1711,9 @@ button.toggle-text {
     padding: 0.125rem;
     border: 1px solid #7f7f7f;
 }
+.db-has-dialog .db-configbar {
+    background-color: #af4f4f;
+}
 
 /* Right-to-left adjustments for dashboard controls */
 body.rtl .db-config,

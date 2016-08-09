@@ -15,7 +15,7 @@
 
             this.id = addQuestionID;
             addQuestionID += 1;
-            this.namespace = '.addQuestion';
+            this.eventNamespace = '.addQuestion';
 
         },
 
@@ -185,7 +185,7 @@
         _bindEvents: function() {
 
             var self = this,
-                ns = this.namespace;
+                ns = this.eventNamespace;
 
             // Bind change event for all the input fields
             var selector = '#' + this.fieldname;
@@ -210,7 +210,7 @@
          */
         _unbindEvents: function() {
 
-            var ns = this.namespace,
+            var ns = this.eventNamespace,
                 el = $(this.element);
 
             this.inputFields.unbind(ns);

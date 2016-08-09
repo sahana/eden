@@ -43,8 +43,8 @@
             embeddedComponentID += 1;
 
             // Namespace for events
-            this.namespace = '.embeddedComponent';
-            this.namespaceID = this.namespace + this.id;
+            this.eventNamespace = '.embeddedComponent';
+            this.eventNamespaceID = this.eventNamespace + this.id;
         },
 
         /**
@@ -259,9 +259,9 @@
         _bindEvents: function() {
 
             var self = this,
-                ns = this.namespace;
+                ns = this.eventNamespace;
 
-            this.input.closest('form').bind('submit' + this.namespaceID, function () {
+            this.input.closest('form').bind('submit' + this.eventNamespaceID, function () {
                 self._onFormSubmission();
                 return true;
             });
@@ -317,9 +317,9 @@
          */
         _unbindEvents: function() {
 
-            var ns = this.namespace;
+            var ns = this.eventNamespace;
 
-            this.input.closest('form').unbind(this.namespaceID);
+            this.input.closest('form').unbind(this.eventNamespaceID);
 
             this.selectBtn.unbind(ns);
             this.editBtn.unbind(ns);

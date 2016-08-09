@@ -40,7 +40,7 @@
             personcontactsID += 1;
 
             // Namespace for events
-            this.namespace = '.personcontacts';
+            this.eventNamespace = '.personcontacts';
         },
 
         /**
@@ -374,7 +374,7 @@
 
             var self = this,
                 element = $(this.element),
-                ns = this.namespace;
+                ns = this.eventNamespace;
 
             element.find('.pr-contacts .contact-add-btn').bind('click' + ns, function() {
                 // Add new contact
@@ -516,7 +516,7 @@
         _unbindEvents: function() {
 
             var element = $(this.element),
-                ns = this.namespace;
+                ns = this.eventNamespace;
 
             element.undelegate(ns);
             element.find('.pr-contact-add, .pr-emergency-add, .pr-contact-form').unbind(ns);

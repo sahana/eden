@@ -246,7 +246,7 @@
 
             // Instance ID and namespace
             this.id = calendarWidgetID;
-            this.namespace = '.calendar-widget-' + calendarWidgetID;
+            this.eventNamespace = '.calendar-widget-' + calendarWidgetID;
 
             calendarWidgetID += 1;
         },
@@ -1134,7 +1134,7 @@
         _bindEvents: function() {
 
             var el = $(this.element),
-                ns = this.namespace,
+                ns = this.eventNamespace,
                 self = this;
 
             // Trigger calendarsPicker.show when real input receives focus
@@ -1194,7 +1194,7 @@
         _unbindEvents: function() {
 
             var el = $(this.element),
-                ns = this.namespace,
+                ns = this.eventNamespace,
                 self = this;
 
             // Real input

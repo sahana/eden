@@ -41,7 +41,7 @@
             dashboardID += 1;
 
             // Namespace for events
-            this.namespace = '.dashboard';
+            this.eventNamespace = '.dashboard';
         },
 
         /**
@@ -87,7 +87,7 @@
         configMode: function(mode) {
 
             var el = this.element,
-                ns = this.namespace,
+                ns = this.eventNamespace,
                 modeSwitch = $('.db-config');
 
             if (typeof mode === 'undefined') {
@@ -139,7 +139,7 @@
          */
         _bindEvents: function() {
 
-            var ns = this.namespace,
+            var ns = this.eventNamespace,
                 self = this;
 
             // Config mode switches
@@ -158,7 +158,7 @@
          */
         _unbindEvents: function() {
 
-            var ns = this.namespace;
+            var ns = this.eventNamespace;
 
             $('.dashboard-config').unbind(ns);
 
@@ -195,6 +195,9 @@
 
             this.id = dashboardWidgetID;
             dashboardWidgetID += 1;
+
+            // Namespace for events
+            this.eventNamespace = '.dashboardWidget';
         },
 
         /**
@@ -204,6 +207,10 @@
 
             var el = $(this.element);
 
+            // Identify the config-bar
+            this.configBar = el.find('.db-configbar');
+
+            // Refresh the widget contents
             this.refresh();
 
             // @todo: remove
@@ -227,9 +234,6 @@
                 opts = this.options;
 
             this._unbindEvents();
-
-            // Identify the config-bar
-            this.configBar = el.find('.db-configbar');
 
             this._bindEvents();
         },
@@ -257,9 +261,43 @@
         },
 
         /**
+         * @todo: docstring
+         */
+        _openConfigDialog: function() {
+
+            var el = $(this.element),
+                self = this;
+
+            if (!$('.db-config-dialog').length) {
+                var dialog = $('<div class="db-config-dialog">TESTING</div>').hide().appendTo('body');
+                self.configDialog = dialog;
+                dialog.dialog({
+                    modal: true,
+                    open: function() {
+                        el.addClass('db-has-dialog');
+                    },
+                    close: function() {
+                        el.removeClass('db-has-dialog');
+                        self.configDialog.remove();
+                        self.configDialog = null;
+                    }
+                }).show();
+            }
+        },
+
+        /**
          * Bind events to generated elements (after refresh)
          */
         _bindEvents: function() {
+
+            var el = $(this.element),
+                ns = this.eventNamespace,
+                self = this;
+
+            this.configBar.find('.db-task-config').on('click' + ns, function() {
+                self._openConfigDialog();
+            });
+
             return true;
         },
 
@@ -267,6 +305,11 @@
          * Unbind events (before refresh)
          */
         _unbindEvents: function() {
+
+            var ns = this.eventNamespace;
+
+            this.configBar.find('.db-task-config').off('click' + ns);
+
             return true;
         }
     });

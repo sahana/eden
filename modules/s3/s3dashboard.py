@@ -1122,11 +1122,11 @@ class S3DashboardWidget(object):
             @return: the XML for the task bar
         """
 
-        return DIV(SPAN(ICON("move"),
+        return DIV(SPAN(ICON("move", _class="db-task-move"),
                         _class="db-configbar-left",
                         ),
-                   SPAN(ICON("delete"),
-                        ICON("settings"),
+                   SPAN(ICON("delete", _class="db-task-delete"),
+                        ICON("settings", _class="db-task-config"),
                         _class="db-configbar-right",
                         ),
                    _class = "db-configbar",

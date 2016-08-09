@@ -48,7 +48,7 @@
             inlinecomponentID += 1;
 
             // Namespace for events
-            this.namespace = '.inlinecomponent';
+            this.eventNamespace = '.inlinecomponent';
         },
 
         /**
@@ -384,7 +384,7 @@
          */
         _catchSubmit: function(element) {
 
-            var ns = this.namespace + this.id;
+            var ns = this.eventNamespace + this.id;
             $(this.element).closest('form')
                            .unbind(ns)
                            .bind('submit' + ns, {widget: this}, this._submitAll);
@@ -972,7 +972,7 @@
                 add_button.removeClass('hide');
             }
             if (success) {
-                $(this.element).closest('form').unbind(this.namespace + this.id);
+                $(this.element).closest('form').unbind(this.eventNamespace + this.id);
             }
 
             return success;
@@ -1376,7 +1376,7 @@
         _bindEvents: function() {
 
             var el = $(this.element),
-                ns = this.namespace,
+                ns = this.eventNamespace,
                 self = this;
 
             // Button events
@@ -1531,7 +1531,7 @@
         _unbindEvents: function() {
 
             var el = $(this.element),
-                ns = this.namespace;
+                ns = this.eventNamespace;
 
             // Remove inline-multiselect-widget event handlers
             if (el.hasClass('inline-multiselect')) {

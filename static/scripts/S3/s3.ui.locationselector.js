@@ -69,7 +69,7 @@
             locationselectorID += 1;
 
             // Namespace for events
-            this.namespace = '.locationselector';
+            this.eventNamespace = '.locationselector';
         },
 
         /**
@@ -339,7 +339,7 @@
 
             // Make errorWrapper clickable to remove it
             if (errorWrapper.length) {
-                errorWrapper.one('click' + this.namespace, function() {
+                errorWrapper.one('click' + this.eventNamespace, function() {
                     var $this = $(this);
                     $this.fadeOut('slow', function() {
                         $this.remove();
@@ -856,7 +856,7 @@
               selector + '_geocode .geocode_fail').hide();
 
             var self = this,
-                ns = this.namespace;
+                ns = this.eventNamespace;
             if (this.input.data('manually_geocoded')) {
                 // Show a button to allow the user to do a new automatic Geocode
                 $(selector + '_geocode button').removeClass('hide')
@@ -1100,7 +1100,7 @@
         _showMap: function(event) {
 
             var fieldname = this.fieldname,
-                ns = this.namespace,
+                ns = this.eventNamespace,
                 self = this;
 
             var selector = '#' + fieldname;
@@ -1208,7 +1208,7 @@
                                     'internalProjection': map.getProjectionObject(),
                                     'externalProjection': gis.proj4326
                                     };
-                                    
+
                                 data.radius = null;
                                 var linearRing = new OpenLayers.Geometry.LinearRing(feature.geometry.components[0].components);
                                 var polygon = new OpenLayers.Geometry.Polygon([linearRing]);
@@ -1275,7 +1275,7 @@
         _hideMap: function() {
 
             var fieldname = this.fieldname,
-                ns = this.namespace;
+                ns = this.eventNamespace;
 
             var selector = '#' + fieldname;
 
@@ -1571,7 +1571,7 @@
         _bindEvents: function() {
 
             var fieldname = this.fieldname,
-                ns = this.namespace,
+                ns = this.eventNamespace,
                 self = this;
 
             var selector = '#' + fieldname;
@@ -1660,7 +1660,7 @@
         _unbindEvents: function() {
 
             var selector = '#' + this.fieldname,
-                ns = this.namespace;
+                ns = this.eventNamespace;
 
             $(selector + '_L0,' +
               selector + '_L1,' +
@@ -1716,7 +1716,7 @@
             latloninputID += 1;
 
             // Namespace for events
-            this.namespace = '.latloninput';
+            this.eventNamespace = '.latloninput';
         },
 
         /**
@@ -2117,7 +2117,7 @@
         _bindEvents: function() {
 
             var self = this,
-                ns = this.namespace;
+                ns = this.eventNamespace;
 
             this.dmsInput.find('input').bind('change' + ns, function() {
                 var value = self._validateDMS();
@@ -2150,7 +2150,7 @@
          */
         _unbindEvents: function() {
 
-            var ns = this.namespace;
+            var ns = this.eventNamespace;
 
             if (this.input) {
                 this.input.find('input').unbind(ns);

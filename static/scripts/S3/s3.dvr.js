@@ -41,7 +41,7 @@
             eventRegistrationID += 1;
 
             // Namespace for events
-            this.namespace = '.eventRegistration';
+            this.eventNamespace = '.eventRegistration';
         },
 
         /**
@@ -588,7 +588,7 @@
 
             var form = $(this.element),
                 prefix = this.idPrefix,
-                ns = this.namespace,
+                ns = this.eventNamespace,
                 self = this;
 
             // Events for outside elements
@@ -699,7 +699,7 @@
         _unbindEvents: function() {
 
             var form = $(this.element),
-                ns = this.namespace,
+                ns = this.eventNamespace,
                 prefix = this.idPrefix;
 
             $('.zxing-button').unbind(ns).unbind('click');
