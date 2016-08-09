@@ -4844,7 +4844,8 @@ class S3LocationSelector(S3Selector):
             @param reverse_lx: render Lx selectors in the order usually used by
                                street Addresses (lowest level first), and below the
                                address line
-            @param show_address: show a field for street address
+            @param show_address: show a field for street address.
+                                 If the parameter is set to a string then this is used as the label.
             @param show_postcode: show a field for postcode
             @param show_latlon: show fields for manual Lat/Lon input
             @param latlon_mode: (initial) lat/lon input mode ("decimal" or "dms")
@@ -5109,10 +5110,14 @@ class S3LocationSelector(S3Selector):
         show_address = self.show_address
         if show_address:
             address = values.get("address")
+            if show_address is True:
+                label = T("Street Address")
+            else:
+                label = show_address
             components["address"] = manual_input(fieldname,
                                                  "address",
                                                  address,
-                                                 T("Street Address"),
+                                                 label,
                                                  hidden = not address,
                                                  )
 

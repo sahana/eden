@@ -1822,6 +1822,7 @@ $.filterOptionsS3({
 
         db = current.db
         s3db = current.s3db
+        set_record_owner = self.s3_set_record_owner
         update_super = s3db.update_super
         otable = s3db.org_organisation
 
@@ -1860,7 +1861,7 @@ $.filterOptionsS3({
                     # Add a new record
                     id = table.insert(**{pe_field: pe_value})
                     update_super(table, Storage(id=id))
-                    self.s3_set_record_owner(table, id)
+                    set_record_owner(table, id)
                     record = db(table.id == id).select(table.id,
                                                        table.pe_id,
                                                        limitby=(0, 1)).first()
@@ -1919,7 +1920,7 @@ $.filterOptionsS3({
                         # Add a new record
                         id = otable.insert(name=org)
                         update_super(otable, Storage(id=id))
-                        self.s3_set_record_owner(otable, id)
+                        set_record_owner(otable, id)
                         # @ToDo: Call onaccept?
                         if parent:
                             records = db(otable.name == parent).select(otable.id)
@@ -1936,7 +1937,7 @@ $.filterOptionsS3({
                                 # Create Parent
                                 parent_id = otable.insert(name=parent)
                                 update_super(otable, Storage(id=parent_id))
-                                self.s3_set_record_owner(otable, id)
+                                set_record_owner(otable, id)
                                 # @ToDo: Call onaccept?
                                 # Create link
                                 link_id = btable.insert(organisation_id == parent_id,
@@ -5287,7 +5288,7 @@ class S3Permission(object):
                             # apply this ACL only to records owned
                             # by this entity
                             Field("entity", "integer"),
-                            # apply this ACL to all record regardless
+                            # apply this ACL to all records regardless
                             # of the realm entity
                             Field("unrestricted", "boolean",
                                   default=False),
@@ -6492,7 +6493,7 @@ class S3Permission(object):
                 if row.unrestricted:
                     entities = [ANY]
                 elif row.entity is not None:
-                    entities = row.entity
+                    entities = [row.entity]
                 else:
                     entities = realms[group_id]
                 if entities is None:

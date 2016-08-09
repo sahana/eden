@@ -2648,7 +2648,8 @@ def config(settings):
                     ptable = s3db.pr_person
                     ptable.first_name.label = T("Name")
                     ptable.gender.label = T("Gender")
-                    s3db.pr_address.location_id.widget = S3LocationSelector(show_map = False)
+                    s3db.pr_address.location_id.widget = S3LocationSelector(show_address = T("Village"),
+                                                                            show_map = False)
                     # NB Need to use alias if using this pre-filtered component
                     #s3db.pr_home_address_address.location_id.widget = S3LocationSelector(show_map = False)
                     # Emergency Contact Name isn't required
@@ -3793,7 +3794,8 @@ def config(settings):
             f = mtable.trainings
             f.readable = f.writable = True
             mtable.comments.label = T("Remarks")
-            s3db.pr_address.location_id.widget = S3LocationSelector(show_map=False)
+            s3db.pr_address.location_id.widget = S3LocationSelector(show_address = T("Village"),
+                                                                    show_map = False)
             ptable = s3db.pr_person
             ptable.first_name.label = T("Name")
             ptable.gender.label = T("Gender")

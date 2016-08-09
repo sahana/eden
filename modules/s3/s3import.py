@@ -4157,6 +4157,26 @@ class S3BulkImporter(object):
             current.log.debug(msg)
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def _lookup_pe(entity):
+        """
+            Convert an Organisation Name to a pe_id
+            - helper for import_role
+        """
+
+        table = current.s3db.org_organisation
+        org = current.db(table.name == entity).select(table.pe_id,
+                                                      limitby = (0, 1)
+                                                      ).first()
+        try:
+            pe_id = org.pe_id
+        except:
+            current.log.warning("import_role cannot find pe_id for %s" % entity)
+            pe_id = None
+
+        return pe_id
+
+    # -------------------------------------------------------------------------
     def import_role(self, filename):
         """
             Import Roles from CSV
@@ -4201,36 +4221,53 @@ class S3BulkImporter(object):
         for row in reader:
             if row != None:
                 role = row["role"]
-                if "description" in row:
-                    desc = row["description"]
-                else:
-                    desc = ""
+                desc = row.get("description", "")
                 rules = {}
                 extra_param = {}
-                if "controller" in row and row["controller"]:
-                    rules["c"] = row["controller"]
-                if "function" in row and row["function"]:
-                    rules["f"] = row["function"]
-                if "table" in row and row["table"]:
-                    rules["t"] = row["table"]
-                if row["oacl"]:
-                    rules["oacl"] = parseACL(row["oacl"])
-                if row["uacl"]:
-                    rules["uacl"] = parseACL(row["uacl"])
-                #if "org" in row and row["org"]:
-                    #rules["organisation"] = row["org"]
-                #if "facility" in row and row["facility"]:
-                    #rules["facility"] = row["facility"]
-                if "entity" in row and row["entity"]:
-                    rules["entity"] = row["entity"]
-                if "hidden" in row and row["hidden"]:
-                    extra_param["hidden"] = row["hidden"]
-                if "system" in row and row["system"]:
-                    extra_param["system"] = row["system"]
-                if "protected" in row and row["protected"]:
-                    extra_param["protected"] = row["protected"]
-                if "uid" in row and row["uid"]:
-                    extra_param["uid"] = row["uid"]
+                controller = row.get("controller")
+                if controller:
+                    rules["c"] = controller
+                fn = row.get("function")
+                if fn:
+                    rules["f"] = fn
+                table = row.get("table")
+                if table:
+                    rules["t"] = table
+                oacl = row.get("oacl")
+                if oacl:
+                    rules["oacl"] = parseACL(oacl)
+                uacl = row.get("uacl")
+                if uacl:
+                    rules["uacl"] = parseACL(uacl)
+                #org = row.get("org")
+                #if org:
+                #    rules["organisation"] = org
+                #facility = row.get("facility")
+                #if facility:
+                #    rules["facility"] = facility
+                entity = row.get("entity")
+                if entity:
+                    if entity == "any":
+                        # Pass through as-is
+                        pass
+                    else:
+                        try:
+                            entity = int(entity)
+                        except ValueError:
+                            entity = self._lookup_pe(entity)
+                    rules["entity"] = entity
+                hidden = row.get("hidden")
+                if hidden:
+                    extra_param["hidden"] = hidden
+                system = row.get("system")
+                if system:
+                    extra_param["system"] = system
+                protected = row.get("protected")
+                if protected:
+                    extra_param["protected"] = protected
+                uid = row.get("uid")
+                if uid:
+                    extra_param["uid"] = uid
             if role in roles:
                 acls[role].append(rules)
             else:
