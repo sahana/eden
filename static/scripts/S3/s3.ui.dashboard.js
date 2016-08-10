@@ -182,9 +182,14 @@
         /**
          * Default options
          *
-         * @todo document options
+         * @prop {string} dashboardURL - the URL for dashboard agent requests
+         * @prop {string} title - the widget title (used in config dialog,
+         *                        configured in back-end widget class)
          */
         options: {
+
+            dashboardURL: null,
+            title: 'Dashboard Widget',
 
         },
 
@@ -206,6 +211,9 @@
         _init: function() {
 
             var el = $(this.element);
+
+            // Get the agent ID
+            this.agentID = el.attr('id');
 
             // Identify the config-bar
             this.configBar = el.find('.db-configbar');
@@ -261,19 +269,55 @@
         },
 
         /**
-         * @todo: docstring
+         * Render the config dialog
          */
-        _openConfigDialog: function() {
+        _configDialog: function() {
 
             var el = $(this.element),
+                ns = this.eventNamespace,
+                opts = this.options,
                 self = this;
 
             if (!$('.db-config-dialog').length) {
-                var dialog = $('<div class="db-config-dialog">TESTING</div>').hide().appendTo('body');
-                self.configDialog = dialog;
+
+                // Construct the popup URL
+                var configURL = 'config.popup?agent=' + this.agentID,
+                    dashboardURL = opts.dashboardURL;
+                if (dashboardURL) {
+                    configURL = dashboardURL + '/' + configURL;
+                }
+
+                // Construct the iframe
+                var iframeID = this.agentID + '-dialog',
+                    dialog = $('<iframe>', {
+                    'id': iframeID,
+                    'src': configURL,
+                    'class': 'loading',
+                    'load': function() {
+                        $(this).removeClass('loading');
+                        var width = $('.ui-dialog').width();
+                        $('#' + iframeID).width(width)
+                                         .contents().find('#popup form').show();
+                    },
+                    'marginWidth': '0',
+                    'marginHeight': '0',
+                    'frameBorder': '0'
+                }).appendTo('body');
+
+                this.configDialog = dialog;
+
+                // Instantiate the dialog
                 dialog.dialog({
                     modal: true,
+                    minWidth: 320,
+                    minHeight: 480,
+                    title: opts.title,
                     open: function() {
+                        // Clicking outside of the dialog closes it
+                        $('.ui-widget-overlay').one('click' + ns, function() {
+                            dialog.dialog('close');
+                        });
+                        // Highlight the widget this dialog belongs to
                         el.addClass('db-has-dialog');
                     },
                     close: function() {
@@ -295,7 +339,7 @@
                 self = this;
 
             this.configBar.find('.db-task-config').on('click' + ns, function() {
-                self._openConfigDialog();
+                self._configDialog();
             });
 
             return true;
