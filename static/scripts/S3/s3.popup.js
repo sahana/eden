@@ -1,9 +1,16 @@
 /**
- * JS to handle Popup Modal forms to create new resources
+ * Function to refresh the caller of a popup (e.g. the parent form),
+ * usually called via layout_popup.html, which itself is rendered by
+ * layout.html if r.representation=="popup" and response.confirmation
+ * (i.e. successful form submission from a popup).
+ *
+ * @param {object} popupData - data passed back from form submission
+ *                             via response.s3.popup_data, this can
+ *                             help to avoid having to Ajax-load them ;)
  */
+function s3_popup_refresh_caller(popupData) {
 
-function s3_popup_refresh_main_form() {
-    // The GET parameters
+    // The GET vars (=URL query parameters)
     var $_GET = getQueryParams(document.location.search);
 
     // Is this a modal that is to refresh a datatable/datalist/map?
@@ -19,7 +26,7 @@ function s3_popup_refresh_main_form() {
             var record = $_GET['record'];
             if (record !== undefined) {
                 // reload a single item
-                selector.datalist('ajaxReloadItem', record)
+                selector.datalist('ajaxReloadItem', record);
             } else {
                 // reload the whole list
                 selector.datalist('ajaxReload');
@@ -31,7 +38,7 @@ function s3_popup_refresh_main_form() {
             } catch(e) {}
         }
         // Update the layer on the Maps (if appropriate)
-        var maps = self.parent.S3.gis.maps
+        var maps = self.parent.S3.gis.maps;
         if (typeof maps != 'undefined') {
             var map_id, map, layer_id, layers, i, len, layer, strategies, j, jlen, strategy;
             for (map_id in maps) {
@@ -68,7 +75,7 @@ function s3_popup_refresh_main_form() {
     // Is this a Map popup? (e.g. PoI entry)
     var layer_id = $_GET['refresh_layer'];
     if (typeof layer_id != 'undefined') {
-        var maps = self.parent.S3.gis.maps
+        var maps = self.parent.S3.gis.maps;
         if (typeof maps != 'undefined') {
             var map_id, map, layers, i, len, layer, found, strategies, j, jlen, strategy;
             if (layer_id != 'undefined') {
@@ -108,26 +115,45 @@ function s3_popup_refresh_main_form() {
         return;
     }
 
+    // Is this a popup to edit a node in hierarchical CRUD?
     var node_id = $_GET['node'];
     if (node_id) {
+        // Refresh the node in the hierarchy
         var hierarchy = self.parent.$('#' + $_GET['hierarchy']),
             node = self.parent.$('#' + node_id);
         if (hierarchy && node) {
             hierarchy.hierarchicalcrud('refreshNode', node);
         }
+        // Remove the dialog
         self.parent.S3.popup_remove();
         return;
     }
 
-    // Modal opened from a form (e.g. S3PopupLink)?
-    // => update the respective form field (=the caller)
+    // Is this a dashboard widget configuration dialog?
+    var agent = $_GET['agent'];
+    if (typeof agent != 'undefined') {
 
+        var data;
+        if (typeof popupData != 'undefined') {
+            data = [popupData];
+        } else {
+            data = [];
+        }
+
+        // Inform the agent that it's done (agent will remove the dialog)
+        self.parent.$('#' + agent).trigger('configSaved', data);
+        return;
+    }
+
+    // Location selector?
     var level = $_GET['level'];
     if (typeof level != 'undefined') {
-        // Location Selector
         self.parent.S3.popup_remove();
         return;
     }
+
+    // Modal opened from a form (e.g. S3PopupLink, PersonSelector)?
+    // => update the respective form field (=the caller)
 
     var caller = $_GET['caller'];
     if (caller === undefined) {
@@ -367,17 +393,23 @@ function s3_popup_refresh_main_form() {
     });
 }
 
-// Function to get the URL parameters
+/**
+ * Function to get the URL query parameters
+ *
+ * @param {string} qs - the query string (e.g. document.location.search)
+ */
 function getQueryParams(qs) {
-    // We want all the vars, i.e. after the ?
-    var params = {};
+
+    // Remove the leading '?'
     qs = qs.substring(1);
+
+    var params = {};
     if (qs) {
-        var pairs = qs.split('&');
-        var check = [];
-        for (var i=0; i < pairs.length; i++) {
-            check = pairs[i].split('=');
-            params[decodeURIComponent(check[0])] = decodeURIComponent(check[1]);
+        var pairs = qs.split('&'),
+            pair = [];
+        for (var i=0, len=pairs.length; i < len; i++) {
+            pair = pairs[i].split('=');
+            params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
         }
     }
     return params;

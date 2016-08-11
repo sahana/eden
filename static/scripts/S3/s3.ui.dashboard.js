@@ -189,7 +189,7 @@
         options: {
 
             dashboardURL: null,
-            title: 'Dashboard Widget',
+            title: 'Dashboard Widget'
 
         },
 
@@ -247,6 +247,36 @@
         },
 
         /**
+         * Actions after widget config settings have changed
+         *
+         * @param {object} newConfig - the new widget config
+         */
+        _onConfigUpdate: function(newConfig) {
+
+            var el = $(this.element);
+
+            // Generic widget can update directly from newConfig,
+            // no need to Ajax-reload anything (other widget
+            // classes may have to, though - and then this is the
+            // right place to do it)
+            if (newConfig && newConfig.hasOwnProperty('xml')) {
+
+                // Remove everything except config bars
+                el.children(':not(.db-configbar)').remove();
+
+                // Insert the new XML after the top-most config bar
+                var xmlStr = newConfig.xml;
+                if (xmlStr) {
+                    this.configBar.first().after(xmlStr);
+                }
+            }
+
+            // Refresh widget (this should always be done after
+            // updating elements or DOM tree of the widget)
+            this.refresh();
+        },
+
+        /**
          * Get or set the current config-mode status
          *
          * @param {bool} mode - true|false to turn config mode on/off,
@@ -296,8 +326,7 @@
                     'load': function() {
                         $(this).removeClass('loading');
                         var width = $('.ui-dialog').width();
-                        $('#' + iframeID).width(width)
-                                         .contents().find('#popup form').show();
+                        $('#' + iframeID).width(width).contents().find('#popup form').show();
                     },
                     'marginWidth': '0',
                     'marginHeight': '0',
@@ -338,8 +367,31 @@
                 ns = this.eventNamespace,
                 self = this;
 
+            // ConfigBar actions
             this.configBar.find('.db-task-config').on('click' + ns, function() {
                 self._configDialog();
+            });
+
+            // Actions after successful config update
+            el.bind('configSaved' + ns, function(e, data) {
+
+                // New config returned from form processing?
+                var newConfig = null;
+                if (data && data.hasOwnProperty('c')) {
+                    newConfig = data.c;
+                }
+
+                // Prevent configSaved from bubbling up to the dashboard
+                e.stopPropagation();
+
+                // Reload/refresh widget as necessary
+                self._onConfigUpdate(newConfig);
+
+                // Close the dialog (will remove the iframe itself)
+                var dialog = self.configDialog;
+                if (dialog) {
+                    dialog.dialog('close');
+                }
             });
 
             return true;
@@ -350,7 +402,10 @@
          */
         _unbindEvents: function() {
 
-            var ns = this.eventNamespace;
+            var el = $(this.element),
+                ns = this.eventNamespace;
+
+            el.unbind(ns);
 
             this.configBar.find('.db-task-config').off('click' + ns);
 

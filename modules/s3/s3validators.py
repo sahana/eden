@@ -78,7 +78,7 @@ from s3datetime import S3DateTime
 from s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_validate
 
 DEFAULT = lambda: None
-JSONErrors = (NameError, TypeError, ValueError, AttributeError, KeyError)
+JSONERRORS = (NameError, TypeError, ValueError, AttributeError, KeyError)
 SEPARATORS = (",", ":")
 
 def translate(text):
@@ -160,7 +160,7 @@ class IS_JSONS3(Validator):
                 value_ = json.dumps(ast.literal_eval(value),
                                     separators = SEPARATORS,
                                     )
-            except JSONErrors + (SyntaxError,), e:
+            except JSONERRORS + (SyntaxError,), e:
                 return error(value, e)
             if self.native_json:
                 return (value_, None)
@@ -174,7 +174,7 @@ class IS_JSONS3(Validator):
                     return (value, None) #  the serialized value is not passed
                 else:
                     return (json.loads(value), None)
-            except JSONErrors, e:
+            except JSONERRORS, e:
                 return error(value, e)
 
     # -------------------------------------------------------------------------

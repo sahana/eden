@@ -42,6 +42,7 @@ from gluon import *
 
 from s3utils import s3_get_extension, s3_str
 from s3widgets import ICON
+from s3validators import JSONERRORS
 
 DEFAULT = lambda: None
 DEFAULT_FORMAT = "html"
@@ -50,18 +51,18 @@ DEFAULT_FORMAT = "html"
 class S3DashboardContext(object):
     """ Context data for a dashboard """
 
-    def __init__(self, r=None):
+    def __init__(self, r=None, dashboard=None):
         """
             Constructor
 
             @param r: the request object (defaults to current.request)
-
+            @param dashboard: the dashboard (S3Dashboard)
         """
 
         # @todo: add request owner info (to select the active config)
-        # @todo: extract the URL method (like default/dashboard/[method])
 
         # Context variables
+        self.dashboard = dashboard
         self.shared = {}
 
         # Global filters
@@ -588,7 +589,7 @@ class S3Dashboard(object):
             config = S3DashboardConfig(config)
         self._config = config
 
-        self.context = S3DashboardContext()
+        self.context = S3DashboardContext(dashboard=self)
 
         available_layouts = dict(self.layouts)
         if layouts:
@@ -1087,17 +1088,28 @@ class S3DashboardAgent(object):
         formname = "config/%s" % self.agent_id
         if form.accepts(context.post_vars,
                         current.session,
-                        # @todo: implement this:
-                        #onvalidation = prototype.validate_config,
+                        onvalidation = prototype.validate_config,
                         formname = formname,
                         keepvalues = False,
                         hideerror = False,
                         ):
 
-            # @todo: implement processing of the config form
+            # Get an updated config dict from the widget
+            new_config = prototype.accept_config(self.config, form)
 
-            #print form.vars
-            pass
+            # Pass new config to client via s3.popup_data
+            popup_data = {"c": new_config}
+
+            # Using JSON serializer rather than raw json.dumps to catch T()'s
+            from gluon.serializers import json as jsons
+            s3.popup_data = jsons(popup_data)
+
+            # @todo: store the new config
+
+            # Send a confirmation so the popup gets closed
+            # (layout.html diverts to layout_popup.html with
+            # "popup" request format + response.confirmation)
+            response.confirmation = T("Configuration updated")
 
         # Set view (@todo: implement specific view?)
         response.view = "popup.html"
@@ -1123,8 +1135,10 @@ class S3DashboardWidget(object):
         """
             Construct the XML for this widget
 
-            @param context: the S3DashboardContext
+            @param agent_id: the agent ID (same as the DOM node ID of the
+                             outer wrapper DIV, to attach scripts)
             @param config: the active widget configuration
+            @param context: the S3DashboardContext
 
             @return: an XmlComponent with the widget contents,
                      the outer DIV will be added by the agent
@@ -1175,6 +1189,37 @@ class S3DashboardWidget(object):
                       ]
 
         return formfields
+
+    # -------------------------------------------------------------------------
+    def accept_config(self, config, form):
+        """
+            Extract the new config settings from the form and
+            update the config dict
+
+            @param config: the config dict
+            @param form: the configuration form
+
+            @return: the updated config dict (can be a replacement)
+
+            NB config must remain JSON-serializable
+        """
+
+        formvars = form.vars
+
+        xml = formvars.get("xml")
+        if xml is not None:
+            config["xml"] = xml
+
+        return config
+
+    # -------------------------------------------------------------------------
+    def validate_config(self, form):
+        """
+            Validation function for configuration form
+        """
+
+        # Generic widget has nothing to validate
+        pass
 
     # -------------------------------------------------------------------------
     # Helpers
