@@ -7058,14 +7058,14 @@ class org_OrganisationDuplicate(object):
                      local name if enabled and no direct name match
         """
 
-        db = current.db
-        s3db = current.s3db
-
         matches = {}
 
         name = item.data.get("name")
         if not name:
             return matches
+
+        db = current.db
+        s3db = current.s3db
 
         table = item.table
 
@@ -7073,8 +7073,7 @@ class org_OrganisationDuplicate(object):
         query = (table.name.lower() == name.lower())
         rows = db(query).select(table.id, table.name)
 
-        settings = current.deployment_settings
-        if not rows and settings.get_L10n_translate_org_organisation():
+        if not rows and current.deployment_settings.get_L10n_translate_org_organisation():
             # Search by local name
             ltable = s3db.org_organisation_name
             query = (ltable.name_l10n.lower() == name.lower()) & \

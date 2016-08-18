@@ -334,9 +334,9 @@ $('#login-btn').click(function(){
     # Feed Control
     rss = settings.frontpage.rss
     if rss:
-        s3.external_stylesheets.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")
-        s3.scripts.append("http://www.google.com/jsapi?key=notsupplied-wizard")
-        s3.scripts.append("http://www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js")
+        s3.external_stylesheets.append("//www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.css")
+        s3.scripts.append("//www.google.com/jsapi?key=notsupplied-wizard")
+        s3.scripts.append("//www.google.com/uds/solutions/dynamicfeed/gfdynamicfeedcontrol.js")
 
         feeds = ["{title:'%s',url:'%s'}" % (feed["title"], feed["url"])
                  for feed in rss
