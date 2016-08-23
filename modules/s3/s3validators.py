@@ -3264,7 +3264,11 @@ class IS_PHONE_NUMBER(Validator):
         T = current.T
         error_message = self.error_message
 
-        number = s3_str(value).strip()
+        value = value.strip()
+        if value[0] == unichr(8206):
+            # Strip the LRM character 
+            value = value[1:]
+        number = s3_str(value)
         number, error = s3_single_phone_requires(number)
         if not error:
             if self.international and \

@@ -790,6 +790,17 @@ def s3_comments_represent(text, show_link=True):
         return represent
 
 # =============================================================================
+def s3_phone_represent(value):
+    """
+        Ensure that Phone numbers always show as LTR
+        - otherwise + appears at the end which looks wrong even in RTL
+    """
+
+    if not value:
+        return current.messages["NONE"]
+    return "%s%s" % (unichr(8206), s3_unicode(value))
+
+# =============================================================================
 def s3_url_represent(url):
     """
         Make URLs clickable

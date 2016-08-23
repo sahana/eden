@@ -1380,6 +1380,12 @@ def vol_volunteer_controller():
                            )
 
         if r.interactive:
+            if s3.rtl:
+                # Ensure that + appears at the beginning of the number
+                f = s3db.pr_phone_contact.value
+                f.represent = s3_phone_represent
+                f.widget = S3PhoneWidget()
+
             if r.id:
                 if r.method not in ("profile", "delete"):
                     # Redirect to person controller
@@ -1624,6 +1630,12 @@ def vol_person_controller():
         if r.representation == "s3json":
             current.xml.show_ids = True
         elif r.interactive and r.method != "import":
+            if s3.rtl:
+                # Ensure that + appears at the beginning of the number
+                f = s3db.pr_phone_contact.value
+                f.represent = s3_phone_represent
+                f.widget = S3PhoneWidget()
+
             if not r.component:
                 table = r.table
                 # Assume volunteers only between 12-81

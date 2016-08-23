@@ -3280,7 +3280,9 @@ $.filterOptionsS3({
         s3 = current.response.s3
         if "restricted_tables" in s3:
             del s3["restricted_tables"]
-        self.permission.clear_cache()
+
+        permission = self.permission
+        permission.clear_cache()
 
         system_roles = self.get_system_roles()
         ANONYMOUS = system_roles.ANONYMOUS
@@ -3322,7 +3324,7 @@ $.filterOptionsS3({
             # Permissions of a group apply only for records owned by any of
             # the entities which belong to the realm of the group membership
 
-            if not self.permission.entity_realm:
+            if not permission.entity_realm:
                 # Group memberships have no realms (policy 5 and below)
                 self.user["realms"] = Storage([(row.group_id, None) for row in rows])
                 self.user["delegations"] = Storage()
@@ -3364,7 +3366,7 @@ $.filterOptionsS3({
                     elif pe_id not in realm:
                         realms[group_id].append(pe_id)
 
-                if self.permission.entity_hierarchy:
+                if permission.entity_hierarchy:
                     # Realms include subsidiaries of the realm entities
 
                     # Get all entities in realms
@@ -3377,7 +3379,7 @@ $.filterOptionsS3({
                                     append(entity)
 
                     # Lookup all delegations to any OU ancestor of the user
-                    if self.permission.delegations and self.user.pe_id:
+                    if permission.delegations and self.user.pe_id:
 
                         ancestors = s3db.pr_get_ancestors(self.user.pe_id)
 
@@ -3433,7 +3435,7 @@ $.filterOptionsS3({
                                         append(subsidiary)
 
                     # Process the delegations
-                    if self.permission.delegations:
+                    if permission.delegations:
                         for row in rows:
 
                             # owner == delegates group_id to ==> partner
@@ -3526,8 +3528,9 @@ $.filterOptionsS3({
                                    description=description,
                                    **system_data)
         if role_id:
+            update_acl = self.permission.update_acl
             for acl in acls:
-                self.permission.update_acl(role_id, **acl)
+                update_acl(role_id, **acl)
 
         return role_id
 
@@ -5542,11 +5545,12 @@ class S3Permission(object):
             @return: True if the current user owns the record, else False
         """
 
+        auth = self.auth
         user_id = None
-        sr = self.auth.get_system_roles()
+        sr = auth.get_system_roles()
 
-        if self.auth.user is not None:
-            user_id = self.auth.user.id
+        if auth.user is not None:
+            user_id = auth.user.id
 
         session = current.session
         roles = [sr.ANONYMOUS]
@@ -5571,7 +5575,7 @@ class S3Permission(object):
                 record_id = record[table._id.name]
             else:
                 record_id = record
-            if self.auth.s3_session_owns(table, record_id):
+            if auth.s3_session_owns(table, record_id):
                 # Session owns record
                 return True
             else:
@@ -5589,7 +5593,7 @@ class S3Permission(object):
 
         # OrgAuth: apply only group memberships within the realm
         if self.entity_realm and realm_entity:
-            realms = self.auth.user.realms
+            realms = auth.user.realms
             roles = [sr.ANONYMOUS]
             append = roles.append
             for r in realms:

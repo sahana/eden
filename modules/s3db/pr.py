@@ -1947,8 +1947,8 @@ class S3PersonModel(S3Model):
                 if job_title:
                     item["job"] = job_title
                 if show_orgs:
-                     org = row.get("org_organisation.name")
-                     if org:
+                    org = row.get("org_organisation.name")
+                    if org:
                         item["org"] = org
             iappend(item)
         output = json.dumps(items, separators=SEPARATORS)
@@ -2713,7 +2713,9 @@ class S3ContactModel(S3Model):
                            ),
                      Field("phone",
                            label = T("Phone"),
-                           requires = IS_EMPTY_OR(s3_phone_requires),
+                           represent = s3_phone_represent,
+                           requires = IS_EMPTY_OR(IS_PHONE_NUMBER()),
+                           widget = S3PhoneWidget(),
                            ),
                      Field("address",
                            label = T("Address"),
@@ -5578,7 +5580,7 @@ def pr_person_phone_represent(id, show_link=True):
 
     repr = s3_fullname(person)
     if row.pr_contact.value:
-        repr = "%s %s" % (repr, row.pr_contact.value)
+        repr = "%s %s" % (repr, s3_phone_represent(row.pr_contact.value))
     if show_link:
         request = current.request
         group = request.get_vars.get("group", None)

@@ -6528,6 +6528,12 @@ def hrm_human_resource_controller(extra_filter=None):
         deploy = c == "deploy"
         vol = c == "vol"
 
+        if s3.rtl:
+            # Ensure that + appears at the beginning of the number
+            f = s3db.pr_phone_contact.value
+            f.represent = s3_phone_represent
+            f.widget = S3PhoneWidget()
+
         method = r.method
         if method in ("form", "lookup"):
             return True
@@ -7135,6 +7141,12 @@ def hrm_person_controller(**attr):
     def prep(r):
         # Plug-in role matrix for Admins/OrgAdmins
         S3PersonRoleManager.set_method(r, entity="pr_person")
+
+        if s3.rtl:
+            # Ensure that + appears at the beginning of the number
+            f = s3db.pr_phone_contact.value
+            f.represent = s3_phone_represent
+            f.widget = S3PhoneWidget()
 
         method = r.method
         if r.representation == "s3json":
