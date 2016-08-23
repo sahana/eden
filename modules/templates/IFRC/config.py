@@ -2648,6 +2648,11 @@ def config(settings):
                     ptable = s3db.pr_person
                     ptable.first_name.label = T("Name")
                     ptable.gender.label = T("Gender")
+                    # Ensure that + appears at the beginning of the number
+                    # Done in Model
+                    #f = s3db.pr_phone_contact.value
+                    #f.represent = s3_phone_represent
+                    #f.widget = S3PhoneWidget()
                     s3db.pr_address.location_id.widget = S3LocationSelector(show_address = T("Village"),
                                                                             show_map = False)
                     # NB Need to use alias if using this pre-filtered component
@@ -3794,6 +3799,11 @@ def config(settings):
             f = mtable.trainings
             f.readable = f.writable = True
             mtable.comments.label = T("Remarks")
+            # Ensure that + appears at the beginning of the number
+            # Done in Model
+            #f = s3db.pr_phone_contact.value
+            #f.represent = s3_phone_represent
+            #f.widget = S3PhoneWidget()
             s3db.pr_address.location_id.widget = S3LocationSelector(show_address = T("Village"),
                                                                     show_map = False)
             ptable = s3db.pr_person
@@ -3962,7 +3972,7 @@ def config(settings):
                                                              update_link = False,
                                                              multiple = False,
                                                              ),
-                                        S3SQLInlineComponent("contact",
+                                        S3SQLInlineComponent("phone",
                                                              label = T("Phone Number"),
                                                              fields = (("", "value"),),
                                                              filterby = {"field": "contact_method",
@@ -4015,7 +4025,11 @@ def config(settings):
                            )
 
             list_fields = s3db.get_config(tablename, "list_fields")
-            list_fields.remove((T("Email"), "email.value"))
+            try:
+                list_fields.remove((T("Email"), "email.value"))
+            except:
+                # Already removed
+                pass
 
         elif root_org == NRCS:
             current.s3db.member_membership.membership_paid.label = \
@@ -4293,7 +4307,11 @@ def config(settings):
                             type_names = type_filter.split(",")
                             if len(type_names) == 1:
                                 # Strip Type from list_fields
-                                list_fields.remove("organisation_organisation_type.organisation_type_id")
+                                try:
+                                    list_fields.remove("organisation_organisation_type.organisation_type_id")
+                                except:
+                                    # Already removed
+                                    pass
                                 type_label = ""
 
                             if type_filter == "Red Cross / Red Crescent":
@@ -4635,6 +4653,7 @@ def config(settings):
         if root_org == ARCS:
             arcs = True
             #settings.member.cv_tab = True
+            settings.pr.separate_name_fields = 2
         elif root_org == CRMADA:
             crmada = True
             table = s3db.pr_person
@@ -4857,6 +4876,11 @@ def config(settings):
                 from gluon import IS_EMPTY_OR
                 from s3 import IS_ONE_OF, S3SQLCustomForm, S3SQLInlineComponent, S3LocationSelector
                 db = current.db
+                # Ensure that + appears at the beginning of the number
+                # Done in Model
+                #f = s3db.pr_phone_contact.value
+                #f.represent = s3_phone_represent
+                #f.widget = S3PhoneWidget()
                 s3db.pr_address.location_id.widget = S3LocationSelector(show_map = False)
                 etable = s3db.pr_education
                 etable.level_id.comment = None # Don't Add Education Levels inline
@@ -5099,7 +5123,7 @@ def config(settings):
                                                                      fields = (("", "blood_type"),),
                                                                      multiple = False,
                                                                      ),
-                                                S3SQLInlineComponent("contact",
+                                                S3SQLInlineComponent("phone",
                                                                      label = T("Phone Number"),
                                                                      fields = (("", "value"),),
                                                                      filterby = {"field": "contact_method",

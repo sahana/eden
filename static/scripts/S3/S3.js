@@ -1763,6 +1763,15 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
             }
         });
 
+        // T2 Layer
+        //try { $('.zoom').fancyZoom( {
+        //    scaleImg: true,
+        //    closeOnClick: true,
+        //    directory: S3.Ap.concat('/static/media')
+        //}); } catch(e) {}
+
+        // S3 Layer
+
         // If a form is submitted with errors, this will scroll
         // the window to the first form error message
         var inputErrorId = $('form .error[id]').eq(0).attr('id');
@@ -1775,14 +1784,6 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
             } catch(e) {}
         }
 
-        // T2 Layer
-        //try { $('.zoom').fancyZoom( {
-        //    scaleImg: true,
-        //    closeOnClick: true,
-        //    directory: S3.Ap.concat('/static/media')
-        //}); } catch(e) {}
-
-        // S3 Layer
         // dataTables' delete button
         // (can't use S3.confirmClick as the buttons haven't yet rendered)
         if (S3.interactive) {
@@ -1817,6 +1818,20 @@ S3.reloadWithQueryStringVars = function(queryStringVars) {
         $('input[name="first_name"]').focusout(function() {
             this.value = this.value.charAt(0).toLocaleUpperCase() + this.value.substring(1);
         });
+
+        // Ensure that phone fields appear with + at beginning not end in RTL
+        if (S3.rtl) {
+            $('.phone-widget').each(function() {
+                if (this.value && (this.value.charAt(0) != '\u200E')) {
+                    this.value = '\u200E' + this.value;
+                };
+            });
+            $('.phone-widget').focusout(function() {
+                if (this.value.charAt(0) != '\u200E') {
+                    this.value = '\u200E' + this.value;
+                };
+            });
+        };
 
         // ListCreate Views
         $('#show-add-btn').click(function() {

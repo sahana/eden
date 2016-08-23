@@ -2057,7 +2057,11 @@ def config(settings):
                             type_names = type_filter.split(",")
                             if len(type_names) == 1:
                                 # Strip Type from list_fields
-                                list_fields.remove("organisation_organisation_type.organisation_type_id")
+                                try:
+                                    list_fields.remove("organisation_organisation_type.organisation_type_id")
+                                except:
+                                    # Already removed
+                                    pass
                                 type_label = ""
 
                             if type_filter == RED_CROSS:

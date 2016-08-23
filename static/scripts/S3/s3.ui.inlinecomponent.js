@@ -61,7 +61,7 @@
             this.formname = el.attr('id').split('-').pop();
             this.input = $('#' + el.attr('field'));
 
-            // Configure layout-dependend functions
+            // Configure layout-dependent functions
             var layout = this._layout;
             if ($.inlineComponentLayout) {
                 // Use custom script
@@ -157,7 +157,7 @@
         // Layout -------------------------------------------------------------
 
         /**
-         * The default layout-dependend functions
+         * The default layout-dependent functions
          */
         _layout: {
 
@@ -763,6 +763,10 @@
                             input.groupedopts('refresh');
                         } else if (input.hasClass('location-selector') && input.locationselector('instance')) {
                             input.locationselector('refresh');
+                        } else if (S3.rtl && input.hasClass('phone-widget')) {
+                            if (value && (value.charAt(0) != '\u200E')) {
+                                input.val('\u200E' + value);
+                            };
                         } else {
                             // Populate text in autocompletes
                             element = '#dummy_sub_' + formname + '_' + formname + '_i_' + fieldname + '_edit_0';

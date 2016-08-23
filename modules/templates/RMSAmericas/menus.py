@@ -64,6 +64,8 @@ class S3MainMenu(default.S3MainMenu):
 
         def hrm(item):
             return has_role(ORG_ADMIN) or \
+                   has_role("national_hr_manager") or \
+                   has_role("hr_manager") or \
                    has_role("training_coordinator") or \
                    has_role("training_assistant") or \
                    has_role("surge_capacity_manager") or \
