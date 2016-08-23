@@ -2714,7 +2714,7 @@ class S3ContactModel(S3Model):
                      Field("phone",
                            label = T("Phone"),
                            represent = s3_phone_represent,
-                           requires = IS_EMPTY_OR(IS_PHONE_NUMBER()),
+                           requires = IS_EMPTY_OR(IS_PHONE_NUMBER_MULTI()),
                            widget = S3PhoneWidget(),
                            ),
                      Field("address",
