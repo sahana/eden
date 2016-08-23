@@ -55,6 +55,7 @@ __all__ = ("single_phone_number_pattern",
            "IS_NOT_ONE_OF",
            "IS_PERSON_GENDER",
            "IS_PHONE_NUMBER",
+           "IS_PHONE_NUMBER_MULTI",
            "IS_PROCESSED_IMAGE",
            "IS_SITE_SELECTOR",
            "IS_UTC_DATETIME",
@@ -3261,9 +3262,6 @@ class IS_PHONE_NUMBER(Validator):
                      is converted into E.123 international notation.
         """
 
-        T = current.T
-        error_message = self.error_message
-
         value = value.strip()
         if value[0] == unichr(8206):
             # Strip the LRM character 
@@ -3274,8 +3272,9 @@ class IS_PHONE_NUMBER(Validator):
             if self.international and \
                current.deployment_settings \
                       .get_msg_require_international_phone_numbers():
+                error_message = self.error_message
                 if not error_message:
-                    error_message = T("Enter phone number in international format like +46783754957")
+                    error_message = current.T("Enter phone number in international format like +46783754957")
                 # Require E.123 international format
                 number = "".join(re.findall("[\d+]+", number))
                 match = re.match("(\+)([1-9]\d+)$", number)
@@ -3286,8 +3285,49 @@ class IS_PHONE_NUMBER(Validator):
             else:
                 return (number, None)
 
+        error_message = self.error_message
         if not error_message:
-            error_message = T("Enter a valid phone number")
+            error_message = current.T("Enter a valid phone number")
+
+        return (value, error_message)
+
+# =============================================================================
+class IS_PHONE_NUMBER_MULTI(Validator):
+    """
+        Validator for multiple phone numbers.
+    """
+
+    def __init__(self,
+                 error_message = None):
+        """
+            Constructor
+
+            @param error_message: alternative error message
+        """
+
+        self.error_message = error_message
+
+    def __call__(self, value):
+        """
+            Validation of a value
+
+            @param value: the value
+            @return: tuple (value, error), where error is None if value
+                     is valid.
+        """
+
+        value = value.strip()
+        if value[0] == unichr(8206):
+            # Strip the LRM character 
+            value = value[1:]
+        number = s3_str(value)
+        number, error = s3_phone_requires(number)
+        if not error:
+            return (number, None)
+
+        error_message = self.error_message
+        if not error_message:
+            error_message = current.T("Enter a valid phone number")
 
         return (value, error_message)
 
