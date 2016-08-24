@@ -3262,23 +3262,31 @@ class IS_PHONE_NUMBER(Validator):
                      is converted into E.123 international notation.
         """
 
-        value = value.strip()
-        if value[0] == unichr(8206):
-            # Strip the LRM character 
-            value = value[1:]
-        number = s3_str(value)
-        number, error = s3_single_phone_requires(number)
+        if isinstance(value, basestring):
+            value = value.strip()
+            if value and value[0] == unichr(8206):
+                # Strip the LRM character
+                value = value[1:]
+            number = s3_str(value)
+            number, error = s3_single_phone_requires(number)
+        else:
+            error = True
+
         if not error:
             if self.international and \
                current.deployment_settings \
                       .get_msg_require_international_phone_numbers():
+
+                # Configure alternative error message
                 error_message = self.error_message
                 if not error_message:
                     error_message = current.T("Enter phone number in international format like +46783754957")
+
                 # Require E.123 international format
                 number = "".join(re.findall("[\d+]+", number))
                 match = re.match("(\+)([1-9]\d+)$", number)
                 #match = re.match("(\+|00|\+00)([1-9]\d+)$", number)
+
                 if match:
                     number = "+%s" % match.groups()[1]
                     return (number, None)
@@ -3318,7 +3326,7 @@ class IS_PHONE_NUMBER_MULTI(Validator):
 
         value = value.strip()
         if value[0] == unichr(8206):
-            # Strip the LRM character 
+            # Strip the LRM character
             value = value[1:]
         number = s3_str(value)
         number, error = s3_phone_requires(number)
