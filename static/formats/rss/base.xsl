@@ -54,7 +54,7 @@
                         </xsl:otherwise>
                     </xsl:choose>
                 </xsl:variable>
-                <xsl:value-of select="$target"/>
+                <!--<xsl:value-of select="$target"/>-->
                 <xsl:apply-templates select=".//resource[@name=$target]" mode="item">
                     <xsl:sort select="@modified_on" order="descending"/>
                     <xsl:with-param name="resource_url" select="$resource_url"/>
@@ -70,19 +70,26 @@
         <xsl:variable name="resource_name">
             <xsl:call-template name="resource_name"/>
         </xsl:variable>
-        <item>
-            <link>
-                <xsl:value-of select="concat($resource_url, '?', $resource_name, '.uid=', @uuid)"/>
-            </link>
-            <pubDate>
-                <xsl:if test="@modified_on">
-                    <xsl:call-template name="rfc_822_datetime">
-                        <xsl:with-param name="iso_datetime" select="@modified_on"/>
-                    </xsl:call-template>
-                </xsl:if>
-            </pubDate>
-            <xsl:apply-templates select="." mode="contents"/>
-        </item>
+        <xsl:choose>
+            <xsl:when test="normalize-space(concat($prefix, '_', $resource_name))='cap_alert'">
+                <xsl:apply-templates select="." mode="contents"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <item>
+                    <link>
+                        <xsl:value-of select="concat($resource_url, '?', $resource_name, '.uid=', @uuid)"/>
+                    </link>
+                    <pubDate>
+                        <xsl:if test="@modified_on">
+                            <xsl:call-template name="rfc_822_datetime">
+                                <xsl:with-param name="iso_datetime" select="@modified_on"/>
+                            </xsl:call-template>
+                        </xsl:if>
+                    </pubDate>
+                    <xsl:apply-templates select="." mode="contents"/>
+                </item>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <!-- ****************************************************************** -->
@@ -180,8 +187,16 @@
                 <xsl:when test="$month='12'"><xsl:value-of select="'Dec'"/></xsl:when>
             </xsl:choose>
         </xsl:variable>
-        <xsl:variable name="time"
-                      select="substring-before(substring-after($iso_datetime, 'T'), 'Z')"/>
+        <xsl:variable name="time">
+            <xsl:choose>
+                <xsl:when test="contains($iso_datetime, 'Z')">
+                    <xsl:value-of select="substring-before(substring-after($iso_datetime, 'T'), 'Z')"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="substring-after($iso_datetime, 'T')"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
         <xsl:value-of select="concat($day, ' ', $month_name, ' ', $year, ' ', $time, ' GMT')"/>
     </xsl:template>
 

@@ -1537,7 +1537,7 @@ class S3InventoryTrackingModel(S3Model):
 
         set_method("inv", "recv",
                    method = "cert",
-                   action = self.inv_recv_donation_cert )
+                   action = self.inv_recv_donation_cert)
 
         set_method("inv", "recv",
                    method = "timeline",

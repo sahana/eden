@@ -47,12 +47,12 @@ def document_rheader(r):
             table = db.doc_document
             rheader = DIV(B("%s: " % T("Name")), doc_document.name,
                         TABLE(TR(
-                                TH("%s: " % T("File")), table.file.represent( doc_document.file ),
-                                TH("%s: " % T("URL")), table.url.represent( doc_document.url ),
+                                TH("%s: " % T("File")), table.file.represent(doc_document.file),
+                                TH("%s: " % T("URL")), table.url.represent(doc_document.url),
                                 ),
                                 TR(
-                                TH("%s: " % ORGANISATION), table.organisation_id.represent( doc_document.organisation_id ),
-                                TH("%s: " % T("Person")), table.person_id.represent( doc_document.organisation_id ),
+                                TH("%s: " % ORGANISATION), table.organisation_id.represent(doc_document.organisation_id),
+                                TH("%s: " % T("Person")), table.person_id.represent(doc_document.organisation_id),
                                 ),
                             ),
                         #rheader_tabs

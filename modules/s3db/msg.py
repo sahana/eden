@@ -1611,7 +1611,8 @@ class S3SMSOutboundModel(S3Model):
                            #default = "http://sms1.cardboardfish.com:9001/HTTPSMS?", # Cardboardfish
                            default = "https://api.clickatell.com/http/sendmsg", # Clickatell
                            #default = "https://secure.mcommons.com/api/send_message", # Mobile Commons
-                           #default =  "https://www.textmagic.com/app/api", # Text Magic
+                           #default = "https://www.textmagic.com/app/api", # Text Magic
+                           #default = "http://bulkmessage-api.dhiraagu.com.mv/jsp/receiveSMS.jsp", # Dhiraagu (Maldives local provider)
                            #default = "https://api.twilio.com/2010-04-01/Accounts/{AccountSid}/Messages", # Twilio (Untested)
                            requires = IS_URL(),
                            ),
@@ -1620,18 +1621,19 @@ class S3SMSOutboundModel(S3Model):
                            default = "user=yourusername&password=yourpassword&api_id=yourapiid", # Clickatell
                            #default = "campaign_id=yourid", # Mobile Commons
                            #default = "username=yourusername&password=yourpassword&cmd=send&unicode=1", # Text Magic
+                           #default = "userid=yourusername&password=yourpassword", # Dhiraagu
                            #default = "From={RegisteredTelNumber}", # Twilio (Untested)
                            ),
                      Field("message_variable", "string",
                            #default = "M", # Cardboardfish
-                           default = "text", # Clickatell, Text Magic
+                           default = "text", # Clickatell, Text Magic, Dhiraagu
                            #default = "body", # Mobile Commons
                            #default = "Body", # Twilio (Untested)
                            requires = IS_NOT_EMPTY(),
                            ),
                      Field("to_variable", "string",
                            #default = "DA", # Cardboardfish
-                           default = "to", # Clickatell
+                           default = "to", # Clickatell, Dhiraagu
                            #default = "phone_number", # Mobile Commons
                            #default = "phone", # Text Magic
                            #default = "To", # Twilio (Untested)

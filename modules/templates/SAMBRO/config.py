@@ -338,6 +338,33 @@ def config(settings):
     settings.customise_pr_person_resource = customise_pr_person_resource
 
     # -------------------------------------------------------------------------
+    def customise_pr_contact_controller(**attr):
+
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            table = r.table
+            table.priority.writable = False
+            table.priority.readable = False
+            table.comments.writable = False
+            table.comments.readable = False
+
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_pr_contact_controller = customise_pr_contact_controller
+
+    # -------------------------------------------------------------------------
     def customise_cap_alert_resource(r, tablename):
 
         T = current.T
@@ -1056,7 +1083,8 @@ def config(settings):
                          BR(), BR(),
                          T("For more details visit %(url)s or contact %(contact)s") % \
                          {"url": "%s/%s" % ((s3_str(row["cap_info.web"])), "profile"),
-                          "contact": s3_str(row["cap_info.contact"]),
+                          "contact": s3_str(get_formatted_value(row["cap_info.contact"],
+                                                                system=system)),
                           },
                          BR(), BR(),
                          T("To acknowledge the alert, use the following link: %(ack_link)s") % \
@@ -1097,6 +1125,8 @@ def config(settings):
                                                       system=system),
                                   event_type,
                                   priority)
+        if len(subject) > 78: # RFC 2822
+            subject = "%s $s %s" % (T("SAHANA"), T("Alert Notification"))
 
         return subject
 

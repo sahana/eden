@@ -98,6 +98,7 @@ def alert():
 
     def prep(r):
         from s3 import S3OptionsFilter
+        resource = r.resource
         table = r.table
         itable = s3db.cap_info
 
@@ -201,6 +202,12 @@ def alert():
                            list_fields = list_fields,
                            )
 
+        elif representation == "rss":
+            # filter non-template internal alerts that are approved
+            filter = (table.is_template != True) & (table.external != True) & \
+                     (table.approved_on != None)
+            resource.add_filter(filter)
+
         #elif r.representation == "cap":
         #    # This is either importing from or exporting to cap format. Set both
         #    # postprocessing hooks so we don't have to enumerate methods.
@@ -272,9 +279,14 @@ def alert():
                     # Filter to internal alerts
                     r.resource.add_filter(table.external != True)
                     s3.crud_strings["cap_alert"].title_list = T("Approved Alerts")
-                    url = URL(c="cap", f="alert", args=["[id]", "profile"])
-                    s3base.S3CRUD.action_buttons(r, deletable=False, editable=False,
-                                                 read_url = url)
+                    s3_action_buttons(r, deletable=False, editable=False,
+                                      read_url=URL(args="[id]"))
+                    profile_button = {"url": URL(args=["[id]", "profile"]),
+                                      "_class": "action-btn",
+                                      "_target": "_blank",
+                                      "label": str(T("View Profile"))
+                                      }
+                    s3.actions.insert(1, profile_button)
                     list_fields = ["info.event_type_id",
                                    "msg_type",
                                    (T("Sent"), "sent"),
@@ -398,11 +410,11 @@ def alert():
 
                     # Info
                     # Fields to extract
-                    resource = r.resource
                     fields = ["info.id",
                               "info.category",
                               "info.event_type_id",
                               "info.response_type",
+                              "info.priority",
                               "info.urgency",
                               "info.severity",
                               "info.certainty",
@@ -419,6 +431,9 @@ def alert():
                               "info_parameter.name",
                               "info_parameter.value",
                               "area.name",
+                              "resource.resource_desc",
+                              "resource.image",
+                              "resource.doc_id",
                               ]
 
                     # Extract the data
@@ -535,6 +550,11 @@ def alert():
                             params = None
 
                         return (
+                            component("Priority",
+                                      info["cap_info.priority"],
+                                      represent = itable.priority.represent,
+                                      hide_empty = True,
+                                      ),
                             component("Category",
                                       info["cap_info.category"],
                                       represent = itable.category.represent,
@@ -617,6 +637,43 @@ def alert():
                                       ),
                         )
     
+                    resource_desc = info["cap_resource.resource_desc"]
+                    dtable = s3db.doc_document
+                    documents_ = []
+                    resource_title = None
+                    if resource_desc:
+                        resource_title = T("Resources")
+                        doc_id = info["cap_resource.doc_id"]
+                        resource_image = info["cap_resource.image"]
+                        if doc_id:
+                            if isinstance(doc_id, list):
+                                query = (dtable.doc_id.belongs(doc_id)) & \
+                                        (dtable.deleted != True)
+                            else:
+                                query = (dtable.doc_id == doc_id) & (dtable.deleted != True)
+                            drows = db(query).select(dtable.file)
+                            for drow in drows:
+                                documents_.append(drow.file)
+
+                    @widget(resource_title)
+                    def resource_widget(r, **attr):
+
+                        return (
+                            component("Resource Description",
+                                      resource_desc,
+                                      ),
+                            component("Attached Image",
+                                      info["cap_resource.image"],
+                                      represent = s3db.doc_image_represent,
+                                      resource_segment = True,
+                                      ),
+                            component("Attached Document",
+                                      documents_,
+                                      represent = dtable.file.represent,
+                                      resource_segment = True,
+                                      ),
+                        )
+
                     s3db.configure(tablename,
                                    profile_header = profile_header,
                                    profile_layers = (layer,),
@@ -629,6 +686,9 @@ def alert():
                                                        },
                                                       {"type": "custom",
                                                        "fn": qualifiers_widget,
+                                                       },
+                                                      {"type": "custom",
+                                                       "fn": resource_widget,
                                                        },
                                                       ),
                                    )
@@ -1036,23 +1096,21 @@ def template():
     def prep(r):
         list_fields = ["template_title",
                        "identifier",
-                       "info.event_type_id",
-                       "scope",
+                       "event_type_id",
                        "incidents",
                        "info.category",
                        ]
 
         s3db.configure(tablename,
                        list_fields = list_fields,
-                       list_orderby = "cap_info.event_type_id desc",
-                       orderby = "cap_info.event_type_id desc",
+                       list_orderby = "cap_alert.event_type_id asc",
+                       orderby = "cap_alert.event_type_id asc",
                        )
         if r.representation == "xls":
             r.table.scope.represent = None
             r.table.incidents.represent = None
             list_fields = [(T("ID"), "id"),
                            "template_title",
-                           "scope",
                            "restriction",
                            "note",
                            "incidents",
@@ -1061,7 +1119,7 @@ def template():
             s3db.configure(tablename,
                            list_fields = list_fields,
                            )
-        for f in ("identifier", "msg_type"):
+        for f in ("identifier", "msg_type", "sender", "source", "scope"):
             field = atable[f]
             field.writable = False
             field.readable = False
@@ -1069,6 +1127,7 @@ def template():
         atable.template_title.requires = IS_NOT_EMPTY()
         atable.status.readable = atable.status.writable = False
         atable.addresses.readable = atable.addresses.writable = False
+        atable.external.default = False
 
         if r.component_name == "info":
             itable = r.component.table
@@ -1310,7 +1369,7 @@ def notify_approver():
                 url = "%s%s" % (settings.get_base_public_url(),
                                 URL(c="cap", f="alert", args=[alert_id, "review"]))
                 message = """
-Hello Editor,
+Hello Approver,
 %(full_name)s has created the alert message.
 Your action is required to approve or reject the message.
 Please go to %(url)s to complete the actions.\n

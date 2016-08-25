@@ -64,9 +64,7 @@
 
     function get_template_fields(table) {
         if (table == 'cap_alert') {
-            return ('sent,status,msg_type,source,scope,' +
-                    'restriction,addresses,codes,note,reference,' +
-                    'incidents').split(',');
+            return ('codes,note,incidents').split(',');
 
         } else if (table == 'cap_info') {
              return ('category,event,response_type,urgency,' +
@@ -85,11 +83,14 @@
         var recipient_row = $('#cap_alert_addresses__row, #cap_alert_addresses__row1');
         // Show the restriction field if scope is restricted otherwise hide by default
         if ($('#cap_alert_scope').val() == 'Restricted') {
-        	restriction_row.show();
+            restriction_row.show();
             recipient_row.hide();
+        } else if($('#cap_alert_scope').val() == 'Public' || $('#cap_alert_scope').val() == 'Private') {
+            recipient_row.show();
+            restriction_row.hide();
         } else {
             recipient_row.hide();
-        	restriction_row.hide();
+            restriction_row.hide();
         }
         // On change in scope
         $('#cap_alert_scope').change(function() {
@@ -98,18 +99,21 @@
                 case 'Public':
                     restriction_row.hide();
                 	if ($('#cap_alert_restriction').val()) {
-                		$('#cap_alert_restriction').val('');
+                	    $('#cap_alert_restriction').val('');
                 	}
                     recipient_row.show();
                     break;
                 case 'Restricted':
                     recipient_row.hide();
+                    if ($('#cap_alert_addresses').val()) {
+                        $('#cap_alert_addresses').val('');
+                    }
                     restriction_row.show();
                     break;
                 case 'Private':
                     restriction_row.hide();
                 	if ($('#cap_alert_restriction').val()) {
-                		$('#cap_alert_restriction').val('');	
+                	    $('#cap_alert_restriction').val('');	
                 	}
                     recipient_row.show();
                     break;
@@ -122,7 +126,7 @@
 
         $('#cap_info_priority').change(function() {
         	if (!$(this).val()) {
-        		$(this).css('border', '1px solid gray');
+        	    $(this).css('border', '1px solid gray');
         	}
         	else {
 	            var p = S3.cap_priorities,

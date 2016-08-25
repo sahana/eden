@@ -114,9 +114,9 @@
             </xsl:if>
 
             <xsl:if test="data[@field='reference']!=''">
-            	<reference>
+            	<references>
             		<xsl:value-of select="data[@field='reference']"/>
-            	</reference>
+            	</references>
             </xsl:if>
 
             <xsl:if test="data[@field='incidents']!=''">
