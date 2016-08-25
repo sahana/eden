@@ -76,6 +76,7 @@ def get_cap_options():
     T = current.T
     cap_options = {}
     cap_options["cap_incident_type_opts"] = {
+        "accident": T("Accident"),
         "animalHealth.animalDieOff": T("Animal Die Off"),
         "animalHealth.animalFeed": T("Animal Feed"),
         "aviation.aircraftCrash": T("Aircraft Crash"),
@@ -138,6 +139,7 @@ def get_cap_options():
         "hazardousMaterial.infectiousDisease": T("Infectious Disease (Hazardous Material)"),
         "hazardousMaterial.poisonousGas": T("Poisonous Gas"),
         "hazardousMaterial.radiologicalHazard": T("Radiological Hazard"),
+        "health.disease": T("Disease"),
         "health.infectiousDisease": T("Infectious Disease"),
         "health.infestation": T("Infestation"),
         "ice.iceberg": T("Iceberg"),
@@ -225,7 +227,7 @@ def get_cap_options():
         ("Cancel", T("Cancel: Cancel earlier message(s)")),
         ("Ack", T("Ack: Acknowledge receipt and acceptance of the message(s)")),
         ("Error", T("Error: Indicate rejection of the message(s)")),
-        ("AllClear", T("AllClear - The subject event no longer poses a threat")),
+        #("AllClear", T("AllClear - The subject event no longer poses a threat")),
     ])
 
     # CAP alert scope
@@ -388,6 +390,7 @@ $.filterOptionsS3({
                                                error_message=T("Cannot be empty and Must not include spaces, commas, or restricted characters (< and &).")),
                            # Dont Allow to change the identifier
                            writable = False,
+                           readable = False,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("A unique identifier of the alert message"),
                                                            T("A number or string uniquely identifying this message, assigned by the sender. Must not include spaces, commas or restricted characters (< and &)."))),
@@ -410,6 +413,8 @@ $.filterOptionsS3({
                      Field("sender",
                            label = T("Sender"),
                            default = self.generate_sender,
+                           readable = False,
+                           writable = False,
                            requires = IS_MATCH('^[^,<&\s]+$',
                                                error_message=T("Cannot be empty and Must not include spaces, commas, or restricted characters (< and &).")),
                            comment = DIV(_class="tooltip",
@@ -443,13 +448,15 @@ $.filterOptionsS3({
                      Field("source",
                            label = T("Source"),
                            default = self.generate_source,
+                           readable = False,
+                           writable = False,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The text identifying the source of the alert message"),
                                                            T("The particular source of this alert; e.g., an operator or a specific device."))),
                            ),
                      Field("scope",
                            label = T("Scope"),
-                           requires = IS_IN_SET(cap_options["cap_alert_scope_code_opts"]),
+                           requires = IS_EMPTY_OR(IS_IN_SET(cap_options["cap_alert_scope_code_opts"])),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Denotes the intended distribution of the alert message"),
                                                            T("Who is this alert for?"))),
@@ -495,7 +502,7 @@ $.filterOptionsS3({
                      Field("reference", #"list:reference cap_alert",
                            label = T("Reference"),
                            writable = False,
-                           #readable = False,
+                           readable = False,
                            #represent = S3Represent(lookup = tablename,
                            #                        fields = ["msg_type", "sent", "sender"],
                            #                        field_sep = " - ",
@@ -600,6 +607,8 @@ $.filterOptionsS3({
                   list_fields = list_fields,
                   list_layout = cap_alert_list_layout,
                   #list_orderby = "cap_alert.sent desc",
+                  # Required Fields
+                  mark_required = ("scope",),
                   notify_fields = notify_fields,
                   onapprove = self.cap_alert_approve,
                   onvalidation = self.cap_alert_onvalidation,
@@ -621,6 +630,7 @@ $.filterOptionsS3({
                        cap_resource = "alert_id",
                        )
 
+        # Custom Methods
         set_method("cap", "alert",
                    method = "import_feed",
                    action = CAPImportFeed())
@@ -671,7 +681,7 @@ $.filterOptionsS3({
         tablename = "cap_warning_priority"
         define_table(tablename,
                      Field("priority_rank", "integer",
-                           label = T("Priority Rank"),
+                           label = T("Priority Sequence"),
                            length = 2,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("Priority Rank"),
@@ -756,17 +766,17 @@ $.filterOptionsS3({
         priority_represent = S3Represent(lookup=tablename, translate=True)
 
         crud_strings[tablename] = Storage(
-            label_create = T("Create Warning Priority"),
-            title_display = T("Warning Priority Details"),
-            title_list = T("Warning Priorities"),
-            title_update = T("Edit Warning Priority"),
-            title_upload = T("Import Warning Priorities"),
-            label_list_button = T("List Warning Priorities"),
-            label_delete_button = T("Delete Warning Priority"),
-            msg_record_created = T("Warning Priority added"),
-            msg_record_modified = T("Warning Priority updated"),
-            msg_record_deleted = T("Warning Priority removed"),
-            msg_list_empty = T("No Warning Priorities currently registered")
+            label_create = T("Create Warning Classification"),
+            title_display = T("Warning Classification Details"),
+            title_list = T("Warning Classifications"),
+            title_update = T("Edit Warning Classification"),
+            title_upload = T("Import Warning Classifications"),
+            label_list_button = T("List Warning Classifications"),
+            label_delete_button = T("Delete Warning Classification"),
+            msg_record_created = T("Warning Classification added"),
+            msg_record_modified = T("Warning Classification updated"),
+            msg_record_deleted = T("Warning Classification removed"),
+            msg_list_empty = T("No Warning Classifications currently registered")
             )
 
         list_fields = ["event_type_id",
@@ -780,7 +790,7 @@ $.filterOptionsS3({
                   # Not needed since unique=True
                   #deduplicate = S3Duplicate(primary=("event_type_id", "name")),
                   list_fields = list_fields,
-                  onvalidation = self.cap_warning_priority_onvalidation,
+                  #onvalidation = self.cap_warning_priority_onvalidation,
                   orderby = "cap_warning_priority.event_type_id,cap_warning_priority.priority_rank desc",
                   )
 
@@ -853,7 +863,8 @@ $.filterOptionsS3({
                              'target':'priority',
                              'lookupPrefix': 'cap',
                              'lookupResource':'warning_priority',
-                             'lookupKey': 'event_type_id'
+                             'lookupKey': 'event_type_id',
+                             'optional': true
                              })'''
                      ),
                      Field("response_type", "list:string", # 0 or more allowed
@@ -958,7 +969,7 @@ $.filterOptionsS3({
                                  ),
                      s3_datetime("expires",
                                  label = T("Expires at"),
-                                 past = 0,
+                                 #past = 0,
                                  default = cap_expirydate(),
                                  comment = DIV(_class="tooltip",
                                                _title="%s|%s" % (T("The expiry time of the information of the alert message"),
@@ -1086,7 +1097,7 @@ $.filterOptionsS3({
 
         configure(tablename,
                   crud_form = crud_form,
-                  deduplicate = S3Duplicate(primary=("alert_id", "language")),
+                  deduplicate = self.cap_info_duplicate,
                   # Required Fields
                   mark_required = ("urgency", "severity", "certainty",),
                   onaccept = self.cap_info_onaccept,
@@ -1740,6 +1751,10 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
         form_vars_get = form.vars.get
         if not form_vars_get("is_template"):
             # For non templates
+            if not form_vars_get("scope"):
+                form.errors["scope"] = \
+                    current.T("'Scope' field is mandatory for actual alerts!")
+
             if form_vars_get("scope") == "Private" and not form_vars_get("addresses"):
                 form.errors["addresses"] = \
                     current.T("'Recipients' field mandatory in case of 'Private' scope")
@@ -1919,7 +1934,8 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
             approved_on = record["approved_on"]
             table = db.cap_alert
             query = table.id == alert_id
-            db(query).update(approved_on = current.request.utcnow)
+            utcnow = current.request.utcnow
+            db(query).update(approved_on=utcnow, sent=utcnow)
 
             # Notify the owner of the record about approval
             row = db(query).select(table.owned_by_user,
@@ -1935,6 +1951,24 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
 
             # Record the approved alert in history table without external references
             clone(current.request, record)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def cap_info_duplicate(item):
+
+        data = item.data
+        alert_id = data.get("alert_id")
+        # Default Info Language
+        language = data.get("language", "en-US")
+
+        if alert_id and language:
+            table = item.table
+            query = (table.alert_id == alert_id) & (table.language == language)
+            duplicate = current.db(query).select(table.id,
+                                                 limitby=(0, 1)).first()
+            if duplicate:
+                item.id = duplicate.id
+                item.method = item.METHOD.UPDATE
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -2603,7 +2637,7 @@ class S3CAPHistoryModel(S3Model):
                                  ),
                      s3_datetime("expires",
                                  label = T("Expires at"),
-                                 past = 0,
+                                 #past = 0,
                                  comment = DIV(_class="tooltip",
                                                _title="%s|%s" % (T("The expiry time of the information of the alert message"),
                                                                  T("If this item is not provided, each recipient is free to enforce its own policy as to when the message is no longer in effect."))),
@@ -3137,10 +3171,13 @@ def cap_rheader(r):
 
                     rheader_tabs = s3_rheader_tabs(r, tabs)
 
-                    rheader = DIV(TABLE(TR(TH("%s: " % T("Template")),
+                    rheader = DIV(TABLE(TR(TH("%s: " % T("Template Title")),
                                            TD(A(s3db.cap_template_represent(alert_id, record),
                                                 _href=URL(c="cap", f="template",
                                                           args=[alert_id, "update"]))),
+                                           ),
+                                        TR(TH("%s: " % T("Event Type")),
+                                           TD(r.table.event_type_id.represent(record.event_type_id))
                                            ),
                                         ),
                                   rheader_tabs,
@@ -3200,7 +3237,7 @@ def cap_rheader(r):
                             if has_permission("create", "cap_alert"):
                                 relay_alert = A(T("Relay Alert"),
                                                 _data = "%s/%s" % (record.msg_type, r.id),
-                                                _class = "action-btn cap-clone-update",
+                                                _class = "action-btn cap-clone-update button tiny",
                                                 )
                                 if record.external:
                                     msg_type_buttons = relay_alert
@@ -3220,31 +3257,31 @@ def cap_rheader(r):
                                                 msg_type_buttons = TAG[""](
                                                         TR(TD(A(T("Update Alert"),
                                                                 _data = "Update/%s" % r.id,
-                                                                _class = "action-btn cap-clone-update",
+                                                                _class = "action-btn cap-clone-update button tiny",
                                                                 ))),
                                                         TR(TD(A(T("Cancel Alert"),
                                                                 _data = "Cancel/%s" % r.id,
-                                                                _class = "action-btn cap-clone-update",
+                                                                _class = "action-btn cap-clone-update button tiny",
                                                                 ))),
                                                         TR(TD(A(T("Error Alert"),
                                                                 _data = "Error/%s" % r.id,
-                                                                _class = "action-btn cap-clone-update",
+                                                                _class = "action-btn cap-clone-update button tiny",
                                                                 ))),
-                                                        TR(TD(A(T("All Clear"),
-                                                                _data = "AllClear/%s" % r.id,
-                                                                _class = "action-btn cap-clone-update",
-                                                                ))),
+                                                        #TR(TD(A(T("All Clear"),
+                                                        #        _data = "AllClear/%s" % r.id,
+                                                        #        _class = "action-btn cap-clone-update button tiny",
+                                                        #        ))),
                                                         )
                                             elif msg_type == "Error":
                                                 msg_type_buttons = TAG[""](
                                                         TR(TD(A(T("Update Alert"),
                                                                 _data = "Update/%s" % r.id,
-                                                                _class = "action-btn cap-clone-update",
+                                                                _class = "action-btn cap-clone-update button tiny",
                                                                 ))),
-                                                        TR(TD(A(T("All Clear"),
-                                                                _data = "AllClear/%s" % r.id,
-                                                                _class = "action-btn cap-clone-update",
-                                                                ))),
+                                                        #TR(TD(A(T("All Clear"),
+                                                        #        _data = "AllClear/%s" % r.id,
+                                                        #        _class = "action-btn cap-clone-update button tiny",
+                                                        #        ))),
                                                         )
                                             else:
                                                 msg_type_buttons = None
@@ -3280,7 +3317,7 @@ def cap_rheader(r):
                     rheader_tabs = s3_rheader_tabs(r, tabs)
 
                     rheader = DIV(TABLE(TR(TH("%s: " % T("Alert")),
-                                           TD(A(s3db.cap_alert_represent(alert_id, record),
+                                           TD(A("%s - %s" % (record.identifier, record.sender),
                                                 _href=URL(c="cap", f="alert",
                                                           args=[alert_id, "update"]))),
                                            ),
@@ -4316,11 +4353,6 @@ def clone(r, record=None, **attr):
         del alert_row_clone["template_title"]
         del alert_row_clone["template_settings"]
         del alert_row_clone["external"]
-        try:
-            user_email = auth.user.email
-        except AttributeError:
-            user_email = ""
-        alert_row_clone["sender"] = "%s" % user_email
 
         new_alert_id = alert_history_table.insert(**alert_row_clone)
         # Post-process create
@@ -4329,15 +4361,32 @@ def clone(r, record=None, **attr):
         set_record_owner(alert_history_table, new_alert_id)
     else:
         # Change of msg_type use-case or relay alert
+        referenced_reference = alert_row.reference
+        references = []
+        if referenced_reference:
+            reference_splits = referenced_reference.split(",")
+            reference_query_ = (alert_table.deleted != True) & \
+                               (alert_table.is_template != True) & \
+                               (alert_table.external != True)
+            for split in reference_splits:
+                reference_query = reference_query_ & (alert_table.identifier == split)
+                reference_row = db(reference_query).select(alert_table.sender,
+                                                           alert_table.sent,
+                                                           limitby=(0, 1)).first()
+                if reference_row:
+                    references.append(("%s,%s,%s") % (reference_row.sender,
+                                                      split,
+                              s3_str(s3_utc(reference_row.sent)).replace(" ", "T")))
+
+        references.append(("%s,%s,%s") % (alert_row.sender,
+                                          alert_row.identifier,
+                                s3_str(s3_utc(alert_row.sent)).replace(" ", "T")))
         del alert_row_clone["identifier"]
         alert_row_clone["msg_type"] = msg_type
         alert_row_clone["sent"] = current.request.utcnow
         alert_row_clone["external"] = False
         alert_row_clone["approved_on"] = None
-        alert_row_clone["reference"] = ("%s,%s,%s") % (alert_row.sender,
-                                                       alert_row.identifier,
-                                str(s3_utc(alert_row.sent)).replace(" ", "T"),
-                                                       )
+        alert_row_clone["reference"] = " ".join(references)
         try:
             user_email = auth.user.email
         except AttributeError:
@@ -4457,6 +4506,7 @@ def clone(r, record=None, **attr):
                 area_row_clone = area_row.as_dict()
                 del area_row_clone["id"]
                 if record:
+                    # History table use-case
                     del area_row_clone["template_area_id"]
                     del area_row_clone["event_type_id"]
                     #del area_row_clone["priority"]
@@ -4467,6 +4517,7 @@ def clone(r, record=None, **attr):
                     audit("create", "cap", "area_history", record=new_area_id)
                     set_record_owner(area_history_table, new_area_id)
                 else:
+                    # Update/Error/Relay/All Clear use-case
                     area_row_clone["alert_id"] = new_alert_id
 
                     new_area_id = area_table_insert(**area_row_clone)
@@ -4484,6 +4535,7 @@ def clone(r, record=None, **attr):
                 for location_row in location_rows:
                     location_row_clone = location_row.as_dict()
                     if record:
+                        # History table use-case
                         del location_row_clone["area_id"]
                         location_row_clone["alert_history_id"] = new_alert_id
                         location_row_clone["area_history_id"] = new_area_id
@@ -4499,6 +4551,7 @@ def clone(r, record=None, **attr):
                               record=new_location_id)
                         set_record_owner(location_history_table, new_location_id)
                     else:
+                        # Update/Error/Relay/All Clear use-case
                         location_row_clone.update(alert_id = new_alert_id,
                                                   area_id = new_area_id)
                         onvalidation(gtable, location_row_clone)
@@ -4517,6 +4570,7 @@ def clone(r, record=None, **attr):
                 for tag_row in tag_rows:
                     tag_row_clone = tag_row.as_dict()
                     if record:
+                        # History table use-case
                         del tag_row_clone["area_id"]
                         tag_row_clone["alert_history_id"] = new_alert_id
                         tag_row_clone["area_history_id"] = new_area_id
@@ -4527,6 +4581,7 @@ def clone(r, record=None, **attr):
                         audit("create", "cap", "area_tag_history", record=new_tag_id)
                         set_record_owner(tag_history_table, new_tag_id)
                     else:
+                        # Update/Error/Relay/All Clear use-case
                         tag_row_clone.update(alert_id = new_alert_id,
                                              area_id = new_area_id)
 
@@ -4535,7 +4590,9 @@ def clone(r, record=None, **attr):
                         tag_row_clone["id"] = new_tag_id
                         audit("create", "cap", "area_tag", record=new_tag_id)
                         set_record_owner(tag_table, new_tag_id)
-                        onaccept(tag_table, tag_row_clone)
+                        # Don't do onaccept as geocodes may create locations, so duplicates
+                        # as Locations are cloned anyway
+                        #onaccept(tag_table, tag_row_clone)
     if has_permission("create", resource_table):
         # Copy the resource segment
         resource_fields = [resource_table[f] for f in resource_table.fields
@@ -4550,6 +4607,7 @@ def clone(r, record=None, **attr):
             for resource_row in resource_rows:
                 resource_row_clone = resource_row.as_dict()
                 if record:
+                    # History Table use-case
                     resource_row_clone["alert_history_id"] = new_alert_id
                     rid = resource_history_table.insert(**resource_row_clone)
                     resource_row_clone["id"] = rid
@@ -4557,6 +4615,7 @@ def clone(r, record=None, **attr):
                     audit("create", "cap", "resource_history", record=rid)
                     set_record_owner(resource_history_table, rid)
                 else:
+                    # Update/Error/Relay/All Clear use-case
                     resource_row_clone["alert_id"] = new_alert_id
                     rid = resource_table_insert(**resource_row_clone)
                     resource_row_clone["id"] = rid
@@ -4713,6 +4772,7 @@ class cap_AlertProfileWidget(object):
                   strong = False,
                   hide_empty = True,
                   headline = False,
+                  resource_segment = False,
                   ):
         """
             Component builder
@@ -4723,6 +4783,7 @@ class cap_AlertProfileWidget(object):
             @param strong: whether to display with strong color
             @param hide_empty: whether to hide empty records
             @param headline: is headline?
+            @param resource_segment: beongs to resource segment
         """
 
         if not value and hide_empty:
@@ -4736,10 +4797,11 @@ class cap_AlertProfileWidget(object):
                             nvalue.append(represent(value_))
                         else:
                             nvalue.append(value_)
-                if len(nvalue):
-                    nvalue = ", ".join(nvalue)
-                else:
-                    return None
+                if not resource_segment:
+                    if len(nvalue):
+                        nvalue = ", ".join(nvalue)
+                    else:
+                        return None
             else:
                 if represent:
                     nvalue = represent(value)

@@ -31,3 +31,6 @@ input#assign-selected-action.selected-action {
     border-radius: 3em;
 }
 #cap_info_event_type_id__row {display:none;}
+.embeddedComponent .map_wrapper {
+    min-width: 650px !important;
+}
