@@ -1692,11 +1692,12 @@ class DVRCaseAppointmentModel(S3Model):
 
         settings = current.deployment_settings
 
+        table = s3db.dvr_case_appointment
+
         person_id = formvars.get("person_id")
         case_id = formvars.get("case_id")
 
         if not person_id or not case_id:
-            table = s3db.dvr_case_appointment
             row = db(table.id == record_id).select(table.case_id,
                                                    table.person_id,
                                                    limitby = (0, 1),
@@ -2479,7 +2480,7 @@ class DVRCaseEventModel(S3Model):
                                                              T("Minimum interval between two consecutive registrations of this event type for the same person"),
                                                              ),
                                          ),
-                           requires = IS_FLOAT_IN_RANGE(0.0, None),
+                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
                            ),
                      s3_comments(),
                      *s3_meta_fields())
