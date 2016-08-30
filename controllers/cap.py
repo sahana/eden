@@ -349,6 +349,9 @@ def alert():
                     if alert_id:
                         artable = s3db.cap_area
                         irow = db(itable.alert_id == alert_id).select(itable.id,
+                                                                      itable.urgency,
+                                                                      itable.severity,
+                                                                      itable.certainty,
                                                                       limitby=(0, 1)).first()
                         arow = db(artable.alert_id == alert_id).select(artable.id,
                                                                        limitby=(0, 1)).first()
@@ -356,6 +359,12 @@ def alert():
                             # This is incomplete alert
                             session.warning = T("This Alert is incomplete! You can complete it now.")
                             redirect(URL(c="cap", f="alert", args=[alert_id]))
+                        elif not irow.urgency or not irow.severity or not irow.certainty:
+                            # Some required element is missing
+                            # This could arise because info segments are copied from templates
+                            # and there is no any urgency or severity or certainty in the info template
+                            session.warning = T("Urgency or Severity or Certainty is missing in info segment!.")
+                            redirect(URL(c="cap", f="alert", args=[alert_id, "info"]))
                     else:
                         if r.get_vars["status"] == "incomplete":
                             # Show incomplete alerts, ie. without info and area segment
