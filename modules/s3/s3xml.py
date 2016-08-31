@@ -1,4 +1,4 @@
-## -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """ S3XML Toolkit
 
@@ -2424,9 +2424,8 @@ class S3XML(S3Codec):
                 # Use header row in the work sheet
                 headers = {}
 
-            # Lambda to decode XLS dates into an ISO datetime-string
-            decode_date = lambda v: datetime.datetime(
-                                    *xlrd.xldate_as_tuple(v, wb.datemode))
+            # Lambda to decode XLS dates into a datetime.datetime
+            decode_date = lambda v: xlrd.xldate.xldate_as_datetime(v, wb.datemode)
 
             def decode(t, v):
                 """
@@ -2445,6 +2444,7 @@ class S3XML(S3Codec):
                     elif t == xlrd.XL_CELL_NUMBER:
                         text = str(long(v)) if long(v) == v else str(v)
                     elif t == xlrd.XL_CELL_DATE:
+                        # Convert into an ISO datetime string
                         text = s3_encode_iso_datetime(decode_date(v))
                     elif t == xlrd.XL_CELL_BOOLEAN:
                         text = str(value).lower()
