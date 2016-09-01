@@ -202,12 +202,38 @@ S3.addModals = function() {
                 //select.css('z-index', 1049);
             }
         }
-        var id = S3.uid();
-        // Open a jQueryUI Dialog showing a spinner until iframe is loaded
-        var dialog = $('<iframe id="' + id + '" src=' + url + ' onload="S3.popup_loaded(\'' + id + '\')" class="loading" marginWidth="0" marginHeight="0" frameBorder="0"></iframe>')
-                      .appendTo('body');
+
+        // Create an iframe
+        var id = S3.uid(),
+            dialog = $('<iframe>', {
+                'id': id,
+                // Start empty to prevent contents reload at
+                // DOM re-insertion (=unnecessary HTTP request)
+                'src': '',
+                // Set initial 'loading' class to show spinner until contents loaded
+                'class': 'loading',
+                'load': function(event, ui) {
+                    S3.popup_loaded(id);
+                },
+                'marginWidth': '0',
+                'marginHeight': '0',
+                'frameBorder': '0'
+            }).appendTo('body');
+
+        // Create jQuery UI dialog
         dialog.dialog({
-            // add a close listener to prevent adding multiple divs to the document
+            autoOpen: false,
+            title: title,
+            minHeight: 480,
+            minWidth: 320,
+            modal: true,
+            closeText: '',
+            open: function(event, ui) {
+                // Clicking outside of the popup closes it
+                $('.ui-widget-overlay').bind('click', function() {
+                    dialog.dialog('close');
+                });
+            },
             close: function(event, ui) {
                 if (self.parent) {
                     // There is a parent modal: refresh it to fix layout
@@ -218,20 +244,15 @@ S3.addModals = function() {
                         iframe.width(width);
                     }, 300);
                 }
-                // remove div with all data and events
-                dialog.remove();
+                // Clear src to prevent DOM manipulation from triggering
+                // post-close contents reload (=unnecessary HTTP request)
+                dialog.attr('src', '').remove();
             },
-            minHeight: 480,
-            modal: true,
-            open: function(event, ui) {
-                $('.ui-widget-overlay').bind('click', function() {
-                    dialog.dialog('close');
-                });
-            },
-            title: title,
-            minWidth: 320,
-            closeText: ''
         });
+
+        // Only now set the iframe source URL and open the dialog
+        dialog.attr('src', url).dialog('open');
+
         // Prevent browser from following link
         return false;
     });
