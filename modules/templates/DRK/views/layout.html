@@ -79,7 +79,7 @@
      </a>
     </div>
     <div class='medium-4 columns'>
-      <div class="username">{{if auth.is_logged_in():}}{{=auth.user.email}}{{else:}}{{=T("anonymous user")}}{{pass}}<i class='icon icon-user'></i></div>
+      <div class="username">{{if auth.is_logged_in():}}{{=auth.user.email}}{{else:}}{{=T("anonymous user")}}{{pass}}<i class='fa fa-user'></i></div>
       {{=current.menu.personal}}
     </div>
     <div class='medium-2 columns'>
