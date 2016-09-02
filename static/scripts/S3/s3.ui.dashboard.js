@@ -23,10 +23,12 @@
          * Default options
          *
          * @prop {string} ajaxURL - URL for dashboard agent Ajax requests
+         * @prop {string} version - the current config version key
          */
         options: {
 
-            ajaxURL: null
+            ajaxURL: null,
+            version: null
 
         },
 
@@ -53,9 +55,10 @@
 
             this.refresh();
 
-            // @todo: remove
+            // @todo: remove?
             s3_debug("dashboard initialized");
             s3_debug("dashboard ajaxURL=" + this.options.ajaxURL);
+            s3_debug("dashboard version=" + this.options.version);
         },
 
         /**
@@ -135,11 +138,34 @@
         },
 
         /**
+         * Helper method to update the version key for the dashboard
+         * and all its active widgets
+         *
+         * @param {string} version: the version key
+         */
+        updateVersion: function(version) {
+
+            var el = this.element;
+
+            // Update version key
+            this._setOption('version', version);
+
+            // @todo: remove?
+            s3_debug("dashboard new version=" + version);
+
+            // Also update version key in all widgets
+            el.find('.db-widget').each(function() {
+                $(this).dashboardWidget('option', 'version', version);
+            });
+        },
+
+        /**
          * Bind events to generated elements (after refresh)
          */
         _bindEvents: function() {
 
-            var ns = this.eventNamespace,
+            var el = this.element,
+                ns = this.eventNamespace,
                 self = this;
 
             // Config mode switches
@@ -148,6 +174,21 @@
             });
             $('.db-config-off').bind('click' + ns, function() {
                 self.configMode(false);
+            });
+
+            // Config saved => update version key
+            el.bind('configSaved' + ns, function(e, data) {
+
+                // Prevent configSaved event from bubbling further up
+                e.stopPropagation();
+
+                var version = null;
+                if (data && data.hasOwnProperty('v')) {
+                    version = data.v;
+                }
+                if (version) {
+                    self.updateVersion(version);
+                }
             });
 
             return true;
@@ -183,12 +224,14 @@
          * Default options
          *
          * @prop {string} dashboardURL - the URL for dashboard agent requests
+         * @prop {string} version - the config version key
          * @prop {string} title - the widget title (used in config dialog,
          *                        configured in back-end widget class)
          */
         options: {
 
             dashboardURL: null,
+            version: null,
             title: 'Dashboard Widget'
 
         },
@@ -221,7 +264,7 @@
             // Refresh the widget contents
             this.refresh();
 
-            // @todo: remove
+            // @todo: remove?
             s3_debug("dashboard widget initialized");
         },
 
@@ -311,7 +354,7 @@
             if (!$('.db-config-dialog').length) {
 
                 // Construct the popup URL
-                var configURL = 'config.popup?agent=' + this.agentID,
+                var configURL = 'config.popup?agent=' + this.agentID + '&version=' + opts.version,
                     dashboardURL = opts.dashboardURL;
                 if (dashboardURL) {
                     configURL = dashboardURL + '/' + configURL;
@@ -321,7 +364,7 @@
                 var iframeID = this.agentID + '-dialog',
                     dialog = $('<iframe>', {
                     'id': iframeID,
-                    'src': configURL,
+                    'src': '',
                     'class': 'loading',
                     'load': function() {
                         $(this).removeClass('loading');
@@ -337,6 +380,7 @@
 
                 // Instantiate the dialog
                 dialog.dialog({
+                    autoOpen: false,
                     modal: true,
                     minWidth: 320,
                     minHeight: 480,
@@ -350,11 +394,15 @@
                         el.addClass('db-has-dialog');
                     },
                     close: function() {
+                        dialog.attr('src', '');
                         el.removeClass('db-has-dialog');
                         self.configDialog.remove();
                         self.configDialog = null;
                     }
-                }).show();
+                });
+
+                // Set iframe source and open the dialog
+                dialog.attr('src', configURL).dialog('open');
             }
         },
 
@@ -380,9 +428,6 @@
                 if (data && data.hasOwnProperty('c')) {
                     newConfig = data.c;
                 }
-
-                // Prevent configSaved from bubbling up to the dashboard
-                e.stopPropagation();
 
                 // Reload/refresh widget as necessary
                 self._onConfigUpdate(newConfig);
