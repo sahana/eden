@@ -2609,6 +2609,24 @@ def config(settings):
                     limit_filter_opts = True,
                     )
 
+            resource = r.resource
+            get_config = resource.get_config
+
+            is_admin = auth.s3_has_role("ADMIN")
+            if is_admin:
+                # Remove Location Filter to improve performance
+                # @ToDo: Restore this once performance issues in widget fixed
+                filters = []
+                append_widget = filters.append
+                filter_widgets = get_config("filter_widgets")
+                while filter_widgets:
+                    widget = filter_widgets.pop(0)
+                    if widget.field not in ("location_id",
+                                            ):
+                        append_widget(widget)
+
+                resource.configure(filter_widgets = filters)
+
             table = s3db.hrm_human_resource
 
             if arcs:
@@ -2619,14 +2637,11 @@ def config(settings):
                 field.readable = field.writable = False
             else:
                 from s3 import S3OptionsFilter
-                filter_widgets = s3db.get_config(tablename, "filter_widgets")
+                filter_widgets = get_config("filter_widgets")
                 filter_widgets.insert(-1, S3OptionsFilter("training.course_id$course_sector.sector_id",
                                                           label = T("Training Sector"),
                                                           hidden = True,
                                                           ))
-
-            resource = r.resource
-            get_config = resource.get_config
 
             if controller == "vol":
                 if arcs:
@@ -2938,7 +2953,7 @@ def config(settings):
                         report_options["cols"].insert(pos, "details.volunteer_type")
 
                     # Add filter widget for volunteer type
-                    filter_widgets = s3db.get_config(tablename, "filter_widgets")
+                    filter_widgets = get_config("filter_widgets")
                     filter_widgets.insert(-1, S3OptionsFilter("details.volunteer_type",
                                                               hidden = True,
                                                               ))
@@ -2974,7 +2989,6 @@ def config(settings):
 
                 db = current.db
 
-                is_admin = auth.s3_has_role("ADMIN")
                 if not is_admin:
                     organisation_id = auth.user.organisation_id
                     dotable = s3db.deploy_organisation

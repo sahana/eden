@@ -1303,6 +1303,7 @@ class S3LocationFilter(S3FilterWidget):
                         path = path.split("/")
                 if path:
                     ids |= set(path)
+
             # Build lookup table for name_l10n
             ntable = s3db.gis_location_name
             query = (gtable.id.belongs(ids)) & \
