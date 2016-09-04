@@ -991,6 +991,7 @@ def config(settings):
         response_type = row["cap_info.response_type"]
         instruction = row["cap_info.instruction"]
         description = row["cap_info.description"]
+        status = row["cap_alert.status"]
 
         if event_type_id and event_type_id != current.messages["NONE"]:
             if not isinstance(event_type_id, lazyT):
@@ -1009,13 +1010,18 @@ def config(settings):
             priority = T("Alert")
 
         email_content = TAG[""](HR(), BR(),
+                         B(s3_str("%s %s %s" % (T(status.upper()),
+                                                T(status.upper()),
+                                                T(status.upper()))))
+                         if status != "Actual" else "",
+                         BR() if status != "Actual" else "",
+                         BR() if status != "Actual" else "",
                          A(T("VIEW ALERT ON THE WEB"),
                            _href = "%s/%s" % (s3_str(row["cap_info.web"]), "profile")),
                          BR(), BR(),
-                         T("%(scope)s %(status)s Alert") % \
-                         {"scope": s3_str(row["cap_alert.scope"]),
-                          "status": s3_str(row["cap_alert.status"]),
-                          },
+                         B(s3_str("%s %s Alert" % (T(row["cap_alert.scope"]),
+                                                   T(status)
+                                                   ))),
                          H2(T(s3_str(get_formatted_value(row["cap_info.headline"],
                                                          system=system)))),
                          BR(),
@@ -1028,7 +1034,7 @@ def config(settings):
                           "area_description": s3_str(get_formatted_value(row["cap_area.name"],
                                                                          system=system)),
                          },
-                         BR(),
+                         BR(), BR(),
                          T("This %(severity)s %(event_type)s is %(urgency)s and is %(certainty)s") %\
                          {"severity": s3_str(row["cap_info.severity"]),
                           "event_type": s3_str(event_type),
@@ -1091,6 +1097,12 @@ def config(settings):
                          {"ack_link": "%s%s" % (current.deployment_settings.get_base_public_url(),
                                                 URL(c="cap", f="alert_ack", args=[ack_id, "update"])),
                           } if ack_id else "",
+                         BR() if ack_id else "",
+                         BR() if ack_id else "",
+                         B(s3_str("%s %s %s" % (T(status.upper()),
+                                                T(status.upper()),
+                                                T(status.upper()))))
+                         if status != "Actual" else "",
                          )
 
         return email_content
@@ -1126,7 +1138,9 @@ def config(settings):
                                   event_type,
                                   priority)
         if len(subject) > 78: # RFC 2822
-            subject = "%s $s %s" % (T("SAHANA"), T("Alert Notification"))
+            subject = "%s %s %s" % (T("SAHANA"),
+                                    current.deployment_settings.get_system_name_short(),
+                                    T("Alert Notification"))
 
         return subject
 
