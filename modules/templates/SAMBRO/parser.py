@@ -241,19 +241,31 @@ class S3Parser(object):
         db = current.db
         s3db = current.s3db
         table = s3db.msg_rss
-        record = db(table.message_id == message.message_id).select(table.channel_id,
-                                                                   table.title,
-                                                                   table.from_address,
-                                                                   table.body,
-                                                                   table.date,
-                                                                   table.location_id,
-                                                                   table.author,
-                                                                   limitby=(0, 1)
-                                                                   ).first()
+        message_id = message.message_id
+        record = db(table.message_id == message_id).select(table.id,
+                                                           table.channel_id,
+                                                           table.title,
+                                                           table.from_address,
+                                                           table.body,
+                                                           table.date,
+                                                           table.location_id,
+                                                           table.author,
+                                                           limitby=(0, 1)
+                                                           ).first()
         if not record:
             return
 
-        channel_id = record.channel_id
+        pstable = s3db.msg_parsing_status
+        # not adding (pstable.channel_id == record.channel_id) to query
+        # because two channels (http://host.domain/eden/cap/public.rss and
+        # (http://host.domain/eden/cap/alert.rss) may contain common url
+        # eg. http://host.domain/eden/cap/public/xx.cap
+        pquery = (pstable.message_id == message_id)
+        prows = db(pquery).select(pstable.id, pstable.is_parsed)
+        for prow in prows:
+            if prow.is_parsed:
+                return
+
         alert_table = s3db.cap_alert
         info_table = s3db.cap_info
 
@@ -304,11 +316,14 @@ class S3Parser(object):
         else:
             # Embedded link
             url = record.from_address
+            import_xml = s3db.resource("cap_alert").import_xml
+            stylesheet = os.path.join(current.request.folder, "static", "formats", "cap", "import.xsl")
             try:
                 file = fetch(url)
             except urllib2.HTTPError, e:
+                import base64
                 rss_table = s3db.msg_rss_channel
-                query = (rss_table.channel_id == message.channel_id)
+                query = (rss_table.channel_id == record.channel_id)
                 channel = db(query).select(rss_table.date,
                                            rss_table.etag,
                                            rss_table.url,
@@ -318,112 +333,48 @@ class S3Parser(object):
                 username = channel.username
                 password = channel.password
                 if e.code == 401 and username and password:
-                    import base64
                     request = urllib2.Request(url)
                     base64string = base64.encodestring("%s:%s" % (username, password))
                     request.add_header("Authorization", "Basic %s" % base64string)
-                    try:
-                        file = urllib2.urlopen(request).read()
-                    except urllib2.HTTPError, e:
-                        current.log.error("Getting content from link failed: %s" % e)
-                        return
-                    else:
-                        File = StringIO(file)
-
-                        # Import via XSLT
-                        resource = s3db.resource("cap_alert")
-                        stylesheet = os.path.join(current.request.folder, "static", "formats", "cap", "import.xsl")
-                        success = resource.import_xml(File, stylesheet=stylesheet)
-                        return
                 else:
-                    if current.deployment_settings.get_cap_rss_use_links():
-                        # Look into links
-                        # use-case for Philippines
-                        import feedparser
-                        auth_handler = None
-                        if username and password:
-                            # Basic Authentication
-                            auth_handler = urllib2.HTTPBasicAuthHandler()
-                            auth_handler.add_password(None, channel.url, username, password)
+                    request = None
 
-                        if channel.etag:
-                            # http://pythonhosted.org/feedparser/http-etag.html
-                            # NB This won't help for a server like Drupal 7 set to not allow caching & hence generating a new ETag/Last Modified each request!
-                            d = feedparser.parse(channel.url, etag=channel.etag, handlers=[auth_handler] if auth_handler else None)
-                        elif channel.date:
-                            d = feedparser.parse(channel.url, modified=channel.date.utctimetuple(), handlers=[auth_handler] if auth_handler else None)
-                        else:
-                            # We've not polled this feed before
-                            d = feedparser.parse(channel.url, handlers=[auth_handler] if auth_handler else None)
-
-                        if d.bozo:
-                            # Something doesn't seem right
-                            from s3 import S3Msg
-                            S3Msg.update_channel_status(message.channel_id,
-                                                        status=d.bozo_exception.message,
-                                                        period=(300, 3600))
-                            return
-
-                        # Update ETag/Last-polled
-                        now = current.request.utcnow
-                        data = dict(date=now)
-                        etag = d.get("etag", None)
-                        if etag:
-                            data["etag"] = etag
-                        db(query).update(**data)
-
-                        entries = d.entries
-                        for entry in entries:
-                            current_link = entry.get("link", None)
-                            if current_link == record.from_address:
-                                links_ = entry.get("links", [])
-                                for link_ in links_:
-                                    link = link_["href"]
-                                    try:
-                                        file = fetch(link)
-                                    except urllib2.HTTPError, e:
-                                        if e.code == 401 and username and password:
-                                            import base64
-                                            request = urllib2.Request(link)
-                                            base64string = base64.encodestring("%s:%s" % (username, password))
-                                            request.add_header("Authorization", "Basic %s" % base64string)
-                                            try:
-                                                file = urllib2.urlopen(request).read()
-                                            except urllib2.HTTPError, e:
-                                                current.log.error("Getting content from link failed: %s" % e)
-                                            else:
-                                                File = StringIO(file)
-
-                                                # Import via XSLT
-                                                resource = s3db.resource("cap_alert")
-                                                stylesheet = os.path.join(current.request.folder, "static", "formats", "cap", "import.xsl")
-                                                success = resource.import_xml(File, stylesheet=stylesheet)
-                                        else:
-                                            current.log.error("Getting content from link failed: %s" % e)
-                                    except urllib2.URLError, e:
-                                        current.log.error("Getting content from link failed: %s" % e)
-                                    else:
-                                        File = StringIO(file)
-
-                                        # Import via XSLT
-                                        resource = s3db.resource("cap_alert")
-                                        stylesheet = os.path.join(current.request.folder, "static", "formats", "cap", "import.xsl")
-                                        success = resource.import_xml(File, stylesheet=stylesheet)
-                                break
-                        return
-                    else:
-                        current.log.error("Getting content from link failed: %s" % e)
-                        return
-            except urllib2.URLError, e:
-                current.log.error("Getting content from link failed: %s" % e)
-                return
+                try:
+                    file = urllib2.urlopen(request).read() if request else fetch(url)
+                except urllib2.HTTPError, e:
+                    # Check if there are links to look into
+                    from urlparse import urlparse
+                    ltable = s3db.msg_rss_link
+                    query_ = (ltable.rss_id == record.id) & (ltable.deleted != True)
+                    rows_ = db(query_).select(ltable.type,
+                                              ltable.url)
+                    url_format = "{uri.scheme}://{uri.netloc}/".format
+                    url_domain = url_format(uri=urlparse(url))
+                    for row_ in rows_:
+                        url = row_.url
+                        if url and row_.type == "application/cap+xml" and \
+                           url_domain == url_format(uri=urlparse(url)):
+                            # Same domain, so okey to use same username/pwd combination
+                            if e.code == 401 and username and password:
+                                request = urllib2.Request(url)
+                                request.add_header("Authorization", "Basic %s" % base64string)
+                            else:
+                                request = None
+                            try:
+                                file = urllib2.urlopen(request).read() if request else fetch(url)
+                            except urllib2.HTTPError, e:
+                                current.log.error("Getting content from link failed: %s" % e)
+                            else:
+                                # Import via XSLT
+                                import_xml(StringIO(file), stylesheet=stylesheet, ignore_errors=True)
+                else:
+                    # Import via XSLT
+                    import_xml(StringIO(file), stylesheet=stylesheet, ignore_errors=True)
             else:
-                File = StringIO(file)
-
+                # Public Alerts
+                # eg. http://host.domain/eden/cap/public/xx.cap
                 # Import via XSLT
-                resource = s3db.resource("cap_alert")
-                stylesheet = os.path.join(current.request.folder, "static", "formats", "cap", "import.xsl")
-                success = resource.import_xml(File, stylesheet=stylesheet)
+                import_xml(StringIO(file), stylesheet=stylesheet, ignore_errors=True)
 
         # No Reply
         return
