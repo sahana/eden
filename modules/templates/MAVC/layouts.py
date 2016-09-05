@@ -213,6 +213,52 @@ class S3FooterMenuLayout(S3NavigationItem):
 MF = S3FooterMenuLayout
 
 # =============================================================================
+class S3LoginMenuLayout(S3NavigationItem):
+    """ MAVC Login Menu Layout """
+
+    @staticmethod
+    def layout(item):
+        """ Custom Layout Method """
+
+        if not item.authorized:
+            item.enabled = item.visible = False
+        elif item.enabled is None or item.enabled:
+            item.enabled = item.visible = True
+
+        if item.enabled and item.visible:
+
+            if item.parent.parent is None:
+
+                # The menu itself
+                items = item.render_components()
+
+                return LI(DIV(items,
+                              _class="row login-menu",
+                              ),
+                          _class="has-form",
+                          )
+
+            else:
+
+                column_class = item.opts.get("column", "6")
+                button_class = item.opts.get("button", "secondary")
+                return DIV(A(item.label,
+                             _href = item.url(),
+                             _id = item.attr._id,
+                             _class = "tiny %s button" % button_class,
+                             ),
+                           _class="small-%s columns" % column_class,
+                           )
+
+        else:
+            return None
+
+# -----------------------------------------------------------------------------
+# Shortcut
+#
+MA = S3LoginMenuLayout
+
+# =============================================================================
 class S3LanguageMenuLayout(S3NavigationItem):
     """ Custom Language Menu (Dropdown) """
 

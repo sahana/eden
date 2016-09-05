@@ -79,7 +79,7 @@ class PluginLoader(object):
         if reload_all:
             cls.detect(reset_all=True)
 
-        for name in cls._registry():
+        for name in cls._registry().keys():
             cls.load(name)
 
     # -------------------------------------------------------------------------

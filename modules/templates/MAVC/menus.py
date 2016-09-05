@@ -21,6 +21,7 @@ class S3MainMenu(default.S3MainMenu):
         # Modules menus
         main_menu = MM()(
             cls.menu_modules(),
+            cls.menu_login(),
             cls.menu_personal(),
             cls.menu_lang(),
         )
@@ -65,6 +66,22 @@ class S3MainMenu(default.S3MainMenu):
 
     # -------------------------------------------------------------------------
     @classmethod
+    def menu_login(cls):
+
+        if not current.auth.s3_logged_in():
+            login = MA("Login", c="default", f="user", m="login", button="secondary", column="5")
+            settings = current.deployment_settings
+            self_registration = settings.get_security_self_registration()
+            if self_registration:
+                register = MA("Register", c="default", f="user", m="register", button="primary", column="7 end")
+            else:
+                register = None
+            return MA()(login, register)
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    @classmethod
     def menu_personal(cls):
         """ Custom Personal Menu """
 
@@ -72,32 +89,8 @@ class S3MainMenu(default.S3MainMenu):
         s3 = current.response.s3
         settings = current.deployment_settings
 
-        if not auth.is_logged_in():
+        if auth.is_logged_in():
 
-            request = current.request
-
-            login_next = URL(args=request.args, vars=request.vars)
-            if request.controller == "default" and \
-               request.function == "user" and \
-               "_next" in request.get_vars:
-                login_next = request.get_vars["_next"]
-
-            self_registration = settings.get_security_self_registration()
-            menu_personal = MM(icon="administration", link=False)(
-                        MM("Register", c="default", f="user",
-                           m="register",
-                           check = self_registration,
-                           ),
-                        MM("Login", c="default", f="user",
-                           m="login",
-                           vars = {"_next": login_next},
-                           ),
-                        MM("Lost Password", c="default", f="user",
-                           m="retrieve_password",
-                           ),
-                        )
-
-        else:
             s3_has_role = auth.s3_has_role
             is_org_admin = lambda i: s3_has_role("ORG_ADMIN") and \
                                      not s3_has_role("ADMIN")
@@ -116,6 +109,9 @@ class S3MainMenu(default.S3MainMenu):
                            m = "logout",
                            ),
                         )
+
+        else:
+            return None
 
         return menu_personal
 
