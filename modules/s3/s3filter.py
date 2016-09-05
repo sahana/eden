@@ -54,7 +54,7 @@ from gluon.storage import Storage
 from gluon.tools import callback
 
 from s3datetime import s3_decode_iso_datetime, S3DateTime
-from s3query import S3ResourceField, S3ResourceQuery, S3URLQuery
+from s3query import FS, S3ResourceField, S3ResourceQuery, S3URLQuery
 from s3rest import S3Method
 from s3utils import s3_get_foreign_key, s3_unicode, S3TypeConverter
 from s3validators import *
@@ -1184,7 +1184,7 @@ class S3LocationFilter(S3FilterWidget):
             joined = True
             # Filter out old Locations
             # @ToDo: Allow override
-            resource.add_filter(gtable.end_date == None)
+            resource.add_filter(FS("%s.end_date" % selector) == None)
 
         else:
             # Neither fixed options nor resource to look them up
