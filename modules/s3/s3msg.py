@@ -1951,24 +1951,26 @@ class S3Msg(object):
             return "No Such RSS Channel: %s" % channel_id
 
         # http://pythonhosted.org/feedparser
-        import feedparser, urllib2
-        auth_handler = None
+        import feedparser
         # Basic Authentication
         username = channel.username
         password = channel.password
         if username and password:
-            auth_handler = urllib2.HTTPBasicAuthHandler()
-            auth_handler.add_password(None, channel.url, username, password)
+            # feedparser doesn't do pre-emptive authentication with urllib2.HTTPBasicAuthHandler() and throws errors on the 401
+            base64string = base64.encodestring("%s:%s" % (username, password)).replace("\n", "")
+            request_headers = {"Authorization": "Basic %s" % base64string}
+        else:
+            request_headers = None
 
         if channel.etag:
             # http://pythonhosted.org/feedparser/http-etag.html
             # NB This won't help for a server like Drupal 7 set to not allow caching & hence generating a new ETag/Last Modified each request!
-            d = feedparser.parse(channel.url, etag=channel.etag, handlers=[auth_handler] if auth_handler else None)
+            d = feedparser.parse(channel.url, etag=channel.etag, request_headers=request_headers)
         elif channel.date:
-            d = feedparser.parse(channel.url, modified=channel.date.utctimetuple(), handlers=[auth_handler] if auth_handler else None)
+            d = feedparser.parse(channel.url, modified=channel.date.utctimetuple(), request_headers=request_headers)
         else:
             # We've not polled this feed before
-            d = feedparser.parse(channel.url, handlers=[auth_handler] if auth_handler else None)
+            d = feedparser.parse(channel.url, request_headers=request_headers)
 
         if d.bozo:
             # Something doesn't seem right
