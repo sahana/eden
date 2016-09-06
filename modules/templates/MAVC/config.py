@@ -129,6 +129,9 @@ def config(settings):
 
     settings.security.policy = 6 # Organisation-ACLs
 
+    # Hide version info on about page
+    settings.security.version_info = False
+
     # Record Approval
     #settings.auth.record_approval = True
     #settings.auth.record_approval_required_for = ("org_organisation",

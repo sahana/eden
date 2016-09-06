@@ -1229,18 +1229,23 @@ h4.profile-sub-header {
   padding-right: 0;
 }
 
-/* line 63, ../scss/custom/_misc.scss */
+/* line 61, ../scss/custom/_misc.scss */
+.about-contents {
+  padding-top: 1rem;
+}
+
+/* line 66, ../scss/custom/_misc.scss */
 body.rtl .personal-menu {
   clear: left;
   float: left;
 }
-/* line 67, ../scss/custom/_misc.scss */
+/* line 70, ../scss/custom/_misc.scss */
 body.rtl .username {
   padding-left: 0.5rem;
   padding-right: 0;
   float: left;
 }
-/* line 70, ../scss/custom/_misc.scss */
+/* line 73, ../scss/custom/_misc.scss */
 body.rtl .username i.icon {
   padding-left: 0;
   padding-right: 0.2rem;

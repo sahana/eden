@@ -455,6 +455,12 @@ class S3Config(Storage):
                   self.security.get("registration_visible", True)
         return visible
 
+    def get_security_version_info(self):
+        """
+            Whether to show version info on the about page
+        """
+        return self.security.get("version_info", True)
+
     def get_security_version_info_requires_login(self):
         """
             Whether the version info on the About page requires login
