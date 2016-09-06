@@ -628,12 +628,28 @@ div.tabs span.tab_other a:hover {
 /* Footer */
 /* line 2, ../scss/custom/_footer.scss */
 #footer {
-  text-align: center;
-  padding-top: 1.75rem;
-  padding-bottom: 1.75rem;
   background-color: #04AFF6;
+  color: #FFFFFF;
+  text-align: center;
 }
-/* line 10, ../scss/custom/_footer.scss */
+/* line 4, ../scss/custom/_footer.scss */
+#footer .columns {
+  padding-top: 0.5rem;
+  padding-bottom: 1rem;
+}
+/* line 12, ../scss/custom/_footer.scss */
+#footer .footer-logo {
+  max-height: 83px;
+}
+/* line 15, ../scss/custom/_footer.scss */
+#footer .footer-icon {
+  padding: 1rem;
+}
+/* line 18, ../scss/custom/_footer.scss */
+#footer .footer-text {
+  font-size: 1rem;
+}
+/* line 23, ../scss/custom/_footer.scss */
 #footer button.btn {
   font-size: 0.6875rem;
   border: 0;
@@ -648,47 +664,17 @@ div.tabs span.tab_other a:hover {
   color: #0399D7;
   background: transparent;
 }
-/* line 17, ../scss/custom/_footer.scss */
+/* line 30, ../scss/custom/_footer.scss */
 #footer button.btn:hover {
   color: #dddddd;
   background: #909090;
 }
 
-/* line 22, ../scss/custom/_footer.scss */
-.footer-menu {
-  list-style: none;
-}
-/* line 25, ../scss/custom/_footer.scss */
-.footer-menu > li {
-  display: inline;
-  padding: 1.75rem;
-}
-/* line 28, ../scss/custom/_footer.scss */
-.footer-menu > li > a {
-  font-size: 0.8125rem;
-  font-weight: bold;
-  color: white;
-}
-/* line 32, ../scss/custom/_footer.scss */
-.footer-menu > li > a:hover {
-  color: #e0e0e0;
-}
-
-/* line 38, ../scss/custom/_footer.scss */
-.footer-home {
-  display: block;
-  margin: 3rem;
-}
-/* line 41, ../scss/custom/_footer.scss */
-.footer-home img {
-  width: 24px;
-}
-
-/* line 46, ../scss/custom/_footer.scss */
+/* line 36, ../scss/custom/_footer.scss */
 #poweredby {
   margin-right: 0.5rem;
 }
-/* line 48, ../scss/custom/_footer.scss */
+/* line 38, ../scss/custom/_footer.scss */
 #poweredby a {
   color: #999999;
   text-decoration: none;
