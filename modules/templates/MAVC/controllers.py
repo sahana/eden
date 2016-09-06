@@ -17,7 +17,7 @@ class index(S3CustomController):
         s3 = response.s3
 
         # Intro
-        caption = XML(T("MapPH helps you share neighborhood concerns<br/>and connects you to information from NGOs,<br/>business and government."))
+        caption = T("MapPH helps you share neighborhood concerns and connects you to information from NGOs, business and government.")
 
         # Get-started-button
         get_started = A(T("Get Started"), XML("&nbsp;"), ICON("fa-caret-right", _class="fa"),
