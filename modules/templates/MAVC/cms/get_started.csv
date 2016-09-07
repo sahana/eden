@@ -1,5 +1,5 @@
-Name,Title,Body
-GetStarted,"Get Started with MapPH","
+Name,Module,Title,Body
+GetStarted,default,"Get Started with MapPH","
 <section class=""get-started-connect"" style=""background-color:#FEEF52;padding:3rem 2rem"">
 <h4 class=""text-center"">Connect to community members on the issues you care about</h4>
 <div class=""row"" style=""padding: 2rem 0"">
