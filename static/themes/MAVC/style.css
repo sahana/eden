@@ -714,7 +714,7 @@ div.tabs span.tab_other a:hover {
 }
 /* line 24, ../scss/custom/_menus.scss */
 .top-bar-section > ul li.menu-home a:before {
-  content: url(img/logo-mtp-header.png);
+  content: url(img/logo-mtp-header-beta.png);
 }
 /* line 33, ../scss/custom/_menus.scss */
 .top-bar-section form.language-selector {
