@@ -8,7 +8,7 @@
   <p class='footer-text'>
    {{caption=T("Map the Philippines helps citizens, NGOs, business and government work better together.")}}
    {{explain=T("By working in real-time and sharing data on the UN Sustainable Development Goals, we help make more informed decisions about our communities.")}}
-   {{twitter="http://twitter.com/share?text=%s&amp;url=%s&amp;hashtags=MapPH" % (caption, URL(c="default", f="index"))}}
+   {{twitter="http://twitter.com/share?text=%s&amp;url=%s&amp;hashtags=MapPH" % (caption, URL(c="default", f="index", host=True))}}
    {{=SPAN(caption, explain, XML("&nbsp;"), A("#MapPH", _class="twitter-link", _target="_blank", _href=twitter))}}
   </p>
  </div>
