@@ -22,6 +22,11 @@ class index(S3CustomController):
         # Get-started-button
         get_started = A(T("Get Started"), XML("&nbsp;"), ICON("fa-caret-right", _class="fa"),
                         _class="medium primary button",
+                        _href=URL(c="default",
+                                  f="index",
+                                  args=["docs"],
+                                  vars={"name": "GetStarted"},
+                                  )
                         )
 
         # Inject custom styles for homepage
@@ -33,6 +38,30 @@ class index(S3CustomController):
         output = {"caption": caption,
                   "get_started": get_started,
                   }
+
+        return output
+
+# =============================================================================
+class docs(S3CustomController):
+    """
+        Custom controller to display online documentation, accessible
+        for anonymous users (e.g. information how to register/login)
+    """
+
+    def __call__(self):
+
+        response = current.response
+
+        def prep(r):
+            default_url = URL(f="index", args=[], vars={})
+            return current.s3db.cms_documentation(r, "HELP", default_url)
+        response.s3.prep = prep
+        output = current.rest_controller("cms", "post")
+
+        # Custom view
+        self._view(THEME, "docs.html")
+
+        current.menu.dashboard = None
 
         return output
 
