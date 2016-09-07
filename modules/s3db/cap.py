@@ -1755,9 +1755,15 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                 form.errors["scope"] = \
                     current.T("'Scope' field is mandatory for actual alerts!")
 
-            if form_vars_get("scope") == "Private" and not form_vars_get("addresses"):
-                form.errors["addresses"] = \
-                    current.T("'Recipients' field mandatory in case of 'Private' scope")
+            if form_vars_get("scope") == "Private":
+                # Check if this comes from cap_alert
+                # Can also come from rss import
+                request = current.request
+                if request.controller == "cap" and request.function == "alert":
+                    # Internal alerts
+                    if not form_vars_get("addresses"):
+                        form.errors["addresses"] = \
+                            current.T("'Recipients' field mandatory in case of 'Private' scope")
 
             if form_vars_get("scope") == "Restricted" and not form_vars_get("restriction"):
                 form.errors["restriction"] = \
