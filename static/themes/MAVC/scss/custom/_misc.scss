@@ -61,6 +61,12 @@
 .about-contents {
     padding-top: 1rem;
 }
+.twitter-link {
+    color: $yellow;
+    &:visited {
+        color: $yellow;
+    }
+}
 
 body.rtl {
     .personal-menu {

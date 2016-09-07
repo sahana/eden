@@ -6180,13 +6180,13 @@ meta.foundation-mq-topbar {
   padding: 12px 0 12px 0;
   padding-left: 14.2px;
   font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: bold;
-  text-transform: uppercase;
+  text-transform: none;
 }
 /* line 316, ../../foundation/scss/components/_top-bar.scss */
 .top-bar-section ul li > a.button {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   padding-right: 14.2px;
   padding-left: 14.2px;
   background-color: #37C34E;
@@ -6245,7 +6245,7 @@ meta.foundation-mq-topbar {
 }
 /* line 327, ../../foundation/scss/components/_top-bar.scss */
 .top-bar-section ul li > button {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   padding-right: 14.2px;
   padding-left: 14.2px;
   background-color: #37C34E;

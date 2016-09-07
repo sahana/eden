@@ -16,7 +16,7 @@ def config(settings):
     T = current.T
 
     settings.base.system_name = T("Map the Philippines")
-    #settings.base.system_name_short = T("MAVC")
+    settings.base.system_name_short = T("MapPH")
 
     # PrePopulate data
     settings.base.prepopulate += ("MAVC", "default/users", "MAVC/Demo")

@@ -1234,18 +1234,27 @@ h4.profile-sub-header {
   padding-top: 1rem;
 }
 
+/* line 64, ../scss/custom/_misc.scss */
+.twitter-link {
+  color: #FFE860;
+}
 /* line 66, ../scss/custom/_misc.scss */
+.twitter-link:visited {
+  color: #FFE860;
+}
+
+/* line 72, ../scss/custom/_misc.scss */
 body.rtl .personal-menu {
   clear: left;
   float: left;
 }
-/* line 70, ../scss/custom/_misc.scss */
+/* line 76, ../scss/custom/_misc.scss */
 body.rtl .username {
   padding-left: 0.5rem;
   padding-right: 0;
   float: left;
 }
-/* line 73, ../scss/custom/_misc.scss */
+/* line 79, ../scss/custom/_misc.scss */
 body.rtl .username i.icon {
   padding-left: 0;
   padding-right: 0.2rem;
