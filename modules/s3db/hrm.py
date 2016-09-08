@@ -7378,7 +7378,7 @@ def hrm_training_event_controller():
     """
 
     if current.session.s3.hrm.mode is not None:
-        current.session.error = T("Access denied")
+        current.session.error = current.T("Access denied")
         redirect(URL(f="index"))
 
     s3 = current.response.s3
