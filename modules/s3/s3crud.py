@@ -1100,7 +1100,12 @@ class S3CRUD(S3Method):
                 show_filter_form = True
                 # Apply filter defaults (before rendering the data!)
                 from s3filter import S3FilterForm
-                S3FilterForm.apply_filter_defaults(r, resource)
+                default_filters = S3FilterForm.apply_filter_defaults(r, resource)
+            else:
+                default_filters = None
+
+            get_vars = r.get_vars
+            attr = dict(attr)
 
             # Data
             list_type = attr.get("list_type", "datatable")
@@ -1109,18 +1114,23 @@ class S3CRUD(S3Method):
                 target = "datalist"
                 output = self._datalist(r, **attr)
             else:
-                # Hide datatable filter box if we have a filter form
                 if filter_widgets and not hide_filter:
                     dtargs = attr.get("dtargs", {})
+                    # Hide datatable filter box if we have a filter form
                     if "dt_searching" not in dtargs:
                         dtargs["dt_searching"] = False
-                    _attr = dict(attr)
-                    _attr["dtargs"] = dtargs
-                else:
-                    _attr = attr
+                    # Override default ajax URL if we have default filters
+                    if default_filters:
+                        ajax_vars = dict(get_vars)
+                        ajax_vars.update(default_filters)
+                        ajax_url = r.url(representation = "aadata",
+                                         vars = ajax_vars,
+                                         )
+                        dtargs["dt_ajax_url"] = ajax_url
+                    attr["dtargs"] = dtargs
                 filter_ajax = True
                 target = "datatable"
-                output = self._datatable(r, **_attr)
+                output = self._datatable(r, **attr)
 
             if representation in ("aadata", "dl"):
                 return output
@@ -1143,35 +1153,36 @@ class S3CRUD(S3Method):
                 # Where to retrieve filtered data from:
                 filter_submit_url = attr.get("filter_submit_url")
                 if not filter_submit_url:
-                    _vars = self._remove_filters(r.get_vars)
-                    filter_submit_url = r.url(vars=_vars)
+                    get_vars_ = self._remove_filters(get_vars)
+                    filter_submit_url = r.url(vars=get_vars_)
 
                 # Where to retrieve updated filter options from:
-                filter_ajax_url = attr.get("filter_ajax_url",
-                                           r.url(method="filter",
-                                                 vars={},
-                                                 representation="options"))
-
+                filter_ajax_url = attr.get("filter_ajax_url")
+                if filter_ajax_url is None:
+                    filter_ajax_url = r.url(method = "filter",
+                                            vars = {},
+                                            representation = "options",
+                                            )
                 filter_clear = get_config("filter_clear",
                                           current.deployment_settings.get_ui_filter_clear())
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)
                 filter_form = S3FilterForm(filter_widgets,
-                                           clear=filter_clear,
-                                           formstyle=filter_formstyle,
-                                           submit=filter_submit,
-                                           ajax=filter_ajax,
-                                           url=filter_submit_url,
-                                           ajaxurl=filter_ajax_url,
-                                           _class="filter-form",
-                                           _id="%s-filter-form" % target
+                                           clear = filter_clear,
+                                           formstyle = filter_formstyle,
+                                           submit = filter_submit,
+                                           ajax = filter_ajax,
+                                           url = filter_submit_url,
+                                           ajaxurl = filter_ajax_url,
+                                           _class = "filter-form",
+                                           _id = "%s-filter-form" % target
                                            )
                 fresource = current.s3db.resource(resource.tablename)
                 alias = resource.alias if r.component else None
                 output["list_filter_form"] = filter_form.html(fresource,
-                                                              r.get_vars,
-                                                              target=target,
-                                                              alias=alias
+                                                              get_vars,
+                                                              target = target,
+                                                              alias = alias
                                                               )
             else:
                 # Render as empty string to avoid the exception in the view
@@ -1201,10 +1212,11 @@ class S3CRUD(S3Method):
                         addtitle = self.crud_string(tablename, "label_create")
                         output["addtitle"] = addtitle
                         showadd_btn = self.crud_button(None,
-                                                       tablename=tablename,
-                                                       name="label_create",
-                                                       icon="add",
-                                                       _id="show-add-btn")
+                                                       tablename = tablename,
+                                                       name = "label_create",
+                                                       icon = "add",
+                                                       _id = "show-add-btn",
+                                                       )
                         output["showadd_btn"] = showadd_btn
 
                     # Restore the view
@@ -1233,24 +1245,26 @@ class S3CRUD(S3Method):
                        self._permitted(method="update"):
                         items = self.update(r, **attr).get("form", None)
                     else:
-                        items = self.sqlform(request=self.request,
-                                             resource=self.resource,
-                                             record_id=r.id,
-                                             readonly=True,
-                                             format=representation)
+                        items = self.sqlform(request = self.request,
+                                             resource = self.resource,
+                                             record_id = r.id,
+                                             readonly = True,
+                                             format = representation,
+                                             )
                 else:
                     raise HTTP(404, body="Record not Found")
             else:
                 rows = resource.select(list_fields,
-                                       limit=None,
-                                       as_rows=True)
+                                       limit = None,
+                                       as_rows = True,
+                                       )
                 if rows:
                     items = rows.as_list()
                 else:
                     items = []
 
             current.response.view = "plain.html"
-            return dict(item=items)
+            return {"items": items}
 
         elif representation == "csv":
 
@@ -1274,10 +1288,11 @@ class S3CRUD(S3Method):
 
             exporter = S3Exporter().json
             return exporter(resource,
-                            start=start,
-                            limit=limit,
-                            represent=represent,
-                            tooltip=tooltip)
+                            start = start,
+                            limit = limit,
+                            represent = represent,
+                            tooltip = tooltip,
+                            )
 
         elif representation == "pdf":
 
@@ -1287,8 +1302,8 @@ class S3CRUD(S3Method):
 
             exporter = S3Exporter().pdf
             return exporter(resource,
-                            request=r,
-                            list_fields=list_fields,
+                            request = r,
+                            list_fields = list_fields,
                             report_hide_comments = report_hide_comments,
                             report_filename = report_filename,
                             report_formname = report_formname,
@@ -1297,21 +1312,21 @@ class S3CRUD(S3Method):
         elif representation == "shp":
             exporter = S3Exporter().shp
             return exporter(resource,
-                            list_fields=list_fields,
+                            list_fields = list_fields,
                             **attr)
 
         elif representation == "svg":
             exporter = S3Exporter().svg
             return exporter(resource,
-                            list_fields=list_fields,
+                            list_fields = list_fields,
                             **attr)
 
         elif representation == "xls":
             report_groupby = get_config("report_groupby", None)
             exporter = S3Exporter().xls
             return exporter(resource,
-                            list_fields=list_fields,
-                            report_groupby=report_groupby,
+                            list_fields = list_fields,
+                            report_groupby = report_groupby,
                             **attr)
 
         elif representation == "msg":

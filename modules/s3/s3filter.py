@@ -2470,12 +2470,16 @@ class S3FilterForm(object):
 
             @param request: the request
             @param resource: the resource
+
+            @return: dict with default filters (URL vars)
         """
 
         s3 = current.response.s3
 
         get_vars = request.get_vars
         tablename = resource.tablename
+
+        default_filters = {}
 
         # Do we have filter defaults for this resource?
         filter_defaults = s3
@@ -2534,7 +2538,6 @@ class S3FilterForm(object):
             else:
                 widget_default = {}
 
-            default_filters = {}
             for variable in defaults:
                 if "__" in variable:
                     selector, operator = variable.split("__", 1)
@@ -2577,7 +2580,7 @@ class S3FilterForm(object):
                 for q in queries[alias]:
                     add_filter(q)
 
-        return
+        return default_filters
 
 # =============================================================================
 class S3Filter(S3Method):
