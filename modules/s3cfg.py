@@ -482,6 +482,7 @@ class S3Config(Storage):
 
     def get_auth_show_link(self):
         return self.auth.get("show_link", True)
+
     def get_auth_registration_link_user_to(self):
         """
             Link User accounts to none or more of:
@@ -490,6 +491,7 @@ class S3Config(Storage):
             * Member
         """
         return self.auth.get("registration_link_user_to")
+
     def get_auth_registration_link_user_to_default(self):
         """
             Link User accounts to none or more of:
@@ -603,14 +605,22 @@ class S3Config(Storage):
 
     def get_auth_registration_roles(self):
         """
-            A dictionary of realms, with lists of role UUIDs, to assign to newly-registered users
+            A dictionary of realms, with lists of role UUIDs, to assign to
+            newly-registered users
             Use key = 0 to have the roles not restricted to a realm
         """
         return self.auth.get("registration_roles", [])
 
+    def get_auth_org_admin_to_first(self):
+        """
+            Whether the first user to register for an Org should get the
+            ORG_ADMIN role for that Org
+        """
+        return self.auth.get("org_admin_to_first", False)
+
     def get_auth_terms_of_service(self):
         """
-            Force users to accept Terms of Servcie before Registering an account
+            Force users to accept Terms of Service before Registering an account
             - uses <template>/views/tos.html
         """
         return self.auth.get("terms_of_service", False)

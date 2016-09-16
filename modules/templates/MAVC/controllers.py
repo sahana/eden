@@ -17,7 +17,7 @@ class index(S3CustomController):
         s3 = response.s3
 
         # Intro
-        caption = T("MapPH helps you share neighborhood concerns and connects you to information from NGOs, business and government.")
+        caption = T("MapPH helps you share neighborhood needs and connects you to information from NGOs, business and government.")
 
         # Get-started-button
         get_started = A(T("Get Started"), XML("&nbsp;"), ICON("fa-caret-right", _class="fa"),
@@ -64,5 +64,27 @@ class docs(S3CustomController):
         current.menu.dashboard = None
 
         return output
+
+# =============================================================================
+class profile(S3CustomController):
+    """
+        Custom controller to fill out Organisation Profile
+    """
+
+    def __call__(self):
+
+        auth = current.auth
+        if not current.auth.is_logged_in():
+            redirect(URL(c="default", f="user", args="register"))
+
+        organisation_id = auth.user.organisation_id
+        if not organisation_id:
+            redirect(URL(c="org", f="organisation", args="create"))
+
+        if auth.s3_has_role("ORG_ADMIN"):
+            redirect(URL(c="org", f="organisation", args=[organisation_id, "update"]))
+
+        current.session.warning = current.T("Your Organization Profile is here, changes can only be made by your Organization Administrator")
+        redirect(URL(c="org", f="organisation", args=organisation_id))
 
 # END =========================================================================

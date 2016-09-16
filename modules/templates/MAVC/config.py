@@ -37,10 +37,24 @@ def config(settings):
 
     # Terms of Service to be able to Register on the system
     # uses <template>/views/tos.html
-    settings.auth.terms_of_service = True
+    #settings.auth.terms_of_service = True # Awaiting copy
 
     # Approval emails get sent to all admins
     #settings.mail.approver = "ADMIN"
+
+    # Uncomment to set the default role UUIDs assigned to newly-registered users
+    # This is a dictionary of lists, where the key is the realm that the list of roles applies to
+    # The key 0 implies not realm restricted
+    # The keys "organisation_id" and "site_id" can be used to indicate the user's "organisation_id" and "site_id"
+    #settings.auth.registration_roles = { "organisation_id": ["USER"]}
+
+    # First user to register for an Org should get the ORG_ADMIN role for that Org
+    settings.auth.org_admin_to_first = True
+
+    # Record Approval
+    settings.auth.record_approval = True
+    settings.auth.record_approval_required_for = ("org_organisation",
+                                                  )
 
     # =========================================================================
     # GIS Settings
@@ -62,10 +76,10 @@ def config(settings):
     #
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
-    settings.L10n.languages = OrderedDict([
+    #settings.L10n.languages = OrderedDict([
     #    ("ar", "العربية"),
     #    ("bs", "Bosanski"),
-        ("en", "English"),
+    #    ("en", "English"),
     #    ("fr", "Français"),
     #    ("de", "Deutsch"),
     #    ("el", "ελληνικά"),
@@ -81,17 +95,17 @@ def config(settings):
     #    ("pt-br", "Português (Brasil)"),
     #    ("ru", "русский"),
     #    ("tet", "Tetum"),
-        ("tl", "Tagalog"),
+    #    ("tl", "Tagalog"),
     #    ("tr", "Türkçe"),
     #    ("ur", "اردو"),
     #    ("vi", "Tiếng Việt"),
     #    ("zh-cn", "中文 (简体)"),
     #    ("zh-tw", "中文 (繁體)"),
-    ])
+    #])
     # Default language for Language Toolbar (& GIS Locations in future)
     #settings.L10n.default_language = "en"
     # Uncomment to Hide the language toolbar
-    #settings.L10n.display_toolbar = False
+    settings.L10n.display_toolbar = False
     # Default timezone for users
     #settings.L10n.utc_offset = "+0100"
     # Number formats (defaults to ISO 31-0)
@@ -224,16 +238,95 @@ def config(settings):
     def customise_org_organisation_resource(r, tablename):
 
         s3db = current.s3db
+        table = s3db.org_organisation
 
         # Use comments field for org description
-        table = s3db.org_organisation
-        field = table.comments
         from gluon import DIV
-        field.comment = DIV(_class="tooltip",
-                            _title="%s|%s" % (T("About"),
-                                              T("Describe the organisation, e.g. mission, history and other relevant details")))
+        table.comments.comment = DIV(_class="tooltip",
+                                    _title="%s|%s" % (T("About"),
+                                                      T("Describe the organisation, e.g. mission, history and other relevant details")))
 
-        if not current.auth.is_logged_in():
+        # CRUD Form
+        from s3 import S3SQLCustomForm, \
+                       S3SQLInlineComponent, \
+                       S3SQLInlineLink, \
+                       S3SQLVerticalSubFormLayout
+        multitype = settings.get_org_organisation_types_multiple()
+
+        crud_fields = ["name",
+                       "acronym",
+                       S3SQLInlineLink(
+                            "organisation_type",
+                            field = "organisation_type_id",
+                            filter = False,
+                            label = T("Type"),
+                            multiple = multitype,
+                            ),
+                       "country",
+                       S3SQLInlineLink("sector",
+                            cols = 3,
+                            label = T("Sectors"),
+                            field = "sector_id",
+                            #required = True,
+                            ),
+                       (T("About"), "comments"),
+                       "website",
+                       ]
+
+        if current.auth.is_logged_in():
+            crud_fields += [S3SQLInlineComponent(
+                                    "contact",
+                                    name = "email",
+                                    label = T("Email"),
+                                    #multiple = False,
+                                    fields = [("", "value"),
+                                              ],
+                                    filterby = [{"field": "contact_method",
+                                                 "options": "EMAIL",
+                                                 },
+                                                ],
+                                    ),
+                            S3SQLInlineComponent(
+                                    "facility",
+                                    label = T("Main Office"),
+                                    fields = ["name",
+                                              "phone1",
+                                              "phone2",
+                                              #"email",
+                                              "location_id",
+                                              ],
+                                    layout = S3SQLVerticalSubFormLayout,
+                                    filterby = {"field": "main_facility",
+                                                "options": True,
+                                                },
+                                    multiple = False,
+                                    ),
+                            S3SQLInlineComponent(
+                                "document",
+                                fields = [(T("Title"), "name"),
+                                          "file",
+                                          ],
+                                filterby = {"field": "file",
+                                            "options": "",
+                                            "invert": True,
+                                            },
+                                label = T("Files"),
+                                name = "file",
+                                ),
+                            S3SQLInlineComponent(
+                                "document",
+                                fields = [(T("Title"), "name"),
+                                          "url",
+                                          ],
+                                filterby = {"field": "url",
+                                            "options": None,
+                                            "invert": True,
+                                            },
+                                label = T("Links"),
+                                name = "url",
+                                ),
+                            ]
+        else:
             field = table.logo
             field.readable = field.writable = False
             # User can create records since we need this during registration,
@@ -273,86 +366,9 @@ def config(settings):
                             ),
             ]
 
-        # CRUD Form
-        from s3 import S3SQLCustomForm, \
-                       S3SQLInlineComponent, \
-                       S3SQLInlineLink, \
-                       S3SQLVerticalSubFormLayout
-        multitype = settings.get_org_organisation_types_multiple()
-        crud_form = S3SQLCustomForm("name",
-                                    "acronym",
-                                    S3SQLInlineLink(
-                                            "organisation_type",
-                                            field = "organisation_type_id",
-                                            filter = False,
-                                            label = T("Type"),
-                                            multiple = multitype,
-                                            ),
-                                    "country",
-                                    S3SQLInlineLink("sector",
-                                            cols = 3,
-                                            label = T("Sectors"),
-                                            field = "sector_id",
-                                            #required = True,
-                                            ),
-                                    (T("About"), "comments"),
-                                    "website",
-                                    S3SQLInlineComponent(
-                                            "contact",
-                                            name = "email",
-                                            label = T("Email"),
-                                            #multiple = False,
-                                            fields = [("", "value"),
-                                                      ],
-                                            filterby = [{"field": "contact_method",
-                                                         "options": "EMAIL",
-                                                         },
-                                                        ],
-                                            ),
-                                    S3SQLInlineComponent(
-                                            "facility",
-                                            label = T("Main Office"),
-                                            fields = ["name",
-                                                      "phone1",
-                                                      "phone2",
-                                                      #"email",
-                                                      "location_id",
-                                                      ],
-                                            layout = S3SQLVerticalSubFormLayout,
-                                            filterby = {"field": "main_facility",
-                                                        "options": True,
-                                                        },
-                                            multiple = False,
-                                            ),
-                                    S3SQLInlineComponent(
-                                        "document",
-                                        fields = [(T("Title"), "name"),
-                                                  "file",
-                                                  ],
-                                        filterby = {"field": "file",
-                                                    "options": "",
-                                                    "invert": True,
-                                                    },
-                                        label = T("Files"),
-                                        name = "file",
-                                        ),
-                                    S3SQLInlineComponent(
-                                        "document",
-                                        fields = [(T("Title"), "name"),
-                                                  "url",
-                                                  ],
-                                        filterby = {"field": "url",
-                                                    "options": None,
-                                                    "invert": True,
-                                                    },
-                                        label = T("Links"),
-                                        name = "url",
-                                        ),
-                                    )
-
         s3db.configure("org_organisation",
                        filter_widgets = filter_widgets,
-                       crud_form = crud_form,
+                       crud_form = S3SQLCustomForm(*crud_fields),
                        )
 
     settings.customise_org_organisation_resource = customise_org_organisation_resource
@@ -1026,20 +1042,20 @@ def config(settings):
 
     # =========================================================================
     # Requests
-    settings.req.req_type = ["Stock"]
+    #settings.req.req_type = ["Stock"]
     # Uncomment to disable the Commit step in the workflow & simply move direct to Ship
-    settings.req.use_commit = False
-    settings.req.requester_label = "Contact"
+    #settings.req.use_commit = False
+    #settings.req.requester_label = "Contact"
     # Uncomment if the User Account logging the Request is NOT normally the Requester
-    settings.req.requester_is_author = False
+    #settings.req.requester_is_author = False
     # Uncomment to have Donations include a 'Value' field
-    settings.req.commit_value = True
+    #settings.req.commit_value = True
     # Uncomment if the User Account logging the Commitment is NOT normally the Committer
-    #settings.req.comittter_is_author = False
+    ##settings.req.comittter_is_author = False
     # Uncomment to allow Donations to be made without a matching Request
-    #settings.req.commit_without_request = True
+    ##settings.req.commit_without_request = True
     # Set the Requester as being an HR for the Site if no HR record yet & as Site contact if none yet exists
-    settings.req.requester_to_site = True
+    #settings.req.requester_to_site = True
 
     # =========================================================================
     # Comment/uncomment modules here to disable/enable them
@@ -1143,18 +1159,18 @@ def config(settings):
             restricted = True,
             module_type = None, # Not displayed
         )),
-        ("inv", Storage(
-            name_nice = T("Aid Delivery"),
-            #description = "Receiving and Sending Items",
-            restricted = True,
-            module_type = 3
-        )),
-        ("req", Storage(
-            name_nice = T("Requests for Aid"),
-            #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
-            restricted = True,
-            module_type = 2,
-        )),
+        #("inv", Storage(
+        #    name_nice = T("Aid Delivery"),
+        #    #description = "Receiving and Sending Items",
+        #    restricted = True,
+        #    module_type = 3
+        #)),
+        #("req", Storage(
+        #    name_nice = T("Requests for Aid"),
+        #    #description = "Manage requests for supplies, assets, staff or other resources. Matches against Inventories where supplies are requested.",
+        #    restricted = True,
+        #    module_type = 2,
+        #)),
         ("project", Storage(
            name_nice = T("Projects"),
            #description = "Tracking of Projects, Activities and Tasks",
@@ -1211,9 +1227,9 @@ def mavc_rheader(r, tabs=None):
                     (INDIVIDUALS, "human_resource"),
                     (T("Services"), "service_location"),
                     (T("Facilities"), "facility"),
-                    (T("Activities"), "activity"),
                     (T("Projects"), "project"),
-                    (T("Attachments"), "document"),
+                    (T("Activities"), "activity"),
+                    (T("Documents"), "document"),
                     ]
 
         # Use OrganisationRepresent for title to get L10n name if available
@@ -1258,7 +1274,7 @@ def mavc_rheader(r, tabs=None):
 
         if not tabs:
             tabs = [(T("Activity"), None),
-                    (T("Attachments"), "document"),
+                    (T("Documents"), "document"),
                     ]
 
         # Retrieve details for the rheader
@@ -1287,7 +1303,7 @@ def mavc_rheader(r, tabs=None):
                     (T("Locations"), "location"),
                     (T("Partners and Donors"), "organisation"),
                     (T("Activities"), "activity"),
-                    (T("Attachments"), "document"),
+                    (T("Documents"), "document"),
                     ]
 
         # Retrieve details for the rheader

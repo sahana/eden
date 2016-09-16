@@ -280,6 +280,7 @@ class S3Task(object):
             vars["user_id"] = auth.user.id
 
         # Run the task asynchronously
+        # @ToDo: Switch to API: self.scheduler.queue_task()
         record = current.db.scheduler_task.insert(application_name="%s/default" % current.request.application,
                                                   task_name=task,
                                                   function_name=task,
@@ -383,6 +384,7 @@ class S3Task(object):
             vars["user_id"] = auth.user.id
 
         # Add to DB for pickup by Scheduler task
+        # @ToDo: Switch to API: self.scheduler.queue_task()
         db = current.db
         record = db.scheduler_task.insert(application_name="%s/default" % current.request.application,
                                           task_name=task,

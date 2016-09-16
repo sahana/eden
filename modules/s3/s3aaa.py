@@ -2331,49 +2331,70 @@ $.filterOptionsS3({
         db = current.db
         s3db = current.s3db
         deployment_settings = current.deployment_settings
+        settings = self.settings
 
-        utable = self.settings.table_user
+        utable = settings.table_user
 
         # Add to 'Authenticated' role
         authenticated = self.id_group("Authenticated")
-        self.add_membership(authenticated, user_id)
+        add_membership = self.add_membership
+        add_membership(authenticated, user_id)
+
+        organisation_id = user.organisation_id
 
         # Add User to required registration roles
         entity_roles = deployment_settings.get_auth_registration_roles()
         if entity_roles:
-            gtable = self.settings.table_group
+            gtable = settings.table_group
+            get_pe_id = s3db.pr_get_pe_id
             for entity in entity_roles.keys():
                 roles = entity_roles[entity]
 
                 # Get User's Organisation or Site pe_id
                 if entity in ("organisation_id", "org_group_id", "site_id"):
                     tablename = "org_%s" % entity.split("_")[0]
-                    entity = s3db.pr_get_pe_id(tablename, user[entity])
+                    entity = get_pe_id(tablename, user[entity])
                     if not entity:
                         continue
 
-                query = (gtable.uuid.belongs(roles))
-                rows = db(query).select(gtable.id)
+                rows = db(gtable.uuid.belongs(roles)).select(gtable.id)
                 for role in rows:
-                    self.add_membership(role.id, user_id, entity=entity)
+                    add_membership(role.id, user_id, entity=entity)
+
+        if organisation_id and \
+           deployment_settings.get_auth_org_admin_to_first():
+            # If this is the 1st user to register for an Org, give them ORG_ADMIN for that Org
+            entity = s3db.pr_get_pe_id("org_organisation", organisation_id)
+            gtable = settings.table_group
+            ORG_ADMIN = db(gtable.uuid == "ORG_ADMIN").select(gtable.id,
+                                                              limitby=(0, 1)
+                                                              ).first().id
+            mtable = settings.table_membership
+            query = (mtable.group_id == ORG_ADMIN) & \
+                    (mtable.pe_id == entity)
+            exists = db(query).select(mtable.id,
+                                      limitby=(0, 1))
+            if not exists:
+                add_membership(ORG_ADMIN, user_id, entity=entity)
 
         if deployment_settings.has_module("delphi"):
             # Add user as a participant of the default problem group
             table = s3db.delphi_group
-            query = (table.uuid == "DEFAULT")
-            group = db(query).select(table.id,
-                                     limitby=(0, 1)).first()
+            group = db(table.uuid == "DEFAULT").select(table.id,
+                                                       limitby=(0, 1)).first()
             if group:
                 table = s3db.delphi_membership
-                table.insert(group_id=group.id,
-                             user_id=user_id,
-                             status=3)
+                table.insert(group_id = group.id,
+                             user_id = user_id,
+                             status = 3,
+                             )
 
         self.s3_link_user(user)
 
         if current.response.s3.bulk is True:
             # Non-interactive imports should stop here
-            user_email = db(utable.id == user_id).select(utable.email).first().email
+            user_email = db(utable.id == user_id).select(utable.email,
+                                                         ).first().email
             self.auth_user_onaccept(user_email, user_id)
             return
 
@@ -2381,11 +2402,14 @@ $.filterOptionsS3({
         db(utable.id == user_id).update(registration_key = "")
 
         # Approve User's Organisation
-        if user.organisation_id and \
-           "org_organisation" in deployment_settings.get_auth_record_approval_required_for():
-            s3db.resource("org_organisation", user.organisation_id, unapproved=True).approve()
+        if organisation_id and \
+           "org_organisation" in \
+           deployment_settings.get_auth_record_approval_required_for():
+            s3db.resource("org_organisation", organisation_id,
+                          unapproved=True).approve()
 
-        user_email = db(utable.id == user_id).select(utable.email).first().email
+        user_email = db(utable.id == user_id).select(utable.email,
+                                                     ).first().email
         self.auth_user_onaccept(user_email, user_id)
         # Send Welcome mail
         self.s3_send_welcome_email(user)

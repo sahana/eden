@@ -9,7 +9,7 @@ GetStarted,default,"Get Started with MapPH","
 <div class=""small-12 medium-6 medium-pull-6 columns"">
 <p style=""padding-top:3rem"" class=""text-center"">Create a profile to share your interests and programs</p>
 <p style=""padding-top:1rem"" class=""text-center"">
-<a class=""medium primary button"" href=""{{c:org,f:organisation,args:create}}"">Create a profile&nbsp;<i class=""fa fa-caret-right""></i></a>
+<a class=""medium primary button"" href=""{{c:default,f:index,args:profile}}"">Create a profile&nbsp;<i class=""fa fa-caret-right""></i></a>
 </p>
 </div>
 </div>
@@ -21,9 +21,9 @@ GetStarted,default,"Get Started with MapPH","
 <img src=""{{c:static,f:themes,noargs}}/MAVC/img/image_report_illustration.png"" alt=""illustration""></img>
 </div>
 <div class=""small-12 medium-6 medium-pull-6 columns"">
-<p style=""padding-top:3rem"" class=""text-center"">Create a Project to report public and private sector needs in your community</p>
+<p style=""padding-top:3rem"" class=""text-center"">Report public and private sector needs in your community</p>
 <p style=""padding-top:1rem"" class=""text-center"">
-<a class=""medium primary button"" href=""{{c:project,f:project,args:create}}"">Create a project&nbsp;<i class=""fa fa-caret-right""></i></a>
+<a class=""medium primary button"" href=""{{c:project,f:activity,args:create}}"">Report a Need&nbsp;<i class=""fa fa-caret-right""></i></a>
 </p>
 </div>
 </div>
