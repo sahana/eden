@@ -1319,7 +1319,7 @@ Thank you"""
 
         import time
         reset_password_key = str(int(time.time())) + '-' + web2py_uuid()
-        reset_password_url = "%s/default/user/reset_password/%s" % \
+        reset_password_url = "%s/default/user/reset_password?key=%s" % \
                              (current.response.s3.base_url, reset_password_key)
 
         message = self.messages.reset_password % dict(url=reset_password_url)
