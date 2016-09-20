@@ -50,7 +50,7 @@ class S3MainMenu(default.S3MainMenu):
             # Service menus, align-right
             # Note: always define right-hand items in reverse order!
             cls.menu_help(right=True),
-            cls.menu_lang(right=True),
+            #cls.menu_lang(right=True),
             cls.menu_gis(right=True),
             cls.menu_auth(right=True),
             cls.menu_admin(right=True),
@@ -63,15 +63,15 @@ class S3MainMenu(default.S3MainMenu):
     def menu_modules(cls):
         """ Custom Modules Menu """
 
-        return [homepage(),
+        return [#homepage(),
                 MM("Feed", c="cms", f="newsfeed", m="datalist",
-                   icon="news",
+                   icon = "news",
                    ),
+                MM("Map", c="gis", f="index"),
                 MM("Dashboard", c="event", f="event", m="summary"),
                 MM("Incidents", c="event", f="incident", m="summary"),
                 MM("Resources", c="org", f="resource", m="summary"),
                 MM("Events", c="event", f="event"),
-                MM("Map", c="gis", f="index"),
                 ]
 
 # END =========================================================================
