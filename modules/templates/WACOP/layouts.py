@@ -5,24 +5,10 @@ from gluon.storage import Storage
 from s3 import *
 from s3theme import NAV, SECTION
 
-# Below is an example which you can base your own template's layout.py on
-# - there are also other examples in the other templates folders
-# - you will need to restart web2py after making changes to this file
-
 # =============================================================================
 class S3MainMenuLayout(S3NavigationItem):
    """
-       Application Main Menu Layout
-
-       The layout() function takes an S3NavigationItem instance as input
-       and renders it as an HTML helper class instance. If the item can
-       or shall not be rendered on the page, this method must return None.
-
-       S3NavigationItem instances provide a number of attributes and methods
-       to support context-sensisitve rendering (see modules/s3/s3navigation.py).
-
-       Note that individual items can override the layout method by explicitly
-       setting the layout-property in the item's constructor.
+       Custom Main Menu Layout
    """
 
    @staticmethod
@@ -192,78 +178,4 @@ class S3MainMenuLayout(S3NavigationItem):
                  _class="menu-toggle",
                  )
 
-
-# =============================================================================
-#class S3OptionsMenuLayout(S3NavigationItem):
-#    """ Controller Options Menu Layout """
-#
-#    @staticmethod
-#    def layout(item):
-#        """ Custom Layout Method """
-#
-#        # Manage flags: hide any disabled/unauthorized items
-#        if not item.authorized:
-#            enabled = False
-#            visible = False
-#        elif item.enabled is None or item.enabled:
-#            enabled = True
-#            visible = True
-#
-#        if enabled and visible:
-#            if item.parent is not None:
-#                if item.enabled and item.authorized:
-#
-#                    if item.components:
-#                        # Submenu
-#                        _class = ""
-#                        if item.parent.parent is None and item.selected:
-#                            _class = "active"
-#
-#                        section = [LI(A(item.label,
-#                                        _href=item.url(),
-#                                        _id=item.attr._id,
-#                                        ),
-#                                      _class="heading %s" % _class,
-#                                      ),
-#                                   ]
-#
-#                        items = item.render_components()
-#                        if items:
-#                            section.append(UL(items))
-#                        return section
-#
-#                    else:
-#                        # Submenu item
-#                        if item.parent.parent is None:
-#                            _class = "heading"
-#                        else:
-#                            _class = ""
-#
-#                        return LI(A(item.label,
-#                                    _href=item.url(),
-#                                    _id=item.attr._id,
-#                                    ),
-#                                  _class=_class,
-#                                  )
-#            else:
-#                # Main menu
-#                items = item.render_components()
-#                return DIV(NAV(UL(items, _id="main-sub-menu", _class="side-nav")), _class="sidebar")
-#
-#        else:
-#            return None
-#
-# =============================================================================
-#class S3MenuSeparatorLayout(S3NavigationItem):
-#    """ Simple menu separator """
-#
-#    @staticmethod
-#    def layout(item):
-#        """ Custom Layout Method """
-#
-#        if item.parent is not None:
-#            return LI(_class="divider hide-for-small")
-#        else:
-#            return None
-#
 # END =========================================================================
