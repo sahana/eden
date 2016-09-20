@@ -4,6 +4,7 @@ from gluon import *
 from gluon.storage import Storage
 from s3 import *
 from s3theme import NAV, SECTION
+from s3layouts import S3MainMenuDefaultLayout
 
 # =============================================================================
 class S3MainMenuLayout(S3NavigationItem):
@@ -71,7 +72,9 @@ class S3MainMenuLayout(S3NavigationItem):
                    else:
                        # Submenu item
                        if isinstance(item.label, dict):
-                           if "name" in item.label:
+                           if "id" in item.label:
+                               return S3MainMenuDefaultLayout.checkbox_item(item)
+                           elif "name" in item.label:
                                label = item.label["name"]
                            else:
                                return None
@@ -81,7 +84,6 @@ class S3MainMenuLayout(S3NavigationItem):
                        return LI(link)
            else:
                # Main menu
-
                right = []
                left = []
                for item in items:
@@ -135,47 +137,5 @@ class S3MainMenuLayout(S3NavigationItem):
 
        else:
            return None
-
-   # ---------------------------------------------------------------------
-   @staticmethod
-   def checkbox_item(item):
-       """ Render special active items """
-
-       name = item.label
-       link = item.url()
-       _id = name["id"]
-       if "name" in name:
-           _name = name["name"]
-       else:
-           _name = ""
-       if "value" in name:
-           _value = name["value"]
-       else:
-           _value = False
-       if "request_type" in name:
-           _request_type = name["request_type"]
-       else:
-           _request_type = "ajax"
-       if link:
-           if _request_type == "ajax":
-               _onchange='''var val=$('#%s:checked').length;$.getS3('%s'+'?val='+val,null,false,null,false,false)''' % \
-                         (_id, link)
-           else:
-               # Just load the page. Use this if the changed menu
-               # item should alter the contents of the page, and
-               # it's simpler just to load it.
-               _onchange="location.href='%s'" % link
-       else:
-           _onchange=None
-       return LI(A(INPUT(_type="checkbox",
-                         _id=_id,
-                         _onchange=_onchange,
-                         value=_value,
-                         ),
-                   "%s" % _name,
-                   _nowrap="nowrap",
-                   ),
-                 _class="menu-toggle",
-                 )
 
 # END =========================================================================
