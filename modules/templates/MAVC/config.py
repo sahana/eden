@@ -378,9 +378,21 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_org_organisation_controller(**attr):
 
+        # Use single-org component view
+        current.s3db.add_components("org_organisation",
+                                    project_project = {"name": "projects",
+                                                       "joinby": "organisation_id",
+                                                       },
+                                    )
+
         # Custom rheader and tabs
         attr = dict(attr)
         attr["rheader"] = mavc_rheader
+
+        request_args = current.request.args
+        if len(request_args) > 1 and request_args[1] == "projects":
+            # Ensure that projects open in their own controller in order to access their tabs
+            attr["native"] = True
 
         return attr
 
@@ -766,18 +778,29 @@ def config(settings):
 
         table = s3db.project_project
 
-        # Make project description mandatory
-        field = table.description
-        from gluon import IS_NOT_EMPTY
-        field.requires = IS_NOT_EMPTY(
-                            error_message = T("Enter a project description"),
-                            )
-
         if r.interactive:
 
+            from gluon import IS_EMPTY_OR, IS_NOT_EMPTY
+            from s3 import IS_ONE_OF
+
+            # Make project description mandatory
+            table.description.requires = IS_NOT_EMPTY(
+                                error_message = T("Enter a project description"),
+                                )
+
+            # Remove 'Requested' from Status options
+            field = table.status_id
+            field.requires = IS_EMPTY_OR(
+                                IS_ONE_OF(current.db, "project_status.id",
+                                          field.represent,
+                                          not_filterby = "name",
+                                          not_filter_opts = ["Requested"],
+                                          sort = True,
+                                          ))
+
             # Custom filter widgets
-            LEAD_ROLE = settings.get_project_organisation_lead_role()
-            org_label = settings.get_project_organisation_roles()[LEAD_ROLE]
+            #LEAD_ROLE = settings.get_project_organisation_lead_role()
+            #org_label = settings.get_project_organisation_roles()[LEAD_ROLE]
             from s3 import S3DateFilter, \
                            S3LocationFilter, \
                            S3OptionsFilter, \
@@ -801,15 +824,15 @@ def config(settings):
                                                              translate = TRANSLATE,
                                                              ),
                                 ),
-                S3OptionsFilter("hazard_project.hazard_id",
-                                label = T("Hazard"),
-                                help_field = s3db.project_hazard_help_fields,
-                                cols = 4,
-                                hidden = True,
-                                ),
+                #S3OptionsFilter("hazard_project.hazard_id",
+                #                label = T("Hazard"),
+                #                help_field = s3db.project_hazard_help_fields,
+                #                cols = 4,
+                #                hidden = True,
+                #                ),
                 S3OptionsFilter("status_id",
                                 label = T("Status"),
-                                cols = 4,
+                                cols = 3,
                                 hidden = True,
                                 ),
                 S3DateFilter("start_date",
@@ -819,7 +842,8 @@ def config(settings):
                              hidden = True,
                              ),
                 S3OptionsFilter("organisation_id",
-                                label = org_label,
+                                #label = org_label,
+                                label = T("Organization"),
                                 hidden = True,
                                 ),
                 ]
@@ -890,10 +914,13 @@ def config(settings):
                            filter_widgets = filter_widgets,
                            )
 
-        # Custom list fields
-        list_fields = ["name",
-                       "location.location_id",
-                       "organisation_id",
+        # Custom list fields (outside r.interactive)
+        list_fields = ["location.location_id$L1",
+                       "location.location_id$L2",
+                       "location.location_id$L3",
+                       "location.location_id$L4",
+                       (T("Organization"), "organisation_id"),
+                       (T("Name"), "name"),
                        (T("Sectors"), "sector_project.sector_id"),
                        #(T("Hazards"), "hazard_project.hazard_id"),
                        "status_id",
@@ -980,6 +1007,19 @@ def config(settings):
                                               )
 
         if r.interactive:
+
+            # Remove 'Planned' from Status options
+            from gluon import IS_EMPTY_OR
+            from s3 import IS_ONE_OF
+
+            field = table.status_id
+            field.requires = IS_EMPTY_OR(
+                                IS_ONE_OF(current.db, "project_status.id",
+                                          field.represent,
+                                          not_filterby = "name",
+                                          not_filter_opts = ["Planned"],
+                                          sort = True,
+                                          ))
 
             # Custom filter widgets
             from s3 import S3DateFilter, \
@@ -1332,7 +1372,7 @@ def mavc_rheader(r, tabs=None):
                     (INDIVIDUALS, "human_resource"),
                     (T("Services"), "service_location"),
                     (T("Facilities"), "facility"),
-                    (T("Projects"), "project"),
+                    (T("Projects"), "projects"), #, {"native": True}
                     (T("Activities"), "activity"),
                     (T("Documents"), "document"),
                     ]

@@ -474,8 +474,8 @@ def open_tasks_for_project():
     s3.postp = postp
 
     return s3_rest_controller(module, "project",
-                              hide_filter=False,
-                             )
+                              hide_filter = False,
+                              )
 # -----------------------------------------------------------------------------
 def set_theme_requires(sector_ids):
     """
@@ -585,9 +585,9 @@ def hazard():
 def framework():
     """ RESTful CRUD controller """
 
-    return s3_rest_controller(dtargs={"dt_text_maximum_len": 160},
-                              hide_filter=True,
-                             )
+    return s3_rest_controller(dtargs = {"dt_text_maximum_len": 160},
+                              hide_filter = True,
+                              )
 
 # =============================================================================
 def organisation():
@@ -658,7 +658,8 @@ def beneficiary():
     #    return True
     #s3.prep = prep
 
-    return s3_rest_controller(hide_filter=False)
+    return s3_rest_controller(hide_filter = False,
+                              )
 
 # =============================================================================
 def activity_type():
@@ -825,9 +826,9 @@ def location():
     s3.postp = postp
 
     return s3_rest_controller(interactive_report = True,
-                              rheader = s3db.project_rheader,
-                              hide_filter = False,
                               csv_template = "location",
+                              hide_filter = False,
+                              rheader = s3db.project_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -1048,7 +1049,8 @@ def time():
         delta = month * months
         s3.filter = (table.date > (now - delta))
 
-    return s3_rest_controller(hide_filter=hide_filter)
+    return s3_rest_controller(hide_filter = hide_filter,
+                              )
 
 # =============================================================================
 # Programmes
@@ -1062,6 +1064,7 @@ def programme_project():
     """ RESTful controller for Programmes <> Projects """
 
     s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+
     return s3_rest_controller()
 
 # =============================================================================
@@ -1267,13 +1270,14 @@ def comments():
     field.writable = field.readable = False
 
     # Create S3Request for S3SQLForm
-    r = s3_request(prefix="project",
-                   name="comment",
+    r = s3_request(prefix = "project",
+                   name = "comment",
                    # Override task_id
-                   args=[],
-                   vars=None,
+                   args = [],
+                   vars = None,
                    # Override .loads
-                   extension="html")
+                   extension = "html",
+                   )
 
     # Customise resource
     r.customise_resource()
@@ -1286,7 +1290,8 @@ def comments():
                                            table.parent,
                                            table.body,
                                            table.created_by,
-                                           table.created_on)
+                                           table.created_on,
+                                           )
 
     output = UL(_id="comments")
     for comment in comments:
@@ -1363,6 +1368,7 @@ def human_resource_project():
     """
 
     s3.prep = lambda r: r.method == "options" and r.representation == "s3json"
+
     return s3_rest_controller()
 
 # END =========================================================================

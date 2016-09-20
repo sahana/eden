@@ -623,6 +623,7 @@ def track_movement():
                                 )
     if "add_btn" in output:
         del output["add_btn"]
+
     return output
 
 # -----------------------------------------------------------------------------
@@ -1093,7 +1094,8 @@ def recv():
                            listadd = False,
                            )
 
-    output = s3_rest_controller(rheader = s3db.inv_recv_rheader)
+    output = s3_rest_controller(rheader = s3db.inv_recv_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -1474,7 +1476,8 @@ def track_item():
                        )
         s3.filter = (FS("expiry_date") != None)
 
-    output = s3_rest_controller(rheader = s3db.inv_rheader)
+    output = s3_rest_controller(rheader = s3db.inv_rheader,
+                                )
     return output
 
 # =============================================================================
@@ -1574,7 +1577,8 @@ def adj():
                        listadd = False,
                        )
 
-    output = s3_rest_controller(rheader = s3db.inv_adj_rheader)
+    output = s3_rest_controller(rheader = s3db.inv_adj_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -1716,6 +1720,7 @@ def send_item_json():
 
 # -----------------------------------------------------------------------------
 def kitting():
+
     return s3_rest_controller(rheader = s3db.inv_rheader,
                               )
 

@@ -64,6 +64,7 @@ def group_person():
     """ REST controller for options.s3json lookups """
 
     s3.prep = lambda r: r.representation == "s3json" and r.method == "options"
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
@@ -198,6 +199,7 @@ def org_search():
     """
 
     s3.prep = lambda r: r.method == "search_ac"
+
     return s3_rest_controller(module, "organisation")
 
 # -----------------------------------------------------------------------------
@@ -353,9 +355,10 @@ def mailing_list():
     s3db.add_components("pr_group", pr_group_membership="group_id")
 
     rheader = lambda r: _rheader(r, tabs = _tabs)
-    return s3_rest_controller("pr",
-                              "group",
-                              rheader=rheader)
+
+    return s3_rest_controller("pr", "group",
+                              rheader = rheader,
+                              )
 
 # -----------------------------------------------------------------------------
 def donor():
@@ -377,9 +380,11 @@ def donor():
         msg_record_deleted = T("Donor deleted"),
         msg_list_empty = T("No Donors currently registered"))
 
-    s3db.configure(tablename, listadd=False)
-    output = s3_rest_controller()
+    s3db.configure(tablename,
+                   listadd = False,
+                   )
 
+    output = s3_rest_controller()
     return output
 
 # -----------------------------------------------------------------------------
