@@ -141,8 +141,8 @@ def group_membership():
     s3.prep = prep
 
     return s3_rest_controller("pr", "group_membership",
-                              csv_template=("hrm", "group_membership"),
-                              csv_stylesheet=("hrm", "group_membership.xsl"),
+                              csv_stylesheet = ("hrm", "group_membership.xsl"),
+                              csv_template = ("hrm", "group_membership"),
                               )
 
 # =============================================================================
@@ -180,8 +180,8 @@ def job_title():
         s3.filter &= auth.filter_by_root_org(s3db.hrm_job_title)
 
     return s3_rest_controller("hrm", resourcename,
-                              csv_template=("hrm", "job_title"),
-                              csv_stylesheet=("hrm", "job_title.xsl"),
+                              csv_stylesheet = ("hrm", "job_title.xsl"),
+                              csv_template = ("hrm", "job_title"),
                               )
 
 # =============================================================================
@@ -198,8 +198,8 @@ def skill():
     s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
-                              csv_template=("hrm", "skill"),
-                              csv_stylesheet=("hrm", "skill.xsl"),
+                              csv_stylesheet = ("hrm", "skill.xsl"),
+                              csv_template = ("hrm", "skill"),
                               )
 
 # -----------------------------------------------------------------------------
@@ -227,8 +227,8 @@ def competency_rating():
     s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
-                              csv_template=("hrm", "competency_rating"),
-                              csv_stylesheet=("hrm", "competency_rating.xsl"),
+                              csv_stylesheet = ("hrm", "competency_rating.xsl"),
+                              csv_template = ("hrm", "competency_rating"),
                               )
 
 # -----------------------------------------------------------------------------
@@ -259,9 +259,9 @@ def course():
         s3.filter = auth.filter_by_root_org(s3db.hrm_course)
 
     return s3_rest_controller("hrm", resourcename,
-                              rheader=s3db.hrm_rheader,
-                              csv_template=("hrm", "course"),
-                              csv_stylesheet=("hrm", "course.xsl"),
+                              csv_stylesheet = ("hrm", "course.xsl"),
+                              csv_template = ("hrm", "course"),
+                              rheader = s3db.hrm_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -293,9 +293,9 @@ def certificate():
         s3.filter = auth.filter_by_root_org(s3db.hrm_certificate)
 
     return s3_rest_controller("hrm", resourcename,
-                              rheader=s3db.hrm_rheader,
-                              csv_template=("hrm", "certificate"),
-                              csv_stylesheet=("hrm", "certificate.xsl"),
+                              csv_stylesheet = ("hrm", "certificate.xsl"),
+                              csv_template = ("hrm", "certificate"),
+                              rheader = s3db.hrm_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -523,9 +523,9 @@ def programme():
     s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
-                              rheader=s3db.hrm_rheader,
                               csv_stylesheet = ("hrm", "programme.xsl"),
-                              csv_template = ("hrm", "programme")
+                              csv_template = ("hrm", "programme"),
+                              rheader = s3db.hrm_rheader,
                               )
 
 # -----------------------------------------------------------------------------
@@ -543,8 +543,8 @@ def programme_hours():
     s3.prep = prep
 
     return s3_rest_controller("hrm", resourcename,
-                              csv_stylesheet=("hrm", "programme_hours.xsl"),
-                              csv_template=("hrm", "programme_hours")
+                              csv_stylesheet = ("hrm", "programme_hours.xsl"),
+                              csv_template = ("hrm", "programme_hours")
                               )
 
 # =============================================================================
