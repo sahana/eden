@@ -2456,6 +2456,7 @@ class S3OrganisationServiceModel(S3Model):
 
         T = current.T
         db = current.db
+        settings = current.deployment_settings
 
         configure = self.configure
         crud_strings = current.response.s3.crud_strings
@@ -2464,7 +2465,7 @@ class S3OrganisationServiceModel(S3Model):
 
         organisation_id = self.org_organisation_id
 
-        hierarchical_service_types = current.deployment_settings.get_org_services_hierarchical()
+        hierarchical_service_types = settings.get_org_services_hierarchical()
 
         # ---------------------------------------------------------------------
         # Service
@@ -2546,6 +2547,8 @@ class S3OrganisationServiceModel(S3Model):
 
         # ---------------------------------------------------------------------
         # Organizations <> Services Link Table
+        # - normally use org_service_location instead, but can use this simpler
+        #   variant if-required
         #
         tablename = "org_service_organisation"
         define_table(tablename,
@@ -2583,9 +2586,9 @@ class S3OrganisationServiceModel(S3Model):
                                )
 
         # ---------------------------------------------------------------------
-        # Organisation Service Locations
+        # Organizations <> Services <> Locations Link Table
         #
-        SITE = current.deployment_settings.get_org_site_label()
+        SITE = settings.get_org_site_label()
 
         tablename = "org_service_location"
         define_table(tablename,
@@ -2639,17 +2642,17 @@ class S3OrganisationServiceModel(S3Model):
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create Service Location"),
-            title_display = T("Service Location Details"),
-            title_list = T("Service Locations"),
-            title_update = T("Edit Service Location"),
-            title_upload = T("Import Service Locations"),
-            label_list_button = T("List Service Locations"),
-            label_delete_button = T("Delete Service Location"),
-            msg_record_created = T("Service Location added"),
-            msg_record_modified = T("Service Location updated"),
-            msg_record_deleted = T("Service Location deleted"),
-            msg_list_empty = T("No Service Locations currently registered"))
+            label_create = T("Add Service"),
+            title_display = T("Service Details"),
+            title_list = T("Services"),
+            title_update = T("Edit Service"),
+            title_upload = T("Import Services"),
+            label_list_button = T("List Services"),
+            label_delete_button = T("Delete Service"),
+            msg_record_created = T("Service added"),
+            msg_record_modified = T("Service updated"),
+            msg_record_deleted = T("Service deleted"),
+            msg_list_empty = T("No Services currently registered"))
 
         # CRUD form
         service_widget = "hierarchy" if hierarchical_service_types else None

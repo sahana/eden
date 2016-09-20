@@ -75,7 +75,8 @@ class profile(S3CustomController):
 
         auth = current.auth
         if not current.auth.is_logged_in():
-            redirect(URL(c="default", f="user", args="register"))
+            current.session.information = current.T("You need to Login to create an Organization Profile")
+            redirect(URL(c="default", f="user", args="login", vars={"_next": URL(c="default", f="index", args="profile")}))
 
         organisation_id = auth.user.organisation_id
         if not organisation_id:

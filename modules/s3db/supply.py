@@ -523,6 +523,8 @@ $.filterOptionsS3({
                        supply_catalog_item = "item_id",
                        # Packs
                        supply_item_pack = "item_id",
+                       # Distribution Items
+                       supply_distribution_item = "item_id",
                        # Inventory Items
                        inv_inv_item = "item_id",
                        # Order Items
@@ -547,7 +549,7 @@ $.filterOptionsS3({
             add_components(tablename,
                            # Alternative Items
                            supply_item_alt="item_id",
-                          )
+                           )
 
         # =====================================================================
         # Catalog Item
@@ -561,7 +563,7 @@ $.filterOptionsS3({
                      item_category_id(
                         script = item_category_script
                      ),
-                     supply_item_id(script=None), # No Item Pack Filter
+                     supply_item_id(script = None), # No Item Pack Filter
                      s3_comments(), # These comments do *not* pull through to an Inventory's Items or a Request's Items
                      *s3_meta_fields())
 
@@ -625,7 +627,7 @@ $.filterOptionsS3({
         configure(tablename,
                   deduplicate = self.supply_catalog_item_duplicate,
                   filter_widgets = filter_widgets,
-                 )
+                  )
 
         # =====================================================================
         # Item Pack

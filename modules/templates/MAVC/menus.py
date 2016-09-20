@@ -41,14 +41,15 @@ class S3MainMenu(default.S3MainMenu):
                      icon = "%s/static/themes/img/logo-small.png" % \
                             current.request.application,
                      ),
-            MM("About", c="default", f="about"),
             MM("Newsfeed", c="cms", f="newsfeed", m="datalist"),
             MM("Needs", c="project", f="activity", m="summary"),
+            MM("Services", c="org", f="service_location", m="summary"),
             MM("Organizations", c="org", f="organisation"),
             MM("Projects", c="project", f="project"),
             #MM("Aid Requests", link=False),
             #MM("Aid Deliveries", link=False),
             MM("Map", c="gis", f="index"),
+            MM("About", c="default", f="about"),
         ]
 
     # -------------------------------------------------------------------------
