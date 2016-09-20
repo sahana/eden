@@ -524,7 +524,7 @@ def programme():
 
     return s3_rest_controller("hrm", resourcename,
                               csv_stylesheet = ("hrm", "programme.xsl"),
-                              csv_template = ("hrm", "programme")
+                              csv_template = ("hrm", "programme"),
                               rheader = s3db.hrm_rheader,
                               )
 
