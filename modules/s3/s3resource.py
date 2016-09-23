@@ -1039,7 +1039,7 @@ class S3Resource(object):
 
         if approve:
             user = auth.user
-            user_id = user and user.id or None
+            user_id = user and user.id or 0
         else:
             user_id = None
 
