@@ -1032,14 +1032,18 @@ class S3Resource(object):
             @param approve: set to approved (False for reset to unapproved)
         """
 
-        db = current.db
         auth = current.auth
 
-        if auth.s3_logged_in():
-            user_id = approve and auth.user.id or None
-        else:
+        if not auth.s3_logged_in():
             return False
 
+        if approve:
+            user = auth.user
+            user_id = user and user.id or None
+        else:
+            user_id = None
+
+        db = current.db
         tablename = self.tablename
         table = self._table
 
