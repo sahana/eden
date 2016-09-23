@@ -329,6 +329,7 @@ def config(settings):
                 rss_import = None
 
         if current.auth.is_logged_in():
+            from gluon import INPUT
             crud_fields.insert(4, S3SQLInlineLink("sector",
                                                   cols = 3,
                                                   label = T("Sectors"),
