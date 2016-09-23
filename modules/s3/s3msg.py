@@ -1944,6 +1944,7 @@ class S3Msg(object):
         channel = db(query).select(table.date,
                                    table.etag,
                                    table.url,
+                                   table.content_type,
                                    table.username,
                                    table.password,
                                    limitby=(0, 1)).first()
@@ -1960,17 +1961,36 @@ class S3Msg(object):
             base64string = base64.encodestring("%s:%s" % (username, password)).replace("\n", "")
             request_headers = {"Authorization": "Basic %s" % base64string}
         else:
+            # Doesn't help to encourage servers to set correct content-type
+            #request_headers = {"Accept": "application/xml"}
             request_headers = None
+
+        if channel.content_type:
+            # Override content-type (some feeds have text/html set which feedparser refuses to parse)
+            response_headers = {"content-type": "application/xml"}
+        else:
+            response_headers = None
 
         if channel.etag:
             # http://pythonhosted.org/feedparser/http-etag.html
             # NB This won't help for a server like Drupal 7 set to not allow caching & hence generating a new ETag/Last Modified each request!
-            d = feedparser.parse(channel.url, etag=channel.etag, request_headers=request_headers)
+            d = feedparser.parse(channel.url,
+                                 etag=channel.etag,
+                                 request_headers=request_headers,
+                                 response_headers=response_headers,
+                                 )
         elif channel.date:
-            d = feedparser.parse(channel.url, modified=channel.date.utctimetuple(), request_headers=request_headers)
+            d = feedparser.parse(channel.url,
+                                 modified=channel.date.utctimetuple(),
+                                 request_headers=request_headers,
+                                 response_headers=response_headers,
+                                 )
         else:
             # We've not polled this feed before
-            d = feedparser.parse(channel.url, request_headers=request_headers)
+            d = feedparser.parse(channel.url,
+                                 request_headers=request_headers,
+                                 response_headers=response_headers,
+                                 )
 
         if d.bozo:
             # Something doesn't seem right

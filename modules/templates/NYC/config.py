@@ -495,8 +495,9 @@ def config(settings):
     # -------------------------------------------------------------------------
     def org_organisation_postprocess(form):
         """
-            If the user selects the City (L2), or Borough (L3) for Area Served,
-            then add all Zipcodes in instead
+            * If the user selects the City (L2), or Borough (L3) for Area Served,
+            then add all Zipcodes in instead.
+            * RSS Subscriptions handling
         """
 
         db = current.db

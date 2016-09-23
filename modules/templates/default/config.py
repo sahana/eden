@@ -104,6 +104,7 @@ def config(settings):
     # @ToDo: Extend to all optional Profile settings: Homepage, Twitter, Facebook, Mobile Phone, Image
     #settings.auth.registration_volunteer = True
     # Terms of Service to be able to Register on the system
+    # https://termsfeed.com/terms-conditions/generator/
     # uses <template>/views/tos.html
     #settings.auth.terms_of_service = True
     # Uncomment this to allow users to Login using Gmail's SMTP

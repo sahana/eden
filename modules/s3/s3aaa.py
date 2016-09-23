@@ -1370,7 +1370,6 @@ Thank you"""
         """
 
         settings = self.settings
-        messages = self.messages
         request = current.request
 
         # Customise the resource
@@ -1386,7 +1385,7 @@ Thank you"""
             redirect(settings.verify_email_next)
 
         if log == DEFAULT:
-            log = messages.verify_email_log
+            log = self.messages.verify_email_log
         if next == DEFAULT:
             next = settings.verify_email_next
 

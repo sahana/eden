@@ -183,12 +183,18 @@ def config(settings):
                            )
 
     # =========================================================================
+    # Messaging
+    # Parser
+    settings.msg.parser = "MAVC"
+
+    # =========================================================================
     # CMS Options
     #
     settings.cms.filter_open = True
-    settings.cms.location_click_filters = True
-
     settings.cms.hide_index = True
+    settings.cms.location_click_filters = True
+    settings.cms.organisation = "post_organisation.organisation_id"
+    settings.cms.richtext = True
 
     # =========================================================================
     # Documents
@@ -269,6 +275,59 @@ def config(settings):
                        "website",
                        ]
 
+        # RSS Feed handling
+        if r.tablename == "org_organisation":
+            if r.id:
+                # Update form
+                ctable = s3db.pr_contact
+                query = (ctable.pe_id == r.record.pe_id) & \
+                        (ctable.contact_method == "RSS") & \
+                        (ctable.deleted == False)
+                rss = current.db(query).select(ctable.poll,
+                                               limitby=(0, 1)
+                                               ).first()
+                if rss and not rss.poll:
+                    # Remember that we don't wish to import
+                    rss_import = "on"
+                else:
+                    # Default
+                    rss_import = None
+            else:
+                # Create form: Default
+                rss_import = None
+        else:
+            # Component
+            if r.component_id:
+                # Update form
+                db = current.db
+                otable = s3db.org_organisation
+                org = db(otable.id == r.component_id).select(otable.pe_id,
+                                                             limitby=(0, 1)
+                                                             ).first()
+                try:
+                    pe_id = org.pe_id
+                except:
+                    current.log.error("Org %s not found: cannot set rss_import correctly" % r.component_id)
+                    # Default
+                    rss_import = None
+                else:
+                    ctable = s3db.pr_contact
+                    query = (ctable.pe_id == pe_id) & \
+                            (ctable.contact_method == "RSS") & \
+                            (ctable.deleted == False)
+                    rss = db(query).select(ctable.poll,
+                                           limitby=(0, 1)
+                                           ).first()
+                    if rss and not rss.poll:
+                        # Remember that we don't wish to import
+                        rss_import = "on"
+                    else:
+                        # Default
+                        rss_import = None
+            else:
+                # Create form: Default
+                rss_import = None
+
         if current.auth.is_logged_in():
             crud_fields.insert(4, S3SQLInlineLink("sector",
                                                   cols = 3,
@@ -304,6 +363,24 @@ def config(settings):
                                     multiple = False,
                                     ),
                             S3SQLInlineComponent(
+                                "contact",
+                                comment = DIV(INPUT(_type="checkbox",
+                                                    _name="rss_no_import",
+                                                    value = rss_import,
+                                                    ),
+                                              T("Don't Import Feed"),
+                                              ),
+                                name = "rss",
+                                label = T("RSS"),
+                                multiple = False,
+                                fields = [("", "value"),
+                                          #(T("Don't Import Feed"), "poll"),
+                                          ],
+                                filterby = dict(field = "contact_method",
+                                                options = "RSS",
+                                                ),
+                                ),
+                           S3SQLInlineComponent(
                                 "document",
                                 fields = [(T("Title"), "name"),
                                           "file",
@@ -328,6 +405,8 @@ def config(settings):
                                 name = "url",
                                 ),
                             ]
+            # RSS feed handling
+            postprocess = pr_contact_postprocess
         else:
             field = table.logo
             field.readable = field.writable = False
@@ -336,6 +415,7 @@ def config(settings):
             s3db.configure("org_organisation",
                            listadd = False,
                            )
+            postprocess = None
 
         # Custom filters to match the information provided
         from s3 import S3LocationFilter, \
@@ -370,7 +450,8 @@ def config(settings):
 
         s3db.configure("org_organisation",
                        filter_widgets = filter_widgets,
-                       crud_form = S3SQLCustomForm(*crud_fields),
+                       crud_form = S3SQLCustomForm(*crud_fields,
+                                                   postprocess = postprocess),
                        )
 
     settings.customise_org_organisation_resource = customise_org_organisation_resource
@@ -1335,6 +1416,171 @@ def config(settings):
            module_type = None,
         )),
     ])
+
+# =============================================================================
+def pr_contact_postprocess(form):
+    """
+        Import Organisation RSS Feeds
+    """
+
+    s3db = current.s3db
+    form_vars = form.vars
+
+    rss_url = form_vars.rsscontact_i_value_edit_0 or \
+              form_vars.rsscontact_i_value_edit_none
+    if not rss_url:
+        if form.record:
+            # Update form
+            old_rss = form.record.sub_rsscontact
+            import json
+            data = old_rss = json.loads(old_rss)["data"]
+            if data:
+                # RSS feed is being deleted, so we should disable it
+                old_rss = data[0]["value"]["value"]
+                table = s3db.msg_rss_channel
+                old = current.db(table.url == old_rss).select(table.channel_id,
+                                                              table.enabled,
+                                                              limitby = (0, 1)
+                                                              ).first()
+                if old and old.enabled:
+                    s3db.msg_channel_disable("msg_rss_channel", old.channel_id)
+                return
+        else:
+            # Nothing to do :)
+            return
+
+    # Check if we already have a channel for this Contact
+    db = current.db
+    name = form_vars.name
+    table = s3db.msg_rss_channel
+    name_exists = db(table.name == name).select(table.id,
+                                                table.channel_id,
+                                                table.enabled,
+                                                table.url,
+                                                limitby = (0, 1)
+                                                ).first()
+
+    no_import = current.request.post_vars.get("rss_no_import", None)
+
+    if name_exists:
+        if name_exists.url == rss_url:
+            # No change to either Contact Name or URL
+            if no_import:
+                if name_exists.enabled:
+                    # Disable channel (& associated parsers)
+                    s3db.msg_channel_disable("msg_rss_channel",
+                                             name_exists.channel_id)
+                return
+            elif name_exists.enabled:
+                # Nothing to do :)
+                return
+            else:
+                # Enable channel (& associated parsers)
+                s3db.msg_channel_enable("msg_rss_channel",
+                                        name_exists.channel_id)
+                return
+
+        # Check if we already have a channel for this URL
+        url_exists = db(table.url == rss_url).select(table.id,
+                                                     table.channel_id,
+                                                     table.enabled,
+                                                     limitby = (0, 1)
+                                                     ).first()
+        if url_exists:
+            # We have 2 feeds: 1 for the Contact & 1 for the URL
+            # Disable the old Contact one and link the URL one to this Contact
+            # and ensure active or not as appropriate
+            # Name field is unique so rename old one
+            name_exists.update_record(name="%s (Old)" % name)
+            if name_exists.enabled:
+                # Disable channel (& associated parsers)
+                s3db.msg_channel_disable("msg_rss_channel",
+                                         name_exists.channel_id)
+            url_exists.update_record(name=name)
+            if no_import:
+                if url_exists.enabled:
+                    # Disable channel (& associated parsers)
+                    s3db.msg_channel_disable("msg_rss_channel",
+                                             url_exists.channel_id)
+                return
+            elif url_exists.enabled:
+                # Nothing to do :)
+                return
+            else:
+                # Enable channel (& associated parsers)
+                s3db.msg_channel_enable("msg_rss_channel",
+                                        url_exists.channel_id)
+                return
+        else:
+            # Update the URL
+            name_exists.update_record(url=rss_url)
+            if no_import:
+                if name_exists.enabled:
+                    # Disable channel (& associated parsers)
+                    s3db.msg_channel_disable("msg_rss_channel",
+                                             name_exists.channel_id)
+                return
+            elif name_exists.enabled:
+                # Nothing to do :)
+                return
+            else:
+                # Enable channel (& associated parsers)
+                s3db.msg_channel_enable("msg_rss_channel",
+                                        name_exists.channel_id)
+                return
+    else:
+        # Check if we already have a channel for this URL
+        url_exists = db(table.url == rss_url).select(table.id,
+                                                     table.channel_id,
+                                                     table.enabled,
+                                                     limitby = (0, 1)
+                                                     ).first()
+        if url_exists:
+            # Either Contact has changed Name or this feed is associated with
+            # another Contact
+            # - update Feed name
+            url_exists.update_record(name=name)
+            if no_import:
+                if url_exists.enabled:
+                    # Disable channel (& associated parsers)
+                    s3db.msg_channel_disable("msg_rss_channel",
+                                             url_exists.channel_id)
+                return
+            elif url_exists.enabled:
+                # Nothing to do :)
+                return
+            else:
+                # Enable channel (& associated parsers)
+                s3db.msg_channel_enable("msg_rss_channel",
+                                        url_exists.channel_id)
+                return
+        elif no_import:
+            # Nothing to do :)
+            return
+        #else:
+        #    # Create a new Feed
+        #    pass
+
+    # Add RSS Channel
+    _id = table.insert(name=name, enabled=True, url=rss_url)
+    record = dict(id=_id)
+    s3db.update_super(table, record)
+
+    # Enable
+    channel_id = record["channel_id"]
+    s3db.msg_channel_enable("msg_rss_channel", channel_id)
+
+    # Setup Parser
+    table = s3db.msg_parser
+    _id = table.insert(channel_id=channel_id,
+                       function_name="parse_rss",
+                       enabled=True)
+    s3db.msg_parser_enable(_id)
+
+    # Check Now
+    async = current.s3task.async
+    async("msg_poll", args=["msg_rss_channel", channel_id])
+    async("msg_parse", args=[channel_id, "parse_rss"])
 
 # =============================================================================
 def mavc_rheader(r, tabs=None):

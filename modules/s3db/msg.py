@@ -1316,6 +1316,13 @@ class S3RSSModel(S3ChannelModel):
                            label = T("URL"),
                            requires = IS_URL(),
                            ),
+                     Field("content_type", "boolean",
+                           default = False,
+                           label = T("Content-Type Override"),
+                           represent = s3_yes_no_represent,
+                           # Some feeds have text/html set which feedparser refuses to parse
+                           comment = T("Force content-type to application/xml"),
+                           ),
                      s3_datetime(label = T("Last Polled"),
                                  writable = False,
                                  ),
