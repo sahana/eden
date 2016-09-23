@@ -2593,7 +2593,15 @@ class S3OrganisationServiceModel(S3Model):
         tablename = "org_service_location"
         define_table(tablename,
                      super_link("doc_id", "doc_entity"),
-                     organisation_id(),
+                     organisation_id(
+                        default = current.auth.root_org(),
+                        requires = self.org_organisation_requires(
+                                    required = True,
+                                    # Only allowed to add Projects for Orgs
+                                    # that the user has write access to
+                                    updateable = True,
+                                    ),
+                        ),
                      # The site where the organisation provides services:
                      # (component not instance)
                      super_link("site_id", "org_site",

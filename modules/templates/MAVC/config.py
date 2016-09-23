@@ -1088,62 +1088,14 @@ def config(settings):
                                               multiple = False,
                                               )
 
-        if r.interactive:
+        if r.function != "activity":
+            # Activities not Needs
 
-            # Remove 'Planned' from Status options
-            from gluon import IS_EMPTY_OR
-            from s3 import IS_ONE_OF
+            if r.interactive:
 
-            field = table.status_id
-            field.requires = IS_EMPTY_OR(
-                                IS_ONE_OF(current.db, "project_status.id",
-                                          field.represent,
-                                          not_filterby = "name",
-                                          not_filter_opts = ["Planned"],
-                                          sort = True,
-                                          ))
+                # Component Context
+                current.response.s3.crud_strings[tablename].label_create = T("Add Activity")
 
-            # Custom filter widgets
-            from s3 import S3DateFilter, \
-                           S3LocationFilter, \
-                           S3OptionsFilter, \
-                           S3TextFilter, \
-                           s3_get_filter_opts
-
-            filter_widgets = [
-                S3TextFilter(["name",
-                              ],
-                              label = T("Search"),
-                              comment = T("Search for an Activity by its description."),
-                              ),
-                S3LocationFilter("location_id",
-                                 ),
-                S3OptionsFilter("status_id",
-                                options = s3_get_filter_opts("project_status",
-                                                             none = True,
-                                                             translate = TRANSLATE,
-                                                             ),
-                                ),
-                S3OptionsFilter("distribution.parameter_id",
-                                label = T("Distributed Items"),
-                                options = s3_get_filter_opts("supply_distribution_item",
-                                                             key = "parameter_id",
-                                                             ),
-                                hidden = True,
-                                ),
-                S3DateFilter("date",
-                             hidden = True,
-                             ),
-                S3DateFilter("end_date",
-                             hidden = True,
-                             ),
-                ]
-
-            s3db.configure("project_activity",
-                           filter_widgets = filter_widgets,
-                           )
-
-            if r.function != "activity":
                 # Custom CRUD form
                 crud_form = S3SQLCustomForm("project_id",
                                             organisation_id,
@@ -1170,7 +1122,6 @@ def config(settings):
                                crud_form = crud_form,
                                )
 
-        if r.function != "activity":
             # Custom list fields (must be outside of r.interactive)
             list_fields = ["project_id",
                            "name",
@@ -1191,73 +1142,181 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def customise_project_activity_controller(**attr):
+        """
+            When going through the Activity controller then these are 'Needs'
+        """
 
+        tablename = "project_activity"
+        s3 = current.response.s3
         s3db = current.s3db
+        db = current.db
 
-        # When going through the Activity controller then these are 'Needs'
-        current.response.s3.crud_strings["project_activity"] = Storage(
-            label_create = T("Report Need"),
-            title_display = T("Need Details"),
-            title_list = T("Needs"),
-            title_update = T("Edit Need"),
-            title_upload = T("Import Needs Data"),
-            title_report = T("Needs Report"),
-            label_list_button = T("List Needs"),
-            msg_record_created = T("Need Added"),
-            msg_record_modified = T("Need Updated"),
-            msg_record_deleted = T("Need Deleted"),
-            msg_list_empty = T("No Needs Found")
-        )
-
-        # Default to status 'Requested'
+        # Lookup the Status IDs
         stable = s3db.project_status
-        requested = current.db(stable.name == "Requested").select(stable.id,
-                                                                  limitby=(0, 1)
-                                                                  ).first()
-        try:
-            s3db.project_activity.status_id.default = requested.id
-        except:
-            # Prepop not done
-            pass
+        query = (stable.deleted == False) & \
+                (stable.name != "Planned")
+        dbset = db(query)
 
-        # Custom CRUD form
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent#, S3SQLInlineLink
-        crud_form = S3SQLCustomForm(#"project_id",
-                                    #organisation_id,
-                                    "name",
-                                    #S3SQLInlineLink("activity_type",
-                                    #                field = "activity_type_id",
-                                    #                label = T("Activity Types"),
-                                    #                ),
-                                    S3SQLInlineComponent("distribution",
-                                                         fields = ["parameter_id",
-                                                                   "value",
-                                                                   "comments",
-                                                                   ],
-                                                         label = T("Supplies/Services Needed"),
-                                                         ),
-                                    "status_id",
-                                    "date",
-                                    "end_date",
-                                    "location_id",
-                                    "comments",
-                                    )
+        def status_ids():
+            rows = dbset.select(stable.id,
+                                stable.name,
+                                )
+            if TRANSLATE:
+                opts = dict((row.id, T(row.name)) for row in rows)
+            else:
+                opts = dict((row.id, row.name) for row in rows)
+            return opts
 
-        # Custom list fields (must be outside of r.interactive)
-        list_fields = [#"project_id",
-                       "location_id$L1",
-                       "location_id$L2",
-                       "location_id$L3",
-                       "location_id$L4",
-                       "status_id",
-                       #"date",
-                       "name",
-                       ]
+        STATUS_IDS = current.cache.ram("project_status_ids",
+                                       lambda: status_ids(),
+                                       time_expire = 360,
+                                       )
 
-        s3db.configure("project_activity",
-                       crud_form = crud_form,
-                       list_fields = list_fields,
-                       )
+        # Lookup 'Requested'
+        REQUESTED = None
+        for status_id in STATUS_IDS:
+            status = STATUS_IDS[status_id]
+            if status == "Requested":
+                REQUESTED = status_id
+                break
+
+        # Default Filter
+        from s3 import s3_set_default_filter
+        s3_set_default_filter("~.status_id",
+                              REQUESTED,
+                              tablename = tablename)
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            table = s3db.project_activity
+
+            if r.interactive:
+                s3.crud_strings[tablename] = Storage(
+                    label_create = T("Report Need"),
+                    title_display = T("Need Details"),
+                    title_list = T("Needs"),
+                    title_update = T("Edit Need"),
+                    title_upload = T("Import Needs Data"),
+                    title_report = T("Needs Report"),
+                    label_list_button = T("List Needs"),
+                    msg_record_created = T("Need Added"),
+                    msg_record_modified = T("Need Updated"),
+                    msg_record_deleted = T("Need Deleted"),
+                    msg_list_empty = T("No Needs Found")
+                )
+
+                # Remove 'Planned' from Status options (just used for Projects)
+                from gluon import IS_EMPTY_OR
+                from s3 import IS_ONE_OF
+
+                field = table.status_id
+                field.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(dbset, "project_status.id",
+                                              field.represent,
+                                              #not_filterby = "name",
+                                              #not_filter_opts = ["Planned"],
+                                              sort = True,
+                                              ))
+
+                # Default to status 'Requested'
+                field.default = REQUESTED
+
+                # Custom CRUD form
+                if current.auth.s3_has_role("ORG_ADMIN"):
+                    project_id = "project_id"
+                    postprocess = project_activity_postprocess
+                else:
+                    project_id = None
+                    postprocess = None
+
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent#, S3SQLInlineLink
+                crud_form = S3SQLCustomForm(project_id,
+                                            #organisation_id, # auto-populated from Project
+                                            "name",
+                                            #S3SQLInlineLink("activity_type",
+                                            #                field = "activity_type_id",
+                                            #                label = T("Activity Types"),
+                                            #                ),
+                                            S3SQLInlineComponent("distribution",
+                                                                 fields = ["parameter_id",
+                                                                           "value",
+                                                                           "comments",
+                                                                           ],
+                                                                 label = T("Supplies/Services Needed"),
+                                                                 ),
+                                            "status_id",
+                                            "date",
+                                            "end_date",
+                                            "location_id",
+                                            "comments",
+                                            postprocess = postprocess,
+                                            )
+
+                # Custom filter widgets
+                from s3 import S3DateFilter, \
+                               S3LocationFilter, \
+                               S3OptionsFilter, \
+                               S3TextFilter, \
+                               s3_get_filter_opts
+
+                filter_widgets = [
+                    S3TextFilter(["name",
+                                  ],
+                                  label = T("Search"),
+                                  comment = T("Search for an Activity by its description."),
+                                  ),
+                    S3LocationFilter("location_id",
+                                     ),
+                    S3OptionsFilter("status_id",
+                                    options = STATUS_IDS,
+                                    ),
+                    S3OptionsFilter("distribution.parameter_id",
+                                    label = T("Distributed Items"),
+                                    options = s3_get_filter_opts("supply_distribution_item",
+                                                                 key = "parameter_id",
+                                                                 ),
+                                    hidden = True,
+                                    ),
+                    S3DateFilter("date",
+                                 hidden = True,
+                                 ),
+                    S3DateFilter("end_date",
+                                 hidden = True,
+                                 ),
+                    ]
+
+            else:
+                # Not interactive
+                crud_form = None
+                filter_widgets = None
+
+            # Custom list fields (must be outside of r.interactive)
+            list_fields = [#"project_id",
+                           "location_id$L1",
+                           "location_id$L2",
+                           "location_id$L3",
+                           "location_id$L4",
+                           "status_id",
+                           #"date",
+                           "name",
+                           ]
+
+            s3db.configure(tablename,
+                           crud_form = crud_form,
+                           filter_widgets = filter_widgets,
+                           list_fields = list_fields,
+                           )
+
+            return True
+        s3.prep = custom_prep
 
         # Custom rheader and tabs
         attr = dict(attr)
@@ -1417,6 +1476,38 @@ def config(settings):
            module_type = None,
         )),
     ])
+
+# =============================================================================
+def project_activity_postprocess(form):
+    """
+        Default the Activity's Organisation to that of the Project
+    """
+
+    form_vars = form.vars
+    project_id = form_vars.get("project_id", None)
+    if project_id:
+        s3db = current.s3db
+        db = current.db
+        activity_id = form_vars.get("id", None)
+        ltable = s3db.project_activity_organisation
+        org = db(ltable.activity_id == activity_id).select(ltable.organisation_id,
+                                                           limitby=(0, 1),
+                                                           ).first()
+        if org:
+            return
+        ptable = s3db.project_project
+        project = db(ptable.id == project_id).select(ptable.organisation_id,
+                                                     limitby=(0, 1),
+                                                     ).first()
+        try:
+            organisation_id = project.organisation_id
+        except:
+            # Can't find the project?
+            return
+
+        ltable.insert(activity_id = activity_id,
+                      organisation_id = organisation_id,
+                      )
 
 # =============================================================================
 def pr_contact_postprocess(form):

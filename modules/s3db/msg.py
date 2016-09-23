@@ -1040,6 +1040,7 @@ class S3ParsingModel(S3Model):
         # ---------------------------------------------------------------------
         # Message parsing status
         # - component to core msg_message table
+        # - messages which need parsing are placed here & updated when parsed
         #
         tablename = "msg_parsing_status"
         define_table(tablename,
