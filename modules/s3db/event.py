@@ -146,6 +146,12 @@ class S3EventModel(S3Model):
             #                        _title="%s|%s" % (T("Event Type"),
             #                                          AUTOCOMPLETE_HELP))
 
+        filter_widgets = [S3TextFilter(["name",
+                                        ],
+                                       label = T("Search"),
+                                       )
+                          ]
+
         crud_strings[tablename] = Storage(
             label_create = T("Create Event Type"),
             title_display = T("Event Type Details"),
@@ -177,6 +183,7 @@ class S3EventModel(S3Model):
         configure(tablename,
                   deduplicate = S3Duplicate(),
                   hierarchy = hierarchy,
+                  filter_widgets = filter_widgets,
                   )
 
         # ---------------------------------------------------------------------
@@ -291,15 +298,16 @@ class S3EventModel(S3Model):
                                                 ),
                                # @ToDo: Filter for any event which starts or ends within a date range
                                S3DateFilter("start_date",
-                                            label = None,
+                                            label = T("Date"),
                                             hide_time = True,
-                                            input_labels = {"ge": "From", "le": "To"}
                                             ),
                                ))
 
         report_fields = ["event_type_id",
                          ]
+
         rappend = report_fields.append
+
         for level in levels:
             rappend("event_location.location_id$%s" % level)
         rappend((T("Year"), "year"))
@@ -331,7 +339,7 @@ class S3EventModel(S3Model):
                   filter_widgets = filter_widgets,
                   list_fields = ["id",
                                  "name",
-                                 "event_type_id$name",
+                                 (T("Event Type"), "event_type_id$name"),
                                  (T("Location"), "location.name"),
                                  "start_date",
                                  "exercise",
