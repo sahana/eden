@@ -148,14 +148,13 @@ class FaceBookAccount(OAuthAccount):
             #session = current.session
             #session.facebooklogin = True
 
-            auth = current.auth
-            table = auth.settings.table_user
+            table = current.auth.settings.table_user
 
             query = (table.email == user["email"])
-            existent = current.db(query).select(table.id,
-                                                table.password,
-                                                limitby=(0, 1)).first()
-            if existent:
+            exists = current.db(query).select(table.id,
+                                              table.password,
+                                              limitby=(0, 1)).first()
+            if exists:
                 #session["%s_setpassword" % existent.id] = existent.password
 
                 user_dict = {"first_name": user.get("first_name", ""),
@@ -173,7 +172,8 @@ class FaceBookAccount(OAuthAccount):
                 #     session.flocation = user['location']
                 #session["is_new_from"] = "facebook"
 
-                auth.s3_send_welcome_email(user)
+                # Done in s3_approve_user()
+                #auth.s3_send_welcome_email(user)
 
                 user_dict = {"first_name": user.get("first_name", ""),
                              "last_name": user.get("last_name", ""),
@@ -211,7 +211,6 @@ class GooglePlusAccount(OAuthAccount):
                             {id=clientID, secret=clientSecret}
         """
 
-        request = current.request
         settings = current.deployment_settings
 
         scope = "https://www.googleapis.com/auth/userinfo.email " \
@@ -220,7 +219,7 @@ class GooglePlusAccount(OAuthAccount):
 
         # Set the redirect URI to the default/google controller
         redirect_uri = "%s/%s/default/google/login" % \
-                       (settings.get_base_public_url(), request.application)
+                   (settings.get_base_public_url(), current.request.application)
 
         OAuthAccount.__init__(self,
                               client_id = channel["id"],
@@ -244,7 +243,7 @@ class GooglePlusAccount(OAuthAccount):
         """
 
         # Create an OpenerDirector with support
-        # for Basic HTTP Authentication...
+        # for Basic HTTP Authentication
         auth_handler = urllib2.HTTPBasicAuthHandler()
         auth_handler.add_password(None,
                                   uri,
@@ -309,9 +308,9 @@ class GooglePlusAccount(OAuthAccount):
         if not self.accessToken():
 
             request = current.request
-            session = current.session
             if not request.vars.code:
 
+                session = current.session
                 session.redirect_uri = self.args["redirect_uri"]
 
                 data = {"redirect_uri": session.redirect_uri,
@@ -330,7 +329,7 @@ class GooglePlusAccount(OAuthAccount):
                            Location = auth_request_url,
                            )
             else:
-                session.code = request.vars.code
+                current.session.code = request.vars.code
                 self.accessToken()
 
         return next
@@ -343,25 +342,24 @@ class GooglePlusAccount(OAuthAccount):
         if not token:
             return None
 
-        session = current.session
+        #session = current.session
         user = None
         try:
             user = self.call_api(token)
         except Exception, e:
-            session.token = None
+            current.session.token = None
 
         user_dict = None
         if user:
             # Check if a user with this email has already registered
             #session.googlelogin = True
 
-            auth = current.auth
-            table = auth.settings.table_user
+            table = current.auth.settings.table_user
             query = (table.email == user["email"])
-            existent = current.db(query).select(table.id,
-                                                table.password,
-                                                limitby=(0, 1)).first()
-            if existent:
+            exists = current.db(query).select(table.id,
+                                              table.password,
+                                              limitby=(0, 1)).first()
+            if exists:
                 #session["%s_setpassword" % existent.id] = existent.password
 
                 user_dict = {#"first_name": user.get("given_name", user["name"]),
@@ -377,7 +375,8 @@ class GooglePlusAccount(OAuthAccount):
                 #     session.flocation = user["location"]
                 #session["is_new_from"] = "google"
 
-                auth.s3_send_welcome_email(user)
+                # Done in s3_approve_user()
+                #auth.s3_send_welcome_email(user)
 
                 names = user.get("name", "").split()
                 first = names[0] if len(names) > 0 else ""
@@ -580,8 +579,7 @@ class HumanitarianIDAccount(OAuthAccount):
             # Check if a user with this email has already registered
             #session.humanitarian_id_login = True
 
-            auth = current.auth
-            table = auth.settings.table_user
+            table = current.auth.settings.table_user
             query = (table.email == user["email"])
             existent = current.db(query).select(table.id,
                                                 table.password,
@@ -598,7 +596,8 @@ class HumanitarianIDAccount(OAuthAccount):
             else:
                 #session["is_new_from"] = "humanitarian_id"
 
-                auth.s3_send_welcome_email(user)
+                # Done in s3_approve_user()
+                #auth.s3_send_welcome_email(user)
 
                 user_dict = {"first_name": user.get("name_given", ""),
                              "last_name": user.get("name_family", ""),

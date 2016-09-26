@@ -183,12 +183,19 @@ def config(settings):
                            )
 
     # =========================================================================
+    # Messaging
+    # Parser
+    settings.msg.parser = "MAVC"
+
+    # =========================================================================
     # CMS Options
     #
     settings.cms.filter_open = True
-    settings.cms.location_click_filters = True
-
     settings.cms.hide_index = True
+    settings.cms.location_click_filters = True
+    settings.cms.organisation = "post_organisation.organisation_id"
+    settings.cms.richtext = True
+    settings.cms.show_tags = True
 
     # =========================================================================
     # Documents
@@ -269,7 +276,61 @@ def config(settings):
                        "website",
                        ]
 
+        # RSS Feed handling
+        if r.tablename == "org_organisation":
+            if r.id:
+                # Update form
+                ctable = s3db.pr_contact
+                query = (ctable.pe_id == r.record.pe_id) & \
+                        (ctable.contact_method == "RSS") & \
+                        (ctable.deleted == False)
+                rss = current.db(query).select(ctable.poll,
+                                               limitby=(0, 1)
+                                               ).first()
+                if rss and not rss.poll:
+                    # Remember that we don't wish to import
+                    rss_import = "on"
+                else:
+                    # Default
+                    rss_import = None
+            else:
+                # Create form: Default
+                rss_import = None
+        else:
+            # Component
+            if r.component_id:
+                # Update form
+                db = current.db
+                otable = s3db.org_organisation
+                org = db(otable.id == r.component_id).select(otable.pe_id,
+                                                             limitby=(0, 1)
+                                                             ).first()
+                try:
+                    pe_id = org.pe_id
+                except:
+                    current.log.error("Org %s not found: cannot set rss_import correctly" % r.component_id)
+                    # Default
+                    rss_import = None
+                else:
+                    ctable = s3db.pr_contact
+                    query = (ctable.pe_id == pe_id) & \
+                            (ctable.contact_method == "RSS") & \
+                            (ctable.deleted == False)
+                    rss = db(query).select(ctable.poll,
+                                           limitby=(0, 1)
+                                           ).first()
+                    if rss and not rss.poll:
+                        # Remember that we don't wish to import
+                        rss_import = "on"
+                    else:
+                        # Default
+                        rss_import = None
+            else:
+                # Create form: Default
+                rss_import = None
+
         if current.auth.is_logged_in():
+            from gluon import INPUT
             crud_fields.insert(4, S3SQLInlineLink("sector",
                                                   cols = 3,
                                                   label = T("Sectors"),
@@ -304,6 +365,24 @@ def config(settings):
                                     multiple = False,
                                     ),
                             S3SQLInlineComponent(
+                                "contact",
+                                comment = DIV(INPUT(_type="checkbox",
+                                                    _name="rss_no_import",
+                                                    value = rss_import,
+                                                    ),
+                                              T("Don't Import Feed"),
+                                              ),
+                                name = "rss",
+                                label = T("RSS"),
+                                multiple = False,
+                                fields = [("", "value"),
+                                          #(T("Don't Import Feed"), "poll"),
+                                          ],
+                                filterby = dict(field = "contact_method",
+                                                options = "RSS",
+                                                ),
+                                ),
+                           S3SQLInlineComponent(
                                 "document",
                                 fields = [(T("Title"), "name"),
                                           "file",
@@ -328,6 +407,9 @@ def config(settings):
                                 name = "url",
                                 ),
                             ]
+            # RSS feed handling
+            postprocess = pr_contact_postprocess
+            current.response.s3.crud_strings["org_organisation"].label_create = T("Create a Profile")
         else:
             field = table.logo
             field.readable = field.writable = False
@@ -336,6 +418,7 @@ def config(settings):
             s3db.configure("org_organisation",
                            listadd = False,
                            )
+            postprocess = None
 
         # Custom filters to match the information provided
         from s3 import S3LocationFilter, \
@@ -370,7 +453,8 @@ def config(settings):
 
         s3db.configure("org_organisation",
                        filter_widgets = filter_widgets,
-                       crud_form = S3SQLCustomForm(*crud_fields),
+                       crud_form = S3SQLCustomForm(*crud_fields,
+                                                   postprocess = postprocess),
                        )
 
     settings.customise_org_organisation_resource = customise_org_organisation_resource
@@ -758,7 +842,7 @@ def config(settings):
     #
     settings.project.mode_3w = True
     settings.project.mode_drr = True
-    settings.project.hazards = True
+    settings.project.hazards = False
     settings.project.themes = False
     settings.project.hfa = False
     settings.project.activities = True
@@ -932,7 +1016,6 @@ def config(settings):
                        list_fields = list_fields,
                        )
 
-
     settings.customise_project_project_resource = customise_project_project_resource
 
     # -------------------------------------------------------------------------
@@ -941,6 +1024,37 @@ def config(settings):
         # Custom rheader and tabs
         attr = dict(attr)
         attr["rheader"] = mavc_rheader
+
+        # Report axes
+        report_fields = ["organisation_id",
+                         "sector_project.sector_id",
+                         ]
+        add_report_field = report_fields.append
+
+        # Location levels (append to list fields and report axes)
+        # @ToDo: deployment_setting for Site vs Location
+        levels = current.gis.get_relevant_hierarchy_levels()
+        for level in levels:
+            lfield = "location_id$%s" % level
+            #list_fields.append(lfield)
+            add_report_field(lfield)
+
+        current.s3db.configure("project_project",
+                               report_options = Storage(
+                                    rows = report_fields,
+                                    cols = report_fields,
+                                    fact = [(T("Number of Organizations"),
+                                             "count(organisation_id)",
+                                             ),
+                                            ],
+                                    defaults = Storage(
+                                        rows = "location_id$L1",
+                                        cols = "sector_project.sector_id",
+                                        fact = "count(organisation_id)",
+                                        totals = True,
+                                    )
+                                  ),
+                               )
 
         return attr
 
@@ -1006,62 +1120,14 @@ def config(settings):
                                               multiple = False,
                                               )
 
-        if r.interactive:
+        if r.function != "activity":
+            # Activities not Needs
 
-            # Remove 'Planned' from Status options
-            from gluon import IS_EMPTY_OR
-            from s3 import IS_ONE_OF
+            if r.interactive:
 
-            field = table.status_id
-            field.requires = IS_EMPTY_OR(
-                                IS_ONE_OF(current.db, "project_status.id",
-                                          field.represent,
-                                          not_filterby = "name",
-                                          not_filter_opts = ["Planned"],
-                                          sort = True,
-                                          ))
+                # Component Context
+                current.response.s3.crud_strings[tablename].label_create = T("Add Activity")
 
-            # Custom filter widgets
-            from s3 import S3DateFilter, \
-                           S3LocationFilter, \
-                           S3OptionsFilter, \
-                           S3TextFilter, \
-                           s3_get_filter_opts
-
-            filter_widgets = [
-                S3TextFilter(["name",
-                              ],
-                              label = T("Search"),
-                              comment = T("Search for an Activity by its description."),
-                              ),
-                S3LocationFilter("location_id",
-                                 ),
-                S3OptionsFilter("status_id",
-                                options = s3_get_filter_opts("project_status",
-                                                             none = True,
-                                                             translate = TRANSLATE,
-                                                             ),
-                                ),
-                S3OptionsFilter("distribution.parameter_id",
-                                label = T("Distributed Items"),
-                                options = s3_get_filter_opts("supply_distribution_item",
-                                                             key = "parameter_id",
-                                                             ),
-                                hidden = True,
-                                ),
-                S3DateFilter("date",
-                             hidden = True,
-                             ),
-                S3DateFilter("end_date",
-                             hidden = True,
-                             ),
-                ]
-
-            s3db.configure("project_activity",
-                           filter_widgets = filter_widgets,
-                           )
-
-            if r.function != "activity":
                 # Custom CRUD form
                 crud_form = S3SQLCustomForm("project_id",
                                             organisation_id,
@@ -1088,7 +1154,6 @@ def config(settings):
                                crud_form = crud_form,
                                )
 
-        if r.function != "activity":
             # Custom list fields (must be outside of r.interactive)
             list_fields = ["project_id",
                            "name",
@@ -1109,73 +1174,181 @@ def config(settings):
 
     # -------------------------------------------------------------------------
     def customise_project_activity_controller(**attr):
+        """
+            When going through the Activity controller then these are 'Needs'
+        """
 
+        tablename = "project_activity"
+        s3 = current.response.s3
         s3db = current.s3db
+        db = current.db
 
-        # When going through the Activity controller then these are 'Needs'
-        current.response.s3.crud_strings["project_activity"] = Storage(
-            label_create = T("Report Need"),
-            title_display = T("Need Details"),
-            title_list = T("Needs"),
-            title_update = T("Edit Need"),
-            title_upload = T("Import Needs Data"),
-            title_report = T("Needs Report"),
-            label_list_button = T("List Needs"),
-            msg_record_created = T("Need Added"),
-            msg_record_modified = T("Need Updated"),
-            msg_record_deleted = T("Need Deleted"),
-            msg_list_empty = T("No Needs Found")
-        )
-
-        # Default to status 'Requested'
+        # Lookup the Status IDs
         stable = s3db.project_status
-        requested = current.db(stable.name == "Requested").select(stable.id,
-                                                                  limitby=(0, 1)
-                                                                  ).first()
-        try:
-            s3db.project_activity.status_id.default = requested.id
-        except:
-            # Prepop not done
-            pass
+        query = (stable.deleted == False) & \
+                (stable.name != "Planned")
+        dbset = db(query)
 
-        # Custom CRUD form
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent#, S3SQLInlineLink
-        crud_form = S3SQLCustomForm(#"project_id",
-                                    #organisation_id,
-                                    "name",
-                                    #S3SQLInlineLink("activity_type",
-                                    #                field = "activity_type_id",
-                                    #                label = T("Activity Types"),
-                                    #                ),
-                                    S3SQLInlineComponent("distribution",
-                                                         fields = ["parameter_id",
-                                                                   "value",
-                                                                   "comments",
-                                                                   ],
-                                                         label = T("Supplies/Services Needed"),
-                                                         ),
-                                    "status_id",
-                                    "date",
-                                    "end_date",
-                                    "location_id",
-                                    "comments",
-                                    )
+        def status_ids():
+            rows = dbset.select(stable.id,
+                                stable.name,
+                                )
+            if TRANSLATE:
+                opts = dict((row.id, T(row.name)) for row in rows)
+            else:
+                opts = dict((row.id, row.name) for row in rows)
+            return opts
 
-        # Custom list fields (must be outside of r.interactive)
-        list_fields = [#"project_id",
-                       "location_id$L1",
-                       "location_id$L2",
-                       "location_id$L3",
-                       "location_id$L4",
-                       "status_id",
-                       #"date",
-                       "name",
-                       ]
+        STATUS_IDS = current.cache.ram("project_status_ids",
+                                       lambda: status_ids(),
+                                       time_expire = 360,
+                                       )
 
-        s3db.configure("project_activity",
-                       crud_form = crud_form,
-                       list_fields = list_fields,
-                       )
+        # Lookup 'Requested'
+        REQUESTED = None
+        for status_id in STATUS_IDS:
+            status = STATUS_IDS[status_id]
+            if status == "Requested":
+                REQUESTED = status_id
+                break
+
+        # Default Filter
+        from s3 import s3_set_default_filter
+        s3_set_default_filter("~.status_id",
+                              REQUESTED,
+                              tablename = tablename)
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            table = s3db.project_activity
+
+            if r.interactive:
+                s3.crud_strings[tablename] = Storage(
+                    label_create = T("Report a Need"),
+                    title_display = T("Need Details"),
+                    title_list = T("Needs"),
+                    title_update = T("Edit Need"),
+                    title_upload = T("Import Needs Data"),
+                    title_report = T("Needs Report"),
+                    label_list_button = T("List Needs"),
+                    msg_record_created = T("Need Added"),
+                    msg_record_modified = T("Need Updated"),
+                    msg_record_deleted = T("Need Deleted"),
+                    msg_list_empty = T("No Needs Found")
+                )
+
+                # Remove 'Planned' from Status options (just used for Projects)
+                from gluon import IS_EMPTY_OR
+                from s3 import IS_ONE_OF
+
+                field = table.status_id
+                field.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(dbset, "project_status.id",
+                                              field.represent,
+                                              #not_filterby = "name",
+                                              #not_filter_opts = ["Planned"],
+                                              sort = True,
+                                              ))
+
+                # Default to status 'Requested'
+                field.default = REQUESTED
+
+                # Custom CRUD form
+                if current.auth.s3_has_role("ORG_ADMIN"):
+                    project_id = "project_id"
+                    postprocess = project_activity_postprocess
+                else:
+                    project_id = None
+                    postprocess = None
+
+                from s3 import S3SQLCustomForm, S3SQLInlineComponent#, S3SQLInlineLink
+                crud_form = S3SQLCustomForm(project_id,
+                                            #organisation_id, # auto-populated from Project
+                                            "name",
+                                            #S3SQLInlineLink("activity_type",
+                                            #                field = "activity_type_id",
+                                            #                label = T("Activity Types"),
+                                            #                ),
+                                            S3SQLInlineComponent("distribution",
+                                                                 fields = ["parameter_id",
+                                                                           "value",
+                                                                           "comments",
+                                                                           ],
+                                                                 label = T("Supplies/Services Needed"),
+                                                                 ),
+                                            "status_id",
+                                            "date",
+                                            "end_date",
+                                            "location_id",
+                                            "comments",
+                                            postprocess = postprocess,
+                                            )
+
+                # Custom filter widgets
+                from s3 import S3DateFilter, \
+                               S3LocationFilter, \
+                               S3OptionsFilter, \
+                               S3TextFilter, \
+                               s3_get_filter_opts
+
+                filter_widgets = [
+                    S3TextFilter(["name",
+                                  ],
+                                  label = T("Search"),
+                                  comment = T("Search for an Activity by its description."),
+                                  ),
+                    S3LocationFilter("location_id",
+                                     ),
+                    S3OptionsFilter("status_id",
+                                    options = STATUS_IDS,
+                                    ),
+                    S3OptionsFilter("distribution.parameter_id",
+                                    label = T("Distributed Items"),
+                                    options = s3_get_filter_opts("supply_distribution_item",
+                                                                 key = "parameter_id",
+                                                                 ),
+                                    hidden = True,
+                                    ),
+                    S3DateFilter("date",
+                                 hidden = True,
+                                 ),
+                    S3DateFilter("end_date",
+                                 hidden = True,
+                                 ),
+                    ]
+
+            else:
+                # Not interactive
+                crud_form = None
+                filter_widgets = None
+
+            # Custom list fields (must be outside of r.interactive)
+            list_fields = [#"project_id",
+                           "location_id$L1",
+                           "location_id$L2",
+                           "location_id$L3",
+                           "location_id$L4",
+                           "status_id",
+                           #"date",
+                           "name",
+                           ]
+
+            s3db.configure(tablename,
+                           crud_form = crud_form,
+                           filter_widgets = filter_widgets,
+                           list_fields = list_fields,
+                           )
+
+            return True
+        s3.prep = custom_prep
 
         # Custom rheader and tabs
         attr = dict(attr)
@@ -1335,6 +1508,203 @@ def config(settings):
            module_type = None,
         )),
     ])
+
+# =============================================================================
+def project_activity_postprocess(form):
+    """
+        Default the Activity's Organisation to that of the Project
+    """
+
+    form_vars = form.vars
+    project_id = form_vars.get("project_id", None)
+    if project_id:
+        s3db = current.s3db
+        db = current.db
+        activity_id = form_vars.get("id", None)
+        ltable = s3db.project_activity_organisation
+        org = db(ltable.activity_id == activity_id).select(ltable.organisation_id,
+                                                           limitby=(0, 1),
+                                                           ).first()
+        if org:
+            return
+        ptable = s3db.project_project
+        project = db(ptable.id == project_id).select(ptable.organisation_id,
+                                                     limitby=(0, 1),
+                                                     ).first()
+        try:
+            organisation_id = project.organisation_id
+        except:
+            # Can't find the project?
+            return
+
+        ltable.insert(activity_id = activity_id,
+                      organisation_id = organisation_id,
+                      )
+
+# =============================================================================
+def pr_contact_postprocess(form):
+    """
+        Import Organisation RSS Feeds
+    """
+
+    s3db = current.s3db
+    form_vars = form.vars
+
+    rss_url = form_vars.rsscontact_i_value_edit_0 or \
+              form_vars.rsscontact_i_value_edit_none
+    if not rss_url:
+        if form.record:
+            # Update form
+            old_rss = form.record.sub_rsscontact
+            import json
+            data = old_rss = json.loads(old_rss)["data"]
+            if data:
+                # RSS feed is being deleted, so we should disable it
+                old_rss = data[0]["value"]["value"]
+                table = s3db.msg_rss_channel
+                old = current.db(table.url == old_rss).select(table.channel_id,
+                                                              table.enabled,
+                                                              limitby = (0, 1)
+                                                              ).first()
+                if old and old.enabled:
+                    s3db.msg_channel_disable("msg_rss_channel", old.channel_id)
+                return
+        else:
+            # Nothing to do :)
+            return
+
+    # Check if we already have a channel for this Contact
+    db = current.db
+    name = form_vars.name
+    table = s3db.msg_rss_channel
+    name_exists = db(table.name == name).select(table.id,
+                                                table.channel_id,
+                                                table.enabled,
+                                                table.url,
+                                                limitby = (0, 1)
+                                                ).first()
+
+    no_import = current.request.post_vars.get("rss_no_import", None)
+
+    if name_exists:
+        if name_exists.url == rss_url:
+            # No change to either Contact Name or URL
+            if no_import:
+                if name_exists.enabled:
+                    # Disable channel (& associated parsers)
+                    s3db.msg_channel_disable("msg_rss_channel",
+                                             name_exists.channel_id)
+                return
+            elif name_exists.enabled:
+                # Nothing to do :)
+                return
+            else:
+                # Enable channel (& associated parsers)
+                s3db.msg_channel_enable("msg_rss_channel",
+                                        name_exists.channel_id)
+                return
+
+        # Check if we already have a channel for this URL
+        url_exists = db(table.url == rss_url).select(table.id,
+                                                     table.channel_id,
+                                                     table.enabled,
+                                                     limitby = (0, 1)
+                                                     ).first()
+        if url_exists:
+            # We have 2 feeds: 1 for the Contact & 1 for the URL
+            # Disable the old Contact one and link the URL one to this Contact
+            # and ensure active or not as appropriate
+            # Name field is unique so rename old one
+            name_exists.update_record(name="%s (Old)" % name)
+            if name_exists.enabled:
+                # Disable channel (& associated parsers)
+                s3db.msg_channel_disable("msg_rss_channel",
+                                         name_exists.channel_id)
+            url_exists.update_record(name=name)
+            if no_import:
+                if url_exists.enabled:
+                    # Disable channel (& associated parsers)
+                    s3db.msg_channel_disable("msg_rss_channel",
+                                             url_exists.channel_id)
+                return
+            elif url_exists.enabled:
+                # Nothing to do :)
+                return
+            else:
+                # Enable channel (& associated parsers)
+                s3db.msg_channel_enable("msg_rss_channel",
+                                        url_exists.channel_id)
+                return
+        else:
+            # Update the URL
+            name_exists.update_record(url=rss_url)
+            if no_import:
+                if name_exists.enabled:
+                    # Disable channel (& associated parsers)
+                    s3db.msg_channel_disable("msg_rss_channel",
+                                             name_exists.channel_id)
+                return
+            elif name_exists.enabled:
+                # Nothing to do :)
+                return
+            else:
+                # Enable channel (& associated parsers)
+                s3db.msg_channel_enable("msg_rss_channel",
+                                        name_exists.channel_id)
+                return
+    else:
+        # Check if we already have a channel for this URL
+        url_exists = db(table.url == rss_url).select(table.id,
+                                                     table.channel_id,
+                                                     table.enabled,
+                                                     limitby = (0, 1)
+                                                     ).first()
+        if url_exists:
+            # Either Contact has changed Name or this feed is associated with
+            # another Contact
+            # - update Feed name
+            url_exists.update_record(name=name)
+            if no_import:
+                if url_exists.enabled:
+                    # Disable channel (& associated parsers)
+                    s3db.msg_channel_disable("msg_rss_channel",
+                                             url_exists.channel_id)
+                return
+            elif url_exists.enabled:
+                # Nothing to do :)
+                return
+            else:
+                # Enable channel (& associated parsers)
+                s3db.msg_channel_enable("msg_rss_channel",
+                                        url_exists.channel_id)
+                return
+        elif no_import:
+            # Nothing to do :)
+            return
+        #else:
+        #    # Create a new Feed
+        #    pass
+
+    # Add RSS Channel
+    _id = table.insert(name=name, enabled=True, url=rss_url)
+    record = dict(id=_id)
+    s3db.update_super(table, record)
+
+    # Enable
+    channel_id = record["channel_id"]
+    s3db.msg_channel_enable("msg_rss_channel", channel_id)
+
+    # Setup Parser
+    table = s3db.msg_parser
+    _id = table.insert(channel_id=channel_id,
+                       function_name="parse_rss",
+                       enabled=True)
+    s3db.msg_parser_enable(_id)
+
+    # Check Now
+    async = current.s3task.async
+    async("msg_poll", args=["msg_rss_channel", channel_id])
+    async("msg_parse", args=[channel_id, "parse_rss"])
 
 # =============================================================================
 def mavc_rheader(r, tabs=None):

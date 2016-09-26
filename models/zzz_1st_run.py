@@ -227,6 +227,7 @@ if len(pop_list) > 0:
     bi = s3base.S3BulkImporter()
 
     # Register handlers
+    s3.import_feed = bi.import_feed
     s3.import_font = bi.import_font
     s3.import_image = bi.import_image
     s3.import_remote_csv = bi.import_remote_csv

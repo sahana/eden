@@ -319,6 +319,7 @@ class S3ProjectModel(S3Model):
         if use_codes:
             cappend("code")
         lappend("organisation_id")
+        default_row = "organisation_id"
         crud_fields += ["description",
                         "status_id",
                         "start_date",
@@ -335,9 +336,10 @@ class S3ProjectModel(S3Model):
                                     cols = 4,
                                     translate = True,
                                     ))
-            lappend((T("Sectors"), "sector.name"))
+            lappend((T("Sectors"), "sector_project.sector_id"))
+            default_row = "sector_project.sector_id"
         if mode_drr and settings.get_project_hazards():
-            lappend((T("Hazards"), "hazard.name"))
+            lappend((T("Hazards"), "hazard_project.hazard_id"))
             cappend(S3SQLInlineLink("hazard",
                                     label = T("Hazards"),
                                     field = "hazard_id",
@@ -346,6 +348,7 @@ class S3ProjectModel(S3Model):
                                     translate = True,
                                     ))
             #lappend("drr.hfa")
+            default_row = "hazard_project.hazard_id"
         if settings.get_project_themes():
             cappend(S3SQLInlineLink("theme",
                                     label = T("Themes"),
@@ -430,14 +433,14 @@ class S3ProjectModel(S3Model):
                                       "image",
                                       ),
                   report_options = Storage(
-                    rows=report_fields,
-                    cols=report_fields,
-                    fact=report_fact_fields,
-                    defaults=Storage(
-                        rows="hazard.name",
-                        cols=report_col_default,
-                        fact=report_fact_default,
-                        totals=True
+                    rows = report_fields,
+                    cols = report_fields,
+                    fact = report_fact_fields,
+                    defaults = Storage(
+                        rows = "hazard_id",
+                        cols = report_col_default,
+                        fact = report_fact_default,
+                        totals = True,
                     )
                   ),
                   super_entity = ("doc_entity", "budget_entity"),
@@ -758,10 +761,11 @@ class S3ProjectModel(S3Model):
                 count = current.db(query).update(organisation_id = organisation_id)
                 if not count:
                     # If there is no record to update, then create a new one
-                    otable.insert(project_id = id,
-                                  organisation_id = organisation_id,
-                                  role = lead_role,
-                                  )
+                    oid = otable.insert(project_id = id,
+                                        organisation_id = organisation_id,
+                                        role = lead_role,
+                                        )
+                    current.auth.s3_set_record_owner(otable, oid)
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -1263,8 +1267,10 @@ class S3ProjectActivityModel(S3Model):
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   #onaccept = self.project_activity_onaccept,
+                  realm_entity = self.project_activity_realm_entity,
                   report_options = report_options,
                   super_entity = "doc_entity",
+                  update_realm = True,
                   )
 
         # Reusable Field
@@ -1517,6 +1523,24 @@ class S3ProjectActivityModel(S3Model):
             latable.insert(project_location_id = pl_id,
                            activity_type_id = activity_type_id,
                            )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_activity_realm_entity(table, record):
+        """ Set the realm entity to the project's realm entity """
+
+        activity_id = record.id
+        db = current.db
+        table = db.project_activity
+        ptable = db.project_project
+        query = (table.id == activity_id) & \
+                (table.project_id == ptable.id)
+        project = db(query).select(ptable.realm_entity,
+                                   limitby=(0, 1)).first()
+        try:
+            return project.realm_entity
+        except:
+            return None
 
 # =============================================================================
 class S3ProjectActivityTypeModel(S3Model):
@@ -3652,6 +3676,7 @@ class S3ProjectOrganisationModel(S3Model):
                        onaccept = self.project_organisation_onaccept,
                        ondelete = self.project_organisation_ondelete,
                        onvalidation = self.project_organisation_onvalidation,
+                       realm_entity = self.project_organisation_realm_entity,
                        report_options = report_options,
                        )
 
@@ -3754,6 +3779,24 @@ class S3ProjectOrganisationModel(S3Model):
 
             # Set the project organisation_id to NULL (using None)
             db(ptable.id == project_id).update(organisation_id=None)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def project_organisation_realm_entity(table, record):
+        """ Set the realm entity to the project's realm entity """
+
+        po_id = record.id
+        db = current.db
+        table = db.project_organisation
+        ptable = db.project_project
+        query = (table.id == po_id) & \
+                (table.project_id == ptable.id)
+        project = db(query).select(ptable.realm_entity,
+                                   limitby=(0, 1)).first()
+        try:
+            return project.realm_entity
+        except:
+            return None
 
 # =============================================================================
 class S3ProjectPlanningModel(S3Model):

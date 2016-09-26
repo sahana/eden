@@ -1040,6 +1040,7 @@ class S3ParsingModel(S3Model):
         # ---------------------------------------------------------------------
         # Message parsing status
         # - component to core msg_message table
+        # - messages which need parsing are placed here & updated when parsed
         #
         tablename = "msg_parsing_status"
         define_table(tablename,
@@ -1315,6 +1316,13 @@ class S3RSSModel(S3ChannelModel):
                      Field("url",
                            label = T("URL"),
                            requires = IS_URL(),
+                           ),
+                     Field("content_type", "boolean",
+                           default = False,
+                           label = T("Content-Type Override"),
+                           represent = s3_yes_no_represent,
+                           # Some feeds have text/html set which feedparser refuses to parse
+                           comment = T("Force content-type to application/xml"),
                            ),
                      s3_datetime(label = T("Last Polled"),
                                  writable = False,

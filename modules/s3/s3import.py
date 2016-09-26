@@ -4289,7 +4289,7 @@ class S3BulkImporter(object):
     # -------------------------------------------------------------------------
     def import_user(self, filename):
         """
-            Import Users from CSV
+            Import Users from CSV with an import Prep
         """
 
         current.response.s3.import_prep = current.auth.s3_import_prep
@@ -4304,6 +4304,41 @@ class S3BulkImporter(object):
                                   "auth",
                                   "user.xsl"
                                   ),
+                     None
+                     ]
+        self.execute_import_task(user_task)
+
+    # -------------------------------------------------------------------------
+    def import_feed(self, filename):
+        """
+            Import RSS Feeds from CSV with an import Prep
+        """
+
+        stylesheet = os.path.join(current.request.folder,
+                                  "static",
+                                  "formats",
+                                  "s3csv",
+                                  "msg",
+                                  "rss_channel.xsl"
+                                  )
+
+        # 1st import any Contacts
+        current.response.s3.import_prep = current.s3db.pr_import_prep
+        user_task = [1,
+                     "pr",
+                     "contact",
+                     filename,
+                     stylesheet,
+                     None
+                     ]
+        self.execute_import_task(user_task)
+
+        # Then import the Channels
+        user_task = [1,
+                     "msg",
+                     "rss_channel",
+                     filename,
+                     stylesheet,
                      None
                      ]
         self.execute_import_task(user_task)

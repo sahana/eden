@@ -659,7 +659,7 @@ Thank you"""
                 query = (utable[userfield] == form.vars[userfield])
                 user = db(query).select(limitby=(0, 1)).first()
                 if user:
-                    # user in db, check if registration pending or disabled
+                    # User in db, check if registration pending or disabled
                     temp_user = user
                     if temp_user.registration_key == "pending":
                         response.warning = deployment_settings.get_auth_registration_pending()
@@ -702,6 +702,14 @@ Thank you"""
                                 if not self in settings.login_methods:
                                     # Do not store password in db
                                     form.vars[passfield] = None
+                                # Ensure new users go through their post registration tasks 
+                                register_onaccept = settings.register_onaccept
+                                if register_onaccept:
+                                    register_onaccept = [self.s3_register_onaccept,
+                                                         register_onaccept, # Used by DRRPP
+                                                         ]
+                                else:
+                                    settings.register_onaccept = self.s3_register_onaccept
                                 user = self.get_or_create_user(form.vars)
                                 break
                 if not user:
@@ -724,11 +732,15 @@ Thank you"""
             cas_user = cas.get_user()
             if cas_user:
                 cas_user[passfield] = None
+                # Ensure new users go through their post registration tasks 
+                register_onaccept = settings.register_onaccept
+                if register_onaccept:
+                    register_onaccept = [self.s3_register_onaccept,
+                                         register_onaccept, # Used by DRRPP
+                                         ]
+                else:
+                    settings.register_onaccept = self.s3_register_onaccept
                 user = self.get_or_create_user(utable._filter_fields(cas_user))
-                # @ToDo: Complete Registration for new users
-                #form = Storage()
-                #form.vars = user
-                #self.s3_user_register_onaccept(form)
             elif hasattr(cas, "login_form"):
                 return cas.login_form()
             else:
@@ -1370,7 +1382,6 @@ Thank you"""
         """
 
         settings = self.settings
-        messages = self.messages
         request = current.request
 
         # Customise the resource
@@ -1386,7 +1397,7 @@ Thank you"""
             redirect(settings.verify_email_next)
 
         if log == DEFAULT:
-            log = messages.verify_email_log
+            log = self.messages.verify_email_log
         if next == DEFAULT:
             next = settings.verify_email_next
 
@@ -2110,6 +2121,23 @@ $.filterOptionsS3({
                 chatdb.executesql(sql_query)
 
     # -------------------------------------------------------------------------
+    def s3_register_onaccept(self, form):
+        """
+            S3 framework function
+
+            Designed to be called when a user is created through:
+                - registration via OAuth, LDAP, etc
+
+            Does the following:
+                - Sets session.auth.user for authorstamp, etc
+                - Approves user (to set registration groups, such as AUTHENTICATED, link to Person)
+        """
+
+        user = form.vars
+        current.session.auth = Storage(user=user)
+        self.s3_approve_user(user)
+
+    # -------------------------------------------------------------------------
     def s3_user_register_onaccept(self, form):
         """
             S3 framework function
@@ -2405,8 +2433,15 @@ $.filterOptionsS3({
         if organisation_id and \
            "org_organisation" in \
            deployment_settings.get_auth_record_approval_required_for():
-            s3db.resource("org_organisation", organisation_id,
-                          unapproved=True).approve()
+            approved = s3db.resource("org_organisation", organisation_id,
+                                     unapproved=True).approve()
+            if not approved:
+                # User is verifying their email and is not yet logged-in
+                #self.s3_impersonate(user_id) # Don't want to switch user
+                self.override = True
+                s3db.resource("org_organisation", organisation_id,
+                              unapproved=True).approve()
+                self.override = False
 
         user_email = db(utable.id == user_id).select(utable.email,
                                                      ).first().email
