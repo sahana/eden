@@ -73,6 +73,7 @@ osetattr = object.__setattr__
 ogetattr = object.__getattribute__
 
 MAXDEPTH = 10
+DEFAULT = lambda: None
 
 # Compact JSON encoding
 #SEPARATORS = (",", ":")
@@ -1023,60 +1024,95 @@ class S3Resource(object):
         return numrows
 
     # -------------------------------------------------------------------------
-    def approve(self, components=[], approve=True):
+    def approve(self, components=(), approve=True, approved_by=None):
         """
             Approve all records in this resource
 
             @param components: list of component aliases to include, None
-                               for no components, empty list for all components
-            @param approve: set to approved (False for reset to unapproved)
+                               for no components, empty list or tuple to
+                               approve all components (default)
+            @param approve: set to approved (False to reset to unapproved)
+            @param approved_by: set approver explicitly, a valid auth_user.id
+                                or 0 for approval by system authority
         """
 
+        if "approved_by" not in self.fields:
+            # No approved_by field => treat as approved by default
+            return True
+
         auth = current.auth
-
-        if not auth.s3_logged_in():
-            return False
-
         if approve:
-            user = auth.user
-            user_id = user and user.id or 0
+            if approved_by is None:
+                user = auth.user
+                if user:
+                    user_id = user.id
+                else:
+                    return False
+            else:
+                user_id = approved_by
         else:
+            # Reset to unapproved
             user_id = None
 
         db = current.db
-        tablename = self.tablename
         table = self._table
 
-        records = self.select([self._id.name], limit=None)
-        for record in records["rows"]:
+        # Get all record_ids in the resource
+        pkey = self._id.name
+        rows = self.select([pkey], limit=None, as_rows=True)
+        if not rows:
+            # No records to approve => exit early
+            return True
 
-            record_id = record[str(self._id)]
+        # Collect record_ids and clear cached permissions
+        record_ids = set()
+        add = record_ids.add
+        forget_permissions = auth.permission.forget
+        for record in rows:
+            record_id = record[pkey]
+            forget_permissions(table, record_id)
+            add(record_id)
 
-            # Forget any cached permission for this record
-            auth.permission.forget(table, record_id)
+        # Set approved_by for each record in the set
+        dbset = db(table._id.belongs(record_ids))
+        try:
+            success = dbset.update(approved_by = user_id)
+        except:
+            # DB error => raise in debug mode to produce a proper ticket
+            if current.response.s3.debug:
+                raise
+            success = False
+        if not success:
+            db.rollback()
+            return False
 
-            if "approved_by" in table.fields:
-                dbset = db(table._id == record_id)
-                success = dbset.update(approved_by = user_id)
-                if not success:
-                    current.db.rollback()
-                    return False
-                else:
-                    onapprove = self.get_config("onapprove", None)
-                    if onapprove is not None:
-                        row = dbset.select(limitby=(0, 1)).first()
-                        if row:
-                            callback(onapprove, row, tablename=tablename)
-            if components is None:
-                continue
-            for alias in self.components:
-                if components and alias not in components:
-                    continue
-                component = self.components[alias]
-                success = component.approve(components=None, approve=approve)
-                if not success:
-                    current.db.rollback()
-                    return False
+        # Invoke onapprove-callback for each updated record
+        onapprove = self.get_config("onapprove", None)
+        if onapprove:
+            rows = dbset.select(limitby=(0, len(record_ids)))
+            for row in rows:
+                callback(onapprove, row, tablename=self.tablename)
+
+        # Return early if no components to approve
+        if components is None:
+            return True
+
+        # Determine which components to approve
+        # NB: Components are pre-filtered with the master filter, too
+        if components:
+            cdict = self.components
+            components = [cdict[k] for k in cdict if k in components]
+        else:
+            # Approve all currently attached components
+            components = self.components.values()
+
+        for component in components:
+            success = component.approve(components = None,
+                                        approve = approve,
+                                        approved_by = approved_by,
+                                        )
+            if not success:
+                return False
 
         return True
 

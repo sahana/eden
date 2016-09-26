@@ -2435,15 +2435,18 @@ $.filterOptionsS3({
         if organisation_id and \
            "org_organisation" in \
            deployment_settings.get_auth_record_approval_required_for():
-            approved = s3db.resource("org_organisation", organisation_id,
-                                     unapproved=True).approve()
+            org_resource = s3db.resource("org_organisation",
+                                         organisation_id,
+                                         # Do not re-approve (would
+                                         # overwrite original approver)
+                                         approved = False,
+                                         unapproved = True,
+                                         )
+            approved = org_resource.approve()
             if not approved:
-                # User is verifying their email and is not yet logged-in
-                #self.s3_impersonate(user_id) # Don't want to switch user
-                self.override = True
-                s3db.resource("org_organisation", organisation_id,
-                              unapproved=True).approve()
-                self.override = False
+                # User is verifying their email and is not yet
+                # logged-in, so approve by system authority
+                org_resource.approve(approved_by=0)
 
         user_email = db(utable.id == user_id).select(utable.email,
                                                      ).first().email
