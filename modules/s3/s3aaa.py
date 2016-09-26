@@ -702,12 +702,13 @@ Thank you"""
                                 if not self in settings.login_methods:
                                     # Do not store password in db
                                     form.vars[passfield] = None
-                                # Ensure new users go through their post registration tasks 
+                                # Ensure new users go through their post registration tasks
                                 register_onaccept = settings.register_onaccept
                                 if register_onaccept:
-                                    register_onaccept = [self.s3_register_onaccept,
-                                                         register_onaccept, # Used by DRRPP
-                                                         ]
+                                    settings.register_onaccept = \
+                                        [self.s3_register_onaccept,
+                                         register_onaccept, # Used by DRRPP
+                                         ]
                                 else:
                                     settings.register_onaccept = self.s3_register_onaccept
                                 user = self.get_or_create_user(form.vars)
@@ -732,12 +733,13 @@ Thank you"""
             cas_user = cas.get_user()
             if cas_user:
                 cas_user[passfield] = None
-                # Ensure new users go through their post registration tasks 
+                # Ensure new users go through their post registration tasks
                 register_onaccept = settings.register_onaccept
                 if register_onaccept:
-                    register_onaccept = [self.s3_register_onaccept,
-                                         register_onaccept, # Used by DRRPP
-                                         ]
+                    settings.register_onaccept = \
+                        [self.s3_register_onaccept,
+                         register_onaccept, # Used by DRRPP
+                         ]
                 else:
                     settings.register_onaccept = self.s3_register_onaccept
                 user = self.get_or_create_user(utable._filter_fields(cas_user))
