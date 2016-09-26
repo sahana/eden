@@ -898,18 +898,18 @@ s3uuid = SQLCustomType(type = "string",
 
 # Universally unique identifier for a record
 s3_meta_uuid = S3ReusableField("uuid", type=s3uuid,
-                               length=128,
-                               notnull=True,
-                               unique=True,
-                               readable=False,
-                               writable=False,
-                               default="")
+                               length = 128,
+                               notnull = True,
+                               unique = True,
+                               readable = False,
+                               writable = False,
+                               default = "")
 
 # Master-Copy-Index (for Sync)
 s3_meta_mci = S3ReusableField("mci", "integer",
-                              default=0,
-                              readable=False,
-                              writable=False)
+                              default = 0,
+                              readable = False,
+                              writable = False)
 
 def s3_uid():
     return (s3_meta_uuid(),
@@ -973,7 +973,8 @@ def s3_authorstamp():
     utable = auth.settings.table_user
 
     if auth.is_logged_in():
-        current_user = auth.user.id
+        # Not current.auth.user to support impersonation
+        current_user = current.session.auth.user.id
     else:
         current_user = None
 
@@ -1018,7 +1019,8 @@ def s3_ownerstamp():
                                             readable = False,
                                             writable = False,
                                             requires = None,
-                                            default = auth.user.id
+                                            # Not current.auth.user to support impersonation
+                                            default = current.session.auth.user.id
                                                         if auth.is_logged_in()
                                                         else None,
                                             represent = lambda id: \

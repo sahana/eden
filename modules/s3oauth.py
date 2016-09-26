@@ -151,10 +151,10 @@ class FaceBookAccount(OAuthAccount):
             table = current.auth.settings.table_user
 
             query = (table.email == user["email"])
-            existent = current.db(query).select(table.id,
-                                                table.password,
-                                                limitby=(0, 1)).first()
-            if existent:
+            exists = current.db(query).select(table.id,
+                                              table.password,
+                                              limitby=(0, 1)).first()
+            if exists:
                 #session["%s_setpassword" % existent.id] = existent.password
 
                 user_dict = {"first_name": user.get("first_name", ""),

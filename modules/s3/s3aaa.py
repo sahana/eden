@@ -702,9 +702,15 @@ Thank you"""
                                 if not self in settings.login_methods:
                                     # Do not store password in db
                                     form.vars[passfield] = None
+                                # Ensure new users go through their post registration tasks 
+                                register_onaccept = settings.register_onaccept
+                                if register_onaccept:
+                                    register_onaccept = [lambda form: self.s3_approve_user(form.vars),
+                                                         register_onaccept,
+                                                         ]
+                                else:
+                                    settings.register_onaccept = lambda form: self.s3_approve_user(form.vars)
                                 user = self.get_or_create_user(form.vars)
-                                # Complete Registration for new users
-                                self.s3_approve_user(form.vars)
                                 break
                 if not user:
                     self.log_event(settings.login_failed_log,
@@ -726,9 +732,15 @@ Thank you"""
             cas_user = cas.get_user()
             if cas_user:
                 cas_user[passfield] = None
+                # Ensure new users go through their post registration tasks 
+                register_onaccept = settings.register_onaccept
+                if register_onaccept:
+                    register_onaccept = [lambda form: self.s3_approve_user(form.vars),
+                                         register_onaccept,
+                                         ]
+                else:
+                    settings.register_onaccept = lambda form: self.s3_approve_user(form.vars)
                 user = self.get_or_create_user(utable._filter_fields(cas_user))
-                # Complete Registration for new users
-                self.s3_approve_user(user)
             elif hasattr(cas, "login_form"):
                 return cas.login_form()
             else:
