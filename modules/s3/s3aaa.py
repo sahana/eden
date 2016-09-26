@@ -705,11 +705,11 @@ Thank you"""
                                 # Ensure new users go through their post registration tasks 
                                 register_onaccept = settings.register_onaccept
                                 if register_onaccept:
-                                    register_onaccept = [lambda form: self.login_user(form.vars); self.s3_approve_user(form.vars),
+                                    register_onaccept = [self.register_onaccept,
                                                          register_onaccept, # Used by DRRPP
                                                          ]
                                 else:
-                                    settings.register_onaccept = lambda form: self.login_user(form.vars); self.s3_approve_user(form.vars)
+                                    settings.register_onaccept = self.register_onaccept
                                 user = self.get_or_create_user(form.vars)
                                 break
                 if not user:
@@ -735,11 +735,11 @@ Thank you"""
                 # Ensure new users go through their post registration tasks 
                 register_onaccept = settings.register_onaccept
                 if register_onaccept:
-                    register_onaccept = [lambda form: self.login_user(form.vars); self.s3_approve_user(form.vars),
+                    register_onaccept = [self.register_onaccept,
                                          register_onaccept, # Used by DRRPP
                                          ]
                 else:
-                    settings.register_onaccept = lambda form: self.login_user(form.vars); self.s3_approve_user(form.vars)
+                    settings.register_onaccept = self.register_onaccept
                 user = self.get_or_create_user(utable._filter_fields(cas_user))
             elif hasattr(cas, "login_form"):
                 return cas.login_form()
@@ -2119,6 +2119,23 @@ $.filterOptionsS3({
                 # Using RawSQL as table not created in web2py
                 sql_query="insert into ofGroupUser values (\'%s\',\'%s\' ,0);" % (chat_server["groupname"], chat_username)
                 chatdb.executesql(sql_query)
+
+    # -------------------------------------------------------------------------
+    def s3_register_onaccept(self, form):
+        """
+            S3 framework function
+
+            Designed to be called when a user is created through:
+                - registration via OAuth, LDAP, etc
+
+            Does the following:
+                - Logs the user in (to set session.auth.user for authorstamp, etc)
+                - Approves user (to set registration groups, such as AUTHENTICATED)
+        """
+
+        user = form.vars
+        self.login_user(user)
+        self.s3_approve_user(user)
 
     # -------------------------------------------------------------------------
     def s3_user_register_onaccept(self, form):
