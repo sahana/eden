@@ -2689,11 +2689,46 @@ class S3OrganisationServiceModel(S3Model):
                        "comments",
                        ]
 
+        # Report axes
+        report_fields = ["organisation_id",
+                         "service_location_service.service_id",
+                         ]
+        add_report_field = report_fields.append
+
+        # Location levels (append to list fields and report axes)
+        # @ToDo: deployment_setting for Site vs Location
+        levels = current.gis.get_relevant_hierarchy_levels()
+        for level in levels:
+            lfield = "location_id$%s" % level
+            #list_fields.append(lfield)
+            add_report_field(lfield)
+
+        if "L0" in levels:
+            default_row = "location_id$L0"
+        elif "L1" in levels:
+            default_row = "location_id$L1"
+        elif "L2" in levels:
+            default_row = "location_id$L2"
+
         # Table configuration
         configure(tablename,
                   crud_form = crud_form,
                   deduplicate = self.org_service_location_deduplicate,
                   list_fields = list_fields,
+                  report_options = Storage(
+                    rows = report_fields,
+                    cols = report_fields,
+                    fact = [(T("Number of Organizations"),
+                             "count(organisation_id)",
+                             ),
+                            ],
+                    defaults = Storage(
+                        rows = default_row,
+                        cols = "service_location_service.service_id",
+                        fact = "count(organisation_id)",
+                        totals = True,
+                    )
+                  ),
                   super_entity = "doc_entity",
                   )
 

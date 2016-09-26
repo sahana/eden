@@ -195,6 +195,7 @@ def config(settings):
     settings.cms.location_click_filters = True
     settings.cms.organisation = "post_organisation.organisation_id"
     settings.cms.richtext = True
+    settings.cms.show_tags = True
 
     # =========================================================================
     # Documents
@@ -408,6 +409,7 @@ def config(settings):
                             ]
             # RSS feed handling
             postprocess = pr_contact_postprocess
+            current.response.s3.crud_strings["org_organisation"].label_create = T("Create a Profile")
         else:
             field = table.logo
             field.readable = field.writable = False
@@ -840,7 +842,7 @@ def config(settings):
     #
     settings.project.mode_3w = True
     settings.project.mode_drr = True
-    settings.project.hazards = True
+    settings.project.hazards = False
     settings.project.themes = False
     settings.project.hfa = False
     settings.project.activities = True
@@ -1014,7 +1016,6 @@ def config(settings):
                        list_fields = list_fields,
                        )
 
-
     settings.customise_project_project_resource = customise_project_project_resource
 
     # -------------------------------------------------------------------------
@@ -1023,6 +1024,37 @@ def config(settings):
         # Custom rheader and tabs
         attr = dict(attr)
         attr["rheader"] = mavc_rheader
+
+        # Report axes
+        report_fields = ["organisation_id",
+                         "sector_project.sector_id",
+                         ]
+        add_report_field = report_fields.append
+
+        # Location levels (append to list fields and report axes)
+        # @ToDo: deployment_setting for Site vs Location
+        levels = current.gis.get_relevant_hierarchy_levels()
+        for level in levels:
+            lfield = "location_id$%s" % level
+            #list_fields.append(lfield)
+            add_report_field(lfield)
+
+        current.s3db.configure("project_project",
+                               report_options = Storage(
+                                    rows = report_fields,
+                                    cols = report_fields,
+                                    fact = [(T("Number of Organizations"),
+                                             "count(organisation_id)",
+                                             ),
+                                            ],
+                                    defaults = Storage(
+                                        rows = "location_id$L1",
+                                        cols = "sector_project.sector_id",
+                                        fact = "count(organisation_id)",
+                                        totals = True,
+                                    )
+                                  ),
+                               )
 
         return attr
 
@@ -1200,7 +1232,7 @@ def config(settings):
 
             if r.interactive:
                 s3.crud_strings[tablename] = Storage(
-                    label_create = T("Report Need"),
+                    label_create = T("Report a Need"),
                     title_display = T("Need Details"),
                     title_list = T("Needs"),
                     title_update = T("Edit Need"),

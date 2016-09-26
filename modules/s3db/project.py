@@ -319,6 +319,7 @@ class S3ProjectModel(S3Model):
         if use_codes:
             cappend("code")
         lappend("organisation_id")
+        default_row = "organisation_id"
         crud_fields += ["description",
                         "status_id",
                         "start_date",
@@ -335,9 +336,10 @@ class S3ProjectModel(S3Model):
                                     cols = 4,
                                     translate = True,
                                     ))
-            lappend((T("Sectors"), "sector.name"))
+            lappend((T("Sectors"), "sector_project.sector_id"))
+            default_row = "sector_project.sector_id"
         if mode_drr and settings.get_project_hazards():
-            lappend((T("Hazards"), "hazard.name"))
+            lappend((T("Hazards"), "hazard_project.hazard_id"))
             cappend(S3SQLInlineLink("hazard",
                                     label = T("Hazards"),
                                     field = "hazard_id",
@@ -346,6 +348,7 @@ class S3ProjectModel(S3Model):
                                     translate = True,
                                     ))
             #lappend("drr.hfa")
+            default_row = "hazard_project.hazard_id"
         if settings.get_project_themes():
             cappend(S3SQLInlineLink("theme",
                                     label = T("Themes"),
@@ -430,14 +433,14 @@ class S3ProjectModel(S3Model):
                                       "image",
                                       ),
                   report_options = Storage(
-                    rows=report_fields,
-                    cols=report_fields,
-                    fact=report_fact_fields,
-                    defaults=Storage(
-                        rows="hazard.name",
-                        cols=report_col_default,
-                        fact=report_fact_default,
-                        totals=True
+                    rows = report_fields,
+                    cols = report_fields,
+                    fact = report_fact_fields,
+                    defaults = Storage(
+                        rows = "hazard_id",
+                        cols = report_col_default,
+                        fact = report_fact_default,
+                        totals = True,
                     )
                   ),
                   super_entity = ("doc_entity", "budget_entity"),
