@@ -2129,12 +2129,12 @@ $.filterOptionsS3({
                 - registration via OAuth, LDAP, etc
 
             Does the following:
-                - Logs the user in (to set session.auth.user for authorstamp, etc)
+                - Sets session.auth.user for authorstamp, etc
                 - Approves user (to set registration groups, such as AUTHENTICATED)
         """
 
         user = form.vars
-        self.login_user(user)
+        current.session.auth = Storage(user=user)
         self.s3_approve_user(user)
 
     # -------------------------------------------------------------------------
