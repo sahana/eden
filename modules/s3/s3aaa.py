@@ -705,11 +705,11 @@ Thank you"""
                                 # Ensure new users go through their post registration tasks 
                                 register_onaccept = settings.register_onaccept
                                 if register_onaccept:
-                                    register_onaccept = [self.register_onaccept,
+                                    register_onaccept = [self.s3_register_onaccept,
                                                          register_onaccept, # Used by DRRPP
                                                          ]
                                 else:
-                                    settings.register_onaccept = self.register_onaccept
+                                    settings.register_onaccept = self.s3_register_onaccept
                                 user = self.get_or_create_user(form.vars)
                                 break
                 if not user:
@@ -735,11 +735,11 @@ Thank you"""
                 # Ensure new users go through their post registration tasks 
                 register_onaccept = settings.register_onaccept
                 if register_onaccept:
-                    register_onaccept = [self.register_onaccept,
+                    register_onaccept = [self.s3_register_onaccept,
                                          register_onaccept, # Used by DRRPP
                                          ]
                 else:
-                    settings.register_onaccept = self.register_onaccept
+                    settings.register_onaccept = self.s3_register_onaccept
                 user = self.get_or_create_user(utable._filter_fields(cas_user))
             elif hasattr(cas, "login_form"):
                 return cas.login_form()
