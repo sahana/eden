@@ -2130,7 +2130,7 @@ $.filterOptionsS3({
 
             Does the following:
                 - Sets session.auth.user for authorstamp, etc
-                - Approves user (to set registration groups, such as AUTHENTICATED)
+                - Approves user (to set registration groups, such as AUTHENTICATED, link to Person)
         """
 
         user = form.vars
