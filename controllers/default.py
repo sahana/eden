@@ -928,7 +928,7 @@ def skill():
     """
         RESTful CRUD controller
         - needed when skill add form embedded in default/person
-        - only create method is allowed, when opened in a inline form.
+        - only create method is allowed, when opened in an inline form.
     """
 
     # Check if it is called from a inline form

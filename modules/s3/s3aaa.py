@@ -659,7 +659,7 @@ Thank you"""
                 query = (utable[userfield] == form.vars[userfield])
                 user = db(query).select(limitby=(0, 1)).first()
                 if user:
-                    # user in db, check if registration pending or disabled
+                    # User in db, check if registration pending or disabled
                     temp_user = user
                     if temp_user.registration_key == "pending":
                         response.warning = deployment_settings.get_auth_registration_pending()
@@ -703,6 +703,8 @@ Thank you"""
                                     # Do not store password in db
                                     form.vars[passfield] = None
                                 user = self.get_or_create_user(form.vars)
+                                # Complete Registration for new users
+                                self.s3_approve_user(form.vars)
                                 break
                 if not user:
                     self.log_event(settings.login_failed_log,
@@ -725,10 +727,8 @@ Thank you"""
             if cas_user:
                 cas_user[passfield] = None
                 user = self.get_or_create_user(utable._filter_fields(cas_user))
-                # @ToDo: Complete Registration for new users
-                #form = Storage()
-                #form.vars = user
-                #self.s3_user_register_onaccept(form)
+                # Complete Registration for new users
+                self.s3_approve_user(user)
             elif hasattr(cas, "login_form"):
                 return cas.login_form()
             else:
