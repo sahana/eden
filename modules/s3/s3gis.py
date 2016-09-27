@@ -9130,8 +9130,7 @@ class S3Map(S3Method):
 
             output = {}
 
-            title = response.s3.crud_strings[tablename].get("title_map",
-                                                            current.T("Map"))
+            title = self.crud_string(tablename, "title_map")
             output["title"] = title
 
             # Filter widgets

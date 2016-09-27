@@ -345,6 +345,22 @@ class S3FireStationModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Water Source"),
+            title_display = T("Water Source Details"),
+            title_list = T("Water Sources"),
+            title_map = T("Map of Water Sources"),
+            title_update = T("Edit Water Source"),
+            title_upload = T("Import Water Sources"),
+            label_list_button = T("List Water Sources"),
+            label_delete_button = T("Delete Water Source"),
+            msg_record_created = T("Water Source added"),
+            msg_record_modified = T("Water Source updated"),
+            msg_record_deleted = T("Water Source deleted"),
+            msg_no_match = T("No Water Sources could be found"),
+            msg_list_empty = T("No Water Sources currently registered"))
+
         # =====================================================================
         # Hazards
         # - this is long-term hazards, not incidents
@@ -361,6 +377,21 @@ class S3FireStationModel(S3Model):
                      person_id(),
                      s3_comments(),
                      *s3_meta_fields())
+
+        # CRUD strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Hazard Point"),
+            title_display = T("Hazard Point Details"),
+            title_list = T("Hazard Points"),
+            title_update = T("Edit Hazard Point"),
+            title_upload = T("Import Hazard Points"),
+            label_list_button = T("List Hazard Points"),
+            label_delete_button = T("Delete Hazard Point"),
+            msg_record_created = T("Hazard Point added"),
+            msg_record_modified = T("Hazard Point updated"),
+            msg_record_deleted = T("Hazard Point deleted"),
+            msg_no_match = T("No Hazard Points could be found"),
+            msg_list_empty = T("No Hazard Points currently registered"))
 
         # =====================================================================
         # Shifts
