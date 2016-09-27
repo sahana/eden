@@ -38,6 +38,7 @@ __all__ = ("DVRCaseModel",
            "DVRCaseAllowanceModel",
            "DVRCaseEventModel",
            "DVRSiteActivityModel",
+           "dvr_AssignMethod",
            "dvr_case_default_status",
            "dvr_case_status_filter_opts",
            "dvr_case_household_size",
@@ -85,6 +86,7 @@ class DVRCaseModel(S3Model):
         define_table = self.define_table
         person_id = self.pr_person_id
 
+        beneficiary = settings.get_dvr_label() # If we add more options in future then == "Beneficiary"
         manage_transferability = settings.get_dvr_manage_transferability()
 
         # ---------------------------------------------------------------------
@@ -463,18 +465,35 @@ class DVRCaseModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD Strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Case"),
-            title_display = T("Case Details"),
-            title_list = T("Cases"),
-            title_update = T("Edit Case"),
-            label_list_button = T("List Cases"),
-            label_delete_button = T("Delete Case"),
-            msg_record_created = T("Case added"),
-            msg_record_modified = T("Case updated"),
-            msg_record_deleted = T("Case deleted"),
-            msg_list_empty = T("No Cases found"),
-            )
+        if beneficiary:
+            label = T("Beneficiary"),
+            crud_strings[tablename] = Storage(
+                label_create = T("Create Beneficiary"),
+                title_display = T("Beneficiary Details"),
+                title_list = T("Beneficiaries"),
+                title_update = T("Edit Beneficiary"),
+                label_list_button = T("List Beneficiaries"),
+                label_delete_button = T("Delete Beneficiary"),
+                msg_record_created = T("Beneficiary added"),
+                msg_record_modified = T("Beneficiary updated"),
+                msg_record_deleted = T("Beneficiary deleted"),
+                msg_list_empty = T("No Beneficiaries found"),
+                )
+
+        else:
+            label = T("Case"),
+            crud_strings[tablename] = Storage(
+                label_create = T("Create Case"),
+                title_display = T("Case Details"),
+                title_list = T("Cases"),
+                title_update = T("Edit Case"),
+                label_list_button = T("List Cases"),
+                label_delete_button = T("Delete Case"),
+                msg_record_created = T("Case added"),
+                msg_record_modified = T("Case updated"),
+                msg_record_deleted = T("Case deleted"),
+                msg_list_empty = T("No Cases found"),
+                )
 
         # Components
         self.add_components(tablename,
@@ -524,7 +543,7 @@ class DVRCaseModel(S3Model):
         # Reusable field
         represent = S3Represent(lookup=tablename, fields=("reference",))
         case_id = S3ReusableField("case_id", "reference %s" % tablename,
-                                  label = T("Case"),
+                                  label = label,
                                   ondelete = "RESTRICT",
                                   represent = represent,
                                   requires = IS_EMPTY_OR(
@@ -5087,6 +5106,279 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
             output = current.T("No pending payments")
 
         return output
+
+# =============================================================================
+class dvr_AssignMethod(S3Method):
+    """
+        Custom Method to allow beneficiaries (cases) to be assigned to something
+        e.g. Project, Activity, Distribution
+    """
+
+    def __init__(self, component, next_tab="case", types=None):
+        """
+            @param component: the Component in which to create records
+            @param types: a list of types to pick from: Staff, Volunteers, Deployables
+            @param next_tab: the component/method to redirect to after assigning
+        """
+
+        self.component = component
+        self.next_tab = next_tab
+        self.types = types
+
+    def apply_method(self, r, **attr):
+        """
+            Apply method.
+
+            @param r: the S3Request
+            @param attr: controller options for this request
+        """
+
+        component = self.component
+        components = r.resource.components
+        for c in components:
+            if c == component:
+                component = components[c]
+                break
+        try:
+            if component.link:
+                component = component.link
+        except:
+            current.log.error("Invalid Component!")
+            raise
+
+        tablename = component.tablename
+
+        # Requires permission to create component
+        authorised = current.auth.s3_has_permission("create", tablename)
+        if not authorised:
+            r.unauthorised()
+
+        T = current.T
+        db = current.db
+        s3db = current.s3db
+        settings = current.deployment_settings
+
+        table = s3db[tablename]
+        fkey = component.fkey
+        record = r.record
+        if fkey in record:
+            # SuperKey
+            record_id = record[fkey]
+        else:
+            record_id = r.id
+
+        get_vars = r.get_vars
+        response = current.response
+
+        if r.http == "POST":
+            added = 0
+            post_vars = r.post_vars
+            if all([n in post_vars for n in ("assign", "selected", "mode")]):
+
+                selected = post_vars.selected
+                if selected:
+                    selected = selected.split(",")
+                else:
+                    selected = []
+
+                # Handle exclusion filter
+                if post_vars.mode == "Exclusive":
+                    if "filterURL" in post_vars:
+                        filters = S3URLQuery.parse_url(post_vars.filterURL)
+                    else:
+                        filters = None
+                    query = ~(FS("id").belongs(selected))
+                    dresource = s3db.resource("dvr_case",
+                                              alias = self.component,
+                                              filter=query, vars=filters)
+                    rows = dresource.select(["id"], as_rows=True)
+                    selected = [str(row.id) for row in rows]
+
+                # Prevent multiple entries in the link table
+                query = (table.case_id.belongs(selected)) & \
+                        (table[fkey] == record_id) & \
+                        (table.deleted != True)
+                rows = db(query).select(table.id)
+                rows = dict((row.id, row) for row in rows)
+                onaccept = component.get_config("create_onaccept",
+                                                component.get_config("onaccept", None))
+                for case_id in selected:
+                    try:
+                        cid = int(case_id.strip())
+                    except ValueError:
+                        continue
+                    if cid not in rows:
+                        link = Storage(case_id = case_id)
+                        link[fkey] = record_id
+                        _id = table.insert(**link)
+                        if onaccept:
+                            link["id"] = _id
+                            form = Storage(vars=link)
+                            onaccept(form)
+                        added += 1
+            current.session.confirmation = T("%(number)s assigned") % \
+                                           dict(number=added)
+            if added > 0:
+                redirect(URL(args=[r.id, self.next_tab], vars={}))
+            else:
+                redirect(URL(args=r.args, vars={}))
+
+        elif r.http == "GET":
+
+            # Filter widgets
+            filter_widgets = s3db.get_config("dvr_case", "filter_widgets")
+
+            # List fields
+            list_fields = ["id",
+                           "person_id",
+                           ]
+
+            # Data table
+            resource = s3db.resource("dvr_case",
+                                     alias=r.component.alias if r.component else None,
+                                     vars=get_vars)
+            totalrows = resource.count()
+            if "pageLength" in get_vars:
+                display_length = get_vars["pageLength"]
+                if display_length == "None":
+                    display_length = None
+                else:
+                    display_length = int(display_length)
+            else:
+                display_length = 25
+            if display_length:
+                limit = 4 * display_length
+            else:
+                limit = None
+            filter, orderby, left = resource.datatable_filter(list_fields,
+                                                              get_vars)
+            resource.add_filter(filter)
+
+            # Hide people already in the link table
+            query = (table[fkey] == record_id) & \
+                    (table.deleted != True)
+            rows = db(query).select(table.case_id)
+            already = [row.case_id for row in rows]
+            filter = (~db.dvr_case.id.belongs(already))
+            resource.add_filter(filter)
+
+            dt_id = "datatable"
+
+            # Bulk actions
+            dt_bulk_actions = [(T("Assign"), "assign")]
+
+            if r.representation == "html":
+                # Page load
+                resource.configure(deletable = False)
+
+                profile_url = URL(c = "dvr",
+                                  f = "case",
+                                  args = ["[id]", "profile"])
+                S3CRUD.action_buttons(r,
+                                      deletable = False,
+                                      read_url = profile_url,
+                                      update_url = profile_url)
+                response.s3.no_formats = True
+
+                # Filter form
+                if filter_widgets:
+
+                    # Where to retrieve filtered data from:
+                    _vars = resource.crud._remove_filters(r.get_vars)
+                    filter_submit_url = r.url(vars=_vars)
+
+                    # Default Filters (before selecting data!)
+                    resource.configure(filter_widgets=filter_widgets)
+                    S3FilterForm.apply_filter_defaults(r, resource)
+
+                    # Where to retrieve updated filter options from:
+                    filter_ajax_url = URL(f="case",
+                                          args=["filter.options"],
+                                          vars={})
+
+                    get_config = resource.get_config
+                    filter_clear = get_config("filter_clear", True)
+                    filter_formstyle = get_config("filter_formstyle", None)
+                    filter_submit = get_config("filter_submit", True)
+                    filter_form = S3FilterForm(filter_widgets,
+                                               clear=filter_clear,
+                                               formstyle=filter_formstyle,
+                                               submit=filter_submit,
+                                               ajax=True,
+                                               url=filter_submit_url,
+                                               ajaxurl=filter_ajax_url,
+                                               _class="filter-form",
+                                               _id="datatable-filter-form",
+                                               )
+                    fresource = current.s3db.resource(resource.tablename)
+                    alias = r.component.alias if r.component else None
+                    ff = filter_form.html(fresource,
+                                          r.get_vars,
+                                          target="datatable",
+                                          alias=alias)
+                else:
+                    ff = ""
+
+                # Data table (items)
+                data = resource.select(list_fields,
+                                       start=0,
+                                       limit=limit,
+                                       orderby=orderby,
+                                       left=left,
+                                       count=True,
+                                       represent=True)
+                filteredrows = data["numrows"]
+                dt = S3DataTable(data["rfields"], data["rows"])
+
+                items = dt.html(totalrows,
+                                filteredrows,
+                                dt_id,
+                                dt_ajax_url=r.url(representation="aadata"),
+                                dt_bulk_actions=dt_bulk_actions,
+                                dt_pageLength=display_length,
+                                dt_pagination="true",
+                                dt_searching="false",
+                                )
+
+                # @ToDO: dvr_case_label()
+                #CASE = settings.get_dvr_case_label()
+                CASE = T("Beneficiaries")
+                output = dict(items = items,
+                              title = T("Assign %(case)s") % dict(case=CASE),
+                              list_filter_form = ff)
+
+                response.view = "list_filter.html"
+                return output
+
+            elif r.representation == "aadata":
+                # Ajax refresh
+                if "draw" in get_vars:
+                    echo = int(get_vars.draw)
+                else:
+                    echo = None
+
+                data = resource.select(list_fields,
+                                       start=0,
+                                       limit=limit,
+                                       orderby=orderby,
+                                       left=left,
+                                       count=True,
+                                       represent=True)
+                filteredrows = data["numrows"]
+                dt = S3DataTable(data["rfields"], data["rows"])
+
+                items = dt.json(totalrows,
+                                filteredrows,
+                                dt_id,
+                                echo,
+                                dt_bulk_actions=dt_bulk_actions)
+                response.headers["Content-Type"] = "application/json"
+                return items
+
+            else:
+                r.error(415, current.ERROR.BAD_FORMAT)
+        else:
+            r.error(405, current.ERROR.BAD_METHOD)
 
 # =============================================================================
 def dvr_get_flag_instructions(person_id, action=None):

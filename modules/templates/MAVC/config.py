@@ -231,6 +231,7 @@ def config(settings):
                        "date",
                        "comments",
                        ]
+
         s3db.configure("doc_document",
                        crud_form = crud_form,
                        list_fields = list_fields,
@@ -420,9 +421,8 @@ def config(settings):
                            )
             postprocess = None
 
-        # Custom filters to match the information provided
-        from s3 import S3LocationFilter, \
-                       S3OptionsFilter, \
+        # Custom filters
+        from s3 import S3OptionsFilter, \
                        S3TextFilter, \
                        s3_get_filter_opts
 
@@ -1879,6 +1879,8 @@ def mavc_rheader(r, tabs=None):
                 subtitle = TAG[""]("%s, " % row["hrm_human_resource.job_title_id"],
                                    subtitle,
                                    )
+        else:
+            subtitle = ""
 
         # Compose the rheader
         rheader = DIV(DIV(H1(title),

@@ -1261,6 +1261,7 @@ class S3SupplyDistributionModel(S3Model):
                                                       ),
                                 ),
                      self.gis_location_id(),
+                     # @ToDo: (Optionally) Populate this value based on the # Beneficiaries
                      Field("value", "integer",
                            label = T("Quantity"),
                            requires = IS_INT_IN_RANGE(0, None),
@@ -1276,6 +1277,10 @@ class S3SupplyDistributionModel(S3Model):
                              label = T("End Date"),
                              start_field = "supply_distribution_date",
                              default_interval = 12,
+                             # Most Distributions happen on a single day
+                             # Enable in-template if-required
+                             readable = False,
+                             writable = False,
                              ),
                      #self.stats_source_id(),
                      Field.Method("year", self.supply_distribution_year),

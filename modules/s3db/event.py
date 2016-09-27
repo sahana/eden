@@ -96,10 +96,11 @@ class S3EventModel(S3Model):
         NONE = messages["NONE"]
         AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
 
+        disaster = settings.get_event_label() # If we add more options in future then == "Disaster"
         hierarchical_event_types = settings.get_event_types_hierarchical()
 
         # ---------------------------------------------------------------------
-        # Event Types / Disaster Types
+        # Event Types
         #
         tablename = "event_event_type"
         define_table(tablename,
@@ -146,22 +147,39 @@ class S3EventModel(S3Model):
             #                        _title="%s|%s" % (T("Event Type"),
             #                                          AUTOCOMPLETE_HELP))
 
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Event Type"),
-            title_display = T("Event Type Details"),
-            title_list = T("Event Types"),
-            title_update = T("Edit Event Type"),
-            title_upload = T("Import Event Types"),
-            label_list_button = T("List Event Types"),
-            label_delete_button = T("Delete Event Type"),
-            msg_record_created = T("Event Type added"),
-            msg_record_modified = T("Event Type updated"),
-            msg_record_deleted = T("Event Type removed"),
-            msg_list_empty = T("No Event Types currently registered")
-            )
+        if disaster:
+            label = T("Disaster Type")
+            crud_strings[tablename] = Storage(
+                label_create = T("Create Disaster Type"),
+                title_display = T("Disaster Type Details"),
+                title_list = T("Disaster Types"),
+                title_update = T("Edit Disaster Type"),
+                title_upload = T("Import Disaster Types"),
+                label_list_button = T("List Disaster Types"),
+                label_delete_button = T("Delete Disaster Type"),
+                msg_record_created = T("Disaster Type added"),
+                msg_record_modified = T("Disaster Type updated"),
+                msg_record_deleted = T("Disaster Type removed"),
+                msg_list_empty = T("No Disaster Types currently registered")
+                )
+        else:
+            label = T("Event Type")
+            crud_strings[tablename] = Storage(
+                label_create = T("Create Event Type"),
+                title_display = T("Event Type Details"),
+                title_list = T("Event Types"),
+                title_update = T("Edit Event Type"),
+                title_upload = T("Import Event Types"),
+                label_list_button = T("List Event Types"),
+                label_delete_button = T("Delete Event Type"),
+                msg_record_created = T("Event Type added"),
+                msg_record_modified = T("Event Type updated"),
+                msg_record_deleted = T("Event Type removed"),
+                msg_list_empty = T("No Event Types currently registered")
+                )
 
         event_type_id = S3ReusableField("event_type_id", "reference %s" % tablename,
-                                        label = T("Event Type"),
+                                        label = label,
                                         ondelete = "RESTRICT",
                                         represent = type_represent,
                                         requires = IS_EMPTY_OR(
@@ -187,6 +205,7 @@ class S3EventModel(S3Model):
         # ---------------------------------------------------------------------
         tablename = "event_event"
         define_table(tablename,
+                     self.super_link("doc_id", "doc_entity"),
                      Field("name",      # Name could be a code
                            length = 64,   # Mayon compatibility
                            label = T("Name"),
@@ -233,18 +252,34 @@ class S3EventModel(S3Model):
                      *s3_meta_fields())
 
         # CRUD strings
-        ADD_EVENT = T("New Event")
-        crud_strings[tablename] = Storage(
-            label_create = ADD_EVENT,
-            title_display = T("Event Details"),
-            title_list = T("Events"),
-            title_update = T("Edit Event"),
-            label_list_button = T("List Events"),
-            label_delete_button = T("Delete Event"),
-            msg_record_created = T("Event added"),
-            msg_record_modified = T("Event updated"),
-            msg_record_deleted = T("Event deleted"),
-            msg_list_empty = T("No Events currently registered"))
+        if disaster:
+            label = T("Disaster")
+            ADD_EVENT = T("New Disaster")
+            crud_strings[tablename] = Storage(
+                label_create = ADD_EVENT,
+                title_display = T("Disaster Details"),
+                title_list = T("Disasters"),
+                title_update = T("Edit Disaster"),
+                label_list_button = T("List Disasters"),
+                label_delete_button = T("Delete Disaster"),
+                msg_record_created = T("Disaster added"),
+                msg_record_modified = T("Disaster updated"),
+                msg_record_deleted = T("Disaster deleted"),
+                msg_list_empty = T("No Disasters currently registered"))
+        else:
+            label = T("Event")
+            ADD_EVENT = T("New Event")
+            crud_strings[tablename] = Storage(
+                label_create = ADD_EVENT,
+                title_display = T("Event Details"),
+                title_list = T("Events"),
+                title_update = T("Edit Event"),
+                label_list_button = T("List Events"),
+                label_delete_button = T("Delete Event"),
+                msg_record_created = T("Event added"),
+                msg_record_modified = T("Event updated"),
+                msg_record_deleted = T("Event deleted"),
+                msg_list_empty = T("No Events currently registered"))
 
         represent = S3Represent(lookup=tablename)
         event_id = S3ReusableField("event_id", "reference %s" % tablename,
@@ -257,7 +292,7 @@ class S3EventModel(S3Model):
                                                           orderby="event_event.name",
                                                           sort=True)),
                                    represent = represent,
-                                   label = T("Event"),
+                                   label = label,
                                    ondelete = "CASCADE",
                                    # Uncomment these to use an Autocomplete & not a Dropdown
                                    #widget = S3AutocompleteWidget()
@@ -341,6 +376,7 @@ class S3EventModel(S3Model):
                   list_orderby = "event_event.start_date desc",
                   orderby = "event_event.start_date desc",
                   report_options = report_options,
+                  super_entity = "doc_entity",
                   update_onaccept = self.event_update_onaccept,
                   )
 
@@ -2156,7 +2192,7 @@ class S3EventSiteModel(S3Model):
 # =============================================================================
 class S3EventSitRepModel(S3Model):
     """
-        Link Incidents to SitReps
+        Link SitReps to Events &/or Incidents
     """
 
     names = ("event_sitrep",
@@ -2173,9 +2209,10 @@ class S3EventSitRepModel(S3Model):
 
         tablename = "event_sitrep"
         self.define_table(tablename,
-                          #self.event_event_id(ondelete = "CASCADE"),
-                          self.event_incident_id(empty = False,
-                                                 ondelete = "CASCADE",
+                          # @ToDo: Validate that SitRep is linked to either an Event or an Incident
+                          self.event_event_id(ondelete = "CASCADE",
+                                              ),
+                          self.event_incident_id(ondelete = "CASCADE",
                                                  ),
                           self.doc_sitrep_id(empty = False,
                                              ondelete = "CASCADE",
@@ -2196,7 +2233,8 @@ class S3EventSitRepModel(S3Model):
         #    msg_list_empty = T("No SitReps currently registered in this incident"))
 
         self.configure(tablename,
-                       deduplicate = S3Duplicate(primary = ("incident_id",
+                       deduplicate = S3Duplicate(primary = ("event_id",
+                                                            "incident_id",
                                                             "sitrep_id",
                                                             ),
                                                  ),
@@ -2668,8 +2706,16 @@ def event_rheader(r):
 
         if r.name == "event":
             # Event Controller
-            tabs = [(T("Event Details"), None),
+            if settings.get_event_label(): # == "Disaster"
+                label = T("Disaster Details")
+            else:
+                label = T("Event Details")
+            tabs = [(label, None),
                     ]
+            if settings.has_module("doc"):
+                tabs += [(T("Documents"), "document"),
+                         (T("Photos"), "image"),
+                         ]
             if settings.has_module("cr"):
                 tabs.append((T("Shelters"), "event_shelter"))
             #if settings.has_module("req"):
@@ -2700,7 +2746,7 @@ def event_rheader(r):
                                     TR(closed),
                                     ), rheader_tabs)
 
-        if r.name == "incident":
+        elif r.name == "incident":
             # Incident Controller
             tabs = [(T("Incident Details"), None)]
             append = tabs.append

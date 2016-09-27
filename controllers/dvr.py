@@ -34,7 +34,11 @@ def person():
         resource = r.resource
         resource.add_filter(FS("dvr_case.id") != None)
 
-        CASES = T("Cases")
+        beneficiary = settings.get_dvr_label() # If we add more options in future then == "Beneficiary"
+        if beneficiary:
+            CASES = T("Beneficiaries")
+        else:
+            CASES = T("Cases")
 
         # Filters to split case list
         if not r.record:
@@ -102,19 +106,32 @@ def person():
         if r.interactive:
 
             # Adapt CRUD strings to context
-
-            s3.crud_strings["pr_person"] = Storage(
-                label_create = T("Create Case"),
-                title_display = T("Case Details"),
-                title_list = CASES,
-                title_update = T("Edit Case Details"),
-                label_list_button = T("List Cases"),
-                label_delete_button = T("Delete Case"),
-                msg_record_created = T("Case added"),
-                msg_record_modified = T("Case details updated"),
-                msg_record_deleted = T("Case deleted"),
-                msg_list_empty = T("No Cases currently registered")
-                )
+            if beneficiary:
+                s3.crud_strings["pr_person"] = Storage(
+                    label_create = T("Create Beneficiary"),
+                    title_display = T("Beneficiary Details"),
+                    title_list = CASES,
+                    title_update = T("Edit Beneficiary Details"),
+                    label_list_button = T("List Beneficiaries"),
+                    label_delete_button = T("Delete Beneficiary"),
+                    msg_record_created = T("Beneficiary added"),
+                    msg_record_modified = T("Beneficiary details updated"),
+                    msg_record_deleted = T("Beneficiary deleted"),
+                    msg_list_empty = T("No Beneficiaries currently registered")
+                    )
+            else:
+                s3.crud_strings["pr_person"] = Storage(
+                    label_create = T("Create Case"),
+                    title_display = T("Case Details"),
+                    title_list = CASES,
+                    title_update = T("Edit Case Details"),
+                    label_list_button = T("List Cases"),
+                    label_delete_button = T("Delete Case"),
+                    msg_record_created = T("Case added"),
+                    msg_record_modified = T("Case details updated"),
+                    msg_record_deleted = T("Case deleted"),
+                    msg_list_empty = T("No Cases currently registered")
+                    )
 
             if not r.component:
 

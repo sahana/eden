@@ -2689,6 +2689,14 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # DVR Options
     #
+    def get_dvr_label(self):
+        """
+            Whether Cases are called Cases or Beneficiaries
+            - default: None = Case
+            - valid options: "Beneficiary"
+        """
+        return self.dvr.get("label", None)
+
     def get_dvr_manage_transferability(self):
         """
             Enable features to manage transferability of cases
@@ -2765,6 +2773,14 @@ class S3Config(Storage):
     # -------------------------------------------------------------------------
     # Events
     #
+    def get_event_label(self):
+        """
+            Whether Events are called Events or Disasters
+            - default: None = Event
+            - valid options: "Disaster"
+        """
+        return self.event.get("label", None)
+
     def get_event_types_hierarchical(self):
         """
             Whether Event Types are Hierarchical or not

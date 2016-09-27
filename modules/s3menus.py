@@ -821,6 +821,13 @@ class S3OptionsMenu(object):
     def dvr():
         """ DVR Menu """
 
+        if current.deployment_settings.get_dvr_label(): # == "Beneficiary"
+            return M(c="dvr")(
+                        M("Beneficiaries", f="person")(
+                            M("Create", m="create"),
+                        ),
+                    )
+
         return M(c="dvr")(
                     M("Cases", f="person")(
                         M("Create", m="create"),
@@ -853,15 +860,22 @@ class S3OptionsMenu(object):
     def event():
         """ EVENT / Event Module """
 
+        if current.deployment_settings.get_event_label(): # == "Disaster"
+            EVENTS = "Disasters"
+            EVENT_TYPES = "Disaster Types"
+        else:
+            EVENTS = "Events"
+            EVENT_TYPES = "Event Types"
+
         return M()(
                     M("Scenarios", c="scenario", f="scenario")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
-                    M("Events", c="event", f="event")(
+                    M(EVENTS, c="event", f="event")(
                         M("Create", m="create"),
                     ),
-                    M("Event Types", c="event", f="event_type")(
+                    M(EVENT_TYPES, c="event", f="event_type")(
                         M("Create", m="create"),
                         M("Import", m="import", p="create"),
                     ),
@@ -1499,7 +1513,6 @@ class S3OptionsMenu(object):
                     ),
                     M("Administration", restrict=[ADMIN])(settings_messaging)
                 )
-
 
     # -------------------------------------------------------------------------
     @staticmethod

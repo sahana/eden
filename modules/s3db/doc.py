@@ -74,34 +74,35 @@ class S3DocumentLibrary(S3Model):
         # ---------------------------------------------------------------------
         # Document-referencing entities
         #
-        entity_types = Storage(asset_asset=T("Asset"),
-                               cap_resource=T("CAP Resource"),
-                               cms_post=T("Post"),
-                               cr_shelter=T("Shelter"),
-                               deploy_mission=T("Mission"),
-                               doc_sitrep=T("Situation Report"),
-                               event_incident=T("Incident"),
-                               event_incident_report=T("Incident Report"),
-                               hms_hospital=T("Hospital"),
-                               hrm_human_resource=T("Human Resource"),
-                               inv_adj=T("Stock Adjustment"),
-                               inv_warehouse=T("Warehouse"),
+        entity_types = Storage(asset_asset = T("Asset"),
+                               cap_resource = T("CAP Resource"),
+                               cms_post = T("Post"),
+                               cr_shelter = T("Shelter"),
+                               deploy_mission = T("Mission"),
+                               doc_sitrep = T("Situation Report"),
+                               event_event = T("Event"),
+                               event_incident = T("Incident"),
+                               event_incident_report = T("Incident Report"),
+                               hms_hospital = T("Hospital"),
+                               hrm_human_resource = T("Human Resource"),
+                               inv_adj = T("Stock Adjustment"),
+                               inv_warehouse = T("Warehouse"),
                                # @ToDo: Deprecate
-                               irs_ireport=T("Incident Report"),
-                               pr_group=T("Team"),
-                               project_project=T("Project"),
-                               project_activity=T("Project Activity"),
-                               project_framework=T("Project Framework"),
-                               project_task=T("Task"),
-                               org_office=T("Office"),
-                               org_facility=T("Facility"),
-                               org_group=T("Organization Group"),
-                               req_req=T("Request"),
+                               irs_ireport = T("Incident Report"),
+                               pr_group = T("Team"),
+                               project_project = T("Project"),
+                               project_activity = T("Project Activity"),
+                               project_framework = T("Project Framework"),
+                               project_task = T("Task"),
+                               org_office = T("Office"),
+                               org_facility = T("Facility"),
+                               org_group = T("Organization Group"),
+                               req_req = T("Request"),
                                # @ToDo: Deprecate
-                               stats_people=T("People"),
-                               vulnerability_document=T("Vulnerability Document"),
-                               vulnerability_risk=T("Risk"),
-                               vulnerability_evac_route=T("Evacuation Route"),
+                               #stats_people = T("People"),
+                               vulnerability_document = T("Vulnerability Document"),
+                               vulnerability_risk = T("Risk"),
+                               vulnerability_evac_route = T("Evacuation Route"),
                                )
 
         tablename = "doc_entity"
@@ -193,7 +194,8 @@ class S3DocumentLibrary(S3Model):
             msg_list_empty = T("No Documents found")
         )
 
-        # Search Method
+        # Filter Widgets
+        # - define in-template if-required
 
         # Resource Configuration
         if current.deployment_settings.get_base_solr_url():

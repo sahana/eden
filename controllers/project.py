@@ -715,18 +715,57 @@ def activity():
     def prep(r):
         if r.interactive:
             if r.component is not None:
-                if r.component_name == "document":
-                    doc_table = s3db.doc_document
-                    doc_table.organisation_id.readable = doc_table.organisation_id.writable = False
-                    doc_table.person_id.readable = doc_table.person_id.writable = False
-                    doc_table.location_id.readable = doc_table.location_id.writable = False
+                component_name = r.component_name
+                if component_name == "distribution":
+                    dtable = s3db.supply_distribution
+                    f = dtable.location_id
+                    f.default = r.record.location_id
+                    f.readable = f.writable = False
+                    f = dtable.date
+                    f.default = r.record.date
+                    f.readable = f.writable = False
+                elif component_name == "case":
+                    # Use Assign to add new entries
+                    s3db.configure("project_case_activity",
+                                   listadd = False)
+                elif component_name == "document":
+                    dtable = s3db.doc_document
+                    dtable.organisation_id.readable = dtable.organisation_id.writable = False
+                    dtable.person_id.readable = dtable.person_id.writable = False
+                    f = dtable.location_id
+                    f.default = r.record.location_id
+                    f.readable = f.writable = False
         return True
     s3.prep = prep
 
-    return s3_rest_controller(csv_template = "activity",
-                              hide_filter = False,
+    return s3_rest_controller("project", "activity",
+                              csv_template = "activity",
+                              #hide_filter = False,
                               rheader = s3db.project_rheader,
                               )
+
+# -----------------------------------------------------------------------------
+def distribution():
+    """ Activities which include Distributions """
+
+    # Load model
+    table = s3db.project_activity
+
+    # CRUD strings
+    s3.crud_strings["project_activity"] = Storage(
+        label_create = T("Create Distribution"),
+        title_display = T("Distribution Details"),
+        title_list = T("Distributions"),
+        title_update = T("Edit Distribution"),
+        title_report = T("Distribution Report"),
+        label_list_button = T("List Distributions"),
+        msg_record_created = T("Distribution Added"),
+        msg_record_modified = T("Distribution Updated"),
+        msg_record_deleted = T("Distribution Deleted"),
+        msg_list_empty = T("No Distributions Found")
+    )
+
+    return activity()
 
 # -----------------------------------------------------------------------------
 def location():

@@ -35,7 +35,8 @@ def document():
         return True
     s3.prep = prep
 
-    output = s3_rest_controller(rheader=document_rheader)
+    output = s3_rest_controller(rheader = document_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
