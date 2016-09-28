@@ -93,6 +93,10 @@ form .form-row > .columns:first-child {
 form .form-row > .columns > label {
   font-weight: bold;
 }
+form .form-row .controls > .s3-hierarchy-widget {
+    display: inline-block;
+    vertical-align: middle;
+}
 form label.inline {
   padding: 0;
 }
@@ -102,6 +106,9 @@ form .gis_loc_select_btn {
 form .gis_loc_select_btn i {
   font-size: 1.0em;
   margin-right: 4px;
+}
+form .jstree-anchor {
+    font-size: 0.9rem;
 }
 form .error {
   display: block;

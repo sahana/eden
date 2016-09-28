@@ -21,18 +21,28 @@ def config(settings):
     # Theme (folder to use for views/layout.html)
     #settings.base.theme = "STL"
 
-    # Authentication settings
+    # =========================================================================
+    # Security/AAA Settings
+    #
     # Should users be allowed to register themselves?
     settings.security.self_registration = False
     # Do new users need to verify their email address?
     #settings.auth.registration_requires_verification = True
     # Do new users need to be approved by an administrator prior to being able to login?
     #settings.auth.registration_requires_approval = True
-    settings.auth.registration_requests_organisation = True
+    #settings.auth.registration_requests_organisation = True
+    # Uncomment to have Person records owned by the Org they are an HR for
+    settings.auth.person_realm_human_resource_site_then_org = True
 
-    # Approval emails get sent to all admins
+     # Approval emails get sent to all admins
     #settings.mail.approver = "ADMIN"
 
+    # Security Policy
+    settings.security.policy = 7 # Hierarchical realms
+
+    # =========================================================================
+    # GIS Settings
+    #
     # Restrict the Location Selector to just certain countries
     # NB This can also be over-ridden for specific contexts later
     # e.g. Activities filtered to those of parent Project
@@ -45,7 +55,9 @@ def config(settings):
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
 
-    # L10n settings
+    # =========================================================================
+    # L10n Settings
+    #
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
     settings.L10n.languages = OrderedDict([
@@ -54,7 +66,7 @@ def config(settings):
         ("tr", "Türkçe"),
     ])
     # Default language for Language Toolbar (& GIS Locations in future)
-    settings.L10n.default_language = "tr"
+    settings.L10n.default_language = "en"
     # Uncomment to Hide the language toolbar
     #settings.L10n.display_toolbar = False
     # Default timezone for users
@@ -70,7 +82,10 @@ def config(settings):
     settings.L10n.translate_gis_location = True
     # Uncomment this to Translate Organisation Names/Acronyms
     settings.L10n.translate_org_organisation = True
-    # Finance settings
+
+    # =========================================================================
+    # Finance Settings
+    #
     settings.fin.currencies = {
         "EUR" : "Euros",
         #"GBP" : "Great British Pounds",
@@ -79,182 +94,11 @@ def config(settings):
     }
     settings.fin.currency_default = "TRY"
 
-    # Security Policy
-    # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
-    # 1: Simple (default): Global as Reader, Authenticated as Editor
-    # 2: Editor role required for Update/Delete, unless record owned by session
-    # 3: Apply Controller ACLs
-    # 4: Apply both Controller & Function ACLs
-    # 5: Apply Controller, Function & Table ACLs
-    # 6: Apply Controller, Function, Table ACLs and Entity Realm
-    # 7: Apply Controller, Function, Table ACLs and Entity Realm + Hierarchy
-    # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
-    #
-    settings.security.policy = 8 # Entity Realm + Hierarchy and Delegations
-
-    # Uncomment to have Person records owned by the Org they are an HR for
-    settings.auth.person_realm_human_resource_site_then_org = True
-
-    # -------------------------------------------------------------------------
-    # Uncomment to allow hierarchical categories of Skills, which each need their own set of competency levels.
-    #settings.hrm.skill_types = True
-
-    # Uncomment to have Volunteers be hierarchical organisational units
-    # (& hence HR realms propagate down to Address & Contacts)
-    # NB Doesn't seem to make any difference
-    #settings.hrm.vol_affiliation = 1
-
-    # -------------------------------------------------------------------------
-    # Uncomment to Commit Named People rather than simply Anonymous Skills
-    settings.req.commit_people = True
-
-    # Disable Inline Forms, unless we enable separate controllers
-    # (otherwise Create form cannot redirect to next tab correctly)
-    settings.req.inline_forms = False
-
-    # -------------------------------------------------------------------------
+    # =========================================================================
     # Person Registry
     #
     # Allow third gender
     settings.pr.hide_third_gender = False
-
-    # -------------------------------------------------------------------------
-    def pr_component_realm_entity(table, row):
-        """
-            Assign a Realm Entity to Person Address/Contact records
-        """
-
-        db = current.db
-        s3db = current.s3db
-
-        # Find the Person
-        ptable = s3db.pr_person
-        person = db(ptable.pe_id == row.pe_id).select(ptable.id,
-                                                      limitby=(0, 1)
-                                                      ).first()
-        try:
-            person_id = person.id
-        except:
-            # => Set to default of Person's
-            return row.pe_id
-
-        # Find the Organisation which this Person links to
-        htable = s3db.hrm_human_resource
-        query = (htable.person_id == person_id) & \
-                (htable.deleted == False)
-        hrs = db(query).select(htable.organisation_id)
-        if len(hrs) != 1:
-            # Either no HR record or multiple options
-            # => Set to default of Person's
-            return row.pe_id
-        organisation_id = hrs.first().organisation_id
-
-        # Find the Org's realm_entity
-        otable = s3db.org_organisation
-        org = db(otable.id == organisation_id).select(otable.realm_entity,
-                                                      limitby=(0, 1)
-                                                      ).first()
-        try:
-            # Set to the same realm_entity
-            return org.realm_entity
-        except:
-            # => Set to default of Person's
-            return row.pe_id
-
-    # -------------------------------------------------------------------------
-    def customise_pr_address_resource(r, tablename):
-
-        current.s3db.configure("pr_address",
-                               realm_entity = pr_component_realm_entity,
-                               )
-
-    settings.customise_pr_address_resource = customise_pr_address_resource
-
-    # -------------------------------------------------------------------------
-    def customise_pr_contact_resource(r, tablename):
-
-        current.s3db.configure("pr_contact",
-                               realm_entity = pr_component_realm_entity,
-                               )
-
-    settings.customise_pr_contact_resource = customise_pr_contact_resource
-
-    # -------------------------------------------------------------------------
-    #def customise_pr_person_resource(r, tablename):
-
-        #s3db = current.s3db
-        #table = s3db.pr_person_details
-        #table.place_of_birth.writable = True
-        #table.mother_name.readable = True
-        #table.father_name.readable = True
-        #import s3db.tr
-        #s3db.add_components("pr_person",
-        #                    tr_identity = "person_id",
-        #                    )
-        #settings.org.dependent_fields = \
-        #    {"pr_person_details.mother_name" : None, # Show for all
-        #     "pr_person_details.father_name" : None, # Show for all
-        #     }
-        #from s3 import S3SQLCustomForm
-        #crud_form = S3SQLCustomForm("first_name",
-        #                            "last_name",
-        #                            "date_of_birth",
-        #                            #"initials",
-        #                            #"preferred_name",
-        #                            #"local_name",
-        #                            "gender",
-        #                            "person_details.occupation",
-        #                            "person_details.marital_status",
-        #                            "person_details.number_children",
-        #                            #"person_details.nationality",
-        #                            #"person_details.religion",
-        #                            "person_details.mother_name",
-        #                            "person_details.father_name",
-        #                            #"person_details.company",
-        #                            #"person_details.affiliations",
-        #                            "person_details.criminal_record",
-        #                            "person_details.military_service",
-        #                            "comments",
-        #                            )
-
-        #s3db.configure("pr_person",
-        #               crud_form = crud_form,
-        #               )
-        #s3db.configure("pr_address",
-        #               realm_entity = pr_component_realm_entity,
-        #               )
-        #s3db.configure("pr_contact",
-        #               realm_entity = pr_component_realm_entity,
-        #               )
-
-    #settings.customise_pr_person_resource = customise_pr_person_resource
-
-    # -------------------------------------------------------------------------
-    def vol_rheader(r):
-        if r.representation != "html":
-            # RHeaders only used in interactive views
-            return None
-        record = r.record
-        if record is None:
-            # List or Create form: rheader makes no sense here
-            return None
-
-        #from gluon.html import DIV
-        person_id = r.id
-        s3db = current.s3db
-        table = s3db.hrm_human_resource
-        hr = current.db(table.person_id == person_id).select(table.organisation_id,
-                                                             limitby=(0, 1)).first()
-        if hr:
-            if current.auth.user.organisation_id != hr.organisation_id:
-                # Only show Org if not the same as user's
-                rheader = table.organisation_id.represent(hr.organisation_id)
-            else:
-                rheader = None
-        else:
-            # Something went wrong!
-            rheader = None
-        return rheader
 
     # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
@@ -274,49 +118,22 @@ def config(settings):
 
             if r.controller == "dvr" and not r.component:
 
+                # Hierarchical Organisation Selector
                 ctable = s3db.dvr_case
-
-                # Mandatory Fields
-                from s3 import IS_NOT_EMPTY
-                from gluon import IS_EMPTY_OR
-
-                # Require a case number
-                ctable.reference.requires = IS_NOT_EMPTY()
-
-                # Require organisation, site and status
-                for fn in ("organisation_id",
-                           "site_id",
-                           "status_id",
-                           ):
-                    field = ctable[fn]
-                    requires = field.requires
-                    if isinstance(requires, IS_EMPTY_OR):
-                        field.requires = requires.other
-
-                root_org = current.auth.root_org()
-
-                if root_org:
-                    # Set default for organisation_id and hide the field
-                    field = ctable.organisation_id
-                    field.default = root_org
-                    field.readable = field.writable = False
-
-                    # Hide organisation_id in list_fields, too
-                    list_fields = r.resource.get_config("list_fields")
-                    if "dvr_case.organisation_id" in list_fields:
-                        list_fields.remove("dvr_case.organisation_id")
-
-                    # Limit sites to root_org
-                    field = ctable.site_id
-                    requires = field.requires
-                    if requires:
-                        if isinstance(requires, IS_EMPTY_OR):
-                            requires = requires.other
-                        if hasattr(requires, "dbset"):
-                            stable = s3db.org_site
-                            query = (stable.organisation_id == root_org)
-                            requires.dbset = current.db(query)
-
+                field = ctable.organisation_id
+                from gluon import DIV
+                from s3 import S3HierarchyWidget
+                represent = s3db.org_OrganisationRepresent(parent=False)
+                field.widget = S3HierarchyWidget(lookup="org_organisation",
+                                                 represent=represent,
+                                                 multiple=False,
+                                                 leafonly=False,
+                                                 )
+                field.comment = DIV(_class = "tooltip",
+                                    _title = "%s|%s" % (T("Organisation"),
+                                                        T("The organisation/branch this case is assigned to"),
+                                                        ),
+                                    )
 
                 resource = r.resource
                 if r.interactive:
@@ -324,30 +141,24 @@ def config(settings):
                     # Custom CRUD form
                     from s3 import S3SQLCustomForm, S3SQLInlineComponent
                     crud_form = S3SQLCustomForm(
-                                "dvr_case.reference",
                                 "dvr_case.date",
                                 "dvr_case.organisation_id",
-                                "dvr_case.site_id",
-                                "dvr_case.priority",
-                                "dvr_case.case_type_id",
-                                "dvr_case.beneficiary",
-                                "dvr_case.status_id",
                                 "first_name",
                                 "middle_name",
                                 "last_name",
+                                "person_details.nationality",
                                 "date_of_birth",
                                 "gender",
-                                "person_details.marital_status",
                                 S3SQLInlineComponent(
-                                        "contact",
-                                        fields = [("", "value"),
+                                        "address",
+                                        label = T("Current Address"),
+                                        fields = [("", "location_id"),
                                                   ],
-                                        filterby = {"field": "contact_method",
-                                                    "options": "EMAIL",
+                                        filterby = {"field": "type",
+                                                    "options": "1",
                                                     },
-                                        label = T("Email"),
+                                        link = False,
                                         multiple = False,
-                                        name = "email",
                                         ),
                                 S3SQLInlineComponent(
                                         "contact",
@@ -360,67 +171,10 @@ def config(settings):
                                         multiple = False,
                                         name = "phone",
                                         ),
-                                "person_details.nationality",
-                                "person_details.literacy",
-                                S3SQLInlineComponent(
-                                        "case_language",
-                                        fields = ["language",
-                                                  "quality",
-                                                  "comments",
-                                                  ],
-                                        label = T("Language / Communication Mode"),
-                                        ),
-                                S3SQLInlineComponent(
-                                        "contact_emergency",
-                                        fields = ["name",
-                                                  "relationship",
-                                                  "phone",
-                                                  ],
-                                        label = T("Emergency Contact"),
-                                        multiple = False,
-                                        ),
-                                S3SQLInlineComponent(
-                                        "identity",
-                                        fields = ["type",
-                                                  "description",
-                                                  "value",
-                                                  ],
-                                        ),
-                                S3SQLInlineComponent(
-                                        "address",
-                                        label = T("Current Address"),
-                                        fields = [("", "location_id"),
-                                                  ],
-                                        filterby = {"field": "type",
-                                                    "options": "1",
-                                                    },
-                                        link = False,
-                                        multiple = False,
-                                        ),
-                                "dvr_case.head_of_household",
-                                "dvr_case.hoh_name",
-                                "dvr_case.hoh_gender",
-                                "dvr_case.hoh_relationship",
                                 "dvr_case.comments",
-                                "dvr_case.archived",
                                 )
 
-                    # Extend filter widgets
-                    filter_widgets = resource.get_config("filter_widgets")
-                    if filter_widgets is not None:
-                        from s3 import s3_get_filter_opts, S3OptionsFilter
-                        filter_widgets.extend([
-                            S3OptionsFilter("dvr_case.case_type_id",
-                                            options = lambda: s3_get_filter_opts("dvr_case_type"),
-                                            ),
-                            S3OptionsFilter("dvr_case_activity.need_id",
-                                            options = lambda: s3_get_filter_opts("dvr_need"),
-                                            hidden = True,
-                                            ),
-                            ])
-
                     resource.configure(crud_form = crud_form,
-                                       filter_widgets = filter_widgets,
                                        )
                     # Hide Postcode in addresses (not used)
                     atable = s3db.pr_address
@@ -430,58 +184,48 @@ def config(settings):
                                                             show_postcode = False,
                                                             )
 
-                    # Inject filter script for sites (filter by selected org)
-                    if not root_org:
-                        script = '''$.filterOptionsS3({
-'trigger':'sub_dvr_case_organisation_id',
-'target':'sub_dvr_case_site_id',
-'lookupResource':'site',
-'lookupPrefix':'org',
-'lookupField':'site_id',
-'lookupKey':'organisation_id'
-})'''
-                        s3.jquery_ready.append(script)
-
-                    # Expose additional case fields:
-                    fields = ("beneficiary",
-                              "head_of_household",
-                              "hoh_name",
-                              "hoh_gender",
-                              "hoh_relationship"
-                              )
-                    for fname in fields:
-                        field = ctable[fname]
-                        field.readable = field.writable = True
-
                     # Inject script to toggle Head of Household form fields
-                    path = "/%s/static/themes/STL/js/dvr.js" % current.request.application
-                    if path not in s3.scripts:
-                        s3.scripts.append(path)
+                    #path = "/%s/static/themes/STL/js/dvr.js" % current.request.application
+                    #if path not in s3.scripts:
+                    #    s3.scripts.append(path)
 
                 # Custom list fields (must be outside of r.interactive)
-                list_fields = ["dvr_case.reference",
-                               "dvr_case.case_type_id",
-                               "dvr_case.priority",
-                               "first_name",
+                list_fields = ["first_name",
                                "middle_name",
                                "last_name",
                                "date_of_birth",
                                "gender",
-                               #"dvr_case.organisation_id",
                                "dvr_case.date",
-                               "dvr_case.status_id",
                                ]
                 resource.configure(list_fields = list_fields,
-                                   #orderby = "dvr_case.priority desc",
                                    )
             return result
         s3.prep = custom_prep
+
+        # Custom rheader tabs
+        if current.request.controller == "dvr":
+            attr = dict(attr)
+            attr["rheader"] = stl_dvr_rheader
 
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller
 
-    # -------------------------------------------------------------------------
+    # =========================================================================
+    # Staff Module
+    #
+    settings.hrm.staff_departments = False
+
+    # =========================================================================
+    # Organisation Registry
+    #
+    settings.org.branches = True
+
+    # Uncomment this to make tree view the default for "Branches" tab
+    #settings.org.branches_tree_view = True
+
+    # =========================================================================
+    # Modules
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
     settings.modules = OrderedDict([
@@ -655,5 +399,62 @@ def config(settings):
             module_type = None,
         )),
     ])
+
+# =============================================================================
+def stl_dvr_rheader(r, tabs=[]):
+    """ DVR custom resource headers """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    from s3 import s3_rheader_resource, \
+                   S3ResourceHeader, \
+                   s3_fullname
+
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "pr_person":
+
+            if not tabs:
+                tabs = [(T("Basic Details"), None),
+                        ]
+
+                case = resource.select(["first_name",
+                                        "last_name",
+                                        ],
+                                        represent = True,
+                                        raw_data = True,
+                                        ).rows
+
+                if case:
+                    name = lambda row: s3_fullname(row)
+                else:
+                    return None
+
+                rheader_fields = [[(T("ID"), "pe_label"),
+                                   ],
+                                  [(T("Name"), name),
+                                   ],
+                                  ["date_of_birth",
+                                   ],
+                                  ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                         table=resource.table,
+                                                         record=record,
+                                                         )
+
+    return rheader
 
 # END =========================================================================
