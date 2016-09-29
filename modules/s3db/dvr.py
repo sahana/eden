@@ -258,23 +258,46 @@ class DVRCaseModel(S3Model):
         SITE = settings.get_org_site_label()
         site_represent = self.org_SiteRepresent(show_link=False)
 
+        # Defaults for case assignment
         default_organisation = settings.get_org_default_organisation()
         default_site = settings.get_org_default_site()
         permitted_facilities = current.auth.permitted_facilities(redirect_on_error=False)
 
+        # Household size tracking
         household_size = settings.get_dvr_household_size()
         household_size_writable = household_size and household_size != "auto"
 
+        # Transfer origin/destination tracking
+        track_transfer_sites = settings.get_dvr_track_transfer_sites()
+        transfer_site_types = settings.get_dvr_transfer_site_types()
+        transfer_site_requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(db, "org_site.site_id",
+                                              site_represent,
+                                              sort = True,
+                                              filterby = "instance_type",
+                                              filter_opts = transfer_site_types,
+                                              not_filterby = "obsolete",
+                                              not_filter_opts = (True,),
+                                              ))
+        transfer_site_id = S3ReusableField("transfer_site_id", "reference org_site",
+                                           ondelete = "RESTRICT",
+                                           requires = transfer_site_requires,
+                                           represent = site_represent,
+                                           # Enable in template if required
+                                           readable = track_transfer_sites,
+                                           writable = track_transfer_sites,
+                                           )
+
         tablename = "dvr_case"
         define_table(tablename,
+
+                     # The primary case beneficiary
                      person_id(represent = self.pr_PersonRepresent(show_link=True),
                                requires = IS_ADD_PERSON_WIDGET2(),
                                widget = S3AddPersonWidget2(controller="dvr"),
                                ),
-                     # @ToDo: Option to autogenerate these, like Waybills, et al
-                     Field("reference",
-                           label = T("Case Number"),
-                           ),
+
+                     # Case type and reference number
                      FieldS3("case_type_id", "reference dvr_case_type",
                              label = T("Case Type"),
                              represent = case_type_represent,
@@ -293,17 +316,55 @@ class DVRCaseModel(S3Model):
                                                            },
                                                    ),
                              ),
-                     Field("beneficiary",
-                           default = "INDIVIDUAL",
-                           label = T("Assistance for"),
-                           represent = S3Represent(options=case_beneficiary_opts),
-                           requires = IS_IN_SET(case_beneficiary_opts,
+                     # @todo: rename into "code"?
+                     # @ToDo: Option to autogenerate these, like Waybills, et al
+                     Field("reference",
+                           label = T("Case Number"),
+                           ),
+
+                     # Case priority and status
+                     status_id(),
+                     Field("priority", "integer",
+                           default = 2,
+                           label = T("Priority"),
+                           represent = S3Represent(options=dict(case_priority_opts)),
+                           requires = IS_IN_SET(case_priority_opts,
+                                                sort = False,
                                                 zero = None,
                                                 ),
-                           # Enable in template if required
+                           ),
+                     Field("archived", "boolean",
+                           default = False,
+                           label = T("Archived"),
+                           represent = s3_yes_no_represent,
+                           # Enabled in controller:
                            readable = False,
                            writable = False,
                            ),
+
+                     # Case assignment
+                     self.org_organisation_id(
+                            default = default_organisation,
+                            readable = not default_organisation,
+                            writable = not default_organisation,
+                            ),
+                     self.super_link("site_id", "org_site",
+                            default = default_site,
+                            filterby = "site_id",
+                            filter_opts = permitted_facilities,
+                            label = SITE,
+                            readable = not default_site,
+                            writable = not default_site,
+                            represent = site_represent,
+                            updateable = True,
+                            ),
+                     self.hrm_human_resource_id(
+                            label = T("Assigned to"),
+                            readable = False,
+                            writable = False,
+                            ),
+
+                     # Basic date fields
                      s3_date(label = T("Registration Date"),
                              default = "now",
                              empty = False,
@@ -313,6 +374,8 @@ class DVRCaseModel(S3Model):
                              # Automatically set onaccept
                              writable = False,
                              ),
+
+                     # Extended date fields
                      s3_date("valid_until",
                              label = T("Valid until"),
                              # Enable in template if required
@@ -331,78 +394,28 @@ class DVRCaseModel(S3Model):
                                  readable = False,
                                  writable = False,
                                  ),
-                     status_id(),
-                     Field("priority", "integer",
-                           default = 2,
-                           label = T("Priority"),
-                           represent = S3Represent(options=dict(case_priority_opts)),
-                           requires = IS_IN_SET(case_priority_opts,
-                                                sort = False,
-                                                zero = None,
-                                                ),
+
+                     # Household size tracking
+                     Field("household_size", "integer",
+                           default = 1,
+                           label = T("Household Size"),
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, None)),
+                           readable = household_size,
+                           writable = household_size_writable,
+                           comment = DIV(_class="tooltip",
+                                         _title="%s|%s" % (T("Household Size"),
+                                                           T("Number of persons belonging to the same household"),
+                                                           ),
+                                         ),
                            ),
-                     self.org_organisation_id(default = default_organisation,
-                                              readable = not default_organisation,
-                                              writable = not default_organisation,
-                                              ),
-                     self.super_link("site_id", "org_site",
-                                     default = default_site,
-                                     filterby = "site_id",
-                                     filter_opts = permitted_facilities,
-                                     label = SITE,
-                                     readable = not default_site,
-                                     writable = not default_site,
-                                     represent = site_represent,
-                                     updateable = True,
-                                     ),
-                     Field("origin_site_id", "reference org_site",
-                           label = T("Admission from"),
-                           ondelete = "RESTRICT",
-                           requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(db, "org_site.site_id",
-                                                  site_represent,
-                                                  sort = True,
-                                                  filterby = "instance_type",
-                                                  filter_opts = ("cr_shelter",
-                                                                 "org_office",
-                                                                 "org_facility",
-                                                                 ),
-                                                  not_filterby = "obsolete",
-                                                  not_filter_opts = (True,),
-                                                  )),
-                           represent = site_represent,
-                           # Enable in template if required
-                           readable = False,
-                           writable = False,
-                           ),
-                     Field("destination_site_id", "reference org_site",
-                           label = T("Transfer to"),
-                           ondelete = "RESTRICT",
-                           requires = IS_EMPTY_OR(
-                                        IS_ONE_OF(db, "org_site.site_id",
-                                                  site_represent,
-                                                  sort = True,
-                                                  filterby = "instance_type",
-                                                  filter_opts = ("cr_shelter",
-                                                                 "org_office",
-                                                                 "org_facility",
-                                                                 ),
-                                                  not_filterby = "obsolete",
-                                                  not_filter_opts = (True,),
-                                                  )),
-                           represent = site_represent,
-                           # Enable in template if required
-                           readable = False,
-                           writable = False,
-                           ),
-                     Field("archived", "boolean",
-                           default = False,
-                           label = T("Archived"),
-                           represent = s3_yes_no_represent,
-                           # Enabled in controller:
-                           readable = False,
-                           writable = False,
-                           ),
+
+                     # Case transfer management
+                     transfer_site_id("origin_site_id",
+                                      label = T("Admission from"),
+                                      ),
+                     transfer_site_id("destination_site_id",
+                                      label = T("Transfer to"),
+                                      ),
                      # "transferable" indicates whether this case is
                      # ready for transfer (=workflow is complete)
                      Field("transferable", "boolean",
@@ -421,17 +434,19 @@ class DVRCaseModel(S3Model):
                            readable = manage_transferability,
                            writable = manage_transferability,
                            ),
-                     Field("household_size", "integer",
-                           default = 1,
-                           label = T("Household Size"),
-                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(1, None)),
-                           readable = household_size,
-                           writable = household_size_writable,
-                           comment = DIV(_class="tooltip",
-                                         _title="%s|%s" % (T("Household Size"),
-                                                           T("Number of persons belonging to the same household"),
-                                                           ),
-                                         ),
+
+                     # STL Extensions
+                     # @todo: move into component(s)
+                     Field("beneficiary",
+                           default = "INDIVIDUAL",
+                           label = T("Assistance for"),
+                           represent = S3Represent(options=case_beneficiary_opts),
+                           requires = IS_IN_SET(case_beneficiary_opts,
+                                                zero = None,
+                                                ),
+                           # Enable in template if required
+                           readable = False,
+                           writable = False,
                            ),
                      # Simplified "head of household" fields:
                      # (if not tracked as separate case beneficiaries)
@@ -461,6 +476,8 @@ class DVRCaseModel(S3Model):
                            readable = False,
                            writable = False,
                            ),
+
+                     # Standard comments and meta fields
                      s3_comments(),
                      *s3_meta_fields())
 

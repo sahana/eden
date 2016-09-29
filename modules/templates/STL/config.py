@@ -118,8 +118,9 @@ def config(settings):
 
             if r.controller == "dvr" and not r.component:
 
-                # Hierarchical Organisation Selector
                 ctable = s3db.dvr_case
+
+                # Hierarchical Organisation Selector
                 field = ctable.organisation_id
                 from gluon import DIV
                 from s3 import S3HierarchyWidget
@@ -135,6 +136,11 @@ def config(settings):
                                                         ),
                                     )
 
+                # Individual staff assignment
+                field = ctable.human_resource_id
+                field.label = T("Person Responsible")
+                field.readable = field.writable = True
+
                 resource = r.resource
                 if r.interactive:
 
@@ -143,6 +149,7 @@ def config(settings):
                     crud_form = S3SQLCustomForm(
                                 "dvr_case.date",
                                 "dvr_case.organisation_id",
+                                "dvr_case.human_resource_id",
                                 "first_name",
                                 "middle_name",
                                 "last_name",

@@ -2697,6 +2697,22 @@ class S3Config(Storage):
         """
         return self.dvr.get("label", None)
 
+    def get_dvr_track_transfer_sites(self):
+        """
+            Enable features to track transfer origin/destination sites
+        """
+        return self.dvr.get("track_transfer_sites", False)
+
+    def get_dvr_transfer_site_types(self):
+        """
+            Site types for case transfer origin/destination
+        """
+        default = ("cr_shelter",
+                   "org_office",
+                   "org_facility",
+                   )
+        return self.dvr.get("transfer_site_types", default)
+
     def get_dvr_manage_transferability(self):
         """
             Enable features to manage transferability of cases

@@ -481,6 +481,8 @@ def config(settings):
     # Disaster Victim Registry / Case Management
     # Uncomment to use the term Beneficiary instead of Case
     #settings.dvr.label = "Beneficiary"
+    # Uncomment this to enable tracking of transfer origin/destination sites
+    #settings.dvr.track_transfer_sites = True
     # Uncomment this to enable features to manage transferability of cases
     #settings.dvr.manage_transferability = True
     # Uncomment this to enable household size in cases, set to "auto" for automatic counting

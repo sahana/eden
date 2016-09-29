@@ -794,6 +794,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     # DVR Module Settings and Customizations
     #
+    # Uncomment this to enable tracking of transfer origin/destination sites
+    settings.dvr.track_transfer_sites = True
     # Uncomment this to enable features to manage transferability of cases
     settings.dvr.manage_transferability = True
     # Uncomment this to enable household size in cases, set to "auto" for automatic counting
@@ -1000,12 +1002,6 @@ def config(settings):
                               )
                 else:
                     absence_field = None
-
-                # Enable origin and destination site fields
-                field = ctable.origin_site_id
-                field.readable = field.writable = True
-                field = ctable.destination_site_id
-                field.readable = field.writable = True
 
                 # Expose expiration dates
                 field = ctable.valid_until

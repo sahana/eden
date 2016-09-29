@@ -583,16 +583,13 @@ class S3HRModel(S3Model):
                     msg_record_deleted = T("Record deleted"),
                     msg_list_empty = T("No staff or volunteers currently registered"))
 
-        tooltip = DIV(_class="tooltip",
-                      _title="%s|%s" % (T("Human Resource"),
-                                        AUTOCOMPLETE_HELP))
         comment = S3PopupLink(c = "vol" if group == "volunteer" else "hrm",
                               f = group or "staff",
                               vars = {"child": "human_resource_id"},
                               label = crud_strings["hrm_%s" % group].label_create if group else \
                                       crud_strings[tablename].label_create,
                               title = label,
-                              tooltip = tooltip,
+                              tooltip = AUTOCOMPLETE_HELP,
                               )
 
         human_resource_id = S3ReusableField("human_resource_id", "reference %s" % tablename,
