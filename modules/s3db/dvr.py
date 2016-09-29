@@ -2571,6 +2571,15 @@ class DVRCaseEventModel(S3Model):
                                  future = 0,
                                  writable = False,
                                  ),
+                     # Generic quantity field for statistical purposes
+                     Field("quantity", "double",
+                           label = T("Quantity"),
+                           default = 1.0,
+                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           # activate in template as required
+                           readable = False,
+                           writable = False,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 

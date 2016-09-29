@@ -654,6 +654,8 @@ class S3DateFilter(S3RangeFilter):
 
             # Do we want a timepicker?
             timepicker = False if ftype == "date" or hide_time else True
+            if timepicker:
+                input_class += " datetimepicker"
 
             # Make the two inputs constrain each other
             set_min = set_max = None

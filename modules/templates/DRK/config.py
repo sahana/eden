@@ -2028,6 +2028,87 @@ def config(settings):
     settings.customise_dvr_allowance_controller = customise_dvr_allowance_controller
 
     # -------------------------------------------------------------------------
+    def case_event_create_onaccept(form):
+        """
+            Custom onaccept-method for case events to set the quantity in
+            "FOOD" events to the current household size
+
+            @param form: the Form
+        """
+
+        # Get form.vars.id
+        formvars = form.vars
+        try:
+            record_id = formvars.id
+        except AttributeError:
+            record_id = None
+        if not record_id:
+            return
+
+        # Get the person ID and event type code
+        db = current.db
+        s3db = current.s3db
+        ttable = s3db.dvr_case_event_type
+        etable = s3db.dvr_case_event
+
+        query = (etable.id == record_id) & \
+                (ttable.id == etable.type_id)
+        row = db(query).select(etable.person_id,
+                               ttable.code,
+                               limitby = (0, 1),
+                               ).first()
+        if not row:
+            return
+        event_code = row[ttable.code]
+        person_id = row[etable.person_id]
+
+        # Check event type code and update quantity as required
+        if event_code == "FOOD":
+
+            # Get the household size
+            ctable = s3db.dvr_case
+            query = (ctable.person_id == person_id) & \
+                    (ctable.deleted != True)
+            row = db(query).select(ctable.household_size,
+                                   limitby = (0, 1),
+                                   ).first()
+            if not row:
+                return
+
+            # Update quantity
+            household_size = row.household_size
+            if household_size and household_size > 1:
+                query = (etable.id == record_id)
+                db(query).update(quantity=float(household_size))
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_event_resource(r, tablename):
+
+        resource = current.s3db.resource("dvr_case_event")
+
+        # Get the current create_onaccept setting
+        hook = "create_onaccept"
+        callback = resource.get_config(hook)
+
+        # Fall back to generic onaccept
+        if not callback:
+            hook = "onaccept"
+            callback = resource.get_config(hook)
+
+        # Extend with custom onaccept
+        custom_onaccept = case_event_create_onaccept
+        if callback:
+            if isinstance(callback, (tuple, list)):
+                callback = list(callback) + [custom_onaccept]
+            else:
+                callback = [callback, custom_onaccept]
+        else:
+            callback = custom_onaccept
+        resource.configure(**{hook: callback})
+
+    settings.customise_dvr_case_event_resource = customise_dvr_case_event_resource
+
+    # -------------------------------------------------------------------------
     def customise_dvr_case_event_controller(**attr):
 
         s3 = current.response.s3
