@@ -101,6 +101,39 @@ def config(settings):
     settings.pr.hide_third_gender = False
 
     # -------------------------------------------------------------------------
+    def customise_pr_person_resource(r, tablename):
+
+        s3db = current.s3db
+
+        # Person tag for Family ID Number
+        s3db.add_components("pr_person",
+                            pr_person_tag = {"name": "family_id",
+                                             "joinby": "person_id",
+                                             "filterby": "tag",
+                                             "filterfor": ("FAMILY_ID",),
+                                             "multiple": False,
+                                             },
+                            )
+
+        table = s3db.pr_person
+
+        # Remove default tooltip for pe_label
+        field = table.pe_label
+        field.comment = None
+
+        # Use "Gender" as label for gender field
+        field = table.gender
+        field.label = current.T("Gender")
+
+        if r.controller == "dvr":
+            # Default nationality for case beneficiaries is Syrian
+            dtable = s3db.pr_person_details
+            field = dtable.nationality
+            field.default = "SY"
+
+    settings.customise_pr_person_resource = customise_pr_person_resource
+
+    # -------------------------------------------------------------------------
     def customise_pr_person_controller(**attr):
 
         s3db = current.s3db
@@ -118,6 +151,7 @@ def config(settings):
 
             if r.controller == "dvr" and not r.component:
 
+                table = r.table
                 ctable = s3db.dvr_case
 
                 # Hierarchical Organisation Selector
@@ -156,6 +190,18 @@ def config(settings):
                                 "person_details.nationality",
                                 "date_of_birth",
                                 "gender",
+                                (T("Individual ID Number"), "pe_label"),
+                                S3SQLInlineComponent(
+                                        "family_id",
+                                        fields = [("", "value"),
+                                                  ],
+                                        filterby = {"field": "tag",
+                                                    "options": "FAMILY_ID",
+                                                    },
+                                        label = T("Family ID Number"),
+                                        multiple = False,
+                                        name = "family_id",
+                                        ),
                                 S3SQLInlineComponent(
                                         "address",
                                         label = T("Current Address"),
@@ -197,11 +243,14 @@ def config(settings):
                     #    s3.scripts.append(path)
 
                 # Custom list fields (must be outside of r.interactive)
-                list_fields = ["first_name",
+                list_fields = [(T("ID"), "pe_label"),
+                               (T("Family ID"), "family_id.value"),
+                               "first_name",
                                "middle_name",
                                "last_name",
                                "date_of_birth",
                                "gender",
+                               "person_details.nationality",
                                "dvr_case.date",
                                ]
                 resource.configure(list_fields = list_fields,
