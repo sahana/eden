@@ -868,6 +868,7 @@ def config(settings):
             from s3 import IS_ONE_OF
 
             # Make project description mandatory
+            # NB This prevents importing projects via project_location currently...need to create valid projects first
             table.description.requires = IS_NOT_EMPTY(
                                 error_message = T("Enter a project description"),
                                 )
@@ -1105,10 +1106,6 @@ def config(settings):
         s3db = current.s3db
         table = s3db.project_activity
 
-        # Hide unwanted fields
-        field = table.person_id
-        field.readable = field.writable = False
-
         # Custom CRUD form
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
 
@@ -1146,6 +1143,7 @@ def config(settings):
                                             "location_id",
                                             "date",
                                             "end_date",
+                                            "person_id",
                                             "status_id",
                                             "comments",
                                             )
@@ -1288,6 +1286,7 @@ def config(settings):
                                             "date",
                                             "end_date",
                                             "location_id",
+                                            "person_id",
                                             "comments",
                                             postprocess = postprocess,
                                             )

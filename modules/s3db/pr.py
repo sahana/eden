@@ -1965,7 +1965,6 @@ class S3GroupModel(S3Model):
              "pr_group_id",
              "pr_group_membership",
              "pr_group_member_role",
-
              )
 
     def model(self):
