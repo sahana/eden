@@ -178,8 +178,12 @@ def config(settings):
                 resource = r.resource
                 if r.interactive:
 
+                    from s3 import S3LocationSelector, \
+                                   S3SQLCustomForm, \
+                                   S3SQLInlineComponent, \
+                                   S3TextFilter
+
                     # Custom CRUD form
-                    from s3 import S3SQLCustomForm, S3SQLInlineComponent
                     crud_form = S3SQLCustomForm(
                                 "dvr_case.date",
                                 "dvr_case.organisation_id",
@@ -231,11 +235,19 @@ def config(settings):
                                        )
                     # Hide Postcode in addresses (not used)
                     atable = s3db.pr_address
-                    from s3 import S3LocationSelector
                     location_id = atable.location_id
                     location_id.widget = S3LocationSelector(show_address=True,
                                                             show_postcode = False,
                                                             )
+
+                    # Extend text filter with Family ID and case comments
+                    filter_widgets = resource.get_config("filter_widgets")
+                    for fw in filter_widgets:
+                        if isinstance(fw, S3TextFilter):
+                            fw.field.extend(("family_id.value",
+                                             "dvr_case.comments",
+                                             ))
+                            break
 
                     # Inject script to toggle Head of Household form fields
                     #path = "/%s/static/themes/STL/js/dvr.js" % current.request.application
