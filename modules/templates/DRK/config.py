@@ -2061,19 +2061,14 @@ def config(settings):
         # Check event type code and update quantity as required
         if event_code == "FOOD":
 
-            # Get the household size
-            ctable = s3db.dvr_case
-            query = (ctable.person_id == person_id) & \
-                    (ctable.deleted != True)
-            row = db(query).select(ctable.household_size,
-                                   limitby = (0, 1),
-                                   ).first()
-            if not row:
-                return
+            # Get current household size
+            adults, children = s3db.dvr_get_household_size(person_id,
+                                                           formatted=False,
+                                                           )
+            household_size = adults + children
 
             # Update quantity
-            household_size = row.household_size
-            if household_size and household_size > 1:
+            if household_size > 1:
                 query = (etable.id == record_id)
                 db(query).update(quantity=float(household_size))
 
