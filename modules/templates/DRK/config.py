@@ -2111,8 +2111,22 @@ def config(settings):
         try:
             date = row.date
         except AttributeError:
-            return "-"
-        return date.date()
+            date = None
+        if date:
+            # Get local hour
+            from dateutil import tz
+            date = date.replace(tzinfo=tz.gettz("UTC"))
+            date = date.astimezone(tz.gettz("Europe/Berlin"))
+            hour = date.time().hour
+
+            # Convert to date
+            date = date.date()
+            if hour <= 7:
+                # Map early hours to previous day
+                return date - datetime.timedelta(days=1)
+        else:
+            date = None
+        return date
 
     def case_event_date_day_represent(value):
         """
@@ -2123,6 +2137,33 @@ def config(settings):
 
         from s3 import S3DateTime
         return S3DateTime.date_represent(value, utc=True)
+
+    def case_event_time_of_day(row):
+        """
+            Field method to group events by time of day
+        """
+
+        if hasattr(row, "dvr_case_event"):
+            row = row.dvr_case_event
+        try:
+            date = row.date
+        except AttributeError:
+            date = None
+        if date:
+            from dateutil import tz
+            date = date.replace(tzinfo=tz.gettz("UTC"))
+            date = date.astimezone(tz.gettz("Europe/Berlin"))
+            hour = date.time().hour
+
+            if 7 <= hour < 11:
+                tod = "07:00 - 11:00"
+            elif 11 <= hour < 15:
+                tod = "11:00 - 15:00"
+            else:
+                tod = "15:00 - 07:00"
+        else:
+            tod = "-"
+        return tod
 
     def case_event_report_default_filters(event_code=None):
         """
@@ -2185,9 +2226,14 @@ def config(settings):
                                     case_event_date_day,
                                     represent = case_event_date_day_represent,
                                     )
+                table.date_tod = s3_fieldmethod(
+                                    "date_tod",
+                                    case_event_time_of_day,
+                                    )
 
                 # Pivot axis options
                 report_axes = [(T("Date"), "date_day"),
+                               (T("Time of Day"), "date_tod"),
                                "type_id",
                                "created_by",
                                ]
@@ -2200,7 +2246,7 @@ def config(settings):
                              #(T("Number of Events"), "count(id)"),
                              ],
                     "defaults": {"rows": "date_day",
-                                 "cols": "type_id",
+                                 "cols": "date_tod",
                                  "fact": "sum(quantity)",
                                  "totals": True,
                                  },

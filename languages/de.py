@@ -4475,6 +4475,7 @@
 'Timeline': 'Zeitplan',
 'Time Out': 'Ausgangszeit',
 'Time Question': 'Zeit Frage',
+'Time of Day': 'Uhrzeit',
 'Title': 'Titel',
 'Title to show for the Web Map Service panel in the Tools panel.': 'Titel, mit der die WebMapService-Leiste in der Werkzeugleiste angezeigt wird',
 'To Location': 'Zum Standort',
