@@ -2368,21 +2368,28 @@ class S3PivotTable(object):
         if field and field in rfields:
 
             rfield = rfields[field]
-
             if rfield.field:
                 def repr_method(value):
-                    return s3_represent_value(rfield.field, value,
-                                              strip_markup=True)
-
+                    return s3_represent_value(rfield.field,
+                                              value,
+                                              strip_markup = True,
+                                              )
             elif rfield.virtual:
+
+                # If rfield defines a represent, use it
+                represent = rfield.represent
+                if not represent:
+                    represent = s3_unicode
+
+                # Wrap with markup stripper
                 stripper = S3MarkupStripper()
                 def repr_method(val):
                     if val is None:
                         return "-"
-                    text = s3_unicode(val)
+                    text = represent(val)
                     if "<" in text:
                         stripper.feed(text)
-                        return stripper.stripped() # = totally naked ;)
+                        return stripper.stripped()
                     else:
                         return text
             else:

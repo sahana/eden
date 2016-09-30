@@ -671,6 +671,14 @@ class S3ResourceField(object):
         elif self.colname:
             self.virtual = True
             self.ftype = "virtual"
+
+            # Check whether the fieldmethod handler has a
+            # representation method (s3_fieldmethod)
+            field = resource.table[self.fname]
+            if hasattr(field, "handler"):
+                handler = field.handler
+                if hasattr(handler, "represent"):
+                    self.represent = handler.represent
         else:
             self.ftype = "context"
 

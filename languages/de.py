@@ -4518,6 +4518,7 @@
 'Total number of schools in affected area': 'Gesamtzahl der Schulen im betroffenen Gebiet',
 'Total population of site visited': 'Gesamtzahl der Bevölkerung des besuchten Gebietes',
 'Total': 'Summe',
+'Total Quantity': 'Gesamtmenge',
 'Tourist Group': 'Touristengruppe',
 'Town': 'Stadt',
 'Town / Municipality': 'Ort / Stadtbezirk',

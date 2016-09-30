@@ -819,10 +819,15 @@ class S3TimeSeries(object):
             representations = []
             append = representations.append()
             stripper = S3MarkupStripper()
+
+            represent = rfield.represent
+            if not represent:
+                represent = s3_unicode
+
             for value in values:
                 if value is None:
                     append((value, "-"))
-                text = s3_unicode(value)
+                text = represent(value)
                 if "<" in text:
                     stripper.feed(text)
                     append((value, stripper.stripped()))

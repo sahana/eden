@@ -2105,9 +2105,116 @@ def config(settings):
     settings.customise_dvr_case_event_resource = customise_dvr_case_event_resource
 
     # -------------------------------------------------------------------------
+    def case_event_date_day(row):
+        """
+            Field method to reduce case event date/time to just date,
+            used in pivot table reports to group case events by day
+        """
+
+        if hasattr(row, "dvr_case_event"):
+            row = row.dvr_case_event
+        try:
+            date = row.date
+        except AttributeError:
+            return "-"
+        return date.date()
+
+    def case_event_date_day_represent(value):
+        """
+            Representation method for case_event_date_day, needed in order
+            to sort pivot axis values by raw date, but show them in locale
+            format (default DD.MM.YYYY, doesn't sort properly).
+        """
+
+        from s3 import S3DateTime
+        return S3DateTime.date_represent(value, utc=True)
+
+    def case_event_report_default_filters(event_code=None):
+        """
+            Set default filters for case event report
+
+            @param event_code: code for the default event type
+        """
+
+        from s3 import s3_set_default_filter
+
+        if event_code:
+            ttable = current.s3db.dvr_case_event_type
+            query = (ttable.code == event_code) & \
+                    (ttable.deleted != True)
+            row = current.db(query).select(ttable.id,
+                                           limitby = (0, 1),
+                                           ).first()
+            if row:
+                s3_set_default_filter("~.type_id",
+                                      row.id,
+                                      tablename = "dvr_case_event",
+                                      )
+
+        # Minimum date: one week
+        WEEK_AGO = datetime.datetime.now() - \
+                    datetime.timedelta(days=7)
+        min_date = WEEK_AGO.replace(hour=8, minute=0, second=0)
+
+        s3_set_default_filter("~.date",
+                              {"ge": min_date,
+                               },
+                              tablename = "dvr_case_event",
+                              )
+
+    # -------------------------------------------------------------------------
     def customise_dvr_case_event_controller(**attr):
 
         s3 = current.response.s3
+
+        standard_prep = s3.prep
+        def custom_prep(r):
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            resource = r.resource
+            table = resource.table
+
+            if r.method == "report":
+                # Set report default filters
+                event_code = r.get_vars.get("code")
+                case_event_report_default_filters(event_code)
+
+                # Field method for day-date of events
+                from s3 import s3_fieldmethod
+                table.date_day = s3_fieldmethod(
+                                    "date_day",
+                                    case_event_date_day,
+                                    represent = case_event_date_day_represent,
+                                    )
+
+                # Pivot axis options
+                report_axes = [(T("Date"), "date_day"),
+                               "type_id",
+                               "created_by",
+                               ]
+
+                # Configure report options
+                report_options = {
+                    "rows": report_axes,
+                    "cols": report_axes,
+                    "fact": [(T("Total Quantity"), "sum(quantity)"),
+                             #(T("Number of Events"), "count(id)"),
+                             ],
+                    "defaults": {"rows": "date_day",
+                                 "cols": "type_id",
+                                 "fact": "sum(quantity)",
+                                 "totals": True,
+                                 },
+                    }
+                resource.configure(report_options = report_options,
+                                   extra_fields = ["date"],
+                                   )
+            return result
+        s3.prep = custom_prep
 
         # Custom postp
         standard_postp = s3.postp

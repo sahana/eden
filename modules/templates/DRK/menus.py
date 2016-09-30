@@ -191,6 +191,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           ),
                         M("Residents Reports", c="dvr", f="site_activity",
                           ),
+                        M("Food Distribution", c="dvr", f="case_event",
+                          m = "report",
+                          vars = {"code": "FOOD"},
+                          ),
                         ),
                     M("Activities", f="case_activity")(
                         M("Emergencies",
