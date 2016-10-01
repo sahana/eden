@@ -6562,12 +6562,12 @@ def org_facility_controller():
     s3.prep = prep
 
     def postp(r, output):
-        if r.representation == "plain":
+        record = r.record
+        if r.representation == "plain" and record:
             # Custom Map Popup
             T = current.T
             output = TABLE()
             append = output.append
-            record = r.record
             # Edit button
             append(TR(TD(A(T("Edit"),
                            _target="_blank",
