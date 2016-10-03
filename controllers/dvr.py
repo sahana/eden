@@ -217,15 +217,19 @@ def person():
                                     ),
                     S3OptionsFilter("person_details.nationality",
                                     ),
-                    S3OptionsFilter("case_flag_case.flag_id",
-                                    label = T("Flags"),
-                                    options = s3_get_filter_opts("dvr_case_flag",
-                                                                 translate = True,
-                                                                 ),
-                                    cols = 3,
-                                    hidden = True,
-                                    ),
                     ]
+
+                # Add filter for case flags
+                if settings.get_dvr_case_flags():
+                    filter_widgets.append(
+                        S3OptionsFilter("case_flag_case.flag_id",
+                                        label = T("Flags"),
+                                        options = s3_get_filter_opts("dvr_case_flag",
+                                                                     translate = True,
+                                                                     ),
+                                        cols = 3,
+                                        hidden = True,
+                                        ))
 
                 # Add filter for transferability if relevant for deployment
                 if settings.get_dvr_manage_transferability():
@@ -236,8 +240,7 @@ def person():
                                                    },
                                         cols = 2,
                                         hidden = True,
-                                        )
-                        )
+                                        ))
 
                 resource.configure(crud_form = crud_form,
                                    filter_widgets = filter_widgets,

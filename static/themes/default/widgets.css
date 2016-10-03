@@ -737,11 +737,14 @@ body.popup {
 #rheader th,
 #rheader td {
     text-align: left;
-    padding: 1px 5px 1px 5px;
+    padding: 0.1rem 0.5rem 0.05rem 0;
     white-space: pre-line;
 }
 #rheader th {
     font-weight: bold;
+}
+#rheader td {
+    padding-right: 1.25rem;
 }
 
 /* Tabs */

@@ -2719,6 +2719,12 @@ class S3Config(Storage):
         """
         return self.dvr.get("manage_transferability", False)
 
+    def get_dvr_case_flags(self):
+        """
+            Enable features to manage case flags
+        """
+        return self.dvr.get("case_flags", False)
+
     def get_dvr_household_size(self):
         """
             Register number of persons per household (family)

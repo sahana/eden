@@ -178,7 +178,8 @@ def config(settings):
                 resource = r.resource
                 if r.interactive:
 
-                    from s3 import S3LocationSelector, \
+                    from s3 import S3DateFilter, \
+                                   S3LocationSelector, \
                                    S3SQLCustomForm, \
                                    S3SQLInlineComponent, \
                                    S3TextFilter
@@ -249,6 +250,18 @@ def config(settings):
                                              ))
                             break
 
+                    # Add filter for date of birth
+                    dob_filter = S3DateFilter("date_of_birth",
+                                              hidden=True,
+                                              )
+                    filter_widgets.append(dob_filter)
+
+                    # Add filter for registration date
+                    reg_filter = S3DateFilter("dvr_case.date",
+                                                hidden = True,
+                                                )
+                    filter_widgets.append(reg_filter)
+
                     # Inject script to toggle Head of Household form fields
                     #path = "/%s/static/themes/STL/js/dvr.js" % current.request.application
                     #if path not in s3.scripts:
@@ -264,6 +277,7 @@ def config(settings):
                                "gender",
                                "person_details.nationality",
                                "dvr_case.date",
+                               "dvr_case.status_id",
                                ]
                 resource.configure(list_fields = list_fields,
                                    )
@@ -498,21 +512,27 @@ def stl_dvr_rheader(r, tabs=[]):
                 tabs = [(T("Basic Details"), None),
                         ]
 
-                case = resource.select(["first_name",
-                                        "last_name",
+                case = resource.select(["family_id.value",
+                                        "dvr_case.organisation_id",
                                         ],
                                         represent = True,
                                         raw_data = True,
                                         ).rows
 
                 if case:
-                    name = lambda row: s3_fullname(row)
+                    case = case[0]
+                    print case
+                    family_id = lambda row: case["pr_family_id_person_tag.value"]
+                    organisation_id = lambda row: case["dvr_case.organisation_id"]
                 else:
                     return None
+                name = lambda row: s3_fullname(row)
 
                 rheader_fields = [[(T("ID"), "pe_label"),
+                                   (T("Family ID"), family_id),
                                    ],
                                   [(T("Name"), name),
+                                   (T("Organisation"), organisation_id),
                                    ],
                                   ["date_of_birth",
                                    ],
