@@ -41,6 +41,9 @@ from s3layouts import S3PopupLink
 
 # =============================================================================
 class DataCollectionTemplateModel(S3Model):
+    """
+        Templates to use for Assessments / Surveys
+    """
 
     names = ("dc_template",
              "dc_template_id",
@@ -251,9 +254,15 @@ class DataCollectionTemplateModel(S3Model):
 
 # =============================================================================
 class DataCollectionModel(S3Model):
+    """
+        Results of Assessments / Surveys
+    """
 
-    names = ("dc_collection",
+    names = ("dc_target",
+             "dc_collection",
              "dc_answer",
+             "dc_collection_id",
+             "dc_target_id",
              )
 
     def model(self):
@@ -261,19 +270,66 @@ class DataCollectionModel(S3Model):
         T = current.T
         db = current.db
 
+        add_components = self.add_components
         crud_strings = current.response.s3.crud_strings
-
         define_table = self.define_table
 
+        location_id = self.gis_location_id
+        template_id = self.dc_template_id
+
         # =====================================================================
-        # Data Collection
+        # Data Collection Target
+        # - planning of Assessments / Surveys
+        # - optional step in the process
+        #
+        tablename = "dc_target"
+        define_table(tablename,
+                     template_id(),
+                     s3_date(default = "now"),
+                     location_id(widget = S3LocationSelector(show_map=False)),
+                     #self.org_organisation_id(),
+                     #self.pr_person_id(),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Components
+        add_components(tablename,
+                       dc_collection = "target_id",
+                       )
+
+        # CRUD strings
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Data Collection Target"),
+            title_display = T("Data Collection Target Details"),
+            title_list = T("Data Collection Targets"),
+            title_update = T("Edit Data Collection Target"),
+            title_upload = T("Import Data Collection Targets"),
+            label_list_button = T("List Data Collection Targets"),
+            label_delete_button = T("Delete Data Collection Target"),
+            msg_record_created = T("Data Collection Target added"),
+            msg_record_modified = T("Data Collection Target updated"),
+            msg_record_deleted = T("Data Collection Target deleted"),
+            msg_list_empty = T("No Data Collection Targets currently registered"))
+
+        target_id = S3ReusableField("target_id", "reference %s" % tablename,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "dc_target.id")
+                                                ),
+                                    readable = False,
+                                    writable = False,
+                                    )
+
+        # =====================================================================
+        # Data Collections
+        # - instances of an Assessment / Survey
         #
         tablename = "dc_collection"
         define_table(tablename,
                      self.super_link("doc_id", "doc_entity"),
-                     self.dc_template_id(),
+                     target_id(),
+                     template_id(),
                      s3_date(default = "now"),
-                     self.gis_location_id(),
+                     location_id(),
                      self.org_organisation_id(),
                      self.pr_person_id(
                         default = current.auth.s3_logged_in_person(),
@@ -288,9 +344,9 @@ class DataCollectionModel(S3Model):
                        )
 
         # Components
-        self.add_components(tablename,
-                            dc_answer = "collection_id",
-                            )
+        add_components(tablename,
+                       dc_answer = "collection_id",
+                       )
 
         # CRUD strings
         crud_strings[tablename] = Storage(
@@ -325,7 +381,8 @@ class DataCollectionModel(S3Model):
                                         )
 
         # =====================================================================
-        # Data Collection Answer
+        # Data Collection Answers
+        # - the data within Assessments / Surveys
         #
         tablename = "dc_answer"
         define_table(tablename,
@@ -356,6 +413,7 @@ class DataCollectionModel(S3Model):
         # =====================================================================
         # Pass names back to global scope (s3.*)
         return dict(dc_collection_id = collection_id,
+                    dc_target_id = target_id,
                     )
 
     # -------------------------------------------------------------------------
@@ -369,6 +427,7 @@ class DataCollectionModel(S3Model):
                                 )
 
         return dict(dc_collection_id = lambda **attr: dummy("collection_id"),
+                    dc_target_id = lambda **attr: dummy("target_id"),
                     )
 
 # =============================================================================
@@ -406,6 +465,18 @@ def dc_rheader(r, tabs=None):
         tabs = ((T("Basic Details"), None),
                 (T("Answers"), "answer"),
                 (T("Attachments"), "document"),
+                )
+
+        rheader_fields = (["template_id"],
+                          ["location_id"],
+                          ["date"],
+                          )
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r)
+
+    elif resourcename == "target":
+
+        tabs = ((T("Basic Details"), None),
+                (T("Collections"), "collection"),
                 )
 
         rheader_fields = (["template_id"],

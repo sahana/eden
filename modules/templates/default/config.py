@@ -1151,6 +1151,12 @@ def config(settings):
         #   module_type = 10,
         #   #access = "|DVI|",      # Only users with the DVI role can see this module in the default menu & access the controller
         #)),
+        #("edu", Storage(
+        #    name_nice = T("Schools"),
+        #    #description = "Helps to monitor status of schools",
+        #    restricted = True,
+        #    module_type = 10
+        #)),
         #("mpr", Storage(
         #   name_nice = T("Missing Person Registry"),
         #   #description = "Helps to report and search for missing persons",

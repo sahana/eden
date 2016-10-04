@@ -41,18 +41,26 @@ def event():
     # Pre-process
     def prep(r):
         if r.interactive:
+            method = r.method
             if r.component:
-                if r.component.name == "req":
-                    if r.method != "update" and r.method != "read":
+                cname = r.component_name
+                if cname == "collection":
+                    s3.crud_strings["dc_collection"].label_create = T("Add Assessment")
+
+                elif cname == "req":
+                    if method != "update" and method != "read":
                         # Hide fields which don't make sense in a Create form
                         # inc list_create (list_fields over-rides)
                         s3db.req_create_form_mods()
 
-            elif r.method != "update" and r.method != "read":
+                elif cname == "target":
+                    s3.crud_strings["dc_target"].label_create = T("Add Target")
+
+            elif method != "update" and method != "read":
                 # Create or ListCreate
                 r.table.closed.writable = r.table.closed.readable = False
 
-            elif r.method == "update":
+            elif method == "update":
                 # Can't change details after event activation
                 table = r.table
                 table.exercise.writable = False

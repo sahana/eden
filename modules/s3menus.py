@@ -659,7 +659,7 @@ class S3OptionsMenu(object):
     def dc():
         """ Data Collection Tool """
 
-        ADMIN = current.session.s3.system_roles.ADMIN
+        #ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c="dc")(
                     M("Templates", f="template")(
@@ -852,6 +852,21 @@ class S3OptionsMenu(object):
                     ),
                     M("Beneficiary Types", f="beneficiary_type")(
                       M("Create", m="create"),
+                    ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def edu():
+        """ Education Module """
+
+        return M()(
+                    M("Schools", c="edu", f="school")(
+                        M("Create", m="create"),
+                    ),
+                    M("School Types", c="edu", f="school_type")(
+                        M("Create", m="create"),
+                        M("Import", m="import", p="create"),
                     ),
                 )
 
