@@ -1,0 +1,4 @@
+Position,Code,Status,Default,Closed,Comments
+1,PENDING,Pending,false,false,Case pending
+2,OPEN,Open,true,false,Case in progress
+3,CLOSED,Closed,false,true,Case closed
