@@ -6961,7 +6961,7 @@ def project_indicator_progress_report(r, **attr):
 # =============================================================================
 class S3ProjectProgrammeModel(S3Model):
     """
-        Project Programme Model
+        Programmes Model
     """
 
     names = ("project_programme",
@@ -6976,7 +6976,7 @@ class S3ProjectProgrammeModel(S3Model):
         NONE = current.messages["NONE"]
 
         # ---------------------------------------------------------------------
-        # Project Programmes
+        # Programmes
         #
         tablename = "project_programme"
         self.define_table(tablename,
@@ -6985,7 +6985,12 @@ class S3ProjectProgrammeModel(S3Model):
                                 label = T("Title"),
                                 represent = lambda v: T(v) if v is not None \
                                                            else NONE,
-                                requires = IS_NOT_EMPTY()
+                                requires = IS_NOT_EMPTY(),
+                                ),
+                          Field("code",
+                                label = T("Code"),
+                                represent = lambda v: T(v) if v is not None \
+                                                           else NONE,
                                 ),
                           s3_comments(),
                           *s3_meta_fields())

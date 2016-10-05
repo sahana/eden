@@ -562,7 +562,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_stats_demographic_data_resource(r, tablename):
         """
-            Customise event_event resource
+            Customise stats_demographic_data resource
             - Configure fields
             Runs after controller customisation
             But runs before prep
@@ -662,7 +662,7 @@ def config(settings):
     # -------------------------------------------------------------------------
     def customise_org_facility_resource(r, tablename):
         """
-            Customise event_event resource
+            Customise org_facility resource
             - List Fields
             - Form
             - Filter

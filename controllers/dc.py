@@ -147,4 +147,25 @@ def template_question():
 
     return s3_rest_controller()
 
+# -----------------------------------------------------------------------------
+def target():
+    """
+        RESTful CRUD controller
+    """
+
+    # Pre-process
+    def prep(r):
+        if r.interactive:
+            if r.component_name == "collection":
+                # Default component values from master record
+                record = r.record
+                table = s3db.dc_collection
+                table.location_id.default = record.location_id
+                table.template_id.default = record.template_id
+                
+        return True
+    s3.prep = prep
+
+    return s3_rest_controller(rheader = s3db.dc_rheader)
+
 # END =========================================================================

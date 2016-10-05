@@ -19,19 +19,14 @@ def config(settings):
 
     # PrePopulate data
     #settings.base.prepopulate = ("skeleton", "default/users")
-    settings.base.prepopulate += ("SCPHIMS", "default/users")
+    settings.base.prepopulate += ("SCPHIMS", "SCPHIMS/Demo", "default/users")
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "SCPHIMS"
 
     # Authentication settings
-    # Should users be allowed to register themselves?
-    #settings.security.self_registration = False
-    # Do new users need to verify their email address?
-    #settings.auth.registration_requires_verification = True
-    # Do new users need to be approved by an administrator prior to being able to login?
-    #settings.auth.registration_requires_approval = True
-    #settings.auth.registration_requests_organisation = True
+    # Users use their existing SC accounts
+    settings.security.self_registration = False
 
     # Approval emails get sent to all admins
     settings.mail.approver = "ADMIN"
@@ -70,7 +65,7 @@ def config(settings):
     #    ("pt-br", "Português (Brasil)"),
     #    ("ru", "русский"),
     #    ("tet", "Tetum"),
-        ("tl", "Tagalog"),
+    #    ("tl", "Tagalog"),
     #    ("tr", "Türkçe"),
     #    ("ur", "اردو"),
     #    ("vi", "Tiếng Việt"),
@@ -101,7 +96,7 @@ def config(settings):
         "PHP" : "Philippine Pesos",
         "USD" : "United States Dollars",
     }
-    #settings.fin.currency_default = "USD"
+    settings.fin.currency_default = "PHP"
 
     # Security Policy
     # http://eden.sahanafoundation.org/wiki/S3AAA#System-widePolicy
@@ -115,6 +110,17 @@ def config(settings):
     # 8: Apply Controller, Function, Table ACLs, Entity Realm + Hierarchy and Delegations
 
     settings.security.policy = 5 # Controller, Function & Table ACLs
+
+    # =========================================================================
+    # Data Collection
+    #
+
+    def customise_dc_target_resource(r, tablename):
+
+        # @ToDo: Default to the Rapid Assessment Form (maybe based on role)
+        pass
+
+    #settings.customise_dc_target_resource = customise_dc_target_resource
 
     # =========================================================================
     # Documents
@@ -362,6 +368,8 @@ def config(settings):
     # Events
     #
     settings.event.label = "Disaster"
+    #settings.event.impact_tab = True
+    settings.event.dispatch_tab = False
 
     # =========================================================================
     # Projects
@@ -372,6 +380,7 @@ def config(settings):
     settings.project.activities = True
     settings.project.hazards = False
     settings.project.hfa = False
+    settings.project.programmes = True
     settings.project.themes = False
 
     settings.project.multiple_organisations = True
@@ -381,6 +390,12 @@ def config(settings):
                                            2: T("Partner Organization"),
                                            3: T("Donor"),
                                            }
+
+    def customise_project_activity_resource(r, tablename):
+
+        s3db.gis_location.addr_street.label = T("Precise Location")
+
+    settings.customise_project_activity_resource = customise_project_activity_resource
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them
@@ -484,12 +499,12 @@ def config(settings):
             restricted = True,
             module_type = 10,
         )),
-        #("inv", Storage(
-        #    name_nice = T("Warehouses"),
-        #    #description = "Receiving and Sending Items",
-        #    restricted = True,
-        #    module_type = 4
-        #)),
+        ("inv", Storage(
+            name_nice = T("Warehouses"),
+            #description = "Receiving and Sending Items",
+            restricted = True,
+            module_type = 4
+        )),
         #("asset", Storage(
         #    name_nice = T("Assets"),
         #    #description = "Recording and Assigning Assets",
@@ -521,12 +536,12 @@ def config(settings):
         #    restricted = True,
         #    module_type = 10
         #)),
-        #("hms", Storage(
-        #    name_nice = T("Hospitals"),
-        #    #description = "Helps to monitor status of hospitals",
-        #    restricted = True,
-        #    module_type = 10
-        #)),
+        ("hms", Storage(
+            name_nice = T("Clinics"),
+            #description = "Helps to monitor status of hospitals",
+            restricted = True,
+            module_type = 10
+        )),
         ("dc", Storage(
             name_nice = T("Assessments"),
             restricted = True,
@@ -543,6 +558,12 @@ def config(settings):
             #description = "Activate Events (e.g. from Scenario templates) for allocation of appropriate Resources (Human, Assets & Facilities).",
             restricted = True,
             module_type = 10,
+        )),
+        ("edu", Storage(
+            name_nice = T("Schools"),
+            #description = "Helps to monitor status of schools",
+            restricted = True,
+            module_type = 10
         )),
         #("transport", Storage(
         #   name_nice = T("Transport"),
