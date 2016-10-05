@@ -7084,12 +7084,30 @@ class S3HierarchyWidget(FormWidget):
                          )
         else:
             header = ""
-        widget = DIV(INPUT(_type = "hidden",
-                           _multiple = "multiple",
-                           _name = name,
-                           _id = selector,
-                           _class = "s3-hierarchy-input",
-                           requires = self.parse),
+
+        # Currently selected values
+        selected = []
+        append = selected.append
+        if not isinstance(value, (list, tuple, set)):
+            values = [value]
+        else:
+            values = value
+        for v in values:
+            if isinstance(v, (int, long)) or str(v).isdigit():
+                append(v)
+
+        # The hidden input field
+        hidden_input = INPUT(_type = "hidden",
+                             _multiple = "multiple",
+                             _name = name,
+                             _id = selector,
+                             _class = "s3-hierarchy-input",
+                             requires = self.parse,
+                             value = json.dumps(selected),
+                             )
+
+        # The widget
+        widget = DIV(hidden_input,
                      DIV(header,
                          DIV(h.html("%s-tree" % widget_id,
                                     none=self.none,
@@ -7104,17 +7122,6 @@ class S3HierarchyWidget(FormWidget):
         s3 = current.response.s3
         scripts = s3.scripts
         script_dir = "/%s/static/scripts" % current.request.application
-
-        # Currently selected values
-        selected = []
-        append = selected.append
-        if not isinstance(value, (list, tuple, set)):
-            values = [value]
-        else:
-            values = value
-        for v in values:
-            if isinstance(v, (int, long)) or str(v).isdigit():
-                append(v)
 
         # Custom theme
         theme = settings.get_ui_hierarchy_theme()

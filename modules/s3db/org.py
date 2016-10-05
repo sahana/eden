@@ -5875,43 +5875,47 @@ def org_rheader(r, tabs=[]):
         #    sectors = TR(TH("%s: " % sector_label),
         #                 table.sector_id.represent(record.sector_id))
         # else:
-        #    sectors = ""
+        #    sectors = None
 
         if record.website:
             website = TR(TH("%s: " % table.website.label),
                          A(record.website, _href=record.website))
         else:
-            website = ""
+            website = None
 
         if record.root_organisation != record.id:
             btable = s3db.org_organisation_branch
             query = (btable.branch_id == record.id) & \
                     (btable.organisation_id == table.id)
-            parent = current.db(query).select(table.id,
-                                              table.name,
-                                              limitby=(0, 1)
-                                              ).first()
-            if parent:
+            row = current.db(query).select(table.id,
+                                           table.name,
+                                           limitby=(0, 1)
+                                           ).first()
+            if row:
                 parent = TR(TH("%s: " % T("Branch of")),
-                             A(parent.name, _href=URL(args=[parent.id, "read"])))
+                            A(row.name, _href=URL(args=[row.id, "read"])),
+                            )
             else:
-                parent = ""
+                parent = None
         else:
-            parent = ""
+            parent = None
 
         rheader = DIV()
         logo = org_organisation_logo(record)
-        rData = TABLE(TR(TH("%s: " % table.name.label),
-                         record.name,
-                         ),
-                      parent,
-                      website,
-                      #sectors,
+
+        record_data = TABLE(TR(TH("%s: " % table.name.label),
+                               record.name,
+                               ),
                       )
+        for item in (parent, website): #, sectors):
+            if item is not None:
+                record_data.append(item)
+
         if logo:
-            rheader.append(TABLE(TR(TD(logo), TD(rData))))
+            rheader.append(TABLE(TR(TD(logo), TD(record_data))))
         else:
-            rheader.append(rData)
+            rheader.append(record_data)
+
         rheader.append(rheader_tabs)
 
     elif tablename in ("org_office", "org_facility"):

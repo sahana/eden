@@ -775,7 +775,10 @@ S3.openPopup = function(url, center) {
                 prefix += setting.alias;
             }
             var type = setting.inlineType || 'sub',
-                rows = setting.inlineRows || true;
+                rows = setting.inlineRows;
+            if (rows === undefined) {
+                rows = true;
+            }
             if (type == 'sub') {
                 var name = setting.name;
                 if (rows) {

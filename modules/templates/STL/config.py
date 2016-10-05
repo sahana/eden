@@ -174,6 +174,20 @@ def config(settings):
                 field = ctable.human_resource_id
                 field.label = T("Person Responsible")
                 field.readable = field.writable = True
+                field.widget = None
+                field.comment = None
+
+                # Filter staff by organisation
+                script = '''$.filterOptionsS3({
+ 'trigger':'sub_dvr_case_organisation_id',
+ 'target':'sub_dvr_case_human_resource_id',
+ 'lookupPrefix':'hrm',
+ 'lookupResource':'human_resource',
+ 'lookupKey':'organisation_id',
+ 'fncRepresent': function(record){return record.person_id},
+ 'optional': true
+})'''
+                s3.jquery_ready.append(script)
 
                 resource = r.resource
                 if r.interactive:
@@ -305,6 +319,28 @@ def config(settings):
 
     # Uncomment this to make tree view the default for "Branches" tab
     #settings.org.branches_tree_view = True
+
+    def customise_org_organisation_controller(**attr):
+
+        tabs = [(T("Basic Details"), None),
+                (T("Staff & Volunteers"), "human_resource"),
+                ]
+
+        if settings.get_org_branches():
+            if settings.get_org_branches_tree_view():
+                branches = "hierarchy"
+            else:
+                branches = "branch"
+            tabs.insert(1, (T("Branches"), branches))
+
+        org_rheader = lambda r, tabs=tabs: current.s3db.org_rheader(r, tabs=tabs)
+
+        attr = dict(attr)
+        attr["rheader"] = org_rheader
+
+        return attr
+
+    settings.customise_org_organisation_controller = customise_org_organisation_controller
 
     # =========================================================================
     # Modules
@@ -521,7 +557,6 @@ def stl_dvr_rheader(r, tabs=[]):
 
                 if case:
                     case = case[0]
-                    print case
                     family_id = lambda row: case["pr_family_id_person_tag.value"]
                     organisation_id = lambda row: case["dvr_case.organisation_id"]
                 else:
