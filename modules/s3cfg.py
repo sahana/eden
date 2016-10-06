@@ -122,6 +122,7 @@ class S3Config(Storage):
         self.cms = Storage()
         self.cr = Storage()
         self.database = Storage()
+        self.dc = Storage()
         self.deploy = Storage()
         self.doc = Storage()
         self.dvr = Storage()
@@ -396,6 +397,13 @@ class S3Config(Storage):
         """
         return self.auth.get("hmac_key", "akeytochange")
 
+    def get_auth_password_changes(self):
+        """
+            Are password changes allowed?
+            - set to False if passwords are being managed externally (OpenID / SMTP / LDAP)
+        """
+        return self.auth.get("password_changes", True)
+
     def get_auth_password_min_length(self):
         """
             To set the Minimum Password Length
@@ -405,6 +413,10 @@ class S3Config(Storage):
     def get_auth_gmail_domains(self):
         """ List of domains which can use GMail SMTP for Authentication """
         return self.auth.get("gmail_domains", [])
+
+    def get_auth_office365_domains(self):
+        """ List of domains which can use Office 365 SMTP for Authentication """
+        return self.auth.get("office365_domains", [])
 
     def get_auth_google(self):
         """
@@ -2636,6 +2648,18 @@ class S3Config(Storage):
             Whether Shelters should show a Tags tab
         """
         return self.cr.get("tags", False)
+
+    # -------------------------------------------------------------------------
+    # DC: Data Collection
+    #
+    def get_dc_collection_label(self):
+        """
+            Label for Data Collections
+            - default: 'Data Collection'
+            - 'Survey'
+            - 'Assessment;
+        """
+        return self.dc.get("collection_label", "Assessment")
 
     # -------------------------------------------------------------------------
     # Deployments

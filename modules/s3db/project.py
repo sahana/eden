@@ -6983,6 +6983,7 @@ class S3ProjectProgrammeModel(S3Model):
         tablename = "project_programme"
         self.define_table(tablename,
                           self.super_link("doc_id", "doc_entity"),
+                          #super_link("budget_entity_id", "budget_entity"),
                           self.org_organisation_id(),
                           Field("name",
                                 label = T("Title"),
@@ -7044,7 +7045,8 @@ class S3ProjectProgrammeModel(S3Model):
                        deduplicate = S3Duplicate(primary = ("name",),
                                                  secondary = ("organisation_id",),
                                                  ),
-                       super_entity = "doc_id",
+                       super_entity = "doc_entity",
+                       #super_entity = ("doc_entity", "budget_entity"),
                        )
 
         self.add_components(tablename,

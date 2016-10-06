@@ -109,8 +109,12 @@ def config(settings):
     #settings.auth.terms_of_service = True
     # Uncomment this to allow users to Login using Gmail's SMTP
     #settings.auth.gmail_domains = ["gmail.com"]
+    # Uncomment this to allow users to Login using Office365's SMTP
+    #settings.auth.office365_domains = ["microsoft.com"]
     # Uncomment this to allow users to Login using OpenID
     #settings.auth.openid = True
+    # Uncomment this to block password changes since managed externally (OpenID / SMTP / LDAP)
+    #settings.auth.password_changes = True
     # Uncomment this to enable presence records on login based on HTML5 geolocations
     #settings.auth.set_presence_on_login = True
     # Uncomment this and specify a list of location levels to be ignored by presence records

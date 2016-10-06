@@ -506,7 +506,7 @@ Thank you"""
               onaccept = DEFAULT,
               log = DEFAULT,
               inline = False, # Set to True to use an 'inline' variant of the style
-              lost_pw_link = True,
+              lost_pw_link = None,
               register_link = True,
               ):
         """
@@ -573,6 +573,8 @@ Thank you"""
                 buttons.append(register_link)
 
             # Lost-password action link
+            if lost_pw_link is None:
+                lost_pw_link = deployment_settings.get_auth_password_changes()
             if lost_pw_link:
                 lost_pw_link = A(T("Lost Password"),
                                  _href=URL(f="user", args="retrieve_password"),
@@ -580,10 +582,10 @@ Thank you"""
                                  )
                 buttons.append(lost_pw_link)
 
-            # If we have custom buttons, add submit button
-            if buttons:
-                submit_button = INPUT(_type="submit", _value=T("Login"))
-                buttons.insert(0, submit_button)
+            # Add submit button
+            #if buttons:
+            submit_button = INPUT(_type="submit", _value=T("Login"))
+            buttons.insert(0, submit_button)
 
             form = SQLFORM(utable,
                            fields = [userfield, passfield],
@@ -656,6 +658,14 @@ Thank you"""
                         if domain in gmail_domains:
                             settings.login_methods.append(
                                 email_auth("smtp.gmail.com:587", "@%s" % domain))
+                    office365_domains = current.deployment_settings.get_auth_office365_domains()
+                    if office365_domains:
+                        from gluon.contrib.login_methods.email_auth import email_auth
+                        domain = form.vars[userfield].split("@")[1]
+                        if domain in office365_domains:
+                            settings.login_methods.append(
+                                email_auth("smtp.office365.com:587", "@%s" % domain))
+
                 # Check for username in db
                 query = (utable[userfield] == form.vars[userfield])
                 user = db(query).select(limitby=(0, 1)).first()

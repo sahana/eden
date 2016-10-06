@@ -41,6 +41,7 @@ __all__ = ("S3DateFilter",
            "S3SliderFilter",
            "S3TextFilter",
            "s3_get_filter_opts",
+           "s3_set_default_filter",
            )
 
 import datetime
@@ -3249,5 +3250,26 @@ def s3_get_filter_opts(tablename,
     else:
         opts = {}
     return opts
+
+# =============================================================================
+def s3_set_default_filter(selector, value, tablename=None):
+    """
+        Set a default filter for selector.
+
+        @param selector: the field selector
+        @param value: the value, can be a dict {operator: value},
+                      a list of values, or a single value, or a
+                      callable that returns any of these
+        @param tablename: the tablename
+    """
+
+    s3 = current.response.s3
+
+    filter_defaults = s3
+    for level in ("filter_defaults", tablename):
+        if level not in filter_defaults:
+            filter_defaults[level] = {}
+        filter_defaults = filter_defaults[level]
+    filter_defaults[selector] = value
 
 # END =========================================================================

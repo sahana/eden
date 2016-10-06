@@ -112,6 +112,18 @@ def config(settings):
     settings.security.policy = 5 # Controller, Function & Table ACLs
 
     # =========================================================================
+    # Login
+    #
+
+    settings.auth.password_changes = False
+    settings.auth.office365_domains = ["savethechildren.org"]
+
+    #settings.mail.sender = "'IMS' <imsph@savethechildren.org>"
+    #settings.mail.server = "smtp.office365.com:587"
+    #settings.mail.tls = True
+    #settings.mail.login = "username:password"
+
+    # =========================================================================
     # Data Collection
     #
 
@@ -142,6 +154,8 @@ def config(settings):
     settings.customise_dc_target_resource = customise_dc_target_resource
 
     def customise_dc_collection_resource(r, tablename):
+
+        # @ToDo: Filters inc 'Assigned to me'
 
         db = current.db
         s3db = current.s3db
@@ -327,39 +341,99 @@ def config(settings):
         #    # @ToDo: Just show the External (Public) parts
         #    pass
 
-        from s3 import S3DateFilter, S3SQLCustomForm#, S3SQLInlineComponent
+        from s3 import S3DateFilter, S3OptionsFilter, S3SQLCustomForm, S3SQLInlineComponent
 
-        crud_form = S3SQLCustomForm(# @ToDo: Have this as an event_id dropdown...defaulting to currently-open Event
-                                    #S3SQLInlineComponent("event"),
+        db = current.db
+        s3db = current.s3db
+        table = s3db.doc_sitrep
+
+        # Always SC
+        otable = s3db.org_organisation
+        org = db(otable.name == SAVE).select(otable.id,
+                                             cache = s3db.cache,
+                                             limitby = (0, 1)
+                                             ).first()
+        try:
+            SCI = org.id
+        except:
+            current.log.error("Cannot find org %s - prepop not done?" % SAVE)
+        else:
+            f = table.organisation_id
+            f.default = SCI
+
+        # Always National
+        PH = "Philippines"
+        gtable = s3db.gis_location
+        loc = db((gtable.name == PH) & (gtable.level == "L0")).select(gtable.id,
+                                                                      cache = s3db.cache,
+                                                                      limitby = (0, 1)
+                                                                      ).first()
+        try:
+            PH = loc.id
+        except:
+            current.log.error("Cannot find loc %s - prepop not done?" % PH)
+        else:
+            f = table.location_id
+            f.default = PH
+
+        # Default to currently-open Event (if just 1)
+        s3db.event_sitrep.event_id.default = current.session.s3.event
+
+        crud_form = S3SQLCustomForm(S3SQLInlineComponent("event_sitrep",
+                                                         label = T("Disaster"),
+                                                         fields = [("", "event_id")],
+                                                         multiple = False,
+                                                         required = True,
+                                                         ),
                                     "date",
                                     "name",
                                     "description",
                                     "comments",
                                     )
 
-        filter_widgets = [S3DateFilter("date"),
+        filter_widgets = [S3OptionsFilter("event_sitrep.event_id"),
+                          S3DateFilter("date"),
                           ]
 
-        list_fields = [#"event_id",
+        list_fields = ["event_sitrep.event_id",
                        "date",
                        "name",
                        "comments",
                        ]
 
-        current.s3db.configure("doc_sitrep",
-                               crud_form = crud_form,
-                               filter_widgets = filter_widgets,
-                               list_fields = list_fields,
-                               )
+        s3db.configure("doc_sitrep",
+                       crud_form = crud_form,
+                       filter_widgets = filter_widgets,
+                       list_fields = list_fields,
+                       )
 
     settings.customise_doc_sitrep_resource = customise_doc_sitrep_resource
 
     def customise_doc_sitrep_controller(**attr):
 
-        # @ToDo: Default Filter: only show those related to open Disasters
-        pass
+        # Default Filter: Only open Events
+        etable = current.s3db.event_event
+        query = (etable.closed == False) & \
+                (etable.deleted == False)
+        open = current.db(query).select(etable.id,
+                                        etable.name,
+                                        )
+        len_open = len(open)
+        if len_open:
+            if len_open == 1:
+                current.session.s3.event = open.first().id
+            else:
+                current.session.s3.event = None
+            open = {row.id: row.name for row in open}
 
-    #settings.customise_doc_sitrep_controller = customise_doc_sitrep_controller
+            from s3 import s3_set_default_filter
+            s3_set_default_filter("event_sitrep.event_id",
+                                  open,
+                                  tablename = "doc_sitrep")
+
+        return attr
+
+    settings.customise_doc_sitrep_controller = customise_doc_sitrep_controller
 
     # =========================================================================
     # Beneficiaries
@@ -469,7 +543,7 @@ def config(settings):
 
     def customise_event_event_controller(**attr):
 
-        # Default Filter
+        # Default Filter: Only open Events
         from s3 import s3_set_default_filter
         s3_set_default_filter("~.closed",
                               False,
@@ -516,6 +590,28 @@ def config(settings):
         current.s3db.gis_location.addr_street.label = T("Precise Location")
 
     settings.customise_project_activity_resource = customise_project_activity_resource
+
+    def customise_project_programme_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+
+        crud_form = S3SQLCustomForm("name",
+                                    (T("Project Code"), "code"),
+                                    (T("Master Budget"), "budget"),
+                                    "currency",
+                                    S3SQLInlineComponent("document",
+                                                         label = T("Response Plan"),
+                                                         fields = ["file"],
+                                                         multiple = False,
+                                                         ),
+                                    "comments",
+                                    )
+        
+        current.s3db.configure(tablename,
+                               crud_form = crud_form,
+                               )
+
+    settings.customise_project_programme_resource = customise_project_programme_resource
 
     def customise_project_project_resource(r, tablename):
 
@@ -605,6 +701,19 @@ def config(settings):
 
     def customise_project_project_controller(**attr):
 
+        # Default Filter: Only open Projects
+        # @ToDo: Fix (not activating for some reason)
+        stable = current.s3db.project_status
+        active = current.db(stable.name.belongs("Active", "Proposed")).select(stable.id,
+                                                                              stable.name,
+                                                                              )
+        active = {row.id: row.name for row in active}
+
+        from s3 import s3_set_default_filter
+        s3_set_default_filter("~.status_id",
+                              active,
+                              tablename = "project_project")
+
         has_role = current.auth.s3_has_role
         ERT_LEADER = has_role("ERT_LEADER") and not has_role("ADMIN")
 
@@ -637,28 +746,6 @@ def config(settings):
         return attr
 
     settings.customise_project_project_controller = customise_project_project_controller
-
-    def customise_project_programme_resource(r, tablename):
-
-        from s3 import S3SQLCustomForm, S3SQLInlineComponent
-
-        crud_form = S3SQLCustomForm("name",
-                                    (T("Project Code"), "code"),
-                                    (T("Master Budget"), "budget"),
-                                    "currency",
-                                    S3SQLInlineComponent("document",
-                                                         label = T("Response Plan"),
-                                                         fields = ["file"],
-                                                         multiple = False,
-                                                         ),
-                                    "comments",
-                                    )
-        
-        current.s3db.configure(tablename,
-                               crud_form = crud_form,
-                               )
-
-    settings.customise_project_programme_resource = customise_project_programme_resource
 
     # -------------------------------------------------------------------------
     # Comment/uncomment modules here to disable/enable them

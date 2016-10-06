@@ -349,18 +349,49 @@ class DataCollectionModel(S3Model):
                        )
 
         # CRUD strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Data Collection"),
-            title_display = T("Data Collection Details"),
-            title_list = T("Data Collections"),
-            title_update = T("Edit Data Collection"),
-            title_upload = T("Import Data Collections"),
-            label_list_button = T("List Data Collections"),
-            label_delete_button = T("Delete Data Collection"),
-            msg_record_created = T("Data Collection added"),
-            msg_record_modified = T("Data Collection updated"),
-            msg_record_deleted = T("Data Collection deleted"),
-            msg_list_empty = T("No Data Collections currently registered"))
+        label = current.deployment_settings.get_dc_collection_label()
+        if label == "Assessment":
+            label = T("Assessment")
+            crud_strings[tablename] = Storage(
+                label_create = T("Create Assessment"),
+                title_display = T("Assessment Details"),
+                title_list = T("Assessments"),
+                title_update = T("Edit Assessment"),
+                title_upload = T("Import Assessments"),
+                label_list_button = T("List Assessments"),
+                label_delete_button = T("Delete Assessment"),
+                msg_record_created = T("Assessment added"),
+                msg_record_modified = T("Assessment updated"),
+                msg_record_deleted = T("Assessment deleted"),
+                msg_list_empty = T("No Assessments currently registered"))
+        elif label == "Survey":
+            label = T("Survey")
+            crud_strings[tablename] = Storage(
+                label_create = T("Create Survey"),
+                title_display = T("Survey Details"),
+                title_list = T("Surveys"),
+                title_update = T("Edit Survey"),
+                title_upload = T("Import Surveys"),
+                label_list_button = T("List Surveys"),
+                label_delete_button = T("Delete Survey"),
+                msg_record_created = T("Survey added"),
+                msg_record_modified = T("Survey updated"),
+                msg_record_deleted = T("Survey deleted"),
+                msg_list_empty = T("No Surveys currently registered"))
+        else:
+            label = T("Data Collection")
+            crud_strings[tablename] = Storage(
+                label_create = T("Create Data Collection"),
+                title_display = T("Data Collection Details"),
+                title_list = T("Data Collections"),
+                title_update = T("Edit Data Collection"),
+                title_upload = T("Import Data Collections"),
+                label_list_button = T("List Data Collections"),
+                label_delete_button = T("Delete Data Collection"),
+                msg_record_created = T("Data Collection added"),
+                msg_record_modified = T("Data Collection updated"),
+                msg_record_deleted = T("Data Collection deleted"),
+                msg_list_empty = T("No Data Collections currently registered"))
 
         # @todo: representation including template name, location and date
         #        (not currently required since always hidden)
@@ -370,13 +401,12 @@ class DataCollectionModel(S3Model):
 
         # Reusable field
         collection_id = S3ReusableField("collection_id", "reference %s" % tablename,
-                                        label = T("Data Collection"),
+                                        label = label,
                                         represent = represent,
                                         requires = IS_ONE_OF(db, "dc_collection.id",
                                                              represent,
                                                              ),
                                         comment = S3PopupLink(f="collection",
-                                                              tooltip=T("Add a new data collection"),
                                                               ),
                                         )
 

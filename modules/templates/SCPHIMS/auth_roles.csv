@@ -57,6 +57,7 @@ HUM_MANAGER,Humanitarian Manager,"Manage Programmes & Projects, Sign-off on Stoc
 HUM_MANAGER,Humanitarian Manager,,dc,,,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,,,dc_collection,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,,,dc_target,,ALL,,,,,
+HUM_MANAGER,Humanitarian Manager,,event,,,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,project,,,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,project,project,,,ALL,,,,,
 HUM_MANAGER,Humanitarian Manager,,project,activity,,,ALL,,,,,

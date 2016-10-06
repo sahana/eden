@@ -768,6 +768,11 @@ class S3DocSitRepModel(S3Model):
 
         # Components
         self.add_components(tablename,
+                            event_event = {"link": "event_sitrep",
+                                           "joinby": "sitrep_id",
+                                           "key": "event_id",
+                                           #"actuate": "replace",
+                                           },
                             event_sitrep = {"name": "event_sitrep",
                                             "joinby": "sitrep_id",
                                             },

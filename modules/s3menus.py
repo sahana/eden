@@ -193,6 +193,7 @@ class S3MainMenu(object):
 
         auth = current.auth
         logged_in = auth.is_logged_in()
+        settings = current.deployment_settings
 
         if not logged_in:
             request = current.request
@@ -202,7 +203,7 @@ class S3MainMenu(object):
                "_next" in request.get_vars:
                 login_next = request.get_vars["_next"]
 
-            self_registration = current.deployment_settings.get_security_registration_visible()
+            self_registration = settings.get_security_registration_visible()
             if self_registration == "index":
                 register = MM("Register", c="default", f="index", m="register",
                                vars=dict(_next=login_next),
@@ -212,16 +213,27 @@ class S3MainMenu(object):
                                vars=dict(_next=login_next),
                                check=self_registration)
 
+            if settings.get_auth_password_changes():
+                lost_pw = MM("Lost Password", m="retrieve_password")
+            else:
+                lost_pw = None
+
             menu_auth = MM("Login", c="default", f="user", m="login",
                            _id="auth_menu_login",
                            vars=dict(_next=login_next), **attr)(
-                            MM("Login", m="login",
-                               vars=dict(_next=login_next)),
-                            register,
-                            MM("Lost Password", m="retrieve_password")
-                        )
+                                MM("Login", m="login",
+                                   vars=dict(_next=login_next)),
+                                register,
+                                lost_pw,
+                                )
         else:
             # Logged-in
+
+            if settings.get_auth_password_changes():
+                change_pw = MM("Change Password", m="change_password")
+            else:
+                change_pw = None
+
             menu_auth = MM(auth.user.email, c="default", f="user",
                            translate=False, link=False, _id="auth_menu_email",
                            **attr)(
@@ -234,7 +246,7 @@ class S3MainMenu(object):
                             #MM("Subscriptions", c="pr", f="person",
                             #    args="pe_subscription",
                             #    vars={"person.pe_id" : auth.user.pe_id}),
-                            MM("Change Password", m="change_password"),
+                            change_pw,
                             SEP(),
                             MM({"name": current.T("Rapid Data Entry"),
                                "id": "rapid_toggle",

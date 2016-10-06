@@ -1857,7 +1857,12 @@ class cms_Calendar(S3Method):
         resource.add_filter((FS("date") > days[0].replace(hour = 0, minute=0, second=0, microsecond=0)) & \
                             (FS("date") < days[-1].replace(hour = 23, minute=59, second=59)))
 
-        posts = resource.select()
+        fields = ["name",
+                  "date",
+                  "location_id",
+                  ]
+
+        posts = resource.select(fields)
 
         # @ToDo: Reformat posts into Array by day & return the maximum number of Posts in a day
 

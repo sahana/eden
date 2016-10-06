@@ -194,20 +194,24 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         #ADMIN = current.session.s3.system_roles.ADMIN
 
-        return M(c="dc")(
-                    M("Templates", f="template")(
-                        M("Create", m="create"),
-                    ),
-                    #M("Questions", f="question")(
-                    #    M("Create", m="create"),
-                    #),
-                    M("Assessment Planning", f="target")(
-                        M("Create", m="create"),
-                    ),
-                    M("Assessments", f="collection")(
-                        M("Create", m="create"),
-                    ),
-                )
+        has_role = current.auth.s3_has_role
+        if has_role("HUM_MGR") or has_role("ERT"):
+            return M(c="dc")(
+                        M("Templates", f="template")(
+                            M("Create", m="create"),
+                        ),
+                        #M("Questions", f="question")(
+                        #    M("Create", m="create"),
+                        #),
+                        M("Assessment Planning", f="target")(
+                            M("Create", m="create"),
+                        ),
+                        M("Assessments", f="collection")(
+                            M("Create", m="create"),
+                        ),
+                    )
+        else:
+            return None
 
     # -------------------------------------------------------------------------
     def doc(self):
