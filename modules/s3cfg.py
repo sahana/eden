@@ -123,6 +123,7 @@ class S3Config(Storage):
         self.cr = Storage()
         self.database = Storage()
         self.deploy = Storage()
+        self.doc = Storage()
         self.dvr = Storage()
         self.edu = Storage()
         self.event = Storage()
@@ -2688,6 +2689,15 @@ class S3Config(Storage):
         return self.deploy.get("team_label", "Deployable")
 
     # -------------------------------------------------------------------------
+    # Doc Options
+    #
+    def get_doc_label(self):
+        """
+            label for Document/Attachment
+        """
+        return self.doc.get("label", "Document")
+
+    # -------------------------------------------------------------------------
     # DVR Options
     #
     def get_dvr_label(self):
@@ -2813,6 +2823,12 @@ class S3Config(Storage):
         """
         return self.event.get("label", None)
 
+    def get_event_exercise(self):
+        """
+            Whether Events can be Exercises
+        """
+        return self.event.get("exercise", False)
+
     def get_event_types_hierarchical(self):
         """
             Whether Event Types are Hierarchical or not
@@ -2836,12 +2852,6 @@ class S3Config(Storage):
             Whether to show the DC target tab for events
         """
         return self.event.get("target_tab", True)
-
-    def get_event_impact_tab(self):
-        """
-            Whether to show the impact tab for events
-        """
-        return self.event.get("impact_tab", True)
 
     def get_event_impact_tab(self):
         """
@@ -2973,7 +2983,7 @@ class S3Config(Storage):
     def get_hrm_email_required(self):
         """
             If set to True then Staff & Volunteers require an email address
-            NB Currently this also acts on Members!
+            NB Currently this also acts on Members & Beneficiaries!
         """
         return self.hrm.get("email_required", True)
 
@@ -3965,6 +3975,12 @@ class S3Config(Storage):
         """
         return self.project.get("activities", False)
 
+    def get_project_activity_sectors(self):
+        """
+            Use Sectors in Activities
+        """
+        return self.project.get("activity_sectors", False)
+
     def get_project_activity_types(self):
         """
             Use Activity Types in Activities & Projects
@@ -4093,17 +4109,23 @@ class S3Config(Storage):
         """
         return self.project.get("projects", False)
 
-    def get_project_sectors(self):
-        """
-            Use Sectors in Projects
-        """
-        return self.project.get("sectors", True)
-
     def get_project_programmes(self):
         """
             Use Programmes in Projects
         """
         return self.project.get("programmes", False)
+
+    def get_project_programme_budget(self):
+        """
+            Use Budgets in Programmes
+        """
+        return self.project.get("programme_budget", False)
+
+    def get_project_sectors(self):
+        """
+            Use Sectors in Projects
+        """
+        return self.project.get("sectors", True)
 
     def get_project_themes(self):
         """

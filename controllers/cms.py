@@ -302,28 +302,6 @@ function comment_reply(id){
     return output
 
 # -----------------------------------------------------------------------------
-def filter_formstyle(row_id, label, widget, comment, hidden=False):
-    """
-        Custom Formstyle for FilterForm
-
-        @param row_id: HTML id for the row
-        @param label: the label
-        @param widget: the form widget
-        @param comment: the comment
-        @param hidden: whether the row should initially be hidden or not
-    """
-
-    if hidden:
-        _class = "advanced hide"
-    else:
-        _class= ""
-
-    if label:
-        return DIV(label, widget, _id=row_id, _class=_class)
-    else:
-        return DIV(widget, _id=row_id, _class=_class)
-
-# -----------------------------------------------------------------------------
 def cms_post_age(row):
     """
         The age of the post

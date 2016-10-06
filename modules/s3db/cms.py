@@ -40,6 +40,7 @@ __all__ = ("S3ContentModel",
            "S3CMS",
            )
 
+import datetime
 import json
 
 from gluon import *
@@ -417,6 +418,10 @@ class S3ContentModel(S3Model):
         set_method("cms", "post",
                    method = "remove_bookmark",
                    action = self.cms_remove_bookmark)
+
+        set_method("cms", "post",
+                   method = "calendar",
+                   action = cms_Calendar)
 
         # ---------------------------------------------------------------------
         # Modules/Resources <> Posts link table
@@ -1805,5 +1810,99 @@ def cms_post_list_layout(list_id, item_id, resource, rfields, record):
                )
 
     return item
+
+# =============================================================================
+class cms_Calendar(S3Method):
+    """
+        Display Posts on a Calendar format
+
+       @ToDo: Customisable Date Range
+                - currently hardcoded to 1 day in past, today & 5 days ahead
+       @ToDo: Interactive version
+                - drag/drop entries
+                - edit entries
+       @ToDo: PDF/XLS representations
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        if r.name == "post":
+            if r.representation == "html":
+                output = self.html(r, **attr)
+                return output
+            #elif r.representation == "xls":
+            #    output = self.xls(r, **attr)
+            #    return output
+        raise HTTP(405, current.ERROR.BAD_METHOD)
+
+    # -------------------------------------------------------------------------
+    def _extract(self, days, r, **attr):
+        """
+            Extract the Data
+        """
+
+        rows = 0
+
+        # Respect any filters present
+        resource = r.resource
+
+        # Provide additional Filter based on days
+        resource.add_filter((FS("date") > days[0].replace(hour = 0, minute=0, second=0, microsecond=0)) & \
+                            (FS("date") < days[-1].replace(hour = 23, minute=59, second=59)))
+
+        posts = resource.select()
+
+        # @ToDo: Reformat posts into Array by day & return the maximum number of Posts in a day
+
+        return rows, posts
+
+    # -------------------------------------------------------------------------
+    def html(self, r, **attr):
+        """
+            HTML Representation
+        """
+
+        T = current.T
+
+        now = current.request.now
+        timedelta = datetime.timedelta
+
+        # @ToDo: Make this configurable
+        days = (now - timedelta(days = 1), # Yesterday
+                now,                       # Today
+                now + timedelta(days = 1), # Tomorrow
+                now + timedelta(days = 2),
+                now + timedelta(days = 3),
+                now + timedelta(days = 4),
+                now + timedelta(days = 5),
+                )
+
+        rows, posts = self._extract(days, r, **attr)
+
+        item = TABLE()
+        title_row = TR()
+        rappend = title_row.append
+        for day in days:
+            rappend(TD(day.strftime("%A")))
+        item.append(title_row)
+
+        output = dict(item=item)
+        output["title"] = T("Weekly Schedule")
+
+        # Maintain RHeader for consistency
+        if "rheader" in attr:
+            rheader = attr["rheader"](r)
+            if rheader:
+                output["rheader"] = rheader
+
+        current.response.view = "simple.html"
+        return output
 
 # END =========================================================================

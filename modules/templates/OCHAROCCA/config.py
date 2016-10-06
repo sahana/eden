@@ -137,6 +137,7 @@ def config(settings):
     # Events
     # Make Event Types Hierarchical
     settings.event.types_hierarchical = True
+    settings.event.impact_tab = False # Done inline
 
     # -------------------------------------------------------------------------
     # Vulnerability
@@ -441,9 +442,7 @@ def config(settings):
         table = r.table
         table.name.label = T("Disaster Number")
 
-        location_field = s3db.event_event_location.location_id
-        location_field.requires = IS_LOCATION()
-        location_field.widget = S3LocationSelector(levels=gis_levels)
+        s3db.event_event_location.location_id.widget = S3LocationSelector(levels=gis_levels)
 
         impact_fields = OrderedDict(killed = "Killed",
                                     total_affected = "Total Affected",

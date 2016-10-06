@@ -93,6 +93,7 @@ class S3DocumentLibrary(S3Model):
                                project_project = T("Project"),
                                project_activity = T("Project Activity"),
                                project_framework = T("Project Framework"),
+                               project_programme = T("Project Programme"),
                                project_task = T("Task"),
                                org_office = T("Office"),
                                org_facility = T("Facility"),

@@ -77,7 +77,7 @@ class S3MainMenu(default.S3MainMenu):
                     M("Documents", c="doc", f="document"),
                     M("Photos", c="doc", f="image"),
                     M("Items", c="supply", f="distribution_item"),
-                    M("Beneficiaries", c="dvr", f="case"),
+                    M("Beneficiaries", c="dvr", f="person"),
                     M("Staff", c="hrm", f="human_resource"),
                     M("Clinics", c="hms", f="hospital"),
                     M("Offices", c="org", f="office"),
@@ -107,11 +107,11 @@ class S3MainMenu(default.S3MainMenu):
             # Manage Projects
             return [
                 homepage(),
-                MM("Calendar", c="project", f="activity", m="report"),
+                MM("Calendar", c="cms", f="post", m="calendar"), # Weekly Schedule
                 MM("Staff", c="hrm", f="human_resource"),
                 MM("Disasters", c="event", f="event"),
                 MM("Assessments", c="dc", f="collection", m="summary")(
-                    M("Municipalities", f="target"),
+                    M("Targets", f="target"),
                 ),
                 MM("Projects", c="project", f="project", m="summary"),
                 MM("4W", c="project", f="activity", m="summary"),
@@ -124,23 +124,24 @@ class S3MainMenu(default.S3MainMenu):
             return [
                 homepage(),
                 M("Distributions", c="project", f="distribution"),
-                M("Beneficiaries", c="dvr", f="case"),
+                M("Beneficiaries", c="dvr", f="person"),
                 homepage("gis"),
             ]
         elif has_role("ERT_LEADER"):
             # Field Operations
             return [
                 homepage(),
-                MM("Assessments", c="dc", f="collection"),
+                MM("Assessments", c="dc", f="target"),
+                MM("Activities", c="project", f="project"), # Activities are accessed via Projects
                 MM("SitReps", c="doc", f="sitrep"),
                 MM("Documents", c="doc", f="document"),
-                MM("Activities", c="project", f="activity"),
                 homepage("gis"),
             ]
         elif has_role("AUTHENTICATED"):
-            # SC Staff inc Senior Managers
+            # SC Staff inc ERT members and Senior Managers
             return [
                 homepage(),
+                MM("Calendar", c="cms", f="post", m="calendar"), # Weekly Schedule
                 MM("Assessments", c="dc", f="collection", m="summary"),
                 MM("SitReps", c="doc", f="sitrep"),
                 MM("4W", c="project", f="activity", m="summary"),
@@ -178,6 +179,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
     """
 
     # -------------------------------------------------------------------------
+    def cms(self):
+        """ DOC / Documents Module """
+
+        if current.auth.s3_has_role("ADMIN"):
+            return super(S3OptionsMenu, self).cms()
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
     @staticmethod
     def dc():
         """ Data Collection Tool """
@@ -198,6 +208,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                     ),
                 )
+
+    # -------------------------------------------------------------------------
+    def doc(self):
+        """ DOC / Documents Module """
+
+        if current.auth.s3_is_logged_in():
+            return super(S3OptionsMenu, self).doc()
+        else:
+            return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -224,6 +243,15 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Import", m="import", p="create"),
                     ),
                 )
+
+    # -------------------------------------------------------------------------
+    def gis(self):
+        """ GIS / Maps Module """
+
+        if current.auth.s3_has_role("MAP_ADMIN"):
+            return super(S3OptionsMenu, self).gis()
+        else:
+            return None
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -324,12 +352,16 @@ class S3OptionsMenu(default.S3OptionsMenu):
                  )
         elif has_role("ERT_LEADER"):
             # Field Operations
-            return M(c="project")(
-                     M("Activities", f="activity")(
-                        M("Create", m="create"),
-                        M("Map", m="map"),
-                     ),
-                 )
+            # - just need to see Projects & create Activities within them
+            return None
+            #return M(c="project")(
+            #         M("Projects", f="project"),
+            #         M("Activities", f="activity")(
+            #            # Always created within the context of a Project
+            #            #M("Create", m="create"),
+            #            M("Map", m="map"),
+            #         ),
+            #     )
         elif has_role("AUTHENTICATED"):
             # SC Staff inc Senior Managers
             return M(c="project")(

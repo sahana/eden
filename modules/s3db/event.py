@@ -98,6 +98,7 @@ class S3EventModel(S3Model):
         AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
 
         disaster = settings.get_event_label() # If we add more options in future then == "Disaster"
+        exercise = settings.get_event_exercise()
         hierarchical_event_types = settings.get_event_types_hierarchical()
 
         # ---------------------------------------------------------------------
@@ -225,6 +226,8 @@ class S3EventModel(S3Model):
                            default = False,
                            label = T("Exercise?"),
                            represent = lambda opt: "√" if opt else NONE,
+                           readable = exercise,
+                           writable = exercise,
                            #comment = DIV(_class="tooltip",
                            #              _title="%s|%s" % (T("Exercise"),
                                                            # Should!
@@ -305,34 +308,42 @@ class S3EventModel(S3Model):
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
 
+        filter_widgets = [S3LocationFilter("event_location.location_id",
+                                           levels = levels,
+                                           label = T("Location"),
+                                           ),
+                          # @ToDo: Filter for events which are open within a date range
+                          #S3DateFilter("start_date",
+                          #             label = None,
+                          #             hide_time = True,
+                          #             input_labels = {"ge": "From", "le": "To"}
+                          #             ),
+                          # Typically we just need to filter by Year
+                          S3OptionsFilter("year",
+                                          label = T("Year"),
+                                          ),
+                          S3OptionsFilter("closed",
+                                          label = T("Status"),
+                                          options = OrderedDict([(False, T("Open")),
+                                                                 (True, T("Closed")),
+                                                                 ]),
+                                          cols = 2,
+                                          sort = False,
+                                          ),
+                          ]
+
         if hierarchical_event_types:
-            filter_widgets = [S3HierarchyFilter("event_type_id",
-                                                label = T("Type"),
-                                                #multiple = False,
-                                                ),
-                              ]
+            filter_widgets.insert(0, S3HierarchyFilter("event_type_id",
+                                                       label = T("Type"),
+                                                       ))
         else:
-            filter_widgets = [S3OptionsFilter("event_type_id",
-                                              label = T("Type"),
-                                              multiple = False,
-                                              #options = lambda: \
-                                              #  s3_get_filter_opts("event_event_type",
-                                              #                     translate = True)
-                                              ),
-                              ]
-
-        filter_widgets.extend((S3LocationFilter("event_location.location_id",
-                                                levels = levels,
-                                                label = T("Location"),
-                                                ),
-                               # @ToDo: Filter for any event which starts or ends within a date range
-                               S3DateFilter("start_date",
-                                            label = None,
-                                            hide_time = True,
-                                            input_labels = {"ge": "From", "le": "To"}
-                                            ),
-                               ))
-
+            filter_widgets.insert(0, S3OptionsFilter("event_type_id",
+                                                     label = T("Type"),
+                                                     #multiple = False,
+                                                     #options = lambda: \
+                                                     #  s3_get_filter_opts("event_event_type",
+                                                     #                     translate = True)
+                                                     ))
         report_fields = ["event_type_id",
                          ]
         rappend = report_fields.append
@@ -354,9 +365,46 @@ class S3EventModel(S3Model):
                 ),
             )
 
+        # Custom Form
+        crud_fields = ["name",
+                       "event_type_id",
+                       "start_date",
+                       "closed",
+                       "end_date",
+                       S3SQLInlineComponent("event_location",
+                                            label = T("Locations"),
+                                            #multiple = False,
+                                            fields = [("", "location_id")],
+                                            ),
+                       "comments",
+                       ]
+
+        list_fields = ["name",
+                       (T("Type"), "event_type_id$name"),
+                       (T("Location"), "location.name"),
+                       "start_date",
+                       "closed",
+                       "comments",
+                       ]
+
+        if exercise:
+            crud_fields.insert(1, "exercise")
+            list_fields.insert(4, "exercise")
+            filter_widgets.insert(2, S3OptionsFilter("exercise",
+                                                     label = T("Exercise"),
+                                                     options = OrderedDict([(True, T("Yes")),
+                                                                            (False, T("No")),
+                                                                            ]),
+                                                     cols = 2,
+                                                     sort = False,
+                                                     ))
+
+        crud_form = S3SQLCustomForm(*crud_fields)
+
         configure(tablename,
                   context = {"location": "event_location.location_id",
                              },
+                  crud_form = crud_form,
                   deduplicate = S3Duplicate(primary = ("name",
                                                        "start_date",
                                                        ),
@@ -365,15 +413,7 @@ class S3EventModel(S3Model):
                                             ),
                   extra_fields = ["start_date"],
                   filter_widgets = filter_widgets,
-                  list_fields = ["id",
-                                 "name",
-                                 "event_type_id$name",
-                                 (T("Location"), "location.name"),
-                                 "start_date",
-                                 "exercise",
-                                 "closed",
-                                 "comments",
-                                 ],
+                  list_fields = list_fields,
                   list_orderby = "event_event.start_date desc",
                   orderby = "event_event.start_date desc",
                   report_options = report_options,
@@ -424,17 +464,25 @@ class S3EventModel(S3Model):
         define_table(tablename,
                      event_id(),
                      self.gis_location_id(
-                        widget = S3LocationAutocompleteWidget(),
+                        widget = S3LocationSelector(show_map=False),
+                        #widget = S3LocationAutocompleteWidget(),
                         requires = IS_LOCATION(),
                         represent = self.gis_LocationRepresent(sep=", "),
-                        comment = S3PopupLink(c = "gis",
-                                              f = "location",
-                                              label = T("Create Location"),
-                                              title = T("Location"),
-                                              tooltip = AUTOCOMPLETE_HELP,
-                                              ),
+                        #comment = S3PopupLink(c = "gis",
+                        #                      f = "location",
+                        #                      label = T("Create Location"),
+                        #                      title = T("Location"),
+                        #                      tooltip = AUTOCOMPLETE_HELP,
+                        #                      ),
                         ),
                      *s3_meta_fields())
+
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("event_id",
+                                                       "location_id",
+                                                       ),
+                                            ),
+                  )
 
         # ---------------------------------------------------------------------
         # Event Tags
@@ -496,6 +544,8 @@ class S3EventModel(S3Model):
             Requires "start_date" to be in extra_fields
 
             @param row: the Row
+
+            @ToDo: Extend this to show multiple years if open for multiple?
         """
 
         try:

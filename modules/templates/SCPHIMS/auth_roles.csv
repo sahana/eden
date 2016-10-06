@@ -21,8 +21,15 @@ ANONYMOUS,Anonymous,,,,gis_layer_wms,,READ,,,,,
 ANONYMOUS,Anonymous,,,,gis_layer_xyz,,READ,,,,,
 ANONYMOUS,Anonymous,,doc,sitrep,,,READ,,,,,Public access to External SitReps
 ANONYMOUS,Anonymous,,project,activity,,,READ,,,,,Public access to 4W information
-AUTHENTICATED,Authenticated,Normal User,,,doc_document,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
+ANONYMOUS,Anonymous,,,,project_activity,,READ,,,,,
+ANONYMOUS,Anonymous,,edu,school,,,READ,,,,,Public access to Schools information
+ANONYMOUS,Anonymous,,hms,hospital,,,READ,,,,,Public access to Clinics information
+ANONYMOUS,Anonymous,,org,office,,,READ,,,,,Public access to Offices information
+ANONYMOUS,Anonymous,,inv,warehouse,,,READ,,,,,Public access to Warehouses information
+AUTHENTICATED,Authenticated,SC Staff inc ERT Members,cms,,,,READ,,,,,Weekly Schedule
 AUTHENTICATED,Authenticated,,dc,,,,READ,,,,,
+AUTHENTICATED,Authenticated,,,,dc_collection,,READ|UPDATE,,,,,
+AUTHENTICATED,Authenticated,,doc,,,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 AUTHENTICATED,Authenticated,,gis,location,,,READ|CREATE,,,,,Location Selector
 AUTHENTICATED,Authenticated,,,,gis_location,,READ|CREATE,,,,,Location Selector
 AUTHENTICATED,Authenticated,,hrm,person,,,READ,,,,,search_ac
@@ -37,9 +44,23 @@ AUTHENTICATED,Authenticated,,,,org_organisation,,READ|CREATE,READ|CREATE|UPDATE|
 AUTHENTICATED,Authenticated,,,,org_organisation_organisation_type,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 AUTHENTICATED,Authenticated,,,,pr_person,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
 AUTHENTICATED,Authenticated,,,,pr_contact,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
-AUTHENTICATED,Authenticated,,project,,,,READ|CREATE|UPDATE,READ|CREATE|UPDATE|DELETE,,,,
-AUTHENTICATED,Authenticated,,,,project_activity,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
-AUTHENTICATED,Authenticated,,,,project_activity_activity_type,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,Unused
-HUM_MANAGER,Humanitarian Manager,Signs-off on Stock Release/Procurement Requests,hrm,,,ALL,,,,,
-ERT_LEADER,Team Leader,ERT Team Leader,Forwards Distributions to Logistics,,,supply_distribution,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
+AUTHENTICATED,Authenticated,,project,,,,READ,,,,,
+AUTHENTICATED,Authenticated,,project,project,,,READ,,,,,
+AUTHENTICATED,Authenticated,,,,project_project,,READ,,,,,
+ERT_LEADER,ERT Team Leader,"Manage Activities, Forward Distributions to Logistics",,,supply_distribution,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
+ERT_LEADER,ERT Team Leader,,dc,,,,ALL,,,,,
+ERT_LEADER,ERT Team Leader,,,,dc_collection,,ALL,,,,,
+ERT_LEADER,ERT Team Leader,,,,dc_target,,ALL,,,,,
+ERT_LEADER,ERT Team Leader,,project,project,,,READ|CREATE|UPDATE|DELETE,,,,,
+ERT_LEADER,ERT Team Leader,,,,project_activity,,READ|CREATE,READ|CREATE|UPDATE|DELETE,,,,
+HUM_MANAGER,Humanitarian Manager,"Manage Programmes & Projects, Sign-off on Stock Release/Procurement Requests",hrm,,,,ALL,,,,,
+HUM_MANAGER,Humanitarian Manager,,dc,,,,ALL,,,,,
+HUM_MANAGER,Humanitarian Manager,,,,dc_collection,,ALL,,,,,
+HUM_MANAGER,Humanitarian Manager,,,,dc_target,,ALL,,,,,
+HUM_MANAGER,Humanitarian Manager,,project,,,,ALL,,,,,
+HUM_MANAGER,Humanitarian Manager,,project,project,,,ALL,,,,,
+HUM_MANAGER,Humanitarian Manager,,project,activity,,,ALL,,,,,
+HUM_MANAGER,Humanitarian Manager,,,,project_activity,,ALL,,,,,
+HUM_MANAGER,Humanitarian Manager,,,,project_project,,ALL,,,,,
 LOGISTICS,Logistics,Manage Distributions,,,supply_distribution,,ALL,,,,,
+COMMS,Comms,Manage SitReps,doc,sitrep,,,ALL,,,,,

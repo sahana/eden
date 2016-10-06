@@ -510,7 +510,21 @@ def config(settings):
     #settings.event.types_hierarchical = True
     # Make Incident Types Hierarchical
     #settings.event.incident_types_hierarchical = True
-    # Show tab with teams assigned for incidents
+    # Uncomment to allow the use of Exercise Events
+    #settings.event.exercise = True
+    # Show tab for Event Dispatch
+    #settings.event.dispatch_tab = False
+    # Hide tab for Event Impacts
+    #settings.event.impact_tab = False
+    # Hide tab for Event Collection Targets
+    #settings.event.target_tab = False
+    # Hide tab for Event Collections
+    #settings.event.collection_tab = False
+    # Hide tab for Incident Dispatch
+    #settings.event.incident_dispatch_tab = False
+    # Show tab for Incident Impacts
+    #settings.event.incident_impact_tab = True
+    # Show tab for Incident Teams
     #settings.event.incident_teams_tab = True
 
     # -------------------------------------------------------------------------
@@ -863,6 +877,8 @@ def config(settings):
     #settings.project.sectors = False
     # Uncomment this to enable Programmes in projects
     #settings.project.programmes = True
+    # Uncomment this to enable Budgets in Programmes
+    #settings.project.programme_budget = True
     # Uncomment this to use Tags in Tasks
     #settings.project.task_tag = True
     # Uncomment this to enable Themes in 3W projects
