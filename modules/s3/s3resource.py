@@ -1313,31 +1313,35 @@ class S3Resource(object):
             fields = [f.name for f in self.readable_fields()]
         selectors = list(fields)
 
-        # Automatically include the record ID
         table = self.table
-        if table._id.name not in selectors:
-            fields.insert(0, table._id.name)
-            selectors.insert(0, table._id.name)
+
+        # Automatically include the record ID
+        table_id = table._id
+        pkey = table_id.name
+        if pkey not in selectors:
+            fields.insert(0, pkey)
+            selectors.insert(0, pkey)
 
         # Skip representation of IDs in data tables
-        id_repr = table._id.represent
-        table._id.represent = None
+        id_repr = table_id.represent
+        table_id.represent = None
 
         # Extract the data
         data = self.select(selectors,
-                           start=start,
-                           limit=limit,
-                           orderby=orderby,
-                           left=left,
-                           distinct=distinct,
-                           count=True,
-                           getids=getids,
-                           represent=True)
+                           start = start,
+                           limit = limit,
+                           orderby = orderby,
+                           left = left,
+                           distinct = distinct,
+                           count = True,
+                           getids = getids,
+                           represent = True,
+                           )
 
-        rows = data["rows"]
+        rows = data.rows
 
         # Restore ID representation
-        table._id.represent = id_repr
+        table_id.represent = id_repr
 
         # Empty table - or just no match?
         empty = False
@@ -1346,16 +1350,16 @@ class S3Resource(object):
             if DELETED in table:
                 query = (table[DELETED] != True)
             else:
-                query = (table._id > 0)
-            row = current.db(query).select(table._id, limitby=(0, 1)).first()
+                query = (table_id > 0)
+            row = current.db(query).select(table_id, limitby=(0, 1)).first()
             if not row:
                 empty = True
 
         # Generate the data table
-        rfields = data["rfields"]
+        rfields = data.rfields
         dt = S3DataTable(rfields, rows, orderby=orderby, empty=empty)
 
-        return dt, data["numrows"], data["ids"]
+        return dt, data.numrows, data.ids
 
     # -------------------------------------------------------------------------
     def datalist(self,
@@ -1392,36 +1396,40 @@ class S3Resource(object):
             fields = [f.name for f in self.readable_fields()]
         selectors = list(fields)
 
-        # Automatically include the record ID
         table = self.table
-        if table._id.name not in selectors:
-            fields.insert(0, table._id.name)
-            selectors.insert(0, table._id.name)
+
+        # Automatically include the record ID
+        pkey = table._id.name
+        if pkey not in selectors:
+            fields.insert(0, pkey)
+            selectors.insert(0, pkey)
 
         # Extract the data
         data = self.select(selectors,
-                           start=start,
-                           limit=limit,
-                           orderby=orderby,
-                           left=left,
-                           distinct=distinct,
-                           count=True,
-                           getids=getids,
-                           raw_data=True,
-                           represent=True)
+                           start = start,
+                           limit = limit,
+                           orderby = orderby,
+                           left = left,
+                           distinct = distinct,
+                           count = True,
+                           getids = getids,
+                           raw_data = True,
+                           represent = True,
+                           )
 
         # Generate the data list
-        numrows = data["numrows"]
+        numrows = data.numrows
         dl = S3DataList(self,
                         fields,
-                        data["rows"],
-                        list_id=list_id,
-                        start=start,
-                        limit=limit,
-                        total=numrows,
-                        layout=layout)
+                        data.rows,
+                        list_id = list_id,
+                        start = start,
+                        limit = limit,
+                        total = numrows,
+                        layout = layout,
+                        )
 
-        return dl, numrows, data["ids"]
+        return dl, numrows, data.ids
 
     # -------------------------------------------------------------------------
     def json(self,
@@ -3200,12 +3208,15 @@ class S3Resource(object):
         fkey = None
         table = self.table
 
-        if self.parent and self.linked is None:
-            component = self.parent.components.get(self.alias, None)
+        parent = self.parent
+        linked = self.linked
+
+        if parent and linked is None:
+            component = parent.components.get(self.alias, None)
             if component:
                 fkey = component.fkey
-        elif self.linked is not None:
-            component = self.linked
+        elif linked is not None:
+            component = linked
             if component:
                 fkey = component.lkey
 
@@ -3237,21 +3248,25 @@ class S3Resource(object):
         prefix = lambda s: "~.%s" % s \
                            if "." not in s.split("$", 1)[0] else s
 
+        display_fields = set()
+        add = display_fields.add
+
         # Store field selectors
-        display_fields = []
-        append = display_fields.append
-        for _s in selectors:
-            if isinstance(_s, tuple):
-                s = _s[-1]
+        for item in selectors:
+            if not item:
+                continue
+            elif type(item) is tuple:
+                item = item[-1]
+            if isinstance(item, str):
+                selector = item
+            elif isinstance(item, S3ResourceField):
+                selector = item.selector
+            elif isinstance(item, FS):
+                selector = item.name
             else:
-                s = _s
-            if isinstance(s, S3ResourceField):
-                selector = s.selector
-            elif isinstance(s, FS):
-                selector = s.name
-            else:
-                selector = s
-            append(prefix(selector))
+                continue
+            add(prefix(selector))
+
         slist = list(selectors)
 
         # Collect extra fields from virtual tables
@@ -3268,14 +3283,16 @@ class S3Resource(object):
 
         distinct = False
 
+        columns = set()
+        add_column = columns.add
 
         rfields = []
-        columns = []
         append = rfields.append
+
         for s in slist:
 
             # Allow to override the field label
-            if isinstance(s, tuple):
+            if type(s) is tuple:
                 label, selector = s
             else:
                 label, selector = None, s
@@ -3301,6 +3318,13 @@ class S3Resource(object):
             if rfield.field is None and not rfield.virtual:
                 continue
 
+            # De-duplicate columns
+            colname = rfield.colname
+            if colname in columns:
+                continue
+            else:
+                add_column(colname)
+
             # Replace default label
             if label is not None:
                 rfield.label = label
@@ -3310,12 +3334,6 @@ class S3Resource(object):
                 head = rfield.selector.split("$", 1)[0]
                 if "." in head and head.split(".")[0] not in ("~", self.alias):
                     continue
-
-            # De-duplicate columns
-            if rfield.colname in columns:
-                continue
-            else:
-                columns.append(rfield.colname)
 
             # Resolve the joins
             if rfield.distinct:

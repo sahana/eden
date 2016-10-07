@@ -149,7 +149,9 @@ def config(settings):
             else:
                 result = True
 
-            if r.controller == "dvr" and not r.component:
+            controller = r.controller
+
+            if controller == "dvr" and not r.component:
 
                 table = r.table
                 ctable = s3db.dvr_case
@@ -209,6 +211,7 @@ def config(settings):
                                 "person_details.nationality",
                                 "date_of_birth",
                                 "gender",
+                                "case_details.registered",
                                 (T("Individual ID Number"), "pe_label"),
                                 S3SQLInlineComponent(
                                         "family_id",
@@ -295,6 +298,24 @@ def config(settings):
                                ]
                 resource.configure(list_fields = list_fields,
                                    )
+
+            elif controller == "hrm":
+
+                if not r.component:
+
+                    table = s3db.pr_person_details
+                    field = table.marital_status
+                    field.readable = field.writable = False
+                    field = table.religion
+                    field.readable = field.writable = False
+
+                elif r.method == "record" or \
+                     r.component_name == "human_resource":
+
+                    table = s3db.hrm_human_resource
+                    field = table.site_id
+                    field.readable = field.writable = False
+
             return result
         s3.prep = custom_prep
 
@@ -310,7 +331,68 @@ def config(settings):
     # =========================================================================
     # Staff Module
     #
+    settings.hrm.use_skills = False
+    settings.hrm.use_address = False
+    settings.hrm.use_certificates = False
+    settings.hrm.use_credentials = False
+    settings.hrm.use_description = False
+    settings.hrm.use_id = False
+    settings.hrm.use_trainings = False
+
     settings.hrm.staff_departments = False
+    settings.hrm.teams = False
+    settings.hrm.staff_experience = False
+
+    def customise_hrm_human_resource_controller(**attr):
+
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        # Custom prep
+        standard_prep = s3.prep
+        def custom_prep(r):
+
+            # Call standard prep
+            if callable(standard_prep):
+                result = standard_prep(r)
+            else:
+                result = True
+
+            if r.controller == "hrm":
+
+                resource = r.resource
+
+                # Hide "Facility" from form (unused)
+                table = resource.table
+                field = table.site_id
+                field.readable = field.writable = False
+
+                # Don't need Location/Facility filters either
+                std_filters = resource.get_config("filter_widgets")
+                filter_widgets = []
+                for filter_widget in std_filters:
+                    if filter_widget.field in ("location_id", "site_id"):
+                        continue
+                    filter_widgets.append(filter_widget)
+
+                # Custom list fields
+                list_fields = ["person_id",
+                               "job_title_id",
+                               "organisation_id",
+                               (T("Email"), "email.value"),
+                               (settings.get_ui_label_mobile_phone(), "phone.value"),
+                               ]
+
+                # Update resource config
+                resource.configure(list_fields = list_fields,
+                                   filter_widgets = filter_widgets,
+                                   )
+            return result
+        s3.prep = custom_prep
+
+        return attr
+
+    settings.customise_hrm_human_resource_controller = customise_hrm_human_resource_controller
 
     # =========================================================================
     # Organisation Registry

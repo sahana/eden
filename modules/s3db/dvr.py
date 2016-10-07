@@ -70,6 +70,7 @@ class DVRCaseModel(S3Model):
     names = ("dvr_case",
              "dvr_case_id",
              "dvr_case_language",
+             "dvr_case_details",
              "dvr_case_status",
              "dvr_case_status_id",
              "dvr_case_type",
@@ -517,6 +518,9 @@ class DVRCaseModel(S3Model):
         self.add_components(tablename,
                             dvr_beneficiary_data = "case_id",
                             dvr_case_activity = "case_id",
+                            dvr_case_details = {"joinby": "case_id",
+                                                "multiple": False,
+                                                },
                             dvr_case_event = "case_id",
                             dvr_case_service_contact = "case_id",
                             dvr_economy = {"joinby": "case_id",
@@ -604,6 +608,24 @@ class DVRCaseModel(S3Model):
                                                 ),
                            ),
                      s3_comments(),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Case Details: extended attributes for DVR cases
+        #
+        tablename = "dvr_case_details"
+        define_table(tablename,
+                     case_id(empty = False,
+                             ondelete = "CASCADE",
+                             ),
+                     person_id(empty = False,
+                               ondelete = "CASCADE",
+                               ),
+                     Field("registered", "boolean",
+                           default = True,
+                           label = T("Officially Registered"),
+                           represent = s3_yes_no_represent,
+                           ),
                      *s3_meta_fields())
 
         # ---------------------------------------------------------------------

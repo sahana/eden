@@ -83,21 +83,23 @@ def staff():
                            "person_id",
                            "job_title_id",
                            "organisation_id",
-                           "department_id",
                            "site_id",
                            #"site_contact",
                            ]
+            if settings.get_hrm_staff_departments():
+                list_fields.insert(4, "department_id")
         else:
             # Adapt list_fields
             list_fields = ["person_id",
                            "job_title_id",
                            "organisation_id",
-                           "department_id",
                            "site_id",
                            #"site_contact",
                            (T("Email"), "email.value"),
                            (settings.get_ui_label_mobile_phone(), "phone.value"),
                            ]
+            if settings.get_hrm_staff_departments():
+                list_fields.insert(3, "department_id")
             if settings.get_hrm_use_trainings():
                 list_fields.append("person_id$training.course_id")
             if settings.get_hrm_use_certificates():
