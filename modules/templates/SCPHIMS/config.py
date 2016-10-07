@@ -42,6 +42,7 @@ def config(settings):
     # Uncomment to show the Print control:
     # http://eden.sahanafoundation.org/wiki/UserGuidelines/Admin/MapPrinting
     #settings.gis.print_button = True
+    settings.gis.lookup_code = "PSGC"
 
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)
@@ -320,7 +321,7 @@ def config(settings):
                        "location_id$L4",
                        ]
         if r.controller != "event":
-            list_field.append((T("Disaster"), "event.name"))
+            list_fields.append((T("Disaster"), "event.name"))
         list_fields += ["organisation_id",
                         "date",
                         "name",

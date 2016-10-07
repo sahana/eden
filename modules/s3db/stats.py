@@ -134,8 +134,9 @@ class S3StatsModel(S3Model):
                                    represent = lambda opt: \
                                         accuracy_opts.get(opt,
                                                           current.messages.UNKNOWN_OPT),
-                                   requires = IS_IN_SET(accuracy_opts,
-                                                        zero=None),
+                                   requires = IS_EMPTY_OR(IS_IN_SET(accuracy_opts,
+                                                                    zero=None),
+                                                          ),
                                    )
 
         tablename = "stats_data"

@@ -269,6 +269,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("Import", m="import")
                     ),
+                    M("Offices", f="office")(
+                        M("Create", m="create"),
+                        M("Import", m="import")
+                    ),
                     M("Organization Types", f="organisation_type",
                       restrict=[ADMIN])(
                         M("Create", m="create"),

@@ -1,7 +1,9 @@
-Name
-Individuals
-Households
-Men
-Women
-Boys
-Girls
+Name,Total
+Individuals,
+Households,
+Male,Individuals
+Female,Individuals
+Men,Male
+Women,Female
+Boys,Male
+Girls,Female

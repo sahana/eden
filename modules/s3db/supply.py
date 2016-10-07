@@ -351,6 +351,9 @@ $.filterOptionsS3({
         #  These are Template items
         #  Instances of these become Inventory Items & Request items
         #
+
+        track_pack_values = settings.get_inv_track_pack_values()
+
         tablename = "supply_item"
         define_table(tablename,
                      catalog_id(),
@@ -371,6 +374,17 @@ $.filterOptionsS3({
                            label = T("Unit of Measure"),
                            requires = IS_NOT_EMPTY(),
                            ),
+                     Field("unit_value", "double",
+                           label = T("Value per Unit"),
+                           represent = lambda v: \
+                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           readable = track_pack_values,
+                           writable = track_pack_values,
+                           ),
+                     # @ToDo: Move this into a Currency Widget for the pack_value field
+                     s3_currency(readable = track_pack_values,
+                                 writable = track_pack_values,
+                                 ),
                      brand_id(),
                      Field("kit", "boolean",
                            default = False,
@@ -649,6 +663,17 @@ $.filterOptionsS3({
                            represent = lambda v: \
                                        float_represent(v, precision=2),
                            ),
+                     Field("pack_value", "double",
+                           label = T("Value per Pack"),
+                           represent = lambda v: \
+                                IS_FLOAT_AMOUNT.represent(v, precision=2),
+                           readable = track_pack_values,
+                           writable = track_pack_values,
+                           ),
+                     # @ToDo: Move this into a Currency Widget for the pack_value field
+                     s3_currency(readable = track_pack_values,
+                                 writable = track_pack_values,
+                                 ),
                      s3_comments(),
                      *s3_meta_fields())
 

@@ -6407,13 +6407,22 @@ def org_office_controller():
                     field = table.organisation_id
                     field.default = org_id
                     field.readable = field.writable = False
+
             elif r.id:
                 table.obsolete.readable = table.obsolete.writable = True
-            elif r.representation == "geojson":
-                marker_fn = s3db.get_config("org_office", marker_fn)
-                if marker_fn:
-                    # Load these models now as they'll be needed when we encode
-                    mtable = s3db.gis_marker
+
+        elif r.representation == "geojson":
+            marker_fn = s3db.get_config("org_office", marker_fn)
+            if marker_fn:
+                # Load these models now as they'll be needed when we encode
+                mtable = s3db.gis_marker
+
+        elif r.representation == "xls":
+            list_fields = r.resource.get_config("list_fields")
+            list_fields += ["location_id$lat",
+                            "location_id$lon",
+                            "location_id$inherited",
+                            ]
 
         return True
     s3.prep = prep
