@@ -191,6 +191,17 @@ def config(settings):
 })'''
                 s3.jquery_ready.append(script)
 
+                # Custom label for registered-flag
+                dtable = s3db.dvr_case_details
+                field = dtable.registered
+                field.default = False
+                field.label = T("Registered with Turkish Authorities")
+                field.comment = DIV(_class="tooltip",
+                                    _title="%s|%s" % (T("Registered with Turkish Authorities"),
+                                                      T("Is the client officially registered with AFAD/DGMM?"),
+                                                      ),
+                                    )
+
                 resource = r.resource
                 if r.interactive:
 
