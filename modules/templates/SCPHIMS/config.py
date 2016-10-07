@@ -118,7 +118,7 @@ def config(settings):
     settings.auth.password_changes = False
     settings.auth.office365_domains = ["savethechildren.org"]
 
-    #settings.mail.sender = "'IMS' <imsph@savethechildren.org>"
+    #settings.mail.sender = "'IMS' <ims.ph@savethechildren.org>"
     #settings.mail.server = "smtp.office365.com:587"
     #settings.mail.tls = True
     #settings.mail.login = "username:password"
@@ -252,10 +252,13 @@ def config(settings):
                        "location_id$L3",
                        "location_id$L4",
                        ]
-        if r.controller != "event":
-            list_field.append((T("Disaster"), "event.name"))
-        list_fields += ["organisation_id",
-                        "date",
+        if r.controller == "doc":
+            list_fields += ((T("Disaster"), "event.name"),
+                           "organisation_id",
+                            )
+        elif r.controller == "event":
+            list_fields.append("organisation_id")
+        list_fields += ["date",
                         "name",
                         ]
 
@@ -599,6 +602,12 @@ def config(settings):
                                     (T("Project Code"), "code"),
                                     (T("Master Budget"), "budget"),
                                     "currency",
+                                    # @ToDo: Link Programmes to Locations
+                                    #S3SQLInlineComponent("location",
+                                    #                     label = T("Locations"),
+                                    #                     fields = ["location_id"],
+                                    #                     ),
+                                    # @ToDo: Set Metadata on File: Org, Location, Disaster, Date
                                     S3SQLInlineComponent("document",
                                                          label = T("Response Plan"),
                                                          fields = ["file"],
@@ -615,11 +624,30 @@ def config(settings):
 
     def customise_project_project_resource(r, tablename):
 
-        from s3 import S3Represent, S3TextFilter, S3OptionsFilter, S3LocationFilter
+        from s3 import S3LocationSelector, S3Represent, S3TextFilter, S3OptionsFilter, S3LocationFilter
 
         s3db = current.s3db
+        table = s3db.project_project
 
-        s3db.project_project.code.label = "SOF"
+        table.code.label = "SOF"
+
+        s3db.project_location.location_id.widget = S3LocationSelector(levels = ("L1", "L2", "L3"),
+                                                                      show_map = False,
+                                                                      )
+
+        # Always SC
+        otable = s3db.org_organisation
+        org = current.db(otable.name == SAVE).select(otable.id,
+                                                     cache = s3db.cache,
+                                                     limitby = (0, 1)
+                                                     ).first()
+        try:
+            SCI = org.id
+        except:
+            current.log.error("Cannot find org %s - prepop not done?" % SAVE)
+        else:
+            f = table.organisation_id
+            f.default = SCI
 
         org_represent = s3db.org_OrganisationRepresent(acronym=False, show_link=True)
         s3db.project_organisation.organisation_id.represent = org_represent
@@ -628,6 +656,48 @@ def config(settings):
         except:
             # Table not present on Activities tab
             pass
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3SQLInlineLink
+
+        # @ToDo: Inherit Locations from Disaster?
+
+        crud_form = S3SQLCustomForm(S3SQLInlineLink("programme",
+                                                    label = T("Program"),
+                                                    field = "programme_id",
+                                                    multiple = False,
+                                                    ),
+                                    "name",
+                                    "code",
+                                    "status_id",
+                                    "start_date",
+                                    "end_date",
+                                    "budget",
+                                    "currency",
+                                    S3SQLInlineComponent("location",
+                                                         label = T("Locations"),
+                                                         fields = ["location_id"],
+                                                         ),
+                                    S3SQLInlineComponent("organisation",
+                                                         name = "donor",
+                                                         label = T("Donor(s)"),
+                                                         fields = ["organisation_id"],
+                                                         ),
+                                    # @ToDo: Set Metadata on File: Org, Location, Disaster, Date
+                                    S3SQLInlineComponent("document",
+                                                         name = "concept_note",
+                                                         label = T("Concept Note"),
+                                                         fields = ["file"],
+                                                         multiple = False,
+                                                         ),
+                                    # @ToDo: Be able to retrieve the correct document 
+                                    #S3SQLInlineComponent("document",
+                                    #                     name = "log_frame",
+                                    #                     label = T("Log Frame"),
+                                    #                     fields = ["file"],
+                                    #                     multiple = False,
+                                    #                     ),
+                                    "comments",
+                                    )
 
         filter_widgets = [
             S3TextFilter(["name",
@@ -646,8 +716,7 @@ def config(settings):
                             hidden = True,
                             ),
             S3LocationFilter("location.location_id",
-                             # Default should introspect
-                             #levels = ("L0", "L1", "L2"),
+                             levels = ("L1", "L2", "L3"),
                              hidden = True,
                              ),
             S3OptionsFilter("programme_project.programme_id",
@@ -675,6 +744,7 @@ def config(settings):
                        ]
 
         s3db.configure("project_project",
+                       crud_form = crud_form,
                        filter_widgets = filter_widgets,
                        list_fields = list_fields,
                        )
