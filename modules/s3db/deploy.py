@@ -59,7 +59,6 @@ class S3DeploymentOrganisationModel(S3Model):
         # Organisation
         # - which Organisations/Branches have deployment teams
         #
-
         tablename = "deploy_organisation"
         self.define_table(tablename,
                           self.org_organisation_id(),
@@ -124,7 +123,8 @@ class S3DeploymentModel(S3Model):
                      s3_date(default = "now",
                              ),
                      # @ToDo: Link to location via link table
-                     # link table could be event_event_location for IFRC (would still allow 1 multi-country event to have multiple missions)
+                     # link table could be event_event_location for IFRC
+                     # (would still allow 1 multi-country event to have multiple missions)
                      self.gis_location_id(widget = S3LocationSelector(),
                                           ),
                      # @ToDo: Link to event_type via event_id link table instead of duplicating
@@ -136,8 +136,7 @@ class S3DeploymentModel(S3Model):
                            default = 2,
                            label = T("Status"),
                            represent = lambda opt: \
-                                       mission_status_opts.get(opt,
-                                                               UNKNOWN_OPT),
+                                       mission_status_opts.get(opt, UNKNOWN_OPT),
                            requires = IS_IN_SET(mission_status_opts),
                            ),
                      # @todo: change into real fields written onaccept?
@@ -153,10 +152,11 @@ class S3DeploymentModel(S3Model):
         list_layout = deploy_MissionProfileLayout()
         alert_widget = dict(label = "Alerts",
                             insert = lambda r, list_id, title, url: \
-                                   A(title,
-                                     _href=r.url(component="alert",
-                                                 method="create"),
-                                     _class="action-btn profile-add-btn"),
+                                     A(title,
+                                       _href = r.url(component = "alert",
+                                                     method = "create"),
+                                       _class = "action-btn profile-add-btn",
+                                       ),
                             label_create = "Create Alert",
                             type = "datalist",
                             list_fields = ["modified_on",
@@ -171,27 +171,27 @@ class S3DeploymentModel(S3Model):
                             pagesize = 10,
                             )
 
-        list_fields = ["created_on",
-                       "mission_id",
-                       "comments",
-                       "human_resource_id$id",
-                       "human_resource_id$person_id",
-                       "human_resource_id$organisation_id",
-                       "message_id$body",
-                       "message_id$from_address",
-                       "message_id$attachment.document_id$file",
-                       ]
-
         response_widget = dict(label = "Responses",
                                insert = False,
                                type = "datalist",
                                tablename = "deploy_response",
                                # Can't be 'response' as this clobbers web2py global
                                function = "response_message",
-                               list_fields = list_fields,
+                               list_fields = [
+                                   "created_on",
+                                   "mission_id",
+                                   "comments",
+                                   "human_resource_id$id",
+                                   "human_resource_id$person_id",
+                                   "human_resource_id$organisation_id",
+                                   "message_id$body",
+                                   "message_id$from_address",
+                                   "message_id$attachment.document_id$file",
+                                   ],
                                context = "mission",
                                list_layout = list_layout,
-                               # The popup datalist isn't currently functional (needs card layout applying) and not ideal UX anyway
+                               # The popup datalist isn't currently functional
+                               # (needs card layout applying) and not ideal UX anyway
                                #pagesize = 10,
                                pagesize = None,
                                )
@@ -210,9 +210,11 @@ class S3DeploymentModel(S3Model):
         assignment_widget = dict(label = label,
                                  insert = lambda r, list_id, title, url: \
                                         A(title,
-                                          _href=r.url(component="assignment",
-                                                      method="create"),
-                                          _class="action-btn profile-add-btn"),
+                                          _href=r.url(component = "assignment",
+                                                      method = "create",
+                                                      ),
+                                          _class="action-btn profile-add-btn",
+                                          ),
                                  label_create = label_create,
                                  tablename = "deploy_assignment",
                                  type = "datalist",
@@ -228,7 +230,7 @@ class S3DeploymentModel(S3Model):
                                      "job_title",
                                      "appraisal.rating",
                                      "mission_id",
-                                 ],
+                                     ],
                                  context = "mission",
                                  list_layout = list_layout,
                                  pagesize = None, # all records
@@ -245,11 +247,11 @@ class S3DeploymentModel(S3Model):
                            )
 
         # Table configuration
-        profile = URL(c="deploy", f="mission", args=["[id]", "profile"])
+        profile_url = URL(c="deploy", f="mission", args=["[id]", "profile"])
         configure(tablename,
-                  create_next = profile,
-                  delete_next = URL(c="deploy", f="mission", args="summary"),
+                  create_next = profile_url,
                   create_onaccept = self.deploy_mission_create_onaccept,
+                  delete_next = URL(c="deploy", f="mission", args="summary"),
                   list_fields = ["name",
                                  "date",
                                  "location_id",
@@ -267,25 +269,31 @@ class S3DeploymentModel(S3Model):
                                      ],
                   summary = [{"name": "rheader",
                               "common": True,
-                              "widgets": [{"method": self.add_button}]
+                              "widgets": [{"method": self.add_button},
+                                          ],
                               },
                              {"name": "table",
                               "label": "Table",
-                              "widgets": [{"method": "datatable"}]
+                              "widgets": [{"method": "datatable"},
+                                          ],
                               },
                              {"name": "report",
                               "label": "Report",
                               "widgets": [{"method": "report",
-                                           "ajax_init": True}],
+                                           "ajax_init": True,
+                                           },
+                                          ],
                               },
                              {"name": "map",
                               "label": "Map",
                               "widgets": [{"method": "map",
-                                           "ajax_init": True}],
+                                           "ajax_init": True,
+                                           },
+                                          ],
                               },
                              ],
                   super_entity = "doc_entity",
-                  update_next = profile,
+                  update_next = profile_url,
                   )
 
         # Components
@@ -314,7 +322,8 @@ class S3DeploymentModel(S3Model):
         represent = S3Represent(lookup = tablename,
                                 linkto = URL(f="mission",
                                              args=["[id]", "profile"]),
-                                show_link = True)
+                                show_link = True,
+                                )
 
         mission_id = S3ReusableField("mission_id", "reference %s" % tablename,
                                      label = T("Mission"),
@@ -415,39 +424,42 @@ class S3DeploymentModel(S3Model):
                                   "human_resource_id$person_id$middle_name",
                                   "human_resource_id$person_id$last_name",
                                   "mission_id$code",
-                                 ],
-                                 label=T("Search")
-                                ),
+                                  ],
+                                 label = T("Search")
+                                 ),
                     S3OptionsFilter("mission_id$event_type_id",
-                                    widget="multiselect",
-                                    hidden=True
-                                   ),
-                    S3LocationFilter("mission_id$location_id",
-                                     label=messages.COUNTRY,
-                                     widget="multiselect",
-                                     levels=["L0"],
-                                     hidden=True
+                                    widget = "multiselect",
+                                    hidden = True,
                                     ),
+                    S3LocationFilter("mission_id$location_id",
+                                     label = messages.COUNTRY,
+                                     widget = "multiselect",
+                                     levels = ["L0"],
+                                     hidden = True,
+                                     ),
                     S3OptionsFilter("job_title_id",
-                                    widget="multiselect",
-                                    hidden=True,
-                                   ),
+                                    widget = "multiselect",
+                                    hidden = True,
+                                    ),
                     S3DateFilter("start_date",
-                                 hide_time=True,
-                                 hidden=True,
-                                ),
-                  ],
+                                 hide_time = True,
+                                 hidden = True,
+                                 ),
+                    ],
                   summary = [
-                      {"name": "table",
-                       "label": "Table",
-                       "widgets": [{"method": "datatable"}]
-                      },
-                      {"name": "report",
-                       "label": "Report",
-                       "widgets": [{"method": "report",
-                                    "ajax_init": True}]
-                      },
-                  ],
+                    {"name": "table",
+                     "label": "Table",
+                     "widgets": [{"method": "datatable"},
+                                 ],
+                     },
+                    {"name": "report",
+                     "label": "Report",
+                     "widgets": [{"method": "report",
+                                  "ajax_init": True,
+                                  },
+                                 ]
+                     },
+                    ],
                   )
 
         # Components
@@ -516,14 +528,16 @@ class S3DeploymentModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def add_button(r, widget_id=None, visible=True, **attr):
+        """
+            @todo: docstring?
+        """
 
         # Check permission only here, i.e. when the summary is
         # actually being rendered:
         if current.auth.s3_has_permission("create", r.tablename):
-            return A(S3Method.crud_string(r.tablename,
-                                          "label_create"),
-                     _href=r.url(method="create", id=0, vars={}),
-                     _class="action-btn",
+            return A(S3Method.crud_string(r.tablename, "label_create"),
+                     _href = r.url(method="create", id=0, vars={}),
+                     _class = "action-btn",
                      )
         else:
             return ""
@@ -531,17 +545,23 @@ class S3DeploymentModel(S3Model):
     # -------------------------------------------------------------------------
     @staticmethod
     def deploy_mission_name_represent(name):
+        """
+            @todo: docstring?
+        """
 
         table = current.s3db.deploy_mission
         mission = current.db(table.name == name).select(table.id,
-                                                        limitby=(0, 1)
+                                                        limitby = (0, 1),
                                                         ).first()
         if not mission:
             return name
 
         return A(name,
-                 _href=URL(c="deploy", f="mission",
-                           args=[mission.id, "profile"]))
+                 _href=URL(c = "deploy",
+                           f = "mission",
+                           args = [mission.id, "profile"],
+                           ),
+                 )
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -660,7 +680,7 @@ class S3DeploymentModel(S3Model):
             hrtable = s3db.hrm_human_resource
             hr = db(hrtable.id == human_resource_id).select(hrtable.person_id,
                                                             hrtable.type,
-                                                            limitby=(0, 1)
+                                                            limitby = (0, 1),
                                                             ).first()
             if hr:
                 data["person_id"] = hr.person_id
@@ -672,7 +692,7 @@ class S3DeploymentModel(S3Model):
             mtable = db.deploy_mission
             mission = db(mtable.id == mission_id).select(mtable.location_id,
                                                          mtable.organisation_id,
-                                                         limitby=(0, 1)
+                                                         limitby = (0, 1),
                                                          ).first()
             if mission:
                 data["location_id"] = mission.location_id
@@ -683,9 +703,9 @@ class S3DeploymentModel(S3Model):
 
             # Lookup experience record for this assignment
             ltable = s3db.deploy_assignment_experience
-            query = ltable.assignment_id == assignment_id
+            query = (ltable.assignment_id == assignment_id)
             link = db(query).select(ltable.experience_id,
-                                    limitby=(0, 1)
+                                    limitby = (0, 1),
                                     ).first()
             if link:
                 # Update experience
@@ -717,7 +737,8 @@ class S3DeploymentModel(S3Model):
         table = s3db.deploy_assignment_experience
         link = current.db(table.id == row.id).select(table.id,
                                                      table.experience_id,
-                                                     limitby=(0, 1)).first()
+                                                     limitby = (0, 1),
+                                                     ).first()
         if not link:
             return
         else:
@@ -742,7 +763,8 @@ class S3DeploymentModel(S3Model):
         table = s3db.deploy_assignment_appraisal
         link = current.db(table.id == row.id).select(table.id,
                                                      table.appraisal_id,
-                                                     limitby=(0, 1)).first()
+                                                     limitby = (0, 1),
+                                                     ).first()
         if not link:
             return
         else:
@@ -902,7 +924,8 @@ class S3DeploymentAlertModel(S3Model):
         # Custom method to send alerts
         self.set_method("deploy", "alert",
                         method = "send",
-                        action = self.deploy_alert_send)
+                        action = self.deploy_alert_send,
+                        )
 
         # Reusable field
         represent = S3Represent(lookup=tablename)
@@ -911,7 +934,8 @@ class S3DeploymentAlertModel(S3Model):
                                    ondelete = "CASCADE",
                                    represent = represent,
                                    requires = IS_ONE_OF(db, "deploy_alert.id",
-                                                        represent),
+                                                        represent,
+                                                        ),
                                    )
 
         # ---------------------------------------------------------------------
@@ -921,7 +945,8 @@ class S3DeploymentAlertModel(S3Model):
         define_table(tablename,
                      alert_id(),
                      human_resource_id(empty = False,
-                                       label = T(hr_label)),
+                                       label = T(hr_label),
+                                       ),
                      *s3_meta_fields())
 
         crud_strings[tablename] = Storage(
@@ -1029,13 +1054,14 @@ class S3DeploymentAlertModel(S3Model):
 
         # Must have permission to update the alert in order to send it
         authorised = auth.s3_has_permission("update", "deploy_alert",
-                                            record_id = alert_id)
+                                            record_id = alert_id,
+                                            )
         if not authorised:
             r.unauthorised()
 
         record = r.record
         mission_id = record.mission_id
-    
+
         # Always redirect to the Mission Profile
         next_url = URL(f="mission", args=[mission_id, "profile"])
 
@@ -1060,7 +1086,8 @@ class S3DeploymentAlertModel(S3Model):
             recipients = db(query).select(ltable.human_resource_id)
         else:
             recipients = db(query).select(ltable.id,
-                                          limitby=(0, 1)).first()
+                                          limitby = (0, 1),
+                                          ).first()
         if not recipients:
             current.session.error = current.T("This Alert has no Recipients yet!")
             redirect(next_url)
@@ -1086,12 +1113,12 @@ class S3DeploymentAlertModel(S3Model):
             # Send SMS
             message_id = msg.send_by_pe_id(record.pe_id,
                                            contact_method = "SMS",
-                                           message=message,
+                                           message = message,
                                            )
             for g in cc_groups:
                 msg.send_by_pe_id(g.pe_id,
                                   contact_method = "SMS",
-                                  message=message,
+                                  message = message,
                                   )
 
         elif contact_method == 9:
@@ -1115,12 +1142,12 @@ class S3DeploymentAlertModel(S3Model):
             # Send SMS
             message_id = msg.send_by_pe_id(new_alert["pe_id"],
                                            contact_method = "SMS",
-                                           message=message,
+                                           message = message,
                                            )
             for g in cc_groups:
                 msg.send_by_pe_id(g.pe_id,
                                   contact_method = "SMS",
-                                  message=message,
+                                  message = message,
                                   )
 
             # Update the Alert to show it's been Sent
@@ -1162,15 +1189,15 @@ class S3DeploymentAlertModel(S3Model):
                 from_address = "%s@%s" % (username, channel.server)
 
             message_id = msg.send_by_pe_id(record.pe_id,
-                                           subject=record.subject,
-                                           message=message,
-                                           from_address=from_address,
+                                           subject = record.subject,
+                                           message = message,
+                                           from_address = from_address,
                                            )
             for g in cc_groups:
                 msg.send_by_pe_id(g.pe_id,
-                                  subject=record.subject,
-                                  message=message,
-                                  from_address=from_address,
+                                  subject = record.subject,
+                                  message = message,
+                                  from_address = from_address,
                                   )
 
         if settings.get_deploy_post_to_twitter():
@@ -1224,7 +1251,7 @@ class S3DeploymentAlertModel(S3Model):
             rtable = s3db.deploy_response
             response = db(rtable.id == form_vars.id).select(rtable.human_resource_id,
                                                             rtable.message_id,
-                                                            limitby=(0, 1)
+                                                            limitby = (0, 1),
                                                             ).first()
             if not response:
                 return
@@ -1248,7 +1275,7 @@ class S3DeploymentAlertModel(S3Model):
             if human_resource_id:
                 htable = s3db.hrm_human_resource
                 hr = db(htable.id == human_resource_id).select(htable.doc_id,
-                                                               limitby=(0, 1)
+                                                               limitby = (0, 1),
                                                                ).first()
                 if hr:
                     doc_id = hr.doc_id
@@ -1292,10 +1319,12 @@ def deploy_rheader(r, tabs=[], profile=False):
         if unsent and authorised:
             send_button = BUTTON(T("Send Alert"), _class="alert-send-btn")
             if recipients:
-                send_button.update(_onclick="window.location.href='%s'" %
-                                            URL(c="deploy",
-                                                f="alert",
-                                                args=[alert_id, "send"]))
+                send_button.update(_onclick = "window.location.href='%s'" %
+                                              URL(c = "deploy",
+                                                  f = "alert",
+                                                  args = [alert_id, "send"],
+                                                  ),
+                                   )
             else:
                 send_button.update(_disabled="disabled")
         else:
@@ -1310,9 +1339,10 @@ def deploy_rheader(r, tabs=[], profile=False):
 
         # Tabs
         tabs = [(T("Message"), None),
-                (T("Recipients (%(number)s Total)") %
-                   dict(number=recipients),
-                 "recipient"),
+                (T("Recipients (%(number)s Total)") % \
+                    {"number": recipients},
+                 "recipient",
+                 ),
                 ]
         if unsent and authorised and settings.get_deploy_manual_recipients():
             # Insert tab to select recipients
@@ -1328,7 +1358,10 @@ def deploy_rheader(r, tabs=[], profile=False):
                                record.subject
                                ),
                             cc,
-                            ), rheader_tabs, _class="alert-rheader")
+                            ),
+                      rheader_tabs,
+                      _class = "alert-rheader",
+                      )
 
     elif resourcename == "mission":
         if not profile and not r.component:
@@ -1342,10 +1375,12 @@ def deploy_rheader(r, tabs=[], profile=False):
                 edit_btn = ""
                 if profile and has_permission("update",
                                               "deploy_mission",
-                                              record_id=r.id):
+                                              record_id = r.id,
+                                              ):
                     crud_button = S3CRUD.crud_button
                     edit_btn = crud_button(T("Edit"),
-                                           _href=r.url(method="update"))
+                                           _href = r.url(method="update"),
+                                           )
 
                 label = lambda f, table=table, record=record, **attr: \
                                TH("%s: " % table[f].label, **attr)
@@ -1374,13 +1409,13 @@ def deploy_rheader(r, tabs=[], profile=False):
                                        ),
                                     TR(label("comments"),
                                        value("comments",
-                                             _class="mission-comments",
-                                             _colspan="6",
+                                             _class = "mission-comments",
+                                             _colspan = "6",
                                              ),
                                        ),
-                            ),
-                            _class="mission-rheader"
-                          )
+                                    ),
+                              _class = "mission-rheader"
+                              )
                 if edit_btn:
                     rheader[-1][0].append(edit_btn)
             else:
@@ -1464,14 +1499,14 @@ def deploy_member_filters(status=False):
     if settings.get_org_regions():
         if settings.get_org_regions_hierarchical():
             widgets.insert(1, S3HierarchyFilter("organisation_id$region_id",
-                                                lookup="org_region",
-                                                hidden=True,
-                                                none=T("No Region"),
+                                                lookup = "org_region",
+                                                hidden = True,
+                                                none = T("No Region"),
                                                 ))
         else:
             widgets.insert(1, S3OptionsFilter("organisation_id$region_id",
-                                              widget="multiselect",
-                                              filter=True,
+                                              widget = "multiselect",
+                                              filter = True,
                                               ))
     if status:
         # Additional filter for roster status (default=active), allows
@@ -1531,8 +1566,8 @@ class deploy_Inbox(S3Method):
                             filters = None
                         query = ~(FS("id").belongs(selected))
                         mresource = s3db.resource("msg_email",
-                                                  filter=query,
-                                                  vars=filters,
+                                                  filter = query,
+                                                  vars = filters,
                                                   )
                         if response.s3.filter:
                             mresource.add_filter(response.s3.filter)
@@ -1547,7 +1582,7 @@ class deploy_Inbox(S3Method):
                 deleted = mresource.delete(format=r.representation)
                 if deleted:
                     response.confirmation = T("%(number)s messages deleted") % \
-                                            dict(number=deleted)
+                                            {"number": deleted}
                 else:
                     response.warning = T("No messages could be deleted")
 
@@ -1563,7 +1598,8 @@ class deploy_Inbox(S3Method):
         # Truncate message body
         table = resource.table
         table.body.represent = lambda body: DIV(XML(body),
-                                                _class="s3-truncate")
+                                                _class = "s3-truncate",
+                                                )
         s3_trunk8()
 
         # Data table filter & sorting
@@ -1581,7 +1617,9 @@ class deploy_Inbox(S3Method):
             limit = 4 * display_length
         else:
             limit = None
-        filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
+        filter, orderby, left = resource.datatable_filter(list_fields,
+                                                          get_vars,
+                                                          )
         if not orderby:
             # Most recent messages on top
             orderby = "msg_email.date desc"
@@ -1589,12 +1627,13 @@ class deploy_Inbox(S3Method):
 
         # Extract the data
         data = resource.select(list_fields,
-                               start=0,
-                               limit=limit,
-                               orderby=orderby,
-                               left=left,
-                               count=True,
-                               represent=True)
+                               start = 0,
+                               limit = limit,
+                               orderby = orderby,
+                               left = left,
+                               count = True,
+                               represent = True,
+                               )
 
         # Instantiate the data table
         filteredrows = data["numrows"]
@@ -1613,10 +1652,14 @@ class deploy_Inbox(S3Method):
                            },
                           ]
             S3CRUD.action_buttons(r,
-                                editable=False,
-                                read_url = r.url(method="read", id="[id]"),
-                                delete_url = r.url(method="delete", id="[id]"),
-                                )
+                                  editable = False,
+                                  read_url = r.url(method = "read",
+                                                   id = "[id]",
+                                                   ),
+                                  delete_url = r.url(method = "delete",
+                                                     id = "[id]",
+                                                     ),
+                                  )
 
             # Export not needed
             s3.no_formats = True
@@ -1625,11 +1668,11 @@ class deploy_Inbox(S3Method):
             items = dt.html(totalrows,
                             filteredrows,
                             dt_id,
-                            dt_ajax_url=URL(c = "deploy",
-                                            f = "email_inbox",
-                                            extension = "aadata",
-                                            vars = {},
-                                            ),
+                            dt_ajax_url= URL(c = "deploy",
+                                             f = "email_inbox",
+                                             extension = "aadata",
+                                             vars = {},
+                                             ),
                             dt_bulk_actions = dt_bulk_actions,
                             dt_pageLength = display_length,
                             dt_pagination = "true",
@@ -1649,10 +1692,11 @@ class deploy_Inbox(S3Method):
             response.headers["Content-Type"] = "application/json"
 
             return dt.json(totalrows,
-                        filteredrows,
-                        dt_id,
-                        echo,
-                        dt_bulk_actions = dt_bulk_actions)
+                           filteredrows,
+                           dt_id,
+                           echo,
+                           dt_bulk_actions = dt_bulk_actions,
+                           )
 
         else:
             r.error(415, current.ERROR.BAD_FORMAT)
@@ -1721,7 +1765,9 @@ def deploy_apply(r, **attr):
                         filters = None
                     query = ~(FS("id").belongs(selected))
                     hresource = s3db.resource("hrm_human_resource",
-                                              filter=query, vars=filters)
+                                              filter = query,
+                                              vars = filters,
+                                              )
                     rows = hresource.select(["id"], as_rows=True)
                     selected = [str(row.id) for row in rows]
 
@@ -1750,8 +1796,9 @@ def deploy_apply(r, **attr):
                                       )
                         added += 1
         current.session.confirmation = T("%(number)s %(team)s members added") % \
-                                       dict(team = T(deploy_team),
-                                            number=added)
+                                       {"number": added,
+                                        "team": T(deploy_team),
+                                        }
         if added > 0:
             redirect(URL(f="human_resource", args=["summary"], vars={}))
         else:
@@ -1796,20 +1843,22 @@ def deploy_apply(r, **attr):
         filter, orderby, left = resource.datatable_filter(list_fields, get_vars)
         resource.add_filter(filter)
         data = resource.select(list_fields,
-                               start=0,
-                               limit=limit,
-                               orderby=orderby,
-                               left=left,
-                               count=True,
-                               represent=True)
-        filteredrows = data["numrows"]
-        dt = S3DataTable(data["rfields"], data["rows"], orderby=orderby)
+                               start = 0,
+                               limit = limit,
+                               orderby = orderby,
+                               left = left,
+                               count = True,
+                               represent = True,
+                               )
+        filteredrows = data.numrows
+        dt = S3DataTable(data.rfields, data.rows, orderby=orderby)
         dt_id = "datatable"
 
         # Bulk actions
         dt_bulk_actions = [(T("Add as %(team)s Members") % \
-                                dict(team = T(deploy_team)),
-                            "add"),
+                            {"team": T(deploy_team)},
+                            "add"
+                            ),
                            ]
 
         if r.representation == "html":
@@ -1818,18 +1867,23 @@ def deploy_apply(r, **attr):
 
             #dt.defaultActionButtons(resource)
             profile_url = URL(f = "human_resource",
-                              args = ["[id]", "profile"])
+                              args = ["[id]", "profile"],
+                              )
             S3CRUD.action_buttons(r,
                                   deletable = False,
                                   read_url = profile_url,
-                                  update_url = profile_url)
+                                  update_url = profile_url,
+                                  )
             s3.no_formats = True
 
             # Selection of Deploying Organisation
             if not organisation_id and len(deploying_orgs) > 1:
-                opts = [OPTION(v, _value=k) for k, v in deploying_orgs.iteritems()]
-                form = SELECT(*opts, _id="deploy_application_organisation_id",
-                                     _name="organisation_id")
+                opts = [OPTION(v, _value=k)
+                        for k, v in deploying_orgs.iteritems()
+                        ]
+                form = SELECT(_id = "deploy_application_organisation_id",
+                              _name = "organisation_id",
+                              *opts)
                 s3.scripts.append("/%s/static/scripts/S3/s3.deploy.js" % r.application)
             else:
                 form = ""
@@ -1838,58 +1892,60 @@ def deploy_apply(r, **attr):
             items = dt.html(totalrows,
                             filteredrows,
                             dt_id,
-                            dt_pageLength=display_length,
-                            dt_ajax_url=URL(c="deploy",
-                                            f="application",
-                                            extension="aadata",
-                                            vars={},
-                                            ),
-                            dt_searching="false",
-                            dt_pagination="true",
-                            dt_bulk_actions=dt_bulk_actions,
+                            dt_pageLength = display_length,
+                            dt_ajax_url = URL(c = "deploy",
+                                              f = "application",
+                                              extension = "aadata",
+                                              vars = {},
+                                              ),
+                            dt_searching = "false",
+                            dt_pagination = "true",
+                            dt_bulk_actions = dt_bulk_actions,
                             )
 
             # Filter form
             if filter_widgets:
 
                 # Where to retrieve filtered data from:
-                _vars = resource.crud._remove_filters(r.get_vars)
-                filter_submit_url = r.url(vars=_vars)
+                submit_url_vars = resource.crud._remove_filters(r.get_vars)
+                filter_submit_url = r.url(vars=submit_url_vars)
 
                 # Where to retrieve updated filter options from:
-                filter_ajax_url = URL(f="human_resource",
-                                      args=["filter.options"],
-                                      vars={})
+                filter_ajax_url = URL(f = "human_resource",
+                                      args = ["filter.options"],
+                                      vars = {},
+                                      )
 
                 get_config = resource.get_config
                 filter_clear = get_config("filter_clear", True)
                 filter_formstyle = get_config("filter_formstyle", None)
                 filter_submit = get_config("filter_submit", True)
                 filter_form = S3FilterForm(filter_widgets,
-                                           clear=filter_clear,
-                                           formstyle=filter_formstyle,
-                                           submit=filter_submit,
-                                           ajax=True,
-                                           url=filter_submit_url,
-                                           ajaxurl=filter_ajax_url,
-                                           _class="filter-form",
-                                           _id="datatable-filter-form",
+                                           clear = filter_clear,
+                                           formstyle = filter_formstyle,
+                                           submit = filter_submit,
+                                           ajax = True,
+                                           url = filter_submit_url,
+                                           ajaxurl = filter_ajax_url,
+                                           _class = "filter-form",
+                                           _id = "datatable-filter-form",
                                            )
                 fresource = s3db.resource(resource.tablename)
                 alias = resource.alias if r.component else None
                 ff = filter_form.html(fresource,
                                       r.get_vars,
-                                      target="datatable",
-                                      alias=alias)
+                                      target = "datatable",
+                                      alias = alias,
+                                      )
             else:
                 ff = ""
 
-            output = dict(form = form,
-                          items = items,
-                          list_filter_form = ff,
-                          title = T("Add %(team)s Members") % \
-                                    dict(team = T(deploy_team)),
-                          )
+            output = {"form": form,
+                      "items": items,
+                      "list_filter_form": ff,
+                      "title": T("Add %(team)s Members") % \
+                               {"team": T(deploy_team)},
+                      }
 
             response.view = "list_filter.html"
             return output
@@ -1904,7 +1960,8 @@ def deploy_apply(r, **attr):
                             filteredrows,
                             dt_id,
                             echo,
-                            dt_bulk_actions=dt_bulk_actions)
+                            dt_bulk_actions = dt_bulk_actions,
+                            )
             response.headers["Content-Type"] = "application/json"
             return items
 
@@ -1927,7 +1984,8 @@ def deploy_alert_select_recipients(r, **attr):
 
     # Must have permission to update the alert in order to add recipients
     authorised = current.auth.s3_has_permission("update", "deploy_alert",
-                                                record_id = alert_id)
+                                                record_id = alert_id,
+                                                )
     if not authorised:
         r.unauthorised()
 
@@ -1960,7 +2018,9 @@ def deploy_alert_select_recipients(r, **attr):
                         (~(FS("id").belongs(selected)))
 
                 hresource = s3db.resource("hrm_human_resource",
-                                          filter=query, vars=filters)
+                                          filter = query,
+                                          vars = filters,
+                                          )
                 rows = hresource.select(["id"], as_rows=True)
                 selected = [str(row.id) for row in rows]
 
@@ -1978,8 +2038,8 @@ def deploy_alert_select_recipients(r, **attr):
                     continue
                 if hr_id in skip:
                     continue
-                rtable.insert(alert_id=alert_id,
-                              human_resource_id=human_resource_id,
+                rtable.insert(alert_id = alert_id,
+                              human_resource_id = human_resource_id,
                               )
                 added += 1
         if not selected:
@@ -1992,7 +2052,9 @@ def deploy_alert_select_recipients(r, **attr):
     representation = r.representation
     settings = current.deployment_settings
     resource = s3db.resource("hrm_human_resource",
-                             filter=member_query, vars=r.get_vars)
+                             filter = member_query,
+                             vars = r.get_vars,
+                             )
 
     # Filter widgets (including roster status)
     filter_widgets = deploy_member_filters(status=True)
@@ -2063,15 +2125,16 @@ def deploy_alert_select_recipients(r, **attr):
     resource.add_filter(filter)
     resource.add_filter(s3.filter)
     data = resource.select(list_fields,
-                           start=0,
-                           limit=limit,
-                           orderby=orderby,
-                           left=left,
-                           count=True,
-                           represent=True)
+                           start = 0,
+                           limit = limit,
+                           orderby = orderby,
+                           left = left,
+                           count = True,
+                           represent = True,
+                           )
 
-    filteredrows = data["numrows"]
-    dt = S3DataTable(data["rfields"], data["rows"], orderby=orderby)
+    filteredrows = data.numrows
+    dt = S3DataTable(data.rfields, data.rows, orderby=orderby)
     dt_id = "datatable"
 
     # Bulk actions
@@ -2088,11 +2151,11 @@ def deploy_alert_select_recipients(r, **attr):
         items = dt.html(totalrows,
                         filteredrows,
                         dt_id,
-                        dt_ajax_url=r.url(representation="aadata"),
-                        dt_bulk_actions=dt_bulk_actions,
-                        dt_pageLength=display_length,
-                        dt_pagination="true",
-                        dt_searching="false",
+                        dt_ajax_url = r.url(representation="aadata"),
+                        dt_bulk_actions = dt_bulk_actions,
+                        dt_pageLength = display_length,
+                        dt_pagination = "true",
+                        dt_searching = "false",
                         )
 
         # Filter form
@@ -2103,36 +2166,39 @@ def deploy_alert_select_recipients(r, **attr):
             filter_submit_url = r.url(vars=_vars)
 
             # Where to retrieve updated filter options from:
-            filter_ajax_url = URL(f="human_resource",
-                                  args=["filter.options"],
-                                  vars={})
+            filter_ajax_url = URL(f = "human_resource",
+                                  args = ["filter.options"],
+                                  vars = {},
+                                  )
 
             get_config = resource.get_config
             filter_clear = get_config("filter_clear", True)
             filter_formstyle = get_config("filter_formstyle", None)
             filter_submit = get_config("filter_submit", True)
             filter_form = S3FilterForm(filter_widgets,
-                                       clear=filter_clear,
-                                       formstyle=filter_formstyle,
-                                       submit=filter_submit,
-                                       ajax=True,
-                                       url=filter_submit_url,
-                                       ajaxurl=filter_ajax_url,
-                                       _class="filter-form",
-                                       _id="datatable-filter-form",
+                                       clear = filter_clear,
+                                       formstyle = filter_formstyle,
+                                       submit = filter_submit,
+                                       ajax = True,
+                                       url = filter_submit_url,
+                                       ajaxurl = filter_ajax_url,
+                                       _class = "filter-form",
+                                       _id = "datatable-filter-form",
                                        )
             fresource = s3db.resource(resource.tablename)
             alias = resource.alias if r.component else None
             ff = filter_form.html(fresource,
                                   r.get_vars,
-                                  target="datatable",
-                                  alias=alias)
+                                  target = "datatable",
+                                  alias = alias,
+                                  )
         else:
             ff = ""
 
-        output = dict(items=items,
-                      title=T("Select Recipients"),
-                      list_filter_form=ff)
+        output = {"items": items,
+                  "title": T("Select Recipients"),
+                  "list_filter_form": ff,
+                  }
 
         # Maintain RHeader for consistency
         if attr.get("rheader"):
@@ -2153,7 +2219,8 @@ def deploy_alert_select_recipients(r, **attr):
                         filteredrows,
                         dt_id,
                         echo,
-                        dt_bulk_actions=dt_bulk_actions)
+                        dt_bulk_actions = dt_bulk_actions,
+                        )
         response.headers["Content-Type"] = "application/json"
         return items
 
@@ -2167,7 +2234,10 @@ def deploy_response_select_mission(r, **attr):
     """
 
     message_id = r.record.message_id if r.record else None
-    if r.representation not in ("html", "aadata") or not message_id or not r.component:
+
+    if r.representation not in ("html", "aadata") or \
+       not message_id or \
+       not r.component:
         r.error(405, current.ERROR.BAD_METHOD)
 
     T = current.T
@@ -2231,7 +2301,9 @@ def deploy_response_select_mission(r, **attr):
 
     settings = current.deployment_settings
     resource = s3db.resource("deploy_mission",
-                             filter=mission_query, vars=r.get_vars)
+                             filter = mission_query,
+                             vars = get_vars,
+                             )
 
     # Filter widgets
     filter_widgets = s3db.get_config("deploy_mission", "filter_widgets")
@@ -2260,23 +2332,24 @@ def deploy_response_select_mission(r, **attr):
         orderby = "deploy_mission.created_on desc"
     resource.add_filter(filter)
     data = resource.select(list_fields,
-                           start=0,
-                           limit=limit,
-                           orderby=orderby,
-                           left=left,
-                           count=True,
-                           represent=True)
+                           start = 0,
+                           limit = limit,
+                           orderby = orderby,
+                           left = left,
+                           count = True,
+                           represent = True,
+                           )
 
-    filteredrows = data["numrows"]
-    dt = S3DataTable(data["rfields"], data["rows"], orderby=orderby)
+    filteredrows = data.numrows
+    dt = S3DataTable(data.rfields, data.rows, orderby=orderby)
     dt_id = "datatable"
 
     if r.representation == "html":
         # Page load
-        resource.configure(deletable = False)
+        resource.configure(deletable=False)
 
         record = r.record
-        action_vars = dict(mission_id="[id]")
+        action_vars = {"mission_id": "[id]"}
 
         # Can we identify the Member?
         from ..s3.s3parser import S3Parsing
@@ -2286,12 +2359,13 @@ def deploy_response_select_mission(r, **attr):
             action_vars["hr_id"] = hr_id
 
         s3 = response.s3
-        s3.actions = [dict(label=str(T("Select Mission")),
-                           _class="action-btn link",
-                           url=URL(f="email_inbox",
-                                   args=[r.id, "select"],
-                                   vars=action_vars,
-                                   )),
+        s3.actions = [{"label": str(T("Select Mission")),
+                       "_class": "action-btn link",
+                       "url": URL(f = "email_inbox",
+                                  args = [r.id, "select"],
+                                  vars = action_vars,
+                                  ),
+                       },
                       ]
         s3.no_formats = True
 
@@ -2299,18 +2373,18 @@ def deploy_response_select_mission(r, **attr):
         items = dt.html(totalrows,
                         filteredrows,
                         dt_id,
-                        dt_ajax_url=r.url(representation="aadata"),
-                        dt_pageLength=display_length,
-                        dt_pagination="true",
-                        dt_searching="false",
+                        dt_ajax_url = r.url(representation="aadata"),
+                        dt_pageLength = display_length,
+                        dt_pagination = "true",
+                        dt_searching = "false",
                         )
 
         # Filter form
         if filter_widgets:
 
             # Where to retrieve filtered data from:
-            _vars = resource.crud._remove_filters(r.get_vars)
-            filter_submit_url = r.url(vars=_vars)
+            submit_url_vars = resource.crud._remove_filters(get_vars)
+            filter_submit_url = r.url(vars=submit_url_vars)
 
             # Where to retrieve updated filter options from:
             filter_ajax_url = URL(f="mission",
@@ -2322,34 +2396,37 @@ def deploy_response_select_mission(r, **attr):
             filter_formstyle = get_config("filter_formstyle", None)
             filter_submit = get_config("filter_submit", True)
             filter_form = S3FilterForm(filter_widgets,
-                                       clear=filter_clear,
-                                       formstyle=filter_formstyle,
-                                       submit=filter_submit,
-                                       ajax=True,
-                                       url=filter_submit_url,
-                                       ajaxurl=filter_ajax_url,
-                                       _class="filter-form",
-                                       _id="datatable-filter-form",
+                                       clear = filter_clear,
+                                       formstyle = filter_formstyle,
+                                       submit = filter_submit,
+                                       ajax = True,
+                                       url = filter_submit_url,
+                                       ajaxurl = filter_ajax_url,
+                                       _class = "filter-form",
+                                       _id = "datatable-filter-form",
                                        )
             fresource = s3db.resource(resource.tablename)
             alias = resource.alias if r.component else None
             ff = filter_form.html(fresource,
-                                  r.get_vars,
-                                  target="datatable",
-                                  alias=alias)
+                                  get_vars,
+                                  target = "datatable",
+                                  alias = alias,
+                                  )
         else:
             ff = ""
 
-        output = dict(items=items,
-                      title=T("Select Mission"),
-                      list_filter_form=ff)
+        output = {"items": items,
+                  "title": T("Select Mission"),
+                  "list_filter_form": ff,
+                  }
 
         # Add RHeader
         if hr_id:
             from_address = A(from_address,
-                             _href=URL(c="deploy", f="human_resource",
-                                       args=[hr_id, "profile"],
-                                       )
+                             _href = URL(c = "deploy",
+                                         f = "human_resource",
+                                         args = [hr_id, "profile"],
+                                         )
                              )
             row = ""
         else:
@@ -2373,9 +2450,10 @@ def deploy_response_select_mission(r, **attr):
             post_process = '''S3.update_links()'''
             widget = S3HumanResourceAutocompleteWidget(post_process=post_process)
             widget = widget(field, None)
-            comment = DIV(_class="tooltip",
-                          _title="%s|%s" % (title,
-                                            current.messages.AUTOCOMPLETE_HELP),
+            comment = DIV(_class = "tooltip",
+                          _title = "%s|%s" % (title,
+                                              current.messages.AUTOCOMPLETE_HELP,
+                                              ),
                           )
             # @ToDo: Handle non-callable formstyles
             row = s3.crud.formstyle(id, label, widget, comment)
@@ -2386,15 +2464,22 @@ def deploy_response_select_mission(r, **attr):
         if atts:
             attachments = TABLE(TR(TH("%s: " % T("Attachments"))))
             for a in atts:
-                url = URL(c="default", f="download",
-                          args=a.file)
+                url = URL(c = "default",
+                          f = "download",
+                          args = a.file,
+                          )
                 attachments.append(TR(TD(A(ICON("attachment"),
                                            a.name,
-                                           _href=url))))
+                                           _href = url,
+                                           ),
+                                         ),
+                                      ))
         else:
             attachments = ""
         # @ToDo: Add Reply button
-        rheader = DIV(FORM(row, _class="select-member-form"),
+        rheader = DIV(FORM(row,
+                           _class = "select-member-form",
+                           ),
                       TABLE(TR(TH("%s: " % T("From")),
                                from_address,
                                ),
@@ -2407,9 +2492,11 @@ def deploy_response_select_mission(r, **attr):
                             TR(TH("%s: " % T("Message Text")),
                                ),
                             ),
-                            DIV(record.body, _class="message-body s3-truncate"),
-                            attachments,
-                            )
+                      DIV(record.body,
+                          _class = "message-body s3-truncate",
+                          ),
+                      attachments,
+                      )
         output["rheader"] = rheader
         s3_trunk8(lines=5)
 
@@ -2426,7 +2513,8 @@ def deploy_response_select_mission(r, **attr):
                         filteredrows,
                         dt_id,
                         echo,
-                        dt_bulk_actions=dt_bulk_actions)
+                        dt_bulk_actions = dt_bulk_actions,
+                        )
         response.headers["Content-Type"] = "application/json"
         return items
 
@@ -2466,7 +2554,9 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         if tablename == "deploy_alert":
 
             # Recipients, aggregated by alert
-            record_ids = set(record["_row"]["deploy_alert.id"] for record in records)
+            record_ids = set(record["_row"]["deploy_alert.id"]
+                             for record in records
+                             )
 
             htable = s3db.hrm_human_resource
             number_of_recipients = htable.id.count()
@@ -2479,19 +2569,20 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                 otable = s3db.org_organisation
                 region_id = otable.region_id
                 fields = [alert_id, region_id, number_of_recipients]
-                left = [htable.on(htable.id==rtable.human_resource_id),
-                        otable.on(otable.id==htable.organisation_id),
+                left = [htable.on(htable.id == rtable.human_resource_id),
+                        otable.on(otable.id == htable.organisation_id),
                         ]
                 groupby = [alert_id, region_id]
             else:
                 fields = [alert_id, number_of_recipients]
-                left = [htable.on(htable.id==rtable.human_resource_id)]
+                left = [htable.on(htable.id == rtable.human_resource_id),
+                        ]
                 groupby = [alert_id]
 
             query = (alert_id.belongs(record_ids)) & \
                     (rtable.deleted != True)
-            rows = current.db(query).select(left=left,
-                                            groupby=groupby,
+            rows = current.db(query).select(left = left,
+                                            groupby = groupby,
                                             *fields)
 
             recipient_numbers = {}
@@ -2578,7 +2669,8 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         elif tablename == "deploy_assignment":
 
             record_ids = set(record["_row"]["deploy_assignment.id"]
-                             for record in records)
+                             for record in records
+                             )
 
             atable = s3db.hrm_appraisal
             ltable = s3db.deploy_assignment_appraisal
@@ -2663,9 +2755,9 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                 if not self.use_regions:
                     total_recipients = rows[0][rcount]
                     label = HR_LABEL if total_recipients == 1 else HRS_LABEL
-                    link = URL(f = "alert", args = [record_id, "recipient"])
+                    link = URL(f="alert", args=[record_id, "recipient"])
                     recipients = SPAN(A("%s %s" % (total_recipients, label),
-                                        _href=link,
+                                        _href = link,
                                         ),
                                       )
                 else:
@@ -2692,7 +2784,8 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                         # Link
                         link = URL(f = "alert",
                                    args = [record_id, "recipient"],
-                                   vars = region_filter)
+                                   vars = region_filter,
+                                   )
 
                         # Recipient list item
                         recipient = SPAN("%s (" % region_name,
@@ -2720,39 +2813,50 @@ class deploy_MissionProfileLayout(S3DataListLayout):
             sent = True if raw["deploy_alert.message_id"] else False
             if sent:
                 status = SPAN(ICON("sent"),
-                              T("sent"), _class="alert-status")
+                              T("sent"),
+                              _class="alert-status",
+                              )
             else:
                 status = SPAN(ICON("unsent"),
-                              T("not sent"), _class="red alert-status")
+                              T("not sent"),
+                              _class="red alert-status",
+                              )
 
             # Message
             message = record["deploy_alert.body"]
 
             # Contents
-            contents = DIV(
-                           DIV(
-                               DIV(subject,
-                                   _class="card-title"),
+            contents = DIV(DIV(DIV(subject,
+                                   _class = "card-title",
+                                   ),
                                DIV(recipients,
-                                   _class="card-category"),
-                               _class="media-heading"
-                            ),
-                            DIV(modified_on, status, _class="card-subtitle"),
-                            DIV(message, _class="message-body s3-truncate"),
-                            _class="media-body",
-                       )
+                                   _class = "card-category",
+                                   ),
+                               _class = "media-heading"
+                               ),
+                           DIV(modified_on,
+                               status,
+                               _class = "card-subtitle",
+                               ),
+                           DIV(message,
+                               _class = "message-body s3-truncate",
+                               ),
+                           _class = "media-body",
+                           )
 
             # Workflow
             if not sent and total_recipients and \
                has_permission("update", table, record_id=record_id):
                 send = A(ICON("mail"),
                          SPAN(T("Send this Alert"),
-                              _class="card-action"),
-                         _onclick="window.location.href='%s'" %
-                                  URL(c="deploy", f="alert",
-                                      args=[record_id, "send"]),
-                         _class="action-lnk",
-                       )
+                              _class = "card-action"),
+                         _onclick = "window.location.href='%s'" %
+                                    URL(c = "deploy",
+                                        f = "alert",
+                                        args = [record_id, "send"],
+                                        ),
+                         _class = "action-lnk",
+                         )
                 workflow = [send]
 
         elif tablename == "deploy_response":
@@ -2762,16 +2866,18 @@ class deploy_MissionProfileLayout(S3DataListLayout):
             # Title linked to member profile
             if human_resource_id:
                 person_id = record["hrm_human_resource.person_id"]
-                profile_url = URL(f="human_resource", args=[human_resource_id, "profile"])
+                profile_url = URL(f = "human_resource",
+                                  args = [human_resource_id, "profile"],
+                                  )
                 profile_title = T("Open Member Profile (in a new tab)")
                 person = A(person_id,
-                        _href=profile_url,
-                        _target="_blank",
-                        _title=profile_title)
+                           _href = profile_url,
+                           _target = "_blank",
+                           _title = profile_title,
+                           )
             else:
-                person_id = "%s (%s)" % \
-                            (T("Unknown"), record["msg_message.from_address"])
-                person = person_id
+                person = "%s (%s)" % \
+                         (T("Unknown"), record["msg_message.from_address"])
 
             # Organisation
             organisation = record["hrm_human_resource.organisation_id"]
@@ -2790,8 +2896,8 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                 bootstrap = current.response.s3.formstyle == "bootstrap"
                 if bootstrap:
                     docs = UL(_class="dropdown-menu",
-                            _role="menu",
-                            )
+                              _role="menu",
+                              )
                 else:
                     docs = SPAN(_id="attachments",
                                 _class="profile-data-value",
@@ -2802,44 +2908,46 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                         doc_name = retrieve(doc)[0]
                     except (IOError, TypeError):
                         doc_name = current.messages["NONE"]
-                    doc_url = URL(c="default", f="download",
-                                args=[doc])
+                    doc_url = URL(c = "default",
+                                  f = "download",
+                                  args=[doc],
+                                  )
                     if bootstrap:
                         doc_item = LI(A(ICON("file"),
                                         " ",
                                         doc_name,
-                                        _href=doc_url,
+                                        _href = doc_url,
                                         ),
-                                    _role="menuitem",
-                                    )
+                                      _role="menuitem",
+                                      )
                     else:
                         doc_item = A(ICON("file"),
                                      " ",
                                      doc_name,
-                                     _href=doc_url,
+                                     _href = doc_url,
                                      )
                     docs.append(doc_item)
                     docs.append(", ")
                 if bootstrap:
                     docs = DIV(A(ICON("attachment"),
-                                SPAN(_class="caret"),
-                                _class="btn dropdown-toggle",
-                                _href="#",
-                                **{"_data-toggle": "dropdown"}
-                                ),
-                            doc_list,
-                            _class="btn-group attachments dropdown pull-right",
-                            )
+                                 SPAN(_class="caret"),
+                                 _class = "btn dropdown-toggle",
+                                 _href = "#",
+                                 data = {"toggle": "dropdown"},
+                                 ),
+                               doc_list,
+                               _class = "btn-group attachments dropdown pull-right",
+                               )
                 else:
                     # Remove final comma
                     docs.components.pop()
                     docs = DIV(LABEL("%s:" % T("Attachments"),
-                                    _class = "profile-data-label",
-                                    _for="attachments",
-                                    ),
-                            docs,
-                            _class = "profile-data",
-                            )
+                                     _class = "profile-data-label",
+                                     _for = "attachments",
+                                     ),
+                               docs,
+                               _class = "profile-data",
+                               )
             else:
                 docs = ""
 
@@ -2852,67 +2960,80 @@ class deploy_MissionProfileLayout(S3DataListLayout):
             dcount_id = "profile-data-dcount-%s" % record_id
             avgrat_id = "profile-data-avgrat-%s" % record_id
             dinfo = DIV(LABEL("%s:" % T("Previous Deployments"),
-                              _for=dcount_id,
-                              _class="profile-data-label"),
+                              _for = dcount_id,
+                              _class = "profile-data-label",
+                              ),
                         SPAN(dcount,
-                             _id=dcount_id,
-                             _class="profile-data-value"),
+                             _id = dcount_id,
+                             _class = "profile-data-value",
+                             ),
                         LABEL("%s:" % T("Average Rating"),
-                              _for=avgrat_id,
-                              _class="profile-data-label"),
+                              _for = avgrat_id,
+                              _class = "profile-data-label",
+                              ),
                         SPAN(avgrat,
-                             _id=avgrat_id,
-                             _class="profile-data-value"),
-                        _class="profile-data",
-                    )
+                             _id = avgrat_id,
+                             _class = "profile-data-value",
+                             ),
+                        _class = "profile-data",
+                        )
 
             # Comments
             comments_id = "profile-data-comments-%s" % record_id
             comments = DIV(LABEL("%s:" % T("Comments"),
-                                _for=comments_id,
-                                _class="profile-data-label"),
-                        SPAN(record["deploy_response.comments"],
-                                _id=comments_id,
-                                _class="profile-data-value s3-truncate"),
-                        _class="profile-data",
-                        )
+                                 _for = comments_id,
+                                 _class = "profile-data-label",
+                                 ),
+                           SPAN(record["deploy_response.comments"],
+                                _id = comments_id,
+                                _class = "profile-data-value s3-truncate",
+                                ),
+                           _class = "profile-data",
+                           )
 
             # Contents
-            contents = DIV(
-                            DIV(
-                                DIV(person,
-                                    _class="card-title"),
-                                DIV(organisation,
-                                    _class="card-category"),
-                                _class="media-heading",
-                            ),
-                            DIV(created_on, _class="card-subtitle"),
-                            DIV(message, _class="message-body s3-truncate"),
-                            docs,
-                            dinfo,
-                            comments,
-                            _class="media-body",
-                        )
+            contents = DIV(DIV(DIV(person,
+                                   _class = "card-title",
+                                   ),
+                               DIV(organisation,
+                                   _class = "card-category",
+                                   ),
+                               _class = "media-heading",
+                               ),
+                           DIV(created_on,
+                               _class = "card-subtitle",
+                               ),
+                           DIV(message,
+                               _class = "message-body s3-truncate",
+                               ),
+                           docs,
+                           dinfo,
+                           comments,
+                           _class = "media-body",
+                           )
 
             # Workflow
             if human_resource_id:
                 if hasattr(self, "deployed") and human_resource_id in self.deployed:
                     deploy = A(ICON("deployed"),
                                SPAN(T("Member Deployed"),
-                                    _class="card-action"),
-                               _class="action-lnk",
+                                    _class = "card-action",
+                                    ),
+                               _class = "action-lnk",
                                )
                 elif has_permission("create", "deploy_assignment"):
                     mission_id = raw["deploy_response.mission_id"]
-                    url = URL(f="mission",
-                              args=[mission_id, "assignment", "create"],
-                              vars={"member_id": human_resource_id})
+                    url = URL(f = "mission",
+                              args = [mission_id, "assignment", "create"],
+                              vars = {"member_id": human_resource_id},
+                              )
                     deploy = A(ICON("deploy"),
                                SPAN(T("Deploy this Member"),
-                                    _class="card-action"),
-                               _href=url,
-                               _class="action-lnk"
-                             )
+                                    _class = "card-action",
+                                    ),
+                               _href = url,
+                               _class = "action-lnk"
+                               )
                 else:
                     deploy = None
                 if deploy:
@@ -2923,12 +3044,15 @@ class deploy_MissionProfileLayout(S3DataListLayout):
             human_resource_id = raw["hrm_human_resource.id"]
 
             # Title linked to member profile
-            profile_url = URL(f="human_resource", args=[human_resource_id, "profile"])
+            profile_url = URL(f = "human_resource",
+                              args = [human_resource_id, "profile"],
+                              )
             profile_title = T("Open Member Profile (in a new tab)")
             person = A(record["hrm_human_resource.person_id"],
-                       _href=profile_url,
-                       _target="_blank",
-                       _title=profile_title)
+                       _href = profile_url,
+                       _target = "_blank",
+                       _title = profile_title,
+                       )
 
             # Organisation
             organisation = record["hrm_human_resource.organisation_id"]
@@ -2936,23 +3060,25 @@ class deploy_MissionProfileLayout(S3DataListLayout):
             fields = dict((rfield.colname, rfield) for rfield in rfields)
             render = lambda colname: self.render_column(item_id,
                                                         fields[colname],
-                                                        record)
+                                                        record,
+                                                        )
 
             # Contents
-            contents = DIV(
-                            DIV(
-                                DIV(person,
-                                    _class="card-title"),
-                                DIV(organisation,
-                                    _class="card-category"),
-                                _class="media-heading"),
-                            render("deploy_assignment.start_date"),
-                            render("deploy_assignment.end_date"),
-                            render("deploy_assignment.job_title_id"),
-                            render("deploy_assignment.job_title"),
-                            render("hrm_appraisal.rating"),
-                            _class="media-body",
-                       )
+            contents = DIV(DIV(DIV(person,
+                                   _class = "card-title",
+                                   ),
+                               DIV(organisation,
+                                   _class = "card-category",
+                                   ),
+                               _class = "media-heading",
+                               ),
+                           render("deploy_assignment.start_date"),
+                           render("deploy_assignment.end_date"),
+                           render("deploy_assignment.job_title_id"),
+                           render("deploy_assignment.job_title"),
+                           render("hrm_appraisal.rating"),
+                           _class = "media-body",
+                           )
 
             # Workflow actions
             appraisal = self.appraisals.get(record_id)
@@ -2961,21 +3087,25 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                has_permission("update", "hrm_appraisal", record_id=appraisal.id):
                 # Appraisal already uploaded => edit
                 EDIT_APPRAISAL = T("Open Appraisal")
-                url = URL(c="deploy", f="person",
-                          args=[person_id,
-                                "appraisal",
-                                appraisal.id,
-                                "update.popup"
-                               ],
-                          vars={"refresh": list_id,
-                                "record": record_id
-                               })
+                url = URL(c = "deploy",
+                          f = "person",
+                          args = [person_id,
+                                  "appraisal",
+                                  appraisal.id,
+                                  "update.popup"
+                                  ],
+                          vars = {"refresh": list_id,
+                                  "record": record_id
+                                  },
+                          )
                 edit = A(ICON("attachment"),
-                         SPAN(EDIT_APPRAISAL, _class="card-action"),
-                         _href=url,
-                         _class="s3_modal action-lnk",
-                         _title=EDIT_APPRAISAL,
-                       )
+                         SPAN(EDIT_APPRAISAL,
+                              _class = "card-action",
+                              ),
+                         _href = url,
+                         _class = "s3_modal action-lnk",
+                         _title = EDIT_APPRAISAL,
+                         )
                 workflow = [edit]
 
             elif has_permission("update", table, record_id=record_id):
@@ -2985,21 +3115,25 @@ class deploy_MissionProfileLayout(S3DataListLayout):
                 _class = "action-lnk"
                 UPLOAD_APPRAISAL = T("Upload Appraisal")
                 mission_id = raw["deploy_assignment.mission_id"]
-                url = URL(c="deploy", f="person",
-                          args=[person_id,
-                                "appraisal",
-                                "create.popup"
-                               ],
-                          vars={"mission_id": mission_id,
-                                "refresh": list_id,
-                                "record": record_id,
-                               })
+                url = URL(c = "deploy",
+                          f = "person",
+                          args = [person_id,
+                                  "appraisal",
+                                  "create.popup"
+                                  ],
+                          vars = {"mission_id": mission_id,
+                                  "refresh": list_id,
+                                  "record": record_id,
+                                  },
+                          )
                 upload = A(ICON("upload"),
-                           SPAN(UPLOAD_APPRAISAL, _class="card-action"),
-                           _href=url,
-                           _class="s3_modal action-lnk",
-                           _title=UPLOAD_APPRAISAL,
-                         )
+                           SPAN(UPLOAD_APPRAISAL,
+                                _class = "card-action",
+                                ),
+                           _href = url,
+                           _class = "s3_modal action-lnk",
+                           _title = UPLOAD_APPRAISAL,
+                           )
                 workflow = [upload]
 
         body = DIV(_class="media")
@@ -3042,12 +3176,14 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         else:
             return None
 
-        return A(IMG(_src=URL(c="static", f="themes",
-                              args=["IFRC", "img", icon]),
-                     _class="media-object",
-                 ),
-                 _class="pull-left",
-               )
+        return A(IMG(_src = URL(c = "static",
+                                f = "themes",
+                                args = ["IFRC", "img", icon],
+                                ),
+                     _class = "media-object",
+                     ),
+                 _class = "pull-left",
+                 )
 
     # -------------------------------------------------------------------------
     def render_toolbox(self, list_id, resource, record):
@@ -3063,26 +3199,29 @@ class deploy_MissionProfileLayout(S3DataListLayout):
         tablename = resource.tablename
         record_id = record[str(resource._id)]
 
+        # Determine URLs for Update/Open actions
         open_url = update_url = None
+
         if tablename == "deploy_alert":
             open_url = URL(f="alert", args=[record_id])
 
         elif tablename == "deploy_response":
-            update_url = URL(f="response_message",
-                             args=[record_id, "update.popup"],
-                             vars={"refresh": list_id,
-                                   "record": record_id,
-                                   "profile": self.profile,
-                                   },
+            update_url = URL(f = "response_message",
+                             args = [record_id, "update.popup"],
+                             vars = {"refresh": list_id,
+                                     "record": record_id,
+                                     "profile": self.profile,
+                                     },
                              )
 
         elif tablename == "deploy_assignment":
-            update_url = URL(c="deploy", f="assignment",
-                             args=[record_id, "update.popup"],
-                             vars={"refresh": list_id,
-                                   "record": record_id,
-                                   "profile": self.profile,
-                                   },
+            update_url = URL(c = "deploy",
+                             f = "assignment",
+                             args = [record_id, "update.popup"],
+                             vars = {"refresh": list_id,
+                                     "record": record_id,
+                                     "profile": self.profile,
+                                     },
                              )
 
         has_permission = current.auth.s3_has_permission
@@ -3090,23 +3229,28 @@ class deploy_MissionProfileLayout(S3DataListLayout):
 
         toolbox = DIV(_class="edit-bar fright")
 
+        # Update- or Open-button
         if update_url and \
            has_permission("update", table, record_id=record_id):
             btn = A(ICON("edit"),
-                    _href=update_url,
-                    _class="s3_modal",
-                    _title=crud_string(tablename, "title_update"))
+                    _href = update_url,
+                    _class = "s3_modal",
+                    _title = crud_string(tablename, "title_update"),
+                    )
             toolbox.append(btn)
         elif open_url:
             btn = A(ICON("file-alt"),
-                    _href=open_url,
-                    _title=crud_string(tablename, "title_display"))
+                    _href = open_url,
+                    _title = crud_string(tablename, "title_display"),
+                    )
             toolbox.append(btn)
 
+        # Delete-button
         if has_permission("delete", table, record_id=record_id):
             btn = A(ICON("delete"),
-                    _class="dl-item-delete",
-                    _title=crud_string(tablename, "label_delete_button"))
+                    _class = "dl-item-delete",
+                    _title = crud_string(tablename, "label_delete_button"),
+                    )
             toolbox.append(btn)
 
         return toolbox
@@ -3126,15 +3270,17 @@ class deploy_MissionProfileLayout(S3DataListLayout):
             return None
 
         value = record[colname]
-        value_id = "%s-%s" % (item_id, rfield.colname.replace(".", "_"))
+        value_id = "%s-%s" % (item_id, colname.replace(".", "_"))
 
         label = LABEL("%s:" % rfield.label,
                       _for = value_id,
-                      _class = "profile-data-label")
+                      _class = "profile-data-label",
+                      )
 
         value = SPAN(value,
                      _id = value_id,
-                     _class = "profile-data-value")
+                     _class = "profile-data-value",
+                     )
 
         return TAG[""](label, value)
 
