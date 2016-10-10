@@ -2028,8 +2028,8 @@ def config(settings):
     # -------------------------------------------------------------------------
     def case_event_create_onaccept(form):
         """
-            Custom onaccept-method for case events to set the quantity in
-            "FOOD" events to the current household size
+            Custom onaccept-method for case events
+                - cascade FOOD events to other members of the same case group
 
             @param form: the Form
         """
@@ -2043,36 +2043,118 @@ def config(settings):
         if not record_id:
             return
 
-        # Get the person ID and event type code
+        # Prevent recursion
+        try:
+            if formvars._cascade:
+                return
+        except AttributeError:
+            pass
+
         db = current.db
         s3db = current.s3db
+
+        # Get the person ID and event type code and interval
         ttable = s3db.dvr_case_event_type
         etable = s3db.dvr_case_event
-
         query = (etable.id == record_id) & \
                 (ttable.id == etable.type_id)
         row = db(query).select(etable.person_id,
+                               etable.type_id,
+                               etable.date,
                                ttable.code,
+                               ttable.min_interval,
                                limitby = (0, 1),
                                ).first()
         if not row:
             return
-        event_code = row[ttable.code]
-        person_id = row[etable.person_id]
 
-        # Check event type code and update quantity as required
+        # Extract the event attributes
+        event = row.dvr_case_event
+        person_id = event.person_id
+        event_type_id = event.type_id
+        event_date = event.date
+
+        # Extract the event type attributes
+        event_type = row.dvr_case_event_type
+        event_code = event_type.code
+        interval = event_type.min_interval
+
         if event_code == "FOOD":
 
-            # Get current household size
-            adults, children = s3db.dvr_get_household_size(person_id,
-                                                           formatted=False,
-                                                           )
-            household_size = adults + children
+            gtable = s3db.pr_group
+            mtable = s3db.pr_group_membership
+            ctable = s3db.dvr_case
+            stable = s3db.dvr_case_status
 
-            # Update quantity
-            if household_size > 1:
-                query = (etable.id == record_id)
-                db(query).update(quantity=float(household_size))
+            # Get all case groups this person belongs to
+            query = ((mtable.person_id == person_id) & \
+                    (mtable.deleted != True) & \
+                    (gtable.id == mtable.group_id) & \
+                    (gtable.group_type == 7))
+            rows = db(query).select(gtable.id)
+            group_ids = set(row.id for row in rows)
+
+            # Find all other members of these case groups, and
+            # the last FOOD event registration date/time for each
+            members = {}
+            if group_ids:
+                left = [ctable.on(ctable.person_id == mtable.person_id),
+                        stable.on(stable.id == ctable.status_id),
+                        etable.on((etable.person_id == mtable.person_id) & \
+                                  (etable.type_id == event_type_id) & \
+                                  (etable.deleted != True)),
+                        ]
+                query = (mtable.person_id != person_id) & \
+                        (mtable.group_id.belongs(group_ids)) & \
+                        (mtable.deleted != True) & \
+                        (ctable.archived != True) & \
+                        (ctable.deleted != True) & \
+                        (stable.is_closed != True)
+                latest = etable.date.max()
+                case_id = ctable._id.min()
+                rows = db(query).select(mtable.person_id,
+                                        case_id,
+                                        latest,
+                                        left = left,
+                                        groupby = mtable.person_id,
+                                        )
+                for row in rows:
+                    person = row[mtable.person_id]
+                    if person not in members:
+                        members[person] = (row[case_id], row[latest])
+
+            # For each case group member, replicate the event
+            now = current.request.utcnow
+            for member, details in members.items():
+
+                case_id, latest = details
+
+                # Check minimum waiting interval
+                passed = True
+                if interval and latest:
+                    earliest = latest + datetime.timedelta(hours=interval)
+                    if earliest > now:
+                        passed = False
+                if not passed:
+                    continue
+
+                # Replicate the event for this member
+                data = {"person_id": member,
+                        "case_id": case_id,
+                        "type_id": event_type_id,
+                        "date": event_date,
+                        }
+                event_id = etable.insert(**data)
+                if event_id:
+                    # Set record owner
+                    auth = current.auth
+                    auth.s3_set_record_owner(etable, event_id)
+                    auth.s3_make_session_owner(etable, event_id)
+                    # Execute onaccept
+                    # => set _cascade flag to prevent recursion
+                    data["id"] = event_id
+                    data["_cascade"] = True
+                    s3db.onaccept(etable, data, method="create")
 
     # -------------------------------------------------------------------------
     def customise_dvr_case_event_resource(r, tablename):
@@ -2092,7 +2174,8 @@ def config(settings):
         custom_onaccept = case_event_create_onaccept
         if callback:
             if isinstance(callback, (tuple, list)):
-                callback = list(callback) + [custom_onaccept]
+                if custom_onaccept not in callback:
+                    callback = list(callback) + [custom_onaccept]
             else:
                 callback = [callback, custom_onaccept]
         else:
