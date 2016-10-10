@@ -1,7 +1,7 @@
 .org-logo {
     vertical-align: top;
     display: inline-block;
-    padding: 0.5rem 0.5rem 0.5rem 0;
+    padding: 0.4rem 0.5rem 0.3rem 0;
 }
 .system-title {
     display: inline-block;
@@ -97,8 +97,8 @@
     text-align: right;
 }
 .event-type-setting {
-    color: black;
-    font-size: 1.1rem;
+    color: #afafaf;
+    font-size: 0.9rem;
     margin-left: 0.8rem;
     vertical-align: text-top;
 }
@@ -149,4 +149,12 @@ body.rtl {
     .event-type-header {
         text-align: left;
     }
+}
+
+// Event registration UI
+.event-registration-blocked {
+    background-color: #FFAAAA;
+    color: black;
+    padding: 0.2rem 0.5rem;
+    margin: 0.2rem 0.6rem;
 }

@@ -338,12 +338,14 @@
             }
             if (info) {
                 // Check the date
-                var message = '<div class="small-12 columns">' + info[0] + '</div>',
+                var message = $('<h6>').addClass('event-registration-blocked')
+                                       .html(info[0]),
                     date = new Date(info[1]),
                     now = new Date();
                 if (date > now) {
                     // Event registration is blocked, show message and return
-                    this.blockingMessage = $(message).css({color:'red'})
+                    this.blockingMessage = $('<div>').addClass('small-12-columns')
+                                                     .append(message)
                                                      .prependTo($('#submit_record__row'));
                     return false;
                 }

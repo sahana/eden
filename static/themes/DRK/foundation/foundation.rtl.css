@@ -988,7 +988,7 @@ button.disabled, button[disabled], .button.disabled, .button[disabled] {
   border-color: #00555a;
   color: #FFFFFF;
   cursor: default;
-  opacity: 0.7;
+  opacity: 0.5;
   box-shadow: none;
 }
 /* line 161, ../../foundation/scss/components/_buttons.scss */
@@ -1009,7 +1009,7 @@ button.disabled.secondary, button[disabled].secondary, .button.disabled.secondar
   border-color: #b9b9b9;
   color: #333333;
   cursor: default;
-  opacity: 0.7;
+  opacity: 0.5;
   box-shadow: none;
 }
 /* line 161, ../../foundation/scss/components/_buttons.scss */
@@ -1030,7 +1030,7 @@ button.disabled.success, button[disabled].success, .button.disabled.success, .bu
   border-color: #368a55;
   color: #FFFFFF;
   cursor: default;
-  opacity: 0.7;
+  opacity: 0.5;
   box-shadow: none;
 }
 /* line 161, ../../foundation/scss/components/_buttons.scss */
@@ -1051,7 +1051,7 @@ button.disabled.alert, button[disabled].alert, .button.disabled.alert, .button[d
   border-color: #ae231a;
   color: #FFFFFF;
   cursor: default;
-  opacity: 0.7;
+  opacity: 0.5;
   box-shadow: none;
 }
 /* line 161, ../../foundation/scss/components/_buttons.scss */
@@ -1072,7 +1072,7 @@ button.disabled.warning, button[disabled].warning, .button.disabled.warning, .bu
   border-color: #cf6e0e;
   color: #FFFFFF;
   cursor: default;
-  opacity: 0.7;
+  opacity: 0.5;
   box-shadow: none;
 }
 /* line 161, ../../foundation/scss/components/_buttons.scss */
@@ -1093,7 +1093,7 @@ button.disabled.info, button[disabled].info, .button.disabled.info, .button[disa
   border-color: #61b6d9;
   color: #333333;
   cursor: default;
-  opacity: 0.7;
+  opacity: 0.5;
   box-shadow: none;
 }
 /* line 161, ../../foundation/scss/components/_buttons.scss */

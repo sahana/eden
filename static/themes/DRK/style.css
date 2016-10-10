@@ -1094,7 +1094,7 @@ h4.profile-sub-header {
 .org-logo {
   vertical-align: top;
   display: inline-block;
-  padding: 0.5rem 0.5rem 0.5rem 0;
+  padding: 0.4rem 0.5rem 0.3rem 0;
 }
 
 /* line 6, ../scss/custom/_misc.scss */
@@ -1232,8 +1232,8 @@ h4.profile-sub-header {
 
 /* line 99, ../scss/custom/_misc.scss */
 .event-type-setting {
-  color: black;
-  font-size: 1.1rem;
+  color: #afafaf;
+  font-size: 0.9rem;
   margin-left: 0.8rem;
   vertical-align: text-top;
 }
@@ -1296,4 +1296,12 @@ body.rtl .username i.icon, body.rtl .username i.fa {
 /* line 149, ../scss/custom/_misc.scss */
 body.rtl .event-type-header {
   text-align: left;
+}
+
+/* line 155, ../scss/custom/_misc.scss */
+.event-registration-blocked {
+  background-color: #FFAAAA;
+  color: black;
+  padding: 0.2rem 0.5rem;
+  margin: 0.2rem 0.6rem;
 }

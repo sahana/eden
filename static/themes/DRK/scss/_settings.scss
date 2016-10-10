@@ -97,6 +97,7 @@ $font-weight-bold: bold !default;
 
 // We use these as default colors throughout
 $primary-color: #006A71;
+// $primary-color: #004b79;
 $secondary-color: #e7e7e7;
 $alert-color: #D92C20;
 // $success-color: #43AC6A;
@@ -467,7 +468,7 @@ $header-font-color: $primary-color;
 // $button-round: $global-rounded;
 
 // We use this to set default opacity and cursor for disabled buttons.
-// $button-disabled-opacity: 0.7;
+$button-disabled-opacity: 0.5;
 // $button-disabled-cursor: $cursor-default-value;
 
 // 06. Button Groups
