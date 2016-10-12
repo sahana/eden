@@ -2008,6 +2008,9 @@ class S3ProjectBeneficiaryModel(S3Model):
         define_table = self.define_table
         super_link = self.super_link
 
+        stats_parameter_represent = S3Represent(lookup="stats_parameter",
+                                                translate=True)
+
         # ---------------------------------------------------------------------
         # Project Beneficiary Type
         #
@@ -2024,6 +2027,16 @@ class S3ProjectBeneficiaryModel(S3Model):
                      s3_comments("description",
                                  label = T("Description"),
                                  ),
+                     # Link to the Beneficiary Type which is the Total, so that we can calculate percentages
+                     Field("total_id", self.stats_parameter,
+                           label = T("Total"),
+                           represent = stats_parameter_represent,
+                           requires = IS_EMPTY_OR(
+                                        IS_ONE_OF(db, "stats_parameter.parameter_id",
+                                                  stats_parameter_represent,
+                                                  instance_types = ("project_beneficiary_type",),
+                                                  sort=True)),
+                           ),
                      *s3_meta_fields())
 
         # CRUD Strings
@@ -2067,9 +2080,7 @@ class S3ProjectBeneficiaryModel(S3Model):
                                 empty = False,
                                 instance_types = ("project_beneficiary_type",),
                                 label = T("Beneficiary Type"),
-                                represent = S3Represent(lookup="stats_parameter",
-                                                        translate=True,
-                                                        ),
+                                represent = stats_parameter_represent,
                                 readable = True,
                                 writable = True,
                                 comment = S3PopupLink(c = "project",
