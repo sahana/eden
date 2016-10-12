@@ -62,6 +62,10 @@ class S3MainMenu(default.S3MainMenu):
         s3db.inv_recv_crud_strings()
         inv_recv_list = current.response.s3.crud_strings.inv_recv.title_list
 
+        def gis(item):
+            root_org = auth.root_org_name()
+            return root_org == "Honduran Red Cross"
+
         def hrm(item):
             return has_role(ORG_ADMIN) or \
                    has_role("national_hr_manager") or \
@@ -92,8 +96,7 @@ class S3MainMenu(default.S3MainMenu):
             else:
                 return True
 
-        menu= [#homepage("gis")(
-               #),
+        menu= [homepage("gis", check=gis)(),
                homepage("hrm", "org", name="Human Talent", check=hrm)(
                    MM("Human Talent", c="hrm", f="human_resource", m="summary"),
                    #MM("Teams", c="hrm", f="group"),
