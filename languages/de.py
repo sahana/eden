@@ -4434,6 +4434,7 @@
 'They': 'Sie',
 'This appointment is mandatory before transfer': 'Dieser Termin ist zwingend erforderlich vor Transfer',
 'This appointment requires the presence of the person concerned': 'Dieser Termin erfordert die Anwesenheit der betroffenen Person',
+'This event type requires the presence of the person concerned': 'Dieser Ereignistyp erfordert die Anwesenheit der betroffenen Person',
 'This flag indicates that the person is currently accommodated/being held externally (e.g. in Hospital or with Police)': 'Dieses Flag zeigt an dass die Person momentan extern untergebracht ist oder festgehalten wird (z.B. im Krankenhaus, oder bei der Polizei)',
 'This Group has no Members yet': 'Diese Gruppe hat noch keine Mitglieder',
 'This Team has no Members yet': 'Dieses Team hat noch keine Mitglieder',
