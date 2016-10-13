@@ -28,7 +28,7 @@ def config(settings):
     # Self-Registration and User Profile
     #
     # Users can self-register
-    #settings.security.self_registration = False
+    settings.security.self_registration = False
     # Users need to verify their email
     settings.auth.registration_requires_verification = True
     # Users need to be approved
