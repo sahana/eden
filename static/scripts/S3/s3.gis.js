@@ -4693,7 +4693,7 @@ OpenLayers.ProxyHost = S3.Ap.concat('/gis/proxy?url=');
                         var url = map.s3.urlForPopup(feature, resource);
                         urlArray[counter] = url;
                         urlArray[counter].feature = feature;
-                        HTML_inside_popup +=  '<input onClick="S3.gis.changePopupContent('+ counter +');" type="radio" name="selectResource" value='+url+' /> '+resource["label"]+'<br/>';
+                        HTML_inside_popup += '<input onClick="S3.gis.changePopupContent('+ counter +');" type="radio" name="selectResource" value='+url+' /> '+resource["label"]+'<br/>';
                         counter++;
                     }
                  }

@@ -39,8 +39,6 @@
         <resource name="project_beneficiary_type">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
             <data field="description"><xsl:value-of select="col[@field='Description']"/></data>
-        </resource>
-    </xsl:template>
             <xsl:if test="$total!=''">
                 <reference field="total_id" resource="project_beneficiary_type">
                     <xsl:attribute name="tuid">
