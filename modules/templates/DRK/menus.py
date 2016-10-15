@@ -79,11 +79,11 @@ class S3MainMenu(default.S3MainMenu):
                    ),
                 homepage("vol"),
                 homepage("hrm"),
-                MM("More")(
+                MM("More", link=False)(
                     MM("Facilities", c="org", f="facility"),
                     #homepage("req"),
                     homepage("inv"),
-                    SEP(),
+                    SEP(link=False),
                     MM("Surplus Meals", c="default", f="index",
                        args = "surplus_meals",
                        t = "dvr_case_event",
