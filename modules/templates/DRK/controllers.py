@@ -261,7 +261,10 @@ class transferability(S3CustomController):
             T = current.T
 
             form = FORM(H3(T("Check transferability for all current cases")),
-                        INPUT(_type="submit", _value=T("Update now"), _class="tiny primary button"),
+                        INPUT(_class="tiny primary button",
+                              _type="submit",
+                              _value=T("Update now"),
+                              ),
                         P("(%s)" % T("This process can take a couple of minutes")),
                         )
 
@@ -281,12 +284,12 @@ class transferability(S3CustomController):
 
                 # Forward to list of transferable cases
                 redirect(URL(c = "dvr",
-                            f = "person",
-                            vars = {"closed": "0",
-                                    "dvr_case.transferable__belongs": "True",
-                                    "show_family_transferable": "1",
-                                    },
-                            ))
+                             f = "person",
+                             vars = {"closed": "0",
+                                     "dvr_case.transferable__belongs": "True",
+                                     "show_family_transferable": "1",
+                                     },
+                             ))
 
             self._view(THEME, "transferability.html")
             return {"form": form}
@@ -295,13 +298,181 @@ class transferability(S3CustomController):
             auth.permission.fail()
 
 # =============================================================================
+class surplus_meals(S3CustomController):
+    """
+        Custom controller to register surplus meals
+    """
+
+    def __call__(self):
+
+        from gluon import IS_INT_IN_RANGE
+        from s3 import FS, \
+                       s3_request, \
+                       S3CRUD, \
+                       S3TextFilter, \
+                       S3DateFilter, \
+                       S3SQLCustomForm
+
+        s3 = current.response.s3
+        controller = self.__class__.__name__
+
+        def prep(r):
+
+            FOOD = "FOOD"
+
+            T = current.T
+            db = current.db
+            s3db = current.s3db
+
+            resource = r.resource
+
+            # Set default FOOD event type
+            ttable = s3db.dvr_case_event_type
+            query = (ttable.code == FOOD) & \
+                    (ttable.deleted != True)
+            event_type = db(query).select(ttable.id,
+                                          limitby = (0, 1),
+                                          ).first()
+            if not event_type:
+                r.error("No event type with code %s defined" % FOOD)
+            event_type_id = event_type.id
+
+            # Filter to FOOD events without person_id
+            query = (FS("type_id") == event_type_id) & \
+                    (FS("person_id") == None)
+            resource.add_filter(query)
+
+            # Configure fields
+            table = resource.table
+
+            field = table.person_id
+            field.default = None
+            field.readable = field.writable = False
+
+            field = table.type_id
+            field.default = event_type_id
+            field.readable = field.writable = False
+
+            field = table.date
+            field.readable = field.writable = True
+
+            field = table.quantity
+            field.default = 0
+            # Override IS_EMPTY_OR
+            field.requires = IS_INT_IN_RANGE(0, None)
+            field.readable = field.writable = True
+
+            field = table.modified_by
+            field.readable = True
+            registered_by = (T("Registered by"), "modified_by")
+
+            if r.interactive:
+                # Custom CRUD form
+                crud_form = S3SQLCustomForm("date",
+                                            "quantity",
+                                            registered_by,
+                                            "comments",
+                                            )
+                # Custom filter widgets
+                filter_widgets = [S3TextFilter(["created_by$email",
+                                                "comments",
+                                                ],
+                                                label = T("Search"),
+                                               ),
+                                  S3DateFilter("date"),
+                                  ]
+
+                resource.configure(crud_form = crud_form,
+                                   filter_widgets = filter_widgets,
+                                   )
+
+                # Turn off filter manager
+                current.deployment_settings.search.filter_manager = False
+
+            # Custom list fields
+            list_fields = ["date",
+                           "quantity",
+                           registered_by,
+                           "comments",
+                           ]
+
+            # URL of the list view
+            list_url = URL(args=[controller], vars={})
+            s3.datatable_ajax_source = list_url
+
+            resource.configure(insertable = True,
+                               list_fields = list_fields,
+                               # Fix redirects:
+                               create_next = list_url,
+                               update_next = list_url,
+                               delete_next = list_url,
+                               )
+
+            # Custom CRUD strings
+            T = current.T
+            s3.crud_strings["dvr_case_event"] = Storage(
+                label_create = T("Register Surplus Meals Quantity"),
+                title_display = T("Surplus Meals Quantity"),
+                title_list = T("Surplus Meals"),
+                title_update = T("Edit Surplus Meals Quantity"),
+                label_list_button = T("List Surplus Meals"),
+                label_delete_button = T("Delete Entry"),
+                msg_record_created = T("Entry added"),
+                msg_record_modified = T("Entry updated"),
+                msg_record_deleted = T("Entry deleted"),
+                msg_list_empty = T("No Surplus Meals currently registered"),
+            )
+
+            return True
+        s3.prep = prep
+
+        def postp(r, output):
+
+            if isinstance(output, dict):
+
+                # Inject controller name in dt action buttons
+                if r.component:
+                    action_args = [controller, r.id, r.component.alias, '[id]']
+                else:
+                    action_args = [controller, '[id]']
+                action_url = lambda action: URL(args=action_args + [action], vars={})
+                S3CRUD.action_buttons(r,
+                                      read_url = action_url('read'),
+                                      update_url = action_url('update'),
+                                      delete_url = action_url('delete'),
+                                      )
+
+                # Inject controller name in CRUD buttons
+                buttons = output.get("buttons")
+                if buttons:
+                    path = "%s/%s" % (r.controller, r.function)
+                    full = "%s/%s" % (path, controller)
+                    for element in buttons.values():
+                        if not hasattr(element, "attributes"):
+                            continue
+                        url = element.attributes.get("_href")
+                        if url:
+                            element["_href"] = url.replace(path, full)
+
+            return output
+        s3.postp = postp
+
+        # Custom REST request
+        request_args = current.request.args[1:]
+        r = s3_request("dvr", "case_event",
+                       args = request_args,
+                       extension = current.auth.permission.format,
+                       )
+
+        return r()
+
+# =============================================================================
 def update_transferability(site_id=None):
     """
         Update transferability status of all cases, to be called either
         from scheduler task or manually through custom controller.
 
-        @todo: call from org_site_check task
-        @todo: check household transferability
+        @param site_id: the site to check for transferability of cases
     """
 
     db = current.db

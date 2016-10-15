@@ -2621,11 +2621,13 @@ class DVRCaseEventModel(S3Model):
                                  future = 0,
                                  writable = False,
                                  ),
-                     # Generic quantity field for statistical purposes
-                     Field("quantity", "double",
+                     # Field for quantitative recording of case events
+                     # for statistical purposes (without linking them to
+                     # individual cases)
+                     Field("quantity", "integer",
                            label = T("Quantity"),
-                           default = 1.0,
-                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           default = 1,
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            # activate in template as required
                            readable = False,
                            writable = False,
