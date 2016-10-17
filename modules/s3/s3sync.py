@@ -752,7 +752,7 @@ class S3SyncLog(S3Method):
 
 # =============================================================================
 class S3SyncRepository(object):
-    """ Class representation a peer repository """
+    """ Class representation of a peer repository """
 
     def __init__(self, repository):
         """
