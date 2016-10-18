@@ -318,11 +318,11 @@ class SyncDataModel(S3Model):
                   )
 
         set_method("sync", "repository",
-                   method="now",
-                   action=sync_now)
+                   method = "now",
+                   action = sync_now)
 
         # Reusable Fields
-        sync_repository_represent = S3Represent(lookup=tablename)
+        sync_repository_represent = S3Represent(lookup = tablename)
         repository_id = S3ReusableField("repository_id", "reference %s" % tablename,
                                         comment = S3PopupLink(c = "sync",
                                                               f = "repository",

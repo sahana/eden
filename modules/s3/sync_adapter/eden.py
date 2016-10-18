@@ -76,8 +76,9 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
         # Construct the URL
         config = repository.config
-        url = "%s/sync/repository/register.xml?repository=%s" % \
-              (repository.url, config.uuid)
+        name = current.deployment_settings.get_base_public_url().split("//", 1)[1]
+        url = "%s/sync/repository/register.xml?repository=%s&name=%s" % \
+              (repository.url, config.uuid, name)
 
         current.log.debug("S3Sync: send registration to URL %s" % url)
 

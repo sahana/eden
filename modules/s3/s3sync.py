@@ -117,23 +117,20 @@ class S3Sync(S3Method):
         message = "registration successful"
         repository_id = None
 
-        if "repository" in r.vars:
-            ruid = r.vars["repository"]
+        get_vars = r.vars
+        ruid = get_vars.get("repository")
+        if ruid:
             db = current.db
             rtable = current.s3db.sync_repository
             row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
             if row:
                 repository_id = row.id
-                if not row.accept_push and current.auth.s3_has_role("ADMIN"):
-                    row.update_record(accept_push=True)
+                row.update_record(deleted=False)
             else:
-                if current.auth.s3_has_role("ADMIN"):
-                    accept_push = True
-                else:
-                    accept_push = False
-                repository_id = rtable.insert(name=ruid,
+                name = get_vars.get("name", ruid)
+                repository_id = rtable.insert(name=name,
                                               uuid=ruid,
-                                              accept_push=accept_push)
+                                              accept_push=True)
                 if not repository_id:
                     result = log.ERROR
                     message = "registration failed"
