@@ -120,17 +120,39 @@ class S3Sync(S3Method):
         get_vars = r.vars
         ruid = get_vars.get("repository")
         if ruid:
+            has_role = current.auth.s3_has_role
             db = current.db
             rtable = current.s3db.sync_repository
-            row = db(rtable.uuid == ruid).select(limitby=(0, 1)).first()
+            row = db(rtable.uuid == ruid).select(rtable.id,
+                                                 rtable.accept_push,
+                                                 limitby=(0, 1)).first()
             if row:
                 repository_id = row.id
-                row.update_record(deleted=False)
+                update = Storage(deleted=False)
+                if not row.accept_push:
+                    if has_role("ADMIN"):
+                        update.update(accept_push=True)
+                    else:
+                        roles = current.deployment_settings.get_sync_roles_which_can_register_repos_with_accept_push()
+                        for role in roles:
+                            if has_role(role):
+                                update.update(accept_push=True)
+                                break
+                row.update_record(**update)
             else:
                 name = get_vars.get("name", ruid)
+                accept_push = False
+                if has_role("ADMIN"):
+                    accept_push = True
+                else:
+                    roles = current.deployment_settings.get_sync_roles_which_can_register_repos_with_accept_push()
+                    for role in roles:
+                        if has_role(role):
+                            accept_push = True
+                            break
                 repository_id = rtable.insert(name=name,
                                               uuid=ruid,
-                                              accept_push=True)
+                                              accept_push=accept_push)
                 if not repository_id:
                     result = log.ERROR
                     message = "registration failed"

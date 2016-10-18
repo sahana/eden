@@ -123,7 +123,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         except urllib2.HTTPError, e:
             result = log.FATAL
             remote = True # Peer error
-            code = e.code
+            #code = e.code
             message = e.read()
             success = False
             try:
@@ -133,7 +133,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
                 pass
         except:
             result = log.FATAL
-            code = 400
+            #code = 400
             message = sys.exc_info()[1]
             success = False
         else:
@@ -209,7 +209,6 @@ class S3SyncAdapter(S3SyncBaseAdapter):
 
         # Send sync filters to peer
         filters = current.sync.get_filters(task.id)
-        filter_string = None
         resource_name = task.resource_name
         for tablename in filters:
             prefix = "~" if not tablename or tablename == resource_name \
@@ -223,7 +222,7 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         if len(url_split) == 2:
             protocol, path = url_split
         else:
-            protocol, path = "http", None
+            protocol = "http"
 
         # Create the request
         req = urllib2.Request(url=url)
@@ -462,10 +461,9 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             if len(url_split) == 2:
                 protocol, path = url_split
             else:
-                protocol, path = "http", None
+                protocol = "http"
 
             # Generate the request
-            import urllib2
             req = urllib2.Request(url=url, data=data)
             req.add_header('Content-Type', "text/xml")
             handlers = []
