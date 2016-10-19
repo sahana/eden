@@ -1198,8 +1198,6 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                      Field("uri",
                            label = T("Link to any resources"),
                            requires = IS_EMPTY_OR(IS_URL()),
-                           readable = False,
-                           writable = False,
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The identifier of the hyperlink for the resource file"),
                                                            T("A full absolute URI, typically a Uniform Resource Locator that can be used to retrieve the resource over the Internet."))),
@@ -1239,6 +1237,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                                     "info_id",
                                     "is_template",
                                     "resource_desc",
+                                    "uri",
                                     "image",
                                     "mime_type",
                                     "size",
@@ -1260,6 +1259,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                                     )
 
         list_fields = ["resource_desc",
+                       "uri",
                        "image",
                        "document.file",
                        ]
@@ -1755,9 +1755,15 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
                 form.errors["scope"] = \
                     current.T("'Scope' field is mandatory for actual alerts!")
 
-            if form_vars_get("scope") == "Private" and not form_vars_get("addresses"):
-                form.errors["addresses"] = \
-                    current.T("'Recipients' field mandatory in case of 'Private' scope")
+            if form_vars_get("scope") == "Private":
+                # Check if this comes from cap_alert
+                # Can also come from rss import
+                request = current.request
+                if request.controller == "cap" and request.function == "alert":
+                    # Internal alerts
+                    if not form_vars_get("addresses"):
+                        form.errors["addresses"] = \
+                            current.T("'Recipients' field mandatory in case of 'Private' scope")
 
             if form_vars_get("scope") == "Restricted" and not form_vars_get("restriction"):
                 form.errors["restriction"] = \
@@ -3009,6 +3015,7 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
 
         crud_form = S3SQLCustomForm("alert_history_id",
                                     "resource_desc",
+                                    "uri",
                                     "image",
                                     "mime_type",
                                     "size",
@@ -3212,10 +3219,10 @@ def cap_rheader(r):
                                                 select(area_table.id,
                                                        limitby=(0, 1)).first()
                             if area_row and has_permission("update", "cap_alert",
-                                                           record_id=record.id):
+                                                           record_id=alert_id):
                                 action_btn = A(T("Submit for Approval"),
                                                _href = URL(f = "notify_approver",
-                                                           vars = {"cap_alert.id": record.id,
+                                                           vars = {"cap_alert.id": alert_id,
                                                                    },
                                                            ),
                                                _class = "action-btn confirm-btn button tiny"
@@ -3226,7 +3233,7 @@ def cap_rheader(r):
                                 # For Alert Approver
                                 if has_permission("approve", "cap_alert"):
                                     action_btn = A(T("Review Alert"),
-                                                   _href = URL(args = [record.id,
+                                                   _href = URL(args = [alert_id,
                                                                        "review"
                                                                        ],
                                                                ),
@@ -4279,7 +4286,7 @@ class cap_CloneAlert(S3Method):
             r.error(405, current.ERROR.BAD_METHOD)
         return output
 
-# -------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 def clone(r, record=None, **attr):
     """
         Clone the cap_alert

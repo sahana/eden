@@ -327,6 +327,11 @@ def alert():
                         S3OptionsFilter("info.event_type_id",
                                         options = event_type_options,
                                         ),
+                        S3OptionsFilter("scope",
+                                        ),
+                        S3OptionsFilter("msg_type",
+                                        default = "Alert",
+                                        ),
                         ]
                     s3.crud_strings["cap_alert"].title_list = T("Alerts Hub")
                     s3base.S3CRUD.action_buttons(r, deletable=False)
@@ -441,6 +446,7 @@ def alert():
                               "info_parameter.value",
                               "area.name",
                               "resource.resource_desc",
+                              "resource.uri",
                               "resource.image",
                               "resource.doc_id",
                               ]
@@ -670,6 +676,9 @@ def alert():
                         return (
                             component("Resource Description",
                                       resource_desc,
+                                      ),
+                            component("Resource Link",
+                                      info["cap_resource.uri"],
                                       ),
                             component("Attached Image",
                                       info["cap_resource.image"],
@@ -1414,7 +1423,7 @@ def set_priority_js():
     p_settings = [(s3_str(T(r.name)), r.urgency, r.severity, r.certainty, r.color_code)\
                  for r in rows]
 
-    priority_conf = '''S3.cap_priorities=%s''' % jsons(p_settings)
+    priority_conf = s3_str('''S3.cap_priorities=%s''' % jsons(p_settings))
     js_global = s3.js_global
     if not priority_conf in js_global:
         js_global.append(priority_conf)
