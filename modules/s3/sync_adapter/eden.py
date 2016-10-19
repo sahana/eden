@@ -210,11 +210,13 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         # Send sync filters to peer
         filters = current.sync.get_filters(task.id)
         resource_name = task.resource_name
+
+        from urllib import quote
         for tablename in filters:
             prefix = "~" if not tablename or tablename == resource_name \
                             else tablename
             for k, v in filters[tablename].items():
-                urlfilter = "[%s]%s=%s" % (prefix, k, v)
+                urlfilter = "[%s]%s=%s" % (prefix, k, quote(v))
                 url += "&%s" % urlfilter
 
         # Figure out the protocol from the URL
