@@ -1556,13 +1556,14 @@ class S3XML(S3Codec):
             is_text = field_type in ("string", "text")
 
             if value is None:
-                decode_value = not is_text
                 if field_type == "password":
                     value = child.text
                     # Do not re-encrypt the password if it already
                     # comes encrypted:
                     skip_validation = True
+                    decode_value = False
                 else:
+                    decode_value = not is_text
                     value = xml_decode(child.text)
             else:
                 decode_value = True
