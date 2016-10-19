@@ -2229,23 +2229,44 @@ def config(settings):
         """
 
         if hasattr(row, "dvr_case_event"):
-            row = row.dvr_case_event
+            event = row.dvr_case_event
+        else:
+            event = row
+        if hasattr(row, "dvr_case_event_type"):
+            event_type = row.dvr_case_event_type
+        else:
+            event_type = None
+
         try:
-            date = row.date
+            date = event.date
         except AttributeError:
             date = None
-        if date:
-            from dateutil import tz
-            date = date.replace(tzinfo=tz.gettz("UTC"))
-            date = date.astimezone(tz.gettz("Europe/Berlin"))
-            hour = date.time().hour
 
-            if 7 <= hour < 11:
-                tod = "07:00 - 11:00"
-            elif 11 <= hour < 15:
-                tod = "11:00 - 15:00"
+        person_id = 0
+        event_code = None
+        if event_type:
+            try:
+                person_id = event.person_id
+                event_code = event_type.code
+            except AttributeError:
+                pass
+
+        if date:
+            if event_code == "FOOD" and person_id is None:
+                from s3 import s3_str
+                tod = s3_str(current.T("Surplus Meals"))
             else:
-                tod = "15:00 - 07:00"
+                from dateutil import tz
+                date = date.replace(tzinfo=tz.gettz("UTC"))
+                date = date.astimezone(tz.gettz("Europe/Berlin"))
+                hour = date.time().hour
+
+                if 7 <= hour < 11:
+                    tod = "07:00 - 11:00"
+                elif 11 <= hour < 15:
+                    tod = "11:00 - 15:00"
+                else:
+                    tod = "15:00 - 07:00"
         else:
             tod = "-"
         return tod
@@ -2337,7 +2358,10 @@ def config(settings):
                                  },
                     }
                 resource.configure(report_options = report_options,
-                                   extra_fields = ["date"],
+                                   extra_fields = ["date",
+                                                   "person_id",
+                                                   "type_id$code",
+                                                   ],
                                    )
             return result
         s3.prep = custom_prep

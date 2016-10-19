@@ -2541,6 +2541,16 @@ class DVRCaseEventModel(S3Model):
                                          ),
                            requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
                            ),
+                     Field("presence_required", "boolean",
+                           default = True,
+                           label = T("Presence required"),
+                           represent = s3_yes_no_represent,
+                           comment = DIV(_class = "tooltip",
+                                         _title = "%s|%s" % (T("Presence required"),
+                                                             T("This event type requires the presence of the person concerned"),
+                                                             ),
+                                         ),
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -2611,11 +2621,13 @@ class DVRCaseEventModel(S3Model):
                                  future = 0,
                                  writable = False,
                                  ),
-                     # Generic quantity field for statistical purposes
-                     Field("quantity", "double",
+                     # Field for quantitative recording of case events
+                     # for statistical purposes (without linking them to
+                     # individual cases)
+                     Field("quantity", "integer",
                            label = T("Quantity"),
-                           default = 1.0,
-                           requires = IS_EMPTY_OR(IS_FLOAT_IN_RANGE(0.0, None)),
+                           default = 1,
+                           requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            # activate in template as required
                            readable = False,
                            writable = False,
@@ -5520,11 +5532,15 @@ def dvr_update_last_seen(person_id):
 
     # Get the last case event
     etable = s3db.dvr_case_event
+    ettable = s3db.dvr_case_event_type
+    join = ettable.on(ettable.id == etable.type_id)
     query = (etable.person_id == person_id) & \
+            (ettable.presence_required == True) & \
             (etable.date != None) & \
             (etable.date <= now) & \
             (etable.deleted != True)
     event = db(query).select(etable.date,
+                             join = join,
                              orderby = ~etable.date,
                              limitby = (0, 1),
                              ).first()

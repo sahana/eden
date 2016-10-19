@@ -42,7 +42,7 @@ class S3MainMenuLayout(S3NavigationItem):
                         classes.append("active")
                     _class = " ".join(classes)
                     # Menu item with Dropdown
-                    if item.get_first(enabled=True):
+                    if item.get_first(enabled=True, link=True):
                         _href = item.url()
                         return LI(A(item.label,
                                     _href=_href,

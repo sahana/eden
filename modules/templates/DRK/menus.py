@@ -68,8 +68,6 @@ class S3MainMenu(default.S3MainMenu):
                    check = lambda this: not this.preceding()[-1].check_permission(),
                    ),
                 MM("ToDo", c="project", f="task"),
-                #homepage("req"),
-                homepage("inv"),
                 MM("Dashboard", c="cr", f="shelter",
                    args = [shelter_id, "profile"],
                    check = shelter_id is not None,
@@ -81,7 +79,17 @@ class S3MainMenu(default.S3MainMenu):
                    ),
                 homepage("vol"),
                 homepage("hrm"),
-                MM("Facilities", c="org", f="facility"),
+                MM("More", link=False)(
+                    MM("Facilities", c="org", f="facility"),
+                    #homepage("req"),
+                    homepage("inv"),
+                    SEP(link=False),
+                    MM("Surplus Meals", c="default", f="index",
+                       args = "surplus_meals",
+                       t = "dvr_case_event",
+                       p = "create",
+                       ),
+                    ),
             ]
 
     # -------------------------------------------------------------------------
