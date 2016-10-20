@@ -3556,7 +3556,8 @@ class S3Config(Storage):
     #
     def get_mobile_forms(self):
         """
-            Configure mobile forms, a list of items
+            Configure mobile forms - a list of items, or a callable returning
+            a list of items.
 
             Item formats:
                 "tablename"
@@ -3571,12 +3572,9 @@ class S3Config(Storage):
                  }
 
             Example:
-                settings.xforms.resources = [("Request", "req_req")]
-
-            @todo: add "restrict" option to restrict forms to certain user
-                   roles (analogous to restrict-option in menu items)
+                settings.mobile.forms = [("Request", "req_req")]
         """
-        return self.mobile.get("forms")
+        return self.__lazy("mobile", "forms", [])
 
     # -------------------------------------------------------------------------
     # Organisations

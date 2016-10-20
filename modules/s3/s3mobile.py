@@ -58,71 +58,72 @@ class S3MobileFormList(object):
         s3db = current.s3db
         settings = current.deployment_settings
 
-        forms = settings.get_mobile_forms()
-
         formlist = []
-        keys = set()
-        for item in forms:
 
-            options = {}
-            if isinstance(item, (tuple, list)):
+        forms = settings.get_mobile_forms()
+        if forms:
+            keys = set()
+            for item in forms:
 
-                if len(item) == 2:
-                    title, tablename = item
-                    if isinstance(tablename, dict):
-                        tablename, options = title, tablename
-                        title = None
-                elif len(item) == 3:
-                    title, tablename, options = item
+                options = {}
+                if isinstance(item, (tuple, list)):
+
+                    if len(item) == 2:
+                        title, tablename = item
+                        if isinstance(tablename, dict):
+                            tablename, options = title, tablename
+                            title = None
+                    elif len(item) == 3:
+                        title, tablename, options = item
+                    else:
+                        continue
                 else:
+                    title, tablename = None, item
+
+                # Make sure table exists
+                table = s3db.table(tablename)
+                if not table:
+                    current.log.warning("Mobile forms: non-existent resource %s" % tablename)
                     continue
-            else:
-                title, tablename = None, item
 
-            # Make sure table exists
-            table = s3db.table(tablename)
-            if not table:
-                current.log.warning("Mobile forms: non-existent resource %s" % tablename)
-                continue
+                # Determine controller and function
+                c, f = tablename.split("_", 1)
+                c = options.get("c") or c
+                f = options.get("f") or f
 
-            # Determine controller and function
-            c, f = tablename.split("_", 1)
-            c = options.get("c") or c
-            f = options.get("f") or f
+                # Only expose if target module is enabled
+                if not settings.has_module(c):
+                    continue
 
-            # Only expose if target module is enabled
-            if not settings.has_module(c):
-                continue
+                # Stringify URL query vars
+                url_vars = options.get("vars")
+                if url_vars:
+                    items = []
+                    for k in url_vars:
+                        v = s3_str(url_vars[k])
+                        url_vars[k] = v
+                        items.append("%s=%s" % (k, v))
+                    query = "&".join(sorted(items))
+                else:
+                    query = ""
 
-            # Stringify URL query vars
-            url_vars = options.get("vars")
-            if url_vars:
-                items = []
-                for k in url_vars:
-                    v = s3_str(url_vars[k])
-                    url_vars[k] = v
-                    items.append("%s=%s" % (k, v))
-                query = "&".join(sorted(items))
-            else:
-                query = ""
+                # Deduplicate by target URL
+                key = (c, f, query)
+                if key in keys:
+                    continue
+                keys.add(key)
 
-            # Deduplicate by target URL
-            key = (c, f, query)
-            if key in keys:
-                continue
-            keys.add(key)
+                # Determine form title
+                if title is None:
+                    title = " ".join(w.capitalize() for w in f.split("_"))
+                if isinstance(title, basestring):
+                    title = T(title)
 
-            # Determine form title
-            if title is None:
-                title = " ".join(w.capitalize() for w in f.split("_"))
-            if isinstance(title, basestring):
-                title = T(title)
-
-            # Append to form list
-            url = {"c": c, "f": f}
-            if url_vars:
-                url["v"] = url_vars
-            formlist.append({"n": s3_str(title), "t": tablename, "r": url})
+                # Append to form list
+                url = {"c": c, "f": f}
+                if url_vars:
+                    url["v"] = url_vars
+                formlist.append({"n": s3_str(title), "t": tablename, "r": url})
 
         self.formlist = formlist
 
@@ -169,6 +170,7 @@ class S3MobileForm(object):
         form = self._form
         if form is None:
 
+            resource = self.resource
             form = resource.get_config("mobile_form")
 
             if form is None:
@@ -206,32 +208,11 @@ class S3MobileForm(object):
 
                 if rfield.tname == resource.tablename:
 
-                    # @todo: move this branch into separate function
-
-                    field = rfield.field
-                    if not field:
-                        # Virtual field
-                        continue
-
-                    fname = rfield.fname
-
-                    # Basic field definition
-                    definition = {"type": rfield.ftype,
-                                  "label": s3_str(field.label),
-                                  }
-
-                    # Field settings
-                    if field.notnull:
-                        definition["notnull"] = True
-                    # @todo: options
-                    # @todo: default value
-                    # @todo: readable, writable
-                    # @todo: placeholder?
-                    # @todo: required
-
-                    # Add to schema
-                    schema[fname] = definition
-                    form_fields.append(fname)
+                    description = self.describe(rfield)
+                    if description:
+                        fname = rfield.fname
+                        schema[fname] = description
+                        form_fields.append(fname)
                 else:
                     # Subtable field
                     # => skip until implemented @todo
@@ -245,6 +226,44 @@ class S3MobileForm(object):
             schema["_form"] = form_fields
 
         return schema
+
+    # -------------------------------------------------------------------------
+    def describe(self, rfield):
+        """
+            Generate a description of a resource field (for mobile schemas)
+
+            @param rfield: the S3ResourceField
+
+            @returns: a JSON-serializable dict describing the field
+        """
+
+        field = rfield.field
+        if not field:
+            # Virtual field
+            return None
+
+        # Basic field description
+        description = {"type": rfield.ftype,
+                       "label": s3_str(field.label),
+                       }
+
+        # Field settings
+        if field.notnull:
+            description["notnull"] = True
+        if not field.readable:
+            description["readable"] = False
+        if not field.writable:
+            description["writable"] = False
+
+        # @todo: options
+        # @todo: minimum
+        # @todo: maximum
+        # @todo: default value
+        # @todo: readable, writable
+        # @todo: placeholder?
+        # @todo: required
+
+        return description
 
 # =============================================================================
 class S3MobileCRUD(S3Method):
@@ -319,15 +338,19 @@ class S3MobileCRUD(S3Method):
             @returns: a JSON string
         """
 
-        form = S3MobileForm(r.resource)
-        name = "%s_%s" % (r.controller, r.function)
+        resource = r.resource
 
-        schema = {name: form.schema(),
-                  }
+        form = S3MobileForm(resource)
+
+        schema = form.schema()
+        schema["_controller"] = r.controller
+        schema["_function"] = r.function
+
+        name = resource.tablename
+        output = json.dumps({name: schema})
 
         current.response.headers = {"Content-Type": "application/json"}
-
-        return json.dumps(schema)
+        return output
 
 
 # END =========================================================================
