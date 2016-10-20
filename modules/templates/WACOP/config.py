@@ -112,9 +112,19 @@ def config(settings):
     settings.gis.poi_create_resources = None
 
     # -------------------------------------------------------------------------
-    # Event Management Settings
+    # Event/Incident Management
     #
     settings.event.incident_teams_tab = "Units"
+
+    def customise_event_incident_controller(**attr):
+
+        # Custom rheader tabs
+        attr = dict(attr)
+        attr["rheader"] = wacop_event_rheader
+
+        return attr
+
+    settings.customise_event_incident_controller = customise_event_incident_controller
 
     # -------------------------------------------------------------------------
     # Modules
@@ -211,5 +221,50 @@ def config(settings):
             module_type = None
         )),
     ])
+
+# =============================================================================
+def wacop_event_rheader(r, tabs=[]):
+    """ EVENT custom resource headers """
+
+    if r.representation != "html":
+        # Resource headers only used in interactive views
+        return None
+
+    from s3 import s3_rheader_resource, S3ResourceHeader
+
+    tablename, record = s3_rheader_resource(r)
+    if tablename != r.tablename:
+        resource = current.s3db.resource(tablename, id=record.id)
+    else:
+        resource = r.resource
+
+    rheader = None
+    rheader_fields = []
+
+    if record:
+        T = current.T
+
+        if tablename == "event_incident":
+
+            if not tabs:
+                tabs = [(T("Incident Details"), None),
+                        (T("Units"), "group"),
+                        (T("Tasks"), "task"),
+                        (T("SitReps"), "sitrep"),
+                        ]
+
+            rheader_fields = [["name",
+                               ],
+                              ["zero_hour",
+                               ],
+                              ["comments",
+                               ],
+                              ]
+
+        rheader = S3ResourceHeader(rheader_fields, tabs)(r,
+                                                         table=resource.table,
+                                                         record=record,
+                                                         )
+    return rheader
 
 # END =========================================================================
