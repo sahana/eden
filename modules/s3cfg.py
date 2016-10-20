@@ -2507,6 +2507,13 @@ class S3Config(Storage):
         """
         return self.cap.get("use_ack", False)
 
+    def get_cap_alert_hub_title(self):
+        """
+            Title for the Alert Hub Page
+        """
+
+        return self.cap.get("alert_hub_title", current.T("SAMBRO Alert Hub Common Operating Picture"))
+
     # -------------------------------------------------------------------------
     # CMS: Content Management System
     #

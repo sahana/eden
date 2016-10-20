@@ -1,0 +1,7 @@
+/* Menu Logo */
+.S3menulogo {
+  background: url(img/pagasa.png) left top no-repeat;
+}
+img.logo {
+    margin-top: 0.5rem;
+}

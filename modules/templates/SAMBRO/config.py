@@ -1143,7 +1143,7 @@ def config(settings):
                                     current.deployment_settings.get_system_name_short(),
                                     T("Alert Notification"))
 
-        return subject
+        return s3_str(subject)
 
     # -------------------------------------------------------------------------
     def get_sms_content(row, ack_id=None, system=True):
@@ -1190,7 +1190,7 @@ T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s prio
                  }
         else:
             sms_body = \
-T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s priority %(event_type)s issued by %(sender_name)s at %(date)s (ID:%(identifier)s) \n\n""") % \
+T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s priority %(event_type)s issued by %(sender_name)s at %(date)s (ID:%(identifier)s).  \nView Alert in web at %(profile)s \n\n""") % \
                 {"status": s3_str(row["cap_alert.status"]),
                  "message_type": s3_str(row["cap_alert.msg_type"]),
                  "area_description": s3_str(get_formatted_value(row["cap_area.name"],
@@ -1201,6 +1201,7 @@ T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s prio
                                                            system=system)),
                  "date": s3_str(row["cap_alert.sent"]),
                  "identifier": s3_str(row["cap_alert.identifier"]),
+                 "profile": "%s/%s" % (s3_str(row["cap_info.web"]), "profile"),
                  }
 
         return s3_str(sms_body)
