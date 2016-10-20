@@ -110,7 +110,6 @@ from s3sync import *
 
 # Import
 from s3import import *
-from s3xforms import *
 
 # De-duplication
 from s3merge import S3Merge
@@ -134,5 +133,9 @@ from s3notify import *
 
 # GUI Navigation Framework
 from s3navigation import *
+
+# Mobile APIs
+from s3xforms import *
+from s3mobile import *
 
 # END =========================================================================

@@ -148,6 +148,7 @@ class S3Config(Storage):
         self.log = Storage()
         self.mail = Storage()
         self.member = Storage()
+        self.mobile = Storage()
         self.msg = Storage()
         self.org = Storage()
         self.pr = Storage()
@@ -3542,6 +3543,33 @@ class S3Config(Storage):
         """
         return self.__lazy("member", "membership_types", default=True)
 
+
+    # -------------------------------------------------------------------------
+    # Mobile Forms
+    #
+    def get_mobile_forms(self):
+        """
+            Configure mobile forms, a list of items
+
+            Item formats:
+                "tablename"
+                ("Title", "tablename")
+                ("Title", "tablename", options)
+
+            Format for options:
+                {
+                    c = controller,      ...use this controller for form handling
+                    f = function,        ...use this function for form handling
+                    vars = vars,         ...add these vars to the download URL
+                 }
+
+            Example:
+                settings.xforms.resources = [("Request", "req_req")]
+
+            @todo: add "restrict" option to restrict forms to certain user
+                   roles (analogous to restrict-option in menu items)
+        """
+        return self.mobile.get("forms")
 
     # -------------------------------------------------------------------------
     # Organisations

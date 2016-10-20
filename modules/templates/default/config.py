@@ -939,6 +939,13 @@ def config(settings):
     #                                 video_id = "HR-FtR2XkBU"),]
 
     # -----------------------------------------------------------------------------
+    # Mobile Forms
+    # Configure mobile forms (example), see modules/s3cfg.py for details
+    #settings.mobile.forms = [
+    #    ("Beneficiaries", "pr_person", {"c": "dvr", "f": "person"}),
+    #]
+
+    # -----------------------------------------------------------------------------
     # XForms
     # Configure xform resources (example)
     #settings.xforms.resources = [("Request", "req_req")]
