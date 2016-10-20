@@ -78,12 +78,12 @@
 
             var $button = $(button);
 
-            // Hide add-button and show throbber
-            $button.hide().siblings('.throbber').removeClass('hide').show();
-
             // Remove any previous popup
             $('.iframe-container').remove();
             this._showAll();
+
+            // Hide add-button and show throbber
+            $button.hide().siblings('.throbber').removeClass('hide').show();
 
             var opts = this.options;
             var access = opts.access,
@@ -124,12 +124,12 @@
 
             var $button = $(button);
 
-            // Hide add-button and show throbber
-            $button.hide().siblings('.throbber').removeClass('hide').show();
-
             // Remove any previous popup
             $('.iframe-container').remove();
             this._showAll();
+
+            // Hide add-button and show throbber
+            $button.hide().siblings('.throbber').removeClass('hide').show();
 
             var opts = this.options;
             var access = opts.access,
@@ -354,7 +354,7 @@
         },
 
         /**
-         * Show all read-rows and hide all throbbers
+         * Show all read-rows and add buttons, hide all throbbers
          */
         _showAll: function() {
 
@@ -365,6 +365,7 @@
                 $this.find('.throbber, .inline-throbber').hide();
                 $this.show();
             });
+            el.find('.contact-add-btn').show();
         },
 
         /**

@@ -48,7 +48,9 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def dvr():
         """ DVR / Disaster Victim Registry """
 
-        return M(c="dvr")(
+        ADMIN = current.session.s3.system_roles.ADMIN
+
+        return M(c=("dvr", "project"))(
                     M("Cases", c=("dvr", "pr"), f="person")(
                         M("Create", m="create"),
                         #M("Archived Cases", vars={"archived": "1"}),
@@ -68,7 +70,18 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #M("Beneficiary Types", f="beneficiary_type")(
                     #   M("Create", m="create"),
                     #),
+                    M("Administration", c="project", link=False,
+                      restrict = [ADMIN])(
+                        M("Projects", c="project", f="project"),
+                    ),
                 )
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def project(cls):
+        """ PROJECT - use DVR menu """
+
+        return cls.dvr()
 
     # -------------------------------------------------------------------------
     @staticmethod
