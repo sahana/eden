@@ -3992,23 +3992,28 @@ class S3Resource(object):
             Get the list_fields for this resource
 
             @param key: alternative key for the table configuration
-            @param id_column: True/False, whether to include the record ID
-                              or not, or 0 to enforce the record ID to be
-                              the first column
+            @param id_column: - False to exclude the record ID
+                              - True to include it if it is configured
+                              - 0 to make it the first column regardless
+                                whether it is configured or not
         """
 
         list_fields = self.get_config(key, None)
+
         if not list_fields and key != "list_fields":
             list_fields = self.get_config("list_fields", None)
         if not list_fields:
             list_fields = [f.name for f in self.readable_fields()]
 
-        pkey = _pkey = self._id.name
+        id_field = pkey = self._id.name
+
+        # Do not include the parent key for components
         if self.parent and not self.link and \
            not current.response.s3.component_show_key:
             fkey = self.fkey
         else:
             fkey = None
+
         fields = []
         append = fields.append
         selectors = set()
@@ -4017,13 +4022,15 @@ class S3Resource(object):
             selector = f[1] if type(f) is tuple else f
             if fkey and selector == fkey:
                 continue
-            if selector == _pkey and not id_column:
-                pkey = f
+            if selector == pkey and not id_column:
+                id_field = f
             elif selector not in selectors:
                 seen(selector)
                 append(f)
+
         if id_column is 0:
-            fields.insert(0, pkey)
+            fields.insert(0, id_field)
+
         return fields
 
     # -------------------------------------------------------------------------

@@ -95,6 +95,54 @@ def config(settings):
     settings.fin.currency_default = "TRY"
 
     # =========================================================================
+    # DVR Case Management
+    #
+    def customise_dvr_case_resource(r, tablename):
+
+        s3db = current.s3db
+        s3 = current.response.s3
+
+        if r.component_name == "dvr_case":
+
+            table = r.component.table
+            field = table.human_resource_id
+            field.label = T("Person Responsible")
+            field.readable = field.writable = True
+            field.widget = None
+            field.comment = None
+
+            # Custom form
+            from s3 import S3SQLCustomForm
+            crud_form = S3SQLCustomForm("person_id",
+                                        "date",
+                                        "organisation_id",
+                                        "human_resource_id",
+                                        )
+
+            # Filter staff by organisation
+            script = '''$.filterOptionsS3({
+ 'trigger':'organisation_id',
+ 'target':'human_resource_id',
+ 'lookupPrefix':'hrm',
+ 'lookupResource':'human_resource',
+ 'lookupKey':'organisation_id',
+ 'fncRepresent': function(record){return record.person_id},
+ 'optional': true
+})'''
+            s3.jquery_ready.append(script)
+
+            s3db.configure("dvr_case",
+                           crud_form = crud_form,
+                           )
+
+        # Deleting cases is not allowed
+        s3db.configure("dvr_case",
+                       deletable = False,
+                       )
+
+    settings.customise_dvr_case_resource = customise_dvr_case_resource
+
+    # =========================================================================
     # Person Registry
     #
     # Allow third gender
@@ -329,6 +377,21 @@ def config(settings):
 
             return result
         s3.prep = custom_prep
+
+        standard_postp = s3.postp
+        def custom_postp(r, output):
+
+            # Call standard postp
+            if callable(standard_postp):
+                output = standard_postp(r, output)
+
+            # Remove subtitle on case tab
+            if r.component_name == "dvr_case" and \
+               isinstance(output, dict) and "subtitle" in output:
+                output["subtitle"] = None
+
+            return output
+        s3.postp = custom_postp
 
         # Custom rheader tabs
         if current.request.controller == "dvr":
@@ -639,6 +702,7 @@ def stl_dvr_rheader(r, tabs=[]):
 
             if not tabs:
                 tabs = [(T("Basic Details"), None),
+                        (T("Case Information"), "dvr_case"),
                         ]
 
                 case = resource.select(["family_id.value",

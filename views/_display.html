@@ -14,9 +14,7 @@
 </div>
 <div class='row'>
 {{pass}}
- <div class='small-12 columns'>
-  {{try:}}{{=H3(subtitle)}}{{except:}}{{pass}}
- </div>
+ {{try:}}{{if subtitle:}}<div class='small-12 columns'>{{=H3(subtitle)}}</div>{{pass}}{{except:}}{{pass}}
  <div class='small-12 columns'>
   {{try:}}{{=buttons["edit_btn"]}}{{except:}}{{pass}}
   {{try:}}{{=buttons["delete_btn"]}}{{except:}}{{pass}}
