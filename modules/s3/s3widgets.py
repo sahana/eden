@@ -8769,6 +8769,7 @@ class ICON(I):
             "globe": "fa-globe",
             "goods": "fa-cubes",
             "group": "fa-group",
+            "hint": "fa-hand-o-right",
             "home": "fa-home",
             "inactive": "fa-check-empty",
             "incident": "fa-bolt",

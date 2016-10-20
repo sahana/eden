@@ -4946,6 +4946,7 @@
 'none': 'nichts',
 'not accessible - no cached version available!': 'Nicht verfügbar - keine zwischengespeicherte Version verfügbar!',
 'not accessible - using cached version from': 'Nicht verfügbar - benutze zwischengespeicherte Version von',
+'not checked-in!': 'nicht eingecheckt!',
 'not specified': 'nicht angegeben',
 'obsolete': 'obsolet',
 'on': 'ein',

@@ -816,6 +816,8 @@ def config(settings):
     #settings.dvr.multiple_case_groups = True
     # Configure a regular expression pattern for ID Codes (QR Codes)
     settings.dvr.id_code_pattern = "(?P<label>[^,]*),(?P<family>[^,]*),(?P<last_name>[^,]*),(?P<first_name>[^,]*),(?P<date_of_birth>[^,]*),.*"
+    # Issue a "not checked-in" warning in case event registration
+    settings.dvr.event_registration_checkin_warning = True
 
     # -------------------------------------------------------------------------
     def customise_dvr_home():

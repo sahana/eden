@@ -2844,6 +2844,13 @@ class S3Config(Storage):
         """
         return self.dvr.get("id_code_pattern", None)
 
+    def get_dvr_event_registration_checkin_warning(self):
+        """
+            Whether to warn during event registration when the person
+            is currently not checked-in
+        """
+        return self.dvr.get("event_registration_checkin_warning", False)
+
     # -------------------------------------------------------------------------
     # Education
     #
