@@ -659,11 +659,27 @@ def docss():
     # Move files to correct locations
     print "Deleting %s." % outputFilenameCSS
     try:
-        os.remove("../../themes/%s/%s" % (theme, outputFilenameCSS))
+        if location:
+            os.remove("../../themes/%s%s/%s" % (location, theme, outputFilenameCSS))
+        else:
+            os.remove("../../themes/%s/%s" % (theme, outputFilenameCSS))
     except:
         pass
     print "Moving new %s." % outputFilenameCSS
-    shutil.move(outputFilenameCSS, "../../themes/%s" % theme)
+    if location:
+        print "Adjusting url in %s." % outputFilenameCSS
+        new_path = "../../themes/%s%s/%s" % (location, theme, outputFilenameCSS)
+        shutil.move(outputFilenameCSS, new_path)
+
+        # Adjust location of url
+        f = open(new_path, "r+")
+        files = f.readline()
+        new_min_css = files.replace("../../", "../../../")
+        f.seek(0)
+        f.write(new_min_css)
+        f.close()
+    else:
+        shutil.move(outputFilenameCSS, "../../themes/%s/%s" % (theme, outputFilenameCSS))
 
     # Enable when needed
     full = False
