@@ -3026,7 +3026,20 @@ class S3Config(Storage):
         """
             Label for Organisations in Human Resources
         """
-        return current.T(self.hrm.get("organisation_label", "Organization"))
+
+        label = self.hrm.get("organisation_label")
+        if not label:
+            if self.get_org_branches():
+                label = "Organization / Branch"
+            else:
+                label = "Organization"
+        return current.T(label)
+
+    def get_hrm_root_organisation_label(self):
+        """
+            Label for Root Organisations in Human Resources
+        """
+        return current.T(self.hrm.get("root_organisation_label", "Top-level Organization"))
 
     def get_hrm_email_required(self):
         """

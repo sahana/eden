@@ -433,6 +433,8 @@ def config(settings):
     settings.hrm.use_skills = True
     # Custom label for Organisations in HR module
     settings.hrm.organisation_label = "National Society / Branch"
+    # Custom label for Top-level Organisations in HR module
+    settings.hrm.root_organisation_label = "National Society"
     # Uncomment to consolidate tabs into a single CV
     settings.hrm.cv_tab = True
     # Uncomment to consolidate tabs into Staff Record (set to False to hide the tab)
