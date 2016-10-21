@@ -341,9 +341,10 @@ class S3Resource(object):
             hook.table = table
         else:
             table_alias = None
+            table = hook.table
 
         # Create as resource
-        component = S3Resource(hook.table,
+        component = S3Resource(table,
                                parent = self,
                                alias = alias,
                                linktable = hook.linktable,
@@ -372,7 +373,6 @@ class S3Resource(object):
         if isinstance(filterby, dict):
             # Filter by multiple criteria
             query = None
-            table = hook.table
             for k, v in filterby.items():
                 is_list = isinstance(v, (tuple, list))
                 if is_list and len(v) == 1:
@@ -402,11 +402,19 @@ class S3Resource(object):
                 is_list = False
                 filterfor = filterfor[0]
             if not is_list:
-                component.filter = (hook.table[hook.filterby] == filterfor)
+                component.filter = (table[filterby] == filterfor)
             elif filterfor:
-                component.filter = (hook.table[hook.filterby].belongs(filterfor))
+                component.filter = (table[filterby].belongs(filterfor))
             else:
                 component.filter = None
+
+        filterjoin = hook.filterjoin
+        if filterjoin:
+            # @ToDo: Allow the use of differently-named fields at each end (once usecase arrives)
+            if component.filter:
+                component.filter &= (table[filterjoin] == self.table[filterjoin])
+            else:
+                component.filter = (table[filterjoin] == self.table[filterjoin])
 
         # Copy properties to the link
         if component.link is not None:

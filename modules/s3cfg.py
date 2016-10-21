@@ -3316,9 +3316,12 @@ class S3Config(Storage):
 
     def get_hrm_training_instructors(self):
         """
-            Whether to track "internal" training instructors (=persons
-            from the registry), or "external" (=just names), or "both",
-            ...or None (=don't track instructors at all)
+            How training instructors are managed:
+                None: Don't track instructors at all
+                internal: Use persons from the registry
+                external: Just use free-text Names
+                both: Use both fields
+                multiple: Use multiple persons from the registry
         """
         return self.__lazy("hrm", "training_instructors", "external")
 

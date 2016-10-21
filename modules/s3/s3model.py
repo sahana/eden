@@ -512,6 +512,7 @@ class S3Model(object):
                     multiple = True
                     filterby = None
                     filterfor = None
+                    filterjoin = None
 
                 elif isinstance(link, dict):
                     alias = link.get("name", name)
@@ -567,6 +568,7 @@ class S3Model(object):
                     multiple = link.get("multiple", True)
                     filterby = link.get("filterby")
                     filterfor = link.get("filterfor")
+                    filterjoin = link.get("filterjoin")
 
                 else:
                     continue
@@ -583,7 +585,9 @@ class S3Model(object):
                                     defaults=defaults,
                                     multiple=multiple,
                                     filterby=filterby,
-                                    filterfor=filterfor)
+                                    filterfor=filterfor,
+                                    filterjoin=filterjoin,
+                                    )
                 hooks[alias] = component
 
         components[master] = hooks

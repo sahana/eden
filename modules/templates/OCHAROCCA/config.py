@@ -310,22 +310,22 @@ def config(settings):
                                     gis_location_name = {"name": "name_ru",
                                                          "joinby": "location_id",
                                                          "filterby": "language",
-                                                         "filterfor": ("ru",),
+                                                         "filterfor": "ru",
                                                          },
                                     gis_location_tag = ({"name": "pcode",
                                                          "joinby": "location_id",
                                                          "filterby": "tag",
-                                                         "filterfor": ("PCode",),
+                                                         "filterfor": "PCode",
                                                          },
                                                         {"name": "lat_lon_source",
                                                          "joinby": "location_id",
                                                          "filterby": "tag",
-                                                         "filterfor": ("LatLon Source",),
+                                                         "filterfor": "LatLon Source",
                                                          },
                                                         {"name": "lat_lon_date",
                                                          "joinby": "location_id",
                                                          "filterby": "tag",
-                                                         "filterfor": ("LatLon Date",),
+                                                         "filterfor": "LatLon Date",
                                                          },
                                                         ),
                                     )
@@ -466,7 +466,7 @@ def config(settings):
                                       "joinby": "event_id",
                                       "key": "impact_id",
                                       "filterby": "parameter_id",
-                                      "filterfor": (parameter,),
+                                      "filterfor": parameter,
                                       })
             label = T(label)
             impact_crud_form_fields.append(S3SQLInlineComponent(tag,
@@ -512,7 +512,7 @@ def config(settings):
                             gis_location_tag = {"name": "pcode",
                                                 "joinby": "location_id",
                                                 "filterby": "tag",
-                                                "filterfor": ("PCode",),
+                                                "filterfor": "PCode",
                                                 },
                             )
         lappend(("PCode", "event_location.location_id$pcode.value"))
@@ -578,7 +578,7 @@ def config(settings):
                             gis_location_tag = {"name": "pcode",
                                                 "joinby": "location_id",
                                                 "filterby": "tag",
-                                                "filterfor": ("PCode",),
+                                                "filterfor": "PCode",
                                                 },
                             )
         list_fields = s3db.get_config(r.tablename, "list_fields")
@@ -638,7 +638,7 @@ def config(settings):
                             gis_location_tag = {"name": "pcode",
                                                 "joinby": "location_id",
                                                 "filterby": "tag",
-                                                "filterfor": ("PCode",),
+                                                "filterfor": "PCode",
                                                 },
                             )
         list_fields.insert(7, ("PCode", "location_id$pcode.value"))

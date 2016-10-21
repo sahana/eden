@@ -1059,7 +1059,7 @@ def config(settings):
                                         pr_person_tag = {"name": "eo_number",
                                                          "joinby": "person_id",
                                                          "filterby": "tag",
-                                                         "filterfor": ("EONUMBER",),
+                                                         "filterfor": "EONUMBER",
                                                          "multiple": False,
                                                          },
                                         )
@@ -1774,7 +1774,7 @@ def config(settings):
                                         pr_person_tag = {"name": "eo_number",
                                                          "joinby": "person_id",
                                                          "filterby": "tag",
-                                                         "filterfor": ("EONUMBER",),
+                                                         "filterfor": "EONUMBER",
                                                          "multiple": False,
                                                          },
                                         )
@@ -1840,7 +1840,7 @@ def config(settings):
                                         pr_person_tag = {"name": "eo_number",
                                                          "joinby": "person_id",
                                                          "filterby": "tag",
-                                                         "filterfor": ("EONUMBER",),
+                                                         "filterfor": "EONUMBER",
                                                          "multiple": False,
                                                          },
                                         )

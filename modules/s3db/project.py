@@ -604,7 +604,7 @@ class S3ProjectModel(S3Model):
                                                     "joinby": "project_id",
                                                     "filterby": "role",
                                                     # Works for IFRC & DRRPP:
-                                                    "filterfor": (3,),
+                                                    "filterfor": 3,
                                                     },
                                                    # Partners
                                                    {"name": "partner",
@@ -3612,7 +3612,7 @@ class S3ProjectLocationModel(S3Model):
                                       "fkey": "pe_id",
                                       "pkey": "person_id",
                                       "filterby": "contact_method",
-                                      "filterfor": ("EMAIL",),
+                                      "filterfor": "EMAIL",
                                       },
                                      # Mobile Phone
                                      {"name": "phone",
@@ -3622,7 +3622,7 @@ class S3ProjectLocationModel(S3Model):
                                       "fkey": "pe_id",
                                       "pkey": "person_id",
                                       "filterby": "contact_method",
-                                      "filterfor": ("SMS",),
+                                      "filterfor": "SMS",
                                       },
                                      ),
                        )

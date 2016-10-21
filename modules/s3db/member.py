@@ -384,7 +384,7 @@ class S3MembersModel(S3Model):
                                            "fkey": "pe_id",
                                            "pkey": "person_id",
                                            "filterby": "contact_method",
-                                           "filterfor": ("EMAIL",),
+                                           "filterfor": "EMAIL",
                                            },
                                           # Phone
                                           {"name": "phone",
