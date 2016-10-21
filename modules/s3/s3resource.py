@@ -374,28 +374,52 @@ class S3Resource(object):
             # Filter by multiple criteria
             query = None
             for k, v in filterby.items():
-                is_list = isinstance(v, (tuple, list))
-                if is_list and len(v) == 1:
-                    filterfor = v[0]
-                    is_list = False
+                if isinstance(v, FS):
+                    # Match a field in the master table
+                    # => identify the field
+                    try:
+                        rfield = v.resolve(self)
+                    except (AttributeError, SyntaxError):
+                        if current.response.s3.debug:
+                            raise
+                        else:
+                            current.log.error(sys.exc_info()[1])
+                            continue
+                    # => must be a real field in the master table
+                    field = rfield.field
+                    if not field or field.table != self.table:
+                        current.log.error("Component filter for %s<=%s: "
+                                          "invalid lookup field '%s'" %
+                                          (self.tablename, alias, v.name))
+                        continue
+                    subquery = (table[k] == field)
                 else:
-                    filterfor = v
-                if not is_list:
-                    subquery = (table[k] == filterfor)
-                else:
-                    subquery = (table[k].belongs(set(filterfor)))
+                    is_list = isinstance(v, (tuple, list))
+                    if is_list and len(v) == 1:
+                        filterfor = v[0]
+                        is_list = False
+                    else:
+                        filterfor = v
+                    if not is_list:
+                        subquery = (table[k] == filterfor)
+                    else:
+                        subquery = (table[k].belongs(set(filterfor)))
                 if subquery:
                     if query is None:
                         query = subquery
                     else:
                         query &= subquery
+
             component.filter = query
+
         elif not filterby:
             # Can use filterby=False to enforce table aliasing yet
             # suppress component filtering (useful e.g. with two
             # foreign key links from the same table)
             component.filter = None
+
         else:
+            # @todo: deprecate
             filterfor = hook.filterfor
             is_list = isinstance(filterfor, (tuple, list))
             if is_list and len(filterfor) == 1:
@@ -407,14 +431,6 @@ class S3Resource(object):
                 component.filter = (table[filterby].belongs(filterfor))
             else:
                 component.filter = None
-
-        filterjoin = hook.filterjoin
-        if filterjoin:
-            # @ToDo: Allow the use of differently-named fields at each end (once usecase arrives)
-            if component.filter:
-                component.filter &= (table[filterjoin] == self.table[filterjoin])
-            else:
-                component.filter = (table[filterjoin] == self.table[filterjoin])
 
         # Copy properties to the link
         if component.link is not None:
@@ -430,7 +446,6 @@ class S3Resource(object):
             self.links[link.name] = link
 
         self.components[alias] = component
-        return
 
     # -------------------------------------------------------------------------
     # Query handling

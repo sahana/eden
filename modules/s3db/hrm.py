@@ -3079,7 +3079,9 @@ class S3HRSkillModel(S3Model):
                                             "key": "certificate_id",
                                             "fkey": "certificate_id",
                                             "pkey": "course_id",
-                                            "filterjoin": "person_id",
+                                            "filterby": {
+                                                "person_id": FS("person_id"),
+                                                },
                                             "multiple": False,
                                             },
                        )
