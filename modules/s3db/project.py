@@ -602,16 +602,18 @@ class S3ProjectModel(S3Model):
                                                    # Donors
                                                    {"name": "donor",
                                                     "joinby": "project_id",
-                                                    "filterby": "role",
-                                                    # Works for IFRC & DRRPP:
-                                                    "filterfor": 3,
+                                                    "filterby": {
+                                                        # Works for IFRC & DRRPP:
+                                                        "role": 3,
+                                                        },
                                                     },
                                                    # Partners
                                                    {"name": "partner",
                                                     "joinby": "project_id",
-                                                    "filterby": "role",
-                                                    # Works for IFRC & DRRPP:
-                                                    "filterfor": (2, 9),
+                                                    "filterby": {
+                                                        # Works for IFRC & DRRPP:
+                                                        "role": (2, 9),
+                                                        },
                                                     },
                                                    ),
                           )
@@ -3611,8 +3613,9 @@ class S3ProjectLocationModel(S3Model):
                                       "key": "pe_id",
                                       "fkey": "pe_id",
                                       "pkey": "person_id",
-                                      "filterby": "contact_method",
-                                      "filterfor": "EMAIL",
+                                      "filterby": {
+                                          "contact_method": "EMAIL",
+                                          },
                                       },
                                      # Mobile Phone
                                      {"name": "phone",
@@ -3621,8 +3624,9 @@ class S3ProjectLocationModel(S3Model):
                                       "key": "pe_id",
                                       "fkey": "pe_id",
                                       "pkey": "person_id",
-                                      "filterby": "contact_method",
-                                      "filterfor": "SMS",
+                                      "filterby": {
+                                          "contact_method": "SMS",
+                                          },
                                       },
                                      ),
                        )

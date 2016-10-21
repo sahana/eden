@@ -2646,8 +2646,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": 5,
+                                          "filterby": {
+                                              "office_type_id": 5,
+                                              },
                                          },
                            )
 
@@ -2667,8 +2668,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": [5],
+                                          "filterby": {
+                                              "office_type_id": [5],
+                                              },
                                          },
                            )
         resource = s3db.resource("org_organisation", components=["test"])
@@ -2677,12 +2679,13 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         assertEqual(str(component.filter),
                     str((table.office_type_id == 5)))
 
-        # Define a filtered component with value list
+        # Define a filtered component with value tuple
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": [4, 5],
+                                          "filterby": {
+                                              "office_type_id": (4, 5),
+                                              },
                                          },
                            )
         resource = s3db.resource("org_organisation", components=["test"])
@@ -2695,8 +2698,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": [],
+                                          "filterby": {
+                                              "office_type_id": [],
+                                              },
                                          },
                            )
         resource = s3db.resource("org_organisation", components=["test"])
@@ -2719,8 +2723,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": 5,
+                                          "filterby": {
+                                              "office_type_id": 5,
+                                              },
                                          },
                            )
 
@@ -2753,8 +2758,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": 5,
+                                          "filterby": {
+                                              "office_type_id": 5,
+                                              },
                                          },
                            )
 
@@ -2825,8 +2831,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": 5,
+                                          "filterby": {
+                                              "office_type_id": 5,
+                                              },
                                          },
                            )
 
@@ -2894,8 +2901,9 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = {"name": "test",
                                           "joinby": "organisation_id",
-                                          "filterby": "office_type_id",
-                                          "filterfor": type_id,
+                                          "filterby": {
+                                              "office_type_id": type_id,
+                                              },
                                          },
                            )
 
@@ -3010,13 +3018,15 @@ class ResourceFilteredComponentTests(unittest.TestCase):
         s3db.add_components("org_organisation",
                             org_office = ({"name": "fieldoffice",
                                            "joinby": "organisation_id",
-                                           "filterby": "office_type_id",
-                                           "filterfor": 5,
+                                           "filterby": {
+                                               "office_type_id": 5,
+                                               },
                                           },
                                           {"name": "hq",
                                            "joinby": "organisation_id",
-                                           "filterby": "office_type_id",
-                                           "filterfor": 4,
+                                           "filterby": {
+                                               "office_type_id": 4,
+                                               },
                                           },
                                          ),
                            )

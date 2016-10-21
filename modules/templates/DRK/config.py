@@ -1058,8 +1058,9 @@ def config(settings):
                     s3db.add_components("pr_person",
                                         pr_person_tag = {"name": "eo_number",
                                                          "joinby": "person_id",
-                                                         "filterby": "tag",
-                                                         "filterfor": "EONUMBER",
+                                                         "filterby": {
+                                                             "tag": "EONUMBER",
+                                                             },
                                                          "multiple": False,
                                                          },
                                         )
@@ -1384,7 +1385,9 @@ def config(settings):
                                                         "link": "pr_group_membership",
                                                         "joinby": "person_id",
                                                         "key": "group_id",
-                                                        "filterby": {"group_type": 7},
+                                                        "filterby": {
+                                                            "group_type": 7,
+                                                            },
                                                         },
                                             )
 
@@ -1773,8 +1776,9 @@ def config(settings):
                     s3db.add_components("pr_person",
                                         pr_person_tag = {"name": "eo_number",
                                                          "joinby": "person_id",
-                                                         "filterby": "tag",
-                                                         "filterfor": "EONUMBER",
+                                                         "filterby": {
+                                                             "tag": "EONUMBER",
+                                                             },
                                                          "multiple": False,
                                                          },
                                         )
@@ -1839,8 +1843,9 @@ def config(settings):
                     s3db.add_components("pr_person",
                                         pr_person_tag = {"name": "eo_number",
                                                          "joinby": "person_id",
-                                                         "filterby": "tag",
-                                                         "filterfor": "EONUMBER",
+                                                         "filterby": {
+                                                             "tag": "EONUMBER",
+                                                             },
                                                          "multiple": False,
                                                          },
                                         )

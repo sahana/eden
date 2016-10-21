@@ -211,14 +211,16 @@ def config(settings):
                             doc_document=(# Files
                                           {"name": "file",
                                            "joinby": "doc_id",
-                                           "filterby": "url",
-                                           "filterfor": ("", None),
+                                           "filterby": {
+                                               "url": ("", None),
+                                               },
                                           },
                                           # Links
                                           {"name": "url",
                                            "joinby": "doc_id",
-                                           "filterby": "file",
-                                           "filterfor": ("", None),
+                                           "filterby": {
+                                               "file": ("", None),
+                                               },
                                           },
                                          ),
                            )

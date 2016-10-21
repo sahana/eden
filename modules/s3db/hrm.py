@@ -622,8 +622,9 @@ class S3HRModel(S3Model):
                                       "key": "pe_id",
                                       "fkey": "pe_id",
                                       "pkey": "person_id",
-                                      "filterby": "contact_method",
-                                      "filterfor": "EMAIL",
+                                      "filterby": {
+                                          "contact_method": "EMAIL",
+                                          },
                                       },
                                      # Mobile Phone
                                      {"name": "phone",
@@ -632,8 +633,9 @@ class S3HRModel(S3Model):
                                       "key": "pe_id",
                                       "fkey": "pe_id",
                                       "pkey": "person_id",
-                                      "filterby": "contact_method",
-                                      "filterfor": "SMS",
+                                      "filterby": {
+                                          "contact_method": "SMS",
+                                          },
                                       },
                                      ),
                         pr_contact_emergency = {"link": "pr_person",
@@ -648,8 +650,9 @@ class S3HRModel(S3Model):
                                        "key": "pe_id",
                                        "fkey": "pe_id",
                                        "pkey": "person_id",
-                                       "filterby": "type",
-                                       "filterfor": "1",
+                                       "filterby": {
+                                           "type": "1",
+                                           },
                                        },
                                       ),
                         # Experience & Skills
@@ -3080,6 +3083,7 @@ class S3HRSkillModel(S3Model):
                                             "fkey": "certificate_id",
                                             "pkey": "course_id",
                                             "filterby": {
+                                                # Match person_id in training record
                                                 "person_id": FS("person_id"),
                                                 },
                                             "multiple": False,

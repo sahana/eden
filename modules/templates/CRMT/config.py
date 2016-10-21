@@ -372,8 +372,9 @@ def config(settings):
                     s3db.add_components("pr_pentity",
                                         pr_contact = ({"name": "home",
                                                        "joinby": "pe_id",
-                                                       "filterby": "contact_method",
-                                                       "filterfor": ["HOME_PHONE"],
+                                                       "filterby": {
+                                                           "contact_method": "HOME_PHONE",
+                                                           },
                                                        }),
                                         )
                     list_fields.extend(((T("Email"), "email.value"),

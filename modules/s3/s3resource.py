@@ -370,7 +370,13 @@ class S3Resource(object):
         component.multiple = hook.multiple
         component.defaults = hook.defaults
 
-        if isinstance(filterby, dict):
+        if not filterby:
+            # Can use filterby=False to enforce table aliasing yet
+            # suppress component filtering (useful e.g. with two
+            # foreign key links from the same table)
+            component.filter = None
+
+        else:
             # Filter by multiple criteria
             query = None
             for k, v in filterby.items():
@@ -402,8 +408,10 @@ class S3Resource(object):
                         filterfor = v
                     if not is_list:
                         subquery = (table[k] == filterfor)
-                    else:
+                    elif filterfor:
                         subquery = (table[k].belongs(set(filterfor)))
+                    else:
+                        continue
                 if subquery:
                     if query is None:
                         query = subquery
@@ -411,26 +419,6 @@ class S3Resource(object):
                         query &= subquery
 
             component.filter = query
-
-        elif not filterby:
-            # Can use filterby=False to enforce table aliasing yet
-            # suppress component filtering (useful e.g. with two
-            # foreign key links from the same table)
-            component.filter = None
-
-        else:
-            # @todo: deprecate
-            filterfor = hook.filterfor
-            is_list = isinstance(filterfor, (tuple, list))
-            if is_list and len(filterfor) == 1:
-                is_list = False
-                filterfor = filterfor[0]
-            if not is_list:
-                component.filter = (table[filterby] == filterfor)
-            elif filterfor:
-                component.filter = (table[filterby].belongs(filterfor))
-            else:
-                component.filter = None
 
         # Copy properties to the link
         if component.link is not None:

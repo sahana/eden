@@ -703,8 +703,9 @@ class S3OrganisationModel(S3Model):
                                                 },
                                                {"name": "active_service_location",
                                                 "joinby": "organisation_id",
-                                                "filterby": "status",
-                                                "filterfor": "ACTIVE",
+                                                "filterby": {
+                                                    "status": "ACTIVE",
+                                                    },
                                                 },
                                                ),
                        # Format for filter_widget
@@ -6126,8 +6127,9 @@ def org_organisation_controller():
                                 add_component(tablename,
                                               org_organisation_tag = {"name": tag,
                                                                       "joinby": "organisation_id",
-                                                                      "filterby": "tag",
-                                                                      "filterfor": (tag,),
+                                                                      "filterby": {
+                                                                          "tag": tag,
+                                                                          },
                                                                       },
                                               )
                                 lappend((label, "%s.value" % tag))

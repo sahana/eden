@@ -187,8 +187,9 @@ def config(settings):
         s3db.add_components("pr_person",
                             pr_person_tag = {"name": "family_id",
                                              "joinby": "person_id",
-                                             "filterby": "tag",
-                                             "filterfor": ("FAMILY_ID",),
+                                             "filterby": {
+                                                 "tag": "FAMILY_ID",
+                                                 },
                                              "multiple": False,
                                              },
                             )

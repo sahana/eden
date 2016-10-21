@@ -208,32 +208,37 @@ class S3PersonEntity(S3Model):
                                      # Email addresses:
                                      {"name": "email",
                                       "joinby": pe_id,
-                                      "filterby": "contact_method",
-                                      "filterfor": "EMAIL",
+                                      "filterby": {
+                                          "contact_method": "EMAIL",
+                                          },
                                       },
                                      # Mobile phone numbers:
                                      {"name": "phone",
                                       "joinby": pe_id,
-                                      "filterby": "contact_method",
-                                      "filterfor": "SMS",
+                                      "filterby": {
+                                          "contact_method": "SMS",
+                                          },
                                       },
                                      # Work phone numbers:
                                      #{"name": "work_phone",
                                      # "joinby": pe_id,
-                                     # "filterby": "contact_method",
-                                     # "filterfor": "WORK_PHONE",
+                                     #"filterby": {
+                                     #    "contact_method": "WORK_PHONE",
+                                     #    },
                                      # },
                                      # Facebook:
                                      {"name": "facebook",
                                       "joinby": pe_id,
-                                      "filterby": "contact_method",
-                                      "filterfor": "FACEBOOK",
+                                      "filterby": {
+                                          "contact_method": "FACEBOOK",
+                                          },
                                       },
                                      # Twitter:
                                      {"name": "twitter",
                                       "joinby": pe_id,
-                                      "filterby": "contact_method",
-                                      "filterfor": "TWITTER",
+                                      "filterby": {
+                                          "contact_method": "TWITTER",
+                                          },
                                       },
                                      ),
                        pr_contact_emergency = pe_id,
@@ -242,8 +247,9 @@ class S3PersonEntity(S3Model):
                                     },
                                     {"name": "picture",
                                      "joinby": "pe_id",
-                                     "filterby": "profile",
-                                     "filterfor": True,
+                                     "filterby": {
+                                         "profile": True,
+                                         },
                                      },
                                     ),
                        pr_note = pe_id,
@@ -1117,8 +1123,9 @@ class S3PersonModel(S3Model):
                                            # Passports in particular
                                            {"name": "passport",
                                             "joinby": "person_id",
-                                            "filterby": "type",
-                                            "filterfor": 1,
+                                            "filterby": {
+                                                "type": 1,
+                                                },
                                             },
                                            ),
                             # Personal Details

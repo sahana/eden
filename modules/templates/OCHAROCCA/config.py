@@ -309,23 +309,27 @@ def config(settings):
                 s3db.add_components("gis_location",
                                     gis_location_name = {"name": "name_ru",
                                                          "joinby": "location_id",
-                                                         "filterby": "language",
-                                                         "filterfor": "ru",
+                                                         "filterby": {
+                                                             "language": "ru",
+                                                             },
                                                          },
                                     gis_location_tag = ({"name": "pcode",
                                                          "joinby": "location_id",
-                                                         "filterby": "tag",
-                                                         "filterfor": "PCode",
+                                                         "filterby": {
+                                                             "tag": "PCode",
+                                                             },
                                                          },
                                                         {"name": "lat_lon_source",
                                                          "joinby": "location_id",
-                                                         "filterby": "tag",
-                                                         "filterfor": "LatLon Source",
+                                                         "filterby": {
+                                                             "tag": "LatLon Source",
+                                                             },
                                                          },
                                                         {"name": "lat_lon_date",
                                                          "joinby": "location_id",
-                                                         "filterby": "tag",
-                                                         "filterfor": "LatLon Date",
+                                                         "filterby": {
+                                                             "tag": "LatLon Date",
+                                                             },
                                                          },
                                                         ),
                                     )
@@ -465,8 +469,9 @@ def config(settings):
                                       "link": "event_event_impact",
                                       "joinby": "event_id",
                                       "key": "impact_id",
-                                      "filterby": "parameter_id",
-                                      "filterfor": parameter,
+                                      "filterby": {
+                                          "parameter_id": parameter,
+                                          },
                                       })
             label = T(label)
             impact_crud_form_fields.append(S3SQLInlineComponent(tag,
@@ -511,8 +516,9 @@ def config(settings):
         s3db.add_components("gis_location",
                             gis_location_tag = {"name": "pcode",
                                                 "joinby": "location_id",
-                                                "filterby": "tag",
-                                                "filterfor": "PCode",
+                                                "filterby": {
+                                                    "tag": "PCode",
+                                                    },
                                                 },
                             )
         lappend(("PCode", "event_location.location_id$pcode.value"))
@@ -577,8 +583,9 @@ def config(settings):
         s3db.add_components("gis_location",
                             gis_location_tag = {"name": "pcode",
                                                 "joinby": "location_id",
-                                                "filterby": "tag",
-                                                "filterfor": "PCode",
+                                                "filterby": {
+                                                    "tag": "PCode",
+                                                    },
                                                 },
                             )
         list_fields = s3db.get_config(r.tablename, "list_fields")
@@ -637,8 +644,9 @@ def config(settings):
         s3db.add_components("gis_location",
                             gis_location_tag = {"name": "pcode",
                                                 "joinby": "location_id",
-                                                "filterby": "tag",
-                                                "filterfor": "PCode",
+                                                "filterby": {
+                                                    "tag": "PCode",
+                                                    },
                                                 },
                             )
         list_fields.insert(7, ("PCode", "location_id$pcode.value"))

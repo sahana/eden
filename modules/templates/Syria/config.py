@@ -1050,8 +1050,9 @@ def config(settings):
                     s3db.add_components("org_organisation",
                                         org_office={"name": "nat_office",
                                                     "joinby": "organisation_id",
-                                                    "filterby": "office_type_id",
-                                                    "filterfor": national,
+                                                    "filterby": {
+                                                        "office_type_id": national,
+                                                        },
                                                    },
                                        )
                     list_fields.append("nat_office.location_id$addr_street")
