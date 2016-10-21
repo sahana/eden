@@ -2844,6 +2844,7 @@ def drk_dvr_rheader(r, tabs=[]):
                             (T("Allowance"), "allowance"),
                             (T("Presence"), "shelter_registration_history"),
                             (T("Events"), "case_event"),
+                            (T("Photos"), "image"),
                             (T("Notes"), "case_note"),
                             ]
 
@@ -2890,6 +2891,30 @@ def drk_dvr_rheader(r, tabs=[]):
 
                 if archived:
                     rheader_fields.insert(0, [(None, hint)])
+
+                # Generate rheader XML
+                rheader = S3ResourceHeader(rheader_fields, tabs)(
+                                r,
+                                table = resource.table,
+                                record = record,
+                                )
+
+                # Add profile picture
+                from gluon import A, URL
+                from s3 import s3_avatar_represent
+                record_id = record.id
+                rheader.insert(0, A(s3_avatar_represent(record_id,
+                                                        "pr_person",
+                                                        _class = "rheader-avatar",
+                                                        ),
+                                    _href=URL(f = "person",
+                                              args = [record_id, "image"],
+                                              vars = r.get_vars,
+                                              ),
+                                    )
+                               )
+
+                return rheader
 
         elif tablename == "dvr_case":
 

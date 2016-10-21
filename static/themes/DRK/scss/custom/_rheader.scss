@@ -7,7 +7,16 @@
         }
         margin-right: 10px;
     }
+    .rheader-avatar {
+        clear: none;
+        display: inline;
+        float: none;
+        margin-right: 1rem;
+        padding: 0;
+        vertical-align: text-top;
+    }
     table {
+        display: inline;
         margin-bottom: 10px;
         border: none;
         tr {
@@ -19,6 +28,7 @@
 /* RHeader Tabs */
 div.tabs {
     // Tabs section
+    display: block;
     border-bottom: 1px solid $rheader_tabs_bgcolor_inactive;
     clear: left;
     height: 2.125em;

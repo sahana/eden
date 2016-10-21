@@ -394,18 +394,29 @@ textarea {
   height: 60px;
 }
 /* line 10, ../scss/custom/_rheader.scss */
+#rheader .rheader-avatar {
+  clear: none;
+  display: inline;
+  float: none;
+  margin-right: 1rem;
+  padding: 0;
+  vertical-align: text-top;
+}
+/* line 18, ../scss/custom/_rheader.scss */
 #rheader table {
+  display: inline;
   margin-bottom: 10px;
   border: none;
 }
-/* line 13, ../scss/custom/_rheader.scss */
+/* line 22, ../scss/custom/_rheader.scss */
 #rheader table tr {
   background: none;
 }
 
 /* RHeader Tabs */
-/* line 20, ../scss/custom/_rheader.scss */
+/* line 29, ../scss/custom/_rheader.scss */
 div.tabs {
+  display: block;
   border-bottom: 1px solid #006A71;
   clear: left;
   height: 2.125em;
@@ -415,23 +426,23 @@ div.tabs {
   width: 100%;
   line-height: 0.975rem;
 }
-/* line 31, ../scss/custom/_rheader.scss */
+/* line 41, ../scss/custom/_rheader.scss */
 div.tabs span {
   float: left;
   border-radius: 3px 3px 0 0;
   padding: 0.15em 6px 0.25em 5px;
 }
-/* line 36, ../scss/custom/_rheader.scss */
+/* line 46, ../scss/custom/_rheader.scss */
 div.tabs span a {
   color: #ffffff !important;
   text-decoration: none !important;
   background: transparent !important;
 }
-/* line 41, ../scss/custom/_rheader.scss */
+/* line 51, ../scss/custom/_rheader.scss */
 div.tabs span a:hover {
   background: transparent !important;
 }
-/* line 45, ../scss/custom/_rheader.scss */
+/* line 55, ../scss/custom/_rheader.scss */
 div.tabs span.tab_here {
   background: #ffffff;
   border-color: #006A71;
@@ -447,19 +458,19 @@ div.tabs span.tab_here {
   padding: 0.2em 6px 0.25em 5px;
   position: relative;
 }
-/* line 64, ../scss/custom/_rheader.scss */
+/* line 74, ../scss/custom/_rheader.scss */
 div.tabs span.tab_here:hover {
   background: #f1edec;
 }
-/* line 67, ../scss/custom/_rheader.scss */
+/* line 77, ../scss/custom/_rheader.scss */
 div.tabs span.tab_here a {
   color: #666666 !important;
 }
-/* line 70, ../scss/custom/_rheader.scss */
+/* line 80, ../scss/custom/_rheader.scss */
 div.tabs span.tab_here a:hover {
   color: #666666 !important;
 }
-/* line 74, ../scss/custom/_rheader.scss */
+/* line 84, ../scss/custom/_rheader.scss */
 div.tabs span.tab_last,
 div.tabs span.tab_other {
   font-size: 90%;
@@ -470,18 +481,18 @@ div.tabs span.tab_other {
   margin-right: 3px;
   margin-top: 0.25em;
 }
-/* line 86, ../scss/custom/_rheader.scss */
+/* line 96, ../scss/custom/_rheader.scss */
 div.tabs span.tab_last:hover,
 div.tabs span.tab_other:hover {
   background: #00555a;
   border-color: #00555a;
 }
-/* line 91, ../scss/custom/_rheader.scss */
+/* line 101, ../scss/custom/_rheader.scss */
 div.tabs span.tab_last a,
 div.tabs span.tab_other a {
   color: #ffffff !important;
 }
-/* line 95, ../scss/custom/_rheader.scss */
+/* line 105, ../scss/custom/_rheader.scss */
 div.tabs span.tab_last a:hover,
 div.tabs span.tab_other a:hover {
   color: #ffffff !important;
