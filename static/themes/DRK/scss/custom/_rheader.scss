@@ -31,7 +31,7 @@ div.tabs {
     display: block;
     border-bottom: 1px solid $rheader_tabs_bgcolor_inactive;
     clear: left;
-    height: 2.125em;
+    height: 2.15em;
     margin: 5px 0 0;
     padding: 0.5em 0;
     text-align: left;
@@ -68,7 +68,7 @@ div.tabs {
         display: inline;
         font-weight: bold;
         margin-right: 5px;
-        padding: 0.2em 6px 0.25em 5px;
+        padding: 0.25em 6px 0.25em 5px;
         position: relative;
     }
     span.tab_here:hover {

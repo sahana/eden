@@ -419,7 +419,7 @@ div.tabs {
   display: block;
   border-bottom: 1px solid #006A71;
   clear: left;
-  height: 2.125em;
+  height: 2.15em;
   margin: 5px 0 0;
   padding: 0.5em 0;
   text-align: left;
@@ -455,7 +455,7 @@ div.tabs span.tab_here {
   display: inline;
   font-weight: bold;
   margin-right: 5px;
-  padding: 0.2em 6px 0.25em 5px;
+  padding: 0.25em 6px 0.25em 5px;
   position: relative;
 }
 /* line 74, ../scss/custom/_rheader.scss */
