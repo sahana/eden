@@ -671,6 +671,10 @@ def config(settings):
     #settings.hrm.staff_experience = False
     # Uncomment to enable Volunteer 'active' field
     # - can also be made a function which is called to calculate the status based on recorded hours
+    # Custom label for Organisations in HR module
+    #settings.hrm.organisation_label = "Organization / Branch"
+    # Custom label for Top-level Organisations in HR module
+    #settings.hrm.root_organisation_label = "Organization"
     #settings.hrm.vol_active = True
     # Uncomment to define a Tooltip to show when viewing the Volunteer 'active' field
     #settings.hrm.vol_active_tooltip = "A volunteer is defined as active if they've participated in an average of 8 or more hours of Program work or Trainings per month in the last year"

@@ -787,6 +787,10 @@ class S3HRModel(S3Model):
                          "location_id$L1",
                          "location_id$L2",
                          ]
+
+        if settings.get_org_branches():
+            report_fields.insert(1, (settings.get_hrm_root_organisation_label(), "organisation_id$root_organisation"))
+
         if teams:
             report_fields.append((T(teams), "group_membership.group_id"))
 
