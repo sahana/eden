@@ -244,24 +244,44 @@ class S3CRUD(S3Method):
                 if buttons:
                     output["buttons"] = buttons
 
-            # Component join
+            # Component defaults and linking
             link = None
             if r.component:
+
+                defaults = r.component.get_defaults(r.record)
+
                 if resource.link is None:
-                    # No link table - direct component
+                    # Apply component defaults
+                    linked = resource.linked
+                    ctable = linked.table if linked else table
+                    for (k, v) in defaults.items():
+                        ctable[k].default = v
+
+                    # Configure post-process for S3EmbeddedComponentWidget
                     link = self._embed_component(resource, record=r.id)
+
+                    # Set default value for parent key (fkey)
                     pkey = resource.pkey
                     fkey = resource.fkey
                     field = table[fkey]
                     value = r.record[pkey]
-                    field.comment = None
-                    field.default = value
-                    field.update = value
+                    field.default = field.update = value
+
+                    # Add parent key to POST vars so that callbacks can see it
                     if r.http == "POST":
                         r.post_vars.update({fkey: value})
+
+                    # Hide the parent link in component forms
+                    field.comment = None
                     field.readable = False
                     field.writable = False
+
                 else:
+                    # Apply component defaults
+                    for (k, v) in defaults.items():
+                        table[k].default = v
+
+                    # Configure post-process to add a link table entry
                     link = Storage(resource=resource.link, master=r.record)
 
             get_vars = r.get_vars
