@@ -5338,7 +5338,7 @@ class pr_PersonEntityRepresent(S3Represent):
             if instance_type == "hrm_training_event":
                 training_event_represent = s3db.hrm_TrainingEventRepresent()
                 training_event_represent._setup()
-                rows = training_event_represent.lookup_rows(key,
+                rows = training_event_represent.lookup_rows(table[keyname],
                                                             values,
                                                             pe_id=True)
                 self.training_event_represent = training_event_represent
