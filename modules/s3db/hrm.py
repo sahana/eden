@@ -1984,7 +1984,7 @@ class S3HRSkillModel(S3Model):
         NONE = messages["NONE"]
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
-        ORGANISATION = messages.ORGANISATION
+        ORGANISATION = settings.get_hrm_organisation_label()
 
         ADMIN = current.session.s3.system_roles.ADMIN
         is_admin = auth.s3_has_role(ADMIN)
@@ -7484,7 +7484,7 @@ def hrm_training_event_controller():
     s3 = current.response.s3
 
     def prep(r):
-        if r.component and \
+        if r.component_name == "participant" and \
            (r.interactive or \
             r.representation in ("aadata", "pdf", "xls")):
 
@@ -7522,14 +7522,17 @@ def hrm_training_event_controller():
             field.default = record.hours
 
             # Suitable list_fields
+            settings = current.deployment_settings
             list_fields = ["person_id",
-                           (T("Job Title"), "job_title"),
-                           (current.messages.ORGANISATION, "organisation"),
-                           "grade",
                            ]
-            if current.deployment_settings.get_hrm_course_pass_marks():
+            if settings.get_hrm_use_job_titles():
+                list_fields.append((T("Job Title"), "job_title"))                       # Field.Method
+            list_fields += [(settings.get_hrm_organisation_label(), "organisation"),    # Field.Method
+                            "grade",
+                            ]
+            if settings.get_hrm_course_pass_marks():
                 list_fields.append("grade_details")
-            if current.deployment_settings.get_hrm_use_certificates():
+            if settings.get_hrm_use_certificates():
                 list_fields.append("certification.number")
 
             current.s3db.configure("hrm_training",

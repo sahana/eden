@@ -646,6 +646,8 @@ def config(settings):
     #settings.hrm.compose_button = False
     # Uncomment to allow HR records to be deletable rather than just marking them as obsolete
     #settings.hrm.deletable = True
+    # Uncomment to hide Job Titles
+    #settings.hrm.use_job_titles = False
     # Uncomment to allow HRs to have multiple Job Titles
     #settings.hrm.multiple_job_titles = True
     # Uncomment to have each root Org use a different Job Title Catalog

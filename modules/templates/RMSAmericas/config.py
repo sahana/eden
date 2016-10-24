@@ -432,6 +432,8 @@ def config(settings):
     settings.hrm.use_description = "Medical"
     # Uncomment to enable the use of HR Education
     settings.hrm.use_education = True
+    # Uncomment to hide Job Titles
+    settings.hrm.use_job_titles = False
     settings.hrm.use_skills = True
     # Custom label for Organisations in HR module
     settings.hrm.organisation_label = "National Society / Branch"
