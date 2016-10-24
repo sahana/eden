@@ -2867,12 +2867,10 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         master = Storage({pkey: master_id})
 
                     # Apply component defaults
-                    print "values before", values
                     values = component.get_defaults(master,
                                                     defaults = defaults,
                                                     data = values,
                                                     )
-                    print "values after", values
 
                     if not actuate_link or not link:
                         # Add master record ID as linked directly
