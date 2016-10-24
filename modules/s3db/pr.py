@@ -135,12 +135,12 @@ class S3PersonEntity(S3Model):
         crud_strings = current.response.s3.crud_strings
         define_table = self.define_table
         super_entity = self.super_entity
-        super_key = self.super_key
+        #super_key = self.super_key
         super_link = self.super_link
 
         messages = current.messages
-        YES = T("yes") #messages.YES
-        NO = T("no") #messages.NO
+        #YES = T("yes") #messages.YES
+        #NO = T("no") #messages.NO
         UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         # ---------------------------------------------------------------------
@@ -456,7 +456,6 @@ class S3PersonEntity(S3Model):
             # Default to Persons & Groups
             types = ("pr_person", "pr_group")
 
-        s3db = current.s3db
         response = current.response
 
         resource = r.resource
@@ -733,13 +732,10 @@ class S3PersonModel(S3Model):
 
         T = current.T
         db = current.db
-        request = current.request
-        gis = current.gis
         settings = current.deployment_settings
 
         messages = current.messages
         NONE = messages["NONE"]
-        UNKNOWN_OPT = messages.UNKNOWN_OPT
 
         super_link = self.super_link
 
@@ -766,13 +762,6 @@ class S3PersonModel(S3Model):
                                                                 zero=None,
                                                                 ),
                                     )
-
-        pr_impact_tags = {1: T("injured"),
-                          2: T("displaced"),
-                          3: T("suffered financial losses"),
-                          4: T("diseased"),
-                          5: T("separated from family"),
-                          }
 
         if settings.get_L10n_mandatory_lastname():
             last_name_validate = IS_NOT_EMPTY(error_message = T("Please enter a last name"))
@@ -5346,26 +5335,39 @@ class pr_PersonEntityRepresent(S3Represent):
             if not table:
                 continue
 
-            if instance_type in instance_fields:
-                fields = [table[f]
-                          for f in instance_fields[instance_type]
-                          if f in table.fields]
-            elif "name" in table.fields:
-                fields = [table["name"]]
+            if instance_type == "hrm_training_event":
+                training_event_represent = s3db.hrm_TrainingEventRepresent()
+                training_event_represent._setup()
+                rows = training_event_represent.lookup_rows(key,
+                                                            values,
+                                                            pe_id=True)
+                self.training_event_represent = training_event_represent
             else:
-                continue
-            fields.insert(0, table[keyname])
+                if instance_type in instance_fields:
+                    fields = [table[f]
+                              for f in instance_fields[instance_type]
+                              if f in table.fields]
+                elif "name" in table.fields:
+                    fields = [table["name"]]
+                else:
+                    continue
+                fields.insert(0, table[keyname])
 
-            query = (table[keyname].belongs(types[instance_type].keys()))
-            rows = db(query).select(*fields)
+                query = (table[keyname].belongs(types[instance_type].keys()))
+                rows = db(query).select(*fields)
             self.queries += 1
 
             sdata = types[instance_type]
-            for row in rows:
-                # Construct a new Row which contains both, the super-entity
-                # record and the instance record:
-                append(Row(pr_pentity = sdata[row[keyname]],
-                           **{instance_type: row}))
+            # Construct a new Row which contains both, the super-entity
+            # record and the instance record:
+            if instance_type == "hrm_training_event":
+                for row in rows:
+                    append(Row(pr_pentity = sdata[row["hrm_training_event"][keyname]],
+                               **{instance_type: row}))
+            else:
+                for row in rows:
+                    append(Row(pr_pentity = sdata[row[keyname]],
+                               **{instance_type: row}))
 
         return results
 
@@ -5387,29 +5389,22 @@ class pr_PersonEntityRepresent(S3Represent):
         else:
             label = None
 
+        item = object.__getattribute__(row, instance_type)
+        if instance_type == "pr_person":
+            pe_str = "%s %s" % (s3_fullname(item),
+                                label)
+        elif instance_type == "hrm_training_event":
+            pe_str = self.training_event_represent.represent_row(item)
+        elif "name" in item:
+            pe_str = s3_unicode(item["name"])
+        else:
+            pe_str = "[%s]" % label
+
         if self.show_type:
             etable = current.s3db.pr_pentity
             instance_type_nice = etable.instance_type.represent(instance_type)
-            instance_type_nice = " (%s)" % s3_unicode(instance_type_nice)
-        else:
-            instance_type_nice = ""
-
-        item = object.__getattribute__(row, instance_type)
-        if instance_type == "pr_person":
-            if show_label:
-                pe_str = "%s %s%s" % (s3_fullname(item),
-                                      label,
-                                      instance_type_nice)
-            else:
-                pe_str = "%s%s" % (s3_fullname(item),
-                                   instance_type_nice)
-
-        elif "name" in item:
-            pe_str = "%s%s" % (s3_unicode(item["name"]),
-                               instance_type_nice)
-        else:
-            pe_str = "[%s]%s" % (label,
-                                 instance_type_nice)
+            pe_str = "%s (%s)" % (pe_str,
+                                  s3_unicode(instance_type_nice))
 
         return pe_str
 
@@ -6287,12 +6282,12 @@ def pr_contacts(r, **attr):
     items.sort(key=mysort)
     opts = current.msg.CONTACT_OPTS
 
-    def action_buttons(table, id):
-        if has_permission("update", ctable, record_id=id):
+    def action_buttons(table, contact_id):
+        if has_permission("update", ctable, record_id=contact_id):
             edit_btn = A(T("Edit"), _class="editBtn action-btn fright")
         else:
             edit_btn = DIV()
-        if has_permission("delete", ctable, record_id=id):
+        if has_permission("delete", ctable, record_id=contact_id):
             delete_btn = A(T("Delete"), _class="delete-btn-ajax fright")
         else:
             delete_btn = DIV()
@@ -6301,17 +6296,17 @@ def pr_contacts(r, **attr):
     for contact_type, details in items:
         contacts_wrapper.append(H3(opts[contact_type]))
         for detail in details:
-            id = detail["pr_contact.id"]
+            contact_id = detail["pr_contact.id"]
             value = detail["pr_contact.value"]
             description = detail["pr_contact.contact_description"] or ""
             if description:
                 description = "%s, " % description
-            (edit_btn, delete_btn) = action_buttons(ctable, id)
+            (edit_btn, delete_btn) = action_buttons(ctable, contact_id)
 
             contacts_wrapper.append(P(SPAN(description, value),
                                       edit_btn,
                                       delete_btn,
-                                      _id="contact-%s" % id,
+                                      _id="contact-%s" % contact_id,
                                       _class="contact",
                                       ))
 
@@ -6559,7 +6554,7 @@ def pr_human_resource_update_affiliations(person_id):
     s = stable._tablename
     o = otable._tablename
     r = rtable._tablename
-    e = etable._tablename
+    #e = etable._tablename
 
     # Get the PE-ID for this person
     pe_id = s3db.pr_get_pe_id("pr_person", person_id)
@@ -6841,7 +6836,7 @@ def pr_delete_role(role_id):
         @param role_id: the role ID
     """
 
-    resource = s3db.resource("pr_role", id=role_id)
+    resource = current.s3db.resource("pr_role", id=role_id)
     return resource.delete()
 
 # =============================================================================
@@ -7385,7 +7380,7 @@ def pr_rebuild_path(pe_id, clear=False):
     """
 
     if isinstance(pe_id, Row):
-        pe_id = row.pe_id
+        pe_id = pe_id.pe_id
 
     rtable = current.s3db.pr_role
     query = (rtable.pe_id == pe_id) & \
@@ -7400,7 +7395,6 @@ def pr_rebuild_path(pe_id, clear=False):
     for role in roles:
         if role.path is None:
             pr_role_rebuild_path(role, clear=clear)
-    return
 
 # =============================================================================
 def pr_role_rebuild_path(role_id, skip=[], clear=False):
@@ -7639,11 +7633,11 @@ def pr_import_prep(data):
                                               ).first()
         if not record:
             # Add a new record
-            id = table.insert(**{"name": org})
-            update_super(table, Storage(id=id))
-            set_record_owner(table, id)
-            record = db(table.id == id).select(table.pe_id,
-                                               limitby=(0, 1)).first()
+            record_id = table.insert(**{"name": org})
+            update_super(table, Storage(id=record_id))
+            set_record_owner(table, record_id)
+            record = db(table.id == record_id).select(table.pe_id,
+                                                      limitby=(0, 1)).first()
         pe_id = record.pe_id
         # Replace string with pe_id
         element.text = str(pe_id)
@@ -8038,7 +8032,7 @@ class pr_PersonListLayout(S3DataListLayout):
         render_column = self.render_column
         for rfield in rfields:
             if rfield.colname in fields:
-                column = self.render_column(item_id, rfield, record)
+                column = render_column(item_id, rfield, record)
                 if column:
                     append(column)
         return DIV(DIV(body, _class="media-body"), _class="media")
@@ -8270,7 +8264,7 @@ def summary_urls(resource, url, filters):
 
         if section.get("common"):
             continue
-        section_id = section["name"]
+        #section_id = section["name"]
 
         tab_vars = list_vars + [("t", str(tab_idx))]
         links[section["name"]] = "%s?%s" % (base_url, urlencode(tab_vars))

@@ -3103,13 +3103,6 @@ class S3Config(Storage):
         """
         return self.hrm.get("deletable", True)
 
-    def get_hrm_filter_certificates(self):
-        """
-            If set to True then Certificates are filtered by (Root) Organisation
-            & hence certificates from other Organisations cannot be added to an HR's profile (except by Admins)
-        """
-        return self.hrm.get("filter_certificates", False)
-
     def get_hrm_multiple_job_titles(self):
         """
             If set to True then HRs can have multiple Job Titles
@@ -3243,6 +3236,19 @@ class S3Config(Storage):
             Whether Human Resources should use Certificates
         """
         return self.__lazy("hrm", "use_certificates", default=True)
+
+    def get_hrm_create_certificates_from_courses(self):
+        """
+            If set to True then Certificates are created automatically for each Course
+        """
+        return self.hrm.get("create_certificates_from_courses", False)
+
+    def get_hrm_filter_certificates(self):
+        """
+            If set to True then Certificates are filtered by (Root) Organisation
+            & hence certificates from other Organisations cannot be added to an HR's profile (except by Admins)
+        """
+        return self.hrm.get("filter_certificates", False)
 
     def get_hrm_use_code(self):
         """

@@ -426,6 +426,8 @@ def config(settings):
     #settings.hrm.use_certificates = False
     # Uncomment to filter certificates by (root) Organisation & hence not allow Certificates from other orgs to be added to a profile (except by Admin)
     settings.hrm.filter_certificates = True
+    # Uncomment to auto-create certificates for courses
+    settings.hrm.create_certificates_from_courses = True
     settings.hrm.use_code = True
     settings.hrm.use_description = "Medical"
     # Uncomment to enable the use of HR Education
@@ -1538,11 +1540,12 @@ def config(settings):
                                     "end_date",
                                     "grade",
                                     "grade_details",
+                                    "certification.number",
                                     # @ToDo: Complete this & then enable
-                                    S3SQLInlineComponent("certification",
-                                                         fields = ["number"],
-                                                         multiple = False,
-                                                         )
+                                    #S3SQLInlineComponent("certification",
+                                    #                     fields = ["number"],
+                                    #                     multiple = False,
+                                    #                     )
                                     )
 
         filter_widgets = [

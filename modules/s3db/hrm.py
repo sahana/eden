@@ -41,7 +41,7 @@ __all__ = ("S3HRModel",
            "S3HRProgrammeModel",
            "hrm_AssignMethod",
            "hrm_HumanResourceRepresent",
-           #"hrm_TrainingEventRepresent",
+           "hrm_TrainingEventRepresent",
            #"hrm_position_represent",
            "hrm_vars",
            "hrm_compose",
@@ -107,7 +107,7 @@ class S3HRModel(S3Model):
         messages = current.messages
         UNKNOWN_OPT = messages.UNKNOWN_OPT
         AUTOCOMPLETE_HELP = messages.AUTOCOMPLETE_HELP
-        ORGANISATION = messages.ORGANISATION
+        #ORGANISATION = messages.ORGANISATION
 
         add_components = self.add_components
         configure = self.configure
@@ -2674,12 +2674,18 @@ class S3HRSkillModel(S3Model):
                                     #widget = S3AutocompleteWidget("hrm", "course")
                                     )
 
+        if settings.get_hrm_create_certificates_from_courses():
+            onaccept = self.hrm_course_onaccept
+        else:
+            onaccept = None
+
         configure(tablename,
                   create_next = URL(f="course",
                                     args=["[id]", "course_certificate"]),
                   deduplicate = S3Duplicate(primary = ("name",),
                                             secondary = ("organisation_id",),
                                             ),
+                  onaccept = onaccept,
                   )
 
         # Components
@@ -3278,6 +3284,43 @@ class S3HRSkillModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
+    def hrm_course_onaccept(form):
+        """
+            Ensure that there is a Certificate created for each Course
+            - only called when create_certificates_from_courses == True
+        """
+
+        form_vars = form.vars
+        course_id = form_vars.id
+
+        db = current.db
+        s3db = current.s3db
+        ltable = s3db.hrm_course_certificate
+        exists = db(ltable.course_id == course_id).select(ltable.id,
+                                                          limitby = (0, 1)
+                                                          )
+        if not exists:
+            name = form_vars.get("name")
+            if not name:
+                table = s3db.hrm_course
+                name = db(table.id == course_id).select(table.name,
+                                                        limitby = (0, 1)
+                                                        ).first().name
+            ctable = s3db.hrm_certificate
+            certificate = db(ctable.name == name).select(ctable.id,
+                                                         limitby = (0, 1)
+                                                         ).first()
+            if certificate:
+                certificate_id = certificate.id
+            else:
+                certificate_id = ctable.insert(name = name)
+
+            ltable.insert(course_id = course_id,
+                          certificate_id = certificate_id,
+                          )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
     def hrm_certification_onaccept(record):
         """
             Ensure that Skills are Populated from Certifications
@@ -3403,7 +3446,6 @@ class S3HRSkillModel(S3Model):
     def hrm_training_event_realm_entity(table, record):
         """ Set the training_event realm entity to the root Org of the Site """
 
-        training_event_id = record.id
         db = current.db
         stable = db.org_site
         query = (stable.site_id == record.site_id)
@@ -4948,13 +4990,15 @@ class hrm_TrainingEventRepresent(S3Represent):
                                                 lookup = "hrm_training_event")
 
     # -------------------------------------------------------------------------
-    def lookup_rows(self, key, values, fields=[]):
+    def lookup_rows(self, key, values, fields=[], pe_id=False):
         """
             Custom rows lookup
 
             @param key: the key Field
             @param values: the values
             @param fields: unused (retained for API compatibility)
+            @param pe_id: whether to include pe_id in the output rows
+                          (True when called from pr_PersonEntityRepresent)
         """
 
         s3db = current.s3db
@@ -4971,13 +5015,18 @@ class hrm_TrainingEventRepresent(S3Represent):
         else:
             query = key.belongs(values)
 
-        rows = current.db(query).select(etable.id,
-                                        etable.start_date,
-                                        etable.instructor,
-                                        etable.person_id,
-                                        ctable.name,
-                                        ctable.code,
-                                        stable.name,
+        fields = [etable.id,
+                  etable.start_date,
+                  etable.instructor,
+                  etable.person_id,
+                  ctable.name,
+                  ctable.code,
+                  stable.name,
+                  ]
+        if pe_id:
+            fields.insert(0, etable.pe_id)
+
+        rows = current.db(query).select(*fields,
                                         left = left)
 
         instructors = current.deployment_settings.get_hrm_training_instructors()
@@ -5349,31 +5398,31 @@ def hrm_compose():
 
     if "human_resource.id" in req_vars:
         fieldname = "human_resource.id"
-        id = req_vars.get(fieldname)
+        record_id = req_vars.get(fieldname)
         table = s3db.pr_person
         htable = s3db.hrm_human_resource
-        query = (htable.id == id) & \
+        query = (htable.id == record_id) & \
                 (htable.person_id == table.id)
         title = T("Send a message to this person")
         # URL to redirect to after message sent
         url = URL(f="compose",
-                  vars={fieldname: id})
+                  vars={fieldname: record_id})
     elif "group_id" in req_vars:
-        id = req_vars.group_id
         fieldname = "group_id"
+        record_id = req_vars.group_id
         table = s3db.pr_group
-        query = (table.id == id)
+        query = (table.id == record_id)
         title = T("Send a message to this team")
         # URL to redirect to after message sent
         url = URL(f="compose",
-                  vars={fieldname: id})
+                  vars={fieldname: record_id})
     elif "training_event.id" in req_vars:
         fieldname = "training_event.id"
-        id = req_vars.get(fieldname)
+        record_id = req_vars.get(fieldname)
         pe_id = req_vars.pe_id
         title = T("Message Participants")
         # URL to redirect to after message sent
-        url = URL(f="training_event", args=id)
+        url = URL(f="training_event", args=record_id)
 
     else:
         current.session.error = T("Record not found")
