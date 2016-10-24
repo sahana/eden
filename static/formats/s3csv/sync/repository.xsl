@@ -15,8 +15,6 @@
                                          eden|adashi
          URL.............................sync_repository.url
          Path............................sync_repository.path (for filesync)
-         Accept Push.....................sync_repository.accept_push
-                                         true|false
          Synchronize UUIDs...............sync_repository.synchronise_uuids
                                          true|false
 
@@ -77,20 +75,6 @@
                         </xsl:if>
                     </xsl:otherwise>
                 </xsl:choose>
-
-                <xsl:variable name="AcceptPush" select="col[@field='Accept Push']/text()"/>
-                <data field="accept_push">
-                    <xsl:attribute name="value">
-                        <xsl:choose>
-                            <xsl:when test="$AcceptPush='true'">
-                                <xsl:value-of select="'true'"/>
-                            </xsl:when>
-                            <xsl:otherwise>
-                                <xsl:value-of select="'false'"/>
-                            </xsl:otherwise>
-                        </xsl:choose>
-                    </xsl:attribute>
-                </data>
 
                 <xsl:variable name="SynchroniseUUIDs" select="col[@field='Synchronize UUIDs']/text()"/>
                 <data field="synchronise_uuids">

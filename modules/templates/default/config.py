@@ -380,11 +380,6 @@ def config(settings):
     # Uncomment to Disable the Postcode selector in the LocationSelector
     #settings.gis.postcode_selector = False
 
-    # Sync
-    # Uncomment to add roles which can register repos with accept_push = True
-    # @ToDo: Use approval framework instead
-    #settings.sync.roles_which_can_register_repos_with_accept_push = ("SYNC",)
-
     # Increase these if having scalability issues or slow connections
     #settings.ui.autocomplete_delay = 800
     #settings.ui.autocomplete_min_chars = 2

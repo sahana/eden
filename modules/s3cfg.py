@@ -2315,15 +2315,6 @@ class S3Config(Storage):
 
         return self.sync.get("mcb_domain_identifiers", {})
 
-    def get_sync_roles_which_can_register_repos_with_accept_push(self):
-        """
-            A list of roles (in addition to ADMIN) which can register
-            Sync Repos with accept_push = True
-
-            @ToDo: Do this via Approval instead
-        """
-        return self.sync.get("roles_which_can_register_repos_with_accept_push", [])
-
     def get_sync_upload_filename(self):
         """
             Filename for upload via FTP Sync

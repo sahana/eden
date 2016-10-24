@@ -182,7 +182,7 @@ def config(settings):
     def customise_msg_rss_channel_controller(**attr):
 
         s3 = current.response.s3
-        table = current.s3db.msg_rss_channel        
+        table = current.s3db.msg_rss_channel
         type = current.request.get_vars.get("type", None)
         if type == "cap":
             # CAP RSS Channel
@@ -220,7 +220,7 @@ def config(settings):
                                                     )
                     restrict_e = [str(row.id) for row in rows if not row.enabled]
                     restrict_d = [str(row.id) for row in rows if row.enabled]
-        
+
                     from s3 import s3_str
                     s3.actions = [dict(label=s3_str(T("Open")),
                                        _class="action-btn edit",
@@ -405,7 +405,7 @@ def config(settings):
                 # Google Cloud Messaging
                 stable = s3db.pr_subscription
                 ctable = s3db.pr_contact
-    
+
                 query = (stable.pe_id == ctable.pe_id) & \
                         (ctable.contact_method == "GCM") & \
                         (ctable.value != None) & \
@@ -574,7 +574,6 @@ def config(settings):
                 table = r.table
                 table.apitype.default = "ftp"
                 table.apitype.readable = table.apitype.writable = False
-                table.accept_push.readable = table.accept_push.writable = False
                 table.synchronise_uuids.readable = \
                                         table.synchronise_uuids.writable = False
                 table.uuid.readable = table.uuid.writable = False

@@ -68,22 +68,25 @@ class S3SyncAdapter(S3SyncBaseAdapter):
         """
 
         repository = self.repository
-
         if not repository.url:
             return True
 
-        current.log.debug("S3Sync: register at %s" % (repository.url))
-
         # Construct the URL
+        url = "%s/sync/repository/register.json" % repository.url
+        current.log.debug("S3Sync: register at %s" % url)
+
+        # The registration parameters
         config = repository.config
         name = current.deployment_settings.get_base_public_url().split("//", 1)[1]
-        url = "%s/sync/repository/register.xml?repository=%s&name=%s" % \
-              (repository.url, config.uuid, name)
-
-        current.log.debug("S3Sync: send registration to URL %s" % url)
+        parameters = {"uuid": config.uuid,
+                      "name": name,
+                      "apitype": "eden",
+                      }
+        data = json.dumps(parameters)
 
         # Generate the request
-        req = urllib2.Request(url=url)
+        headers = {"Content-Type": "application/json"}
+        req = urllib2.Request(url=url, headers=headers)
         handlers = []
 
         # Proxy handling
@@ -114,16 +117,16 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             opener = urllib2.build_opener(*handlers)
             urllib2.install_opener(opener)
 
-        # Execute the request
+        # Send the request
         log = repository.log
         success = True
         remote = False
         try:
-            f = urllib2.urlopen(req)
+            f = urllib2.urlopen(req, data)
         except urllib2.HTTPError, e:
+            # Remote error
             result = log.FATAL
-            remote = True # Peer error
-            #code = e.code
+            remote = True
             message = e.read()
             success = False
             try:
@@ -132,8 +135,8 @@ class S3SyncAdapter(S3SyncBaseAdapter):
             except:
                 pass
         except:
+            # Local error
             result = log.FATAL
-            #code = 400
             message = sys.exc_info()[1]
             success = False
         else:

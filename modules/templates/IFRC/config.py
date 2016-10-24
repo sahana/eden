@@ -241,11 +241,6 @@ def config(settings):
 
     settings.auth.realm_entity = ifrc_realm_entity
 
-    # Sync
-    # Uncomment to add roles which can register repos with accept_push = True
-    # @ToDo: Use approval framework instead
-    settings.sync.roles_which_can_register_repos_with_accept_push = ("SYNC",)
-
     # -------------------------------------------------------------------------
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "IFRC"

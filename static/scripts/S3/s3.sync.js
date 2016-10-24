@@ -21,7 +21,6 @@
                       "client_secret": false,
                       "site_key": false,
                       "proxy": true,
-                      "accept_push": true,
                       "synchronise_uuids": true,
                       "keep_source": false
             };
@@ -31,7 +30,6 @@
                 fields.username = false;
                 fields.password = false;
                 fields.proxy = false;
-                fields.accept_push = false;
                 fields.keep_source = true;
                 break;
             case "ccrm":
@@ -44,7 +42,6 @@
                 fields.username = false;
                 fields.password = false;
                 fields.proxy = false;
-                fields.accept_push = false;
                 break;
             case "ftp":
                 break;
@@ -55,7 +52,6 @@
                 fields.client_id = true;
                 fields.client_secret = true;
                 fields.site_key = true;
-                fields.accept_push = false;
                 break;
             default: // Sahana Eden
                 break;
