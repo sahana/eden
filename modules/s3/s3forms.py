@@ -1206,21 +1206,16 @@ class S3SQLCustomForm(S3SQLForm):
                 subdata[component.fkey] = main_data[pkey]
 
             # Do we already have a record for this component?
-            # If yes, then get the subrecord ID
             rows = self.subrows
             if alias in rows and rows[alias] is not None:
+                # Yes => get the subrecord ID
                 subid = rows[alias][subtable._id]
             else:
+                # No => apply component defaults
                 subid = None
-                # Apply component defaults
-                defaults = component.defaults
-                if isinstance(defaults, dict):
-                    for k, v in defaults.items():
-                        if k != component.fkey and \
-                           k not in subdata and \
-                           k in component.fields:
-                            subdata[k] = v
-
+                subdata = component.get_defaults(main_data,
+                                                 data = subdata,
+                                                 )
             # Accept the subrecord
             self._accept(subid,
                          subdata,
@@ -2863,7 +2858,8 @@ class S3SQLInlineComponent(S3SQLSubForm):
                     mastertable = resource.table
                     if pkey != mastertable._id.name:
                         query = (mastertable._id == master_id)
-                        master = db(query).select(mastertable[pkey],
+                        master = db(query).select(mastertable._id,
+                                                  mastertable[pkey],
                                                   limitby=(0, 1)).first()
                         if not master:
                             return
@@ -2871,23 +2867,23 @@ class S3SQLInlineComponent(S3SQLSubForm):
                         master = Storage({pkey: master_id})
 
                     # Apply component defaults
-                    component_defaults = component.defaults
-                    if isinstance(component_defaults, dict):
-                        for k, v in component_defaults.items():
-                            if k != component.fkey and \
-                               k not in values and \
-                               k in component.fields:
-                                values[k] = v
+                    values = component.get_defaults(master,
+                                                    defaults = defaults,
+                                                    data = values,
+                                                    )
 
                     if not actuate_link or not link:
                         # Add master record ID as linked directly
                         values[component.fkey] = master[pkey]
                     else:
-                        # Check whether the component is a link table and we're linking to that via something like pr_person from hrm_human_resource
+                        # Check whether the component is a link table and
+                        # we're linking to that via something like pr_person
+                        # from hrm_human_resource
                         fkey = component.fkey
                         if fkey != "id" and fkey in component.fields and fkey not in values:
                             if fkey == "pe_id" and pkey == "person_id":
-                                # Need to lookup the pe_id manually (bad that we need this special case, must be a better way but this works for now)
+                                # Need to lookup the pe_id manually (bad that we need this
+                                # special case, must be a better way but this works for now)
                                 ptable = s3db.pr_person
                                 person = db(ptable.id == master[pkey]).select(ptable.pe_id,
                                                                               limitby=(0, 1)
@@ -2898,11 +2894,6 @@ class S3SQLInlineComponent(S3SQLSubForm):
                                     s3_debug("S3Forms", "Cannot find person with ID: %s" % master[pkey])
                             else:
                                 values[fkey] = master[pkey]
-
-                    # Apply defaults
-                    for f, v in defaults.iteritems():
-                        if f not in item:
-                            values[f] = v
 
                     # Create the new record
                     # use _table in case we are using an alias
