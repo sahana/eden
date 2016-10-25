@@ -2681,24 +2681,24 @@ class S3ImportItem(object):
 
             # Resolve the key table name
             ktablename, key, multiple = s3_get_foreign_key(table[fkey])
+            # @ToDo: Remove these when we're certain that s3_get_foreign_key finds these properly
+            #        - doesn't seem to be happening currently, probably because S3OrganisationModel not called to get the config
             if not ktablename:
-                continue
+                if self.tablename == "auth_user":
+                    # Treat the affiliations as proper FKs
+                    if fkey == "organisation_id":
+                        ktablename = "org_organisation"
+                    elif fkey == "site_id":
+                        ktablename = "org_site"
+                    elif fkey == "org_group_id":
+                        ktablename = "org_group"
+                    else:
+                        continue
+                else:
+                    continue
+
             if entry.tablename:
                 ktablename = entry.tablename
-            # @ToDo: Remove these when we're certain that s3_get_foreign_key finds these properly
-            #elif not ktablename:
-            #    if self.tablename == "auth_user":
-            #        # Treat the affiliations as proper FKs
-            #        if fkey == "organisation_id":
-            #            ktablename = "org_organisation"
-            #        elif fkey == "site_id":
-            #            ktablename = "org_site"
-            #        elif fkey == "org_group_id":
-            #            ktablename = "org_group"
-            #        else:
-            #            continue
-            #    else:
-            #        continue
 
             try:
                 ktable = current.s3db[ktablename]
@@ -3284,20 +3284,21 @@ class S3ImportJob():
                 # Find the key table
                 ktablename, key, multiple = s3_get_foreign_key(table[field])
                 if not ktablename:
-                    continue
-                # @ToDo: Remove these when we're certain that s3_get_foreign_key finds these properly
-                #    if table._tablename == "auth_user":
-                #        # Treat the affiliations as proper FKs
-                #        if field == "organisation_id":
-                #            ktablename = "org_organisation"
-                #        elif field == "site_id":
-                #            ktablename = "org_site"
-                #        elif field == "org_group_id":
-                #            ktablename = "org_group"
-                #        else:
-                #            continue
-                #    else:
-                #        continue
+                    #continue
+                    # @ToDo: Remove these when we're certain that s3_get_foreign_key finds these properly
+                    if table._tablename == "auth_user":
+                        # Treat the affiliations as proper FKs
+                        if field == "organisation_id":
+                            ktablename = "org_organisation"
+                        elif field == "site_id":
+                            ktablename = "org_site"
+                        elif field == "org_group_id":
+                            ktablename = "org_group"
+                        else:
+                            continue
+                    else:
+                        continue
+
                 try:
                     ktable = s3db[ktablename]
                 except:
