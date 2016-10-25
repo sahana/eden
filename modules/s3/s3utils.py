@@ -1231,10 +1231,12 @@ def s3_has_foreign_key(field, m2m=True):
     except:
         # Virtual Field
         return False
-    if ftype[:9] == "reference":
+
+    if ftype[:9] == "reference" or \
+       m2m and ftype[:14] == "list:reference" or \
+       current.s3db.virtual_reference(field):
         return True
-    if m2m and ftype[:14] == "list:reference":
-        return True
+
     return False
 
 # =============================================================================
@@ -1247,10 +1249,10 @@ def s3_get_foreign_key(field, m2m=True):
         @param m2m: also detect many-to-many references
 
         @return: tuple (tablename, key, multiple), where tablename is
-                  the name of the referenced table (or None if this field
-                  has no foreign key constraint), key is the field name of
-                  the referenced key, and multiple indicates whether this is
-                  a many-to-many reference (list:reference) or not.
+                 the name of the referenced table (or None if this field
+                 has no foreign key constraint), key is the field name of
+                 the referenced key, and multiple indicates whether this is
+                 a many-to-many reference (list:reference) or not.
 
         @note: many-to-many references (list:reference) are not DB constraints,
                but pseudo-references implemented by the DAL. If you only want
@@ -1258,14 +1260,16 @@ def s3_get_foreign_key(field, m2m=True):
     """
 
     ftype = str(field.type)
+    multiple = False
     if ftype[:9] == "reference":
         key = ftype[10:]
-        multiple = False
     elif m2m and ftype[:14] == "list:reference":
         key = ftype[15:]
         multiple = True
     else:
-        return (None, None, None)
+        key = current.s3db.virtual_reference(field)
+        if not key:
+            return (None, None, None)
     if "." in key:
         rtablename, key = key.split(".")
     else:

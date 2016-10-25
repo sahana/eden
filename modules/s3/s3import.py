@@ -2693,10 +2693,8 @@ class S3ImportItem(object):
                 pkey, fkey = ("id", field)
 
             # Resolve the key table name
-            ktablename, key, multiple = s3_get_foreign_key(table[fkey])
-            if entry.tablename:
-                ktablename = entry.tablename
-            elif not ktablename:
+            ktablename, key, multiple = s3_get_foreign_key(self.table[fkey])
+            if not ktablename:
                 if self.tablename == "auth_user":
                     # Treat the affiliations as proper FKs
                     if fkey == "organisation_id":
@@ -2709,6 +2707,8 @@ class S3ImportItem(object):
                         continue
                 else:
                     continue
+            if entry.tablename:
+                ktablename = entry.tablename
 
             try:
                 ktable = current.s3db[ktablename]

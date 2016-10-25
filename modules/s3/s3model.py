@@ -423,6 +423,34 @@ class S3Model(object):
 
     # -------------------------------------------------------------------------
     @classmethod
+    def virtual_reference(cls, field):
+        """
+            Reverse-lookup of virtual references which are declared for
+            the respective lookup-table as:
+
+                configure(tablename,
+                          referenced_by = [(tablename, fieldname), ...],
+                          )
+
+            @param field: the Field
+
+            @returns: the name of the referenced table
+        """
+
+        if str(field.type) == "integer":
+
+            config = current.model.config
+            key = tuple(str(field).split("."))
+
+            for tn in config:
+                referenced_by = config[tn].get("referenced_by")
+                if referenced_by and key in referenced_by:
+                    return tn
+
+        return None
+
+    # -------------------------------------------------------------------------
+    @classmethod
     def onaccept(cls, table, record, method="create"):
         """
             Helper to run the onvalidation routine for a record
