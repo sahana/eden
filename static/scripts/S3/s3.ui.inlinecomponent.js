@@ -1221,7 +1221,7 @@
             if (!errors) {
                 // Remove the submit-event handler for this widget and
                 // continue submitting the main form (=this)
-                $(this).unbind(self.namespace + self.id).submit();
+                $(this).unbind(self.eventNamespace + self.id).submit();
             }
         },
 

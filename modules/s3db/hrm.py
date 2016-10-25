@@ -3325,13 +3325,13 @@ class S3HRSkillModel(S3Model):
 
         # Deletion and update have a different format
         try:
-            id = record.vars.id
+            certification_id = record.vars.id
         except:
-            id = record.id
+            certification_id = record.id
 
         db = current.db
         table = db.hrm_certification
-        data = table(table.id == id)
+        data = table(table.id == certification_id)
 
         try:
             if data.deleted:
@@ -3346,7 +3346,8 @@ class S3HRSkillModel(S3Model):
         cstable = db.hrm_certificate_skill
 
         # Drop all existing competencies which came from certification
-        # - this is a lot easier than selective deletion.
+        # - this is a lot easier than selective deletion
+        # @ToDo: Avoid this method as it will break Inline Component Updates if we ever use those
         query = (ctable.person_id == person_id) & \
                 (ctable.from_certification == True)
         db(query).delete()
@@ -3511,41 +3512,43 @@ def hrm_training_onaccept(form):
 
     # Deletion and update have a different format
     try:
-        _id = form.vars.id
+        training_id = form.vars.id
         delete = False
     except:
-        _id = form.id
+        training_id = form.id
         delete = True
 
     # Get the full record
     db = current.db
     table = db.hrm_training
-    record = db(table.id == _id).select(table.id,
-                                        table.person_id,
-                                        table.course_id,
-                                        table.date,
-                                        table.hours,
-                                        table.grade,
-                                        table.grade_details,
-                                        table.deleted_fk,
-                                        limitby=(0, 1)).first()
+    record = db(table.id == training_id).select(table.id,
+                                                table.person_id,
+                                                table.course_id,
+                                                table.date,
+                                                table.hours,
+                                                table.grade,
+                                                table.grade_details,
+                                                table.deleted_fk,
+                                                limitby=(0, 1)).first()
 
     if delete:
         deleted_fks = json.loads(record.deleted_fk)
+        course_id = deleted_fks["course_id"]
         person_id = deleted_fks["person_id"]
     else:
+        course_id = record.course_id
         person_id = record.person_id
 
     s3db = current.s3db
+    course_table = db.hrm_course
     settings = current.deployment_settings
 
     course_pass_marks = settings.get_hrm_course_pass_marks()
     if course_pass_marks and not record.grade and record.grade_details:
         # Provide a Pass/Fail rating based on the Course's Pass Mark
-        ctable = db.hrm_course
-        course = db(ctable.id == record.course_id).select(ctable.pass_mark,
-                                                          limitby=(0, 1)
-                                                          ).first()
+        course = db(course_table.id == course_id).select(course_table.pass_mark,
+                                                         limitby=(0, 1)
+                                                         ).first()
         if course:
             if record.grade_details >= course.pass_mark:
                 # Pass
@@ -3566,7 +3569,7 @@ def hrm_training_onaccept(form):
         if vol and vol.type == 2:
             # Update Hours
             ptable = s3db.hrm_programme_hours
-            query = (ptable.training_id == _id)
+            query = (ptable.training_id == training_id)
             if delete:
                 resource = s3db.resource("hrm_programme_hours", filter=query)
                 # Automatically propagates to Active Status
@@ -3584,55 +3587,76 @@ def hrm_training_onaccept(form):
                     if date != exists.date or \
                        hours != exists.hours:
                         db(query).update(date=date, hours=hours)
-                        _id = exists.id
+                        ph_id = exists.id
                     else:
                         # Nothing to propagate
-                        _id = None
+                        ph_id = None
                 else:
-                    _id = ptable.insert(training_id = _id,
-                                        person_id = person_id,
-                                        date = date,
-                                        hours = hours,
-                                        training = True)
-                if _id:
+                    ph_id = ptable.insert(training_id = training_id,
+                                          person_id = person_id,
+                                          date = date,
+                                          hours = hours,
+                                          training = True)
+                if ph_id:
                     # Propagate to Active Status
                     form = Storage()
                     form.vars = Storage()
-                    form.vars.id = _id
+                    form.vars.id = ph_id
                     hrm_programme_hours_onaccept(form)
 
     # Update Certifications
     ctable = db.hrm_certification
-    cctable = db.hrm_course_certificate
-    _ctable = db.hrm_certificate
+    ltable = db.hrm_course_certificate
 
+    # Old: Breaks Inline Component Updates since record_id changes
     # Drop all existing certifications which came from trainings
     # - this is a lot easier than selective deletion.
-    query = (ctable.person_id == person_id) & \
-            (ctable.training_id != None)
-    db(query).delete()
 
-    # Figure out which certifications we're _supposed_ to have.
-    query = (table.person_id == person_id) & \
-            (table.course_id == cctable.course_id)
-    trainings = db(query).select(table.id,
-                                 cctable.certificate_id)
-
-    # Add these certifications back in
-    hrm_certification_onaccept = s3db.hrm_certification_onaccept
-    form = Storage()
-    form.vars = Storage()
-    form_vars = form.vars
-    for training in trainings:
-        _id = ctable.update_or_insert(
-                person_id = person_id,
-                certificate_id = training[cctable.certificate_id],
-                training_id = training[table.id],
-                comments = "Added by training",
-                )
-        # Propagate to Skills
-        form_vars.id = _id
-        hrm_certification_onaccept(form)
+    if delete:
+        # Remove certifications if provided by this training and no other
+        # training led to it
+        query = (ctable.training_id == training_id) & \
+                (ctable.deleted == False)
+        certifications = db(query).select(ctable.id,
+                                          ctable.certificate_id)
+        for certification in certifications:
+            query = (ltable.certificate_id == certification.certificate_id) & \
+                    (ltable.deleted == False) & \
+                    (ltable.course_id == table.course_id) & \
+                    (table.deleted == False)
+            trainings = db(query).select(table.id,
+                                         table.date,
+                                         limitby = (0, 1),
+                                         orderby = "date desc",
+                                         )
+            if trainings:
+                # Update the training_id
+                certification.update_record(training_id = trainings.first().id)
+            else:
+                # Remove the certification
+                query = (ctable.id == certification.id)
+                resource = s3db.resource("hrm_certification", filter=query)
+                # Automatically propagates to Skills
+                resource.delete()
+    else:
+        # Which certificates does this course give?
+        query = (ltable.course_id == course_id) & \
+                (ltable.deleted == False)
+        certificates = db(query).select(ltable.certificate_id)
+        # Add any missing certifications
+        hrm_certification_onaccept = s3db.hrm_certification_onaccept
+        for certificate in certificates:
+            certification_id = ctable.update_or_insert(
+                    person_id = person_id,
+                    certificate_id = certificate.certificate_id,
+                    training_id = training_id,
+                    comments = "Added by training",
+                    )
+            # Propagate to Skills
+            form = Storage()
+            form.vars = Storage()
+            form.vars.id = certification_id
+            hrm_certification_onaccept(form)
 
 # =============================================================================
 class S3HRAppraisalModel(S3Model):
