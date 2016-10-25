@@ -2672,18 +2672,19 @@ class S3ImportItem(object):
             is not yet available, it will be scheduled for later update.
         """
 
-        if not self.table:
+        table = self.table
+        if not table:
             return
 
         db = current.db
         items = self.job.items
         for reference in self.references:
 
-            item = None
-            field = reference.field
             entry = reference.entry
             if not entry:
                 continue
+
+            field = reference.field
 
             # Resolve key tuples
             if isinstance(field, (list,tuple)):
@@ -2692,21 +2693,30 @@ class S3ImportItem(object):
                 pkey, fkey = ("id", field)
 
             # Resolve the key table name
-            ktablename, key, multiple = s3_get_foreign_key(self.table[fkey])
-            if not ktablename:
-                if self.tablename == "auth_user" and \
-                   fkey == "organisation_id":
-                    ktablename = "org_organisation"
-                else:
-                    continue
+            ktablename, key, multiple = s3_get_foreign_key(table[fkey])
             if entry.tablename:
                 ktablename = entry.tablename
+            elif not ktablename:
+                if self.tablename == "auth_user":
+                    # Treat the affiliations as proper FKs
+                    if fkey == "organisation_id":
+                        ktablename = "org_organisation"
+                    elif fkey == "site_id":
+                        ktablename = "org_site"
+                    elif fkey == "org_group_id":
+                        ktablename = "org_group"
+                    else:
+                        continue
+                else:
+                    continue
+
             try:
                 ktable = current.s3db[ktablename]
             except:
                 continue
 
             # Resolve the foreign key (value)
+            item = None
             fk = entry.id
             if entry.item_id:
                 item = items[entry.item_id]
@@ -3284,9 +3294,16 @@ class S3ImportJob():
                 # Find the key table
                 ktablename, key, multiple = s3_get_foreign_key(table[field])
                 if not ktablename:
-                    if table._tablename == "auth_user" and \
-                    field == "organisation_id":
-                        ktablename = "org_organisation"
+                    if table._tablename == "auth_user":
+                        # Treat the affiliations as proper FKs
+                        if field == "organisation_id":
+                            ktablename = "org_organisation"
+                        elif field == "site_id":
+                            ktablename = "org_site"
+                        elif field == "org_group_id":
+                            ktablename = "org_group"
+                        else:
+                            continue
                     else:
                         continue
                 try:

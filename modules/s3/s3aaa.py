@@ -7584,6 +7584,7 @@ class S3RoleManager(S3Method):
             ANY = "ANY"
             controllers = [c for c in self.controllers.keys()
                              if c not in self.HIDE_CONTROLLER]
+            controllers.sort()
             ptables = []
             query = (acl_table.deleted != True) & \
                     (acl_table.group_id == role_id)
@@ -7744,6 +7745,7 @@ class S3RoleManager(S3Method):
                 tacls = db(query).select(acl_table.tablename, distinct=True)
                 if tacls:
                     ptables = [acl.tablename for acl in tacls]
+                    ptables.sort()
                 # Relevant ACLs
                 acls = dict((acl.tablename, acl) for acl in records
                                                  if acl.tablename in ptables)

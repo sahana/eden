@@ -1221,7 +1221,7 @@ def s3_has_foreign_key(field, m2m=True):
         @param field: the field (Field instance)
         @param m2m: also detect many-to-many links
 
-        @note: many-to-many references (list:reference) are no DB constraints,
+        @note: many-to-many references (list:reference) are not DB constraints,
                but pseudo-references implemented by the DAL. If you only want
                to find real foreign key constraints, then set m2m=False.
     """
@@ -1252,7 +1252,7 @@ def s3_get_foreign_key(field, m2m=True):
                   the referenced key, and multiple indicates whether this is
                   a many-to-many reference (list:reference) or not.
 
-        @note: many-to-many references (list:reference) are no DB constraints,
+        @note: many-to-many references (list:reference) are not DB constraints,
                but pseudo-references implemented by the DAL. If you only want
                to find real foreign key constraints, then set m2m=False.
     """
