@@ -2681,6 +2681,8 @@ class S3ImportItem(object):
 
             # Resolve the key table name
             ktablename, key, multiple = s3_get_foreign_key(table[fkey])
+            if not ktablename:
+                continue
             if entry.tablename:
                 ktablename = entry.tablename
             # @ToDo: Remove these when we're certain that s3_get_foreign_key finds these properly
@@ -3281,8 +3283,9 @@ class S3ImportJob():
 
                 # Find the key table
                 ktablename, key, multiple = s3_get_foreign_key(table[field])
+                if not ktablename:
+                    continue
                 # @ToDo: Remove these when we're certain that s3_get_foreign_key finds these properly
-                #if not ktablename:
                 #    if table._tablename == "auth_user":
                 #        # Treat the affiliations as proper FKs
                 #        if field == "organisation_id":
