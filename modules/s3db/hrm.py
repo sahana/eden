@@ -2332,246 +2332,6 @@ class S3HRSkillModel(S3Model):
         #                           )
 
 
-        # =====================================================================
-        # Certificates
-        #
-        # NB Some Orgs will only trust the certificates of some Orgs
-        # - we currently make no attempt to manage this trust chain
-        #
-        filter_certs = settings.get_hrm_filter_certificates()
-        if filter_certs:
-            label = ORGANISATION
-        else:
-            label = T("Certifying Organization")
-
-        tablename = "hrm_certificate"
-        define_table(tablename,
-                     Field("name", notnull=True,
-                           length=128,   # Mayon Compatibility
-                           label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
-                           ),
-                     organisation_id(default = root_org if filter_certs else None,
-                                     label = label,
-                                     readable = is_admin or not filter_certs,
-                                     writable = is_admin or not filter_certs,
-                                     widget = widget,
-                                     ),
-                     Field("expiry", "integer",
-                           label = T("Expiry (months)"),
-                           ),
-                     *s3_meta_fields())
-
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Certificate"),
-            title_display = T("Certificate Details"),
-            title_list = T("Certificate Catalog"),
-            title_update = T("Edit Certificate"),
-            title_upload = T("Import Certificates"),
-            label_list_button = T("List Certificates"),
-            label_delete_button = T("Delete Certificate"),
-            msg_record_created = T("Certificate added"),
-            msg_record_modified = T("Certificate updated"),
-            msg_record_deleted = T("Certificate deleted"),
-            msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no entries in the catalog"))
-
-        label_create = crud_strings[tablename].label_create
-        represent = S3Represent(lookup=tablename)
-        certificate_id = S3ReusableField("certificate_id", "reference %s" % tablename,
-             label = T("Certificate"),
-             ondelete = "RESTRICT",
-             represent = represent,
-             requires = IS_EMPTY_OR(
-                            IS_ONE_OF(db,
-                                      "hrm_certificate.id",
-                                      represent,
-                                      filterby="organisation_id" if filter_certs else None,
-                                      filter_opts=filter_opts
-                                      )),
-             sortby = "name",
-             comment = S3PopupLink(f = "certificate",
-                                   label = label_create,
-                                   title = label_create,
-                                   tooltip = T("Add a new certificate to the catalog."),
-                                   ),
-             )
-
-        if settings.get_hrm_use_skills():
-            create_next = URL(f="certificate",
-                              args=["[id]", "certificate_skill"])
-        else:
-            create_next = None
-
-        configure(tablename,
-                  create_next = create_next,
-                  deduplicate = S3Duplicate(),
-                  )
-
-        # Components
-        add_components(tablename,
-                       hrm_certificate_skill = "certificate_id",
-                       )
-
-        # =====================================================================
-        # Certifications
-        #
-        # Link table between Persons & Certificates
-        #
-        # These are an element of credentials
-        #
-
-        tablename = "hrm_certification"
-        define_table(tablename,
-                     person_id(empty = False,
-                               ondelete = "CASCADE",
-                               ),
-                     certificate_id(empty = False,
-                                    ),
-                     # @ToDo: Option to auto-generate (like Waybills: SiteCode-CourseCode-UniqueNumber)
-                     Field("number",
-                           label = T("License Number"),
-                           ),
-                     #Field("status", label = T("Status")),
-                     s3_date(label = T("Expiry Date")),
-                     Field("image", "upload",
-                           autodelete = True,
-                           label = T("Scanned Copy"),
-                           length = current.MAX_FILENAME_LENGTH,
-                           # upload folder needs to be visible to the download() function as well as the upload
-                           uploadfolder = os.path.join(folder,
-                                                       "uploads"),
-                           ),
-                     # This field can only be filled-out by specific roles
-                     # Once this has been filled-out then the other fields are locked
-                     organisation_id(comment = None,
-                                     label = T("Confirming Organization"),
-                                     widget = widget,
-                                     writable = False,
-                                     ),
-                     Field("from_training", "boolean",
-                           default = False,
-                           readable = False,
-                           writable = False,
-                           ),
-                     s3_comments(),
-                     *s3_meta_fields())
-
-        configure(tablename,
-                  context = {"person": "person_id",
-                             },
-                  list_fields = ["id",
-                                 "certificate_id",
-                                 "number",
-                                 "date",
-                                 #"comments",
-                                 ],
-                  onaccept = self.hrm_certification_onaccept,
-                  ondelete = self.hrm_certification_onaccept,
-                  )
-
-        crud_strings[tablename] = Storage(
-            label_create = T("Add Certification"),
-            title_display = T("Certification Details"),
-            title_list = T("Certifications"),
-            title_update = T("Edit Certification"),
-            label_list_button = T("List Certifications"),
-            label_delete_button = T("Delete Certification"),
-            msg_record_created = T("Certification added"),
-            msg_record_modified = T("Certification updated"),
-            msg_record_deleted = T("Certification deleted"),
-            msg_no_match = T("No entries found"),
-            msg_list_empty = T("No entries currently registered"))
-
-        # =====================================================================
-        # Credentials
-        #
-        #   This determines whether an Organisation believes a person is suitable
-        #   to fulfil a role. It is determined based on a combination of
-        #   experience, training & a performance rating (medical fitness to come).
-        #   @ToDo: Workflow to make this easy for the person doing the credentialling
-        #
-        # http://www.dhs.gov/xlibrary/assets/st-credentialing-interoperability.pdf
-        #
-        # Component added in the hrm person() controller
-        #
-
-        # Used by Courses
-        # & 6-monthly rating (Portuguese Bombeiros)
-        hrm_pass_fail_opts = {8: T("Pass"),
-                              9: T("Fail"),
-                              }
-        # 12-monthly rating (Portuguese Bombeiros)
-        # - this is used to determine rank progression (need 4-5 for 5 years)
-        #hrm_five_rating_opts = {1: T("Poor"),
-        #                        2: T("Fair"),
-        #                        3: T("Good"),
-        #                        4: T("Very Good"),
-        #                        5: T("Excellent"),
-        #                        }
-        # Lookup to represent both sorts of ratings
-        hrm_performance_opts = {1: T("Poor"),
-                                2: T("Fair"),
-                                3: T("Good"),
-                                4: T("Very Good"),
-                                5: T("Excellent"),
-                                8: T("Pass"),
-                                9: T("Fail"),
-                                }
-
-        tablename = "hrm_credential"
-        define_table(tablename,
-                     person_id(),
-                     job_title_id(),
-                     organisation_id(label = T("Credentialling Organization"),
-                                     widget = widget,
-                                     ),
-                     Field("performance_rating", "integer",
-                           label = T("Performance Rating"),
-                           represent = lambda opt: \
-                                       hrm_performance_opts.get(opt,
-                                                                UNKNOWN_OPT),
-                           # Default to pass/fail (can override to 5-levels in Controller)
-                           # @ToDo: Build this onaccept of hrm_appraisal
-                           requires = IS_EMPTY_OR(IS_IN_SET(hrm_pass_fail_opts)),
-                           ),
-                     s3_date("start_date",
-                             default = "now",
-                             label = T("Date Received"),
-                             set_min = "#hrm_credential_end_date",
-                             ),
-                     s3_date("end_date",
-                             label = T("Expiry Date"),
-                             set_max = "#hrm_credential_start_date",
-                             start_field = "hrm_credential_start_date",
-                             default_interval = 12,
-                             default_explicit = True,
-                             ),
-                     *s3_meta_fields())
-
-        crud_strings[tablename] = Storage(
-            label_create = T("Add Credential"),
-            title_display = T("Credential Details"),
-            title_list = T("Credentials"),
-            title_update = T("Edit Credential"),
-            label_list_button = T("List Credentials"),
-            label_delete_button = T("Delete Credential"),
-            msg_record_created = T("Credential added"),
-            msg_record_modified = T("Credential updated"),
-            msg_record_deleted = T("Credential deleted"),
-            msg_no_match = T("No entries found"),
-            msg_list_empty = T("Currently no Credentials registered"))
-
-        configure(tablename,
-                  context = {"person": "person_id",
-                             },
-                  list_fields = ["job_title_id",
-                                 "start_date",
-                                 "end_date",
-                                 ],
-                  list_layout = hrm_credential_list_layout,
-                  )
-
         # =========================================================================
         # Courses
         #
@@ -3083,18 +2843,253 @@ class S3HRSkillModel(S3Model):
 
         # Components
         add_components(tablename,
-                       hrm_certification = {"link": "hrm_course_certificate",
-                                            "joinby": "course_id",
-                                            "key": "certificate_id",
-                                            "fkey": "certificate_id",
-                                            "pkey": "course_id",
-                                            "filterby": {
-                                                # Match person_id in training record
-                                                "person_id": FS("person_id"),
-                                                },
+                       hrm_certification = {"joinby": "training_id",
                                             "multiple": False,
                                             },
                        )
+
+        # =====================================================================
+        # Certificates
+        #
+        # NB Some Orgs will only trust the certificates of some Orgs
+        # - we currently make no attempt to manage this trust chain
+        #
+        filter_certs = settings.get_hrm_filter_certificates()
+        if filter_certs:
+            label = ORGANISATION
+        else:
+            label = T("Certifying Organization")
+
+        tablename = "hrm_certificate"
+        define_table(tablename,
+                     Field("name", notnull=True,
+                           length=128,   # Mayon Compatibility
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     organisation_id(default = root_org if filter_certs else None,
+                                     label = label,
+                                     readable = is_admin or not filter_certs,
+                                     writable = is_admin or not filter_certs,
+                                     widget = widget,
+                                     ),
+                     Field("expiry", "integer",
+                           label = T("Expiry (months)"),
+                           ),
+                     *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Certificate"),
+            title_display = T("Certificate Details"),
+            title_list = T("Certificate Catalog"),
+            title_update = T("Edit Certificate"),
+            title_upload = T("Import Certificates"),
+            label_list_button = T("List Certificates"),
+            label_delete_button = T("Delete Certificate"),
+            msg_record_created = T("Certificate added"),
+            msg_record_modified = T("Certificate updated"),
+            msg_record_deleted = T("Certificate deleted"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no entries in the catalog"))
+
+        label_create = crud_strings[tablename].label_create
+        represent = S3Represent(lookup=tablename)
+        certificate_id = S3ReusableField("certificate_id", "reference %s" % tablename,
+             label = T("Certificate"),
+             ondelete = "RESTRICT",
+             represent = represent,
+             requires = IS_EMPTY_OR(
+                            IS_ONE_OF(db,
+                                      "hrm_certificate.id",
+                                      represent,
+                                      filterby="organisation_id" if filter_certs else None,
+                                      filter_opts=filter_opts
+                                      )),
+             sortby = "name",
+             comment = S3PopupLink(f = "certificate",
+                                   label = label_create,
+                                   title = label_create,
+                                   tooltip = T("Add a new certificate to the catalog."),
+                                   ),
+             )
+
+        if settings.get_hrm_use_skills():
+            create_next = URL(f="certificate",
+                              args=["[id]", "certificate_skill"])
+        else:
+            create_next = None
+
+        configure(tablename,
+                  create_next = create_next,
+                  deduplicate = S3Duplicate(),
+                  )
+
+        # Components
+        add_components(tablename,
+                       hrm_certificate_skill = "certificate_id",
+                       )
+
+        # =====================================================================
+        # Certifications
+        #
+        # Link table between Persons & Certificates
+        #
+        # These are an element of credentials
+        #
+
+        tablename = "hrm_certification"
+        define_table(tablename,
+                     person_id(empty = False,
+                               ondelete = "CASCADE",
+                               ),
+                     certificate_id(empty = False,
+                                    ),
+                     # @ToDo: Option to auto-generate (like Waybills: SiteCode-CourseCode-UniqueNumber)
+                     Field("number",
+                           label = T("License Number"),
+                           ),
+                     #Field("status", label = T("Status")),
+                     s3_date(label = T("Expiry Date")),
+                     Field("image", "upload",
+                           autodelete = True,
+                           label = T("Scanned Copy"),
+                           length = current.MAX_FILENAME_LENGTH,
+                           # upload folder needs to be visible to the download() function as well as the upload
+                           uploadfolder = os.path.join(folder,
+                                                       "uploads"),
+                           ),
+                     # This field can only be filled-out by specific roles
+                     # Once this has been filled-out then the other fields are locked
+                     organisation_id(comment = None,
+                                     label = T("Confirming Organization"),
+                                     widget = widget,
+                                     writable = False,
+                                     ),
+                     # Optional: When certification comes from a training
+                     Field("training_id", "reference hrm_training",
+                           readable = False,
+                           writable = False,
+                           requires = IS_EMPTY_OR(
+                                        IS_ONE_OF(db, "hrm_training.id",
+                                                  )),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        configure(tablename,
+                  context = {"person": "person_id",
+                             },
+                  list_fields = ["id",
+                                 "certificate_id",
+                                 "number",
+                                 "date",
+                                 #"comments",
+                                 ],
+                  onaccept = self.hrm_certification_onaccept,
+                  ondelete = self.hrm_certification_onaccept,
+                  )
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Certification"),
+            title_display = T("Certification Details"),
+            title_list = T("Certifications"),
+            title_update = T("Edit Certification"),
+            label_list_button = T("List Certifications"),
+            label_delete_button = T("Delete Certification"),
+            msg_record_created = T("Certification added"),
+            msg_record_modified = T("Certification updated"),
+            msg_record_deleted = T("Certification deleted"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("No entries currently registered"))
+
+        # =====================================================================
+        # Credentials
+        #
+        #   This determines whether an Organisation believes a person is suitable
+        #   to fulfil a role. It is determined based on a combination of
+        #   experience, training & a performance rating (medical fitness to come).
+        #   @ToDo: Workflow to make this easy for the person doing the credentialling
+        #
+        # http://www.dhs.gov/xlibrary/assets/st-credentialing-interoperability.pdf
+        #
+        # Component added in the hrm person() controller
+        #
+
+        # Used by Courses
+        # & 6-monthly rating (Portuguese Bombeiros)
+        hrm_pass_fail_opts = {8: T("Pass"),
+                              9: T("Fail"),
+                              }
+        # 12-monthly rating (Portuguese Bombeiros)
+        # - this is used to determine rank progression (need 4-5 for 5 years)
+        #hrm_five_rating_opts = {1: T("Poor"),
+        #                        2: T("Fair"),
+        #                        3: T("Good"),
+        #                        4: T("Very Good"),
+        #                        5: T("Excellent"),
+        #                        }
+        # Lookup to represent both sorts of ratings
+        hrm_performance_opts = {1: T("Poor"),
+                                2: T("Fair"),
+                                3: T("Good"),
+                                4: T("Very Good"),
+                                5: T("Excellent"),
+                                8: T("Pass"),
+                                9: T("Fail"),
+                                }
+
+        tablename = "hrm_credential"
+        define_table(tablename,
+                     person_id(),
+                     job_title_id(),
+                     organisation_id(label = T("Credentialling Organization"),
+                                     widget = widget,
+                                     ),
+                     Field("performance_rating", "integer",
+                           label = T("Performance Rating"),
+                           represent = lambda opt: \
+                                       hrm_performance_opts.get(opt,
+                                                                UNKNOWN_OPT),
+                           # Default to pass/fail (can override to 5-levels in Controller)
+                           # @ToDo: Build this onaccept of hrm_appraisal
+                           requires = IS_EMPTY_OR(IS_IN_SET(hrm_pass_fail_opts)),
+                           ),
+                     s3_date("start_date",
+                             default = "now",
+                             label = T("Date Received"),
+                             set_min = "#hrm_credential_end_date",
+                             ),
+                     s3_date("end_date",
+                             label = T("Expiry Date"),
+                             set_max = "#hrm_credential_start_date",
+                             start_field = "hrm_credential_start_date",
+                             default_interval = 12,
+                             default_explicit = True,
+                             ),
+                     *s3_meta_fields())
+
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Credential"),
+            title_display = T("Credential Details"),
+            title_list = T("Credentials"),
+            title_update = T("Edit Credential"),
+            label_list_button = T("List Credentials"),
+            label_delete_button = T("Delete Credential"),
+            msg_record_created = T("Credential added"),
+            msg_record_modified = T("Credential updated"),
+            msg_record_deleted = T("Credential deleted"),
+            msg_no_match = T("No entries found"),
+            msg_list_empty = T("Currently no Credentials registered"))
+
+        configure(tablename,
+                  context = {"person": "person_id",
+                             },
+                  list_fields = ["job_title_id",
+                                 "start_date",
+                                 "end_date",
+                                 ],
+                  list_layout = hrm_credential_list_layout,
+                  )
 
         # =====================================================================
         # Skill Equivalence
@@ -3313,6 +3308,7 @@ class S3HRSkillModel(S3Model):
             if certificate:
                 certificate_id = certificate.id
             else:
+                # @ToDo: Setting to decide whether certificate should be restricted to Org
                 certificate_id = ctable.insert(name = name)
 
             ltable.insert(course_id = course_id,
@@ -3613,16 +3609,16 @@ def hrm_training_onaccept(form):
     # Drop all existing certifications which came from trainings
     # - this is a lot easier than selective deletion.
     query = (ctable.person_id == person_id) & \
-            (ctable.from_training == True)
+            (ctable.training_id != None)
     db(query).delete()
 
     # Figure out which certifications we're _supposed_ to have.
     query = (table.person_id == person_id) & \
-            (table.course_id == cctable.course_id) & \
-            (cctable.certificate_id == _ctable.id)
-    trainings = db(query).select(_ctable.id)
+            (table.course_id == cctable.course_id)
+    trainings = db(query).select(table.id,
+                                 cctable.certificate_id)
 
-    # Add these certifications back in.
+    # Add these certifications back in
     hrm_certification_onaccept = s3db.hrm_certification_onaccept
     form = Storage()
     form.vars = Storage()
@@ -3630,9 +3626,9 @@ def hrm_training_onaccept(form):
     for training in trainings:
         _id = ctable.update_or_insert(
                 person_id = person_id,
-                certificate_id = training.id,
+                certificate_id = training[cctable.certificate_id],
+                training_id = training[table.id],
                 comments = "Added by training",
-                from_training = True
                 )
         # Propagate to Skills
         form_vars.id = _id

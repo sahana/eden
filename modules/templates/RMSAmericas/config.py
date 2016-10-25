@@ -1542,12 +1542,11 @@ def config(settings):
                                     "end_date",
                                     "grade",
                                     "grade_details",
-                                    "certification.number",
-                                    # @ToDo: Complete this & then enable
-                                    #S3SQLInlineComponent("certification",
-                                    #                     fields = ["number"],
-                                    #                     multiple = False,
-                                    #                     )
+                                    S3SQLInlineComponent("certification",
+                                                         fields = (("", "number"),),
+                                                         label = T("Registration Number"),
+                                                         multiple = False,
+                                                         )
                                     )
 
         filter_widgets = [
@@ -1585,7 +1584,7 @@ def config(settings):
             onaccept = hrm_training_onaccept
 
         s3db.configure(tablename,
-                      #crud_form = crud_form,
+                      crud_form = crud_form,
                       filter_widgets = filter_widgets,
                       onaccept = onaccept,
                       )
