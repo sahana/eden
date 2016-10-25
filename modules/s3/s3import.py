@@ -2692,24 +2692,24 @@ class S3ImportItem(object):
             else:
                 pkey, fkey = ("id", field)
 
+            # Resolve the key table name
+            ktablename, key, multiple = s3_get_foreign_key(table[fkey])
             if entry.tablename:
                 ktablename = entry.tablename
-            else:
-                # Resolve the key table name
-                ktablename, key, multiple = s3_get_foreign_key(table[fkey])
-                if not ktablename:
-                    if self.tablename == "auth_user":
-                        # Treat the affiliations as proper FKs
-                        if fkey == "organisation_id":
-                            ktablename = "org_organisation"
-                        elif fkey == "site_id":
-                            ktablename = "org_site"
-                        elif fkey == "org_group_id":
-                            ktablename = "org_group"
-                        else:
-                            continue
+            elif not ktablename:
+                if self.tablename == "auth_user":
+                    # Treat the affiliations as proper FKs
+                    if fkey == "organisation_id":
+                        ktablename = "org_organisation"
+                    elif fkey == "site_id":
+                        ktablename = "org_site"
+                    elif fkey == "org_group_id":
+                        ktablename = "org_group"
                     else:
                         continue
+                else:
+                    continue
+
             try:
                 ktable = current.s3db[ktablename]
             except:
