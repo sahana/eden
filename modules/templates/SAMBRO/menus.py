@@ -63,9 +63,9 @@ class S3MainMenu(default.S3MainMenu):
         alert_hub_menu = MM("Alert Hub", c="default", f="index",
                             args=["alert_hub_cop"])
         if auth.s3_logged_in():
-            alerting_menu = MM("Alerting", c="cap", f="alert")
-            mapping_menu = MM("Mapping", c="gis", f="index")
-            recipient_menu = MM("Manage Recipients", c="pr", f="subscription",
+            alerting_menu = MM("Alerts", c="cap", f="alert")
+            mapping_menu = MM("Map", c="gis", f="index")
+            recipient_menu = MM("Recipients", c="pr", f="subscription",
                                 vars={"option": "manage_recipient"})
 
             if has_role("ADMIN"):
@@ -74,11 +74,10 @@ class S3MainMenu(default.S3MainMenu):
                 return [homepage(),
                         alerting_menu,
                         alert_hub_menu,
-                        mapping_menu,
-                        recipient_menu,
-                        MM("Persons", c="pr", f="person"),
                         MM("Organizations", c="org", f="organisation"),
-                        MM("Event Types", c="event", f="event_type"),
+                        MM("Persons", c="pr", f="person"),
+                        recipient_menu,
+                        mapping_menu,                                                
                         ]
             else:
                 view_menu = [MM("View Alerts", c="cap", f="alert"),
@@ -250,19 +249,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                             M("Create", m="create"),
                             M("Import from CSV", m="import", p="create"),
                         ),
+                        M("Event Types", c="event", f="event_type",
+                          restrict=["ADMIN"])(
+                            M("Create", m="create"),
+                            M("Import from CSV", m="import", p="create"),
+                        ),
                     )
-
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def event():
-        """ EVENT / Event Module """
-
-        return M()(
-                    M("Event Types", c="event", f="event_type")(
-                        M("Create", m="create"),
-                        M("Import", m="import", p="create"),
-                    ),
-                )
 
     # -------------------------------------------------------------------------
     @staticmethod

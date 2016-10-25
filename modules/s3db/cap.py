@@ -2111,7 +2111,7 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
         if alert_id:
             # This is not template area
             # NB Template area are not linked with alert_id
-            db(db.cap_area_location.id == form_vars.id).update(alert_id = alert_id)
+            db(db.cap_area_location.id == form_vars["id"]).update(alert_id = alert_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
