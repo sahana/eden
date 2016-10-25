@@ -26,7 +26,7 @@ class S3MainMenu(default.S3MainMenu):
 
             # Service menus, align-right
             # Note: always define right-hand items in reverse order!
-            #cls.menu_lang(right=True),
+            cls.menu_lang(right=True),
             #cls.menu_gis(right=True),
             cls.menu_auth(right=True),
             cls.menu_admin(right=True),
@@ -117,5 +117,20 @@ class S3MainMenu(default.S3MainMenu):
                         )
 
         return menu_auth
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_lang(cls, **attr):
+        """ Language Selector """
+
+        s3 = current.response.s3
+
+        menu_lang = ML("Language", **attr)
+        for language in s3.l10n_languages.items():
+            code, name = language
+            menu_lang(
+                ML(name, translate=False, lang_code=code, lang_name=name)
+            )
+        return menu_lang
 
 # END =========================================================================

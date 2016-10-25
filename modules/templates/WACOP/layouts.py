@@ -138,4 +138,62 @@ class S3MainMenuLayout(S3NavigationItem):
        else:
            return None
 
+# =============================================================================
+class S3LanguageMenuLayout(S3NavigationItem):
+    """ Custom Language Menu (Dropdown) """
+
+    @staticmethod
+    def layout(item):
+        """
+            Language menu layout
+
+            options for each entry:
+                - lang_code: the language code
+                - lang_name: the language name
+        """
+
+        if item.enabled:
+            if item.components:
+                # The language menu itself
+                T = current.T
+                items = item.render_components()
+                select = SELECT(items,
+                                _name = "_language",
+                                _title = T("Language Selection"),
+                                _onchange = '''S3.reloadWithQueryStringVars({'_language':$(this).val()})''',
+                                value = T.accepted_language,
+                                )
+                classes = ["language-selector"]
+                form = FORM(select,
+                            _class = " ".join(classes),
+                            _name = "_language",
+                            _action = "",
+                            _method = "get",
+                            )
+                list_item = LI(form, _class="has-form")
+                if item.opts.right:
+                    list_item.add_class("menu-right")
+                return list_item
+            else:
+                # A language entry
+                return OPTION(item.opts.lang_name,
+                              _value=item.opts.lang_code,
+                              )
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def check_enabled(self):
+       """ Check whether the language menu is enabled """
+
+       if current.deployment_settings.get_L10n_display_toolbar():
+           return True
+       else:
+           return False
+
+# -----------------------------------------------------------------------------
+# Shortcut
+#
+ML = S3LanguageMenuLayout
+
 # END =========================================================================

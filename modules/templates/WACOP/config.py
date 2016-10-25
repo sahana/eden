@@ -58,6 +58,7 @@ def config(settings):
     #
     settings.L10n.languages = OrderedDict([
         ("en", "English"),
+        ("es", "Español"),
     ])
     # Default Language
     settings.L10n.default_language = "en"

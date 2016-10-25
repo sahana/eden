@@ -1154,35 +1154,34 @@ h4.profile-sub-header {
 
 /* line 36, ../scss/custom/_misc.scss */
 .language-selector {
-  float: right;
   display: block;
   margin-top: 0.625rem;
   margin-bottom: 0.125rem;
 }
 
-/* line 42, ../scss/custom/_misc.scss */
+/* line 41, ../scss/custom/_misc.scss */
 .sub-nav.about-menu {
   margin-left: 0;
   margin-right: 0;
 }
 
-/* line 46, ../scss/custom/_misc.scss */
+/* line 45, ../scss/custom/_misc.scss */
 #dashboard > li {
   display: inline-block;
 }
 
-/* line 49, ../scss/custom/_misc.scss */
+/* line 48, ../scss/custom/_misc.scss */
 .home-map,
 .home-cms {
   margin: 1rem 0;
 }
 
-/* line 53, ../scss/custom/_misc.scss */
+/* line 52, ../scss/custom/_misc.scss */
 .home-map {
   border: 1px solid #999999;
 }
 
-/* line 56, ../scss/custom/_misc.scss */
+/* line 55, ../scss/custom/_misc.scss */
 .username {
   color: #666666;
   padding: 0.5rem 0;
@@ -1190,18 +1189,18 @@ h4.profile-sub-header {
   font-size: 0.7rem;
   float: right;
 }
-/* line 61, ../scss/custom/_misc.scss */
+/* line 60, ../scss/custom/_misc.scss */
 .username i.icon, .username i.fa {
   padding-left: 0.2rem;
   padding-right: 0;
 }
 
-/* line 67, ../scss/custom/_misc.scss */
+/* line 66, ../scss/custom/_misc.scss */
 .overdue {
   color: red;
 }
 
-/* line 70, ../scss/custom/_misc.scss */
+/* line 69, ../scss/custom/_misc.scss */
 .invalid-case {
   border: 1px solid red;
   color: red;
@@ -1213,35 +1212,35 @@ h4.profile-sub-header {
   text-transform: uppercase;
 }
 
-/* line 80, ../scss/custom/_misc.scss */
+/* line 79, ../scss/custom/_misc.scss */
 .checkpoint-advise {
   background: #fff0f0 none repeat scroll 0 0;
   border: 2px solid red;
   margin-bottom: 1rem;
   padding: 0.6rem;
 }
-/* line 85, ../scss/custom/_misc.scss */
+/* line 84, ../scss/custom/_misc.scss */
 .checkpoint-advise p {
   white-space: pre-wrap;
 }
 
-/* line 89, ../scss/custom/_misc.scss */
+/* line 88, ../scss/custom/_misc.scss */
 .checkpoint-person {
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
 
-/* line 93, ../scss/custom/_misc.scss */
+/* line 92, ../scss/custom/_misc.scss */
 .event-top {
   margin-top: 0.3rem !important;
 }
 
-/* line 96, ../scss/custom/_misc.scss */
+/* line 95, ../scss/custom/_misc.scss */
 .event-type-header {
   text-align: right;
 }
 
-/* line 99, ../scss/custom/_misc.scss */
+/* line 98, ../scss/custom/_misc.scss */
 .event-type-setting {
   color: black;
   font-size: 1.1rem;
@@ -1249,62 +1248,62 @@ h4.profile-sub-header {
   vertical-align: text-top;
 }
 
-/* line 105, ../scss/custom/_misc.scss */
+/* line 104, ../scss/custom/_misc.scss */
 .event-type-toggle {
   cursor: pointer;
 }
 
-/* line 108, ../scss/custom/_misc.scss */
+/* line 107, ../scss/custom/_misc.scss */
 .controls.has-flaginfo,
 .controls.has-details {
   width: 100%;
 }
-/* line 111, ../scss/custom/_misc.scss */
+/* line 110, ../scss/custom/_misc.scss */
 .controls.has-flaginfo table,
 .controls.has-details table {
   width: 100%;
   border: none;
 }
 
-/* line 116, ../scss/custom/_misc.scss */
+/* line 115, ../scss/custom/_misc.scss */
 .payment-amount {
   color: darkgreen;
   font-size: 1.2rem;
   font-weight: bold;
 }
 
-/* line 122, ../scss/custom/_misc.scss */
+/* line 121, ../scss/custom/_misc.scss */
 #payment-form #allowance_date__row,
 #payment-form #allowance_comments__row {
   display: none;
 }
 
-/* line 127, ../scss/custom/_misc.scss */
+/* line 126, ../scss/custom/_misc.scss */
 .dashboard-action {
   margin-bottom: 1.0rem;
 }
 
-/* line 133, ../scss/custom/_misc.scss */
+/* line 132, ../scss/custom/_misc.scss */
 body.rtl .personal-menu {
   clear: left;
   float: left;
 }
-/* line 137, ../scss/custom/_misc.scss */
+/* line 136, ../scss/custom/_misc.scss */
 body.rtl .language-selector {
   float: left;
 }
-/* line 140, ../scss/custom/_misc.scss */
+/* line 139, ../scss/custom/_misc.scss */
 body.rtl .username {
   padding-left: 0.5rem;
   padding-right: 0;
   float: left;
 }
-/* line 143, ../scss/custom/_misc.scss */
+/* line 142, ../scss/custom/_misc.scss */
 body.rtl .username i.icon, body.rtl .username i.fa {
   padding-left: 0;
   padding-right: 0.2rem;
 }
-/* line 149, ../scss/custom/_misc.scss */
+/* line 148, ../scss/custom/_misc.scss */
 body.rtl .event-type-header {
   text-align: left;
 }
