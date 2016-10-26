@@ -451,9 +451,11 @@ class S3Model(object):
             tablename, fieldname = str(field).split(".")
 
             # 1st try this table's references
-            references = config[tablename].get("references")
-            if references is not None and fieldname in references:
-                return references[fieldname]
+            this_config = config[tablename]
+            if this_config:
+                references = this_config.get("references")
+                if references is not None and fieldname in references:
+                    return references[fieldname]
 
             # Then try other tables' referenced_by
             key = (tablename, fieldname)
