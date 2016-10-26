@@ -195,7 +195,7 @@ class S3PersonEntity(S3Model):
                                  "pe_label",
                                  ],
                   onaccept = self.pr_pentity_onaccept,
-                  referenced_by = [(auth_settings.table_membership_name, "for_pe")],
+                  referenced_by = [(auth_settings.table_membership_name, "pe_id")],
                   )
 
         # Components

@@ -126,7 +126,7 @@ def user():
 
     s3db.configure("auth_user",
                    create_next = URL(c="admin", f="user", args=["[id]", "roles"]),
-                   create_onaccept = lambda form: auth.s3_approve_user(form.vars),
+                   #create_onaccept = lambda form: auth.s3_approve_user(form.vars),
                    list_fields = list_fields,
                    main = "first_name",
                    #update_onaccept = lambda form: auth.s3_link_user(form.vars),
@@ -394,9 +394,10 @@ def group():
 
     if not auth.s3_has_role(ADMIN):
         s3db.configure(tablename,
-                       editable=False,
-                       insertable=False,
-                       deletable=False)
+                       deletable = False,
+                       editable = False,
+                       insertable = False,
+                       )
 
     # CRUD Strings
     ADD_ROLE = T("Create Role")

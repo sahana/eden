@@ -69,17 +69,25 @@ import s3db.work
 current.s3db = s3db = S3Model()
 
 # =============================================================================
-# Configure the auth_user model
-# @ToDo: Consider moving these pseudo FKs into link tables with real FKs
+# Configure the auth models
 s3db.configure("auth_user",
+               create_onaccept = lambda form: auth.s3_approve_user(form.vars),
+               # @ToDo: Consider moving these pseudo FKs into link tables with real FKs
                references = {"organisation_id": "org_organisation",
                              "site_id": "org_site",
                              "org_group_id": "org_group",
                              },
                )
+
 s3db.add_components("auth_user",
                     auth_membership = "user_id",
                     )
+
+s3db.configure("auth_membership",
+               # @ToDo: Consider moving these pseudo FKs into link tables with real FKs
+               references = {"pe_id": "pr_pentity",
+                             },
+               )
 
 # =============================================================================
 # Make available for S3Models
