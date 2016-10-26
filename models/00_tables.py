@@ -73,7 +73,8 @@ current.s3db = s3db = S3Model()
 # - needed for admin/user, sync/sync & 1st_run, so could move to a fn called
 #   from those 3 if overhead grows
 s3db.configure("auth_user",
-               create_onaccept = lambda form: auth.s3_approve_user(form.vars),
+               # We don't want this for Sync, just in admin/user & 1st_run
+               #create_onaccept = lambda form: auth.s3_approve_user(form.vars),
                # @ToDo: Consider moving these pseudo FKs into link tables with real FKs
                references = {"organisation_id": "org_organisation",
                              "site_id": "org_site",
