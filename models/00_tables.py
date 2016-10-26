@@ -70,6 +70,8 @@ current.s3db = s3db = S3Model()
 
 # =============================================================================
 # Configure the auth models
+# - needed for admin/user, sync/sync & 1st_run, so could move to a fn called
+#   from those 3 if overhead grows
 s3db.configure("auth_user",
                create_onaccept = lambda form: auth.s3_approve_user(form.vars),
                # @ToDo: Consider moving these pseudo FKs into link tables with real FKs
@@ -81,6 +83,7 @@ s3db.configure("auth_user",
 
 s3db.add_components("auth_user",
                     auth_membership = "user_id",
+                    pr_person_user = "user_id",
                     )
 
 s3db.configure("auth_membership",
