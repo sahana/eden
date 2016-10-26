@@ -4086,8 +4086,8 @@ class S3Resource(object):
         # Check for values to look up from master record
         lookup = {}
         for (k, v) in list(values.items()):
-            # Skip nonexistent fields and parent key (fkey)
-            if k not in self.fields or not self.link and k == self.fkey:
+            # Skip nonexistent fields
+            if k not in self.fields:
                 del values[k]
                 continue
             # Resolve any field selectors
