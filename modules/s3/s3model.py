@@ -456,7 +456,7 @@ class S3Model(object):
                 return references[fieldname]
 
             # Then try other tables' referenced_by
-            key = tuple(tablename, fieldname)
+            key = (tablename, fieldname)
             for tn in config:
                 referenced_by = config[tn].get("referenced_by")
                 if referenced_by is not None and key in referenced_by:
