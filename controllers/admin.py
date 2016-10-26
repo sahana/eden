@@ -96,8 +96,10 @@ def user():
 
     auth.configure_user_fields(pe_ids)
 
-    s3db.add_components("auth_user",
-                        auth_membership = "user_id")
+    # Now done in 00_tables.py
+    #s3db.add_components("auth_user",
+    #                    auth_membership = "user_id",
+    #                    )
 
     list_fields = ["first_name",
                    "last_name",

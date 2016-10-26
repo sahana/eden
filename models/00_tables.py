@@ -77,6 +77,9 @@ s3db.configure("auth_user",
                              "org_group_id": "org_group",
                              },
                )
+s3db.add_components("auth_user",
+                    auth_membership = "user_id",
+                    )
 
 # =============================================================================
 # Make available for S3Models
