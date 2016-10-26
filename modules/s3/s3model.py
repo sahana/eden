@@ -432,6 +432,14 @@ class S3Model(object):
                           referenced_by = [(tablename, fieldname), ...],
                           )
 
+            & in the table with the fields(auth_user only current example) as:
+
+                configure(tablename,
+                          references = {fieldname: tablename,
+                                        ...
+                                        },
+                          )
+
             @param field: the Field
 
             @returns: the name of the referenced table
@@ -440,11 +448,18 @@ class S3Model(object):
         if str(field.type) == "integer":
 
             config = current.model.config
-            key = tuple(str(field).split("."))
+            tablename, fieldname = str(field).split(".")
 
+            # 1st try this table's references
+            references = config[tablename].get("references")
+            if references is not None and fieldname in references:
+                return references[fieldname]
+
+            # Then try other tables' referenced_by
+            key = tuple(tablename, fieldname)
             for tn in config:
                 referenced_by = config[tn].get("referenced_by")
-                if referenced_by and key in referenced_by:
+                if referenced_by is not None and key in referenced_by:
                     return tn
 
         return None

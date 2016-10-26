@@ -69,6 +69,16 @@ import s3db.work
 current.s3db = s3db = S3Model()
 
 # =============================================================================
+# Configure the auth_user model
+# @ToDo: Consider moving these pseudo FKs into link tables with real FKs
+s3db.configure("auth_user",
+               references = {"organisation_id": "org_organisation",
+                             "site_id": "org_site",
+                             "org_group_id": "org_group",
+                             },
+               )
+
+# =============================================================================
 # Make available for S3Models
 # - legacy for backwards compatibility w docs & custom modules
 from s3.s3fields import S3ReusableField, s3_comments, s3_meta_fields
