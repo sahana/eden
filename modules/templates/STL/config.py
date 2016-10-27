@@ -2,7 +2,7 @@
 
 from collections import OrderedDict
 
-from gluon import current
+from gluon import current, URL
 from gluon.storage import Storage
 
 def config(settings):
@@ -34,7 +34,12 @@ def config(settings):
     # Uncomment to have Person records owned by the Org they are an HR for
     settings.auth.person_realm_human_resource_site_then_org = True
 
-     # Approval emails get sent to all admins
+    settings.auth.admin_sees_organisation = True
+    settings.auth.registration_organisation_default = "Support To Life"
+    settings.auth.registration_link_user_to = ["staff"]
+    settings.auth.registration_link_user_to_default = "staff"
+
+    # Approval emails get sent to all admins
     #settings.mail.approver = "ADMIN"
 
     # Security Policy
@@ -93,6 +98,14 @@ def config(settings):
         "USD" : "United States Dollars",
     }
     settings.fin.currency_default = "TRY"
+
+    # =========================================================================
+    # UI Settings
+    #
+    settings.ui.menu_logo = URL(c = "static",
+                                f = "themes",
+                                args = ["STL", "img", "stl_menu_logo.png"],
+                                )
 
     # =========================================================================
     # DVR Case Management
@@ -257,6 +270,9 @@ def config(settings):
                                                         T("The organisation/branch this case is assigned to"),
                                                         ),
                                     )
+                user = current.auth.user
+                if user:
+                    field.default = user.organisation_id
 
                 # Individual staff assignment
                 field = ctable.human_resource_id
