@@ -461,8 +461,8 @@ div.tabs span.tab_other a:hover {
   background: #a0a0a0;
 }
 
-/* Menu Logo */
-.S3menulogo {
+/* Utility for in-text logo */
+.sahana-logo {
   background: url(../../img/S3menu_logo.png) left top no-repeat;
   text-shadow: none;
   padding: none;
@@ -479,10 +479,19 @@ div.tabs span.tab_other a:hover {
   background-color: #333333;
   z-index: 1000;
 }
+/* Menu logo */
+.top-bar .logo {
+  color: white;
+  display: inline-block;
+  font-size: 1.1rem;
+  font-weight: bold;
+  height: 35px;
+  padding: 0.625rem 0.5rem 0 0.7rem;
+  text-transform: uppercase;
+}
 .top-bar .menu-toggle input {
   margin-right: 5px;
 }
-
 .top-bar-section ul li:not(.has-form) a:not(.button) {
   color: #ffffff;
   background-color: #333333;
@@ -529,7 +538,6 @@ div.tabs span.tab_other a:hover {
   background: none repeat scroll 0 0 #d7d8d9;
   margin-top: 10px;
 }
-
 .side-nav li {
   line-height: 1.2;
   list-style-type: none;

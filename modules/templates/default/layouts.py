@@ -29,8 +29,12 @@ from s3 import *
 #    def layout(item):
 #        """ Custom Layout Method """
 #
+#    @staticmethod
+#    def layout(item):
+#        """ Layout Method (Item Renderer) """
+#
 #        # Manage flags: hide any disabled/unauthorized items
-#        if not item.authorized:
+#        if not item.authorized and not item.opts.always_display:
 #            item.enabled = False
 #            item.visible = False
 #        elif item.enabled is None or item.enabled:
@@ -42,7 +46,10 @@ from s3 import *
 #            items = item.render_components()
 #            if item.parent is not None:
 #
-#                classes = []
+#                if item.attr._class:
+#                    classes = item.attr._class.split(" ")
+#                else:
+#                    classes = []
 #
 #                if item.parent.parent is None:
 #                    # Item at the top-level?
@@ -79,23 +86,58 @@ from s3 import *
 #                        return LI(A(item.label,
 #                                    _href=item_url,
 #                                    _id=item.attr._id,
+#                                    _target=item.attr._target,
 #                                    ),
 #                                  _class=_class,
 #                                  )
 #                    else:
 #                        # Submenu item
 #                        if isinstance(item.label, dict):
-#                            if "name" in item.label:
+#                            if "id" in item.label:
+#                                return S3MainMenuDefaultLayout.checkbox_item(item)
+#                            elif "name" in item.label:
 #                                label = item.label["name"]
 #                            else:
 #                                return None
 #                        else:
 #                            label = item.label
-#                        link = A(label, _href=item.url(), _id=item.attr._id)
-#                        return LI(link)
+#                        link = A(label,
+#                                 _href=item.url(),
+#                                 _id=item.attr._id,
+#                                 _target=item.attr._target,
+#                                 )
+#                        _class = " ".join(classes)
+#                        return LI(link, _class=_class)
 #            else:
-#                # Main menu
+#                # The main menu itself
+#                T = current.T
+#                settings = current.deployment_settings
 #
+#                if item.opts.title_area:
+#                    # Custom override
+#                    title_area = item.opts.title_area
+#                else:
+#                    # Standard: render a menu logo
+#                    logo = settings.get_ui_menu_logo()
+#                    if logo is None:
+#                        # Render an icon
+#                        logo = SPAN(settings.get_system_name_short(),
+#                                    _class="logo",
+#                                    )
+#                    elif isinstance(logo, str):
+#                        # Assume image-URL
+#                        logo = IMG(_src = logo,
+#                                   _class = "logo",
+#                                   _alt = settings.get_system_name_short(),
+#                                   )
+#                    #else:
+#                        # use as-is (assume HTML or T())
+#                    title_area = A(logo,
+#                                   _href = URL(c="default", f="index"),
+#                                   _title = T("Homepage"),
+#                                   )
+#
+#                # Arrange items left/right
 #                right = []
 #                left = []
 #                for item in items:
@@ -105,26 +147,31 @@ from s3 import *
 #                    else:
 #                        left.append(item)
 #                right.reverse()
-#                return NAV(
-#                    UL(LI(A(" ",
-#                            _href=URL(c="default", f="index"),
-#                            _class="S3menulogo"
-#                            ),
-#                          _class="name"
-#                          ),
-#                       LI(A(SPAN(current.T("Menu"))),
-#                          _class="toggle-topbar menu-icon",
-#                          ),
-#                       _class="title-area"),
-#                    SECTION(UL(right,
-#                               _class="right"),
-#                            UL(left,
-#                               _class="left"),
-#                            _class="top-bar-section"),
-#                    _class = "top-bar",
-#                    data = {"topbar": " "},
-#                )
 #
+#                # Reverse if right-to-left
+#                if current.response.s3.rtl:
+#                    right, left = left, right
+#
+#                # Build top-bar HTML
+#                return NAV(UL(LI(title_area,
+#                                 _class="name",
+#                                 ),
+#                              LI(A(SPAN(T("Menu"))),
+#                                 _class="toggle-topbar menu-icon",
+#                                 ),
+#                              _class="title-area",
+#                              ),
+#                           SECTION(UL(right,
+#                                      _class="right",
+#                                      ),
+#                                   UL(left,
+#                                      _class="left",
+#                                      ),
+#                                   _class="top-bar-section",
+#                                   ),
+#                           _class = "top-bar",
+#                           data = {"topbar": " "},
+#                           )
 #        else:
 #            return None
 #

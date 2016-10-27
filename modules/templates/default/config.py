@@ -436,6 +436,8 @@ def config(settings):
     #settings.ui.datatables_responsive = False
     # Uncomment to modify the label of the Permalink
     #settings.ui.label_permalink = "Permalink"
+    # Uncomment to modify the main menu logo
+    #settings.ui.menu_logo = URL(c="static", f="img", args=["S3menulogo.png"])
 
     # -------------------------------------------------------------------------
     # Asset

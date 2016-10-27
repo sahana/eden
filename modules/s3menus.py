@@ -74,10 +74,9 @@ class S3MainMenu(object):
         menu_modules = []
         all_modules = current.deployment_settings.modules
 
-        # Home always 1st
-        module = all_modules["default"]
-
-        menu_modules.append(MM(module.name_nice, c="default", f="index"))
+        # Home always 1st (commented because redundant/unnecessary)
+        #module = all_modules["default"]
+        #menu_modules.append(MM(module.name_nice, c="default", f="index"))
 
         # Modules to hide due to insufficient permissions
         hidden_modules = current.auth.permission.hidden_modules()

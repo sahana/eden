@@ -2141,6 +2141,26 @@ class S3Config(Storage):
                                  )
         return profile_header
 
+    def get_ui_menu_logo(self):
+        """
+            The menu logo for the default menu, can be:
+                - a string representing an image URL (can use URL())
+                - a T()
+                - an HTML helper instance (e.g. DIV or SPAN)
+                - None (to show system short name instead of a logo)
+
+            NB to override the entire title area, use the template's
+               menus.py and specify a title_area attribute for the
+               main menu node
+        """
+
+        return self.__lazy("ui", "menu_logo",
+                           URL(c = "static",
+                               f = "img",
+                               args = ["S3menu_logo.png"],
+                               )
+                           )
+
     # =========================================================================
     # Messaging
     #

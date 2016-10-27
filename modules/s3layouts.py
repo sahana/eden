@@ -136,16 +136,35 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
                         _class = " ".join(classes)
                         return LI(link, _class=_class)
             else:
-                # Main menu
+                # The main menu itself
+                T = current.T
+                settings = current.deployment_settings
 
                 if item.opts.title_area:
+                    # Custom override
                     title_area = item.opts.title_area
                 else:
-                    title_area = A(" ",
-                                   _href=URL(c="default", f="index"),
-                                   _class="S3menulogo",
+                    # Standard: render a menu logo
+                    logo = settings.get_ui_menu_logo()
+                    if logo is None:
+                        # Render an icon
+                        logo = SPAN(settings.get_system_name_short(),
+                                    _class="logo",
+                                    )
+                    elif isinstance(logo, str):
+                        # Assume image-URL
+                        logo = IMG(_src = logo,
+                                   _class = "logo",
+                                   _alt = settings.get_system_name_short(),
+                                   )
+                    #else:
+                        # use as-is (assume HTML or T())
+                    title_area = A(logo,
+                                   _href = URL(c="default", f="index"),
+                                   _title = T("Homepage"),
                                    )
 
+                # Arrange items left/right
                 right = []
                 left = []
                 for item in items:
@@ -155,26 +174,31 @@ class S3MainMenuDefaultLayout(S3NavigationItem):
                     else:
                         left.append(item)
                 right.reverse()
+
+                # Reverse if right-to-left
                 if current.response.s3.rtl:
                     right, left = left, right
-                return NAV(
-                    UL(LI(title_area,
-                          _class="name"
-                          ),
-                       LI(A(SPAN(current.T("Menu"))),
-                          _class="toggle-topbar menu-icon",
-                          ),
-                       _class="title-area",
-                       ),
-                    SECTION(UL(right,
-                               _class="right"),
-                            UL(left,
-                               _class="left"),
-                            _class="top-bar-section"),
-                    _class = "top-bar",
-                    data = {"topbar": " "},
-                )
 
+                # Build top-bar HTML
+                return NAV(UL(LI(title_area,
+                                 _class="name",
+                                 ),
+                              LI(A(SPAN(T("Menu"))),
+                                 _class="toggle-topbar menu-icon",
+                                 ),
+                              _class="title-area",
+                              ),
+                           SECTION(UL(right,
+                                      _class="right",
+                                      ),
+                                   UL(left,
+                                      _class="left",
+                                      ),
+                                   _class="top-bar-section",
+                                   ),
+                           _class = "top-bar",
+                           data = {"topbar": " "},
+                           )
         else:
             return None
 
@@ -385,19 +409,19 @@ class S3HomepageMenuLayout(S3NavigationItem):
 
             if item.parent is None:
                 # The menu itself
-                
+
                 number_of_links = 0
-                
+
                 components = []
                 append = components.append
                 for submenu in items:
                     append(submenu)
                     number_of_links += len(submenu.elements("a"))
-                    
+
                 # Hide the entire menu if it doesn't contain any links
                 if not number_of_links:
                     return None
-                    
+
                 title = H3(item.label) if item.label else ""
                 menu = DIV(title,
                            DIV(TAG[""](components),
@@ -406,9 +430,9 @@ class S3HomepageMenuLayout(S3NavigationItem):
                            _id = item.attr._id,
                            _class = item.attr._class,
                            )
-                           
+
                 return menu
-                
+
             else:
                 # A menu item
                 _class = item.attr._class
