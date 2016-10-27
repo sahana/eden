@@ -1519,16 +1519,27 @@ def config(settings):
                                       cache = s3db.cache,
                                       limitby=(0, 1)
                                       ).first()
-            if region and region.name in ("Asia Pacific", "East Asia", "Pacific", "South Asia", "South East Asia"):
+            if region:
                 if region_id:
-                    if region == "Asia Pacific":
-                        region_id = region.id
-                    else:
-                        region_id = db(rtable.name == "Asia Pacific").select(rtable.id,
-                                                                             limitby=(0, 1)
-                                                                             ).first().id
-                    return region_id
-                else:
+                    if region.name in ("Asia Pacific", "East Asia", "Pacific", "South Asia", "South East Asia"):
+                        if region == "Asia Pacific":
+                            region_id = region.id
+                        else:
+                            region_id = db(rtable.name == "Asia Pacific").select(rtable.id,
+                                                                                 limitby=(0, 1)
+                                                                                 ).first().id
+                        #return (True, region_id)
+                        return region_id
+                    elif region.name in ("Africa", "Central Africa", "Southern Africa", "Sahel", "East Africa", "West Coast", "Indian Ocean", "Madagascar"):
+                        if region == "Africa":
+                            region_id = region.id
+                        else:
+                            region_id = db(rtable.name == "Africa").select(rtable.id,
+                                                                           limitby=(0, 1)
+                                                                           ).first().id
+                        #return (False, region_id)
+                        return region_id
+                elif region.name in ("Asia Pacific", "East Asia", "Pacific", "South Asia", "South East Asia"):
                     return True
 
         return False
