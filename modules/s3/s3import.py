@@ -861,10 +861,10 @@ class S3Importer(S3Method):
         """
 
         s3 = current.response.s3
-        table = self.table
 
         represent = {"s3_import_item.element" : self._item_element_represent}
         self._use_import_item_table(job_id)
+        table = self.table
 
         # Get a list of the records that have an error of None
         query =  (table.job_id == job_id) & \
