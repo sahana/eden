@@ -2,6 +2,7 @@
 
     /**
      * Function to make RDRT roster member status inline-editable
+     * using jquery.jeditable.js
      *
      * @param {string} ajaxURL - the Ajax URL for the update request (POST)
      * @param {string} active - localized label for "active" option
@@ -42,4 +43,49 @@
             submit: submit
         });
     };
+
+    /**
+     * Function to make RDRT member human_resource.type inline-editable
+     * using jquery.jeditable.js
+     *
+     * @param {string} ajaxURL - the Ajax URL for the update request (POST)
+     * @param {string} staff - localized label for "staff" option
+     * @param {string} volunteer - localized label for "volunteer" option
+     * @param {string} submit - localized label for submit button
+     */
+    $.rdrtType = function(ajaxURL, staff, volunteer, submit) {
+
+        var options = {'1': staff, '2': volunteer};
+
+        $('#rdrt-resource-type').editable(function(value) {
+
+            var currentType = $(this).data('type'),
+                type = 1;
+            if (value == 2) {
+                type = 2;
+            }
+            $.ajaxS3({
+                type: 'POST',
+                url: ajaxURL,
+                data: JSON.stringify({'$_hrm_human_resource': {'type': type}}),
+                dataType: 'JSON',
+                async: false,
+                success: function(response) {
+                    if (response.status == 'success') {
+                        currentType = value;
+                    }
+                }
+            });
+            $(this).data('type', currentType);
+            return options[currentType];
+
+        }, {data: function() {
+                return JSON.stringify($.extend({'selected': $(this).data('type')}, options));
+            },
+            type: 'select',
+            style: 'display: inline',
+            submit: submit
+        });
+    };
+
 })(jQuery);

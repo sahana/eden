@@ -147,6 +147,7 @@ def human_resource():
     """
 
     # Tweak settings for RDRT
+    # @ToDo: These should really be in customise_ in IFRC template
     settings.hrm.staff_experience = True
     settings.hrm.use_skills = True
     settings.search.filter_manager = True
