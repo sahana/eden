@@ -54,11 +54,11 @@ def config(settings):
     # L10n settings
     # Languages used in the deployment (used for Language Toolbar & GIS Locations)
     # http://www.loc.gov/standards/iso639-2/php/code_list.php
-    #settings.L10n.languages = OrderedDict([
+    settings.L10n.languages = OrderedDict([
     #    ("ar", "العربية"),
     #    ("bs", "Bosanski"),
-    #    ("en", "English"),
-    #    ("fr", "Français"),
+        ("en", "English"),
+        ("fr", "Français"),
     #    ("de", "Deutsch"),
     #    ("el", "ελληνικά"),
     #    ("es", "Español"),
@@ -79,7 +79,7 @@ def config(settings):
     #    ("vi", "Tiếng Việt"),
     #    ("zh-cn", "中文 (简体)"),
     #    ("zh-tw", "中文 (繁體)"),
-    #])
+    ])
     # Default language for Language Toolbar (& GIS Locations in future)
     #settings.L10n.default_language = "en"
     # Uncomment to Hide the language toolbar
