@@ -19,7 +19,6 @@
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
-    <xsl:include href="../commons.xsl"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
@@ -32,31 +31,31 @@
     <xsl:template match="row">
 
         <xsl:variable name="PersonLabel">
-            <xsl:call-template name="GetColumnValue">
+            <xsl:call-template name="ColumnValue">
                 <xsl:with-param name="colhdrs">|ID|#|PersonID|</xsl:with-param>
             </xsl:call-template>
         </xsl:variable>
 
         <xsl:variable name="FirstName">
-            <xsl:call-template name="GetColumnValue">
+            <xsl:call-template name="ColumnValue">
                 <xsl:with-param name="colhdrs">|First Name|#|FirstName|</xsl:with-param>
             </xsl:call-template>
         </xsl:variable>
 
         <xsl:variable name="LastName">
-            <xsl:call-template name="GetColumnValue">
+            <xsl:call-template name="ColumnValue">
                 <xsl:with-param name="colhdrs">|Last Name|#|LastName|</xsl:with-param>
             </xsl:call-template>
         </xsl:variable>
 
         <xsl:variable name="DateOfBirth">
-            <xsl:call-template name="GetColumnValue">
+            <xsl:call-template name="ColumnValue">
                 <xsl:with-param name="colhdrs">|Date of Birth|#|DOB|</xsl:with-param>
             </xsl:call-template>
         </xsl:variable>
 
         <xsl:variable name="AmountEUR">
-            <xsl:call-template name="GetColumnValue">
+            <xsl:call-template name="ColumnValue">
                 <xsl:with-param name="colhdrs">|Amount EUR|#|AmountEUR|</xsl:with-param>
             </xsl:call-template>
         </xsl:variable>
@@ -90,7 +89,7 @@
 
                 <!-- Dates -->
                 <xsl:variable name="Period">
-                    <xsl:call-template name="GetColumnValue">
+                    <xsl:call-template name="ColumnValue">
                         <xsl:with-param name="colhdrs">|Period|#|Period|</xsl:with-param>
                     </xsl:call-template>
                 </xsl:variable>
@@ -101,7 +100,7 @@
                 </xsl:if>
 
                 <xsl:variable name="Date">
-                    <xsl:call-template name="GetColumnValue">
+                    <xsl:call-template name="ColumnValue">
                         <xsl:with-param name="colhdrs">|Date|#|Date|</xsl:with-param>
                     </xsl:call-template>
                 </xsl:variable>
@@ -141,9 +140,46 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <!-- Dummy for commons.xsl -->
+    <xsl:template name="ColumnValue">
 
-    <xsl:template name="resource"/>
+        <xsl:param name="colhdrs"/>
+
+        <!-- Column label alternatives -->
+        <xsl:variable name="colLabels">
+            <xsl:choose>
+                <xsl:when test="contains($colhdrs, '#')">
+                    <xsl:value-of select="substring-before($colhdrs, '#')"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="$colhdrs"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <!-- Column hashtags -->
+        <xsl:variable name="colTags">
+            <xsl:choose>
+                <xsl:when test="contains($colhdrs, '#')">
+                    <xsl:value-of select="substring-after($colhdrs, '#')"/>
+                </xsl:when>
+            </xsl:choose>
+        </xsl:variable>
+
+        <!-- Get the column value -->
+        <xsl:variable name="colValue">
+            <xsl:choose>
+                <xsl:when test="$colTags!='' and col[contains($colTags, concat('|', substring-after(@hashtag, '#'), '|'))][1]">
+                    <xsl:value-of select="col[contains($colTags, concat('|', substring-after(@hashtag, '#'), '|'))][1]/text()"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:value-of select="col[contains($colhdrs, concat('|', @field, '|'))][1]/text()"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <xsl:value-of select="$colValue"/>
+
+    </xsl:template>
 
     <!-- ****************************************************************** -->
 

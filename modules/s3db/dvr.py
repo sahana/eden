@@ -2414,6 +2414,11 @@ class DVRCaseAllowanceModel(S3Model):
             if not record_id:
                 return
 
+            if current.response.s3.bulk and "status" not in form_vars:
+                # Import without status change won't affect last_seen_on,
+                # so we can skip this check for better performance
+                return
+
             # Get the person ID
             table = current.s3db.dvr_allowance
             row = current.db(table.id == record_id).select(table.person_id,
