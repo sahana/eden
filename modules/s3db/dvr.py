@@ -4453,61 +4453,6 @@ class DVRRegisterCaseEvent(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    @staticmethod
-    def person_details(person):
-        """
-            Format the person details
-
-            @param person: the person record (Row)
-        """
-
-        T = current.T
-        settings = current.deployment_settings
-
-        name = s3_fullname(person)
-        dob = person.date_of_birth
-        if dob:
-            dob = S3DateTime.date_represent(dob)
-            details = "%s (%s %s)" % (name, T("Date of Birth"), dob)
-        else:
-            details = name
-
-        output = SPAN(details,
-                      _class = "person-details",
-                      )
-
-        if settings.get_dvr_event_registration_checkin_warning():
-
-            table = current.s3db.cr_shelter_registration
-            if table:
-                # Person counts as checked-out when checked-out
-                # somewhere and not checked-in somewhere else
-                query = (table.person_id == person.id) & \
-                        (table.deleted != True)
-                cnt = table.id.count()
-                status = table.registration_status
-                rows = current.db(query).select(status,
-                                                cnt,
-                                                groupby = status,
-                                                )
-                checked_in = checked_out = 0
-                for row in rows:
-                    s = row[status]
-                    if s == 2:
-                        checked_in = row[cnt]
-                    elif s == 3:
-                        checked_out = row[cnt]
-
-                if checked_out and not checked_in:
-                    output = TAG[""](output,
-                                     SPAN(ICON("hint"),
-                                          T("not checked-in!"),
-                                          _class = "check-in-warning",
-                                          ),
-                                     )
-        return output
-
-    # -------------------------------------------------------------------------
     # Common methods
     # -------------------------------------------------------------------------
     @classmethod
@@ -4651,6 +4596,61 @@ class DVRRegisterCaseEvent(S3Method):
                 person = rows[0]
 
         return person
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def person_details(person):
+        """
+            Format the person details
+
+            @param person: the person record (Row)
+        """
+
+        T = current.T
+        settings = current.deployment_settings
+
+        name = s3_fullname(person)
+        dob = person.date_of_birth
+        if dob:
+            dob = S3DateTime.date_represent(dob)
+            details = "%s (%s %s)" % (name, T("Date of Birth"), dob)
+        else:
+            details = name
+
+        output = SPAN(details,
+                      _class = "person-details",
+                      )
+
+        if settings.get_dvr_event_registration_checkin_warning():
+
+            table = current.s3db.cr_shelter_registration
+            if table:
+                # Person counts as checked-out when checked-out
+                # somewhere and not checked-in somewhere else
+                query = (table.person_id == person.id) & \
+                        (table.deleted != True)
+                cnt = table.id.count()
+                status = table.registration_status
+                rows = current.db(query).select(status,
+                                                cnt,
+                                                groupby = status,
+                                                )
+                checked_in = checked_out = 0
+                for row in rows:
+                    s = row[status]
+                    if s == 2:
+                        checked_in = row[cnt]
+                    elif s == 3:
+                        checked_out = row[cnt]
+
+                if checked_out and not checked_in:
+                    output = TAG[""](output,
+                                     SPAN(ICON("hint"),
+                                          T("not checked-in!"),
+                                          _class = "check-in-warning",
+                                          ),
+                                     )
+        return output
 
     # -------------------------------------------------------------------------
     def get_blocked_events(self, person_id, type_id=None):
@@ -4932,15 +4932,10 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
 
             check = data.get("c")
             if check:
-                name = s3_fullname(person)
-                dob = person.date_of_birth
-                if dob:
-                    dob = S3DateTime.date_represent(dob)
-                    person_data = "%s (%s %s)" % (name, T("Date of Birth"), dob)
-                else:
-                    person_data = name
+                # Person details
+                person_details = self.person_details(person)
 
-                output["p"] = s3_str(person_data)
+                output["p"] = s3_str(person_details)
                 output["l"] = person.pe_label
 
                 info = flag_info["info"]
