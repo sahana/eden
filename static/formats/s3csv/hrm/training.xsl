@@ -401,7 +401,9 @@
                     <data field="grade">
                         <xsl:choose>
                             <xsl:when test="$Grade='Pass'">8</xsl:when>
+                            <xsl:when test="$Grade='Aprobado'">8</xsl:when>
                             <xsl:when test="$Grade='Fail'">9</xsl:when>
+                            <xsl:when test="$Grade='Reprobado'">9</xsl:when>
                             <xsl:otherwise><xsl:value-of select="$Grade"/></xsl:otherwise>
                         </xsl:choose>
                     </data>
