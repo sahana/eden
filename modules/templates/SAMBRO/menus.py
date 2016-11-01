@@ -80,35 +80,16 @@ class S3MainMenu(default.S3MainMenu):
                         mapping_menu,                                                
                         ]
             else:
-                view_menu = [MM("View Alerts", c="cap", f="alert"),
-                             alert_hub_menu,
-                             ]
                 # Publisher sees minimal options
                 menus_ = [homepage(),
+                          alerting_menu,
+                          alert_hub_menu,
                           ]
 
                 if has_role("MAP_ADMIN"):
-                    menus_.extend([view_menu,
-                                   alert_hub_menu,
-                                   mapping_menu,
-                                  ])
-                elif has_role("ALERT_APPROVER"):
-                    menus_.extend([alerting_menu,
-                                   alert_hub_menu,
-                                   MM("Approve Alerts", c="cap", f="alert", m="review"),
-                                   MM("View Approved Alerts", c="cap", f="alert",
-                                      vars={"~.approved_by__ne": None}
-                                      ),
-                                   MM("Incomplete Alerts", c="cap", f="alert", m="review",
-                                      vars={"status": "incomplete"}
-                                      )
-                                   ])
-                elif has_role("ALERT_EDITOR"):
-                    menus_.extend([alerting_menu,
-                                   alert_hub_menu])
+                    menus_.append(mapping_menu)
                 else:
-                    # Authenticated Users
-                    menus_.append(view_menu)
+                    return menus_
 
                 return menus_
 
@@ -229,11 +210,20 @@ class S3OptionsMenu(default.S3OptionsMenu):
             cap_editors = lambda i: s3_has_role("ALERT_EDITOR") or \
                                     s3_has_role("ALERT_APPROVER")
             return M(c="cap", check=cap_editors)(
-                        M("Alerts", f="alert",
-                          check=cap_editors)(
-                            M("Create", m="create"),
+                        M("Alerts", f="alert")(
+                            M("Create", m="create", check=cap_editors),
                             M("Import from Feed URL", m="import_feed", p="create",
                               check=cap_editors),
+                            M("To Review", c="cap", f="alert", m="review",
+                              check=s3_has_role("ALERT_APPROVER")),
+                        ),
+                        M("View", check=cap_editors)(
+                            M("Approved Alerts", c="cap", f="alert",
+                              vars={"~.approved_by__ne": None},
+                              ),
+                            M("Incomplete Alerts", c="cap", f="alert", m="review",
+                              vars={"status": "incomplete"}
+                              ),
                         ),
                         M("Templates", f="template")(
                             M("Create", m="create",

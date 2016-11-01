@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current
+from gluon import current, URL
 
 from collections import OrderedDict
 
@@ -31,5 +31,11 @@ def config(settings):
 
     # Maldives don't support ack workflow
     settings.cap.use_ack = False
+
+    # UI Settings
+    settings.ui.menu_logo = URL(c = "static",
+                                f = "themes",
+                                args = ["SAMBRO", "MV", "img", "ndmc.png"],
+                                )
 
 # END =========================================================================

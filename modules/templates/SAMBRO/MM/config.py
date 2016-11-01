@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gluon import current
+from gluon import current, URL
 
 from collections import OrderedDict
 
@@ -28,5 +28,11 @@ def config(settings):
 
     # Alert Hub Title
     settings.cap.alert_hub_title = T("Myanmar Alert Hub Common Operating Picture")
+
+    # UI Settings
+    settings.ui.menu_logo = URL(c = "static",
+                                f = "themes",
+                                args = ["SAMBRO", "MM", "img", "dmh.png"],
+                                )
 
 # END =========================================================================
