@@ -109,7 +109,7 @@ def config(settings):
         #("prs", "دری"),        # Dari
         #("ps", "پښتو"),        # Pashto
         #("tet", "Tetum"),
-        #("th", "ภาษาไทย"),        # Thai
+        ("th", "ภาษาไทย"),        # Thai
         ("tl", "Tagalog"), # Filipino
         #("vi", "Tiếng Việt"),   # Vietnamese
         #("zh-cn", "中文 (简体)"),
@@ -548,6 +548,12 @@ def config(settings):
                 itable.severity.represent = None
                 itable.urgency.represent = None
                 itable.certainty.represent = None
+
+            # Limit import feed to alert editor and approver only
+            args = r.args
+            if args and args[0] == "import_feed" and not \
+                (auth.s3_has_role("ALERT EDITOR") or auth.s3_has_role("ALERT APPROVER")):
+                auth.permission.fail()
 
             return result
         s3.prep = custom_prep

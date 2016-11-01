@@ -1,5 +1,5 @@
 <div>
- {{if request.controller == "default" and request.function == "index" and request.args == ["alert_hub_cop"]:}}
+ {{if request.controller == "default" and request.function == "index" or request.args == ["alert_hub_cop"]:}}
   <!-- Show in Home Page Only -->
   <ul class='home-social' style='display:inline-block; list-style-type:none'>
    <li><h5 style='color:#008CBA'>{{=T("Follow Us")}}</h5></li>
