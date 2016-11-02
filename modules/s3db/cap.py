@@ -30,6 +30,7 @@
 __all__ = ("get_cap_options",
            "S3CAPModel",
            "S3CAPHistoryModel",
+           "S3CAPAlertingAuthorityModel",
            "S3CAPAreaNameModel",
            "cap_alert_is_template",
            "cap_rheader",
@@ -58,7 +59,9 @@ except:
 from gluon import *
 from gluon.storage import Storage
 from gluon.tools import fetch
+
 from ..s3 import *
+from s3layouts import S3PopupLink
 
 # =============================================================================
 def get_cap_options():
@@ -3044,6 +3047,148 @@ T("Upload an image file(bmp, gif, jpeg or png), max. 800x800 pixels!"))),
         except IndexError:
             return current.messages.UNKNOWN_OPT
         return ""
+
+# =============================================================================
+class S3CAPAlertingAuthorityModel(S3Model):
+
+    names = ("cap_alerting_authority",
+             "cap_authority_feed_url",
+             "cap_authority_forecast_url"
+             )
+
+    def model(self):
+
+        T = current.T
+        define_table = self.define_table
+        messages = current.messages
+
+        # ---------------------------------------------------------------------
+        # The data model resembles the data extracted from here http://alerting.worldweather.org/
+        #
+        tablename = "cap_alerting_authority"
+        define_table(tablename,
+                     Field("oid", unique=True,
+                           label = T("CAP OID"),
+                           requires = IS_MATCH('^[^,<&\s]+$',
+                                               error_message=T("Cannot be empty and Must not include spaces, commas, or restricted characters (< and &).")),
+                           ),
+                     self.org_organisation_id(
+                           requires = self.org_organisation_requires(
+                                                required=True,
+                                                ),
+                           widget = None,
+                           comment = S3PopupLink(c = "org",
+                                                 f = "organisation",
+                                                 label = T("Create Organization"),
+                                                 title = messages.ORGANISATION,
+                                                 ),
+                          ),
+                     Field("country", length=2,
+                           label = T("Country"),
+                           represent = self.gis_country_code_represent,
+                           requires = IS_EMPTY_OR(IS_IN_SET_LAZY(
+                                                    lambda: current.gis.get_countries(key_type="code"),
+                                                    zero=messages.SELECT_LOCATION)),
+                           ),
+                     Field("authorisation", "text",
+                           label = T("Authorization Basis"),
+                           readable = False,
+                           writable = False,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        self.crud_strings[tablename] = Storage(
+                    label_create = T("Add Alerting Authority"),
+                    title_display = T("Alerting Authority"),
+                    title_list = T("Alerting Authorities"),
+                    title_update = T("Edit Alerting Authority"),
+                    subtitle_list = T("List Alerting Authorities"),
+                    label_list_button = T("List Alerting Authorities"),
+                    label_delete_button = T("Delete Alerting Authority"),
+                    msg_record_created = T("Alerting Authority added"),
+                    msg_record_modified = T("Alerting Authority updated"),
+                    msg_record_deleted = T("Alerting Authority deleted"),
+                    msg_list_empty = T("No Alerting Authority available"))
+
+        list_fields = ["oid",
+                       "organisation_id",
+                       "country",
+                       "feed_url.url",
+                       "forecast_url.url",
+                       ]
+
+        alerting_authority_represent = S3Represent(lookup = tablename,
+                                                   fields = ["organisation_id", "oid"],
+                                                   field_sep = " - ")
+
+        alerting_authority_id = S3ReusableField("alerting_authority_id", "reference %s" % tablename,
+                                                label = T("CAP Alerting Authority"),
+                                                ondelete = "CASCADE",
+                                                represent = alerting_authority_represent,
+                                                requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "cap_alerting_authority.id",
+                                                              alerting_authority_represent)
+                                                ))
+
+        crud_form = S3SQLCustomForm("oid",
+                                    "organisation_id",
+                                    "country",
+                                    "authorisation",
+                                    S3SQLInlineComponent("feed_url",
+                                                         name = "feed_url",
+                                                         label = T("CAP Feed URL"),
+                                                         fields = [("", "url")],
+                                                         ),
+                                    S3SQLInlineComponent("forecast_url",
+                                                         name = "forecast_url",
+                                                         label = T("Forecast URL"),
+                                                         fields = [("", "url")],
+                                                         )
+                                    )
+
+        self.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       )
+
+        # Components
+        self.add_components(tablename,
+                            cap_authority_feed_url = {"name": "feed_url",
+                                                      "joinby": "alerting_authority_id",
+                                                      },
+                            cap_authority_forecast_url = {"name": "forecast_url",
+                                                          "joinby": "alerting_authority_id",
+                                                          },
+                            )
+
+        # ---------------------------------------------------------------------
+        # Feed URL for CAP Alerting Authority
+        tablename = "cap_authority_feed_url"
+        define_table(tablename,
+                     alerting_authority_id(),
+                     # @ToDo: Add username and pwd for url
+                     Field("url",
+                           label = T("CAP Feed URL"),
+                           requires = IS_EMPTY_OR(IS_URL()),
+                           ),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Forecasts URL for CAP Alerting Authority
+        tablename = "cap_authority_forecast_url"
+        define_table(tablename,
+                     alerting_authority_id(),
+                     Field("url",
+                           label = T("Forecast URL"),
+                           requires = IS_EMPTY_OR(IS_URL()),
+                           ),
+                     *s3_meta_fields())
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        return {}
 
 # =============================================================================
 class S3CAPAreaNameModel(S3Model):
