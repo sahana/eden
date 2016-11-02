@@ -125,12 +125,25 @@ def config(settings):
             field.comment = None
 
             # Custom form
-            from s3 import S3SQLCustomForm, S3SQLInlineLink
+            from s3 import S3SQLCustomForm, \
+                           S3SQLInlineComponent, \
+                           S3SQLInlineLink
             crud_form = S3SQLCustomForm("person_id",
                                         S3SQLInlineLink("project",
                                                         field = "project_id",
                                                         multiple = False,
                                                         ),
+                                        S3SQLInlineComponent("beneficiary_data",
+                                                             fields = ["beneficiary_type_id",
+                                                                       "female",
+                                                                       "male",
+                                                                       "other",
+                                                                       "in_school",
+                                                                       "employed",
+                                                                       ],
+                                                             label = T("Household Details"),
+                                                             explicit_add = T("Add Household Details"),
+                                                             ),
                                         )
 
             # Filter staff by organisation

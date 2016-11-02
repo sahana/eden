@@ -133,6 +133,9 @@ table.embeddedComponent tr.label-row td {
 .form-container form .embeddedComponent  textarea  {
     width: auto;
 }
+table.embeddedComponent input.integer {
+    max-width: 10rem;
+}
 
 .inline-throbber {
     background-image: url(../../img/indicator.gif);

@@ -1941,6 +1941,7 @@ class DVRCaseBeneficiaryModel(S3Model):
         # Beneficiary data
         #
         show_third_gender = not current.deployment_settings.get_pr_hide_third_gender()
+        int_represent = lambda v: str(v) if v is not None else "-"
 
         tablename = "dvr_beneficiary_data"
         define_table(tablename,
@@ -1957,30 +1958,36 @@ class DVRCaseBeneficiaryModel(S3Model):
                      Field("total", "integer",
                            label = T("Number of Beneficiaries"),
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
+                           represent = int_represent,
                            # Expose in templates when not using per-gender fields
                            readable = False,
                            writable = False,
                            ),
                      Field("female", "integer",
                            label = T("Number Female"),
+                           represent = int_represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            ),
                      Field("male", "integer",
                            label = T("Number Male"),
+                           represent = int_represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            ),
                      Field("other", "integer",
                            label = T("Number Other Gender"),
+                           represent = int_represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            readable = show_third_gender,
                            writable = show_third_gender,
                            ),
                      Field("in_school", "integer",
                            label = T("Number in School"),
+                           represent = int_represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            ),
                      Field("employed", "integer",
                            label = T("Number Employed"),
+                           represent = int_represent,
                            requires = IS_EMPTY_OR(IS_INT_IN_RANGE(0, None)),
                            ),
                      s3_comments(),
