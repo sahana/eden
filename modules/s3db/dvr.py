@@ -530,6 +530,13 @@ class DVRCaseModel(S3Model):
                                          "joinby": "case_id",
                                          "key": "need_id",
                                          },
+                            project_project = {"link": "project_case_project",
+                                               "joinby": "case_id",
+                                               "key": "project_id",
+                                               "multiple": False,
+                                               "actuate": "link",
+                                               "autodelete": False,
+                                               },
                             )
 
         # Report options FIXME

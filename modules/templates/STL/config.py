@@ -125,12 +125,12 @@ def config(settings):
             field.comment = None
 
             # Custom form
-            from s3 import S3SQLCustomForm
+            from s3 import S3SQLCustomForm, S3SQLInlineLink
             crud_form = S3SQLCustomForm("person_id",
-                                        "date",
-                                        "organisation_id",
-                                        "human_resource_id",
-                                        "status_id",
+                                        S3SQLInlineLink("project",
+                                                        field = "project_id",
+                                                        multiple = False,
+                                                        ),
                                         )
 
             # Filter staff by organisation
@@ -315,8 +315,9 @@ def config(settings):
 
                     # Custom CRUD form
                     crud_form = S3SQLCustomForm(
-                                "dvr_case.date",
                                 "dvr_case.organisation_id",
+                                "dvr_case.date",
+                                "dvr_case.status_id",
                                 "dvr_case.human_resource_id",
                                 "first_name",
                                 #"middle_name",
@@ -324,6 +325,7 @@ def config(settings):
                                 "person_details.nationality",
                                 "date_of_birth",
                                 "gender",
+                                "person_details.marital_status",
                                 "case_details.registered",
                                 (T("Individual ID Number"), "pe_label"),
                                 S3SQLInlineComponent(
@@ -559,6 +561,21 @@ def config(settings):
     settings.project.codes = True
     settings.project.sectors = False
     settings.project.assign_staff_tab = False
+
+    # -------------------------------------------------------------------------
+    def customise_project_case_project_resource(r, tablename):
+
+        table = current.s3db.project_case_project
+        field = table.project_id
+
+        from s3 import IS_ONE_OF, S3Represent
+        represent = S3Represent(lookup="project_project", fields=["code"])
+        requires = IS_ONE_OF(current.db, "project_project.id", represent)
+
+        field.represent = represent
+        field.requires = requires
+
+    settings.customise_project_case_project_resource = customise_project_case_project_resource
 
     # -------------------------------------------------------------------------
     def customise_project_project_resource(r, tablename):
@@ -839,7 +856,7 @@ def stl_dvr_rheader(r, tabs=[]):
 
             if not tabs:
                 tabs = [(T("Basic Details"), None),
-                        (T("Case Information"), "dvr_case"),
+                        (T("Case Management"), "dvr_case"),
                         (T("Contact"), "contacts"),
                         ]
 
