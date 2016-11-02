@@ -17,6 +17,14 @@ def index():
     s3_redirect_default(URL(f="alert"))
 
 # -----------------------------------------------------------------------------
+def alerting_authority():
+    """
+        RESTful CRUD controller
+    """
+
+    return s3_rest_controller()
+    
+# -----------------------------------------------------------------------------
 def alert_history():
     """
         RESTful CRUD controller
