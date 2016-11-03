@@ -144,6 +144,7 @@ def config(settings):
                                                              label = T("Household Details"),
                                                              explicit_add = T("Add Household Details"),
                                                              ),
+                                        "comments",
                                         )
 
             # Filter staff by organisation
@@ -168,6 +169,16 @@ def config(settings):
                        )
 
     settings.customise_dvr_case_resource = customise_dvr_case_resource
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_economy_resource(r, tablename):
+
+        table = current.s3db.dvr_economy
+        field = table.monthly_costs
+
+        field.label = current.T("Monthly Rent Expense")
+
+    settings.customise_dvr_economy_resource = customise_dvr_economy_resource
 
     # =========================================================================
     # Person Registry
@@ -880,6 +891,7 @@ def stl_dvr_rheader(r, tabs=[]):
             if not tabs:
                 tabs = [(T("Basic Details"), None),
                         (T("Case Management"), "dvr_case"),
+                        (T("Economy"), "economy"),
                         (T("Contact"), "contacts"),
                         ]
 

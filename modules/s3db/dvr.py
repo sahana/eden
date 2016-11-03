@@ -2220,13 +2220,13 @@ class DVRCaseEconomyInformationModel(S3Model):
         # CRUD Form
         crud_form = S3SQLCustomForm("housing_type_id",
                                     "monthly_costs",
+                                    "average_weekly_income",
+                                    "currency",
                                     S3SQLInlineLink("income_source",
                                                     field = "income_source_id",
                                                     label = T("Income Sources"),
                                                     cols = 3,
                                                     ),
-                                    "average_weekly_income",
-                                    "currency",
                                     "comments",
                                     )
 
