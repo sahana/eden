@@ -898,6 +898,7 @@ def stl_dvr_rheader(r, tabs=[]):
                 case = resource.select(["family_id.value",
                                         "dvr_case.organisation_id",
                                         "dvr_case.disclosure_consent",
+                                        "dvr_case.case_project.project_id",
                                         ],
                                         represent = True,
                                         raw_data = True,
@@ -910,6 +911,7 @@ def stl_dvr_rheader(r, tabs=[]):
 
                 family_id = lambda row: case["pr_family_id_person_tag.value"]
                 organisation_id = lambda row: case["dvr_case.organisation_id"]
+                project_id = lambda row: case["project_case_project.project_id"]
                 name = lambda row: s3_fullname(row)
 
                 raw = case._row
@@ -924,11 +926,13 @@ def stl_dvr_rheader(r, tabs=[]):
                                 )
 
                 rheader_fields = [[(T("ID"), "pe_label"),
-                                   (T("Family ID"), family_id),
+                                   (T("Organisation"), organisation_id),
                                    (T("Data Disclosure"), disclosure),
                                    ],
+                                  [(T("Family ID"), family_id),
+                                   (T("Project Code"), project_id),
+                                   ],
                                   [(T("Name"), name),
-                                   (T("Organisation"), organisation_id),
                                    ],
                                   ["date_of_birth",
                                    ],
