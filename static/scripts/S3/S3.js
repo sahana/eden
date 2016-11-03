@@ -484,7 +484,7 @@ var S3EnableNavigateAwayConfirm = function() {
             message = i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '...';
             S3.showAlert(message, 'info');
         }
-        $.ajax(
+        var xhr = $.ajax(
             options
         ).done(function(data, status) {
             S3.hideAlerts();
@@ -498,7 +498,9 @@ var S3EnableNavigateAwayConfirm = function() {
                 s.success(data, status);
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            if (textStatus == 'timeout') {
+            if (textStatus == 'abort') {
+                // Request aborted...don't show nasty messages
+            } else if (textStatus == 'timeout') {
                 this.tryCount++;
                 if (this.tryCount <= this.retryLimit) {
                     // Try again
@@ -509,13 +511,7 @@ var S3EnableNavigateAwayConfirm = function() {
                 }
                 message = i18n.ajax_wht + ' ' + (this.retryLimit + 1) + ' ' + i18n.ajax_gvn;
                 S3.showAlert(message, 'error');
-                if (s.error) {
-                    // Calling function's error callback
-                    s.error(jqXHR, textStatus, errorThrown);
-                }
-                return;
-            }
-            if (jqXHR.status == 500) {
+            } else if (jqXHR.status == 500) {
                 // @ToDo: Can we find & show the ticket URL?
                 S3.showAlert(i18n.ajax_500, 'error');
             } else {
@@ -526,6 +522,8 @@ var S3EnableNavigateAwayConfirm = function() {
                 s.error(jqXHR, textStatus, errorThrown);
             }
         });
+        // Return the request to allow it to be aborted
+        return xhr;
     };
 
     // Simplified wrappers for .ajaxS3
@@ -643,14 +641,14 @@ var s3_viewMap = function(feature_id, iframe_height, popup) {
         func = curl[3];
 
     url += '?controller=' + controller + '&function=' + func;
-    if (curl.length>4) {
+    if (curl.length > 4) {
         // Record id
         if ($.isNumeric(curl[4])) {
             url += '&rid=' + curl[4];
         }
     }
 
-    if ($map.length==0 || popup=='True') {
+    if ($map.length == 0 || popup == 'True') {
         url += '&popup=1';
         S3.openPopup(url, true);
     }

@@ -176,7 +176,8 @@ S3.search = {};
             message = i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '...';
             S3.showAlert(message, 'info');
         }
-        $.ajax(
+
+        var xhr = $.ajax(
             options
         ).done(function(data, status) {
             S3.hideAlerts();
@@ -189,7 +190,9 @@ S3.search = {};
                 doneCallback(data, status);
             }
         }).fail(function(jqXHR, textStatus, errorThrown) {
-            if (textStatus == 'timeout') {
+            if (textStatus == 'abort') {
+                // Request aborted...don't show nasty messages
+            } else if (textStatus == 'timeout') {
                 this.tryCount++;
                 if (this.tryCount <= this.retryLimit) {
                     // Try again
@@ -210,6 +213,8 @@ S3.search = {};
                 failCallback(jqXHR, textStatus, errorThrown);
             }
         });
+        // Return the request to allow it to be aborted
+        return xhr;
     };
 
     /**

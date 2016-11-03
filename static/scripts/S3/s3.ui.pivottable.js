@@ -88,6 +88,7 @@
 
             this.table = null;
             this.chart = null;
+            this.openRequest = null;
         },
 
         /**
@@ -1877,11 +1878,18 @@
                 // Hide empty section while loading
                 $el.find('.pt-empty').hide();
 
-                ajaxMethod({
+                if (pt.openRequest) {
+                    // Abort previously open request
+                    pt.openRequest.onreadystatechange = null;
+                    pt.openRequest.abort();
+                }
+
+                pt.openRequest = ajaxMethod({
                     'url': ajaxURL,
                     'dataType': 'json',
                     'type': 'GET',
                     'success': function(data) {
+                        pt.openRequest = null;
                         pivotdata.first().val(JSON.stringify(data));
                         pt.refresh();
                     },
