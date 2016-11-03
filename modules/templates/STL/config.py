@@ -2,7 +2,7 @@
 
 from collections import OrderedDict
 
-from gluon import current, URL
+from gluon import current, URL, SPAN
 from gluon.storage import Storage
 
 def config(settings):
@@ -306,6 +306,15 @@ def config(settings):
 })'''
                 s3.jquery_ready.append(script)
 
+                # Visibility and tooltip for consent flag
+                field = ctable.disclosure_consent
+                field.readable = field.writable = True
+                field.comment = DIV(_class="tooltip",
+                                    _title="%s|%s" % (T("Consenting to Data Disclosure"),
+                                                      T("Is the client consenting to disclosure of their data towards partner organisations and authorities?"),
+                                                      ),
+                                    )
+
                 # Custom label for registered-flag
                 dtable = s3db.dvr_case_details
                 field = dtable.registered
@@ -374,6 +383,7 @@ def config(settings):
                                         multiple = False,
                                         name = "phone",
                                         ),
+                                "dvr_case.disclosure_consent",
                                 "dvr_case.comments",
                                 )
 
@@ -875,21 +885,35 @@ def stl_dvr_rheader(r, tabs=[]):
 
                 case = resource.select(["family_id.value",
                                         "dvr_case.organisation_id",
+                                        "dvr_case.disclosure_consent",
                                         ],
                                         represent = True,
                                         raw_data = True,
                                         ).rows
 
-                if case:
-                    case = case[0]
-                    family_id = lambda row: case["pr_family_id_person_tag.value"]
-                    organisation_id = lambda row: case["dvr_case.organisation_id"]
-                else:
+                if not case:
                     return None
+
+                case = case[0]
+
+                family_id = lambda row: case["pr_family_id_person_tag.value"]
+                organisation_id = lambda row: case["dvr_case.organisation_id"]
                 name = lambda row: s3_fullname(row)
+
+                raw = case._row
+
+                # Render disclosure consent flag as colored label
+                consent = raw["dvr_case.disclosure_consent"]
+                labels = {"Y": "success", "N/A": "warning", "N": "alert"}
+                def disclosure(row):
+                    _class = labels.get(consent, "secondary")
+                    return SPAN(case["dvr_case.disclosure_consent"],
+                                _class = "%s label" % _class,
+                                )
 
                 rheader_fields = [[(T("ID"), "pe_label"),
                                    (T("Family ID"), family_id),
+                                   (T("Data Disclosure"), disclosure),
                                    ],
                                   [(T("Name"), name),
                                    (T("Organisation"), organisation_id),

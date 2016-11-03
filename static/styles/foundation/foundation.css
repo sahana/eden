@@ -4594,6 +4594,56 @@ label.error {
   }
 }
 
+/* line 91, ../../themes/foundation/scss/components/_labels.scss */
+.label {
+  font-weight: normal;
+  font-family: "Helvetica Neue", Helvetica, Roboto, Arial, sans-serif;
+  text-align: center;
+  text-decoration: none;
+  line-height: 1;
+  white-space: nowrap;
+  display: inline-block;
+  position: relative;
+  margin-bottom: inherit;
+  padding: 0.25rem 0.5rem 0.25rem;
+  font-size: 0.6875rem;
+  background-color: #008CBA;
+  color: #FFFFFF;
+}
+/* line 96, ../../themes/foundation/scss/components/_labels.scss */
+.label.radius {
+  border-radius: 3px;
+}
+/* line 97, ../../themes/foundation/scss/components/_labels.scss */
+.label.round {
+  border-radius: 1000px;
+}
+/* line 99, ../../themes/foundation/scss/components/_labels.scss */
+.label.alert {
+  background-color: #f04124;
+  color: #FFFFFF;
+}
+/* line 100, ../../themes/foundation/scss/components/_labels.scss */
+.label.warning {
+  background-color: #f08a24;
+  color: #FFFFFF;
+}
+/* line 101, ../../themes/foundation/scss/components/_labels.scss */
+.label.success {
+  background-color: #43AC6A;
+  color: #FFFFFF;
+}
+/* line 102, ../../themes/foundation/scss/components/_labels.scss */
+.label.secondary {
+  background-color: #e7e7e7;
+  color: #333333;
+}
+/* line 103, ../../themes/foundation/scss/components/_labels.scss */
+.label.info {
+  background-color: #a0d3e8;
+  color: #333333;
+}
+
 @-webkit-keyframes rotate {
   from {
     -webkit-transform: rotate(0deg);

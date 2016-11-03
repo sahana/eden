@@ -257,6 +257,12 @@ class DVRCaseModel(S3Model):
                                  "HOUSEHOLD": T("Household"),
                                  }
 
+        # Consent flag options
+        consent_opts = {"N/A": T("n/a"),
+                        "Y": T("yes"),
+                        "N": T("no"),
+                        }
+
         SITE = settings.get_org_site_label()
         site_represent = self.org_SiteRepresent(show_link=False)
 
@@ -334,6 +340,13 @@ class DVRCaseModel(S3Model):
                                                 sort = False,
                                                 zero = None,
                                                 ),
+                           ),
+                     Field("disclosure_consent", "string", length=8,
+                           label = T("Consenting to Data Disclosure"),
+                           requires = IS_EMPTY_OR(IS_IN_SET(consent_opts)),
+                           represent = S3Represent(options=consent_opts),
+                           readable = False,
+                           writable = False,
                            ),
                      Field("archived", "boolean",
                            default = False,
