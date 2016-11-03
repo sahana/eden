@@ -61,18 +61,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #M("Need Types", f="need")(
                     #   M("Create", m="create"),
                     #),
-                    #M("Housing Types", f="housing_type")(
-                    #   M("Create", m="create"),
-                    #),
-                    #M("Income Sources", f="income_source")(
-                    #  M("Create", m="create"),
-                    #),
-                    #M("Beneficiary Types", f="beneficiary_type")(
-                    #   M("Create", m="create"),
-                    #),
                     M("Administration", c="project", link=False,
                       restrict = [ADMIN])(
                         M("Projects", c="project", f="project"),
+                        M("Beneficiary Types", c="dvr", f="beneficiary_type"),
+                        M("Housing Types", c="dvr", f="housing_type"),
+                        M("Income Sources", c="dvr", f="income_source"),
                     ),
                 )
 
