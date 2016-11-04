@@ -32,7 +32,7 @@ def config(settings):
     # System Settings
     # -------------------------------------------------------------------------
     # Use the Database for storing sessions to avoid session locks on long-running requests
-    settings.base.sessions_db = True
+    settings.base.session_db = True
 
     # Security Policy
     settings.security.policy = 8 # Delegations
@@ -500,6 +500,8 @@ def config(settings):
 
     # Increase timeout on AJAX reports (ms)
     settings.ui.report_timeout = 600000 # 10 mins, same as the webserver
+    # Increase the timeout on Report auto-submission
+    settings.ui.report_auto_submit = 1400 # 1.4s
 
     # -------------------------------------------------------------------------
     # Content Management
