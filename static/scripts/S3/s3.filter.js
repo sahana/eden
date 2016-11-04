@@ -118,7 +118,7 @@ S3.search = {};
      * Default options for $.searchS3
      */
     var searchS3Defaults = {
-        timeout : 10000,
+        timeout : 10000, // 10s
         retryLimit: 5,
         dataType: 'json',
         contentType: 'application/json; charset=utf-8',
@@ -192,6 +192,7 @@ S3.search = {};
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if (textStatus == 'abort') {
                 // Request aborted...don't show nasty messages
+                this.tryCount = 0;
             } else if (textStatus == 'timeout') {
                 this.tryCount++;
                 if (this.tryCount <= this.retryLimit) {
@@ -213,7 +214,7 @@ S3.search = {};
                 failCallback(jqXHR, textStatus, errorThrown);
             }
         });
-        // Return the request to allow it to be aborted
+        // Return the request to allow it to be aborted or status-checked
         return xhr;
     };
 

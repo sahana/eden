@@ -329,10 +329,23 @@ class S3Model(object):
 
         # Define importer tables
         from s3import import S3Importer, S3ImportJob
-
         S3Importer.define_upload_table()
         S3ImportJob.define_job_table()
         S3ImportJob.define_item_table()
+
+        # Define sessions table
+        if current.deployment_settings.get_base_session_db():
+            # Copied from https://github.com/web2py/web2py/blob/master/gluon/globals.py#L895
+            # Not DRY, bit no easy way to make it so
+            current.db.define_table("web2py_session",
+                                    Field("locked", "boolean", default=False),
+                                    Field("client_ip", length=64),
+                                    Field("created_datetime", "datetime",
+                                          default=current.request.now),
+                                    Field("modified_datetime", "datetime"),
+                                    Field("unique_key", length=64),
+                                    Field("session_data", "blob"),
+                                    )
 
         # Don't do this again within the current request cycle
         s3.load_all_models = False

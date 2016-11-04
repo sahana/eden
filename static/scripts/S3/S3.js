@@ -466,7 +466,7 @@ var S3EnableNavigateAwayConfirm = function() {
 (function($) {
     // Default AJAX settings
     $.ajaxS3Settings = {
-        timeout : 10000,
+        timeout : 10000, // 10s
         //msgTimeout: 2000,
         retryLimit: 5,
         dataType: 'json',
@@ -500,6 +500,7 @@ var S3EnableNavigateAwayConfirm = function() {
         }).fail(function(jqXHR, textStatus, errorThrown) {
             if (textStatus == 'abort') {
                 // Request aborted...don't show nasty messages
+                this.tryCount = 0;
             } else if (textStatus == 'timeout') {
                 this.tryCount++;
                 if (this.tryCount <= this.retryLimit) {
@@ -522,7 +523,7 @@ var S3EnableNavigateAwayConfirm = function() {
                 s.error(jqXHR, textStatus, errorThrown);
             }
         });
-        // Return the request to allow it to be aborted
+        // Return the request to allow it to be aborted or status-checked
         return xhr;
     };
 

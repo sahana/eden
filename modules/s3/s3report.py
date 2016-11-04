@@ -630,6 +630,7 @@ class S3ReportForm(object):
             "filterForm": filter_form,
 
             "autoSubmit": settings.get_ui_report_auto_submit(),
+            "timeout": settings.get_ui_report_timeout(),
 
             "thousandSeparator": settings.get_L10n_thousands_separator(),
             "thousandGrouping": settings.get_L10n_thousands_grouping(),

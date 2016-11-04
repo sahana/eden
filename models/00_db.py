@@ -81,13 +81,19 @@ current.db = db
 db.set_folder("upload")
 
 # Sessions Storage
-if settings.get_base_session_memcache():
+if settings.get_base_session_db():
+    # Store sessions in the database to avoid a locked session
+    session.connect(request, response, db)
+elif settings.get_base_session_memcache():
     # Store sessions in Memcache
     from gluon.contrib.memcache import MemcacheClient
     cache.memcache = MemcacheClient(request,
                                     [settings.get_base_session_memcache()])
     from gluon.contrib.memdb import MEMDB
     session.connect(request, response, db=MEMDB(cache.memcache))
+#else:
+    ## Default to filesystem
+    # pass
 
 ####################################################################
 # Instantiate Classes from Modules                                 #

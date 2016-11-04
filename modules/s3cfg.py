@@ -846,6 +846,19 @@ class S3Config(Storage):
             raise HTTP(501, body="Database type '%s' not recognised - please correct file models/000_config.py." % db_type)
         return db_string
 
+    def get_base_session_db(self):
+        """
+            Should we store sessions in the database to avoid locking sessions on long-running requests?
+        """
+        # @ToDo: Set this as the default when running MySQL/PostgreSQL after more testing
+        result = self.base.get("session_db", False)
+        if result:
+            (db_string, pool_size) = self.get_database_string()
+            if db_string.find("sqlite") != -1:
+                # Never store the sessions in the DB if running SQLite
+                result = False
+        return result
+
     def get_base_session_memcache(self):
         """
             Should we store sessions in a Memcache service to allow sharing
@@ -2055,6 +2068,12 @@ class S3Config(Storage):
             automatically update the filter target(s), set to 0 to disable
         """
         return self.ui.get("report_auto_submit", 800)
+
+    def get_ui_report_timeout(self):
+        """
+            Time in milliseconds to wait for a Report's AJAX call to complete
+        """
+        return self.ui.get("report_timeout", 10000)
 
     def get_ui_use_button_icons(self):
         """
