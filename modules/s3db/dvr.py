@@ -5576,7 +5576,9 @@ def dvr_get_flag_instructions(person_id, action=None):
             advise = flag.advise_at_id_check
         if advise:
             instructions = flag.instructions
-            if not instructions.strip():
+            if instructions is not None:
+                instructions = instructions.strip()
+            if instructions:
                 instructions = current.T("No instructions for this flag")
             info.append((flag.name, instructions))
 
