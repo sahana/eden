@@ -12,6 +12,7 @@ def config(settings):
     T = current.T
 
     settings.base.system_name = T("Myanmar Warning and Situational-Awareness System")
+    settings.base.system_name_short = T("DMH")
 
     # Theme (folder to use for views/layout.html)
     settings.base.theme = "SAMBRO.MM"

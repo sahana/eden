@@ -12,6 +12,7 @@ def config(settings):
     T = current.T
 
     settings.base.system_name = T("Dhandhaana - Maldives Disaster Alerting and Situational Awareness Service")
+    settings.base.system_name_short = T("NDMC")
 
     # Default Language
     settings.L10n.default_language = "dv"

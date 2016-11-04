@@ -778,7 +778,8 @@ def config(settings):
         """
 
         rows = data["rows"]
-        subject = "%s $s %s" % (T("SAHANA"), T("Alert Notification"))
+        subject = "%s %s" % (current.deployment_settings.get_system_name_short(),
+                             T("Alert Notification"))
         if len(rows) == 1:
             # Since if there are more than one row, the single email has content
             # for all rows
@@ -1121,7 +1122,7 @@ def config(settings):
 
         itable = current.s3db.cap_info
         event_type_id = row["cap_info.event_type_id"]
-        priority_id = row["cap_info.priority"]
+        msg_type = T(row["cap_alert.msg_type"])
 
         if event_type_id and event_type_id != current.messages["NONE"]:
             if not isinstance(event_type_id, lazyT):
@@ -1131,22 +1132,13 @@ def config(settings):
         else:
             event_type = T("None")
 
-        if priority_id and priority_id != current.messages["NONE"]:
-            if not isinstance(priority_id, lazyT):
-                priority = itable.priority.represent(priority_id)
-            else:
-                priority = priority_id
-        else:
-            priority = T("Alert")
-
         subject = "[%s] %s %s" % (get_formatted_value(row["cap_info.sender_name"],
                                                       system=system),
                                   event_type,
-                                  priority)
+                                  msg_type)
         if len(subject) > 78: # RFC 2822
-            subject = "%s %s %s" % (T("SAHANA"),
-                                    current.deployment_settings.get_system_name_short(),
-                                    T("Alert Notification"))
+            subject = "%s %s" % (current.deployment_settings.get_system_name_short(),
+                                 T("Alert Notification"))
 
         return s3_str(subject)
 

@@ -12,6 +12,7 @@ def config(settings):
     T = current.T
 
     settings.base.system_name = T("Philippines Warning and Situational-Awareness System")
+    settings.base.system_name_short = T("PAGASA")
 
     # Default Language
     settings.L10n.default_language = "tl"
