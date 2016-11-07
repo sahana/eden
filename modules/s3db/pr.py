@@ -1351,10 +1351,7 @@ class S3PersonModel(S3Model):
         duplicates = Storage()
 
         def rank(a, b, match, mismatch):
-            if a and b:
-                return match if a == b else mismatch
-            else:
-                return untested
+            return match if a == b else mismatch
 
         email_required = current.deployment_settings.get_pr_import_update_requires_email()
         for row in candidates:
@@ -1405,7 +1402,7 @@ class S3PersonModel(S3Model):
 
             if id and row_id_type:
                 id_value = id.get(str(row_id_type), None)
-                if id_value:
+                if id_value and row_id_value:
                     check += rank(id_value, row_id_value, +5, -2)
 
             if check in duplicates:
