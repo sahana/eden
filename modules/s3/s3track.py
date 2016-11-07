@@ -660,8 +660,8 @@ class S3Trackable(object):
             timestamp = datetime.utcnow()
         if track_id:
             trackable = self.table[track_id]
-        if trackable:
-            trackable.update_record(track_timestmp=timestamp)
+            if trackable:
+                trackable.update_record(track_timestmp=timestamp)
 
 # =============================================================================
 class S3Tracker(object):

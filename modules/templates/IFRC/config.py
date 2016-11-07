@@ -4753,7 +4753,7 @@ def config(settings):
             dtable.religion.readable = dtable.religion.writable = False
             dtable.nationality.default = "MG"
             # Simplify UI: Just have 1 Address
-            s3db.add_components("pr_person",
+            s3db.add_components("pr_pentity",
                                 pr_address = {"joinby": "pe_id",
                                               "multiple": False,
                                               },
