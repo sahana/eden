@@ -45,8 +45,10 @@ __all__ = ("S3OrganisationModel",
            "S3OrganisationTypeTagModel",
            "S3SiteModel",
            "S3SiteDetailsModel",
+           "S3SiteLocationModel",
            "S3SiteNameModel",
            "S3SiteTagModel",
+           "S3SiteLocationModel",
            "S3FacilityModel",
            "org_facility_rheader",
            "S3RoomModel",
@@ -1896,6 +1898,7 @@ class S3OrganisationGroupTeamModel(S3Model):
 class S3OrganisationLocationModel(S3Model):
     """
         Organisation Location Model
+        - Locations served by an Organisation
     """
 
     names = ("org_organisation_location",)
@@ -3561,8 +3564,8 @@ class S3SiteDetailsModel(S3Model):
 # =============================================================================
 class S3SiteNameModel(S3Model):
     """
-        Location Names model
-        - local names/acronyms for Sites
+        Site Names model
+        - local names/acronyms for Sites/Facilities
     """
 
     names = ("org_site_name",
@@ -3638,6 +3641,58 @@ class S3SiteTagModel(S3Model):
                        deduplicate = S3Duplicate(primary=("site_id",
                                                           "tag",
                                                           ),
+                                                 ),
+                       )
+
+        # Pass names back to global scope (s3.*)
+        return {}
+
+# =============================================================================
+class S3SiteLocationModel(S3Model):
+    """
+        Site Location Model
+        - Locations served by a Site/Facility
+    """
+
+    names = ("org_site_location",)
+
+    def model(self):
+
+        T = current.T
+
+        # ---------------------------------------------------------------------
+        # Sites <> Locations Link Table
+        #
+        tablename = "org_site_location"
+        self.define_table(tablename,
+                          # Component not instance
+                          self.super_link("site_id", "org_site"),
+                          self.gis_location_id(
+                            #represent = self.gis_LocationRepresent(sep=", "),
+                            requires = IS_LOCATION(),
+                            widget = S3LocationAutocompleteWidget()
+                          ),
+                          *s3_meta_fields()
+                          )
+
+        # CRUD Strings
+        site_label = settings.get_org_site_label()
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("New Location"),
+            title_display = T("Location"),
+            title_list = T("Locations"),
+            title_update = T("Edit Location"),
+            title_upload = T("Import Location data"),
+            label_list_button = T("List Locations"),
+            msg_record_created = T("Location added to %(site_label)s") % dict(site_label=site_label),
+            msg_record_modified = T("Location updated"),
+            msg_record_deleted = T("Location removed from %(site_label)s") % dict(site_label=site_label),
+            msg_list_empty = T("No Locations found for this %(site_label)s") % dict(site_label=site_label))
+
+        self.configure(tablename,
+                       deduplicate = S3Duplicate(primary = ("site_id",
+                                                            "location_id",
+                                                            ),
                                                  ),
                        )
 

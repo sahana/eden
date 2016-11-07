@@ -1405,7 +1405,8 @@ class S3PersonModel(S3Model):
 
             if id and row_id_type:
                 id_value = id.get(str(row_id_type), None)
-                check += rank(id_value, row_id_value, +5, -2)
+                if id_value:
+                    check += rank(id_value, row_id_value, +5, -2)
 
             if check in duplicates:
                 continue
