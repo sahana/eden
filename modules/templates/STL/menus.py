@@ -67,6 +67,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Beneficiary Types", c="dvr", f="beneficiary_type"),
                         M("Housing Types", c="dvr", f="housing_type"),
                         M("Income Sources", c="dvr", f="income_source"),
+                        M("SNF Justifications", c="dvr", f="case_funding_reason"),
                     ),
                 )
 

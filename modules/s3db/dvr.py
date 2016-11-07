@@ -29,14 +29,15 @@
 
 __all__ = ("DVRCaseModel",
            "DVRCaseFlagModel",
-           "DVRNeedsModel",
-           "DVRNotesModel",
            "DVRCaseActivityModel",
+           "DVRCaseAllowanceModel",
            "DVRCaseAppointmentModel",
            "DVRCaseBeneficiaryModel",
            "DVRCaseEconomyInformationModel",
-           "DVRCaseAllowanceModel",
            "DVRCaseEventModel",
+           "DVRCaseFundingModel",
+           "DVRNeedsModel",
+           "DVRNotesModel",
            "DVRSiteActivityModel",
            "dvr_AssignMethod",
            "dvr_case_default_status",
@@ -535,6 +536,9 @@ class DVRCaseModel(S3Model):
                                                 "multiple": False,
                                                 },
                             dvr_case_event = "case_id",
+                            dvr_case_funding = {"joinby": "case_id",
+                                                "multiple": False,
+                                                },
                             dvr_case_service_contact = "case_id",
                             dvr_economy = {"joinby": "case_id",
                                            "multiple": False,
@@ -2959,6 +2963,102 @@ class DVRCaseEventModel(S3Model):
             # Update last_seen_on
             if person_id:
                 dvr_update_last_seen(person_id)
+
+# =============================================================================
+class DVRCaseFundingModel(S3Model):
+    """ Model to manage funding needs for cases """
+
+    names = ("dvr_case_funding_reason",
+             "dvr_case_funding",
+             )
+
+    def model(self):
+
+        T = current.T
+
+        db = current.db
+        s3 = current.response.s3
+
+        define_table = self.define_table
+        crud_strings = s3.crud_strings
+
+        # ---------------------------------------------------------------------
+        # Reasons for case funding
+        #
+        tablename = "dvr_case_funding_reason"
+        define_table(tablename,
+                     Field("name",
+                           label = T("Reason"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Funding Reason"),
+            title_display = T("Funding Reason"),
+            title_list = T("Funding Reasons"),
+            title_update = T("Edit Funding Reason"),
+            label_list_button = T("List Funding Reasons"),
+            label_delete_button = T("Delete Funding Reason"),
+            msg_record_created = T("Funding Reason created"),
+            msg_record_modified = T("Funding Reason updated"),
+            msg_record_deleted = T("Funding Reason deleted"),
+            msg_list_empty = T("No Funding Reasons currently defined"),
+        )
+
+        # Reusable field
+        represent = S3Represent(lookup=tablename)
+        reason_id = S3ReusableField("reason_id", "reference %s" % tablename,
+                                    label = T("Reason"),
+                                    represent = represent,
+                                    requires = IS_ONE_OF(db, "dvr_case_funding_reason.id",
+                                                         represent,
+                                                         ),
+                                    sortby = "name",
+                                    comment = S3PopupLink(c="dvr",
+                                                          f="case_funding_reason",
+                                                          tooltip=T("Create a new case funding reason"),
+                                                          ),
+                                    )
+
+        # ---------------------------------------------------------------------
+        # Case funding proposal
+        #
+        tablename = "dvr_case_funding"
+        define_table(tablename,
+                     self.dvr_case_id(),
+                     Field("funding_required", "boolean",
+                           default = False,
+                           label = T("Funding Required"),
+                           represent = s3_yes_no_represent,
+                           ),
+                     reason_id(ondelete = "SET NULL"),
+                     Field("proposal", "text",
+                           label = T("Proposed Assistance"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Funding Proposal"),
+            title_display = T("Funding Proposal"),
+            title_list = T("Funding Proposals"),
+            title_update = T("Edit Funding Proposal"),
+            label_list_button = T("List Funding Proposals"),
+            label_delete_button = T("Delete Funding Proposal"),
+            msg_record_created = T("Funding Proposal created"),
+            msg_record_modified = T("Funding Proposal updated"),
+            msg_record_deleted = T("Funding Proposal deleted"),
+            msg_list_empty = T("No Funding Proposals currently registered"),
+        )
+
+        # ---------------------------------------------------------------------
+        # Pass names back to global scope (s3.*)
+        #
+        return {}
 
 # =============================================================================
 class DVRSiteActivityModel(S3Model):
