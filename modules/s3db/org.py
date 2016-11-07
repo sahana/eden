@@ -45,7 +45,6 @@ __all__ = ("S3OrganisationModel",
            "S3OrganisationTypeTagModel",
            "S3SiteModel",
            "S3SiteDetailsModel",
-           "S3SiteLocationModel",
            "S3SiteNameModel",
            "S3SiteTagModel",
            "S3SiteLocationModel",
@@ -3676,7 +3675,7 @@ class S3SiteLocationModel(S3Model):
                           )
 
         # CRUD Strings
-        site_label = settings.get_org_site_label()
+        site_label = current.deployment_settings.get_org_site_label()
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("New Location"),
             title_display = T("Location"),
