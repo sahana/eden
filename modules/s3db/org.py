@@ -7194,7 +7194,8 @@ class org_OrganisationDuplicate(object):
 
         # Search by name
         lower_name = s3_unicode(name).lower()
-        query = (table.name.lower() == lower_name)
+        query = (table.name.lower() == lower_name) & \
+                (table.deleted == False)
         rows = db(query).select(table.id, table.name)
 
         if not rows and current.deployment_settings.get_L10n_translate_org_organisation():
