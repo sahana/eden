@@ -460,7 +460,7 @@
                             <xsl:value-of select="$JobName"/>
                         </data>
 
-                        <!-- Link to Organisation to filter lookup lists -->
+                        <!-- Link to Top-level Organisation to filter lookup lists -->
                         <xsl:if test="$OrgName!=''">
                             <reference field="organisation_id" resource="org_organisation">
                                 <xsl:attribute name="tuid">

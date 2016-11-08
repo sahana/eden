@@ -1268,14 +1268,14 @@ class S3PersonModel(S3Model):
         mname = data.get("middle_name")
         lname = data.get("last_name")
         if fname:
-            fname = fname.lower()
+            fname = s3_unicode(fname).lower()
         if mname:
-            mname = mname.lower()
+            mname = s3_unicode(mname).lower()
         if lname:
-            lname = lname.lower()
+            lname = s3_unicode(lname).lower()
         initials = data.get("initials")
         if initials:
-            initials = initials.lower()
+            initials = s3_unicode(initials).lower()
 
         # @ToDo: Allow each name to be split into words in a different order
         if fname and lname:
@@ -1448,7 +1448,7 @@ class S3PersonModel(S3Model):
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = value.lower()
+        value = s3_unicode(value).lower()
         value = value.strip()
 
         settings = current.deployment_settings
@@ -2895,19 +2895,19 @@ class S3AddressModel(S3Model):
         requestvars = current.request.form_vars
         settings = current.deployment_settings
         person = None
-        table = s3db.pr_person
+        ptable = s3db.pr_person
         if requestvars and "base_location" in requestvars and \
            requestvars.base_location == "on":
             # Specifically requested
             S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)
-            person = db(table.pe_id == pe_id).select(table.id,
-                                                     limitby=(0, 1)).first()
+            person = db(ptable.pe_id == pe_id).select(ptable.id,
+                                                      limitby=(0, 1)).first()
         else:
             # Check if a base location already exists
-            person = db(table.pe_id == pe_id).select(table.id,
-                                                     table.location_id,
-                                                     limitby=(0, 1)
-                                                     ).first()
+            person = db(ptable.pe_id == pe_id).select(ptable.id,
+                                                      ptable.location_id,
+                                                      limitby=(0, 1)
+                                                      ).first()
             if person and not person.location_id:
                 # Hasn't yet been set so use this
                 S3Tracker()(db.pr_pentity, pe_id).set_base_location(location_id)

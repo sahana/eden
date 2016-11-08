@@ -1059,7 +1059,7 @@ class S3OrganisationModel(S3Model):
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = value.lower().strip()
+        value = s3_unicode(value).lower().strip()
 
         if not value:
             output = current.xml.json_message(False, 400,
@@ -2379,9 +2379,9 @@ class S3OrganisationSectorModel(S3Model):
         name = data.get("name")
         table = item.table
         if abrv:
-            query = (table.abrv.lower() == abrv.lower())
+            query = (table.abrv.lower() == s3_unicode(abrv).lower())
         elif name:
-            query = (table.name.lower() == name.lower())
+            query = (table.name.lower() == s3_unicode(name).lower())
         else:
             return
         duplicate = current.db(query).select(table.id,
@@ -3377,7 +3377,7 @@ class S3SiteModel(S3Model):
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = value.lower().strip()
+        value = s3_unicode(value).lower().strip()
 
         if not value:
             output = current.xml.json_message(False, 400,
@@ -4186,7 +4186,7 @@ class S3FacilityModel(S3Model):
         #address = data.get("address")
 
         table = item.table
-        query = (table.name.lower() == name.lower())
+        query = (table.name.lower() == s3_unicode(name).lower())
         if org:
             # Either same Org or no Org defined yet
             query = query & ((table.organisation_id == org) | \
@@ -6197,7 +6197,7 @@ def org_organisation_controller():
                                            )
 
                 if type_filter:
-                    type_names = [name.lower().strip()
+                    type_names = [s3_unicode(name).lower().strip()
                                   for name in type_filter.split(",")]
                     field = s3db.org_organisation_organisation_type.organisation_type_id
                     field.comment = None # Don't want to create new types here
@@ -6528,7 +6528,7 @@ def org_facility_controller():
                 get_vars = r.get_vars
                 type_filter = get_vars.get("facility_type.name", None)
                 if type_filter:
-                    type_names = [name.lower().strip()
+                    type_names = [s3_unicode(name).lower().strip()
                                   for name in type_filter.split(",")]
                     field = s3db.org_site_facility_type.facility_type_id
                     field.comment = None # Don't want to create new types here
@@ -7066,7 +7066,7 @@ class org_OrganisationDuplicate(object):
             duplicate_id = cls.identify(item)
         except ValueError:
             # Ambiguous => reject the item
-            error = "Ambiguous data, try specifying parent organisation"
+            error = "Ambiguous data, try specifying parent organisation: %s" % item.data.get("name")
             item.accepted = False
             item.error = error
             if item.element is not None:
@@ -7099,65 +7099,35 @@ class org_OrganisationDuplicate(object):
         if uid is not None:
             # Try to find the record for this UUID
             table = item.table if item else current.s3db.org_organisation
-            query = (table.uuid == uid)
-            row = current.db(query).select(table.id, limitby=(0, 1)).first()
+            row = current.db(table.uuid == uid).select(table.id,
+                                                       limitby=(0, 1)).first()
             if row:
                 return row.id
 
-        if item is not None:
+        # Do we have any name matches?
+        name_matches = cls.name_match(item)
+        if not name_matches:
+            return None
 
-            # Do we have any name matches?
-            name_matches = cls.name_match(item)
-            if not name_matches:
-                return None
+        # Do we have a parent specified by the source?
+        parent_id, parent_uid, parent_item = cls.parent(item)
 
-            # Do we have a parent specified by the source?
-            parent_id, parent_uid, parent_item = cls.parent(item)
+        if not any((parent_id, parent_uid, parent_item)):
 
-            if not any((parent_id, parent_uid, parent_item)):
+            if len(name_matches) == 1:
+                # Single name match (+ no parent item = no conflict)
+                match = name_matches.keys()[0]
+                name = name_matches[match].get("name")
+                if name:
+                    item.data.name = name
+                return match
 
-                if len(name_matches) == 1:
-                    # Single name match (+ no parent item = no conflict)
-                    match = name_matches.keys()[0]
-                    name = name_matches[match].get("name")
-                    if name:
-                        item.data.name = name
-                    return match
-
-                else:
-                    # Multiple name matches, look for a single root org match
-                    hits = [k for k, v in name_matches.items()
-                                  if v.get("parent") is None]
-                    if len(hits) == 1:
-                        # Single root organisation match
-                        match = hits[0]
-                        name = name_matches[match].get("name")
-                        if name:
-                            item.data.name = name
-                        return match
-
-                    else:
-                        # Multiple or no root organisation matches (=ambiguous)
-                        raise ValueError
             else:
-                if not parent_id:
-                    # Try to identify the parent (recurse)
-                    parent_id = cls.identify(item = parent_item,
-                                             uid = parent_uid,
-                                             )
-                if not parent_id:
-                    # Parent does not yet exist, so branch must be new too
-                    return None
-
+                # Multiple name matches, look for a single root org match
                 hits = [k for k, v in name_matches.items()
-                              if v.get("parent") == parent_id]
-
-                if len(hits) == 0:
-                    # No name match under the same parent => new branch
-                    return None
-
+                              if v.get("parent") is None]
                 if len(hits) == 1:
-                    # Single name match under the same parent
+                    # Single root organisation match
                     match = hits[0]
                     name = name_matches[match].get("name")
                     if name:
@@ -7165,8 +7135,36 @@ class org_OrganisationDuplicate(object):
                     return match
 
                 else:
-                    # Multiple name matches under the same parent (=ambiguous)
+                    # Multiple or no root organisation matches (=ambiguous)
                     raise ValueError
+        else:
+            if not parent_id:
+                # Try to identify the parent (recurse)
+                parent_id = cls.identify(item = parent_item,
+                                         uid = parent_uid,
+                                         )
+            if not parent_id:
+                # Parent does not yet exist, so branch must be new too
+                return None
+
+            hits = [k for k, v in name_matches.items()
+                          if v.get("parent") == parent_id]
+
+            if len(hits) == 0:
+                # No name match under the same parent => new branch
+                return None
+
+            if len(hits) == 1:
+                # Single name match under the same parent
+                match = hits[0]
+                name = name_matches[match].get("name")
+                if name:
+                    item.data.name = name
+                return match
+
+            else:
+                # Multiple name matches under the same parent (=ambiguous)
+                raise ValueError
 
         # Default
         return None
@@ -7195,13 +7193,14 @@ class org_OrganisationDuplicate(object):
         table = item.table
 
         # Search by name
-        query = (table.name.lower() == name.lower())
+        lower_name = s3_unicode(name).lower()
+        query = (table.name.lower() == lower_name)
         rows = db(query).select(table.id, table.name)
 
         if not rows and current.deployment_settings.get_L10n_translate_org_organisation():
             # Search by local name
             ltable = s3db.org_organisation_name
-            query = (ltable.name_l10n.lower() == name.lower()) & \
+            query = (ltable.name_l10n.lower() == lower_name) & \
                     (ltable.organisation_id == table.id) & \
                     (ltable.deleted != True)
             rows = db(query).select(table.id, table.name)

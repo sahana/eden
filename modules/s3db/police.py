@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Sahana Eden Education Model
+""" Sahana Eden Police Model
 
     @copyright: 2016 (c) Sahana Software Foundation
     @license: MIT
@@ -27,7 +27,7 @@
     OTHER DEALINGS IN THE SOFTWARE.
 """
 
-__all__ = ("S3SchoolModel",
+__all__ = ("S3PoliceModel",
            )
 
 from gluon import *
@@ -37,10 +37,9 @@ from ..s3 import *
 from s3layouts import S3PopupLink
 
 # =============================================================================
-class S3SchoolModel(S3Model):
+class S3PoliceModel(S3Model):
 
-    names = ("edu_school",
-             "edu_school_type",
+    names = ("police_station",
              )
 
     def model(self):
@@ -70,84 +69,84 @@ class S3SchoolModel(S3Model):
         #    filter_opts = (None,)
 
         # ---------------------------------------------------------------------
-        # School Types
+        # Police Station Types
         #
-        #org_dependent_types = settings.get_edu_org_dependent_school_types()
+        #org_dependent_types = settings.get_police_org_dependent_station_types()
 
-        tablename = "edu_school_type"
-        define_table(tablename,
-                     Field("name", length=128, notnull=True,
-                           label = T("Name"),
-                           requires = IS_NOT_EMPTY(),
-                           ),
-                     #organisation_id(default = root_org if org_dependent_types else None,
-                     #                readable = is_admin if org_dependent_types else False,
-                     #                writable = is_admin if org_dependent_types else False,
-                     #                ),
-                     s3_comments(),
-                     *s3_meta_fields())
+        #tablename = "police_station_type"
+        #define_table(tablename,
+        #             Field("name", length=128, notnull=True,
+        #                   label = T("Name"),
+        #                   requires = IS_NOT_EMPTY(),
+        #                   ),
+        #             #organisation_id(default = root_org if org_dependent_types else None,
+        #             #                readable = is_admin if org_dependent_types else False,
+        #             #                writable = is_admin if org_dependent_types else False,
+        #             #                ),
+        #             s3_comments(),
+        #             *s3_meta_fields())
 
         # CRUD strings
-        ADD_SCHOOL_TYPE = T("Create School Type")
-        crud_strings[tablename] = Storage(
-           label_create = ADD_SCHOOL_TYPE,
-           title_display = T("School Type Details"),
-           title_list = T("School Types"),
-           title_update = T("Edit School Type"),
-           label_list_button = T("List School Types"),
-           label_delete_button = T("Delete School Type"),
-           msg_record_created = T("School Type added"),
-           msg_record_modified = T("School Type updated"),
-           msg_record_deleted = T("School Type deleted"),
-           msg_list_empty = T("No School Types currently registered"))
+        #ADD_TYPE = T("Create Police Station Type")
+        #crud_strings[tablename] = Storage(
+        #   label_create = ADD_TYPE,
+        #   title_display = T("Police Station Type Details"),
+        #   title_list = T("Police Station Types"),
+        #   title_update = T("Edit Police Station Type"),
+        #   label_list_button = T("List Police Station Types"),
+        #   label_delete_button = T("Delete Police Station Type"),
+        #   msg_record_created = T("Police Station Type added"),
+        #   msg_record_modified = T("Police Station Type updated"),
+        #   msg_record_deleted = T("Police Station Type deleted"),
+        #   msg_list_empty = T("No Police Station Types currently registered"))
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        #represent = S3Represent(lookup=tablename, translate=True)
 
-        school_type_id = S3ReusableField("school_type_id", "reference %s" % tablename,
-                               label = T("School Type"),
-                               ondelete = "SET NULL",
-                               represent = represent,
-                               requires = IS_EMPTY_OR(
-                                           IS_ONE_OF(db, "edu_school_type.id",
-                                                     represent,
-                                                     #filterby="organisation_id",
-                                                     #filter_opts=filter_opts,
-                                                     sort=True
-                                                     )),
-                               sortby = "name",
-                               comment = S3PopupLink(c = "inv",
-                                                     f = "school_type",
-                                                     label = ADD_SCHOOL_TYPE,
-                                                     title = T("School Type"),
-                                                     tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Create School Type'."),
-                                                     ),
-                               )
+        #school_type_id = S3ReusableField("school_type_id", "reference %s" % tablename,
+        #                       label = T("Police Station Type"),
+        #                       ondelete = "SET NULL",
+        #                       represent = represent,
+        #                       requires = IS_EMPTY_OR(
+        #                                   IS_ONE_OF(db, "edu_school_type.id",
+        #                                             represent,
+        #                                             #filterby="organisation_id",
+        #                                             #filter_opts=filter_opts,
+        #                                             sort=True
+        #                                             )),
+        #                       sortby = "name",
+        #                       comment = S3PopupLink(c = "inv",
+        #                                             f = "school_type",
+        #                                             label = ADD_TYPE,
+        #                                             title = T("Police Station Type"),
+        #                                             tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Police Station Type'."),
+        #                                             ),
+        #                       )
 
-        configure(tablename,
-                  deduplicate = S3Duplicate(primary = ("name",),
-                                            #secondary = ("organisation_id",),
-                                            ),
-                  )
+        #configure(tablename,
+        #          deduplicate = S3Duplicate(primary = ("name",),
+        #                                    #secondary = ("organisation_id",),
+        #                                    ),
+        #          )
 
-        # Tags as component of School Types
+        # Tags as component of Police Types
         #self.add_components(tablename,
-        #                    edu_school_type_tag={"name": "tag",
-        #                                            "joinby": "school_type_id",
-        #                                            }
+        #                    police_station_type_tag={"name": "tag",
+        #                                             "joinby": "station_type_id",
+        #                                             }
         #                    )
 
         # ---------------------------------------------------------------------
-        # Schools
+        # Police Stations
         #
 
-        if settings.get_edu_school_code_unique():
+        if settings.get_police_station_code_unique():
             code_requires = IS_EMPTY_OR([IS_LENGTH(10),
-                                         IS_NOT_IN_DB(db, "edu_school.code"),
+                                         IS_NOT_IN_DB(db, "police_station.code"),
                                          ])
         else:
             code_requires = IS_EMPTY_OR(IS_LENGTH(10))
 
-        tablename = "edu_school"
+        tablename = "police_station"
         define_table(tablename,
                      super_link("pe_id", "pr_pentity"),
                      super_link("site_id", "org_site"),
@@ -167,10 +166,6 @@ class S3SchoolModel(S3Model):
                         ),
                      school_type_id(),
                      self.gis_location_id(),
-                     Field("capacity", "integer",
-                           label = T("Capacity"),
-                           represent = lambda v: v or NONE,
-                           ),
                      Field("contact",
                            label = T("Contact"),
                            represent = lambda v: v or NONE,
@@ -198,25 +193,25 @@ class S3SchoolModel(S3Model):
 
         # CRUD strings
         crud_strings[tablename] = Storage(
-            label_create = T("Create School"),
-            title_display = T("School Details"),
-            title_list = T("Schools"),
-            title_update = T("Edit School"),
-            title_upload = T("Import Schools"),
-            title_map = T("Map of Schools"),
-            label_list_button = T("List Schools"),
-            label_delete_button = T("Delete School"),
-            msg_record_created = T("School added"),
-            msg_record_modified = T("School updated"),
-            msg_record_deleted = T("School deleted"),
-            msg_list_empty = T("No Schools currently registered"))
+            label_create = T("Create Police Station"),
+            title_display = T("Police Station Details"),
+            title_list = T("Police Stations"),
+            title_update = T("Edit Police Station"),
+            title_upload = T("Import Police Stations"),
+            title_map = T("Map of Police Stations"),
+            label_list_button = T("List Police Stations"),
+            label_delete_button = T("Delete Police Station"),
+            msg_record_created = T("Police Station added"),
+            msg_record_modified = T("Police Station updated"),
+            msg_record_deleted = T("Police Station deleted"),
+            msg_list_empty = T("No Police Stations currently registered"))
 
         # Which levels of Hierarchy are we using?
         levels = current.gis.get_relevant_hierarchy_levels()
 
         list_fields = ["name",
                        #"organisation_id",   # Filtered in Component views
-                       "school_type_id",
+                       #"station_type_id",
                        ]
 
         text_fields = ["name",
@@ -266,7 +261,7 @@ class S3SchoolModel(S3Model):
                                             ),
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
-                  #onaccept = self.edu_school_onaccept,
+                  #onaccept = self.police_station_onaccept,
                   super_entity = ("pr_pentity", "org_site"),
                   update_realm = True,
                   )
@@ -278,11 +273,11 @@ class S3SchoolModel(S3Model):
 
     # -------------------------------------------------------------------------
     @staticmethod
-    def edu_school_onaccept(form):
+    def police_station_onaccept(form):
         """
             Update Affiliation, record ownership and component ownership
         """
 
-        current.s3db.org_update_affiliations("edu_school", form.vars)
+        current.s3db.org_update_affiliations("police_station", form.vars)
 
 # END =========================================================================

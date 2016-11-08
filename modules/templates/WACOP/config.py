@@ -201,12 +201,22 @@ def config(settings):
                 module_type = 10,
             )),
         ("event", Storage(
-                name_nice = "Event Management",
+                name_nice = "Events",
                 restricted = True,
                 module_type = 2,
             )),
+        ("fire", Storage(
+                name_nice = "Fire",
+                restricted = True,
+                module_type = None,
+            )),
+        ("police", Storage(
+                name_nice = "Police",
+                restricted = True,
+                module_type = None,
+            )),
         ("project", Storage(
-                name_nice = "Project Management",
+                name_nice = "Tasks",
                 restricted = True,
                 module_type = None,
             )),

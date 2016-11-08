@@ -42,6 +42,7 @@ import s3db.ocr
 import s3db.org
 import s3db.patient
 import s3db.po
+import s3db.police
 import s3db.pr
 import s3db.sit
 import s3db.proc

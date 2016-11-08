@@ -2640,6 +2640,7 @@ def config(settings):
             s3_set_default_filter("~.organisation_id$region_id",
                                   user_region_and_children_default_filter,
                                   tablename = tablename)
+
         elif root_org != CRMADA: # CRMADA have too many branches which causes issues
             # Default Filter
             from s3 import s3_set_default_filter
@@ -5604,6 +5605,7 @@ def config(settings):
                                                                 label=PROGRAMMES,
                                                                 ),
                                                 )
+
                     list_fields = ["organisation_id",
                                    "membership_type_id",
                                    "start_date",
@@ -5612,6 +5614,7 @@ def config(settings):
                                    (T("Phone"), "phone.value"),
                                    (PROGRAMMES, "membership_programme.programme_id"),
                                    ]
+
                     s3db.configure("member_membership",
                                    crud_form = crud_form,
                                    list_fields = list_fields,
@@ -5624,11 +5627,13 @@ def config(settings):
             attr["rheader"] = None
         else:
             attr["rheader"] = lambda r, vnrc=vnrc: pr_rheader(r, vnrc)
+
         if vnrc:
             # Link to customised download Template
             #attr["csv_template"] = ("../../themes/IFRC/formats", "volunteer_vnrc")
             # Remove link to download Template
             attr["csv_template"] = "hide"
+
         return attr
 
     settings.customise_pr_person_controller = customise_pr_person_controller

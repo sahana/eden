@@ -820,7 +820,7 @@ class S3LocationModel(S3Model):
             # http://stackoverflow.com/questions/18507589/the-lower-function-on-international-characters-in-postgresql
             # Works fine on Debian servers if the locale is a .UTF-8 before the Postgres cluster is created
             query = (table.name.lower() == s3_unicode(name).lower().encode("utf8")) & \
-                (table.level == level)
+                    (table.level == level)
         else :
             query = (table.name.lower() == name.lower()) & \
                 (table.level == level)
@@ -944,7 +944,7 @@ class S3LocationModel(S3Model):
 
         # We want to do case-insensitive searches
         # (default anyway on MySQL/SQLite, but not PostgreSQL)
-        value = value.lower().strip()
+        value = s3_unicode(value).lower().strip()
 
         search_l10n = None
         translate = None
