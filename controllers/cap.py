@@ -992,6 +992,7 @@ def alert():
                            "info.priority",
                            "status",
                            "scope",
+                           "msg_type",
                            "info.event_type_id",
                            "info.description",
                            "info.response_type",
