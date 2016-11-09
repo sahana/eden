@@ -15,29 +15,116 @@ class S3MainMenu(default.S3MainMenu):
 
     # -------------------------------------------------------------------------
     @classmethod
+    def menu(cls):
+        """ Compose Menu """
+
+        # Modules menus
+        main_menu = MM()(
+            cls.menu_modules(),
+        )
+
+        # Additional menus
+        current.menu.personal = cls.menu_personal()
+        current.menu.lang = cls.menu_lang()
+        current.menu.about = cls.menu_about()
+        current.menu.org = cls.menu_org()
+
+        return main_menu
+
+    # -------------------------------------------------------------------------
+    @classmethod
     def menu_modules(cls):
         """ Custom Modules Menu """
 
         #sysname = current.deployment_settings.get_system_name_short()
         return [
             #homepage(),
-            MM("Case Management", c=("dvr", "pr")),
+            MM("Cases", c=("dvr", "pr")),
             #homepage("gis"),
-            homepage("org"),
+            MM("Organizations", c=("org", "project")),
             #homepage("hrm"),
             MM("Staff", c="hrm", f="staff"),
             #homepage("cr"),
         ]
+
     # -------------------------------------------------------------------------
     @classmethod
-    def menu_help(cls, **attr):
-        """ Help Menu """
+    def menu_org(cls):
+        """ Custom Organisation Menu """
 
-        menu_help = MM("Help", c="default", f="help", **attr)(
-            MM("Contact us", f="contact"),
-            MM("About Us", f="about"),
+        OM = S3OrgMenuLayout
+        return OM()
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_lang(cls):
+
+        s3 = current.response.s3
+
+        # Language selector
+        menu_lang = ML("Language", right=True)
+        for language in s3.l10n_languages.items():
+            code, name = language
+            menu_lang(
+                ML(name, translate=False, lang_code=code, lang_name=name)
+            )
+        return menu_lang
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_personal(cls):
+        """ Custom Personal Menu """
+
+        auth = current.auth
+        s3 = current.response.s3
+        settings = current.deployment_settings
+
+        if not auth.is_logged_in():
+            request = current.request
+            login_next = URL(args=request.args, vars=request.vars)
+            if request.controller == "default" and \
+            request.function == "user" and \
+            "_next" in request.get_vars:
+                login_next = request.get_vars["_next"]
+
+            self_registration = settings.get_security_self_registration()
+            menu_personal = MP()(
+                        MP("Register", c="default", f="user",
+                           m="register", check=self_registration),
+                        MP("Login", c="default", f="user",
+                           m="login", vars=dict(_next=login_next)),
+                        MP("Lost Password", c="default", f="user",
+                           m="retrieve_password"),
+            )
+        else:
+            s3_has_role = auth.s3_has_role
+            is_org_admin = lambda i: s3_has_role("ORG_ADMIN") and \
+                                     not s3_has_role("ADMIN")
+            menu_personal = MP()(
+                        MP("Administration", c="admin", f="index",
+                           check=s3_has_role("ADMIN")),
+                        MP("Administration", c="admin", f="user",
+                           check=is_org_admin),
+                        MP("Profile", c="default", f="person"),
+                        MP("Change Password", c="default", f="user",
+                           m="change_password"),
+                        MP("Logout", c="default", f="user",
+                           m="logout"),
+            )
+        return menu_personal
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def menu_about(cls):
+
+        ADMIN = current.auth.get_system_roles().ADMIN
+
+        menu_about = MA(c="default")(
+            MA("Help", f="help"),
+            #MA("Contact", f="contact"),
+            MA("Version", f="about", restrict = ADMIN),
         )
-        return menu_help
+        return menu_about
 
 # =============================================================================
 class S3OptionsMenu(default.S3OptionsMenu):
@@ -55,7 +142,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
 
         ADMIN = current.session.s3.system_roles.ADMIN
 
-        return M(c=("dvr", "project"))(
+        return M(c=("dvr", "pr"))(
                     M("Current Cases", c=("dvr", "pr"), f="person",
                       vars = {"closed": "0"})(
                         M("Create", m="create"),
@@ -76,15 +163,12 @@ class S3OptionsMenu(default.S3OptionsMenu):
                           vars={"archived": "1"},
                           ),
                         ),
-                    M("Administration", c="project", link=False,
+                    M("Administration", c="dvr", link=False,
                       restrict = [ADMIN])(
-                        M("Projects", c="project", f="project"),
-                        M("Service Types", c="org", f="service"),
-                        SEP(),
-                        M("Beneficiary Types", c="dvr", f="beneficiary_type"),
-                        M("Housing Types", c="dvr", f="housing_type"),
-                        M("Income Sources", c="dvr", f="income_source"),
-                        M("SNF Justifications", c="dvr", f="case_funding_reason"),
+                        M("Beneficiary Types", f="beneficiary_type"),
+                        M("Housing Types", f="housing_type"),
+                        M("Income Sources", f="income_source"),
+                        M("SNF Justifications", f="case_funding_reason"),
                     ),
                 )
 
@@ -93,7 +177,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def project(cls):
         """ PROJECT - use DVR menu """
 
-        return cls.dvr()
+        return cls.org()
 
     # -------------------------------------------------------------------------
     @staticmethod
@@ -103,7 +187,7 @@ class S3OptionsMenu(default.S3OptionsMenu):
         settings = current.deployment_settings
         ADMIN = current.session.s3.system_roles.ADMIN
 
-        return M(c="org")(
+        return M(c=("org", "project"))(
                     M("Organizations", f="organisation")(
                         M("Create", m="create"),
                         M("Import", m="import")
@@ -117,9 +201,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     #    M("Create", m="create"),
                     #    M("Import", m="import"),
                     #),
-                    M("Organization Types", f="organisation_type",
+                    M("Administration", c=("org", "project"), link=False,
                       restrict = [ADMIN])(
-                        M("Create", m="create"),
+                        M("Organization Types", f="organisation_type"),
+                        M("Service Types", f="service"),
+                        M("Projects", c="project", f="project"),
                     ),
                     #M("Office Types", f="office_type",
                     #  restrict=[ADMIN])(

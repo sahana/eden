@@ -1,0 +1,83 @@
+/* Action buttons */
+.action-btn,
+.delete-btn-ajax,
+.delete-btn,
+.selected-action {
+    @include tiny_button_style();
+    &[disabled],
+    &[disabled]:hover {
+        color: $action_btn_fgcolor_disabled;
+        background-color: $action_btn_bgcolor_disabled;
+    }
+}
+
+/* Default action buttons */
+.action-btn,
+.selected-action {
+    background-color: $action_btn_bgcolor_default;
+    color: $action_btn_fgcolor_default !important;
+    &:hover {
+        background-color: $action_btn_bgcolor_default_hover;
+        color: $action_btn_fgcolor_default_hover !important;
+    }
+}
+
+/* Alert-style action buttons (e.g. delete) */
+.delete-btn-ajax,
+.delete-btn {
+    background-color: $action_btn_bgcolor_alert;
+    color: $action_btn_fgcolor_alert !important;
+    &:hover {
+        background-color: $action_btn_bgcolor_alert_hover !important;
+        color: $action_btn_fgcolor_alert_hover !important;
+    }
+}
+
+/* Cancel button */
+.cancel-form-btn {
+    padding: 0.9375rem;
+}
+.cancel-form-btn:hover {
+    color: white;
+    background-color: $primary-color;
+}
+
+/* Full screen map button */
+.map_home .gis_fullscreen_map-btn {
+    font-weight: normal;
+    font-size: 0.8rem;
+    padding: 0.2rem;
+}
+
+/* Action buttons in datatables */
+.dataTable {
+    // need to override datatables CSS as that has more specific selectors
+    .action-btn,
+    .selected-action {
+        color: $action_btn_fgcolor_default;
+    }
+    .delete-btn,
+    .delete-btn-ajax {
+        color: $action_btn_fgcolor_alert;
+    }
+    td.actions {
+        white-space: nowrap;
+    }
+}
+
+.action-btn.profile-add-btn {
+    float: right;
+    margin: 0.5rem 0.5rem;
+}
+
+/* Caret */
+.caret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: top;
+  border-top: 4px solid #000000;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  content: "";
+}

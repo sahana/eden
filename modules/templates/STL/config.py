@@ -12,14 +12,14 @@ def config(settings):
 
     T = current.T
 
-    settings.base.system_name = T("Sahana Refugee Case Management")
+    settings.base.system_name = T("Refugee Case Management")
     #settings.base.system_name_short = T("Sahana")
 
     # PrePopulate data
     settings.base.prepopulate += ("STL", "default/users", "STL/Demo")
 
     # Theme (folder to use for views/layout.html)
-    #settings.base.theme = "STL"
+    settings.base.theme = "STL"
 
     # =========================================================================
     # Security/AAA Settings
