@@ -46,6 +46,7 @@ import re
 import string
 import urllib
 import urllib2
+import os
 
 try:
     from cStringIO import StringIO    # Faster, where available
@@ -369,6 +370,7 @@ class S3Msg(object):
                       subject = "",
                       message = "",
                       contact_method = "EMAIL",
+                      documents_id = None,
                       from_address = None,
                       system_generated = False):
         """
@@ -400,6 +402,15 @@ class S3Msg(object):
             record = dict(id=_id)
             s3db.update_super(table, record)
             message_id = record["message_id"]
+            if documents_id:
+                ainsert = s3db.msg_attachment.insert
+                if not isinstance(documents_id, list):
+                    documents_id = [documents_id]
+                for document_id in documents_id:
+                    ainsert(message_id=message_id,
+                            document_id=document_id,
+                            )
+
         elif contact_method == "SMS":
             table = s3db.msg_sms
             _id = table.insert(body=message,
@@ -513,6 +524,7 @@ class S3Msg(object):
                               message,
                               outbox_id,
                               message_id,
+                              attachments = [],
                               organisation_id = None,
                               contact_method = contact_method,
                               channel_id = channel_id,
@@ -548,6 +560,7 @@ class S3Msg(object):
                                            subject,
                                            message,
                                            sender = from_address,
+                                           attachments = attachments,
                                            )
                 elif contact_method == "SMS":
                     if lookup_org:
@@ -680,15 +693,34 @@ class S3Msg(object):
 
         # Set a default for non-SMS
         organisation_id = None
+        attachment_table = s3db.msg_attachment
+        document_table = s3db.doc_document
+        file_field = document_table.file
+        if file_field.custom_retrieve_file_properties:
+            retrieve_file_properties = file_field.custom_retrieve_file_properties
+        else:
+            retrieve_file_properties = file_field.retrieve_file_properties
+        mail_attachment = current.mail.Attachment
 
         for row in rows:
-
+            attachments = []
             status = True
+            message_id = row.msg_outbox.message_id
 
             if contact_method == "EMAIL":
                 subject = row["msg_email.subject"] or ""
                 message = row["msg_email.body"] or ""
                 from_address = row["msg_email.from_address"] or ""
+                query = (attachment_table.message_id == message_id) & \
+                        (attachment_table.deleted != True) & \
+                        (attachment_table.document_id == document_table.id) & \
+                        (document_table.deleted != True)
+                arows = db(query).select(file_field)
+                for arow in arows:
+                    file = arow.file
+                    prop = retrieve_file_properties(file)
+                    _file_path = os.path.join(prop["path"], file)
+                    attachments.append(mail_attachment(_file_path))
             elif contact_method == "SMS":
                 subject = None
                 message = row["msg_sms.body"] or ""
@@ -723,6 +755,7 @@ class S3Msg(object):
                                     message_id,
                                     organisation_id = organisation_id,
                                     from_address = from_address,
+                                    attachments = attachments,
                                     )
                 except:
                     status = False
