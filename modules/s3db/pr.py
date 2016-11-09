@@ -8082,29 +8082,32 @@ class pr_PersonListLayout(S3DataListLayout):
             @param record: the record as dict
         """
 
-        table = resource.table
-        tablename = resource.tablename
         record_id = record[str(resource._id)]
 
         toolbox = DIV(_class="edit-bar fright")
 
-        update_url = URL(c="pr",
-                         f="person",
-                         args=[record_id, "update.popup"],
-                         vars={"refresh": list_id,
-                               "record": record_id,
-                               "profile": self.profile,
-                               },
-                         )
+        if current.auth.s3_has_permission("update",
+                                          resource.table,
+                                          record_id=record_id):
 
-        has_permission = current.auth.s3_has_permission
-        crud_string = S3Method.crud_string
+            controller = current.request.controller
+            if controller not in ("deploy", "hrm", "member", "vol"):
+                controller = "pr"
 
-        if has_permission("update", table, record_id=record_id):
+            update_url = URL(c = controller,
+                             f = "person",
+                             args = [record_id, "update.popup"],
+                             vars = {"refresh": list_id,
+                                     "record": record_id,
+                                     "profile": self.profile,
+                                     },
+                             )
+
             btn = A(ICON("edit"),
                     _href=update_url,
                     _class="s3_modal",
-                    _title=crud_string(tablename, "title_update"))
+                    _title=S3Method.crud_string(resource.tablename,
+                                                "title_update"))
             toolbox.append(btn)
 
         return toolbox
