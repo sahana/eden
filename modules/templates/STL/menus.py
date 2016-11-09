@@ -48,6 +48,11 @@ class S3OptionsMenu(default.S3OptionsMenu):
     def dvr():
         """ DVR / Disaster Victim Registry """
 
+        due_followups = current.s3db.dvr_due_followups() or "0"
+        follow_up_label = "%s (%s)" % (current.T("Due Follow-ups"),
+                                       due_followups,
+                                       )
+
         ADMIN = current.session.s3.system_roles.ADMIN
 
         return M(c=("dvr", "project"))(
@@ -56,9 +61,10 @@ class S3OptionsMenu(default.S3OptionsMenu):
                         M("Create", m="create"),
                         M("All Cases", vars = {}),
                         ),
-                    #M("Case Types", f="case_type")(
-                    #    M("Create", m="create"),
-                    #),
+                    M("Activities", f="case_activity")(
+                       #M("Create", m="create"),
+                        M(follow_up_label, f="due_followups"),
+                    ),
                     #M("Need Types", f="need")(
                     #   M("Create", m="create"),
                     #),
@@ -73,6 +79,8 @@ class S3OptionsMenu(default.S3OptionsMenu):
                     M("Administration", c="project", link=False,
                       restrict = [ADMIN])(
                         M("Projects", c="project", f="project"),
+                        M("Service Types", c="org", f="service"),
+                        SEP(),
                         M("Beneficiary Types", c="dvr", f="beneficiary_type"),
                         M("Housing Types", c="dvr", f="housing_type"),
                         M("Income Sources", c="dvr", f="income_source"),

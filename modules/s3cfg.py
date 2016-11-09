@@ -2881,6 +2881,12 @@ class S3Config(Storage):
         """
         return self.dvr.get("event_registration_checkin_warning", False)
 
+    def get_dvr_case_activity_use_service_type(self):
+        """
+            Whether to use service type in case activities
+        """
+        return self.dvr.get("case_activity_use_service_type", False)
+
     # -------------------------------------------------------------------------
     # Education
     #

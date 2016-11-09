@@ -2452,6 +2452,7 @@ class S3OrganisationServiceModel(S3Model):
     """
 
     names = ("org_service",
+             "org_service_id",
              "org_service_organisation",
              "org_service_location",
              #"org_service_location_service",
@@ -2779,7 +2780,22 @@ class S3OrganisationServiceModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"org_service_id": service_id,
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def defaults():
+        """ Safe defaults for names in case the module is disabled """
+
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
+
+        return {"org_service_id": lambda name="service_id", **attr: \
+                                         dummy(name, **attr),
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod

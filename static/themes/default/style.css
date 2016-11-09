@@ -577,7 +577,7 @@ div.tabs span.tab_other a:hover {
   background-color: #2ba6cb;
 }
 .side-nav li.divider {
-  border-top: 1px solid #ffffff;
+  border-top: 0.5rem solid transparent;
   height: 0;
   list-style: none;
 }

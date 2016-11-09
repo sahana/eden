@@ -110,6 +110,20 @@ def config(settings):
     # =========================================================================
     # DVR Case Management
     #
+    settings.dvr.case_activity_use_service_type = True
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_home():
+        """ Redirect dvr/index to dvr/person?closed=0 """
+
+        from gluon import URL
+        from s3 import s3_redirect_default
+
+        s3_redirect_default(URL(f="person", vars={"closed": "0"}))
+
+    settings.customise_dvr_home = customise_dvr_home
+
+    # -------------------------------------------------------------------------
     def customise_dvr_case_resource(r, tablename):
 
         s3db = current.s3db
@@ -758,6 +772,11 @@ def config(settings):
     settings.customise_project_project_controller = customise_project_project_controller
 
     # =========================================================================
+    # Organisation Registry
+    #
+    settings.org.services_hierarchical = False
+
+    # =========================================================================
     # Modules
     # Comment/uncomment modules here to disable/enable them
     # Modules menu is defined in modules/eden/menu.py
@@ -969,6 +988,7 @@ def stl_dvr_rheader(r, tabs=[]):
                         (T("Case Management"), "dvr_case"),
                         (T("Economy"), "economy"),
                         (T("Contact"), "contacts"),
+                        (T("Activities"), "case_activity"),
                         ]
 
                 case = resource.select(["family_id.value",

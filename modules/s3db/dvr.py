@@ -1291,12 +1291,14 @@ class DVRCaseActivityModel(S3Model):
         T = current.T
         db = current.db
 
+        settings = current.deployment_settings
         crud_strings = current.response.s3.crud_strings
 
         configure = self.configure
         define_table = self.define_table
 
         twoweeks = current.request.utcnow + datetime.timedelta(days=14)
+        service_type = settings.get_dvr_case_activity_use_service_type()
 
         # ---------------------------------------------------------------------
         # Case Activity
@@ -1336,6 +1338,12 @@ class DVRCaseActivityModel(S3Model):
                                               readable = False,
                                               writable = False,
                                               ),
+                     self.org_service_id(label = T("Service Type"),
+                                         ondelete = "SET NULL",
+                                         # @todo: make deployment setting
+                                         readable = service_type,
+                                         writable = service_type,
+                                         ),
                      Field("referral_details", "text",
                            label = T("Support provided"),
                            represent = s3_text_represent,
@@ -1433,6 +1441,10 @@ class DVRCaseActivityModel(S3Model):
                                        ),
                           ]
 
+        if service_type:
+            filter_widgets.insert(3, S3OptionsFilter("service_id",
+                                                     ))
+
         # Report options
         axes = ["need_id",
                 (T("Case Status"), "case_id$status_id"),
@@ -1440,6 +1452,9 @@ class DVRCaseActivityModel(S3Model):
                 "followup",
                 "completed",
                 ]
+        if service_type:
+            axes.insert(2, "service_id")
+
         facts = [(T("Number of Activities"), "count(id)"),
                  (T("Number of Cases"), "count(case_id)"),
                  ]
