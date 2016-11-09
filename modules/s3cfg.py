@@ -3624,6 +3624,7 @@ class S3Config(Storage):
 
             Format for options:
                 {
+                    name = name,         ...form name (optional)
                     c = controller,      ...use this controller for form handling
                     f = function,        ...use this function for form handling
                     vars = vars,         ...add these vars to the download URL

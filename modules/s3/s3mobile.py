@@ -95,6 +95,11 @@ class S3MobileFormList(object):
                 if not settings.has_module(c):
                     continue
 
+                # Determine the form name
+                name = options.get("name")
+                if not name:
+                    name = "%s_%s" % (c, f)
+
                 # Stringify URL query vars
                 url_vars = options.get("vars")
                 if url_vars:
@@ -123,7 +128,11 @@ class S3MobileFormList(object):
                 url = {"c": c, "f": f}
                 if url_vars:
                     url["v"] = url_vars
-                formlist.append({"n": s3_str(title), "t": tablename, "r": url})
+                formlist.append({"n": name,
+                                 "l": s3_str(title),
+                                 "t": tablename,
+                                 "r": url,
+                                 })
 
         self.formlist = formlist
 
