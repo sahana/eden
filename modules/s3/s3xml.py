@@ -227,7 +227,8 @@ class S3XML(S3Codec):
             try:
                 source = urllib2.urlopen(source)
             except:
-                pass
+                self.error = "XML Source error: %s" % sys.exc_info()[1]
+                return None
         try:
             parser = etree.XMLParser(no_network = False,
                                      remove_blank_text = True,
@@ -235,8 +236,7 @@ class S3XML(S3Codec):
             result = etree.parse(source, parser)
             return result
         except:
-            e = sys.exc_info()[1]
-            self.error = e
+            self.error = "XML Parse error: %s" % sys.exc_info()[1]
             return None
 
     # -------------------------------------------------------------------------

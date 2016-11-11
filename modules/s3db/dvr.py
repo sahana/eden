@@ -4212,6 +4212,7 @@ class DVRRegisterCaseEvent(S3Method):
         if code is None:
             event_type = event_types.get("_default")
         else:
+            code = s3_str(code)
             for value in event_types.values():
                 if value.code == code:
                     event_type = value
