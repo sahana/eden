@@ -6,7 +6,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         GeoRSS Import Templates for Sahana-Eden
+         GeoRSS Import Templates for Sahana Eden
 
          Copyright (c) 2011-2015 Sahana Software Foundation
 

@@ -1,0 +1,3631 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:georss="http://www.georss.org/georss" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Current ADASHI Incidents</title>
+    <description>
+          List of Current Incidents
+        </description>
+    <generator>ADASHI</generator>
+    <link>http://www.adashi.org/</link>
+    <docs>http://www.rssboard.org/rss-specification</docs>
+    <pubDate>Mon, 03 Aug 2015 20:25:00 GMT</pubDate>
+    <category>Incidents</category>
+    <ttl>1</ttl>
+    <item>
+      <title>6112</title>
+      <fullAddress> 
+20 Broad St 
+ 
+New York, New York 10005</fullAddress>
+      <incidentIdShort>6112</incidentIdShort>
+      <incidentId>6112</incidentId>
+      <incidentName>Heart Attack</incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 18:51:51 GMT</lastModified>
+      <addressName></addressName>
+      <address1>20 Broad St</address1>
+      <address2></address2>
+      <city>New York</city>
+      <state>New York</state>
+      <zip>10005</zip>
+      <started>Mon, 03 Aug 2015 18:38:54 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>40.7064976591508 -74.0110984530294</georss:point>
+    </item>
+    <item>
+      <title>15_08_03 RCETTWEST 0001</title>
+      <fullAddress> 
+5TH ST 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_08_03 RCETTWEST 0001</incidentIdShort>
+      <incidentId>15_08_03 RCETTWEST 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 18:30:17 GMT</lastModified>
+      <addressName></addressName>
+      <address1>5TH ST</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Mon, 03 Aug 2015 18:30:17 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.2327120540558 -116.060698285373</georss:point>
+    </item>
+    <item>
+      <title>171</title>
+      <fullAddress>Dodger Stadium 
+1000 Elysian Park Ave 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>171</incidentIdShort>
+      <incidentId>171</incidentId>
+      <incidentName>Dodger Stadium Explosion</incidentName>
+      <type>CrimeOrTerrorism_Terrorism_Bomb_Explosion</type>
+      <lastModified>Mon, 03 Aug 2015 17:25:58 GMT</lastModified>
+      <addressName>Dodger Stadium</addressName>
+      <address1>1000 Elysian Park Ave</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 15:55:13 GMT</started>
+      <ended></ended>
+      <resources>BC11 BC720 BC724 E13 E703 RA10 RA112 RA19 T26 </resources>
+      <georss:point>34.073455488136 -118.240192778919</georss:point>
+    </item>
+    <item>
+      <title>170</title>
+      <fullAddress>Mercy West Medical Center 
+177 N Alexandria Ave 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>170</incidentIdShort>
+      <incidentId>170</incidentId>
+      <incidentName>Auto Accident</incidentName>
+      <type>Vehicle.Auto_Accident</type>
+      <lastModified>Mon, 03 Aug 2015 15:54:47 GMT</lastModified>
+      <addressName>Mercy West Medical Center</addressName>
+      <address1>177 N Alexandria Ave</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 15:55:12 GMT</started>
+      <ended></ended>
+      <resources>BC1 BC723 E703 T10 T66 RA112 E19 T26 BC13 </resources>
+      <georss:point>34.074961 -118.298563</georss:point>
+    </item>
+    <item>
+      <title>169</title>
+      <fullAddress>Mercy Westlakes ASC/Capital Orthopedics 
+4180 W Wilshire Blvd 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>169</incidentIdShort>
+      <incidentId>169</incidentId>
+      <incidentName>Mercy Westlakes ASC/Capital Orthopedics</incidentName>
+      <type>XFMR</type>
+      <lastModified>Mon, 03 Aug 2015 15:54:13 GMT</lastModified>
+      <addressName>Mercy Westlakes ASC/Capital Orthopedics</addressName>
+      <address1>4180 W Wilshire Blvd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 15:54:17 GMT</started>
+      <ended></ended>
+      <resources>BC18 BC723 DP2 E703 RA101 RA878 T21 T47 T87 </resources>
+      <georss:point>34.061541 -118.318686</georss:point>
+    </item>
+    <item>
+      <title>168</title>
+      <fullAddress>Dodger Stadium 
+1000 Elysian Park Ave 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>168</incidentIdShort>
+      <incidentId>168</incidentId>
+      <incidentName>Dodger Stadium Explosion</incidentName>
+      <type>CrimeOrTerrorism_Terrorism_Bomb_Explosion</type>
+      <lastModified>Mon, 03 Aug 2015 15:53:19 GMT</lastModified>
+      <addressName>Dodger Stadium</addressName>
+      <address1>1000 Elysian Park Ave</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 15:53:43 GMT</started>
+      <ended></ended>
+      <resources>BC14 E703 LF70a RA103 T20 RA107 E11 T47 E94 </resources>
+      <georss:point>34.073455488136 -118.240192778919</georss:point>
+    </item>
+    <item>
+      <title>7112</title>
+      <fullAddress>Madame Tussauds 
+6933 Hollywood Blvd 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>7112</incidentIdShort>
+      <incidentId>7112</incidentId>
+      <incidentName>Fire in trashcan</incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 15:31:39 GMT</lastModified>
+      <addressName>Madame Tussauds</addressName>
+      <address1>6933 Hollywood Blvd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 15:26:45 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>34.1015761015893 -118.340792244877</georss:point>
+    </item>
+    <item>
+      <title>7111</title>
+      <fullAddress>NY Library 
+203 W 115 St 
+ 
+New York, NY </fullAddress>
+      <incidentIdShort>7111</incidentIdShort>
+      <incidentId>7111</incidentId>
+      <incidentName>Book Thief</incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 14:52:56 GMT</lastModified>
+      <addressName>NY Library</addressName>
+      <address1>203 W 115 St</address1>
+      <address2></address2>
+      <city>New York</city>
+      <state>NY</state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 14:53:15 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>40.8026958548972 -73.9532329327134</georss:point>
+    </item>
+    <item>
+      <title>15_08_03 dkonja 0001</title>
+      <fullAddress> 
+1260 6th Ave 
+ 
+New York, New York 10020</fullAddress>
+      <incidentIdShort>15_08_03 dkonja 0001</incidentIdShort>
+      <incidentId>15_08_03 dkonja 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 13:50:16 GMT</lastModified>
+      <addressName></addressName>
+      <address1>1260 6th Ave</address1>
+      <address2></address2>
+      <city>New York</city>
+      <state>New York</state>
+      <zip>10020</zip>
+      <started>Mon, 03 Aug 2015 13:20:53 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>40.7603610180193 -73.9800548176925</georss:point>
+    </item>
+    <item>
+      <title>15_08_03 CBRNE1 0002</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_08_03 CBRNE1 0002</incidentIdShort>
+      <incidentId>15_08_03 CBRNE1 0002</incidentId>
+      <incidentName>2nd incident</incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 04:00:31 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 03:59:47 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>26.392067464935 127.858180982443</georss:point>
+    </item>
+    <item>
+      <title>15_08_03 CBRNE1 0001</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_08_03 CBRNE1 0001</incidentIdShort>
+      <incidentId>15_08_03 CBRNE1 0001</incidentId>
+      <incidentName>1st incident</incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 03:55:49 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 03:55:49 GMT</started>
+      <ended></ended>
+      <resources />
+    </item>
+    <item>
+      <title>15_08_03 KINSER EOC 0001</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_08_03 KINSER EOC 0001</incidentIdShort>
+      <incidentId>15_08_03 KINSER EOC 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 02:15:29 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 02:10:07 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>26.3746710750493 127.86028204285</georss:point>
+    </item>
+    <item>
+      <title>15_08_03 HAZ1 0004</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_08_03 HAZ1 0004</incidentIdShort>
+      <incidentId>15_08_03 HAZ1 0004</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 01:53:31 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 01:53:31 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>26.290567403256 127.776349332917</georss:point>
+    </item>
+    <item>
+      <title>test</title>
+      <fullAddress> 
+SeaBee Street 
+ 
+,  </fullAddress>
+      <incidentIdShort>test</incidentIdShort>
+      <incidentId>test</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 01:51:02 GMT</lastModified>
+      <addressName></addressName>
+      <address1>SeaBee Street</address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 01:51:02 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.1433294714057 132.232740369793</georss:point>
+    </item>
+    <item>
+      <title>15_08_02 IAN LOWERY 0005</title>
+      <fullAddress> 
+934 S SERRANO AVE 
+ 
+LOS ANGELES, CA 90006</fullAddress>
+      <incidentIdShort>15_08_02 IAN LOWERY 0005</incidentIdShort>
+      <incidentId>15_08_02 IAN LOWERY 0005</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 01:49:58 GMT</lastModified>
+      <addressName></addressName>
+      <address1>934 S SERRANO AVE</address1>
+      <address2></address2>
+      <city>LOS ANGELES</city>
+      <state>CA</state>
+      <zip>90006</zip>
+      <started>Mon, 03 Aug 2015 01:49:58 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.0546204767684 -118.306574703938</georss:point>
+    </item>
+    <item>
+      <title>15_08_02 IAN LOWERY 0003</title>
+      <fullAddress> 
+3510 ALPINE BLVD 
+ 
+ALPINE, CA 91901</fullAddress>
+      <incidentIdShort>15_08_02 IAN LOWERY 0003</incidentIdShort>
+      <incidentId>15_08_02 IAN LOWERY 0003</incidentId>
+      <incidentName>server practice</incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 01:01:52 GMT</lastModified>
+      <addressName></addressName>
+      <address1>3510 ALPINE BLVD</address1>
+      <address2></address2>
+      <city>ALPINE</city>
+      <state>CA</state>
+      <zip>91901</zip>
+      <started>Mon, 03 Aug 2015 01:00:23 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>32.8334027572423 -116.738665227226</georss:point>
+    </item>
+    <item>
+      <title>15_08_03 HAZ1 0003</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_08_03 HAZ1 0003</incidentIdShort>
+      <incidentId>15_08_03 HAZ1 0003</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 00:50:32 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 00:50:11 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>26.2963255443428 127.765130519286</georss:point>
+    </item>
+    <item>
+      <title>mcas futenma</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>mcas futenma</incidentIdShort>
+      <incidentId>mcas futenma</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 00:55:17 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 00:49:43 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>26.6307618425687 128.143739574904</georss:point>
+    </item>
+    <item>
+      <title>15_08_03 FIRE 7 Kinser</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_08_03 FIRE 7 Kinser</incidentIdShort>
+      <incidentId>15_08_03 FIRE 7 Kinser</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 00:22:54 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Mon, 03 Aug 2015 00:22:54 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>26.2969410021586 127.772321652248</georss:point>
+    </item>
+    <item>
+      <title>15_08_02 IAN LOWERY 0001</title>
+      <fullAddress> 
+I 40 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_08_02 IAN LOWERY 0001</incidentIdShort>
+      <incidentId>15_08_02 IAN LOWERY 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 00:18:58 GMT</lastModified>
+      <addressName></addressName>
+      <address1>I 40</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Mon, 03 Aug 2015 00:18:58 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.869089246794 -116.956377809899</georss:point>
+    </item>
+    <item>
+      <title>15_07_31 dkonja 0001</title>
+      <fullAddress> 
+5200 WOODWARD AVE 
+ 
+DETROIT, MI 48202</fullAddress>
+      <incidentIdShort>15_07_31 dkonja 0001</incidentIdShort>
+      <incidentId>15_07_31 dkonja 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Fri, 31 Jul 2015 18:04:19 GMT</lastModified>
+      <addressName></addressName>
+      <address1>5200 WOODWARD AVE</address1>
+      <address2></address2>
+      <city>DETROIT</city>
+      <state>MI</state>
+      <zip>48202</zip>
+      <started>Fri, 31 Jul 2015 16:42:09 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.3588525212348 -83.0654989900028</georss:point>
+    </item>
+    <item>
+      <title>15_07_30 dkonja 0002</title>
+      <fullAddress> 
+111 S Grand Ave 
+ 
+Los Angeles, California 90012</fullAddress>
+      <incidentIdShort>15_07_30 dkonja 0002</incidentIdShort>
+      <incidentId>15_07_30 dkonja 0002</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 20:14:43 GMT</lastModified>
+      <addressName></addressName>
+      <address1>111 S Grand Ave</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>California</state>
+      <zip>90012</zip>
+      <started>Thu, 30 Jul 2015 20:12:07 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.0550220337467 -118.249351086931</georss:point>
+    </item>
+    <item>
+      <title>15_07_30 dkonja 0001</title>
+      <fullAddress> 
+812 Hemphill St 
+ 
+Ypsilanti, Michigan 48198</fullAddress>
+      <incidentIdShort>15_07_30 dkonja 0001</incidentIdShort>
+      <incidentId>15_07_30 dkonja 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 19:09:59 GMT</lastModified>
+      <addressName></addressName>
+      <address1>812 Hemphill St</address1>
+      <address2></address2>
+      <city>Ypsilanti</city>
+      <state>Michigan</state>
+      <zip>48198</zip>
+      <started>Thu, 30 Jul 2015 19:09:59 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.2525103266238 -83.605464087561</georss:point>
+    </item>
+    <item>
+      <title>6110</title>
+      <fullAddress> 
+18 Broad St 
+ 
+New York, New York 10304</fullAddress>
+      <incidentIdShort>6110</incidentIdShort>
+      <incidentId>6110</incidentId>
+      <incidentName>Heart Attack</incidentName>
+      <type></type>
+      <lastModified>Mon, 03 Aug 2015 14:40:56 GMT</lastModified>
+      <addressName></addressName>
+      <address1>18 Broad St</address1>
+      <address2></address2>
+      <city>New York</city>
+      <state>New York</state>
+      <zip>10304</zip>
+      <started>Thu, 30 Jul 2015 18:14:25 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>40.6255225082455 -74.0756099873045</georss:point>
+    </item>
+    <item>
+      <title>7110</title>
+      <fullAddress>NY Library 
+203 W 115 St 
+ 
+New York, NY </fullAddress>
+      <incidentIdShort>7110</incidentIdShort>
+      <incidentId>7110</incidentId>
+      <incidentName>Book Thief</incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 18:01:37 GMT</lastModified>
+      <addressName>NY Library</addressName>
+      <address1>203 W 115 St</address1>
+      <address2></address2>
+      <city>New York</city>
+      <state>NY</state>
+      <zip></zip>
+      <started>Thu, 30 Jul 2015 18:01:37 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>40.802826753086 -73.9536196499404</georss:point>
+    </item>
+    <item>
+      <title>6107</title>
+      <fullAddress>The Purple Pig 
+500 N. Michigan St 
+ 
+Chicago, IL </fullAddress>
+      <incidentIdShort>6107</incidentIdShort>
+      <incidentId>6107</incidentId>
+      <incidentName>Heart Attack</incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 17:45:01 GMT</lastModified>
+      <addressName>The Purple Pig</addressName>
+      <address1>500 N. Michigan St</address1>
+      <address2></address2>
+      <city>Chicago</city>
+      <state>IL</state>
+      <zip></zip>
+      <started>Thu, 30 Jul 2015 17:45:04 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>41.8909402631172 -87.6241573804599</georss:point>
+    </item>
+    <item>
+      <title>7108</title>
+      <fullAddress>Public Parking 
+18779 Dickens Dr 
+ 
+Mokena, IL </fullAddress>
+      <incidentIdShort>7108</incidentIdShort>
+      <incidentId>7108</incidentId>
+      <incidentName>Auto Accident</incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 17:21:56 GMT</lastModified>
+      <addressName>Public Parking</addressName>
+      <address1>18779 Dickens Dr</address1>
+      <address2></address2>
+      <city>Mokena</city>
+      <state>IL</state>
+      <zip></zip>
+      <started>Thu, 30 Jul 2015 17:21:57 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>41.5480706778707 -87.8710646283153</georss:point>
+    </item>
+    <item>
+      <title>7106</title>
+      <fullAddress>Public Parking 
+36 E. Ohio 
+ 
+Chicago, IL </fullAddress>
+      <incidentIdShort>7106</incidentIdShort>
+      <incidentId>7106</incidentId>
+      <incidentName>Auto Accident</incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 17:11:06 GMT</lastModified>
+      <addressName>Public Parking</addressName>
+      <address1>36 E. Ohio</address1>
+      <address2></address2>
+      <city>Chicago</city>
+      <state>IL</state>
+      <zip></zip>
+      <started>Thu, 30 Jul 2015 17:11:05 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>41.8925205993043 -87.626529675617</georss:point>
+    </item>
+    <item>
+      <title>6106</title>
+      <fullAddress>The Purple Pig 
+500 N. Michigan St 
+ 
+Chicago, IL </fullAddress>
+      <incidentIdShort>6106</incidentIdShort>
+      <incidentId>6106</incidentId>
+      <incidentName>Heart Attack</incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 16:58:41 GMT</lastModified>
+      <addressName>The Purple Pig</addressName>
+      <address1>500 N. Michigan St</address1>
+      <address2></address2>
+      <city>Chicago</city>
+      <state>IL</state>
+      <zip></zip>
+      <started>Thu, 30 Jul 2015 16:58:40 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>41.8909402631172 -87.6241573804599</georss:point>
+    </item>
+    <item>
+      <title>7105</title>
+      <fullAddress>Public Parking 
+36 E. Ohio 
+ 
+Chicago, IL </fullAddress>
+      <incidentIdShort>7105</incidentIdShort>
+      <incidentId>7105</incidentId>
+      <incidentName>Auto Accident</incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 16:46:44 GMT</lastModified>
+      <addressName>Public Parking</addressName>
+      <address1>36 E. Ohio</address1>
+      <address2></address2>
+      <city>Chicago</city>
+      <state>IL</state>
+      <zip></zip>
+      <started>Thu, 30 Jul 2015 16:46:42 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>41.8925205993043 -87.626529675617</georss:point>
+    </item>
+    <item>
+      <title>15_07_30 RCETTWEST 0001</title>
+      <fullAddress> 
+482 E MAIN ST 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_07_30 RCETTWEST 0001</incidentIdShort>
+      <incidentId>15_07_30 RCETTWEST 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 16:05:10 GMT</lastModified>
+      <addressName></addressName>
+      <address1>482 E MAIN ST</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Thu, 30 Jul 2015 16:05:10 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8987195610818 -117.023157982249</georss:point>
+    </item>
+    <item>
+      <title>7104</title>
+      <fullAddress> 
+36 E Ohio St 
+ 
+Chicago, Illinois 60611</fullAddress>
+      <incidentIdShort>7104</incidentIdShort>
+      <incidentId>7104</incidentId>
+      <incidentName>Auto Accident</incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 15:51:44 GMT</lastModified>
+      <addressName></addressName>
+      <address1>36 E Ohio St</address1>
+      <address2></address2>
+      <city>Chicago</city>
+      <state>Illinois</state>
+      <zip>60611</zip>
+      <started>Thu, 30 Jul 2015 15:46:15 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>41.8925205993043 -87.626529675617</georss:point>
+    </item>
+    <item>
+      <title>6103</title>
+      <fullAddress>The Purple Pig 
+500 N. Michigan St 
+ 
+Chicago, IL </fullAddress>
+      <incidentIdShort>6103</incidentIdShort>
+      <incidentId>6103</incidentId>
+      <incidentName>Heart Attack</incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 15:39:53 GMT</lastModified>
+      <addressName>The Purple Pig</addressName>
+      <address1>500 N. Michigan St</address1>
+      <address2></address2>
+      <city>Chicago</city>
+      <state>IL</state>
+      <zip></zip>
+      <started>Thu, 30 Jul 2015 15:39:55 GMT</started>
+      <ended></ended>
+      <resources>dkonja-disp dkonja </resources>
+      <georss:point>41.8909148 -87.624192</georss:point>
+    </item>
+    <item>
+      <title>7103</title>
+      <fullAddress>Public Parking 
+36 E. Ohio 
+ 
+Chicago, IL </fullAddress>
+      <incidentIdShort>7103</incidentIdShort>
+      <incidentId>7103</incidentId>
+      <incidentName>Auto Accident</incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 15:39:33 GMT</lastModified>
+      <addressName>Public Parking</addressName>
+      <address1>36 E. Ohio</address1>
+      <address2></address2>
+      <city>Chicago</city>
+      <state>IL</state>
+      <zip></zip>
+      <started>Thu, 30 Jul 2015 15:36:41 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>41.892549 -87.626587</georss:point>
+    </item>
+    <item>
+      <title>6102</title>
+      <fullAddress>The Purple Pig 
+500 N. Michigan St 
+ 
+Chicago, IL </fullAddress>
+      <incidentIdShort>6102</incidentIdShort>
+      <incidentId>6102</incidentId>
+      <incidentName>Heart Attack</incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 15:35:03 GMT</lastModified>
+      <addressName>The Purple Pig</addressName>
+      <address1>500 N. Michigan St</address1>
+      <address2></address2>
+      <city>Chicago</city>
+      <state>IL</state>
+      <zip></zip>
+      <started>Thu, 30 Jul 2015 15:35:05 GMT</started>
+      <ended></ended>
+      <resources>dkonja-disp dkonja </resources>
+      <georss:point>41.8909148 -87.624192</georss:point>
+    </item>
+    <item>
+      <title>7101</title>
+      <fullAddress>Public Parking 
+36 E. Ohio 
+ 
+Chicago, IL </fullAddress>
+      <incidentIdShort>7101</incidentIdShort>
+      <incidentId>7101</incidentId>
+      <incidentName>Auto Accident</incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 15:34:52 GMT</lastModified>
+      <addressName>Public Parking</addressName>
+      <address1>36 E. Ohio</address1>
+      <address2></address2>
+      <city>Chicago</city>
+      <state>IL</state>
+      <zip></zip>
+      <started>Thu, 30 Jul 2015 15:34:54 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>41.892549 -87.626587</georss:point>
+    </item>
+    <item>
+      <title>6101</title>
+      <fullAddress>The Purple Pig 
+500 N. Michigan St 
+ 
+Chicago, IL </fullAddress>
+      <incidentIdShort>6101</incidentIdShort>
+      <incidentId>6101</incidentId>
+      <incidentName>Heart Attack</incidentName>
+      <type></type>
+      <lastModified>Thu, 30 Jul 2015 15:34:51 GMT</lastModified>
+      <addressName>The Purple Pig</addressName>
+      <address1>500 N. Michigan St</address1>
+      <address2></address2>
+      <city>Chicago</city>
+      <state>IL</state>
+      <zip></zip>
+      <started>Thu, 30 Jul 2015 15:34:53 GMT</started>
+      <ended></ended>
+      <resources>dkonja dkonja-disp </resources>
+      <georss:point>41.8909148 -87.624192</georss:point>
+    </item>
+    <item>
+      <title>15_07_29 29HM2 0001</title>
+      <fullAddress> 
+74501 MESA DR 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_07_29 29HM2 0001</incidentIdShort>
+      <incidentId>15_07_29 29HM2 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 19:07:31 GMT</lastModified>
+      <addressName></addressName>
+      <address1>74501 MESA DR</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Wed, 29 Jul 2015 18:51:54 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.1795544488752 -116.036571714958</georss:point>
+    </item>
+    <item>
+      <title>15_07_29 29HM1 0005</title>
+      <fullAddress> 
+74200 AMBOY RD 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_07_29 29HM1 0005</incidentIdShort>
+      <incidentId>15_07_29 29HM1 0005</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 18:52:48 GMT</lastModified>
+      <addressName></addressName>
+      <address1>74200 AMBOY RD</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Wed, 29 Jul 2015 18:42:12 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.1648711227257 -116.045276199978</georss:point>
+    </item>
+    <item>
+      <title>15_07_29 29HM1 0004</title>
+      <fullAddress> 
+BOONIES BLVD 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_07_29 29HM1 0004</incidentIdShort>
+      <incidentId>15_07_29 29HM1 0004</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 18:35:19 GMT</lastModified>
+      <addressName></addressName>
+      <address1>BOONIES BLVD</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Wed, 29 Jul 2015 18:35:19 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.2490169605447 -116.06109800306</georss:point>
+    </item>
+    <item>
+      <title>15_07_29 29HM1 0003</title>
+      <fullAddress> 
+BOONIES BLVD 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_07_29 29HM1 0003</incidentIdShort>
+      <incidentId>15_07_29 29HM1 0003</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 18:34:18 GMT</lastModified>
+      <addressName></addressName>
+      <address1>BOONIES BLVD</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Wed, 29 Jul 2015 18:34:18 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.2488857106519 -116.061023003122</georss:point>
+    </item>
+    <item>
+      <title>15_07_29 29HM1 0002</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_07_29 29HM1 0002</incidentIdShort>
+      <incidentId>15_07_29 29HM1 0002</incidentId>
+      <incidentName>holy shit</incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 18:30:40 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Wed, 29 Jul 2015 18:30:40 GMT</started>
+      <ended></ended>
+      <resources />
+    </item>
+    <item>
+      <title>15_07_29 IC 0002</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_07_29 IC 0002</incidentIdShort>
+      <incidentId>15_07_29 IC 0002</incidentId>
+      <incidentName>bomb at front gate</incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 18:30:38 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Wed, 29 Jul 2015 18:30:38 GMT</started>
+      <ended></ended>
+      <resources />
+    </item>
+    <item>
+      <title>15_07_29 EOC1 0002</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_07_29 EOC1 0002</incidentIdShort>
+      <incidentId>15_07_29 EOC1 0002</incidentId>
+      <incidentName>bomb</incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 18:30:22 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Wed, 29 Jul 2015 18:30:22 GMT</started>
+      <ended></ended>
+      <resources />
+    </item>
+    <item>
+      <title>15_07_29 IC 0001</title>
+      <fullAddress> 
+5708 ADOBE RD 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_07_29 IC 0001</incidentIdShort>
+      <incidentId>15_07_29 IC 0001</incidentId>
+      <incidentName>29 Training day 2</incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 18:42:52 GMT</lastModified>
+      <addressName></addressName>
+      <address1>5708 ADOBE RD</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Wed, 29 Jul 2015 18:07:51 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.1499982863941 -116.054377962498</georss:point>
+    </item>
+    <item>
+      <title>15_07_29 29HM1 0001</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_07_29 29HM1 0001</incidentIdShort>
+      <incidentId>15_07_29 29HM1 0001</incidentId>
+      <incidentName>29 Training Day 2</incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 18:09:13 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Wed, 29 Jul 2015 18:07:49 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.2473334962669 -116.060282253873</georss:point>
+    </item>
+    <item>
+      <title>15_07_29 EOC1 0001</title>
+      <fullAddress> 
+1401 GRIFFIN RD 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_07_29 EOC1 0001</incidentIdShort>
+      <incidentId>15_07_29 EOC1 0001</incidentId>
+      <incidentName>29 Training Day</incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 18:11:09 GMT</lastModified>
+      <addressName></addressName>
+      <address1>1401 GRIFFIN RD</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Wed, 29 Jul 2015 18:07:48 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.2443139586198 -116.063524526604</georss:point>
+    </item>
+    <item>
+      <title>6001</title>
+      <fullAddress>The Purple Pig 
+500 N. Michigan St 
+ 
+Chicago, IL </fullAddress>
+      <incidentIdShort>6001</incidentIdShort>
+      <incidentId>6001</incidentId>
+      <incidentName>Heart Attack</incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 14:46:46 GMT</lastModified>
+      <addressName>The Purple Pig</addressName>
+      <address1>500 N. Michigan St</address1>
+      <address2></address2>
+      <city>Chicago</city>
+      <state>IL</state>
+      <zip></zip>
+      <started>Wed, 29 Jul 2015 14:46:44 GMT</started>
+      <ended></ended>
+      <resources>dkonja-disp dkonja </resources>
+      <georss:point>41.8909148 -87.624192</georss:point>
+    </item>
+    <item>
+      <title>15_07_29 dkonja 0002</title>
+      <fullAddress> 
+36 E Ohio St 
+ 
+Chicago, Illinois 60611</fullAddress>
+      <incidentIdShort>15_07_29 dkonja 0002</incidentIdShort>
+      <incidentId>15_07_29 dkonja 0002</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 14:32:24 GMT</lastModified>
+      <addressName></addressName>
+      <address1>36 E Ohio St</address1>
+      <address2></address2>
+      <city>Chicago</city>
+      <state>Illinois</state>
+      <zip>60611</zip>
+      <started>Wed, 29 Jul 2015 14:32:24 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>41.8925475559775 -87.6266041294696</georss:point>
+    </item>
+    <item>
+      <title>15_07_29 dkonja 0001</title>
+      <fullAddress> 
+500 N Michigan Ave 
+ 
+Chicago, Illinois 60611</fullAddress>
+      <incidentIdShort>15_07_29 dkonja 0001</incidentIdShort>
+      <incidentId>15_07_29 dkonja 0001</incidentId>
+      <incidentName>Heart Attack</incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 14:05:34 GMT</lastModified>
+      <addressName></addressName>
+      <address1>500 N Michigan Ave</address1>
+      <address2></address2>
+      <city>Chicago</city>
+      <state>Illinois</state>
+      <zip>60611</zip>
+      <started>Wed, 29 Jul 2015 14:04:33 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>41.8909148965089 -87.6241924716035</georss:point>
+    </item>
+    <item>
+      <title>15_07_28 IC 0002</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_07_28 IC 0002</incidentIdShort>
+      <incidentId>15_07_28 IC 0002</incidentId>
+      <incidentName>#2</incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 02:07:29 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Tue, 28 Jul 2015 23:20:45 GMT</started>
+      <ended></ended>
+      <resources />
+    </item>
+    <item>
+      <title>15_07_28 29HM1 0002</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_07_28 29HM1 0002</incidentIdShort>
+      <incidentId>15_07_28 29HM1 0002</incidentId>
+      <incidentName>29 Carls</incidentName>
+      <type></type>
+      <lastModified>Tue, 28 Jul 2015 23:20:43 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Tue, 28 Jul 2015 23:20:43 GMT</started>
+      <ended></ended>
+      <resources />
+    </item>
+    <item>
+      <title>15_07_28 29HM3 0002</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_07_28 29HM3 0002</incidentIdShort>
+      <incidentId>15_07_28 29HM3 0002</incidentId>
+      <incidentName>carls</incidentName>
+      <type></type>
+      <lastModified>Tue, 28 Jul 2015 23:20:22 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Tue, 28 Jul 2015 23:20:22 GMT</started>
+      <ended></ended>
+      <resources />
+    </item>
+    <item>
+      <title>15_07_28 29HM2 0002</title>
+      <fullAddress> 
+AGATE RD 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_07_28 29HM2 0002</incidentIdShort>
+      <incidentId>15_07_28 29HM2 0002</incidentId>
+      <incidentName>tacohell</incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 02:17:04 GMT</lastModified>
+      <addressName></addressName>
+      <address1>AGATE RD</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Tue, 28 Jul 2015 23:19:37 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.2129472005913 -116.046930500719</georss:point>
+    </item>
+    <item>
+      <title>15_07_28 29HM2 0001</title>
+      <fullAddress> 
+RAINBOW CANYON RD 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_07_28 29HM2 0001</incidentIdShort>
+      <incidentId>15_07_28 29HM2 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Tue, 28 Jul 2015 22:45:25 GMT</lastModified>
+      <addressName></addressName>
+      <address1>RAINBOW CANYON RD</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Tue, 28 Jul 2015 22:06:23 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.2503814705742 -116.072349103898</georss:point>
+    </item>
+    <item>
+      <title>15_07_28 IC 0001</title>
+      <fullAddress> 
+1401 GRIFFIN RD 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_07_28 IC 0001</incidentIdShort>
+      <incidentId>15_07_28 IC 0001</incidentId>
+      <incidentName>29 Training</incidentName>
+      <type></type>
+      <lastModified>Tue, 28 Jul 2015 22:45:13 GMT</lastModified>
+      <addressName></addressName>
+      <address1>1401 GRIFFIN RD</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Tue, 28 Jul 2015 22:04:52 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.2443628413062 -116.063529991056</georss:point>
+    </item>
+    <item>
+      <title>15_07_28 29HM3 0001</title>
+      <fullAddress> 
+2424 VISTA WAY 
+ 
+OCEANSIDE, CA 92054</fullAddress>
+      <incidentIdShort>15_07_28 29HM3 0001</incidentIdShort>
+      <incidentId>15_07_28 29HM3 0001</incidentId>
+      <incidentName>29Training</incidentName>
+      <type></type>
+      <lastModified>Tue, 28 Jul 2015 22:17:13 GMT</lastModified>
+      <addressName></addressName>
+      <address1>2424 VISTA WAY</address1>
+      <address2></address2>
+      <city>OCEANSIDE</city>
+      <state>CA</state>
+      <zip>92054</zip>
+      <started>Tue, 28 Jul 2015 22:04:48 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>33.1833396528958 -117.334848401222</georss:point>
+    </item>
+    <item>
+      <title>15_07_28 29HM1 0001</title>
+      <fullAddress> 
+BOONIES BLVD 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_07_28 29HM1 0001</incidentIdShort>
+      <incidentId>15_07_28 29HM1 0001</incidentId>
+      <incidentName>mcagcc training</incidentName>
+      <type></type>
+      <lastModified>Tue, 28 Jul 2015 23:06:55 GMT</lastModified>
+      <addressName></addressName>
+      <address1>BOONIES BLVD</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Tue, 28 Jul 2015 22:04:46 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.24664680511 -116.0658278138</georss:point>
+    </item>
+    <item>
+      <title>15_07_27 dkonja 0001</title>
+      <fullAddress> 
+1502 Dexter Ave 
+ 
+Ann Arbor, Michigan 48103</fullAddress>
+      <incidentIdShort>15_07_27 dkonja 0001</incidentIdShort>
+      <incidentId>15_07_27 dkonja 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 27 Jul 2015 22:03:40 GMT</lastModified>
+      <addressName></addressName>
+      <address1>1502 Dexter Ave</address1>
+      <address2></address2>
+      <city>Ann Arbor</city>
+      <state>Michigan</state>
+      <zip>48103</zip>
+      <started>Mon, 27 Jul 2015 13:57:52 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.2821870829405 -83.766224603789</georss:point>
+    </item>
+    <item>
+      <title>15_07_24 ra950 0008</title>
+      <fullAddress> 
+33037 Hamilton Blvd 
+ 
+Farmington Hills, Michigan 48334</fullAddress>
+      <incidentIdShort>15_07_24 ra950 0008</incidentIdShort>
+      <incidentId>15_07_24 ra950 0008</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Fri, 24 Jul 2015 21:50:23 GMT</lastModified>
+      <addressName></addressName>
+      <address1>33037 Hamilton Blvd</address1>
+      <address2></address2>
+      <city>Farmington Hills</city>
+      <state>Michigan</state>
+      <zip>48334</zip>
+      <started>Fri, 24 Jul 2015 21:50:09 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.4968706816096 -83.3743426111187</georss:point>
+    </item>
+    <item>
+      <title>15_07_24 ra950 0007</title>
+      <fullAddress> 
+33037 Hamilton Blvd 
+ 
+Farmington Hills, Michigan 48334</fullAddress>
+      <incidentIdShort>15_07_24 ra950 0007</incidentIdShort>
+      <incidentId>15_07_24 ra950 0007</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Fri, 24 Jul 2015 20:16:57 GMT</lastModified>
+      <addressName></addressName>
+      <address1>33037 Hamilton Blvd</address1>
+      <address2></address2>
+      <city>Farmington Hills</city>
+      <state>Michigan</state>
+      <zip>48334</zip>
+      <started>Fri, 24 Jul 2015 20:13:26 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.4968706816096 -83.3743426111187</georss:point>
+    </item>
+    <item>
+      <title>15_07_24 ra950 0006</title>
+      <fullAddress> 
+33037 Hamilton Blvd 
+ 
+Farmington Hills, Michigan 48334</fullAddress>
+      <incidentIdShort>15_07_24 ra950 0006</incidentIdShort>
+      <incidentId>15_07_24 ra950 0006</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Fri, 24 Jul 2015 20:13:40 GMT</lastModified>
+      <addressName></addressName>
+      <address1>33037 Hamilton Blvd</address1>
+      <address2></address2>
+      <city>Farmington Hills</city>
+      <state>Michigan</state>
+      <zip>48334</zip>
+      <started>Fri, 24 Jul 2015 19:52:15 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.4968706816096 -83.3743426111187</georss:point>
+    </item>
+    <item>
+      <title>2004</title>
+      <fullAddress>Shops on Buffalo 
+601 W Temple St 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>2004</incidentIdShort>
+      <incidentId>2004</incidentId>
+      <incidentName>Shops on Buffalo</incidentName>
+      <type>SF</type>
+      <lastModified>Mon, 27 Jul 2015 19:52:31 GMT</lastModified>
+      <addressName>Shops on Buffalo</addressName>
+      <address1>601 W Temple St</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Fri, 24 Jul 2015 17:40:49 GMT</started>
+      <ended></ended>
+      <resources>E68 E94 L325 T33 T47 </resources>
+      <georss:point>34.0582091162191 -118.246383223679</georss:point>
+    </item>
+    <item>
+      <title>701</title>
+      <fullAddress>Dodger Stadium 
+1000 Elysian Park Ave 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>701</incidentIdShort>
+      <incidentId>701</incidentId>
+      <incidentName>Dodger Stadium Explosion</incidentName>
+      <type>CrimeOrTerrorism_Terrorism_Bomb_Explosion</type>
+      <lastModified>Fri, 24 Jul 2015 18:36:05 GMT</lastModified>
+      <addressName>Dodger Stadium</addressName>
+      <address1>1000 Elysian Park Ave</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Fri, 24 Jul 2015 17:36:34 GMT</started>
+      <ended></ended>
+      <resources>BC6 CP1 E103 L325 </resources>
+      <georss:point>34.073455488136 -118.240192778919</georss:point>
+    </item>
+    <item>
+      <title>15_07_24 a703 0001</title>
+      <fullAddress> 
+2231 Weybridge Ln 
+ 
+Los Angeles, California 90077</fullAddress>
+      <incidentIdShort>15_07_24 a703 0001</incidentIdShort>
+      <incidentId>15_07_24 a703 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Fri, 24 Jul 2015 16:59:49 GMT</lastModified>
+      <addressName></addressName>
+      <address1>2231 Weybridge Ln</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>California</state>
+      <zip>90077</zip>
+      <started>Fri, 24 Jul 2015 16:59:49 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.1117931908513 -118.474322028727</georss:point>
+    </item>
+    <item>
+      <title>15_07_24 ra950 0001</title>
+      <fullAddress> 
+27600 Farmington Rd 
+ 
+Farmington Hills, Michigan 48334</fullAddress>
+      <incidentIdShort>15_07_24 ra950 0001</incidentIdShort>
+      <incidentId>15_07_24 ra950 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Fri, 24 Jul 2015 14:20:54 GMT</lastModified>
+      <addressName></addressName>
+      <address1>27600 Farmington Rd</address1>
+      <address2></address2>
+      <city>Farmington Hills</city>
+      <state>Michigan</state>
+      <zip>48334</zip>
+      <started>Fri, 24 Jul 2015 14:20:54 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.4977274459005 -83.3781093438585</georss:point>
+    </item>
+    <item>
+      <title>15_07_23 ra950 0006</title>
+      <fullAddress> 
+33244 W 12 Mile Rd 
+ 
+Farmington Hills, Michigan 48334</fullAddress>
+      <incidentIdShort>15_07_23 ra950 0006</incidentIdShort>
+      <incidentId>15_07_23 ra950 0006</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Fri, 24 Jul 2015 14:38:09 GMT</lastModified>
+      <addressName></addressName>
+      <address1>33244 W 12 Mile Rd</address1>
+      <address2></address2>
+      <city>Farmington Hills</city>
+      <state>Michigan</state>
+      <zip>48334</zip>
+      <started>Thu, 23 Jul 2015 21:55:05 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.4987945032535 -83.3767873183531</georss:point>
+    </item>
+    <item>
+      <title>15_07_23 ra950 0005</title>
+      <fullAddress> 
+27869 Peppermill Rd 
+ 
+Farmington Hills, Michigan 48331</fullAddress>
+      <incidentIdShort>15_07_23 ra950 0005</incidentIdShort>
+      <incidentId>15_07_23 ra950 0005</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Fri, 24 Jul 2015 14:13:33 GMT</lastModified>
+      <addressName></addressName>
+      <address1>27869 Peppermill Rd</address1>
+      <address2></address2>
+      <city>Farmington Hills</city>
+      <state>Michigan</state>
+      <zip>48331</zip>
+      <started>Thu, 23 Jul 2015 21:10:51 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.499197572827 -83.3813778799762</georss:point>
+    </item>
+    <item>
+      <title>15_07_23 ra950 0004</title>
+      <fullAddress> 
+34997 W 12 Mile Rd 
+ 
+Farmington Hills, Michigan 48331</fullAddress>
+      <incidentIdShort>15_07_23 ra950 0004</incidentIdShort>
+      <incidentId>15_07_23 ra950 0004</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 23 Jul 2015 21:11:14 GMT</lastModified>
+      <addressName></addressName>
+      <address1>34997 W 12 Mile Rd</address1>
+      <address2></address2>
+      <city>Farmington Hills</city>
+      <state>Michigan</state>
+      <zip>48331</zip>
+      <started>Thu, 23 Jul 2015 21:01:33 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.4978627756319 -83.3960453639921</georss:point>
+    </item>
+    <item>
+      <title>15_07_23 ra950 0003</title>
+      <fullAddress> 
+39515 W 12 Mile Rd 
+ 
+Novi, Michigan 48377</fullAddress>
+      <incidentIdShort>15_07_23 ra950 0003</incidentIdShort>
+      <incidentId>15_07_23 ra950 0003</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 23 Jul 2015 21:56:31 GMT</lastModified>
+      <addressName></addressName>
+      <address1>39515 W 12 Mile Rd</address1>
+      <address2></address2>
+      <city>Novi</city>
+      <state>Michigan</state>
+      <zip>48377</zip>
+      <started>Thu, 23 Jul 2015 20:58:13 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.4968146929383 -83.437252284906</georss:point>
+    </item>
+    <item>
+      <title>15_07_23 ra950 0002</title>
+      <fullAddress> 
+27600 Farmington Rd 
+ 
+Farmington Hills, Michigan 48334</fullAddress>
+      <incidentIdShort>15_07_23 ra950 0002</incidentIdShort>
+      <incidentId>15_07_23 ra950 0002</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 23 Jul 2015 20:57:30 GMT</lastModified>
+      <addressName></addressName>
+      <address1>27600 Farmington Rd</address1>
+      <address2></address2>
+      <city>Farmington Hills</city>
+      <state>Michigan</state>
+      <zip>48334</zip>
+      <started>Thu, 23 Jul 2015 20:57:30 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.4977274459005 -83.3781093438585</georss:point>
+    </item>
+    <item>
+      <title>15_07_23 dkonja 0004</title>
+      <fullAddress> 
+Michigan Ave 
+ 
+Westland, Michigan 48186</fullAddress>
+      <incidentIdShort>15_07_23 dkonja 0004</incidentIdShort>
+      <incidentId>15_07_23 dkonja 0004</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 23 Jul 2015 20:26:48 GMT</lastModified>
+      <addressName></addressName>
+      <address1>Michigan Ave</address1>
+      <address2></address2>
+      <city>Westland</city>
+      <state>Michigan</state>
+      <zip>48186</zip>
+      <started>Thu, 23 Jul 2015 20:26:48 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.2856232390906 -83.3487266876617</georss:point>
+    </item>
+    <item>
+      <title>15_07_23 dkonja 0003</title>
+      <fullAddress> 
+200 E Michigan Ave 
+ 
+Ypsilanti, Michigan 48198</fullAddress>
+      <incidentIdShort>15_07_23 dkonja 0003</incidentIdShort>
+      <incidentId>15_07_23 dkonja 0003</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 23 Jul 2015 20:55:38 GMT</lastModified>
+      <addressName></addressName>
+      <address1>200 E Michigan Ave</address1>
+      <address2></address2>
+      <city>Ypsilanti</city>
+      <state>Michigan</state>
+      <zip>48198</zip>
+      <started>Thu, 23 Jul 2015 20:23:45 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.2410266696785 -83.6072231486247</georss:point>
+    </item>
+    <item>
+      <title>15_07_21 dkonja 0002</title>
+      <fullAddress> 
+700 Flower Ave 
+ 
+Los Angeles, California 90291</fullAddress>
+      <incidentIdShort>15_07_21 dkonja 0002</incidentIdShort>
+      <incidentId>15_07_21 dkonja 0002</incidentId>
+      <incidentName>2 car accident</incidentName>
+      <type></type>
+      <lastModified>Thu, 23 Jul 2015 17:26:54 GMT</lastModified>
+      <addressName></addressName>
+      <address1>700 Flower Ave</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>California</state>
+      <zip>90291</zip>
+      <started>Tue, 21 Jul 2015 18:54:50 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>33.9995424604315 -118.468931657502</georss:point>
+    </item>
+    <item>
+      <title>15_07_21 dkonja 0001</title>
+      <fullAddress> 
+1700 Rodeo Rd 
+ 
+Los Angeles, California 90018</fullAddress>
+      <incidentIdShort>15_07_21 dkonja 0001</incidentIdShort>
+      <incidentId>15_07_21 dkonja 0001</incidentId>
+      <incidentName>Derailed Train</incidentName>
+      <type></type>
+      <lastModified>Thu, 23 Jul 2015 19:47:34 GMT</lastModified>
+      <addressName></addressName>
+      <address1>1700 Rodeo Rd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>California</state>
+      <zip>90018</zip>
+      <started>Tue, 21 Jul 2015 14:25:00 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.0182074703097 -118.312597848351</georss:point>
+    </item>
+    <item>
+      <title>15_07_20 dkonja 0003</title>
+      <fullAddress> 
+4600 Hollywood Blvd 
+ 
+Los Angeles, California 90027</fullAddress>
+      <incidentIdShort>15_07_20 dkonja 0003</incidentIdShort>
+      <incidentId>15_07_20 dkonja 0003</incidentId>
+      <incidentName>Heart Attack at Cheetah's</incidentName>
+      <type></type>
+      <lastModified>Tue, 21 Jul 2015 18:36:19 GMT</lastModified>
+      <addressName></addressName>
+      <address1>4600 Hollywood Blvd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>California</state>
+      <zip>90027</zip>
+      <started>Mon, 20 Jul 2015 18:51:45 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.0994962816841 -118.289321650151</georss:point>
+    </item>
+    <item>
+      <title>15_07_20 0001</title>
+      <fullAddress> 
+1518 BROWN RD 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_07_20 0001</incidentIdShort>
+      <incidentId>15_07_20 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 23 Jul 2015 17:29:56 GMT</lastModified>
+      <addressName></addressName>
+      <address1>1518 BROWN RD</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Mon, 20 Jul 2015 17:12:02 GMT</started>
+      <ended>Mon, 20 Jul 2015 19:21:02 GMT</ended>
+      <resources />
+      <georss:point>34.2345532165732 -116.059804736321</georss:point>
+    </item>
+    <item>
+      <title>15_07_20 dkonja 0002</title>
+      <fullAddress> 
+900 Vine St 
+ 
+Los Angeles, California 90038</fullAddress>
+      <incidentIdShort>15_07_20 dkonja 0002</incidentIdShort>
+      <incidentId>15_07_20 dkonja 0002</incidentId>
+      <incidentName>7-11 Robbery</incidentName>
+      <type></type>
+      <lastModified>Tue, 21 Jul 2015 17:37:08 GMT</lastModified>
+      <addressName></addressName>
+      <address1>900 Vine St</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>California</state>
+      <zip>90038</zip>
+      <started>Mon, 20 Jul 2015 16:58:37 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.0871136154935 -118.326549863074</georss:point>
+    </item>
+    <item>
+      <title>15_07_20 dkonja 0001</title>
+      <fullAddress> 
+200 N State St 
+ 
+Los Angeles, California 90033</fullAddress>
+      <incidentIdShort>15_07_20 dkonja 0001</incidentIdShort>
+      <incidentId>15_07_20 dkonja 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 20 Jul 2015 15:55:22 GMT</lastModified>
+      <addressName></addressName>
+      <address1>200 N State St</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>California</state>
+      <zip>90033</zip>
+      <started>Mon, 20 Jul 2015 14:09:55 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.0474629141471 -118.216800458913</georss:point>
+    </item>
+    <item>
+      <title>101</title>
+      <fullAddress>Ammonia respository breach 
+ 
+ 
+Achenson's Auto Works, 8000 University Blvd </fullAddress>
+      <incidentIdShort>101</incidentIdShort>
+      <incidentId>101</incidentId>
+      <incidentName>Achenson's Auto Works Hazmat Leak</incidentName>
+      <type>Smoke called in emitting from building</type>
+      <lastModified>Mon, 20 Jul 2015 13:47:29 GMT</lastModified>
+      <addressName>Ammonia respository breach</addressName>
+      <address1></address1>
+      <address2></address2>
+      <city>Achenson's Auto Works</city>
+      <state>8000 University Blvd</state>
+      <zip></zip>
+      <started>Mon, 20 Jul 2015 13:47:47 GMT</started>
+      <ended></ended>
+      <resources>E703 Page 144 </resources>
+    </item>
+    <item>
+      <title>15_07_20 Mujuk EOC 0001</title>
+      <fullAddress> 
+837 KUAHUA AVE 
+ 
+HONOLULU, HI 96860</fullAddress>
+      <incidentIdShort>15_07_20 Mujuk EOC 0001</incidentIdShort>
+      <incidentId>15_07_20 Mujuk EOC 0001</incidentId>
+      <incidentName>gas test</incidentName>
+      <type></type>
+      <lastModified>Mon, 20 Jul 2015 13:49:23 GMT</lastModified>
+      <addressName></addressName>
+      <address1>837 KUAHUA AVE</address1>
+      <address2></address2>
+      <city>HONOLULU</city>
+      <state>HI</state>
+      <zip>96860</zip>
+      <started>Mon, 20 Jul 2015 03:59:03 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>21.3602119319887 -157.943604381555</georss:point>
+    </item>
+    <item>
+      <title>81465</title>
+      <fullAddress>Mercy Westlakes ASC/Capital Orthopedics 
+4180 W Wilshire Blvd 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>81465</incidentIdShort>
+      <incidentId>81465</incidentId>
+      <incidentName>Mercy Westlakes ASC/Capital Orthopedics</incidentName>
+      <type>High Pressure Tank Car</type>
+      <lastModified>Mon, 20 Jul 2015 03:15:07 GMT</lastModified>
+      <addressName>Mercy Westlakes ASC/Capital Orthopedics</addressName>
+      <address1>4180 W Wilshire Blvd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Mon, 20 Jul 2015 02:15:22 GMT</started>
+      <ended></ended>
+      <resources>BC725 CT4 DP2 E20 T2 BC723 T1 RA101 </resources>
+      <georss:point>34.06171 -118.318179</georss:point>
+    </item>
+    <item>
+      <title>15_07_19 skalasa 0001</title>
+      <fullAddress> 
+24379 Highlander Rd 
+ 
+Los Angeles, California 91307</fullAddress>
+      <incidentIdShort>15_07_19 skalasa 0001</incidentIdShort>
+      <incidentId>15_07_19 skalasa 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 20 Jul 2015 13:48:17 GMT</lastModified>
+      <addressName></addressName>
+      <address1>24379 Highlander Rd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>California</state>
+      <zip>91307</zip>
+      <started>Sun, 19 Jul 2015 14:36:57 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.2004580716617 -118.655237200542</georss:point>
+    </item>
+    <item>
+      <title>15_07_16 DKONJA 0002</title>
+      <fullAddress> 
+3617 WASHTENAW AVE 
+ 
+ANN ARBOR, MI 48104</fullAddress>
+      <incidentIdShort>15_07_16 DKONJA 0002</incidentIdShort>
+      <incidentId>15_07_16 DKONJA 0002</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 22 Jul 2015 19:25:49 GMT</lastModified>
+      <addressName></addressName>
+      <address1>3617 WASHTENAW AVE</address1>
+      <address2></address2>
+      <city>ANN ARBOR</city>
+      <state>MI</state>
+      <zip>48104</zip>
+      <started>Thu, 16 Jul 2015 20:17:55 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.2554934404074 -83.6877399020755</georss:point>
+    </item>
+    <item>
+      <title>15_07_16 DKONJA 0001</title>
+      <fullAddress> 
+6868 HOLLYWOOD BLVD 
+ 
+LOS ANGELES, CA 90028</fullAddress>
+      <incidentIdShort>15_07_16 DKONJA 0001</incidentIdShort>
+      <incidentId>15_07_16 DKONJA 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 16 Jul 2015 17:21:42 GMT</lastModified>
+      <addressName></addressName>
+      <address1>6868 HOLLYWOOD BLVD</address1>
+      <address2></address2>
+      <city>LOS ANGELES</city>
+      <state>CA</state>
+      <zip>90028</zip>
+      <started>Thu, 16 Jul 2015 17:21:42 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.1014665058284 -118.340173518115</georss:point>
+    </item>
+    <item>
+      <title>15_07_16 RCETTWEST 0001</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_07_16 RCETTWEST 0001</incidentIdShort>
+      <incidentId>15_07_16 RCETTWEST 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 16 Jul 2015 14:23:22 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Thu, 16 Jul 2015 14:21:40 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>32.4726491187075 -80.7242764419721</georss:point>
+    </item>
+    <item>
+      <title>15_07_15 CT4 0003</title>
+      <fullAddress> 
+11 ELSIE DR 
+ 
+JOHNSTON, RI 02919</fullAddress>
+      <incidentIdShort>15_07_15 CT4 0003</incidentIdShort>
+      <incidentId>15_07_15 CT4 0003</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 15 Jul 2015 17:39:29 GMT</lastModified>
+      <addressName></addressName>
+      <address1>11 ELSIE DR</address1>
+      <address2></address2>
+      <city>JOHNSTON</city>
+      <state>RI</state>
+      <zip>02919</zip>
+      <started>Wed, 15 Jul 2015 17:39:22 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>41.8234791707511 -71.4926069281044</georss:point>
+    </item>
+    <item>
+      <title>15_07_15 RCETTWEST 0002</title>
+      <fullAddress> 
+C ST 
+ 
+BEAUFORT, SC 29906</fullAddress>
+      <incidentIdShort>15_07_15 RCETTWEST 0002</incidentIdShort>
+      <incidentId>15_07_15 RCETTWEST 0002</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 15 Jul 2015 14:08:44 GMT</lastModified>
+      <addressName></addressName>
+      <address1>C ST</address1>
+      <address2></address2>
+      <city>BEAUFORT</city>
+      <state>SC</state>
+      <zip>29906</zip>
+      <started>Wed, 15 Jul 2015 14:08:44 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>32.4706739964241 -80.7206681557181</georss:point>
+    </item>
+    <item>
+      <title>15_07_15 RCETTWEST 0001</title>
+      <fullAddress> 
+C ST 
+ 
+BEAUFORT, SC 29906</fullAddress>
+      <incidentIdShort>15_07_15 RCETTWEST 0001</incidentIdShort>
+      <incidentId>15_07_15 RCETTWEST 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 15 Jul 2015 14:00:55 GMT</lastModified>
+      <addressName></addressName>
+      <address1>C ST</address1>
+      <address2></address2>
+      <city>BEAUFORT</city>
+      <state>SC</state>
+      <zip>29906</zip>
+      <started>Wed, 15 Jul 2015 13:59:33 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>32.4708936622407 -80.7208391605316</georss:point>
+    </item>
+    <item>
+      <title>100216</title>
+      <fullAddress>Trivia Night 
+259555 S Eastgate Ave 
+ 
+Monee, IL </fullAddress>
+      <incidentIdShort>100216</incidentIdShort>
+      <incidentId>100216</incidentId>
+      <incidentName>BOMB THREAT</incidentName>
+      <type>CrimeOrTerrorism_Terrorism_Bomb_Explosion</type>
+      <lastModified>Tue, 14 Jul 2015 22:36:53 GMT</lastModified>
+      <addressName>Trivia Night</addressName>
+      <address1>259555 S Eastgate Ave</address1>
+      <address2></address2>
+      <city>Monee</city>
+      <state>IL</state>
+      <zip></zip>
+      <started>Tue, 14 Jul 2015 22:37:34 GMT</started>
+      <ended></ended>
+      <resources>AA22 AA23 BC31 DURKACS3 </resources>
+      <georss:point>41.4181346989262 -87.7387719559385</georss:point>
+    </item>
+    <item>
+      <title>15_07_14 DURKACS2 0001</title>
+      <fullAddress> 
+105 N MAIN ST 
+ 
+ANN ARBOR, MI 48104</fullAddress>
+      <incidentIdShort>15_07_14 DURKACS2 0001</incidentIdShort>
+      <incidentId>15_07_14 DURKACS2 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Tue, 14 Jul 2015 21:53:41 GMT</lastModified>
+      <addressName></addressName>
+      <address1>105 N MAIN ST</address1>
+      <address2></address2>
+      <city>ANN ARBOR</city>
+      <state>MI</state>
+      <zip>48104</zip>
+      <started>Tue, 14 Jul 2015 21:52:17 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.2814952687587 -83.7484952797634</georss:point>
+    </item>
+    <item>
+      <title>15_07_14 Jon 0002</title>
+      <fullAddress> 
+380 WORLD WAY 
+ 
+LOS ANGELES, CA 90045</fullAddress>
+      <incidentIdShort>15_07_14 Jon 0002</incidentIdShort>
+      <incidentId>15_07_14 Jon 0002</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Tue, 14 Jul 2015 21:42:22 GMT</lastModified>
+      <addressName></addressName>
+      <address1>380 WORLD WAY</address1>
+      <address2></address2>
+      <city>LOS ANGELES</city>
+      <state>CA</state>
+      <zip>90045</zip>
+      <started>Tue, 14 Jul 2015 21:42:22 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>33.9441084285926 -118.408394855304</georss:point>
+    </item>
+    <item>
+      <title>15_07_14 Jon 0001</title>
+      <fullAddress> 
+WORLD WAY N 
+ 
+LOS ANGELES, CA 90045</fullAddress>
+      <incidentIdShort>15_07_14 Jon 0001</incidentIdShort>
+      <incidentId>15_07_14 Jon 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Tue, 14 Jul 2015 21:05:34 GMT</lastModified>
+      <addressName></addressName>
+      <address1>WORLD WAY N</address1>
+      <address2></address2>
+      <city>LOS ANGELES</city>
+      <state>CA</state>
+      <zip>90045</zip>
+      <started>Tue, 14 Jul 2015 21:05:34 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>33.9442911711978 -118.408303484002</georss:point>
+    </item>
+    <item>
+      <title>167</title>
+      <fullAddress>Mercy West Medical Center 
+1514 N VERMONT AVE 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>167</incidentIdShort>
+      <incidentId>167</incidentId>
+      <incidentName>Mercy West Medical Center Fire</incidentName>
+      <type>SF</type>
+      <lastModified>Tue, 14 Jul 2015 20:42:21 GMT</lastModified>
+      <addressName>Mercy West Medical Center</addressName>
+      <address1>1514 N VERMONT AVE</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Tue, 14 Jul 2015 15:18:32 GMT</started>
+      <ended></ended>
+      <resources>BC720 E17 E68 E703 T47 T47. A703 </resources>
+      <georss:point>34.098659 -118.291538</georss:point>
+    </item>
+    <item>
+      <title>15_07_10 jody1 0001</title>
+      <fullAddress> 
+105 S Main St 
+ 
+Ann Arbor, Michigan 48104</fullAddress>
+      <incidentIdShort>15_07_10 jody1 0001</incidentIdShort>
+      <incidentId>15_07_10 jody1 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Sat, 11 Jul 2015 14:52:08 GMT</lastModified>
+      <addressName></addressName>
+      <address1>105 S Main St</address1>
+      <address2></address2>
+      <city>Ann Arbor</city>
+      <state>Michigan</state>
+      <zip>48104</zip>
+      <started>Fri, 10 Jul 2015 18:51:08 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.2812025070392 -83.748475815946</georss:point>
+    </item>
+    <item>
+      <title>7512</title>
+      <fullAddress> 
+189 N ALEXANDRIA AVE 
+ 
+LOS ANGELES, CA 90004</fullAddress>
+      <incidentIdShort>7512</incidentIdShort>
+      <incidentId>7512</incidentId>
+      <incidentName>Auto Accident</incidentName>
+      <type>Vehicle.Auto_Accident</type>
+      <lastModified>Thu, 16 Jul 2015 17:17:45 GMT</lastModified>
+      <addressName></addressName>
+      <address1>189 N ALEXANDRIA AVE</address1>
+      <address2></address2>
+      <city>LOS ANGELES</city>
+      <state>CA</state>
+      <zip>90004</zip>
+      <started>Fri, 10 Jul 2015 15:07:31 GMT</started>
+      <ended></ended>
+      <resources>dkonja E100 E211 E94 HR56 </resources>
+      <georss:point>34.0749662995924 -118.298562176404</georss:point>
+    </item>
+    <item>
+      <title>257</title>
+      <fullAddress>Hollywood and Highland 
+6810 W Hollywood Blvd 
+ 
+Los Angeles, 6CA </fullAddress>
+      <incidentIdShort>257</incidentIdShort>
+      <incidentId>257</incidentId>
+      <incidentName>Hollywood Hazmat Explosion</incidentName>
+      <type>Hazmat</type>
+      <lastModified>Sat, 11 Jul 2015 18:37:17 GMT</lastModified>
+      <addressName>Hollywood and Highland</addressName>
+      <address1>6810 W Hollywood Blvd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>6CA</state>
+      <zip></zip>
+      <started>Fri, 10 Jul 2015 15:04:12 GMT</started>
+      <ended></ended>
+      <resources>BC15 dkonja LF70 RA878 T12 T72 </resources>
+      <georss:point>34.102287258 -118.339068224</georss:point>
+    </item>
+    <item>
+      <title>3008</title>
+      <fullAddress>Mercy Westlakes ASC/Capital Orthopedics 
+4181 W Wilshire Blvd 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>3008</incidentIdShort>
+      <incidentId>3008</incidentId>
+      <incidentName>Mercy Westlakes ASC/Capital Orthopedics</incidentName>
+      <type>XFMR</type>
+      <lastModified>Tue, 14 Jul 2015 20:42:53 GMT</lastModified>
+      <addressName>Mercy Westlakes ASC/Capital Orthopedics</addressName>
+      <address1>4181 W Wilshire Blvd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Fri, 10 Jul 2015 14:47:55 GMT</started>
+      <ended></ended>
+      <resources>dkonja E100 E211 E94 HR56 </resources>
+      <georss:point>34.061541 -118.318686</georss:point>
+    </item>
+    <item>
+      <title>15_07_10 lf73 0001</title>
+      <fullAddress> 
+351 S Mariposa Ave 
+ 
+Los Angeles, California 90020</fullAddress>
+      <incidentIdShort>15_07_10 lf73 0001</incidentIdShort>
+      <incidentId>15_07_10 lf73 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Tue, 14 Jul 2015 15:10:37 GMT</lastModified>
+      <addressName></addressName>
+      <address1>351 S Mariposa Ave</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>California</state>
+      <zip>90020</zip>
+      <started>Fri, 10 Jul 2015 02:16:26 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.0680899976555 -118.29947831149</georss:point>
+    </item>
+    <item>
+      <title>15_07_09 DURKACS2 0001</title>
+      <fullAddress> 
+101 N MAIN ST 
+ 
+ANN ARBOR, MI 48104</fullAddress>
+      <incidentIdShort>15_07_09 DURKACS2 0001</incidentIdShort>
+      <incidentId>15_07_09 DURKACS2 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 13 Jul 2015 17:34:31 GMT</lastModified>
+      <addressName></addressName>
+      <address1>101 N MAIN ST</address1>
+      <address2></address2>
+      <city>ANN ARBOR</city>
+      <state>MI</state>
+      <zip>48104</zip>
+      <started>Thu, 09 Jul 2015 20:45:15 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.2814476795386 -83.7485190743734</georss:point>
+    </item>
+    <item>
+      <title>15_07_09 MCLB FD IC 0001</title>
+      <fullAddress> 
+I 40 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_07_09 MCLB FD IC 0001</incidentIdShort>
+      <incidentId>15_07_09 MCLB FD IC 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 13 Jul 2015 17:42:37 GMT</lastModified>
+      <addressName></addressName>
+      <address1>I 40</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Thu, 09 Jul 2015 16:44:26 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8705617519932 -116.957663311856</georss:point>
+    </item>
+    <item>
+      <title>15_07_09 Lowery 0002</title>
+      <fullAddress> 
+TARAWA AVE 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_07_09 Lowery 0002</incidentIdShort>
+      <incidentId>15_07_09 Lowery 0002</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 09 Jul 2015 16:43:41 GMT</lastModified>
+      <addressName></addressName>
+      <address1>TARAWA AVE</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Thu, 09 Jul 2015 16:43:41 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8691463538581 -116.950552889357</georss:point>
+    </item>
+    <item>
+      <title>15_07_09 MCLB HM1 0001</title>
+      <fullAddress> 
+35055 DAGGETT YERMO RD 
+ 
+DAGGETT, CA 92327</fullAddress>
+      <incidentIdShort>15_07_09 MCLB HM1 0001</incidentIdShort>
+      <incidentId>15_07_09 MCLB HM1 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Fri, 24 Jul 2015 20:28:11 GMT</lastModified>
+      <addressName></addressName>
+      <address1>35055 DAGGETT YERMO RD</address1>
+      <address2></address2>
+      <city>DAGGETT</city>
+      <state>CA</state>
+      <zip>92327</zip>
+      <started>Thu, 09 Jul 2015 16:40:28 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8907385348094 -116.886039038998</georss:point>
+    </item>
+    <item>
+      <title>15_07_09 Lowery 0001</title>
+      <fullAddress> 
+I 40 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_07_09 Lowery 0001</incidentIdShort>
+      <incidentId>15_07_09 Lowery 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 09 Jul 2015 16:43:18 GMT</lastModified>
+      <addressName></addressName>
+      <address1>I 40</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Thu, 09 Jul 2015 16:40:22 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.867461695466 -116.951523709447</georss:point>
+    </item>
+    <item>
+      <title>15_07_09 DK01 0001</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_07_09 DK01 0001</incidentIdShort>
+      <incidentId>15_07_09 DK01 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 09 Jul 2015 13:37:19 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Thu, 09 Jul 2015 13:37:19 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.0520999998758 -118.241890000062</georss:point>
+    </item>
+    <item>
+      <title>15_07_08 MCLB FD IC 0002</title>
+      <fullAddress> 
+S IWO JIMA ST 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_07_08 MCLB FD IC 0002</incidentIdShort>
+      <incidentId>15_07_08 MCLB FD IC 0002</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 08 Jul 2015 18:14:33 GMT</lastModified>
+      <addressName></addressName>
+      <address1>S IWO JIMA ST</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Wed, 08 Jul 2015 18:14:33 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8721730282575 -116.951123959998</georss:point>
+    </item>
+    <item>
+      <title>15_07_08 Lowery 0006</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_07_08 Lowery 0006</incidentIdShort>
+      <incidentId>15_07_08 Lowery 0006</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 08 Jul 2015 18:10:58 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Wed, 08 Jul 2015 18:10:58 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8626932556103 -116.954893026231</georss:point>
+    </item>
+    <item>
+      <title>15_07_08 Lowery 0004</title>
+      <fullAddress> 
+EPSOM ST 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_07_08 Lowery 0004</incidentIdShort>
+      <incidentId>15_07_08 Lowery 0004</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 08 Jul 2015 17:32:10 GMT</lastModified>
+      <addressName></addressName>
+      <address1>EPSOM ST</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Wed, 08 Jul 2015 17:32:10 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8717732788085 -116.953294028435</georss:point>
+    </item>
+    <item>
+      <title>15_07_08 MCLB HM1 0004</title>
+      <fullAddress> 
+2424 VISTA WAY 
+ 
+OCEANSIDE, CA 92054</fullAddress>
+      <incidentIdShort>15_07_08 MCLB HM1 0004</incidentIdShort>
+      <incidentId>15_07_08 MCLB HM1 0004</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Tue, 14 Jul 2015 15:12:36 GMT</lastModified>
+      <addressName></addressName>
+      <address1>2424 VISTA WAY</address1>
+      <address2></address2>
+      <city>OCEANSIDE</city>
+      <state>CA</state>
+      <zip>92054</zip>
+      <started>Wed, 08 Jul 2015 17:30:24 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>33.1833396528958 -117.334848401222</georss:point>
+    </item>
+    <item>
+      <title>15_07_08 Lowery 0003</title>
+      <fullAddress> 
+32641 JOSEPH L BOLL AVE 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_07_08 Lowery 0003</incidentIdShort>
+      <incidentId>15_07_08 Lowery 0003</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 08 Jul 2015 17:29:58 GMT</lastModified>
+      <addressName></addressName>
+      <address1>32641 JOSEPH L BOLL AVE</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Wed, 08 Jul 2015 17:29:58 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8739433472459 -116.950781317613</georss:point>
+    </item>
+    <item>
+      <title>15_07_08 TEST 10 0002</title>
+      <fullAddress> 
+1228 DIVISION ST 
+ 
+OCEANSIDE, CA 92054</fullAddress>
+      <incidentIdShort>15_07_08 TEST 10 0002</incidentIdShort>
+      <incidentId>15_07_08 TEST 10 0002</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 08 Jul 2015 17:26:08 GMT</lastModified>
+      <addressName></addressName>
+      <address1>1228 DIVISION ST</address1>
+      <address2></address2>
+      <city>OCEANSIDE</city>
+      <state>CA</state>
+      <zip>92054</zip>
+      <started>Wed, 08 Jul 2015 17:26:08 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>33.196261482885 -117.37171271243</georss:point>
+    </item>
+    <item>
+      <title>15_07_08 MCLB HM1 0003</title>
+      <fullAddress> 
+CANNON ST 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_07_08 MCLB HM1 0003</incidentIdShort>
+      <incidentId>15_07_08 MCLB HM1 0003</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 08 Jul 2015 17:56:35 GMT</lastModified>
+      <addressName></addressName>
+      <address1>CANNON ST</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Wed, 08 Jul 2015 17:26:02 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.873834843824 -116.955344172038</georss:point>
+    </item>
+    <item>
+      <title>15_07_08 Lowery 0002</title>
+      <fullAddress> 
+MORELAND ST 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_07_08 Lowery 0002</incidentIdShort>
+      <incidentId>15_07_08 Lowery 0002</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 22 Jul 2015 19:16:33 GMT</lastModified>
+      <addressName></addressName>
+      <address1>MORELAND ST</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Wed, 08 Jul 2015 17:24:52 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8718874929368 -116.955920953386</georss:point>
+    </item>
+    <item>
+      <title>15_07_08 MCLB HM1 0002</title>
+      <fullAddress> 
+YERMO 
+ 
+CA,  </fullAddress>
+      <incidentIdShort>15_07_08 MCLB HM1 0002</incidentIdShort>
+      <incidentId>15_07_08 MCLB HM1 0002</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 08 Jul 2015 17:24:35 GMT</lastModified>
+      <addressName></addressName>
+      <address1>YERMO</address1>
+      <address2></address2>
+      <city>CA</city>
+      <state></state>
+      <zip></zip>
+      <started>Wed, 08 Jul 2015 17:24:35 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.9069299999197 -116.835690000393</georss:point>
+    </item>
+    <item>
+      <title>15_07_08 MCLB HM1 0001</title>
+      <fullAddress> 
+NATIONAL TRAILS HWY 
+ 
+DAGGETT, CA 92327</fullAddress>
+      <incidentIdShort>15_07_08 MCLB HM1 0001</incidentIdShort>
+      <incidentId>15_07_08 MCLB HM1 0001</incidentId>
+      <incidentName>TEST</incidentName>
+      <type></type>
+      <lastModified>Wed, 08 Jul 2015 16:55:21 GMT</lastModified>
+      <addressName></addressName>
+      <address1>NATIONAL TRAILS HWY</address1>
+      <address2></address2>
+      <city>DAGGETT</city>
+      <state>CA</state>
+      <zip>92327</zip>
+      <started>Wed, 08 Jul 2015 16:46:57 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8681698230613 -116.93277546029</georss:point>
+    </item>
+    <item>
+      <title>15_07_08 TEST 10 0001</title>
+      <fullAddress> 
+S IWO JIMA ST 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_07_08 TEST 10 0001</incidentIdShort>
+      <incidentId>15_07_08 TEST 10 0001</incidentId>
+      <incidentName>vehicle swap IC</incidentName>
+      <type></type>
+      <lastModified>Wed, 08 Jul 2015 16:49:59 GMT</lastModified>
+      <addressName></addressName>
+      <address1>S IWO JIMA ST</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Wed, 08 Jul 2015 16:46:54 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8700952982216 -116.953096289268</georss:point>
+    </item>
+    <item>
+      <title>15_07_08 MCLB FD IC 0001</title>
+      <fullAddress> 
+B ST 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_07_08 MCLB FD IC 0001</incidentIdShort>
+      <incidentId>15_07_08 MCLB FD IC 0001</incidentId>
+      <incidentName>Barstow Practice</incidentName>
+      <type></type>
+      <lastModified>Wed, 08 Jul 2015 16:50:42 GMT</lastModified>
+      <addressName></addressName>
+      <address1>B ST</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Wed, 08 Jul 2015 16:46:53 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8761384589921 -116.950848104605</georss:point>
+    </item>
+    <item>
+      <title>15_07_08 Lowery 0001</title>
+      <fullAddress> 
+CANNON ST 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_07_08 Lowery 0001</incidentIdShort>
+      <incidentId>15_07_08 Lowery 0001</incidentId>
+      <incidentName>BARSTOW PRACTICE</incidentName>
+      <type></type>
+      <lastModified>Wed, 08 Jul 2015 17:22:11 GMT</lastModified>
+      <addressName></addressName>
+      <address1>CANNON ST</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Wed, 08 Jul 2015 16:46:51 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8724871377049 -116.957520490931</georss:point>
+    </item>
+    <item>
+      <title>15_07_07 DK01 0001</title>
+      <fullAddress> 
+213 ROSE AVE 
+ 
+LOS ANGELES, CA 90291</fullAddress>
+      <incidentIdShort>15_07_07 DK01 0001</incidentIdShort>
+      <incidentId>15_07_07 DK01 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Tue, 07 Jul 2015 17:11:47 GMT</lastModified>
+      <addressName></addressName>
+      <address1>213 ROSE AVE</address1>
+      <address2></address2>
+      <city>LOS ANGELES</city>
+      <state>CA</state>
+      <zip>90291</zip>
+      <started>Tue, 07 Jul 2015 17:11:47 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>33.9962548216206 -118.477661869955</georss:point>
+    </item>
+    <item>
+      <title>15_07_06 DK01 0006</title>
+      <fullAddress> 
+1450 MAIN ST 
+ 
+LOS ANGELES, CA 90291</fullAddress>
+      <incidentIdShort>15_07_06 DK01 0006</incidentIdShort>
+      <incidentId>15_07_06 DK01 0006</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 06 Jul 2015 20:40:49 GMT</lastModified>
+      <addressName></addressName>
+      <address1>1450 MAIN ST</address1>
+      <address2></address2>
+      <city>LOS ANGELES</city>
+      <state>CA</state>
+      <zip>90291</zip>
+      <started>Mon, 06 Jul 2015 20:37:42 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>33.9889523267427 -118.47168137846</georss:point>
+    </item>
+    <item>
+      <title>15_07_06 DK01 0005</title>
+      <fullAddress> 
+350 MAIN ST 
+ 
+LOS ANGELES, CA 90291</fullAddress>
+      <incidentIdShort>15_07_06 DK01 0005</incidentIdShort>
+      <incidentId>15_07_06 DK01 0005</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 06 Jul 2015 19:39:16 GMT</lastModified>
+      <addressName></addressName>
+      <address1>350 MAIN ST</address1>
+      <address2></address2>
+      <city>LOS ANGELES</city>
+      <state>CA</state>
+      <zip>90291</zip>
+      <started>Mon, 06 Jul 2015 19:39:16 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>33.9953554995913 -118.476978385212</georss:point>
+    </item>
+    <item>
+      <title>15_07_06 DK01 0003</title>
+      <fullAddress> 
+197 E MICHIGAN AVE 
+ 
+YPSILANTI, MI 48198</fullAddress>
+      <incidentIdShort>15_07_06 DK01 0003</incidentIdShort>
+      <incidentId>15_07_06 DK01 0003</incidentId>
+      <incidentName>Robbery</incidentName>
+      <type></type>
+      <lastModified>Tue, 07 Jul 2015 19:43:38 GMT</lastModified>
+      <addressName></addressName>
+      <address1>197 E MICHIGAN AVE</address1>
+      <address2></address2>
+      <city>YPSILANTI</city>
+      <state>MI</state>
+      <zip>48198</zip>
+      <started>Mon, 06 Jul 2015 18:53:53 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.2411582472604 -83.6072955465546</georss:point>
+    </item>
+    <item>
+      <title>15_07_06 jody1 0001</title>
+      <fullAddress> 
+2222 Fuller Ct 
+ 
+Ann Arbor, Michigan 48105</fullAddress>
+      <incidentIdShort>15_07_06 jody1 0001</incidentIdShort>
+      <incidentId>15_07_06 jody1 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Mon, 06 Jul 2015 15:02:48 GMT</lastModified>
+      <addressName></addressName>
+      <address1>2222 Fuller Ct</address1>
+      <address2></address2>
+      <city>Ann Arbor</city>
+      <state>Michigan</state>
+      <zip>48105</zip>
+      <started>Mon, 06 Jul 2015 15:02:48 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.2863980908177 -83.7176800277948</georss:point>
+    </item>
+    <item>
+      <title>15_07_06 DK01 0001</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_07_06 DK01 0001</incidentIdShort>
+      <incidentId>15_07_06 DK01 0001</incidentId>
+      <incidentName>Fire at MCDonalds</incidentName>
+      <type></type>
+      <lastModified>Mon, 06 Jul 2015 14:38:54 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Mon, 06 Jul 2015 14:29:31 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>42.2510699998676 -83.6658600000964</georss:point>
+    </item>
+    <item>
+      <title>3005</title>
+      <fullAddress>Mercy West Medical Center 
+177 N Alexandria Ave 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>3005</incidentIdShort>
+      <incidentId>3005</incidentId>
+      <incidentName>Auto Accident</incidentName>
+      <type>Vehicle.Auto_Accident</type>
+      <lastModified>Mon, 06 Jul 2015 14:11:33 GMT</lastModified>
+      <addressName>Mercy West Medical Center</addressName>
+      <address1>177 N Alexandria Ave</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Mon, 06 Jul 2015 14:11:39 GMT</started>
+      <ended></ended>
+      <resources>samford E94 E211 HR56 E100 </resources>
+      <georss:point>34.074961 -118.298563</georss:point>
+    </item>
+    <item>
+      <title>3013</title>
+      <fullAddress>Chili's Southwest Grill 
+N Vernon AVE 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>3013</incidentIdShort>
+      <incidentId>3013</incidentId>
+      <incidentName>Chili's Southwest Grill</incidentName>
+      <type>SNAKE</type>
+      <lastModified>Mon, 06 Jul 2015 14:10:55 GMT</lastModified>
+      <addressName>Chili's Southwest Grill</addressName>
+      <address1>N Vernon AVE</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Mon, 06 Jul 2015 14:11:01 GMT</started>
+      <ended></ended>
+      <resources>E100 E211 E94 HR56 smcfarland samford </resources>
+      <georss:point>34.032929 -118.291832</georss:point>
+    </item>
+    <item>
+      <title>3003</title>
+      <fullAddress>Mercy West Medical Center 
+177 N Alexandria Ave 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>3003</incidentIdShort>
+      <incidentId>3003</incidentId>
+      <incidentName>Auto Accident</incidentName>
+      <type>Vehicle.Auto_Accident</type>
+      <lastModified>Mon, 06 Jul 2015 14:03:31 GMT</lastModified>
+      <addressName>Mercy West Medical Center</addressName>
+      <address1>177 N Alexandria Ave</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Mon, 06 Jul 2015 14:03:35 GMT</started>
+      <ended></ended>
+      <resources>samford E94 E211 HR56 E100 </resources>
+      <georss:point>34.074961 -118.298563</georss:point>
+    </item>
+    <item>
+      <title>166</title>
+      <fullAddress>Mercy West Medical Center 
+177 N Alexandria Ave 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>166</incidentIdShort>
+      <incidentId>166</incidentId>
+      <incidentName>Auto Accident</incidentName>
+      <type>Vehicle.Auto_Accident</type>
+      <lastModified>Tue, 30 Jun 2015 21:07:47 GMT</lastModified>
+      <addressName>Mercy West Medical Center</addressName>
+      <address1>177 N Alexandria Ave</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Tue, 30 Jun 2015 13:47:08 GMT</started>
+      <ended></ended>
+      <resources>BC15 BC721 BC723 E11 E115 E18 E703 RA104 SKALASA T66 </resources>
+      <georss:point>34.074961 -118.298563</georss:point>
+    </item>
+    <item>
+      <title>Test 5</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>Test 5</incidentIdShort>
+      <incidentId>Test 5</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Tue, 30 Jun 2015 13:47:31 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Mon, 29 Jun 2015 22:46:14 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>26.2743352361556 127.755939876756</georss:point>
+    </item>
+    <item>
+      <title>15_06_26 0001</title>
+      <fullAddress> 
+1521 BROWN RD 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_06_26 0001</incidentIdShort>
+      <incidentId>15_06_26 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Tue, 30 Jun 2015 13:51:17 GMT</lastModified>
+      <addressName></addressName>
+      <address1>1521 BROWN RD</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Fri, 26 Jun 2015 20:20:06 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.2344107224761 -116.060648003428</georss:point>
+    </item>
+    <item>
+      <title>15_06_25 Jon 0001</title>
+      <fullAddress> 
+WORLD WAY N 
+ 
+LOS ANGELES, CA 90045</fullAddress>
+      <incidentIdShort>15_06_25 Jon 0001</incidentIdShort>
+      <incidentId>15_06_25 Jon 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 25 Jun 2015 19:11:21 GMT</lastModified>
+      <addressName></addressName>
+      <address1>WORLD WAY N</address1>
+      <address2></address2>
+      <city>LOS ANGELES</city>
+      <state>CA</state>
+      <zip>90045</zip>
+      <started>Thu, 25 Jun 2015 16:28:00 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>33.9461185972503 -118.401176522397</georss:point>
+    </item>
+    <item>
+      <title>165</title>
+      <fullAddress>Mercy Westlakes Sleep Center 
+177 N Alexandria Ave 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>165</incidentIdShort>
+      <incidentId>165</incidentId>
+      <incidentName>Mercy Westlakes Sleep Center</incidentName>
+      <type>AED</type>
+      <lastModified>Mon, 29 Jun 2015 21:21:35 GMT</lastModified>
+      <addressName>Mercy Westlakes Sleep Center</addressName>
+      <address1>177 N Alexandria Ave</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Sun, 21 Jun 2015 12:47:00 GMT</started>
+      <ended></ended>
+      <resources>CP2 E12 SKALASA T105 T11 </resources>
+      <georss:point>34.069278 -118.323418</georss:point>
+    </item>
+    <item>
+      <title>164</title>
+      <fullAddress>Dodger Stadium 
+1000 Elysian Park Ave 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>164</incidentIdShort>
+      <incidentId>164</incidentId>
+      <incidentName>Dodger Stadium Explosion</incidentName>
+      <type>CrimeOrTerrorism_Terrorism_Bomb_Explosion</type>
+      <lastModified>Fri, 26 Jun 2015 09:04:39 GMT</lastModified>
+      <addressName>Dodger Stadium</addressName>
+      <address1>1000 Elysian Park Ave</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Sun, 21 Jun 2015 12:42:39 GMT</started>
+      <ended></ended>
+      <resources>BC724 CP88 SKALASA T20 T21 </resources>
+      <georss:point>34.073455488136 -118.240192778919</georss:point>
+    </item>
+    <item>
+      <title>163</title>
+      <fullAddress>Mercy Westlakes Sleep Center 
+177 N Alexandria Ave 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>163</incidentIdShort>
+      <incidentId>163</incidentId>
+      <incidentName>Mercy Westlakes Sleep Center</incidentName>
+      <type>AED</type>
+      <lastModified>Tue, 30 Jun 2015 22:13:57 GMT</lastModified>
+      <addressName>Mercy Westlakes Sleep Center</addressName>
+      <address1>177 N Alexandria Ave</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Sun, 21 Jun 2015 12:42:15 GMT</started>
+      <ended></ended>
+      <resources>E115 E15 HT1 RA26 T33 </resources>
+      <georss:point>34.069278 -118.323418</georss:point>
+    </item>
+    <item>
+      <title>162</title>
+      <fullAddress>Marzetti Foods - Plant 
+1404 W Adams BLVD 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>162</incidentIdShort>
+      <incidentId>162</incidentId>
+      <incidentName>Marzetti Foods - Plant</incidentName>
+      <type>HAZFIXK</type>
+      <lastModified>Sun, 21 Jun 2015 12:42:09 GMT</lastModified>
+      <addressName>Marzetti Foods - Plant</addressName>
+      <address1>1404 W Adams BLVD</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Sun, 21 Jun 2015 12:42:14 GMT</started>
+      <ended></ended>
+      <resources>HT1 RA105 T26 T10 E13 </resources>
+      <georss:point>34.032571 -118.291921</georss:point>
+    </item>
+    <item>
+      <title>161</title>
+      <fullAddress>Dahl's Foods 
+2128 W Sunset Blvd 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>161</incidentIdShort>
+      <incidentId>161</incidentId>
+      <incidentName>Dahl's Foods (</incidentName>
+      <type>ALARMT</type>
+      <lastModified>Sun, 21 Jun 2015 12:41:41 GMT</lastModified>
+      <addressName>Dahl's Foods</addressName>
+      <address1>2128 W Sunset Blvd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Sun, 21 Jun 2015 12:41:46 GMT</started>
+      <ended></ended>
+      <resources>HT1 E94 E100 BC724 T1 </resources>
+      <georss:point>34.077244 -118.264692</georss:point>
+    </item>
+    <item>
+      <title>160</title>
+      <fullAddress>Mercy Westlakes ASC/Capital Orthopedics 
+4180 W Wilshire Blvd 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>160</incidentIdShort>
+      <incidentId>160</incidentId>
+      <incidentName>Mercy Westlakes ASC/Capital Orthopedics</incidentName>
+      <type>XFMR</type>
+      <lastModified>Sun, 21 Jun 2015 12:40:21 GMT</lastModified>
+      <addressName>Mercy Westlakes ASC/Capital Orthopedics</addressName>
+      <address1>4180 W Wilshire Blvd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Sun, 21 Jun 2015 12:40:26 GMT</started>
+      <ended></ended>
+      <resources>HT1 RA878 T2 E19 HR56 </resources>
+      <georss:point>34.061541 -118.318686</georss:point>
+    </item>
+    <item>
+      <title>159</title>
+      <fullAddress>Hollywood and Highland 
+6801 W Hollywood Blvd 
+ 
+Los Angeles, 6CA </fullAddress>
+      <incidentIdShort>159</incidentIdShort>
+      <incidentId>159</incidentId>
+      <incidentName>Hollywood Hazmat Explosion</incidentName>
+      <type>Hazmat</type>
+      <lastModified>Sun, 21 Jun 2015 12:40:19 GMT</lastModified>
+      <addressName>Hollywood and Highland</addressName>
+      <address1>6801 W Hollywood Blvd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>6CA</state>
+      <zip></zip>
+      <started>Sun, 21 Jun 2015 12:40:23 GMT</started>
+      <ended></ended>
+      <resources>HT1 E20 E16 E211 E94 </resources>
+      <georss:point>34.102287258 -118.339068224</georss:point>
+    </item>
+    <item>
+      <title>158</title>
+      <fullAddress>Dahl's Foods 
+2128 W Sunset Blvd 
+ 
+Los Angeles, CA </fullAddress>
+      <incidentIdShort>158</incidentIdShort>
+      <incidentId>158</incidentId>
+      <incidentName>Dahl's Foods (</incidentName>
+      <type>ALARMT</type>
+      <lastModified>Sun, 21 Jun 2015 12:38:07 GMT</lastModified>
+      <addressName>Dahl's Foods</addressName>
+      <address1>2128 W Sunset Blvd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>CA</state>
+      <zip></zip>
+      <started>Sun, 21 Jun 2015 12:38:12 GMT</started>
+      <ended></ended>
+      <resources>BC18 HT1 RA105 RA878 T12 RA104 T1 E112 E100 </resources>
+      <georss:point>34.077244 -118.264692</georss:point>
+    </item>
+    <item>
+      <title>15_06_18 jody1 0002</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_06_18 jody1 0002</incidentIdShort>
+      <incidentId>15_06_18 jody1 0002</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 18 Jun 2015 19:20:08 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Thu, 18 Jun 2015 19:20:08 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>31.8033249734067 -95.8429461442622</georss:point>
+    </item>
+    <item>
+      <title>15_06_14 0002</title>
+      <fullAddress> 
+1523 BROWN RD 
+ 
+TWENTYNINE PALMS, CA 92277</fullAddress>
+      <incidentIdShort>15_06_14 0002</incidentIdShort>
+      <incidentId>15_06_14 0002</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Tue, 16 Jun 2015 00:25:41 GMT</lastModified>
+      <addressName></addressName>
+      <address1>1523 BROWN RD</address1>
+      <address2></address2>
+      <city>TWENTYNINE PALMS</city>
+      <state>CA</state>
+      <zip>92277</zip>
+      <started>Mon, 15 Jun 2015 01:18:47 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.2345044723995 -116.060685503397</georss:point>
+    </item>
+    <item>
+      <title>15_06_12 RCETTWEST 0003</title>
+      <fullAddress> 
+TIGER AVE 
+ 
+SAN DIEGO, CA 92145</fullAddress>
+      <incidentIdShort>15_06_12 RCETTWEST 0003</incidentIdShort>
+      <incidentId>15_06_12 RCETTWEST 0003</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Sat, 13 Jun 2015 19:59:00 GMT</lastModified>
+      <addressName></addressName>
+      <address1>TIGER AVE</address1>
+      <address2></address2>
+      <city>SAN DIEGO</city>
+      <state>CA</state>
+      <zip>92145</zip>
+      <started>Fri, 12 Jun 2015 19:36:28 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>32.8824268354308 -117.141915195186</georss:point>
+    </item>
+    <item>
+      <title>15_06_04 RCETTWEST 0009</title>
+      <fullAddress> 
+9425 KEARNY VILLA RD 
+ 
+SAN DIEGO, CA 92126</fullAddress>
+      <incidentIdShort>15_06_04 RCETTWEST 0009</incidentIdShort>
+      <incidentId>15_06_04 RCETTWEST 0009</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 11 Jun 2015 16:23:07 GMT</lastModified>
+      <addressName></addressName>
+      <address1>9425 KEARNY VILLA RD</address1>
+      <address2></address2>
+      <city>SAN DIEGO</city>
+      <state>CA</state>
+      <zip>92126</zip>
+      <started>Thu, 04 Jun 2015 18:08:57 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>32.8944200064551 -117.119826560978</georss:point>
+    </item>
+    <item>
+      <title>15_06_04 RCETTWEST 0008</title>
+      <fullAddress> 
+MIRA MESA BLVD 
+ 
+SAN DIEGO, CA 92126</fullAddress>
+      <incidentIdShort>15_06_04 RCETTWEST 0008</incidentIdShort>
+      <incidentId>15_06_04 RCETTWEST 0008</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 04 Jun 2015 18:07:07 GMT</lastModified>
+      <addressName></addressName>
+      <address1>MIRA MESA BLVD</address1>
+      <address2></address2>
+      <city>SAN DIEGO</city>
+      <state>CA</state>
+      <zip>92126</zip>
+      <started>Thu, 04 Jun 2015 18:07:07 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>32.9170915109187 -117.12468066143</georss:point>
+    </item>
+    <item>
+      <title>15_06_04 RCETTWEST 0007</title>
+      <fullAddress> 
+45456 KANEOHE BAY DR 
+ 
+HONOLULU, HI 96744</fullAddress>
+      <incidentIdShort>15_06_04 RCETTWEST 0007</incidentIdShort>
+      <incidentId>15_06_04 RCETTWEST 0007</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 04 Jun 2015 18:05:33 GMT</lastModified>
+      <addressName></addressName>
+      <address1>45456 KANEOHE BAY DR</address1>
+      <address2></address2>
+      <city>HONOLULU</city>
+      <state>HI</state>
+      <zip>96744</zip>
+      <started>Thu, 04 Jun 2015 18:05:14 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>21.4033055105473 -157.79748500956</georss:point>
+    </item>
+    <item>
+      <title>15_06_04 RCETTWEST 0006</title>
+      <fullAddress> 
+8357 MIRA MESA BLVD 
+ 
+SAN DIEGO, CA 92126</fullAddress>
+      <incidentIdShort>15_06_04 RCETTWEST 0006</incidentIdShort>
+      <incidentId>15_06_04 RCETTWEST 0006</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 04 Jun 2015 18:03:25 GMT</lastModified>
+      <addressName></addressName>
+      <address1>8357 MIRA MESA BLVD</address1>
+      <address2></address2>
+      <city>SAN DIEGO</city>
+      <state>CA</state>
+      <zip>92126</zip>
+      <started>Thu, 04 Jun 2015 18:03:25 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>32.9126371599158 -117.143640206724</georss:point>
+    </item>
+    <item>
+      <title>15_06_04 RCETTWEST 0005</title>
+      <fullAddress> 
+MIRA MESA BLVD 
+ 
+SAN DIEGO, CA 92126</fullAddress>
+      <incidentIdShort>15_06_04 RCETTWEST 0005</incidentIdShort>
+      <incidentId>15_06_04 RCETTWEST 0005</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 04 Jun 2015 18:00:52 GMT</lastModified>
+      <addressName></addressName>
+      <address1>MIRA MESA BLVD</address1>
+      <address2></address2>
+      <city>SAN DIEGO</city>
+      <state>CA</state>
+      <zip>92126</zip>
+      <started>Thu, 04 Jun 2015 18:00:52 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>32.917205725047 -117.124794875558</georss:point>
+    </item>
+    <item>
+      <title>15_06_04 Lowery 0004</title>
+      <fullAddress> 
+8449 ARJONS DR 
+ 
+SAN DIEGO, CA 92126</fullAddress>
+      <incidentIdShort>15_06_04 Lowery 0004</incidentIdShort>
+      <incidentId>15_06_04 Lowery 0004</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 04 Jun 2015 18:09:48 GMT</lastModified>
+      <addressName></addressName>
+      <address1>8449 ARJONS DR</address1>
+      <address2></address2>
+      <city>SAN DIEGO</city>
+      <state>CA</state>
+      <zip>92126</zip>
+      <started>Thu, 04 Jun 2015 17:41:20 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>32.892832531745 -117.141163993065</georss:point>
+    </item>
+    <item>
+      <title>15_06_04 RCETTWEST 0003</title>
+      <fullAddress> 
+19498 TIGER AVE 
+ 
+SAN DIEGO, CA 92145</fullAddress>
+      <incidentIdShort>15_06_04 RCETTWEST 0003</incidentIdShort>
+      <incidentId>15_06_04 RCETTWEST 0003</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 04 Jun 2015 17:41:19 GMT</lastModified>
+      <addressName></addressName>
+      <address1>19498 TIGER AVE</address1>
+      <address2></address2>
+      <city>SAN DIEGO</city>
+      <state>CA</state>
+      <zip>92145</zip>
+      <started>Thu, 04 Jun 2015 17:41:19 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>32.8822562017933 -117.142041208928</georss:point>
+    </item>
+    <item>
+      <title>15_06_04 Lowery 0001</title>
+      <fullAddress> 
+7863 DUNBROOK RD 
+ 
+SAN DIEGO, CA 92126</fullAddress>
+      <incidentIdShort>15_06_04 Lowery 0001</incidentIdShort>
+      <incidentId>15_06_04 Lowery 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Sat, 13 Jun 2015 20:01:58 GMT</lastModified>
+      <addressName></addressName>
+      <address1>7863 DUNBROOK RD</address1>
+      <address2></address2>
+      <city>SAN DIEGO</city>
+      <state>CA</state>
+      <zip>92126</zip>
+      <started>Thu, 04 Jun 2015 17:14:43 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>32.8919228989259 -117.151726579079</georss:point>
+    </item>
+    <item>
+      <title>15_06_04 RCETTWEST 0001</title>
+      <fullAddress> 
+1935 GUY ST 
+ 
+SAN DIEGO, CA 92103</fullAddress>
+      <incidentIdShort>15_06_04 RCETTWEST 0001</incidentIdShort>
+      <incidentId>15_06_04 RCETTWEST 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Thu, 04 Jun 2015 17:22:03 GMT</lastModified>
+      <addressName></addressName>
+      <address1>1935 GUY ST</address1>
+      <address2></address2>
+      <city>SAN DIEGO</city>
+      <state>CA</state>
+      <zip>92103</zip>
+      <started>Thu, 04 Jun 2015 17:11:11 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>32.7473298622114 -117.184316132945</georss:point>
+    </item>
+    <item>
+      <title>Anhydrous Incident</title>
+      <fullAddress> 
+1407 W Adams Blvd 
+ 
+Los Angeles, California 90007</fullAddress>
+      <incidentIdShort>Anhydrous Incident</incidentIdShort>
+      <incidentId>Anhydrous Incident</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Sat, 13 Jun 2015 19:55:53 GMT</lastModified>
+      <addressName></addressName>
+      <address1>1407 W Adams Blvd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>California</state>
+      <zip>90007</zip>
+      <started>Thu, 04 Jun 2015 14:41:01 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.0327953401214 -118.291723435797</georss:point>
+    </item>
+    <item>
+      <title>15_05_18 RCETTWEST 0001</title>
+      <fullAddress> 
+204 N COAST HWY 
+ 
+OCEANSIDE, CA 92054</fullAddress>
+      <incidentIdShort>15_05_18 RCETTWEST 0001</incidentIdShort>
+      <incidentId>15_05_18 RCETTWEST 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Sat, 13 Jun 2015 19:57:14 GMT</lastModified>
+      <addressName></addressName>
+      <address1>204 N COAST HWY</address1>
+      <address2></address2>
+      <city>OCEANSIDE</city>
+      <state>CA</state>
+      <zip>92054</zip>
+      <started>Tue, 02 Jun 2015 21:28:30 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>33.1959627277865 -117.379553378874</georss:point>
+    </item>
+    <item>
+      <title>15_05_22 CAMP FUJI 0001</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_05_22 CAMP FUJI 0001</incidentIdShort>
+      <incidentId>15_05_22 CAMP FUJI 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Fri, 22 May 2015 01:43:48 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Fri, 22 May 2015 01:43:48 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>35.31717 138.869083333333</georss:point>
+    </item>
+    <item>
+      <title>15_05_21 WF Rogers 0001</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_05_21 WF Rogers 0001</incidentIdShort>
+      <incidentId>15_05_21 WF Rogers 0001</incidentId>
+      <incidentName>HAZMAT</incidentName>
+      <type></type>
+      <lastModified>Thu, 21 May 2015 16:38:58 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Thu, 21 May 2015 16:38:58 GMT</started>
+      <ended></ended>
+      <resources />
+    </item>
+    <item>
+      <title>15_05_20 Mujuk EOC 0001</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_05_20 Mujuk EOC 0001</incidentIdShort>
+      <incidentId>15_05_20 Mujuk EOC 0001</incidentId>
+      <incidentName>test</incidentName>
+      <type></type>
+      <lastModified>Tue, 19 May 2015 22:55:56 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Tue, 19 May 2015 22:55:36 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>35.9594729979765 129.41596989496</georss:point>
+    </item>
+    <item>
+      <title>15_05_19 MCLB FD IC 0002</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_05_19 MCLB FD IC 0002</incidentIdShort>
+      <incidentId>15_05_19 MCLB FD IC 0002</incidentId>
+      <incidentName>chow hall</incidentName>
+      <type></type>
+      <lastModified>Tue, 19 May 2015 21:14:47 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Tue, 19 May 2015 21:14:47 GMT</started>
+      <ended></ended>
+      <resources />
+    </item>
+    <item>
+      <title>15_05_19 RCETTWEST 0003</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_05_19 RCETTWEST 0003</incidentIdShort>
+      <incidentId>15_05_19 RCETTWEST 0003</incidentId>
+      <incidentName>BARSOW MCD</incidentName>
+      <type></type>
+      <lastModified>Tue, 19 May 2015 21:14:02 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Tue, 19 May 2015 21:14:02 GMT</started>
+      <ended></ended>
+      <resources />
+    </item>
+    <item>
+      <title>15_05_19 MCLB HM1 0004</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_05_19 MCLB HM1 0004</incidentIdShort>
+      <incidentId>15_05_19 MCLB HM1 0004</incidentId>
+      <incidentName>BARSTOW MCD</incidentName>
+      <type></type>
+      <lastModified>Tue, 19 May 2015 21:13:38 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Tue, 19 May 2015 21:13:38 GMT</started>
+      <ended></ended>
+      <resources />
+    </item>
+    <item>
+      <title>15_05_19 boo 0001</title>
+      <fullAddress> 
+1731 S La Cienega Blvd 
+ 
+Los Angeles, California 90035</fullAddress>
+      <incidentIdShort>15_05_19 boo 0001</incidentIdShort>
+      <incidentId>15_05_19 boo 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Tue, 19 May 2015 20:45:04 GMT</lastModified>
+      <addressName></addressName>
+      <address1>1731 S La Cienega Blvd</address1>
+      <address2></address2>
+      <city>Los Angeles</city>
+      <state>California</state>
+      <zip>90035</zip>
+      <started>Tue, 19 May 2015 20:44:37 GMT</started>
+      <ended></ended>
+      <resources>BOO </resources>
+      <georss:point>34.0462566604063 -118.376462864927</georss:point>
+    </item>
+    <item>
+      <title>15_05_19 MCLB HM1 0003</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_05_19 MCLB HM1 0003</incidentIdShort>
+      <incidentId>15_05_19 MCLB HM1 0003</incidentId>
+      <incidentName>BSTOW GAS</incidentName>
+      <type></type>
+      <lastModified>Tue, 19 May 2015 20:20:40 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Tue, 19 May 2015 20:19:34 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.87222 -116.951666666667</georss:point>
+    </item>
+    <item>
+      <title>15_05_19 RCETTWEST 0002</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_05_19 RCETTWEST 0002</incidentIdShort>
+      <incidentId>15_05_19 RCETTWEST 0002</incidentId>
+      <incidentName>BSTOW GAS</incidentName>
+      <type></type>
+      <lastModified>Tue, 19 May 2015 20:18:24 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Tue, 19 May 2015 20:18:24 GMT</started>
+      <ended></ended>
+      <resources />
+    </item>
+    <item>
+      <title>15_05_19 MCLB FD IC 0001</title>
+      <fullAddress> 
+S IWO JIMA ST 
+ 
+BARSTOW, CA 92311</fullAddress>
+      <incidentIdShort>15_05_19 MCLB FD IC 0001</incidentIdShort>
+      <incidentId>15_05_19 MCLB FD IC 0001</incidentId>
+      <incidentName>GAS STATION</incidentName>
+      <type></type>
+      <lastModified>Tue, 19 May 2015 20:24:23 GMT</lastModified>
+      <addressName></addressName>
+      <address1>S IWO JIMA ST</address1>
+      <address2></address2>
+      <city>BARSTOW</city>
+      <state>CA</state>
+      <zip>92311</zip>
+      <started>Tue, 19 May 2015 20:18:02 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.8721045963204 -116.951783473896</georss:point>
+    </item>
+    <item>
+      <title>15_05_19 MCLB HM1 0002</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_05_19 MCLB HM1 0002</incidentIdShort>
+      <incidentId>15_05_19 MCLB HM1 0002</incidentId>
+      <incidentName>MCLB incidento</incidentName>
+      <type></type>
+      <lastModified>Tue, 19 May 2015 20:17:54 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Tue, 19 May 2015 20:17:54 GMT</started>
+      <ended></ended>
+      <resources />
+    </item>
+    <item>
+      <title>15_05_19 MCLB HM1 0001</title>
+      <fullAddress> 
+ 
+ 
+,  </fullAddress>
+      <incidentIdShort>15_05_19 MCLB HM1 0001</incidentIdShort>
+      <incidentId>15_05_19 MCLB HM1 0001</incidentId>
+      <incidentName></incidentName>
+      <type></type>
+      <lastModified>Wed, 29 Jul 2015 02:08:20 GMT</lastModified>
+      <addressName></addressName>
+      <address1></address1>
+      <address2></address2>
+      <city></city>
+      <state></state>
+      <zip></zip>
+      <started>Tue, 19 May 2015 19:41:35 GMT</started>
+      <ended></ended>
+      <resources />
+      <georss:point>34.87222 -116.951666666667</georss:point>
+    </item>
+  </channel>
+</rss>
