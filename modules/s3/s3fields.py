@@ -693,13 +693,21 @@ class S3Represent(object):
         # Use the given rows to lookup the values
         pop = lookup.pop
         represent_row = self.represent_row
+        represent_path = self._represent_path
         if rows and not self.custom_lookup:
-            _rows = self.rows
+            rows_ = dict((row[key], row) for row in rows)
+            self.rows.update(rows_)
             for row in rows:
                 k = row[key]
-                _rows[k] = row
                 if k not in theset:
-                    theset[k] = represent_row(row)
+                    if h:
+                        theset[k] = represent_path(k,
+                                                   row,
+                                                   rows = rows_,
+                                                   hierarchy = h,
+                                                   )
+                    else:
+                        theset[k] = represent_row(row)
                 if pop(k, None):
                     items[keys.get(k, k)] = theset[k]
 
@@ -720,13 +728,13 @@ class S3Represent(object):
             rows = dict((row[key], row) for row in rows)
             self.rows.update(rows)
             if h:
-                represent_path = self._represent_path
                 for k, row in rows.items():
                     if lookup.pop(k, None):
                         items[keys.get(k, k)] = represent_path(k,
                                                                row,
-                                                               rows=rows,
-                                                               hierarchy=h)
+                                                               rows = rows,
+                                                               hierarchy = h,
+                                                               )
             else:
                 for k, row in rows.items():
                     lookup.pop(k, None)
