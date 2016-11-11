@@ -115,7 +115,7 @@ class S3SchoolModel(S3Model):
                                                      sort=True
                                                      )),
                                sortby = "name",
-                               comment = S3PopupLink(c = "inv",
+                               comment = S3PopupLink(c = "edu",
                                                      f = "school_type",
                                                      label = ADD_SCHOOL_TYPE,
                                                      title = T("School Type"),
@@ -184,6 +184,11 @@ class S3SchoolModel(S3Model):
                            label = T("Email"),
                            represent = lambda v: v or NONE,
                            requires = IS_EMPTY_OR(IS_EMAIL())
+                           ),
+                     Field("website",
+                           label = T("Website"),
+                           represent = lambda url: s3_url_represent(url),
+                           requires = IS_EMPTY_OR(IS_URL()),
                            ),
                      Field("obsolete", "boolean",
                            default = False,

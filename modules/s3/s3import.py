@@ -627,7 +627,8 @@ class S3Importer(S3Method):
                                          id = None,
                                          tree = None,
                                          job_id = job_id,
-                                         delete_job = True)
+                                         delete_job = True,
+                                         )
         # @todo: check result
 
         # Delete the upload entry
@@ -1126,7 +1127,8 @@ class S3Importer(S3Method):
             # Now commit the remaining items
             resource.import_xml(None,
                                 job_id = job_id,
-                                ignore_errors = True)
+                                ignore_errors = True,
+                                )
             return resource.error is None
 
     # -------------------------------------------------------------------------
@@ -4065,7 +4067,8 @@ class S3BulkImporter(object):
                 resource.import_xml(csv,
                                     format="csv",
                                     stylesheet=task[4],
-                                    extra_data=extra_data)
+                                    extra_data=extra_data,
+                                    )
             except SyntaxError, e:
                 self.errorList.append("WARNING: import error - %s (file: %s, stylesheet: %s)" %
                                      (e, filename, task[4]))
@@ -4596,9 +4599,10 @@ class S3BulkImporter(object):
         restricted(code, environment, layer=filename)
 
     # -------------------------------------------------------------------------
-    def import_xml(self, filepath, prefix, resourcename, format):
+    def import_xml(self, filepath, prefix, resourcename, format, source_type=None):
         """
             Import XML data using an XSLT: static/formats/<format>/import.xsl
+            Setting the source_type is possible
         """
 
         # Remove any spaces and enclosing double quote
@@ -4637,7 +4641,10 @@ class S3BulkImporter(object):
         auth = current.auth
         auth.rollback = True
         try:
-            resource.import_xml(File, stylesheet=stylesheet)
+            resource.import_xml(File,
+                                stylesheet = stylesheet,
+                                source_type = source_type,
+                                )
         except SyntaxError, e:
             self.errorList.append("WARNING: import error - %s (file: %s, stylesheet: %s/import.xsl)" %
                                  (e, filepath, format))

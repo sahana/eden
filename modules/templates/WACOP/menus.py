@@ -47,8 +47,11 @@ class S3MainMenu(default.S3MainMenu):
                 MM("Map", c="gis", f="index"),
                 #MM("Dashboard", c="event", f="event", m="summary"),
                 MM("Incidents", c="event", f="incident", m="summary"),
+                #MM("Alerts", c="event", f="alert", m="summary"),
                 MM("Events", c="event", f="event", m="summary"),
+                #MM("Tasks", c="project", f="task", m="summary"),
                 MM("Resources", c="org", f="resource", m="summary"),
+                #MM("Contacts", c="hrm", f="staff", m="summary"),
                 ]
 
     # -------------------------------------------------------------------------

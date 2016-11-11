@@ -1,0 +1,36 @@
+Code,Name,Organisation,Branch,Phone,Email,Website,Country,L1,L2,L3,L4,L5,Building,Address,Postcode,Lat,Lon
+HQ,Fire Headquarters,Seattle Fire Department,Battalion 2,,,http://www.seattle.gov/fire/firestations/stations.htm#staHQ,US,Washington,King,Seattle,,,,301 2nd Ave,,47.59986,-122.33195
+2,Fire Station #2,Seattle Fire Department,Battalion 2,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs02/2.htm,US,Washington,King,Seattle,,,,301 Aurora Ave N,,47.616188,-122.344737
+3,Fire Station #3,Seattle Fire Department,Battalion 4,,,http://www.seattle.gov/fire/firestations/stations.htm#sta3,US,Washington,King,Seattle,,,,1735 West Thurman,,47.6555,-122.37875
+5,Fire Station #5,Seattle Fire Department,Battalion 2,,,http://www.seattle.gov/fire/firestations/stations.htm#sta5,US,Washington,King,Seattle,,,,925 Alaskan Wy,,47.603643,-122.338829
+6,Fire Station #6,Seattle Fire Department,Battalion 5,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs06/6.htm,US,Washington,King,Seattle,,,,101 23rd Av S,,47.601462,-122.302712
+8,Fire Station #8,Seattle Fire Department,Battalion 4,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs08/8.htm,US,Washington,King,Seattle,,,,110 Lee St,,47.631175,-122.354985
+9,Fire Station #9,Seattle Fire Department,Battalion 4,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs09/9.htm,US,Washington,King,Seattle,,,,3829 Linden Av N,,47.653625,-122.348885
+10,Fire Station #10,Seattle Fire Department,Battalion 2,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs10/10.htm,US,Washington,King,Seattle,,,,400 S Washington St,,47.599846,-122.331979
+11,Fire Station #11,Seattle Fire Department,Battalion 7,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs11/11.htm,US,Washington,King,Seattle,,,,1514 SW Holden St,,47.533934,-122.354695
+13,Fire Station #13,Seattle Fire Department,Battalion 5,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs13/13.htm,US,Washington,King,Seattle,,,,3601 Beacon Av S,,47.571742,-122.308646
+14,Fire Station #14,Seattle Fire Department,Battalion 5,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs14/14.htm,US,Washington,King,Seattle,,,,3224 4th Av S,,47.574617,-122.328559
+16,Fire Station #16,Seattle Fire Department,Battalion 6,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs16/16.htm,US,Washington,King,Seattle,,,,6846 Oswego Pl NE,,47.679124,-122.323198
+17,Fire Station #17,Seattle Fire Department,Battalion 6,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs17/17.htm,US,Washington,King,Seattle,,,,4557 11th Avenue NE,,47.665167,-122.316659
+18,Fire Station #18,Seattle Fire Department,Battalion 4,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs18/18.htm,US,Washington,King,Seattle,,,,1521 NW Market St,,47.66839,-122.377331
+20,Fire Station #20,Seattle Fire Department,Battalion 4,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs20/20.htm,US,Washington,King,Seattle,,,,3205 13th Av W,,47.648813,-122.373859
+21,Fire Station #21,Seattle Fire Department,Battalion 4,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs21/21.htm,US,Washington,King,Seattle,,,,7304 Greenwood Av N,,47.682034,-122.354972
+22,Fire Station #22,Seattle Fire Department,Battalion 6,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs22/22.htm,US,Washington,King,Seattle,,,,901 E Roanoke ST,,47.642981,-122.32085
+24,Fire Station #24,Seattle Fire Department,Battalion 4,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs24/24.htm,US,Washington,King,Seattle,,,,401 N 130th St,,47.723053,-122.353826
+25,Fire Station #25,Seattle Fire Department,Battalion 2,,,,US,Washington,King,Seattle,,,,1300 E Pine St,,47.615568,-122.315096
+26,Fire Station #26,Seattle Fire Department,Battalion 7,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs26/26.htm,US,Washington,King,Seattle,,,,800 S Cloverdale St,,47.526718,-122.322376
+27,Fire Station #27,Seattle Fire Department,Battalion 7,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs27/27.htm,US,Washington,King,Seattle,,,,1000 S Myrtle St,,47.53966,-122.319907
+28,Fire Station #28,Seattle Fire Department,Battalion 5,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs28/28.htm,US,Washington,King,Seattle,,,,5968 Rainier Av S,,47.548476,-122.276503
+29,Fire Station #29,Seattle Fire Department,Battalion 7,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs29/29.htm,US,Washington,King,Seattle,,,,2139 Ferry Av SW,,47.584393,-122.38875
+30,Fire Station #30,Seattle Fire Department,Battalion 5,,,,US,Washington,King,Seattle,,,,2931 S Mount Baker Blvd,,47.575614,-122.294701
+31,Fire Station #31,Seattle Fire Department,Battalion 6,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs31/31.htm,US,Washington,King,Seattle,,,,1319 N Northgate Wy,,47.704816,-122.341029
+32,Fire Station #32,Seattle Fire Department,Battalion 7,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs32/32.htm,US,Washington,King,Seattle,,,,3715 SW Alaska St,,47.560813,-122.379741
+33,Fire Station #33,Seattle Fire Department,Battalion 5,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs33/33.htm,US,Washington,King,Seattle,,,,9645 Renton Av S,,47.515927,-122.268662
+34,Fire Station #34,Seattle Fire Department,Battalion 2,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs34/34.htm,US,Washington,King,Seattle,,,,633 32nd Av E,,47.626,-122.291334
+35,Fire Station #35,Seattle Fire Department,Battalion 4,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs35/35.htm,US,Washington,King,Seattle,,,,8729 15th Av NW,,47.693288,-122.377173
+36,Fire Station #36,Seattle Fire Department,Battalion 7,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs36/36.htm,US,Washington,King,Seattle,,,,3600 23rd Av SW,,47.571034,-122.361734
+37,Fire Station #37,Seattle Fire Department,Battalion 7,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs37/37.htm,US,Washington,King,Seattle,,,,7300 35th Av SW,,47.537193,-122.376158
+38,Fire Station #38,Seattle Fire Department,Battalion 6,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs38/38.htm,US,Washington,King,Seattle,,,,5503 33rd Av NE,,47.668721,-122.293007
+39,Fire Station #39,Seattle Fire Department,Battalion 6,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs39/39.htm,US,Washington,King,Seattle,,,,12705 30th Av NE,,47.721342,-122.296691
+40,Fire Station #40,Seattle Fire Department,Battalion 6,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs40/40.htm,US,Washington,King,Seattle,,,,9401 35th Av NE,,47.696768,-122.290937
+41,Fire Station #41,Seattle Fire Department,Battalion 4,,,http://www.seattle.gov/fleetsfacilities/firelevy/facilities/fs41/41.htm,US,Washington,King,Seattle,,,,2416 34th Av W,,47.640129,-122.400527
