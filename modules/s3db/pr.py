@@ -160,9 +160,7 @@ class S3PersonEntity(S3Model):
                            deploy_alert = T("Deployment Alert"),
                            dvi_body = T("Body"),
                            dvi_morgue = T("Morgue"),
-                           # If we want this, then pe_id needs adding to the
-                           # table & configuring as a super-entity
-                           #fire_station = T("Fire Station"),
+                           fire_station = T("Fire Station"),
                            hms_hospital = T("Hospital"),
                            hrm_training_event = T("Training Event"),
                            inv_warehouse = T("Warehouse"),
@@ -170,10 +168,11 @@ class S3PersonEntity(S3Model):
                            org_group = org_group_label,
                            org_facility = T("Facility"),
                            org_office = T("Office"),
-                           pr_person = T("Person"),
-                           pr_group = T("Group"),
                            po_area = T("Recovery Outreach Area"),
                            po_household = T("Household"),
+                           police_station = T("Police Station"),
+                           pr_person = T("Person"),
+                           pr_group = T("Group"),
                            )
 
         pr_pentity_represent = pr_PersonEntityRepresent()

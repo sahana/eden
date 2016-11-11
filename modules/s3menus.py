@@ -1595,7 +1595,7 @@ class S3OptionsMenu(object):
         return M(c="patient")(
                     M("Patients", f="patient")(
                         M("Create", m="create"),
-                    )
+                    ),
                 )
 
     # -------------------------------------------------------------------------
@@ -1625,6 +1625,20 @@ class S3OptionsMenu(object):
                     M("Referral Agencies", f="organisation")(
                         M("Create", m="create"),
                     ),
+                )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def police():
+        """ Police """
+
+        return M(c="police")(
+                    M("Stations", f="station")(
+                        M("Create", m="create"),
+                    ),
+                    #M("Station Types", f="station_type")(
+                    #    M("Create", m="create"),
+                    #),
                 )
 
     # -------------------------------------------------------------------------

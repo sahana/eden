@@ -132,6 +132,7 @@ class S3Config(Storage):
         self.fin = Storage()
         # Allow templates to append rather than replace
         self.fin.currencies = {}
+        self.fire = Storage()
         # @ToDo: Move to self.ui
         self.frontpage = Storage()
         self.frontpage.rss = []
@@ -151,6 +152,7 @@ class S3Config(Storage):
         self.mobile = Storage()
         self.msg = Storage()
         self.org = Storage()
+        self.police = Storage()
         self.pr = Storage()
         self.proc = Storage()
         self.project = Storage()
@@ -3007,6 +3009,16 @@ class S3Config(Storage):
 
 
     # -------------------------------------------------------------------------
+    # Fire
+    #
+
+    def get_fire_station_code_unique(self):
+        """
+            Whether Fire Station code is unique
+        """
+        return self.fire.get("fire_station_unique", False)
+
+    # -------------------------------------------------------------------------
     # Hospital Registry
     #
     def get_hms_track_ctc(self):
@@ -3928,6 +3940,16 @@ class S3Config(Storage):
             Whether Organisations, Offices & Facilities should show a Tags tab
         """
         return self.org.get("tags", False)
+
+    # -------------------------------------------------------------------------
+    # Police
+    #
+
+    def get_police_station_code_unique(self):
+        """
+            Whether Police Station code is unique
+        """
+        return self.police.get("police_station_unique", False)
 
     # -------------------------------------------------------------------------
     # Persons

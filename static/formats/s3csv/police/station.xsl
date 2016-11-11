@@ -1,15 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?>
-<xsl:stylesheet version="1.0"
-    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-    xmlns:org="http://eden.sahanafoundation.org/org">
+<?xml version="1.0"?>
+<xsl:stylesheet
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         Schools - CSV Import Stylesheet
+         Police Stations - CSV Import Stylesheet
 
          CSV fields:
-         Code....................edu_school
-         Name....................edu_school
-         Type....................edu_school_type
+         Code....................police_station
+         Name....................police_station
+         Type....................police_station_type
          Organisation............org_organisation
          Branch..................org_organisation[_branch]
          Country.................gis_location.L0 Name or ISO2
@@ -23,10 +22,10 @@
          L5......................gis_location.L5
          Lat.....................gis_location.lat
          Lon.....................gis_location.lon
-         Phone...................edu_school
-         Email...................edu_school
-         Website.................edu_school
-         Comments................edu_school
+         Phone...................police_station
+         Email...................police_station
+         Website.................police_station
+         Comments................police_station
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
@@ -98,7 +97,7 @@
                          col[@field='L4'], '/',
                          col[@field='L5'])"/>
 
-    <xsl:key name="school_type" match="row" use="col[@field='Type']"/>
+    <xsl:key name="station_type" match="row" use="col[@field='Type']"/>
     <xsl:key name="organisation" match="row" use="col[@field='Organisation']"/>
     <xsl:key name="branch" match="row"
              use="concat(col[@field='Organisation'], '/', col[@field='Branch'])"/>
@@ -161,9 +160,9 @@
                 <xsl:call-template name="L5"/>
             </xsl:for-each>
 
-            <!-- School Types -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('school_type', col[@field='Type'])[1])]">
-                <xsl:call-template name="SchoolType" />
+            <!-- Police Station Types -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('station_type', col[@field='Type'])[1])]">
+                <xsl:call-template name="StationType" />
             </xsl:for-each>
 
             <!-- Top-level Organisations -->
@@ -187,7 +186,7 @@
                 </xsl:call-template>
             </xsl:for-each>
 
-            <!-- Schools -->
+            <!-- Stations -->
             <xsl:apply-templates select="table/row"/>
 
         </s3xml>
@@ -199,17 +198,17 @@
         <!-- Create the variables -->
         <xsl:variable name="OrgName" select="col[@field='Organisation']/text()"/>
         <xsl:variable name="BranchName" select="col[@field='Branch']/text()"/>
-        <xsl:variable name="SchoolName" select="col[@field='Name']/text()"/>
+        <xsl:variable name="StationName" select="col[@field='Name']/text()"/>
 
-        <resource name="edu_school">
+        <resource name="police_station">
             <xsl:attribute name="tuid">
-                <xsl:value-of select="$SchoolName"/>
+                <xsl:value-of select="$StationName"/>
             </xsl:attribute>
 
             <!-- Link to Location -->
             <reference field="location_id" resource="gis_location">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="$SchoolName"/>
+                    <xsl:value-of select="$StationName"/>
                 </xsl:attribute>
             </reference>
 
@@ -228,16 +227,16 @@
             </reference>
 
             <xsl:if test="col[@field='Type']!=''">
-                <reference field="school_type_id" resource="edu_school_type">
+                <reference field="station_type_id" resource="police_station_type">
                     <xsl:attribute name="tuid">
-                        <xsl:value-of select="concat('SchoolType:', col[@field='Type'])"/>
+                        <xsl:value-of select="concat('StationType:', col[@field='Type'])"/>
                     </xsl:attribute>
                 </reference>
             </xsl:if>
 
-            <!-- School data -->
+            <!-- Station data -->
             <data field="code"><xsl:value-of select="col[@field='Code']"/></data>
-            <data field="name"><xsl:value-of select="$SchoolName"/></data>
+            <data field="name"><xsl:value-of select="$StationName"/></data>
             <data field="phone"><xsl:value-of select="col[@field='Phone']"/></data>
             <data field="email"><xsl:value-of select="col[@field='Email']"/></data>
             <data field="website"><xsl:value-of select="col[@field='Website']"/></data>
@@ -286,14 +285,14 @@
     </xsl:template>
 
     <!-- ****************************************************************** -->
-    <xsl:template name="SchoolType">
+    <xsl:template name="StationType">
 
         <xsl:variable name="Type" select="col[@field='Type']"/>
 
         <xsl:if test="$Type!=''">
-            <resource name="edu_school_type">
+            <resource name="police_station_type">
                 <xsl:attribute name="tuid">
-                    <xsl:value-of select="concat('SchoolType:', $Type)"/>
+                    <xsl:value-of select="concat('StationType:', $Type)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$Type"/></data>
             </resource>
@@ -713,7 +712,7 @@
         <xsl:variable name="l4id" select="concat('L4/', $countrycode, '/', $l1, '/', $l2, '/', $l3, '/', $l4)"/>
         <xsl:variable name="l5id" select="concat('L5/', $countrycode, '/', $l1, '/', $l2, '/', $l3, '/', $l4, '/', $l5)"/>
 
-        <!-- School Location -->
+        <!-- Station Location -->
         <resource name="gis_location">
             <xsl:attribute name="tuid">
                 <xsl:value-of select="$Name"/>

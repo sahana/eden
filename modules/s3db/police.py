@@ -102,20 +102,20 @@ class S3PoliceModel(S3Model):
 
         #represent = S3Represent(lookup=tablename, translate=True)
 
-        #school_type_id = S3ReusableField("school_type_id", "reference %s" % tablename,
+        #station_type_id = S3ReusableField("station_type_id", "reference %s" % tablename,
         #                       label = T("Police Station Type"),
         #                       ondelete = "SET NULL",
         #                       represent = represent,
         #                       requires = IS_EMPTY_OR(
-        #                                   IS_ONE_OF(db, "edu_school_type.id",
+        #                                   IS_ONE_OF(db, "police_station_type.id",
         #                                             represent,
         #                                             #filterby="organisation_id",
         #                                             #filter_opts=filter_opts,
         #                                             sort=True
         #                                             )),
         #                       sortby = "name",
-        #                       comment = S3PopupLink(c = "inv",
-        #                                             f = "school_type",
+        #                       comment = S3PopupLink(c = "police",
+        #                                             f = "station_type",
         #                                             label = ADD_TYPE,
         #                                             title = T("Police Station Type"),
         #                                             tooltip = T("If you don't see the Type in the list, you can add a new one by clicking link 'Create Police Station Type'."),
@@ -164,7 +164,7 @@ class S3PoliceModel(S3Model):
                      organisation_id(
                         requires = self.org_organisation_requires(updateable=True),
                         ),
-                     school_type_id(),
+                     #station_type_id(),
                      self.gis_location_id(),
                      Field("contact",
                            label = T("Contact"),
@@ -179,6 +179,11 @@ class S3PoliceModel(S3Model):
                            label = T("Email"),
                            represent = lambda v: v or NONE,
                            requires = IS_EMPTY_OR(IS_EMAIL())
+                           ),
+                     Field("website",
+                           label = T("Website"),
+                           represent = lambda url: s3_url_represent(url),
+                           requires = IS_EMPTY_OR(IS_URL()),
                            ),
                      Field("obsolete", "boolean",
                            default = False,
@@ -231,7 +236,7 @@ class S3PoliceModel(S3Model):
             #report_fields.append(lfield)
             text_fields.append(lfield)
 
-        list_fields += [#(T("Address"), "location_id$addr_street"),
+        list_fields += [(T("Address"), "location_id$addr_street"),
                         "phone",
                         "email",
                         ]
@@ -262,7 +267,7 @@ class S3PoliceModel(S3Model):
                   filter_widgets = filter_widgets,
                   list_fields = list_fields,
                   #onaccept = self.police_station_onaccept,
-                  super_entity = ("pr_pentity", "org_site"),
+                  super_entity = ("pr_pentity", "org_site", "doc_entity"),
                   update_realm = True,
                   )
 
