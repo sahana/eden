@@ -1282,8 +1282,10 @@ class DVRNotesModel(S3Model):
 class DVRCaseActivityModel(S3Model):
     """ Model for Case Activities """
 
-    names = ("dvr_case_activity",
+    names = ("dvr_case_activity_type",
+             "dvr_case_activity",
              "dvr_case_service_contact",
+             "dvr_activity_type_represent",
              )
 
     def model(self):
@@ -1297,12 +1299,89 @@ class DVRCaseActivityModel(S3Model):
         configure = self.configure
         define_table = self.define_table
 
-        twoweeks = current.request.utcnow + datetime.timedelta(days=14)
-        service_type = settings.get_dvr_case_activity_use_service_type()
+        service_type = settings.get_dvr_activity_use_service_type()
+        service_id = self.org_service_id
+
+        activity_types = settings.get_dvr_activity_types()
+        hierarchical_activity_types = settings.get_dvr_activity_types_hierarchical()
+
+        # ---------------------------------------------------------------------
+        # Case Activity Type
+        #
+        tablename = "dvr_case_activity_type"
+        define_table(tablename,
+                     Field("name", length=128, notnull=True,
+                           label = T("Name"),
+                           requires = IS_NOT_EMPTY(),
+                           ),
+                     service_id(label = T("Service Type"),
+                                ondelete = "SET NULL",
+                                readable = service_type,
+                                writable = service_type,
+                                ),
+                     # This form of hierarchy may not work on all Databases:
+                     Field("parent", "reference dvr_case_activity_type",
+                           label = T("Subtype of"),
+                           ondelete = "RESTRICT",
+                           readable = hierarchical_activity_types,
+                           writable = hierarchical_activity_types,
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        if hierarchical_activity_types:
+            hierarchy = "parent"
+            widget = S3HierarchyWidget(multiple = False,
+                                       )
+        else:
+            hierarchy = None
+            widget = None
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("parent",),
+                                            ),
+                  hierarchy = hierarchy,
+                  onaccept = self.activity_type_onaccept
+                  )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Activity Type"),
+            title_display = T("Activity Type Details"),
+            title_list = T("Activity Types"),
+            title_update = T("Edit Activity Types"),
+            label_list_button = T("List Activity Types"),
+            label_delete_button = T("Delete Activity Type"),
+            msg_record_created = T("Activity Type added"),
+            msg_record_modified = T("Activity Type updated"),
+            msg_record_deleted = T("Activity Type deleted"),
+            msg_list_empty = T("No Activity Types currently defined"),
+            )
+
+        # Reusable field
+        activity_type_represent = S3Represent(lookup = tablename,
+                                              translate = True,
+                                              )
+        activity_type_id = S3ReusableField("activity_type_id", "reference %s" % tablename,
+                                           label = T("Activity Type"),
+                                           ondelete = "CASCADE",
+                                           represent = activity_type_represent,
+                                           requires = IS_EMPTY_OR(
+                                                        IS_ONE_OF(db, "%s.id" % tablename,
+                                                                  activity_type_represent,
+                                                                  sort=True,
+                                                                  )),
+                                           sortby = "name",
+                                           widget = widget,
+                                           )
 
         # ---------------------------------------------------------------------
         # Case Activity
         #
+        twoweeks = current.request.utcnow + datetime.timedelta(days=14)
+
         tablename = "dvr_case_activity"
         define_table(tablename,
                      self.dvr_case_id(comment = None,
@@ -1338,12 +1417,14 @@ class DVRCaseActivityModel(S3Model):
                                               readable = False,
                                               writable = False,
                                               ),
-                     self.org_service_id(label = T("Service Type"),
-                                         ondelete = "SET NULL",
-                                         # @todo: make deployment setting
-                                         readable = service_type,
-                                         writable = service_type,
-                                         ),
+                     service_id(label = T("Service Type"),
+                                ondelete = "SET NULL",
+                                readable = service_type,
+                                writable = service_type,
+                                ),
+                     activity_type_id(readable = activity_types,
+                                      writable = activity_types,
+                                      ),
                      Field("referral_details", "text",
                            label = T("Support provided"),
                            represent = s3_text_represent,
@@ -1515,14 +1596,52 @@ class DVRCaseActivityModel(S3Model):
         # ---------------------------------------------------------------------
         # Pass names back to global scope (s3.*)
         #
-        return {}
+        return {"dvr_activity_type_represent": activity_type_represent,
+                }
 
     # -------------------------------------------------------------------------
     @staticmethod
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
-        return {}
+        return {"dvr_activity_type_represent": lambda v: "",
+                }
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def activity_type_onaccept(form):
+
+
+        if current.deployment_settings.get_dvr_activity_types_hierarchical():
+
+            # Read form data
+            formvars = form.vars
+            if "id" in formvars:
+                record_id = formvars.id
+            elif hasattr(form, "record_id"):
+                record_id = form.record_id
+            else:
+                record_id = None
+            if not record_id:
+                return
+
+            db = current.db
+            s3db = current.s3db
+            table = s3db.dvr_case_activity_type
+
+            # Load record
+            row = db(table.id == record_id).select(table.service_id,
+                                                   table.parent,
+                                                   limitby = (0, 1),
+                                                   ).first()
+
+            if row and not row.service_id and row.parent:
+
+                parent = db(table.id == row.parent).select(table.service_id,
+                                                           limitby = (0, 1),
+                                                           ).first()
+                if parent and parent.service_id:
+                    row.update_record(service_id = parent.service_id)
 
 # =============================================================================
 class DVRCaseAppointmentModel(S3Model):

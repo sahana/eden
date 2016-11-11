@@ -110,7 +110,9 @@ def config(settings):
     # =========================================================================
     # DVR Case Management
     #
-    settings.dvr.case_activity_use_service_type = True
+    settings.dvr.activity_use_service_type = True
+    settings.dvr.activity_types = True
+    settings.dvr.activity_types_hierarchical = True
 
     # -------------------------------------------------------------------------
     def customise_dvr_home():

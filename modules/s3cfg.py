@@ -2876,16 +2876,28 @@ class S3Config(Storage):
 
     def get_dvr_event_registration_checkin_warning(self):
         """
-            Whether to warn during event registration when the person
-            is currently not checked-in
+            Warn during event registration when the person is currently
+            not checked-in
         """
         return self.dvr.get("event_registration_checkin_warning", False)
 
-    def get_dvr_case_activity_use_service_type(self):
+    def get_dvr_activity_use_service_type(self):
         """
-            Whether to use service type in case activities
+            Use service type in case activities
         """
-        return self.dvr.get("case_activity_use_service_type", False)
+        return self.dvr.get("activity_use_service_type", False)
+
+    def get_dvr_activity_types(self):
+        """
+            Use activity types in case activities
+        """
+        return self.dvr.get("activity_types", False)
+
+    def get_dvr_activity_types_hierarchical(self):
+        """
+            Case activity types are hierarchical
+        """
+        return self.dvr.get("activity_types_hierarchical", False)
 
     # -------------------------------------------------------------------------
     # Education
