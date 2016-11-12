@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import os
 
 from collections import OrderedDict
 
@@ -401,6 +402,9 @@ def config(settings):
             # Single row as we are filtering for particular alert_id
             arow = data["rows"][0]
 
+            # Create attachment
+            cap_document_id = _get_or_create_attachment(alert_id)
+
             if record["scope"] != "Private" and data["numrows"] > 0:
                 # Google Cloud Messaging
                 stable = s3db.pr_subscription
@@ -469,8 +473,8 @@ def config(settings):
                 get_user_id = current.auth.s3_get_user_id
                 query_ = (gtable.id == mtable.group_id) & \
                          (mtable.person_id == ptable.id) & \
-                         (gtable.deleted != True) &\
-                         (mtable.deleted != True) &\
+                         (gtable.deleted != True) & \
+                         (mtable.deleted != True) & \
                          (ptable.deleted != True)
                 count = len(addresses)
                 if count == 1:
@@ -488,7 +492,10 @@ def config(settings):
                                                                     system=False)),
                                                     "</html>")
                         sms_content = get_sms_content(arow, ack_id=ack_id, system=False)
-                        send_by_pe_id(row.pe_id, subject, email_content)
+                        send_by_pe_id(row.pe_id,
+                                      subject,
+                                      email_content,
+                                      documents_id=cap_document_id)
                         try:
                             send_by_pe_id(row.pe_id, subject, sms_content, contact_method="SMS")
                         except ValueError:
@@ -500,7 +507,10 @@ def config(settings):
                                                 "</html>")
                     sms_content = get_sms_content(arow, system=False)
                     for row in rows:
-                        send_by_pe_id(row.pe_id, subject, email_content)
+                        send_by_pe_id(row.pe_id,
+                                      subject,
+                                      email_content,
+                                      documents_id=cap_document_id)
                         try:
                             send_by_pe_id(row.pe_id, subject, sms_content, contact_method="SMS")
                         except ValueError:
@@ -1348,5 +1358,67 @@ T("""%(status)s %(message_type)s for %(area_description)s with %(priority)s prio
                         nvalue = value
 
                 return nvalue
+
+    # -------------------------------------------------------------------------
+    def _get_or_create_attachment(alert_id):
+        """ 
+            Retrieve the CAP attachment for the alert_id if present
+            else creates CAP file as attachment to be sent with the email
+            returns the document_id for the CAP file
+        """
+
+        s3db = current.s3db
+        rtable = s3db.cap_resource
+        dtable = s3db.doc_document
+        query = (rtable.alert_id == alert_id) & \
+                (rtable.mime_type == "cap") & \
+                (rtable.deleted != True) & \
+                (dtable.doc_id == rtable.doc_id) & \
+                (dtable.deleted != True)
+        row = current.db(query).select(dtable.id, limitby=(0, 1)).first()
+        if row and row.id:
+            return row.id
+
+        request = current.request
+        auth = current.auth
+        path_join = os.path.join
+
+        # Create the cap_resource table
+        record = {"alert_id": alert_id,
+                  "resource_desc": T("CAP XML File"),
+                  "mime_type": "cap" # Hard coded to separate from attachment from user
+                  }
+        resource_id = rtable.insert(**record)
+        record["id"] = resource_id
+        s3db.update_super(rtable, record)
+        doc_id = record["doc_id"]
+        auth.s3_set_record_owner(rtable, resource_id)
+        auth.s3_make_session_owner(rtable, resource_id)
+        s3db.onaccept("cap_resource", record, method="create")
+
+        resource = s3db.resource("cap_alert")
+        resource.add_filter(FS("id") == alert_id)
+        cap_xml = resource.export_xml(stylesheet=path_join(request.folder,
+                                                           "static",
+                                                           "formats",
+                                                           "cap",
+                                                           "export.xsl"),
+                                      pretty_print=True)
+        file_path = path_join(request.folder,
+                              "uploads",
+                              "%s_%s.xml" % ("cap_alert", str(alert_id)))
+        file = open(file_path, "w+")
+        file.write(cap_xml)
+        file.close()
+
+        # Create doc_document record
+        dtable = s3db.doc_document
+        file = open(file_path, "a+")
+        document_id = dtable.insert(**{"file": file, "doc_id": doc_id})
+
+        file.close()
+        os.remove(file_path)
+
+        return document_id
 
 # END =========================================================================

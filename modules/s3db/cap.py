@@ -441,8 +441,8 @@ $.filterOptionsS3({
                      Field("msg_type",
                            label = T("Message Type"),
                            default = "Alert",
-                           represent = S3Represent(options = cap_options["cap_alert_msg_type_code_opts"],
-                                                   ),
+                           #represent = S3Represent(options = cap_options["cap_alert_msg_type_code_opts"],
+                           #                        ),
                            requires = IS_IN_SET(cap_options["cap_alert_msg_type_code_opts"]),
                            comment = DIV(_class="tooltip",
                                          _title="%s|%s" % (T("The nature of the alert message"),
@@ -502,7 +502,9 @@ $.filterOptionsS3({
                                          _title="%s|%s" % (T("The text describing the purpose or significance of the alert message"),
                                                            T("The message note is primarily intended for use with status 'Exercise' and message type 'Error'"))),
                            ),
-                     Field("reference", #"list:reference cap_alert",
+                     # text data type because as the number of referenced alert
+                     # goes on increasing, it could very easily be more than 512 chars
+                     Field("reference", "text",
                            label = T("Reference"),
                            writable = False,
                            readable = False,
@@ -2425,7 +2427,7 @@ class S3CAPHistoryModel(S3Model):
                                          _title="%s|%s" % (T("The text describing the purpose or significance of the alert message"),
                                                            T("The message note is primarily intended for use with status 'Exercise' and message type 'Error'"))),
                            ),
-                     Field("reference",
+                     Field("reference", "text",
                            label = T("Reference"),
                            readable = False,
                            comment = DIV(_class="tooltip",
@@ -3879,6 +3881,7 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
     status = record["cap_alert.status"]
     scope = record["cap_alert.scope"]
     event = record["cap_info.event_type_id"]
+    msg_type = s3_str(record["cap_alert.msg_type"])
 
     if current.auth.s3_logged_in():
         _href = URL(c="cap", f="alert", args=[record_id, "profile"])
@@ -3903,7 +3906,7 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
         # Map popup
         event = itable.event_type_id.represent(event)
         if priority is None:
-            priority = T("Unknown")
+            priority = ""
         else:
             priority = itable.priority.represent(priority)
         description = record["cap_info.description"]
@@ -3942,13 +3945,13 @@ def cap_alert_list_layout(list_id, item_id, resource, rfields, record):
                    )
     else:
         if priority == current.messages["NONE"]:
-            priority = T("Unknown")
+            priority = ""
         sender_name = record["cap_info.sender_name"]
         sent = record["cap_alert.sent"]
 
         headline = "%s" % (headline)
 
-        sub_heading = "%s %s" % (priority, event)
+        sub_heading = "%s %s %s" % (priority, event, msg_type)
 
         sub_headline = A(sub_heading,
                          _href = _href,
