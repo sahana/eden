@@ -1971,11 +1971,7 @@ class S3CRUD(S3Method):
                     resource = current.s3db.resource(r.tablename, r.id,
                                                      approved=False,
                                                      unapproved=True)
-                    try:
-                        success = resource.approve()
-                    except:
-                        success = False
-                    if success:
+                    if resource.approve():
                         response.confirmation = T("Record approved")
                         output["approve_form"] = ""
                     else:
@@ -1988,11 +1984,7 @@ class S3CRUD(S3Method):
                     resource = current.s3db.resource(r.tablename, r.id,
                                                      approved=False,
                                                      unapproved=True)
-                    try:
-                        success = resource.reject()
-                    except:
-                        success = False
-                    if success:
+                    if resource.reject():
                         response.confirmation = T("Record deleted")
                         output["approve_form"] = ""
                     else:
