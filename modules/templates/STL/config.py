@@ -358,7 +358,7 @@ def config(settings):
                 ctable = s3db.dvr_case
 
                 from s3 import IS_ONE_OF, S3HierarchyWidget, S3Represent
-                from gluon import DIV
+                from gluon import DIV, IS_EMPTY_OR
 
                 # Expose project_id
                 field = ctable.project_id
@@ -367,9 +367,10 @@ def config(settings):
                                         fields = ["code"],
                                         )
                 field.represent = represent
-                field.requires = IS_ONE_OF(current.db, "project_project.id",
-                                           represent,
-                                           )
+                field.requires = IS_EMPTY_OR(
+                                    IS_ONE_OF(current.db, "project_project.id",
+                                              represent,
+                                              ))
                 field.comment = None
                 field.label = T("Project Code")
 
