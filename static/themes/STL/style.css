@@ -154,20 +154,25 @@ form .form-row > a {
 form .form-row select {
   min-width: 4rem;
 }
-/* line 21, ../scss/custom/_forms.scss */
+/* line 20, ../scss/custom/_forms.scss */
+form .form-row .controls > .s3-hierarchy-widget {
+  display: inline-block;
+  vertical-align: middle;
+}
+/* line 25, ../scss/custom/_forms.scss */
 form label.inline {
   padding: 0;
 }
-/* line 24, ../scss/custom/_forms.scss */
+/* line 28, ../scss/custom/_forms.scss */
 form .gis_loc_select_btn {
   font-size: 0.8em;
 }
-/* line 26, ../scss/custom/_forms.scss */
+/* line 30, ../scss/custom/_forms.scss */
 form .gis_loc_select_btn i {
   font-size: 1.0em;
   margin-right: 4px;
 }
-/* line 31, ../scss/custom/_forms.scss */
+/* line 35, ../scss/custom/_forms.scss */
 form .error {
   display: block;
   padding: 0.375rem 0.5625rem 0.5625rem;
@@ -178,63 +183,63 @@ form .error {
   background: #c60f13;
   color: white;
 }
-/* line 41, ../scss/custom/_forms.scss */
+/* line 45, ../scss/custom/_forms.scss */
 form .date-clear-btn {
   font-size: 0.75rem;
   margin-left: 0.15rem !important;
 }
-/* line 45, ../scss/custom/_forms.scss */
+/* line 49, ../scss/custom/_forms.scss */
 form .action-lnk {
   font-weight: normal;
   font-size: 0.75rem;
 }
-/* line 49, ../scss/custom/_forms.scss */
+/* line 53, ../scss/custom/_forms.scss */
 form table.embeddedComponent {
   margin-top: 0.125rem;
   margin-bottom: 0.125rem;
   border: 1px solid #dddddd;
   border-collapse: separate;
 }
-/* line 54, ../scss/custom/_forms.scss */
+/* line 58, ../scss/custom/_forms.scss */
 form table.embeddedComponent td {
   border: none;
   padding-bottom: 0.05rem;
   padding-top: 0.15rem;
   vertical-align: top;
 }
-/* line 61, ../scss/custom/_forms.scss */
+/* line 65, ../scss/custom/_forms.scss */
 form table.embeddedComponent .label-row td {
   border-bottom: 1px solid #dddddd;
 }
-/* line 63, ../scss/custom/_forms.scss */
+/* line 67, ../scss/custom/_forms.scss */
 form table.embeddedComponent .label-row td:empty {
   padding: 0;
 }
-/* line 67, ../scss/custom/_forms.scss */
+/* line 71, ../scss/custom/_forms.scss */
 form table.embeddedComponent .label-row label {
   color: #4D4D4D;
 }
-/* line 72, ../scss/custom/_forms.scss */
+/* line 76, ../scss/custom/_forms.scss */
 form table.embeddedComponent tr.inline-form.single td {
   padding: 0;
 }
-/* line 75, ../scss/custom/_forms.scss */
+/* line 79, ../scss/custom/_forms.scss */
 form table.embeddedComponent tr.inline-form select {
   max-width: 18rem;
 }
-/* line 80, ../scss/custom/_forms.scss */
+/* line 84, ../scss/custom/_forms.scss */
 form .inline-open-add {
   display: inline-block;
   margin-bottom: 1.25rem;
   margin-left: 0.2rem;
 }
-/* line 85, ../scss/custom/_forms.scss */
+/* line 89, ../scss/custom/_forms.scss */
 form.auth_login #submit_record__row {
   white-space: pre;
 }
 
 /* General Widgets */
-/* line 91, ../scss/custom/_forms.scss */
+/* line 95, ../scss/custom/_forms.scss */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -257,7 +262,7 @@ select {
   font-weight: normal;
 }
 
-/* line 112, ../scss/custom/_forms.scss */
+/* line 116, ../scss/custom/_forms.scss */
 input[type="text"],
 input[type="password"],
 input[type="date"],
@@ -276,62 +281,62 @@ select {
   max-width: 100%;
 }
 
-/* line 129, ../scss/custom/_forms.scss */
+/* line 133, ../scss/custom/_forms.scss */
 textarea {
   resize: both;
   max-width: 100%;
 }
 
 /* Form and Item containers */
-/* line 134, ../scss/custom/_forms.scss */
+/* line 138, ../scss/custom/_forms.scss */
 #last_update {
   float: none;
 }
 
-/* line 137, ../scss/custom/_forms.scss */
+/* line 141, ../scss/custom/_forms.scss */
 .form-container,
 .item-container {
   width: auto;
   overflow: inherit;
 }
-/* line 139, ../scss/custom/_forms.scss */
+/* line 143, ../scss/custom/_forms.scss */
 .form-container form,
 .item-container form {
   background: #fefefe;
   padding: 5px 10px;
 }
-/* line 145, ../scss/custom/_forms.scss */
+/* line 149, ../scss/custom/_forms.scss */
 .form-container .controls,
 .item-container .controls {
   display: inline-block;
 }
-/* line 147, ../scss/custom/_forms.scss */
+/* line 151, ../scss/custom/_forms.scss */
 .form-container .controls:not(.columns),
 .item-container .controls:not(.columns) {
   max-width: 100%;
 }
 
-/* line 152, ../scss/custom/_forms.scss */
+/* line 156, ../scss/custom/_forms.scss */
 .form-container {
   margin-top: 0.125rem;
   margin-bottom: 0.875rem;
 }
-/* line 156, ../scss/custom/_forms.scss */
+/* line 160, ../scss/custom/_forms.scss */
 .form-container form select,
 .form-container form input.string:not(.date),
 .form-container form textarea {
   margin: 0;
 }
-/* line 161, ../scss/custom/_forms.scss */
+/* line 165, ../scss/custom/_forms.scss */
 .form-container form .ui-multiselect {
   max-width: 100%;
 }
-/* line 165, ../scss/custom/_forms.scss */
+/* line 169, ../scss/custom/_forms.scss */
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
   width: 20rem !important;
 }
 
-/* line 171, ../scss/custom/_forms.scss */
+/* line 175, ../scss/custom/_forms.scss */
 .item-container .controls {
   background: #fafafa;
   padding: 0.35rem;
@@ -339,22 +344,22 @@ textarea {
 }
 
 /* Filter forms */
-/* line 180, ../scss/custom/_forms.scss */
+/* line 184, ../scss/custom/_forms.scss */
 .filter-form table tr,
 .filter-form .ui-multiselect {
   max-width: 60%;
 }
-/* line 184, ../scss/custom/_forms.scss */
+/* line 188, ../scss/custom/_forms.scss */
 .filter-form table.s3-groupedopts-widget {
   display: inline-block;
 }
-/* line 187, ../scss/custom/_forms.scss */
+/* line 191, ../scss/custom/_forms.scss */
 .filter-form .inline-tooltip {
   padding-top: 0.2rem;
 }
 
 /* Login/Registration box */
-/* line 193, ../scss/custom/_forms.scss */
+/* line 197, ../scss/custom/_forms.scss */
 #login_form,
 #register_form,
 #login_box {
@@ -362,13 +367,13 @@ textarea {
 }
 
 /* Help Popup */
-/* line 200, ../scss/custom/_forms.scss */
+/* line 204, ../scss/custom/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 204, ../scss/custom/_forms.scss */
+/* line 208, ../scss/custom/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -377,7 +382,7 @@ textarea {
   padding: 0;
   width: 60px;
 }
-/* line 212, ../scss/custom/_forms.scss */
+/* line 216, ../scss/custom/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;

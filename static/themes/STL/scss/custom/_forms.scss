@@ -17,6 +17,10 @@ form {
         select {
             min-width: 4rem;
         }
+        .controls > .s3-hierarchy-widget {
+            display: inline-block;
+            vertical-align: middle;
+        }
     }
     label.inline {
         padding: 0;

@@ -32,10 +32,10 @@ __all__ = ("DVRCaseModel",
            "DVRCaseActivityModel",
            "DVRCaseAllowanceModel",
            "DVRCaseAppointmentModel",
-           "DVRCaseBeneficiaryModel",
+           "DVRHouseholdModel",
            "DVRCaseEconomyInformationModel",
            "DVRCaseEventModel",
-           "DVRCaseFundingModel",
+           "DVRActivityFundingModel",
            "DVRNeedsModel",
            "DVRNotesModel",
            "DVRSiteActivityModel",
@@ -253,11 +253,6 @@ class DVRCaseModel(S3Model):
                               (1, T("Low")),
                               )
 
-        # Case beneficiary options
-        case_beneficiary_opts = {"INDIVIDUAL": T("Individual"),
-                                 "HOUSEHOLD": T("Household"),
-                                 }
-
         # Consent flag options
         consent_opts = {"N/A": T("n/a"),
                         "Y": T("yes"),
@@ -364,6 +359,12 @@ class DVRCaseModel(S3Model):
                             readable = not default_organisation,
                             writable = not default_organisation,
                             ),
+                     self.project_project_id(
+                            ondelete = "SET NULL",
+                            # Enable in template as required:
+                            readable = False,
+                            writable = False,
+                            ),
                      self.super_link("site_id", "org_site",
                             default = default_site,
                             filterby = "site_id",
@@ -451,48 +452,6 @@ class DVRCaseModel(S3Model):
                            writable = manage_transferability,
                            ),
 
-                     # STL Extensions
-                     # @todo: move into component(s)
-                     Field("beneficiary",
-                           default = "INDIVIDUAL",
-                           label = T("Assistance for"),
-                           represent = S3Represent(options=case_beneficiary_opts),
-                           requires = IS_IN_SET(case_beneficiary_opts,
-                                                zero = None,
-                                                ),
-                           # Enable in template if required
-                           readable = False,
-                           writable = False,
-                           ),
-                     # Simplified "head of household" fields:
-                     # (if not tracked as separate case beneficiaries)
-                     Field("head_of_household", "boolean",
-                           default = True,
-                           label = T("Head of Household"),
-                           represent = s3_yes_no_represent,
-                           # Enable in template if required
-                           readable = False,
-                           writable = False,
-                           ),
-                     Field("hoh_name",
-                           label = T("Head of Household Name"),
-                           # Enable in template if required
-                           readable = False,
-                           writable = False,
-                           ),
-                     self.pr_gender("hoh_gender",
-                                    label = T("Head of Household Gender"),
-                                    # Enable in template if required
-                                    readable = False,
-                                    writable = False,
-                                    ),
-                     Field("hoh_relationship",
-                           label = T("Head of Household Relationship"),
-                           # Enable in template if required
-                           readable = False,
-                           writable = False,
-                           ),
-
                      # Standard comments and meta fields
                      s3_comments(),
                      *s3_meta_fields())
@@ -530,7 +489,6 @@ class DVRCaseModel(S3Model):
 
         # Components
         self.add_components(tablename,
-                            dvr_beneficiary_data = "case_id",
                             dvr_case_activity = "case_id",
                             dvr_case_details = {"joinby": "case_id",
                                                 "multiple": False,
@@ -544,13 +502,6 @@ class DVRCaseModel(S3Model):
                                          "joinby": "case_id",
                                          "key": "need_id",
                                          },
-                            project_project = {"link": "project_case_project",
-                                               "joinby": "case_id",
-                                               "key": "project_id",
-                                               "multiple": False,
-                                               "actuate": "link",
-                                               "autodelete": False,
-                                               },
                             )
 
         # Report options FIXME
@@ -1455,9 +1406,9 @@ class DVRCaseActivityModel(S3Model):
 
         # Components
         self.add_components(tablename,
-                            dvr_case_funding = {"joinby": "activity_id",
-                                                "multiple": False,
-                                                },
+                            dvr_activity_funding = {"joinby": "activity_id",
+                                                    "multiple": False,
+                                                    },
                             )
 
         # List fields
@@ -2051,13 +2002,13 @@ class DVRCaseAppointmentModel(S3Model):
                     dvr_update_last_seen(person_id)
 
 # =============================================================================
-class DVRCaseBeneficiaryModel(S3Model):
+class DVRHouseholdModel(S3Model):
     """
-        Model for Case Beneficiary Data (=statistical data about beneficiaries
-        of the case besides the main beneficiary, e.g. household members)
+        Model to document the household situation of a case
     """
 
-    names = ("dvr_beneficiary_type",
+    names = ("dvr_household",
+             "dvr_beneficiary_type",
              "dvr_beneficiary_data",
              )
 
@@ -2070,6 +2021,58 @@ class DVRCaseBeneficiaryModel(S3Model):
 
         configure = self.configure
         define_table = self.define_table
+
+        # ---------------------------------------------------------------------
+        tablename = "dvr_household"
+        define_table(tablename,
+                     # Main Beneficiary (component link):
+                     # @todo: populate from case and hide in case perspective
+                     self.pr_person_id(empty = False,
+                                       ondelete = "CASCADE",
+                                       ),
+                     Field("hoh_name",
+                           label = T("Head of Household Name"),
+                           ),
+                     self.pr_gender("hoh_gender",
+                                    label = T("Head of Household Gender"),
+                                    ),
+                     s3_date("hoh_date_of_birth",
+                             label = T("Head of Household Date of Birth"),
+                             future = 0,
+                             past = 1320,
+                             ),
+                     Field("hoh_relationship",
+                           label = T("Head of Household Relationship"),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # Components
+        self.add_components(tablename,
+                            dvr_beneficiary_data = "household_id",
+                            )
+
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Add Household Details"),
+            title_display = T("Household Details"),
+            title_list = T("Household Details"),
+            title_update = T("Edit Household Details"),
+            label_list_button = T("List Household Details"),
+            label_delete_button = T("Delete Household Details"),
+            msg_record_created = T("Household Details added"),
+            msg_record_modified = T("Household Details updated"),
+            msg_record_deleted = T("Household Details deleted"),
+            msg_list_empty = T("No Household Details currently registered"),
+            )
+
+        # Reusable field
+        household_id = S3ReusableField("household_id", "reference %s" % tablename,
+                                       ondelete = "CASCADE",
+                                       requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "%s.id" % tablename,
+                                                              )),
+                                       )
 
         # ---------------------------------------------------------------------
         # Beneficiary Types (e.g. Age Groups)
@@ -2117,15 +2120,7 @@ class DVRCaseBeneficiaryModel(S3Model):
 
         tablename = "dvr_beneficiary_data"
         define_table(tablename,
-                     # Main Beneficiary (component link):
-                     # @todo: populate from case and hide in case perspective
-                     self.pr_person_id(empty = False,
-                                       ondelete = "CASCADE",
-                                       ),
-                     self.dvr_case_id(empty = False,
-                                      label = T("Case Number"),
-                                      ondelete = "CASCADE",
-                                      ),
+                     household_id(),
                      beneficiary_type_id(),
                      Field("total", "integer",
                            label = T("Number of Beneficiaries"),
@@ -3120,11 +3115,11 @@ class DVRCaseEventModel(S3Model):
                 dvr_update_last_seen(person_id)
 
 # =============================================================================
-class DVRCaseFundingModel(S3Model):
+class DVRActivityFundingModel(S3Model):
     """ Model to manage funding needs for cases """
 
-    names = ("dvr_case_funding_reason",
-             "dvr_case_funding",
+    names = ("dvr_activity_funding_reason",
+             "dvr_activity_funding",
              )
 
     def model(self):
@@ -3140,7 +3135,7 @@ class DVRCaseFundingModel(S3Model):
         # ---------------------------------------------------------------------
         # Reasons for case funding
         #
-        tablename = "dvr_case_funding_reason"
+        tablename = "dvr_activity_funding_reason"
         define_table(tablename,
                      Field("name",
                            label = T("Reason"),
@@ -3169,7 +3164,7 @@ class DVRCaseFundingModel(S3Model):
                                     label = T("Reason"),
                                     represent = represent,
                                     requires = IS_EMPTY_OR(
-                                                IS_ONE_OF(db, "dvr_case_funding_reason.id",
+                                                IS_ONE_OF(db, "%s.id" % tablename,
                                                           represent,
                                                           )),
                                     sortby = "name",
@@ -3182,7 +3177,7 @@ class DVRCaseFundingModel(S3Model):
         # ---------------------------------------------------------------------
         # Case funding proposal
         #
-        tablename = "dvr_case_funding"
+        tablename = "dvr_activity_funding"
         define_table(tablename,
                      self.dvr_case_activity_id(),
                      Field("funding_required", "boolean",

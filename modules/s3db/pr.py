@@ -1020,7 +1020,6 @@ class S3PersonModel(S3Model):
                             cr_shelter_registration_history = "person_id",
                             # Case Management (Disaster Victim Registry)
                             dvr_allowance = "person_id",
-                            dvr_beneficiary_data = "person_id",
                             dvr_case = {"name": "dvr_case",
                                         "joinby": "person_id",
                                         "multiple": False,
@@ -1042,6 +1041,9 @@ class S3PersonModel(S3Model):
                             dvr_economy = {"joinby": "person_id",
                                            "multiple": False,
                                            },
+                            dvr_household = {"joinby": "person_id",
+                                             "multiple": False,
+                                             },
                             dvr_note = {"name": "case_note",
                                         "joinby": "person_id",
                                         },

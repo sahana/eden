@@ -37,7 +37,6 @@ __all__ = ("S3ProjectModel",
            "S3ProjectActivitySectorModel",
            "S3ProjectAnnualBudgetModel",
            "S3ProjectBeneficiaryModel",
-           "S3ProjectCaseModel",
            "S3ProjectCampaignModel",
            "S3ProjectFrameworkModel",
            "S3ProjectHazardModel",
@@ -2396,31 +2395,6 @@ class S3ProjectBeneficiaryModel(S3Model):
                     project_id = project_location.project_id,
                     location_id = project_location.location_id
                 )
-
-# =============================================================================
-class S3ProjectCaseModel(S3Model):
-    """
-        Project Case Model
-    """
-
-    names = ("project_case_project",
-             )
-
-    def model(self):
-
-        # ---------------------------------------------------------------------
-        # Link project <=> case
-        #
-        tablename = "project_case_project"
-        self.define_table(tablename,
-                          self.project_project_id(empty=False),
-                          self.dvr_case_id(empty=False),
-                          *s3_meta_fields())
-
-        # ---------------------------------------------------------------------
-        # Pass names back to global scope (s3.*)
-        #
-        return {}
 
 # =============================================================================
 class S3ProjectCampaignModel(S3Model):

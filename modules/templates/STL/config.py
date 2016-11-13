@@ -126,69 +126,6 @@ def config(settings):
     settings.customise_dvr_home = customise_dvr_home
 
     # -------------------------------------------------------------------------
-    def customise_dvr_case_resource(r, tablename):
-
-        s3db = current.s3db
-        s3 = current.response.s3
-
-        if r.component_name == "dvr_case":
-
-            from s3 import S3SQLCustomForm, \
-                           S3SQLInlineComponent, \
-                           S3SQLInlineLink, \
-                           s3_comments_widget
-
-            table = r.component.table
-            field = table.human_resource_id
-            field.label = T("Person Responsible")
-            field.readable = field.writable = True
-            field.widget = None
-            field.comment = None
-
-            # Custom form
-            crud_form = S3SQLCustomForm("person_id",
-                                        S3SQLInlineLink("project",
-                                                        field = "project_id",
-                                                        multiple = False,
-                                                        ),
-                                        S3SQLInlineComponent("beneficiary_data",
-                                                             fields = ["beneficiary_type_id",
-                                                                       "female",
-                                                                       "male",
-                                                                       "other",
-                                                                       "in_school",
-                                                                       "employed",
-                                                                       ],
-                                                             label = T("Household Details"),
-                                                             explicit_add = T("Add Household Details"),
-                                                             ),
-                                        "comments",
-                                        )
-
-            # Filter staff by organisation
-            script = '''$.filterOptionsS3({
- 'trigger':'organisation_id',
- 'target':'human_resource_id',
- 'lookupPrefix':'hrm',
- 'lookupResource':'human_resource',
- 'lookupKey':'organisation_id',
- 'fncRepresent': function(record){return record.person_id},
- 'optional': true
-})'''
-            s3.jquery_ready.append(script)
-
-            s3db.configure("dvr_case",
-                           crud_form = crud_form,
-                           )
-
-        # Deleting cases is not allowed
-        s3db.configure("dvr_case",
-                       deletable = False,
-                       )
-
-    settings.customise_dvr_case_resource = customise_dvr_case_resource
-
-    # -------------------------------------------------------------------------
     def customise_dvr_economy_resource(r, tablename):
 
         table = current.s3db.dvr_economy
@@ -199,6 +136,35 @@ def config(settings):
     settings.customise_dvr_economy_resource = customise_dvr_economy_resource
 
     # -------------------------------------------------------------------------
+    def customise_dvr_household_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, S3SQLInlineComponent
+
+        crud_form = S3SQLCustomForm("hoh_relationship",
+                                    "hoh_name",
+                                    "hoh_date_of_birth",
+                                    "hoh_gender",
+                                    S3SQLInlineComponent("beneficiary_data",
+                                                         fields = [(T("Age Group"), "beneficiary_type_id"),
+                                                                   "female",
+                                                                   "male",
+                                                                   "other",
+                                                                   "in_school",
+                                                                   "employed",
+                                                                   ],
+                                                         label = T("Household Members"),
+                                                         explicit_add = T("Add Household Members"),
+                                                         ),
+                                    "comments",
+                                    )
+
+        current.s3db.configure("dvr_household",
+                               crud_form = crud_form,
+                               )
+
+    settings.customise_dvr_household_resource = customise_dvr_household_resource
+
+    # -------------------------------------------------------------------------
     def customise_dvr_case_activity_resource(r, tablename):
 
         from s3 import S3SQLCustomForm, s3_comments_widget
@@ -206,7 +172,7 @@ def config(settings):
         s3db = current.s3db
 
         # Customise SNF fields
-        ftable = s3db.dvr_case_funding
+        ftable = s3db.dvr_activity_funding
         field = ftable.funding_required
         field.label = T("Need for SNF")
         field = ftable.reason_id
@@ -222,9 +188,9 @@ def config(settings):
                                     "activity_type_id",
                                     "followup",
                                     "followup_date",
-                                    "case_funding.funding_required",
-                                    "case_funding.reason_id",
-                                    "case_funding.proposal",
+                                    "activity_funding.funding_required",
+                                    "activity_funding.reason_id",
+                                    "activity_funding.proposal",
                                     "comments",
                                     )
 
@@ -244,11 +210,11 @@ def config(settings):
     settings.customise_dvr_case_activity_resource = customise_dvr_case_activity_resource
 
     # -------------------------------------------------------------------------
-    def customise_dvr_case_funding_reason_resource(r, tablename):
+    def customise_dvr_activity_funding_reason_resource(r, tablename):
 
         T = current.T
 
-        table = current.s3db.dvr_case_funding_reason
+        table = current.s3db.dvr_activity_funding_reason
 
         field = table.name
         field.label = T("SNF Justification")
@@ -256,7 +222,7 @@ def config(settings):
         crud_strings = current.response.s3.crud_strings
 
         # CRUD Strings
-        crud_strings["dvr_case_funding_reason"] = Storage(
+        crud_strings["dvr_activity_funding_reason"] = Storage(
             label_create = T("Create SNF Justification"),
             title_display = T("SNF Justification"),
             title_list = T("SNF Justifications"),
@@ -270,14 +236,14 @@ def config(settings):
         )
 
 
-    settings.customise_dvr_case_funding_reason_resource = customise_dvr_case_funding_reason_resource
+    settings.customise_dvr_activity_funding_reason_resource = customise_dvr_activity_funding_reason_resource
 
     # -------------------------------------------------------------------------
-    def customise_dvr_case_funding_resource(r, tablename):
+    def customise_dvr_activity_funding_resource(r, tablename):
 
         T = current.T
 
-        table = current.s3db.dvr_case_funding
+        table = current.s3db.dvr_activity_funding
         field = table.funding_required
         field.label = T("Need for SNF")
         field = table.reason_id
@@ -285,7 +251,7 @@ def config(settings):
         field = table.proposal
         field.label = T("Proposed Assistance for SNF")
 
-    settings.customise_dvr_case_funding_resource = customise_dvr_case_funding_resource
+    settings.customise_dvr_activity_funding_resource = customise_dvr_activity_funding_resource
 
     # =========================================================================
     # Person Registry
@@ -391,10 +357,24 @@ def config(settings):
                 table = r.table
                 ctable = s3db.dvr_case
 
+                from s3 import IS_ONE_OF, S3HierarchyWidget, S3Represent
+                from gluon import DIV
+
+                # Expose project_id
+                field = ctable.project_id
+                field.readable = field.writable = True
+                represent = S3Represent(lookup = "project_project",
+                                        fields = ["code"],
+                                        )
+                field.represent = represent
+                field.requires = IS_ONE_OF(current.db, "project_project.id",
+                                           represent,
+                                           )
+                field.comment = None
+                field.label = T("Project Code")
+
                 # Hierarchical Organisation Selector
                 field = ctable.organisation_id
-                from gluon import DIV
-                from s3 import S3HierarchyWidget
                 represent = s3db.org_OrganisationRepresent(parent=False)
                 field.widget = S3HierarchyWidget(lookup="org_organisation",
                                                  represent=represent,
@@ -460,10 +440,11 @@ def config(settings):
 
                     # Custom CRUD form
                     crud_form = S3SQLCustomForm(
-                                "dvr_case.organisation_id",
+                                (T("Case Status"), "dvr_case.status_id"),
                                 "dvr_case.date",
-                                "dvr_case.status_id",
+                                "dvr_case.organisation_id",
                                 "dvr_case.human_resource_id",
+                                "dvr_case.project_id",
                                 "first_name",
                                 #"middle_name",
                                 "last_name",
@@ -508,7 +489,7 @@ def config(settings):
                                         ),
                                 "dvr_case.disclosure_consent",
                                 "dvr_case.comments",
-                                (T("Invalid"), "dvr_case.archived"),
+                                (T("Invalid Record"), "dvr_case.archived"),
                                 )
 
                     resource.configure(crud_form = crud_form,
@@ -714,21 +695,6 @@ def config(settings):
     settings.project.codes = True
     settings.project.sectors = False
     settings.project.assign_staff_tab = False
-
-    # -------------------------------------------------------------------------
-    def customise_project_case_project_resource(r, tablename):
-
-        table = current.s3db.project_case_project
-        field = table.project_id
-
-        from s3 import IS_ONE_OF, S3Represent
-        represent = S3Represent(lookup="project_project", fields=["code"])
-        requires = IS_ONE_OF(current.db, "project_project.id", represent)
-
-        field.represent = represent
-        field.requires = requires
-
-    settings.customise_project_case_project_resource = customise_project_case_project_resource
 
     # -------------------------------------------------------------------------
     def customise_project_project_resource(r, tablename):
@@ -1019,9 +985,9 @@ def stl_dvr_rheader(r, tabs=[]):
 
             if not tabs:
                 tabs = [(T("Basic Details"), None),
-                        (T("Case Management"), "dvr_case"),
-                        (T("Economy"), "economy"),
                         (T("Contact"), "contacts"),
+                        (T("Household"), "household"),
+                        (T("Economy"), "economy"),
                         (T("Activities"), "case_activity"),
                         ]
 
@@ -1030,7 +996,7 @@ def stl_dvr_rheader(r, tabs=[]):
                                         "dvr_case.archived",
                                         "dvr_case.organisation_id",
                                         "dvr_case.disclosure_consent",
-                                        "dvr_case.case_project.project_id",
+                                        "dvr_case.project_id",
                                         ],
                                         represent = True,
                                         raw_data = True,
@@ -1045,7 +1011,7 @@ def stl_dvr_rheader(r, tabs=[]):
                 archived = case["_row"]["dvr_case.archived"]
                 family_id = lambda row: case["pr_family_id_person_tag.value"]
                 organisation_id = lambda row: case["dvr_case.organisation_id"]
-                project_id = lambda row: case["project_case_project.project_id"]
+                project_id = lambda row: case["dvr_case.project_id"]
                 name = lambda row: s3_fullname(row)
 
                 raw = case._row
