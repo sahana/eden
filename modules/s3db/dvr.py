@@ -536,9 +536,6 @@ class DVRCaseModel(S3Model):
                                                 "multiple": False,
                                                 },
                             dvr_case_event = "case_id",
-                            dvr_case_funding = {"joinby": "case_id",
-                                                "multiple": False,
-                                                },
                             dvr_case_service_contact = "case_id",
                             dvr_economy = {"joinby": "case_id",
                                            "multiple": False,
@@ -1286,6 +1283,7 @@ class DVRCaseActivityModel(S3Model):
              "dvr_case_activity",
              "dvr_case_service_contact",
              "dvr_activity_type_represent",
+             "dvr_case_activity_id",
              )
 
     def model(self):
@@ -1455,19 +1453,12 @@ class DVRCaseActivityModel(S3Model):
                      s3_comments(),
                      *s3_meta_fields())
 
-        # CRUD Strings
-        crud_strings[tablename] = Storage(
-            label_create = T("Create Activity"),
-            title_display = T("Activity Details"),
-            title_list = T("Activities"),
-            title_update = T("Edit Activity"),
-            label_list_button = T("List Activities"),
-            label_delete_button = T("Delete Activity"),
-            msg_record_created = T("Activity added"),
-            msg_record_modified = T("Activity updated"),
-            msg_record_deleted = T("Activity deleted"),
-            msg_list_empty = T("No Activities currently registered"),
-            )
+        # Components
+        self.add_components(tablename,
+                            dvr_case_funding = {"joinby": "activity_id",
+                                                "multiple": False,
+                                                },
+                            )
 
         # List fields
         list_fields = ["start_date",
@@ -1558,6 +1549,28 @@ class DVRCaseActivityModel(S3Model):
                   report_options = report_options,
                   )
 
+        # CRUD Strings
+        crud_strings[tablename] = Storage(
+            label_create = T("Create Activity"),
+            title_display = T("Activity Details"),
+            title_list = T("Activities"),
+            title_update = T("Edit Activity"),
+            label_list_button = T("List Activities"),
+            label_delete_button = T("Delete Activity"),
+            msg_record_created = T("Activity added"),
+            msg_record_modified = T("Activity updated"),
+            msg_record_deleted = T("Activity deleted"),
+            msg_list_empty = T("No Activities currently registered"),
+            )
+
+        # Reusable field
+        activity_id = S3ReusableField("activity_id", "reference %s" % tablename,
+                                      ondelete = "CASCADE",
+                                      requires = IS_EMPTY_OR(
+                                                    IS_ONE_OF(db, "%s.id" % tablename,
+                                                              )),
+                                      )
+
         # ---------------------------------------------------------------------
         # Case Service Contacts (other than case activities)
         #
@@ -1597,6 +1610,7 @@ class DVRCaseActivityModel(S3Model):
         # Pass names back to global scope (s3.*)
         #
         return {"dvr_activity_type_represent": activity_type_represent,
+                "dvr_case_activity_id": activity_id,
                 }
 
     # -------------------------------------------------------------------------
@@ -1604,7 +1618,14 @@ class DVRCaseActivityModel(S3Model):
     def defaults():
         """ Safe defaults for names in case the module is disabled """
 
+        dummy = S3ReusableField("dummy_id", "integer",
+                                readable = False,
+                                writable = False,
+                                )
+
         return {"dvr_activity_type_represent": lambda v: "",
+                "dvr_case_activity_id": lambda name="activity_id", **attr: \
+                                               dummy(name, **attr),
                 }
 
     # -------------------------------------------------------------------------
@@ -3147,9 +3168,10 @@ class DVRCaseFundingModel(S3Model):
         reason_id = S3ReusableField("reason_id", "reference %s" % tablename,
                                     label = T("Reason"),
                                     represent = represent,
-                                    requires = IS_ONE_OF(db, "dvr_case_funding_reason.id",
-                                                         represent,
-                                                         ),
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "dvr_case_funding_reason.id",
+                                                          represent,
+                                                          )),
                                     sortby = "name",
                                     comment = S3PopupLink(c="dvr",
                                                           f="case_funding_reason",
@@ -3162,7 +3184,7 @@ class DVRCaseFundingModel(S3Model):
         #
         tablename = "dvr_case_funding"
         define_table(tablename,
-                     self.dvr_case_id(),
+                     self.dvr_case_activity_id(),
                      Field("funding_required", "boolean",
                            default = False,
                            label = T("Funding Required"),

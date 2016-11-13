@@ -145,16 +145,6 @@ def config(settings):
             field.widget = None
             field.comment = None
 
-            ftable = current.s3db.dvr_case_funding
-            field = ftable.funding_required
-            field.label = T("Need for SNF")
-            field = ftable.reason_id
-            field.label = T("Justification for SNF")
-            field.comment = None
-            field = ftable.proposal
-            field.label = T("Proposed Assistance for SNF")
-            field.widget = s3_comments_widget
-
             # Custom form
             crud_form = S3SQLCustomForm("person_id",
                                         S3SQLInlineLink("project",
@@ -172,9 +162,6 @@ def config(settings):
                                                              label = T("Household Details"),
                                                              explicit_add = T("Add Household Details"),
                                                              ),
-                                        "case_funding.funding_required",
-                                        "case_funding.reason_id",
-                                        "case_funding.proposal",
                                         "comments",
                                         )
 
@@ -210,6 +197,51 @@ def config(settings):
         field.label = current.T("Monthly Rent Expense")
 
     settings.customise_dvr_economy_resource = customise_dvr_economy_resource
+
+    # -------------------------------------------------------------------------
+    def customise_dvr_case_activity_resource(r, tablename):
+
+        from s3 import S3SQLCustomForm, s3_comments_widget
+
+        s3db = current.s3db
+
+        # Customise SNF fields
+        ftable = s3db.dvr_case_funding
+        field = ftable.funding_required
+        field.label = T("Need for SNF")
+        field = ftable.reason_id
+        field.label = T("Justification for SNF")
+        field.comment = None
+        field = ftable.proposal
+        field.label = T("Proposed Assistance for SNF")
+        field.widget = s3_comments_widget
+
+        # Custom CRUD form
+        crud_form = S3SQLCustomForm("person_id",
+                                    "service_id",
+                                    "activity_type_id",
+                                    "followup",
+                                    "followup_date",
+                                    "case_funding.funding_required",
+                                    "case_funding.reason_id",
+                                    "case_funding.proposal",
+                                    "comments",
+                                    )
+
+        # Custom list fields
+        list_fields = ["person_id",
+                       "service_id",
+                       "activity_type_id",
+                       "followup",
+                       "followup_date",
+                       ]
+
+        s3db.configure("dvr_case_activity",
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       )
+
+    settings.customise_dvr_case_activity_resource = customise_dvr_case_activity_resource
 
     # -------------------------------------------------------------------------
     def customise_dvr_case_funding_reason_resource(r, tablename):
