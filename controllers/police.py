@@ -31,7 +31,8 @@ def station():
         RESTful CRUD controller
     """
 
-    output = s3_rest_controller()
+    output = s3_rest_controller(rheader = police_rheader,
+                                )
     return output
 
 # -----------------------------------------------------------------------------
@@ -41,5 +42,30 @@ def station():
 #    """
 
 #    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
+def police_rheader(r, tabs=[]):
+    """ Resource headers for component views """
+
+    rheader = None
+    if r.representation == "html":
+
+        if r.name == "station":
+            station = r.record
+            if station:
+                tabs = [
+                    (T("Station Details"), None),
+                    #(T("Vehicles"), "vehicle"),
+                    (T("Staff"), "human_resource"),
+                    #(T("Shifts"), "shift"),
+                    #(T("Roster"), "shift_staff"),
+                    #(T("Vehicle Deployments"), "vehicle_report"),
+                    (T("Beats"), "location"),
+                ]
+                rheader_tabs = s3_rheader_tabs(r, tabs)
+
+                rheader = DIV(rheader_tabs)
+
+    return rheader
 
 # END =========================================================================

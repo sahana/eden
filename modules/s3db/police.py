@@ -238,7 +238,7 @@ class S3PoliceModel(S3Model):
 
         list_fields += [(T("Address"), "location_id$addr_street"),
                         "phone",
-                        "email",
+                        #"email",
                         ]
 
         # Filter widgets

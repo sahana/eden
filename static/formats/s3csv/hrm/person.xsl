@@ -623,7 +623,9 @@
             <xsl:choose>
                 <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
                 <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
+                <xsl:when test="$FacilityType='Fire Station'">fire_station</xsl:when>
                 <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
+                <xsl:when test="$FacilityType='Police Station'">police_station</xsl:when>
                 <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
                 <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
                 <xsl:otherwise>org_office</xsl:otherwise>
@@ -1167,7 +1169,9 @@
                 <xsl:choose>
                     <xsl:when test="$FacilityType='Office'">org_office</xsl:when>
                     <xsl:when test="$FacilityType='Facility'">org_facility</xsl:when>
+                    <xsl:when test="$FacilityType='Fire Station'">fire_station</xsl:when>
                     <xsl:when test="$FacilityType='Hospital'">hms_hospital</xsl:when>
+                    <xsl:when test="$FacilityType='Police Station'">police_station</xsl:when>
                     <xsl:when test="$FacilityType='Shelter'">cr_shelter</xsl:when>
                     <xsl:when test="$FacilityType='Warehouse'">inv_warehouse</xsl:when>
                     <xsl:otherwise>org_office</xsl:otherwise>

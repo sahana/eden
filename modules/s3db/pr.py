@@ -1463,7 +1463,7 @@ class S3PersonModel(S3Model):
         query = (FS("first_name").lower().like(value + "%")) | \
                 (FS("last_name").lower().like(value + "%"))
         if middle_name:
-            query != (FS("middle_name").lower().like(value + "%"))
+            query |= (FS("middle_name").lower().like(value + "%"))
         if " " in value:
             value1, value2 = value.split(" ", 1)
             query |= (FS("first_name").lower().like(value1 + "%")) | \

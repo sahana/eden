@@ -1633,7 +1633,7 @@ class S3OptionsMenu(object):
         """ Police """
 
         return M(c="police")(
-                    M("Stations", f="station")(
+                    M("Police Stations", f="station")(
                         M("Create", m="create"),
                     ),
                     #M("Station Types", f="station_type")(

@@ -287,7 +287,7 @@ class S3FireStationModel(S3Model):
 
         list_fields += [(T("Address"), "location_id$addr_street"),
                         "phone",
-                        "email",
+                        #"email",
                         ]
 
         # Filter widgets

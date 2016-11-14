@@ -50,8 +50,12 @@ class S3MainMenu(default.S3MainMenu):
                 #MM("Alerts", c="event", f="alert", m="summary"),
                 MM("Events", c="event", f="event", m="summary"),
                 #MM("Tasks", c="project", f="task", m="summary"),
-                MM("Resources", c="org", f="resource", m="summary"),
+                MM("Resources", c="pr", f="group", m="summary"),
                 #MM("Contacts", c="hrm", f="staff", m="summary"),
+                MM("More", link=False)(
+                   MM("Fire Stations", c="fire", f="station"),
+                   MM("Police Stations", c="police", f="station"),
+                   ),
                 ]
 
     # -------------------------------------------------------------------------
