@@ -1518,7 +1518,7 @@ class S3PersonModel(S3Model):
                     query |= (((FS("first_name").lower().like(value13 + "%")) & \
                                (FS("last_name").lower().like(value4 + "%"))) | \
                               ((FS("first_name").lower().like(value4 + "%")) & \
-                               (FS("last_name").lower().like(value13 + "%")))
+                               (FS("last_name").lower().like(value13 + "%"))))
                     if middle_name:
                         query |= (((FS("first_name").lower().like(value1 + "%")) & \
                                    (FS("middle_name").lower().like(value22 + "%")) & \
