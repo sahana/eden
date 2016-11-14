@@ -1327,3 +1327,12 @@ body.rtl .event-type-header {
 .check-in-warning i {
   margin-right: 0.3rem;
 }
+
+/* line 169, ../scss/custom/_misc.scss */
+.profile-picture {
+  margin-top: 1rem;
+}
+/* line 171, ../scss/custom/_misc.scss */
+.profile-picture .image-row {
+  margin-bottom: 1rem;
+}

@@ -3955,6 +3955,9 @@ class DVRRegisterCaseEvent(S3Method):
     # Action to check flag restrictions for
     ACTION = "id-check"
 
+    # Whether to show profile picture by default
+    SHOW_PICTURE = False
+
     # -------------------------------------------------------------------------
     def apply_method(self, r, **attr):
         """
@@ -4047,6 +4050,7 @@ class DVRRegisterCaseEvent(S3Method):
         if person:
             # Person details
             person_details = self.person_details(person)
+            profile_picture = self.profile_picture(person)
 
             # Blocking periods for events
             event_types = self.get_event_types()
@@ -4074,6 +4078,7 @@ class DVRRegisterCaseEvent(S3Method):
                                   })
         else:
             person_details = ""
+            profile_picture = None
             permitted = False
 
         # Identify the event type
@@ -4116,6 +4121,7 @@ class DVRRegisterCaseEvent(S3Method):
                   "permitted": json.dumps(permitted),
                   "flags": json.dumps(flags),
                   "intervals": json.dumps(intervals),
+                  "image": profile_picture,
                   }
 
         # Additional form data
@@ -4195,6 +4201,9 @@ class DVRRegisterCaseEvent(S3Method):
                                     method = "register",
                                     representation = "json",
                                     ),
+                   "showPicture": self.SHOW_PICTURE,
+                   "showPictureText": s3_str(T("Show Picture")),
+                   "hidePictureText": s3_str(T("Hide Picture")),
                    }
         self.inject_js(widget_id, options)
 
@@ -4396,12 +4405,13 @@ class DVRRegisterCaseEvent(S3Method):
 
             check = data.get("c")
             if check:
-
                 # Person details
                 person_details = self.person_details(person)
+                profile_picture = self.profile_picture(person)
 
                 output["p"] = s3_str(person_details)
                 output["l"] = person.pe_label
+                output["b"] = profile_picture
 
                 # Family details
                 details = dvr_get_household_size(person.id,
@@ -4748,6 +4758,7 @@ class DVRRegisterCaseEvent(S3Method):
 
         # Fields to extract
         fields = ["id",
+                  "pe_id",
                   "pe_label",
                   "first_name",
                   "middle_name",
@@ -4932,6 +4943,26 @@ class DVRRegisterCaseEvent(S3Method):
         return output
 
     # -------------------------------------------------------------------------
+    @staticmethod
+    def profile_picture(person):
+
+        try:
+            pe_id = person.pe_id
+        except AttributeError:
+            return None
+
+        table = current.s3db.pr_image
+        query = (table.pe_id == pe_id) & \
+                (table.profile == True) & \
+                (table.deleted != True)
+        row = current.db(query).select(table.image, limitby=(0, 1)).first()
+
+        if row:
+            return URL(c="default", f="download", args=row.image)
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
     def get_blocked_events(self, person_id, type_id=None):
         """
             Check minimum intervals for event registration and return
@@ -5062,6 +5093,9 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
 
     # Do not check minimum intervals for consecutive registrations
     check_intervals = False
+
+    # Show profile picture by default
+    SHOW_PICTURE = True
 
     # -------------------------------------------------------------------------
     # Configuration
@@ -5213,9 +5247,11 @@ class DVRRegisterPayment(DVRRegisterCaseEvent):
             if check:
                 # Person details
                 person_details = self.person_details(person)
+                profile_picture = self.profile_picture(person)
 
                 output["p"] = s3_str(person_details)
                 output["l"] = person.pe_label
+                output["b"] = profile_picture
 
                 info = flag_info["info"]
                 for flagname, instructions in info:
