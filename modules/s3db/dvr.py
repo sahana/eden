@@ -4945,6 +4945,14 @@ class DVRRegisterCaseEvent(S3Method):
     # -------------------------------------------------------------------------
     @staticmethod
     def profile_picture(person):
+        """
+            Get the profile picture URL for a person
+
+            @param person: the person record (Row)
+
+            @return: the profile picture URL (relative URL), or None if
+                     no profile picture is available for that person
+        """
 
         try:
             pe_id = person.pe_id
