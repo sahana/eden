@@ -955,7 +955,7 @@
 'Latitude is North-South (Up-Down).': 'خط العرض شمال-جنوب (من الأعلى الى الأسفل).',
 'Latitude of far northern end of the region of interest.': 'خط عرض نهاية أقصى شمال المنطقة المعنية.',
 'Latitude of far southern end of the region of interest.': 'خط عرض نهاية اقصى جنوب المنطقة المعنية.',
-'Latitude should be between': 'خط العرض ينبغي أن يكون بين',
+'Latitude %(lat)s is invalid, should be between %(lat_min)s & %(lat_max)s': '%(lat_max)s & %(lat_min)s خط العرض ينبغي أن يكون بين %(lat)s',
 'Layer deleted': 'تم حذف الطبقة',
 'Layers': 'الطبقات',
 'Lead Facilitator': 'قيادة المنشأت',

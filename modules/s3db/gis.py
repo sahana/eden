@@ -616,14 +616,15 @@ class S3LocationModel(S3Model):
                         # disabled. This is what propagates location and bounds
                         # down the hierarchy so the parent may not have bounds.
                         # Prepopulate data should be prepared to be correct.
-                        lat_min, lon_min, lat_max, lon_max, parent_name = gis.get_parent_bounds(parent=parent)
+                        lat_min, lon_min, lat_max, lon_max, parent_name = \
+                                        gis.get_parent_bounds(parent=parent)
                         if (lat > lat_max) or (lat < lat_min):
-                            lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
-                                                          lat_min, lat_max)
+                            lat_error = T("Latitude %(lat)s is invalid, should be between %(lat_min)s & %(lat_max)s") % \
+                                dict(lat=lat, lat_min=lat_min, lat_max=lat_max)
                             form.errors["lat"] = lat_error
                         if (lon > lon_max) or (lon < lon_min):
-                            lon_error = "%s: %s & %s" % (T("Longitude should be between"),
-                                                         lon_min, lon_max)
+                            lon_error = T("Longitude %(lon)s is invalid, should be between %(lon_min)s & %(lon_max)s") % \
+                                dict(lon=lon, lon_min=lon_min, lon_max=lon_max)
                             form.errors["lon"] = lon_error
                         if form.errors:
                             if name:
@@ -666,8 +667,8 @@ class S3LocationModel(S3Model):
                                 error = T("Sorry location appears to be outside the area supported by this deployment.")
                             response.error = error
                             current.log.error(error)
-                            lat_error =  "%s: %s & %s" % (T("Latitude should be between"),
-                                                          str(lat_min), str(lat_max))
+                            lat_error =  T("Latitude %(lat)s is invalid, should be between %(lat_min)s & %(lat_max)s") % \
+                                dict(lat=lat, lat_min=lat_min, lat_max=lat_max)
                             form.errors["lat"] = lat_error
                             current.log.error(lat_error)
                             return
@@ -679,8 +680,8 @@ class S3LocationModel(S3Model):
                                 error = T("Sorry location appears to be outside the area supported by this deployment.")
                             response.error = error
                             current.log.error(error)
-                            lon_error = "%s: %s & %s" % (T("Longitude should be between"),
-                                                         str(lon_min), str(lon_max))
+                            lon_error = T("Longitude %(lon)s is invalid, should be between %(lon_min)s & %(lon_max)s") % \
+                                dict(lon=lon, lon_min=lon_min, lon_max=lon_max)
                             form.errors["lon"] = lon_error
                             current.log.error(lon_error)
                             return
