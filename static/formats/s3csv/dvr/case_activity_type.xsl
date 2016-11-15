@@ -3,7 +3,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
     <!-- **********************************************************************
-         DVR Case Appointment Type - CSV Import Stylesheet
+         DVR Case Activity Type - CSV Import Stylesheet
 
          CSV column..................Format..........Content
 

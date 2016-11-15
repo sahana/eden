@@ -113,6 +113,7 @@ def config(settings):
     settings.dvr.activity_use_service_type = True
     settings.dvr.activity_types = True
     settings.dvr.activity_types_hierarchical = True
+    settings.dvr.needs_hierarchical = True
 
     # -------------------------------------------------------------------------
     def customise_dvr_home():
@@ -186,6 +187,7 @@ def config(settings):
         crud_form = S3SQLCustomForm("person_id",
                                     "service_id",
                                     "activity_type_id",
+                                    "need_id",
                                     "followup",
                                     "followup_date",
                                     "activity_funding.funding_required",

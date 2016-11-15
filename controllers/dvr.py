@@ -616,6 +616,24 @@ def case():
 def need():
     """ Needs: RESTful CRUD Controller """
 
+    if settings.get_dvr_needs_hierarchical():
+
+        tablename = "dvr_need"
+
+        from s3 import S3Represent
+        represent = S3Represent(lookup = tablename,
+                                hierarchy = True,
+                                translate = True,
+                                )
+
+        table = s3db[tablename]
+        field = table.parent
+        field.represent = represent
+        field.requires = IS_EMPTY_OR(IS_ONE_OF(db, "%s.id" % tablename,
+                                               represent,
+                                               orderby="%s.name" % tablename,
+                                               ))
+
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------

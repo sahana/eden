@@ -1036,10 +1036,13 @@ class DVRNeedsModel(S3Model):
         T = current.T
         db = current.db
 
+        settings = current.deployment_settings
         crud_strings = current.response.s3.crud_strings
 
         define_table = self.define_table
         configure = self.configure
+
+        hierarchical_needs = settings.get_dvr_needs_hierarchical()
 
         # ---------------------------------------------------------------------
         # Needs
@@ -1050,8 +1053,33 @@ class DVRNeedsModel(S3Model):
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
+                     # This form of hierarchy may not work on all Databases:
+                     Field("parent", "reference dvr_need",
+                           label = T("Subtype of"),
+                           ondelete = "RESTRICT",
+                           readable = hierarchical_needs,
+                           writable = hierarchical_needs,
+                           ),
                      s3_comments(),
                      *s3_meta_fields())
+
+        # Hierarchy
+        if hierarchical_needs:
+            hierarchy = "parent"
+            widget = S3HierarchyWidget(multiple = False,
+                                       leafonly = False,
+                                       )
+        else:
+            hierarchy = None
+            widget = None
+
+        # Table configuration
+        configure(tablename,
+                  deduplicate = S3Duplicate(primary = ("name",),
+                                            secondary = ("parent",),
+                                            ),
+                  hierarchy = hierarchy,
+                  )
 
         # CRUD Strings
         ADD_NEED = T("Create Need Type")
@@ -1068,11 +1096,6 @@ class DVRNeedsModel(S3Model):
             msg_list_empty = T("No Need Types found"),
             )
 
-        # Table configuration
-        configure(tablename,
-                  deduplicate = S3Duplicate(),
-                  )
-
         # Reusable field
         represent = S3Represent(lookup=tablename, translate=True)
         need_id = S3ReusableField("need_id", "reference %s" % tablename,
@@ -1081,12 +1104,14 @@ class DVRNeedsModel(S3Model):
                                   represent = represent,
                                   requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "dvr_need.id",
-                                                          represent)),
-                                  comment=S3PopupLink(c = "dvr",
-                                                      f = "need",
-                                                      title = ADD_NEED,
-                                                      tooltip = T("Choose the need type from the drop-down, or click the link to create a new type"),
-                                                      ),
+                                                          represent,
+                                                          )),
+                                  comment = S3PopupLink(c = "dvr",
+                                                        f = "need",
+                                                        title = ADD_NEED,
+                                                        tooltip = T("Choose the need type from the drop-down, or click the link to create a new type"),
+                                                        ),
+                                  widget = widget
                                   )
 
         # ---------------------------------------------------------------------

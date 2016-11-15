@@ -2901,6 +2901,12 @@ class S3Config(Storage):
         """
         return self.dvr.get("activity_types_hierarchical", False)
 
+    def get_dvr_needs_hierarchical(self):
+        """
+            Need types are hierarchical
+        """
+        return self.dvr.get("needs_hierarchical", False)
+
     # -------------------------------------------------------------------------
     # Education
     #
