@@ -9,6 +9,7 @@ Locations,Used by Location Details,gis,location,,,{name},"name,gis_feature_type"
 Offices,All Active Offices,org,office,office,Building,{name} (T('Office'))<br />{organisation_id},"name,organisation_id",~.obsolete=False,,True,,,,,False,False,,
 PoIs,Points of Interest,gis,poi,,,{name} ({poi_type_id}),"name,poi_type_id",,,True,,,,,,False,,
 Police Stations,All Active Police Stations,police,station,police_station,Police Station,{name} (T('Police Station')),name,~.obsolete=False,,True,,,,,False,,,
+Resources,All Active Resources,pr,group,team,"Contact, Dreadlocks",{name} (T('Resource')),name,,,True,True,,,,False,,,
 Seaports,All Active Seaports,transport,seaport,port,Marina,{name} (T('Seaport')),name,~.obsolete=False,,True,,,,,False,,,
 Staff,All Active Staff,hrm,staff,staff,"Contact, Dreadlocks",{person_id} (T('Staff'))<br />{job_title_id}<br />{organisation_id},"person_id,job_title_id,organisation_id",~.status=1,,True,True,,,,False,False,,
 Stock Items,Used for Search Results,inv,inv_item,,,{item_id} (T('Stock Item'))<br />{site_id}<br />{quantity} {item_pack_id}<br />T('Expires') {expiry_date},"item_id,site_id,quantity,item_pack_id,expiry_date",,,,,,,,False,False,,

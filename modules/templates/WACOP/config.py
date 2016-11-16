@@ -233,6 +233,30 @@ def config(settings):
         )),
     ])
 
+    # -------------------------------------------------------------------------
+    def customise_pr_group_resource(r, tablename):
+
+        current.response.s3.crud_strings[tablename] = Storage(
+            label_create = T("Create Resource"),
+            title_display = T("Resource Details"),
+            title_list = T("Resources"),
+            title_update = T("Edit Resource"),
+            label_list_button = T("List Resources"),
+            label_delete_button = T("Delete Resource"),
+            msg_record_created = T("Resource added"),
+            msg_record_modified = T("Resource updated"),
+            msg_record_deleted = T("Resource deleted"),
+            msg_list_empty = T("No Resources currently registered"))
+
+        from s3 import S3SQLCustomForm
+        crud_form = S3SQLCustomForm((T("Name"), "name"))
+
+        current.s3db.configure(tablename,
+                               crud_form = crud_form,
+                               )
+
+    settings.customise_pr_group_resource = customise_pr_group_resource
+
 # =============================================================================
 def wacop_event_rheader(r, tabs=[]):
     """ EVENT custom resource headers """
