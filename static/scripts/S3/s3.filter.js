@@ -134,88 +134,24 @@ S3.search = {};
      *
      * @param {object} s - the Ajax options
      * @prop {string} s.url - the Ajax URL
-     * @prop {Array} s.data - GET variables as array of dicts {name: k, value: v},
-     *                        will be appended to the POST URL
-     * @prop {function} s.done - the done-callback (alternatively s.success)
-     * @prop {function} s.fail - the fail-callback (alternatively s.error)
+     * @prop {Array} s.data - Filters as array of dicts {name: k, value: v},
+     *                        will be encoded as JSON body of the POST request
+     * @prop {function} s.success - the success-callback
+     * @prop {function} s.error - the error-callback
      *
      * @note: only GET requests will be converted, while POST requests
-     *        will be sent unmodified (=equivalent to $.AjaxS3)
+     *        will be sent unmodified (=equivalent to $.ajaxS3)
      */
-    $.searchS3 = function(s) {
+    $.searchS3 = function(ajaxOptions) {
 
-        var message,
-            options = $.extend({}, searchS3Defaults, s),
-            doneCallback = null,
-            failCallback = null;
+        // Apply searchS3-specific defaults
+        var options = $.extend({}, searchS3Defaults, ajaxOptions);
 
-        if (s.done) {
-            doneCallback = s.done;
-        } else if (s.success) {
-            doneCallback = s.success;
-        }
-        if (s.fail) {
-            failCallback = s.fail;
-        } else if (s.error) {
-            failCallback = s.error;
-        }
-
-        // Prevent callbacks from being executed twice
-        options.done = null;
-        options.success = null;
-        options.fail = null;
-        options.error = null;
-
-        // Retry-counter
-        options.tryCount = 0;
-
-        // Rewrite the Ajax options
+        // Rewrite the GET as POST
         searchRewriteAjaxOptions(options, 'ajax');
 
-        if (s.message) {
-            message = i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '...';
-            S3.showAlert(message, 'info');
-        }
-
-        var xhr = $.ajax(
-            options
-        ).done(function(data, status) {
-            S3.hideAlerts();
-            this.tryCount = 0;
-            if (data && data.message) {
-                S3.showAlert(data.message, 'success');
-            }
-            // Call done/success callback:
-            if (doneCallback) {
-                doneCallback(data, status);
-            }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            if (textStatus == 'abort') {
-                // Request aborted...don't show nasty messages
-                this.tryCount = 0;
-            } else if (textStatus == 'timeout') {
-                this.tryCount++;
-                if (this.tryCount <= this.retryLimit) {
-                    // Try again
-                    message = i18n.ajax_get + ' ' + (s.message ? s.message : i18n.ajax_fmd) + '... ' + i18n.ajax_rtr + ' ' + this.tryCount;
-                    S3.showAlert(message, 'warning');
-                    $.ajax(this);
-                    return;
-                }
-                message = i18n.ajax_wht + ' ' + (this.retryLimit + 1) + ' ' + i18n.ajax_gvn;
-                S3.showAlert(message, 'error');
-            } else if (jqXHR.status == 500) {
-                S3.showAlert(i18n.ajax_500, 'error');
-            } else {
-                S3.showAlert(i18n.ajax_dwn, 'error');
-            }
-            // Call fail/error callback:
-            if (failCallback) {
-                failCallback(jqXHR, textStatus, errorThrown);
-            }
-        });
-        // Return the request to allow it to be aborted or status-checked
-        return xhr;
+        // Forward to $.ajaxS3
+        return $.ajaxS3(options);
     };
 
     /**
