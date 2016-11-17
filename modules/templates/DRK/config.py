@@ -494,7 +494,7 @@ def config(settings):
                 instructions = flag.instructions
                 if instructions is not None:
                     instructions = instructions.strip()
-                if instructions:
+                if not instructions:
                     instructions = current.T("No instructions for this flag")
                 append(DIV(H4(T(flag.name)),
                            P(instructions),
