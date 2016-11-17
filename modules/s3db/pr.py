@@ -1073,6 +1073,9 @@ class S3PersonModel(S3Model):
                             hrm_competency = "person_id",
                             hrm_credential = "person_id",
                             hrm_training = "person_id",
+                            hrm_trainings = {"joinby": "person_id",
+                                             "multiple": False,
+                                             },
                             # Facilitated Trainings (Instructor)
                             hrm_training_event = "person_id",
                             # Experience

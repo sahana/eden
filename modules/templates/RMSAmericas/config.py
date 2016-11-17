@@ -445,6 +445,8 @@ def config(settings):
     settings.hrm.record_tab = "record"
     # Training Instructors are Multiple
     settings.hrm.training_instructors = "multiple"
+    # Training Filters are Contains
+    settings.hrm.training_filter_and = True
     settings.hrm.record_label = "National Society Information"
     # Pass marks are defined by Course
     settings.hrm.course_pass_marks = True
@@ -1538,16 +1540,29 @@ def config(settings):
 
         from s3 import S3SQLCustomForm, S3SQLInlineComponent, S3TextFilter, S3OptionsFilter, S3DateFilter
 
-        crud_form = S3SQLCustomForm("person_id",
-                                    "end_date",
-                                    "grade",
-                                    "grade_details",
-                                    S3SQLInlineComponent("certification",
-                                                         fields = (("", "number"),),
-                                                         label = T("Registration Number"),
-                                                         multiple = False,
-                                                         )
-                                    )
+        if r.function == "person":
+            crud_form = S3SQLCustomForm("course_id",
+                                        "end_date",
+                                        "grade",
+                                        "grade_details",
+                                        S3SQLInlineComponent("certification",
+                                                             fields = (("", "number"),),
+                                                             label = T("Registration Number"),
+                                                             multiple = False,
+                                                             )
+                                        )
+        else:
+            crud_form = S3SQLCustomForm("person_id",
+                                        "end_date",
+                                        "grade",
+                                        "grade_details",
+                                        S3SQLInlineComponent("certification",
+                                                             fields = (("", "number"),),
+                                                             label = T("Registration Number"),
+                                                             multiple = False,
+                                                             )
+                                        )
+            
 
         filter_widgets = [
             S3TextFilter(["person_id$first_name",

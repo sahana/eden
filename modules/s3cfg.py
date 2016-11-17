@@ -3403,6 +3403,16 @@ class S3Config(Storage):
         """
         return self.__lazy("hrm", "training_instructors", "external")
 
+    def get_hrm_training_filter_and(self):
+        """
+            How people are filtered based on their Trainings:
+                False (default): Std options filter where we do an OR
+                    - i.e. we see all people who have done either (or both) Course A or Course B
+                True: Contains options filter (basically an AND)
+                    - i.e. we see only people who have done both Course A and Course B
+        """
+        return self.__lazy("hrm", "training_filter_and", False)
+
     def get_hrm_activity_types(self):
         """
             HRM Activity Types (for experience record),

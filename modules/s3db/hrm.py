@@ -703,6 +703,13 @@ class S3HRModel(S3Model):
                                         "fkey": "person_id",
                                         "pkey": "person_id",
                                         },
+                        hrm_trainings = {"link": "pr_person",
+                                         "joinby": "id",
+                                         "key": "id",
+                                         "fkey": "person_id",
+                                         "pkey": "person_id",
+                                         "multiple": False,
+                                         },
                         # Organisation Groups
                         org_group_person = {"link": "pr_person",
                                             "joinby": "id",
@@ -1951,6 +1958,7 @@ class S3HRSkillModel(S3Model):
              "hrm_competency",
              "hrm_credential",
              "hrm_training",
+             "hrm_trainings",
              "hrm_training_event",
              "hrm_certificate",
              "hrm_certification",
@@ -2417,14 +2425,14 @@ class S3HRSkillModel(S3Model):
                               _title="%s|%s" % (T("Course"),
                                                 AUTOCOMPLETE_HELP))
 
-        represent = S3Represent(lookup=tablename, translate=True)
+        course_represent = S3Represent(lookup=tablename, translate=True)
         course_id = S3ReusableField("course_id", "reference %s" % tablename,
                                     label = T("Course"),
                                     ondelete = "RESTRICT",
-                                    represent = represent,
+                                    represent = course_represent,
                                     requires = IS_EMPTY_OR(
                                                 IS_ONE_OF(db, "hrm_course.id",
-                                                          represent,
+                                                          course_represent,
                                                           filterby="organisation_id",
                                                           filter_opts=filter_opts,
                                                           )),
@@ -2847,6 +2855,37 @@ class S3HRSkillModel(S3Model):
                                             "multiple": False,
                                             },
                        )
+
+        # =====================================================================
+        # Trainings
+        #
+        # A list:reference table to support Contains queries:
+        #   - people who have attended both Course A & Course B
+        #
+
+        tablename = "hrm_trainings"
+        define_table(tablename,
+                     person_id(empty = False,
+                               ondelete = "CASCADE",
+                               ),
+                     Field("course_id", "list:reference hrm_course",
+                           label = T("Courses Attended"),
+                           ondelete = "SET NULL",
+                           represent = S3Represent(lookup="hrm_course",
+                                                   multiple=True,
+                                                   translate=True
+                                                   ),
+                           requires = IS_EMPTY_OR(
+                                        IS_ONE_OF(db, "hrm_course.id",
+                                                  course_represent,
+                                                  sort=True,
+                                                  multiple=True
+                                                  )),
+                           widget = S3MultiSelectWidget(header="",
+                                                        selectedList=3),
+                                         
+                           ),
+                     *s3_meta_fields())
 
         # =====================================================================
         # Certificates
@@ -3505,7 +3544,7 @@ def hrm_training_onvalidation(form):
 # =============================================================================
 def hrm_training_onaccept(form):
     """
-        Ensure that Certifications & Hours are Populated from Trainings
+        Ensure that Certifications, Hours & list:Trainings are Populated from Trainings
         Provide a Pass/Fail rating based on the Course's Pass Mark
         - called both onaccept & ondelete
     """
@@ -3603,6 +3642,24 @@ def hrm_training_onaccept(form):
                     form.vars = Storage()
                     form.vars.id = ph_id
                     hrm_programme_hours_onaccept(form)
+
+    # Update Trainings list:reference for Contains filter
+    ltable = db.hrm_trainings
+
+    query = (table.person_id == person_id) & \
+            (table.deleted == False)
+    courses = db(query).select(table.course_id,
+                               distinct = True,
+                               )
+    courses = [c.course_id for c in courses]
+    exists = db(ltable.person_id == person_id).select(ltable.id,
+                                                      limitby=(0, 1)).first()
+    if exists:
+        exists.update_record(course_id = courses)
+    else:
+        ltable.insert(person_id = person_id,
+                      course_id = courses,
+                      )
 
     # Update Certifications
     ctable = db.hrm_certification
@@ -8975,10 +9032,17 @@ def hrm_human_resource_filters(resource_type=None,
 
     # Training filter
     if settings.get_hrm_use_trainings():
-        append_filter(S3OptionsFilter("training.course_id",
-                                      label = T("Training"),
-                                      hidden = True,
-                                      ))
+        if settings.get_hrm_training_filter_and():
+            append_filter(S3OptionsFilter("trainings.course_id",
+                                          label = T("Training"),
+                                          hidden = True,
+                                          operator = "contains",
+                                          ))
+        else:
+            append_filter(S3OptionsFilter("training.course_id",
+                                          label = T("Training"),
+                                          hidden = True,
+                                          ))
 
     # Group (team) membership filter
     teams = settings.get_hrm_teams()
