@@ -4966,7 +4966,7 @@ ul.pagination li {
 .sub-nav dd:before,
 .sub-nav li:before {
   content: "|";
-  margin: 0 0.75rem;
+  margin: 0 0.375rem;
 }
 /* line 113, ../../foundation/scss/components/_sub-nav.scss */
 .sub-nav dt:first-child:before,

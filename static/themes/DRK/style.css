@@ -719,6 +719,11 @@ div.tabs span.tab_other a:hover {
   background-color: #E0E0E0;
 }
 
+/* line 48, ../scss/custom/_menus.scss */
+.personal-menu-area {
+  text-align: right;
+}
+
 /* Datatables */
 /* line 2, ../scss/custom/_tables.scss */
 .dataTables_length {
@@ -1196,7 +1201,6 @@ h4.profile-sub-header {
   padding: 0.5rem 0;
   padding-right: 0.5rem;
   font-size: 0.7rem;
-  float: right;
 }
 /* line 61, ../scss/custom/_misc.scss */
 .username i.icon, .username i.fa {
@@ -1204,12 +1208,12 @@ h4.profile-sub-header {
   padding-right: 0;
 }
 
-/* line 67, ../scss/custom/_misc.scss */
+/* line 66, ../scss/custom/_misc.scss */
 .overdue {
   color: red;
 }
 
-/* line 70, ../scss/custom/_misc.scss */
+/* line 69, ../scss/custom/_misc.scss */
 .invalid-case {
   border: 1px solid red;
   color: red;
@@ -1221,35 +1225,35 @@ h4.profile-sub-header {
   text-transform: uppercase;
 }
 
-/* line 80, ../scss/custom/_misc.scss */
+/* line 79, ../scss/custom/_misc.scss */
 .checkpoint-advise {
   background: #fff0f0 none repeat scroll 0 0;
   border: 2px solid red;
   margin-bottom: 1rem;
   padding: 0.6rem;
 }
-/* line 85, ../scss/custom/_misc.scss */
+/* line 84, ../scss/custom/_misc.scss */
 .checkpoint-advise p {
   white-space: pre-wrap;
 }
 
-/* line 89, ../scss/custom/_misc.scss */
+/* line 88, ../scss/custom/_misc.scss */
 .checkpoint-person {
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
 
-/* line 93, ../scss/custom/_misc.scss */
+/* line 92, ../scss/custom/_misc.scss */
 .event-top {
   margin-top: 0.3rem !important;
 }
 
-/* line 96, ../scss/custom/_misc.scss */
+/* line 95, ../scss/custom/_misc.scss */
 .event-type-header {
   text-align: right;
 }
 
-/* line 99, ../scss/custom/_misc.scss */
+/* line 98, ../scss/custom/_misc.scss */
 .event-type-setting {
   color: #afafaf;
   font-size: 0.9rem;
@@ -1257,67 +1261,67 @@ h4.profile-sub-header {
   vertical-align: text-top;
 }
 
-/* line 105, ../scss/custom/_misc.scss */
+/* line 104, ../scss/custom/_misc.scss */
 .event-type-toggle {
   cursor: pointer;
 }
 
-/* line 108, ../scss/custom/_misc.scss */
+/* line 107, ../scss/custom/_misc.scss */
 .controls.has-flaginfo,
 .controls.has-details {
   width: 100%;
 }
-/* line 111, ../scss/custom/_misc.scss */
+/* line 110, ../scss/custom/_misc.scss */
 .controls.has-flaginfo table,
 .controls.has-details table {
   width: 100%;
   border: none;
 }
 
-/* line 116, ../scss/custom/_misc.scss */
+/* line 115, ../scss/custom/_misc.scss */
 .payment-amount {
   color: darkgreen;
   font-size: 1.2rem;
   font-weight: bold;
 }
 
-/* line 122, ../scss/custom/_misc.scss */
+/* line 121, ../scss/custom/_misc.scss */
 #payment-form #allowance_date__row,
 #payment-form #allowance_comments__row {
   display: none;
 }
 
-/* line 127, ../scss/custom/_misc.scss */
+/* line 126, ../scss/custom/_misc.scss */
 .dashboard-action {
   margin-bottom: 1.0rem;
 }
 
-/* line 133, ../scss/custom/_misc.scss */
+/* line 132, ../scss/custom/_misc.scss */
 body.rtl .personal-menu {
   clear: left;
   float: left;
 }
-/* line 137, ../scss/custom/_misc.scss */
+/* line 136, ../scss/custom/_misc.scss */
 body.rtl .language-selector {
   float: left;
 }
-/* line 140, ../scss/custom/_misc.scss */
+/* line 139, ../scss/custom/_misc.scss */
 body.rtl .username {
   padding-left: 0.5rem;
   padding-right: 0;
   float: left;
 }
-/* line 143, ../scss/custom/_misc.scss */
+/* line 142, ../scss/custom/_misc.scss */
 body.rtl .username i.icon, body.rtl .username i.fa {
   padding-left: 0;
   padding-right: 0.2rem;
 }
-/* line 149, ../scss/custom/_misc.scss */
+/* line 148, ../scss/custom/_misc.scss */
 body.rtl .event-type-header {
   text-align: left;
 }
 
-/* line 155, ../scss/custom/_misc.scss */
+/* line 154, ../scss/custom/_misc.scss */
 .event-registration-blocked {
   background-color: #FFAAAA;
   color: black;
@@ -1325,47 +1329,47 @@ body.rtl .event-type-header {
   margin: 0.2rem 0.6rem;
 }
 
-/* line 161, ../scss/custom/_misc.scss */
+/* line 160, ../scss/custom/_misc.scss */
 .check-in-warning {
   color: red;
   font-weight: bold;
   margin-left: 0.5rem;
 }
-/* line 165, ../scss/custom/_misc.scss */
+/* line 164, ../scss/custom/_misc.scss */
 .check-in-warning i {
   margin-right: 0.3rem;
 }
 
-/* line 169, ../scss/custom/_misc.scss */
+/* line 168, ../scss/custom/_misc.scss */
 .profile-picture {
   margin-top: 1rem;
 }
-/* line 171, ../scss/custom/_misc.scss */
+/* line 170, ../scss/custom/_misc.scss */
 .profile-picture .image-row {
   margin-bottom: 1rem;
 }
 
-/* line 177, ../scss/custom/_misc.scss */
+/* line 176, ../scss/custom/_misc.scss */
 #site_check_in_info__row .controls {
   width: 100%;
 }
 
-/* line 180, ../scss/custom/_misc.scss */
+/* line 179, ../scss/custom/_misc.scss */
 #site_check_in_status__row .controls {
   padding-top: 0.3rem;
   width: 100%;
 }
 
-/* line 185, ../scss/custom/_misc.scss */
+/* line 184, ../scss/custom/_misc.scss */
 #check-in-form .status-label {
   font-size: 0.9rem;
 }
-/* line 188, ../scss/custom/_misc.scss */
+/* line 187, ../scss/custom/_misc.scss */
 #check-in-form .status-message {
   font-size: 0.9rem;
   font-weight: bold;
 }
-/* line 192, ../scss/custom/_misc.scss */
+/* line 191, ../scss/custom/_misc.scss */
 #check-in-form .person-details {
   font-size: 1rem;
 }
