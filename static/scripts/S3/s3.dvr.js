@@ -621,8 +621,8 @@
         },
 
         /**
-        * Helper function to hide any alert messages that are currently shown
-        */
+         * Helper function to hide any alert messages that are currently shown
+         */
         _clearAlert: function() {
 
             $('.alert-error, .alert-warning, .alert-info, .alert-success').fadeOut('fast');
@@ -630,12 +630,12 @@
         },
 
         /**
-        * Helper function to remove the person data and empty the label input,
-        * also re-enabling the ID check button while hiding the registration button
-        *
-        * @param {bool} keepAlerts - do not clear the alert space
-        * @param {bool} keepLabel - do not clear the label input field
-        */
+         * Helper function to remove the person data and empty the label input,
+         * also re-enabling the ID check button while hiding the registration button
+         *
+         * @param {bool} keepAlerts - do not clear the alert space
+         * @param {bool} keepLabel - do not clear the label input field
+         */
         _clearForm: function(keepAlerts, keepLabel) {
 
             var prefix = this.idPrefix;

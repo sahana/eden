@@ -5543,219 +5543,571 @@ class org_SiteCheckInMethod(S3Method):
         e.g. using a Barcode scanner (for the person's pe_label)
     """
 
-    # -------------------------------------------------------------------------
-    @staticmethod
-    def apply_method(r, **attr):
+    def apply_method(self, r, **attr):
         """
-            Apply method.
+            Entry point for the REST API
 
             @param r: the S3Request
-            @param attr: controller options for this request
+            @param attr: controller parameters
         """
 
-        representation = r.representation
-        if representation == "json":
-            # AJAX lookup to see if a person is checked-in or not
-            pe_label = r.get_vars.get("pe")
-            if not pe_label:
-                return current.xml.json_message(False, 400, "Label not Provided")
-            s3db = current.s3db
-            ptable = s3db.pr_person
-            person = current.db(ptable.pe_label == pe_label).select(ptable.id,
-                                                                    ptable.first_name,
-                                                                    limitby=(0, 1),
-                                                                    ).first()
-            if not person:
-                return current.xml.json_message(False, 404, "Person not Found")
-            else:
-                result = dict(n=person.first_name)
-                from ..s3.s3track import S3Trackable
-                tracker = S3Trackable(ptable, record_id=person.id)
-                locations = tracker.get_location(_fields=[s3db.gis_location.id])
-                if locations:
-                    if locations[0].id == r.record.location_id:
-                        # Checked-in
-                        result.update(c=1)
-                    else:
-                        # Checked-out
-                        result.update(c=2)
-                else:
-                    # Unknown
-                    result.update(c=3)
-                return current.xml.json_message(True, 200, result)
+        output = {}
 
-        elif representation != "html":
-            raise HTTP(415, current.ERROR.BAD_FORMAT)
+        representation = r.representation
+        if representation == "html":
+            if r.http in ("GET", "POST"):
+                output = self.check_in_form(r, **attr)
+            else:
+                r.error(405, current.ERROR.BAD_METHOD)
+        elif representation == "json":
+            if r.http == "POST":
+                output = self.accept_ajax(r, **attr)
+            else:
+                r.error(405, current.ERROR.BAD_METHOD)
+        else:
+            r.error(415, current.ERROR.BAD_FORMAT)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def check_in_form(self, r, **attr):
+        """
+            Render the check-in page
+
+            @param r: the S3Request
+            @param attr: controller parameters
+        """
 
         T = current.T
-        s3db = current.s3db
         response = current.response
+        settings = current.deployment_settings
 
-        # Give the user a form to check-in/out
+        output = {"title": T("Check-in")}
 
-        # Test the formstyle
-        formstyle = current.deployment_settings.get_ui_formstyle()
-        row = formstyle("test", "test", "test", "test")
-        if isinstance(row, tuple):
-            # Formstyle with separate row for label (e.g. default Eden formstyle)
-            tuple_rows = True
-        else:
-            # Formstyle with just a single row (e.g. Bootstrap, Foundation or DRRPP)
-            tuple_rows = False
+        check = True
+        label = None
 
-        form_rows = []
-        comment = ""
-
-        # @ToDo: Hide this & populate from barcode scanner
-        # (deployment_setting to allow manual entering of code?)
-        _id = "pe_label"
-        label = LABEL("%s:" % s3db.pr_person.pe_label.label)
-        widget = INPUT(_name=_id, _id=_id)
-        row = formstyle("%s__row" % _id, label, widget, comment)
-        if tuple_rows:
-            form_rows.append(row[0])
-            form_rows.append(row[1])
-        else:
-            form_rows.append(row)
-
-        # @ToDo: Hide these buttons until scanned (or entered manually)
-        # @ToDo: Only show relevant button (see whether we are already checked-in via AJAX call)
-        _id = "check-in"
-        label = ""
-        widget = INPUT(_type="submit",
-                       _class="btn crud-submit-button",
-                       _name=_id,
-                       _value=T("Check-In"))
-        row = formstyle("%s__row" % _id, label, widget, comment)
-        if tuple_rows:
-            form_rows.append(row[0])
-            form_rows.append(row[1])
-        else:
-            form_rows.append(row)
-
-        _id = "check-out"
-        widget = INPUT(_type="submit",
-                       _class="btn crud-submit-button",
-                       _name=_id,
-                       _value=T("Check-Out"))
-        row = formstyle("%s__row" % _id, label, widget, comment)
-        if tuple_rows:
-            form_rows.append(row[0])
-            form_rows.append(row[1])
-        else:
-            form_rows.append(row)
-
-        if tuple_rows:
-            # Assume TRs
-            form = FORM(TABLE(*form_rows))
-        else:
-            form = FORM(*form_rows)
-
-        if form.accepts(current.request.vars, current.session):
-            db = current.db
-            s3db = current.s3db
-            pe_label = form.vars.pe_label
-            ptable = s3db.pr_person
-            person = db(ptable.pe_label == pe_label).select(ptable.id,
-                                                            ptable.location_id,
-                                                            limitby=(0, 1),
-                                                            ).first()
-            if not person:
-                response.error = T("Person not found!")
+        request_vars = r.get_vars
+        if r.http == "POST":
+            # Form submission => switch to POST vars
+            request_vars = r.post_vars
+            if "check" in request_vars:
+                label = request_vars.get("label")
             else:
-                from ..s3.s3track import S3Trackable
-                person_id = person.id
-                tracker = S3Trackable(ptable, record_id=person_id)
+                check = False
+        else:
+            label = request_vars.get("label")
 
-                post_vars = r.post_vars
-                postprocess = None
-                record = r.record
-                callback = None
+        # Identify the person
+        person = None
+        pe_label = None
+        if label is not None:
+            person = self.get_person(label)
+            if person is None:
+                if r.http == "GET":
+                    response.error = T("No person found with this ID number")
+            else:
+                pe_label = person.pe_label
+                request_vars["label"] = pe_label
 
-                if "check-in" in post_vars:
+        # Get the person data
+        if person:
+            person_details = self.person_details(person)
+            profile_picture = self.profile_picture(person)
 
-                    # We're not Checking-in in S3Track terms (that's
-                    # about interlocking with another object)
-                    #tracker.check_in()
+            # @todo: get status
+            status = ""
 
-                    # @ToDo: Check if we are already checked-in?
-                    tracker.set_location(record.location_id)
+            # @todo: get info
+            info = ""
 
-                    # Check for Hook (e.g. to be able to update cr_shelter_registration)
-                    postprocess = s3db.get_config(r.tablename, "site_check_in")
-                    action = "check-in"
-                    confirmation = T("Checked-in successfully!")
+        else:
+            person_details = ""
+            profile_picture = None
+            status = ""
+            info = ""
 
-                elif "check-out" in post_vars:
-                    # Check-Out
+        # Standard form fields and data
+        formfields = [Field("label",
+                            label = T("ID"),
+                            requires = IS_NOT_EMPTY(error_message=T("Enter or scan an ID")),
+                            ),
+                      Field("person",
+                            label = "",
+                            writable = False,
+                            default = "",
+                            ),
+                      Field("status",
+                            label = "",
+                            writable = False,
+                            default = "",
+                            ),
+                      Field("info",
+                            label = "",
+                            writable = False,
+                            default = "",
+                            ),
+                      ]
 
-                    # We're not Checking-out in S3Track terms (that's
-                    # about removing an interlock with another object)
-                    # What we're doing is saying that we're now back at
-                    # our base location
-                    #tracker.check_out()
+        data = {"id": "",
+                "label": pe_label,
+                "person": person_details,
+                "status": status,
+                "info": info,
+                }
 
-                    # @ToDo: Check if we are already checked-out?
-                    tracker.set_location(person.location_id)
+        # Form buttons
+        check_btn = INPUT(_class = "tiny secondary button check-btn",
+                          _name = "check",
+                          _type = "submit",
+                          _value = T("Check ID"),
+                          )
+        check_in_btn = INPUT(_class = "tiny primary button check-in-btn",
+                             _name = "check_in",
+                             _type = "submit",
+                             _value = T("Check-in"),
+                             )
+        check_out_btn = INPUT(_class = "tiny primary button check-out-btn",
+                              _name = "check_out",
+                              _type = "submit",
+                              _value = T("Check-out"),
+                              )
 
-                    # Check for Hook (e.g. to be able to update cr_shelter_registration)
-                    postprocess = s3db.get_config(r.tablename, "site_check_out")
-                    action = "check-out"
-                    confirmation = T("Checked-out successfully!")
+        buttons = [check_btn, check_in_btn, check_out_btn]
+        buttons.append(A(T("Cancel"),
+                         _class="cancel-action action-lnk",
+                         _href=r.url(vars={}),
+                         ))
 
-                else:
-                    # Form was not submitted by any of the submit buttons,
-                    # this must be a client-side error. Raise a status so
-                    # the client can recover (i.e. reload the JS)
-                    r.error(400, current.ERROR.BAD_REQUEST, next=r.url())
+        # Generate the form and add it to the output
+        formstyle = settings.get_ui_formstyle()
+        widget_id = "check-in-form"
+        table_name = "site_check_in"
+        form = SQLFORM.factory(record = data if check else None,
+                               showid = False,
+                               formstyle = formstyle,
+                               table_name = table_name,
+                               buttons = buttons,
+                               _id = widget_id,
+                               *formfields)
+        output["form"] = form
 
-                if postprocess is not None:
 
-                    result = postprocess(record.site_id, person_id)
-                    if isinstance(result, tuple):
-                        if len(result) == 2:
-                            error, warning = result
-                        elif len(result) == 3:
-                            error, warning, callback = result
-                    else:
-                        # Ignore return value
-                        error, warning = None, None
+        # Process the form
+        formname = "check_in"
+        if form.accepts(r.post_vars,
+                        current.session,
+                        onvalidation = self.validate,
+                        formname = formname,
+                        keepvalues = False,
+                        hideerror = False,
+                        ):
 
-                    if warning:
-                        response.warning = warning
-                    if error:
-                        response.error = error
-                    else:
-                        response.confirmation = confirmation
-                else:
-                    response.confirmation = confirmation
+            pass
+            # @todo: implement accept
+            #if not check:
+                #self.accept(r, form, event_type=event_type)
 
-                if callback is not None:
-                    # Callback requested by post-process, e.g. to
-                    # show a custom page with handling instructions
-                    return callback(record.site_id,
-                                    person_id,
-                                    action = action,
-                                    )
+        # Profile picture
+        picture = DIV(_class="panel")
+        if check and form.accepted:
+            if profile_picture:
+                picture.append(IMG(_id="profile-picture",
+                                   _src=profile_picture,
+                                   ))
+            else:
+                picture.append(P(T("No picture available")))
+        else:
+            picture.add_class("hide")
+        output["picture"] = picture
 
-        # @ToDo: Allow configuring the special chars via Web UI?
-        # NB  small tilde  char not visible in Notepad++ using default font, switch to Consolas!
-        #success = T("Scan successful: check In or Out?")
-        # @ToDo: Personalise with Name from AJAX call too?
-        #checked_in = T("You are currently Checked-In, would you like to Check-Out?")
-        #checked_out = T("You are currently Checked-Out, would you like to Check-In?")
-        #s3 = response.s3
-        #if s3.debug:
-        #    s3.scripts.append("/%s/static/scripts/jquery.barcodelistener-1.1.js" % r.application)
-        #else:
-        #    s3.scripts.append("/%s/static/scripts/jquery.barcodelistener-1.1-min.js" % r.application)
-        #s3.jquery_ready.append('''$(document).BarcodeListener([['§','32'],['˜','732']],function(code){$('#pe_label').val(code);S3.showAlert('%(success)s')})''' % success)
+        # Inject JS
+        options = {"tableName": table_name,
+                   "ajax": True,
+                   "ajaxURL": r.url(None,
+                                    representation = "json",
+                                    ),
+                   "noPictureAvailable": s3_str(T("No picture available")),
+                   "statusCheckedIn": s3_str(T("checked-in")),
+                   "statusCheckedOut": s3_str(T("checked-out")),
+                   "statusNone": s3_str(current.messages["NONE"]),
+                   "statusLabel": s3_str(T("Status")),
+                   }
+        self.inject_js(widget_id, options)
 
-        response.view = "check-in.html"
-        output = dict(form = form,
-                      title = T("Check-In"),
-                      )
+        response.view = "org/site_check_in.html"
+
         return output
+
+    # -------------------------------------------------------------------------
+    def validate(self, form):
+        """
+            Validate the check-in form (non-Ajax)
+
+            @param form: the FORM
+        """
+
+        T = current.T
+
+        formvars = form.vars
+
+        label = formvars.get("label").strip()
+        person = self.get_person(label)
+        if person is None:
+            form.errors["label"] = T("No person found with this ID number")
+
+    # -------------------------------------------------------------------------
+    def accept(r, form):
+        """
+            Accept the check-in form (non-Ajax)
+
+            @todo: implement, enable in check_in_form
+        """
+
+        pass
+
+    # -------------------------------------------------------------------------
+    def accept_ajax(self, r, **attr):
+        """
+            Perform ajax actions, accepts a JSON object as input:
+                {m: the method (check|check-in|check-out)
+                 l: the PE label
+                 }
+
+            @param r: the S3Request
+            @param attr: controller parameters
+        """
+
+        T = current.T
+
+        # Load JSON data from request body
+        s = r.body
+        s.seek(0)
+        try:
+            data = json.load(s)
+        except (ValueError, TypeError):
+            r.error(400, current.ERROR.BAD_REQUEST)
+
+        # Initialize
+        output = {}
+        error = None
+        alert = None
+        alert_type = 'success'
+
+        # Identify the person
+        label = data.get("l")
+        person = self.get_person(label)
+
+        if person is None:
+            error = T("No person found with this ID number")
+        else:
+            status = self.status(r, person)
+            if not status.get("valid"):
+                person = None
+                error = status.get("error", T("Person not allowed to check-in/out at this site"))
+
+        if person:
+            method = data.get("m")
+            if method == "check":
+
+                ajax_data = self.ajax_data(person, status)
+                output.update(ajax_data)
+
+            elif method == "check-in":
+
+                check_in_allowed = status.get("check_in_allowed")
+
+                if not check_in_allowed or status.get("info") is not None:
+                    ajax_data = self.ajax_data(person, status)
+                    output.update(ajax_data)
+
+                if status.get("status") == 1:
+                    alert = T("Client was already checked-in")
+                    alert_type = "warning"
+                else:
+                    if not check_in_allowed:
+                        alert = T("Check-in denied")
+                        alert_type = "error"
+                    else:
+                        self.check_in(r, person)
+                        output["s"] = 1
+                        alert = T("Checked-in successfully!")
+
+            elif method == "check-out":
+
+                check_out_allowed = status.get("check_out_allowed")
+
+                if not check_out_allowed or status.get("info") is not None:
+                    ajax_data = self.ajax_data(person, status)
+                    output.update(ajax_data)
+
+                if status.get("status") == 2:
+                    alert = T("Client was already checked-out")
+                    alert_type = "warning"
+                else:
+                    if not check_out_allowed:
+                        alert = T("Check-out denied")
+                        alert_type = "error"
+                    else:
+                        self.check_out(r, person)
+                        output["s"] = 2
+                        alert = T("Checked-out successfully!")
+
+            else:
+                r.error(405, current.ERROR.BAD_METHOD)
+
+        # Input-field error
+        if error:
+            output["e"] = s3_str(error)
+
+        # Page alert
+        if alert:
+            output["m"] = (s3_str(alert), alert_type)
+
+        current.response.headers["Content-Type"] = "application/json"
+        return json.dumps(output)
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def ajax_data(cls, person, status):
+        """
+            Convert person details and current check-in status into
+            a JSON-serializable dict for Ajax-actions
+
+            @param person: the person record
+            @param status: the status dict (from status())
+        """
+
+        T = current.T
+
+        person_details = cls.person_details(person)
+        output = {"d": s3_str(person_details),
+                  "i": True if status.get("check_in_allowed") else False,
+                  "o": True if status.get("check_out_allowed") else False,
+                  "s": status.get("status"),
+                  }
+
+        profile_picture = cls.profile_picture(person)
+        if profile_picture:
+            output["p"] = profile_picture
+
+        info = status.get("info")
+        if info:
+            output["a"] = s3_str(info)
+
+        return output
+
+    # -------------------------------------------------------------------------
+    def get_person(self, label):
+        """
+            Get the person record for the label
+
+            @param label: the PE label
+        """
+
+        s3db = current.s3db
+        person = None
+
+        # Fields to extract
+        fields = ["id",
+                  "pe_id",
+                  "pe_label",
+                  "first_name",
+                  "middle_name",
+                  "last_name",
+                  "date_of_birth",
+                  "gender",
+                  "location_id",
+                  ]
+
+        query = (FS("pe_label") == label)
+        presource = s3db.resource("pr_person", filter=query)
+        rows = presource.select(fields,
+                                start = 0,
+                                limit = 1,
+                                as_rows = True,
+                                )
+
+        return rows[0] if rows else None
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def status(r, person):
+        """
+            Check the check-in/out status for a person at this site,
+            invokes the check_in_status hook for the site resource
+            to obtain current status information.
+
+            @param r: the S3Request
+            @param site_id: the site ID
+            @param person: the person record
+
+            @return: a dict like:
+                     {valid: True|False, whether the person record is valid
+                             for check-in/out at this site
+                      status: 1 = currently checked-in at this site
+                              2 = currently checked-out from this site
+                              None = no previous status available
+                      info: string or XML to render in info-field
+                      check_in_allowed: True|False
+                      check_out_allowed: True|False
+                      error: error message to display in check-in form
+                      }
+        """
+
+        # Default values
+        result =  {"valid": True,
+                   "status": None,
+                   "info": None,
+                   "check_in_allowed": True,
+                   "check_out_allowed": True,
+                   "error": None,
+                   }
+
+        check_in_status = current.s3db.get_config(r.tablename,
+                                                  "check_in_status",
+                                                  )
+        if check_in_status:
+            status = check_in_status(r.record, person)
+        else:
+            status = None
+
+        if isinstance(status, dict):
+            result.update(status)
+        else:
+            result["status"] = status
+
+        return result
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def person_details(person):
+        """
+            Format the person details
+
+            @param person: the person record (Row)
+        """
+
+        T = current.T
+        settings = current.deployment_settings
+
+        name = s3_fullname(person)
+        dob = person.date_of_birth
+        if dob:
+            dob = S3DateTime.date_represent(dob)
+            details = "%s (%s %s)" % (name, T("Date of Birth"), dob)
+        else:
+            details = name
+
+        return SPAN(details, _class = "person-details")
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def profile_picture(person):
+        """
+            Get the profile picture URL for a person
+
+            @param person: the person record (Row)
+
+            @return: the profile picture URL (relative URL), or None if
+                     no profile picture is available for that person
+        """
+
+        try:
+            pe_id = person.pe_id
+        except AttributeError:
+            return None
+
+        table = current.s3db.pr_image
+        query = (table.pe_id == pe_id) & \
+                (table.profile == True) & \
+                (table.deleted != True)
+        row = current.db(query).select(table.image, limitby=(0, 1)).first()
+
+        if row:
+            return URL(c="default", f="download", args=row.image)
+        else:
+            return None
+
+    # -------------------------------------------------------------------------
+    def check_in(self, r, person):
+        """
+            Check-in the person at this site, invokes the site_check_in
+            hook for the site resource
+
+            @param r: the S3Request
+            @param person: the person record
+        """
+
+        s3db = current.s3db
+        ptable = s3db.pr_person
+
+        from s3.s3track import S3Trackable
+        person_id = person.id
+        record = r.record
+
+        # Update tracking location for the person
+        tracker = S3Trackable(ptable, record_id=person_id)
+        tracker.set_location(record.location_id)
+
+        # Callback
+        site_check_in = s3db.get_config(r.tablename, "site_check_in")
+        if site_check_in:
+            site_check_in(record.site_id, person_id)
+
+    # -------------------------------------------------------------------------
+    def check_out(self, r, person):
+        """
+            Check-out the person from this site, invokes the site_check_out
+            hook for the site resource
+
+            @param r: the S3Request
+            @param person: the person record
+        """
+
+        s3db = current.s3db
+        ptable = s3db.pr_person
+
+        from s3.s3track import S3Trackable
+        person_id = person.id
+
+        record = r.record
+
+        tracker = S3Trackable(ptable, record_id=person_id)
+        tracker.set_location(person.location_id)
+
+        site_check_out = s3db.get_config(r.tablename, "site_check_out")
+        if site_check_out:
+            site_check_out(record.site_id, person_id)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inject_js(widget_id, options):
+        """
+            Helper function to inject static JS and instantiate the
+            client-side widget
+
+            @param widget_id: the node ID where to instantiate the widget
+            @param options: dict of widget options (JSON-serializable)
+        """
+
+        s3 = current.response.s3
+        appname = current.request.application
+
+        # Static JS
+        scripts = s3.scripts
+        if s3.debug:
+            script = "/%s/static/scripts/S3/s3.ui.sitecheckin.js" % appname
+        else:
+            script = "/%s/static/scripts/S3/s3.ui.sitecheckin.min.js" % appname
+        scripts.append(script)
+
+        # Instantiate widget
+        scripts = s3.jquery_ready
+        script = '''$('#%(id)s').siteCheckIn(%(options)s)''' % \
+                 {"id": widget_id, "options": json.dumps(options)}
+        if script not in scripts:
+            scripts.append(script)
 
 # =============================================================================
 def org_site_has_assets(row, tablename="org_facility"):

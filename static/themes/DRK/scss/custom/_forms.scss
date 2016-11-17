@@ -3,6 +3,12 @@ form {
     font-size: 0.8rem;
     .form-row {
         margin-top: 0.5rem !important;
+        .button {
+            margin-right: 0.5rem;
+            i.fa {
+                margin-right: 0.3rem;
+            }
+        }
         & > .columns {
             &:first-child {
                 overflow: hidden;

@@ -172,3 +172,24 @@ body.rtl {
         margin-bottom: 1rem;
     }
 }
+
+// Check-in/out UI
+#site_check_in_info__row .controls {
+    width: 100%;
+}
+#site_check_in_status__row .controls {
+    padding-top: 0.3rem;
+    width: 100%;
+}
+#check-in-form {
+    .status-label {
+        font-size: 0.9rem;
+    }
+    .status-message {
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+    .person-details {
+        font-size: 1rem;
+    }
+}

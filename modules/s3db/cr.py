@@ -595,7 +595,8 @@ class S3ShelterModel(S3Model):
 
         set_method("cr", "shelter",
                    method="check-in",
-                   action = self.org_SiteCheckInMethod())
+                   action = self.org_SiteCheckInMethod,
+                   )
 
         set_method("cr", "shelter",
                    method = "dispatch",

@@ -370,6 +370,7 @@ def dojs(dogis = False, warnings = True):
                      "ui.dashboard",
                      "ui.embeddedcomponent",
                      "ui.locationselector",
+                     "ui.sitecheckin",
                      "work",
                      ):
         print "Compressing s3.%s.js" % filename
