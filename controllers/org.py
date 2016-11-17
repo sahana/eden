@@ -431,6 +431,12 @@ def service_location():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def site_location():
+    """ RESTful CRUD controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def req_match():
     """ Match Requests for Sites """
 
