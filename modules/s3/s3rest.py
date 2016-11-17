@@ -275,7 +275,9 @@ class S3Request(object):
         set_handler("fields", self.get_fields,
                     http=("GET",), transform=True)
         set_handler("options", self.get_options,
-                    http=("GET",), transform=True)
+                    http=("GET",),
+                    representation = ("__transform__", "json"),
+                    )
 
         sync = current.sync
         set_handler("sync", sync,
@@ -775,11 +777,6 @@ class S3Request(object):
             self.next = URL(r=self, f=self.name)
             return lambda r, **attr: None
 
-        elif method == "options":
-            # Allow json format requests through to this method
-            # (other representations get blocked inside get_options anyway)
-            transform = True
-
         elif self.transformable():
             transform = True
 
@@ -1211,13 +1208,12 @@ class S3Request(object):
             show_uids = False
 
         representation = r.representation
+        flat = False
         if representation == "xml":
-            flat = False
             only_last = False
             as_json = False
             content_type = "text/xml"
         elif representation == "s3json":
-            flat = False
             show_uids = False
             as_json = True
             content_type = "application/json"
@@ -1237,14 +1233,16 @@ class S3Request(object):
                                            show_uids=show_uids,
                                            only_last=only_last,
                                            hierarchy=hierarchy,
-                                           as_json=as_json)
+                                           as_json=as_json,
+                                           )
 
         if flat:
             s3json = json.loads(output)
-            flat = s3json["option"]
             output = {}
-            for item in flat:
-                output[item.get("@value")] = item.get("$", "")
+            options = s3json.get("option")
+            if options:
+                for item in options:
+                    output[item.get("@value")] = item.get("$", "")
             output = json.dumps(output)
 
         current.response.headers["Content-Type"] = content_type

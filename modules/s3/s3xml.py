@@ -1668,7 +1668,7 @@ class S3XML(S3Codec):
         options = None
         try:
             field = table[fieldname]
-        except AttributeError:
+        except (KeyError, AttributeError):
             pass
         else:
             requires = field.requires
