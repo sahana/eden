@@ -728,7 +728,7 @@ S3.showAlert = function(message, type) {
         alert = $('<div class="alert alert-' + type + '">' + message + '<button type="button" class="close" data-dismiss="alert">×</button></div>');
 
     alertSpace.append(alert).undelegate('.s3').delegate('.alert', 'click.s3', function() {
-        $this.fadeOut('slow');
+        $(this).fadeOut('slow').remove();
         return false;
     });
     return alert;
