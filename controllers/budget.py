@@ -164,7 +164,8 @@ def project():
     rheader = lambda r: s3db.project_rheader(r, tabs=tabs)
 
     output = s3_rest_controller("project", "project",
-                                rheader=rheader)
+                                rheader = rheader,
+                                )
 
     return output
 

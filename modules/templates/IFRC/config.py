@@ -2299,6 +2299,8 @@ def config(settings):
     def rdrt_member_profile_header(r):
         """ Custom profile header to allow update of RDRT roster status """
 
+        import json
+
         record = r.record
         if not record:
             return ""
@@ -2310,35 +2312,60 @@ def config(settings):
         has_permission = current.auth.s3_has_permission
         table = r.table
 
-        # Organisation
-        comments = table.organisation_id.represent(record.organisation_id)
-
         from s3 import s3_unicode
         from gluon.html import A, DIV, H2, LABEL, P, SPAN, URL
         SUBMIT = T("Save")
         EDIT = T("Click to edit")
 
-        # Add job title if present
+        # Job title, if present
         job_title_id = record.job_title_id
         if job_title_id:
-            comments = (SPAN("%s, " % \
-                             s3_unicode(table.job_title_id.represent(job_title_id))),
-                             comments)
+            comments = SPAN(s3_unicode(table.job_title_id.represent(job_title_id)))
+        else:
+            comments = SPAN()
+
+        # Permissions
+        record_id = record.id
+        updateable = has_permission("update",
+                                    "hrm_human_resource",
+                                    record_id=record_id)
+
+        # Organisation
+        org_value = record.organisation_id
+        ofield = table.organisation_id
+        org_represent = ofield.represent(org_value)
+
+        if updateable:
+            # Make inline-editable
+            script = True
+            org_represent = A(org_represent,
+                              data = {"organisation_id": org_value},
+                              _id = "rdrt-organisation",
+                              _title = EDIT,
+                              )
+            org_opts = ofield.requires.options()
+            #org_opts = {key: value for (key, value) in org_opts}
+            org_script = '''$.rdrtOrg('%(url)s','%(submit)s')''' % \
+                {"url": URL(c="deploy", f="human_resource",
+                            args=[record_id, "update.url"]),
+                 "submit": SUBMIT,
+                 }
+        else:
+            # Read-only
+            script = False
+            org_represent = SPAN(org_represent)
+            org_script = None
 
         # Add Type
         hr_type_value = record.type
         tfield = table.type
         if hr_type_value in (1, 2):
-            record_id = record.id
             type_represent = tfield.represent
             hr_type_represent = type_represent(hr_type_value)
         else:
-            record_id = None
             hr_type_represent = current.messages.UNKNOWN_OPT
 
-        if record_id and has_permission("update",
-                                        "hrm_human_resource",
-                                        record_id=record_id):
+        if updateable:
             # Make inline-editable
             script = True
             hr_type_represent = A(hr_type_represent,
@@ -2404,6 +2431,8 @@ def config(settings):
             if script not in s3.scripts:
                 s3.scripts.append(script)
             jqrappend = s3.jquery_ready.append
+            if org_script:
+                jqrappend(org_script)
             if type_script:
                 jqrappend(type_script)
             if status_script:
@@ -2418,6 +2447,7 @@ def config(settings):
                      ),
                    H2(name),
                    P(comments),
+                   DIV(LABEL(ofield.label + ": "), org_represent),
                    DIV(LABEL(tfield.label + ": "), hr_type_represent),
                    DIV(LABEL(status.label + ": "), roster_status),
                    _class="profile-header",

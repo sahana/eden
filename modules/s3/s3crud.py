@@ -2709,7 +2709,7 @@ class S3CRUD(S3Method):
     @staticmethod
     def import_url(r):
         """
-            Import data from URL query
+            Import data from vars in URL query
 
             @param r: the S3Request
             @note: can only update single records (no mass-update)
