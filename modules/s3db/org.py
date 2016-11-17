@@ -2044,7 +2044,7 @@ class S3OrganisationResourceModel(S3Model):
                           self.org_organisation_id(ondelete="CASCADE"),
                           # Add this when deprecating S3OfficeSummaryModel
                           #self.super_link("site_id", "org_site",
-                          #                label=current.deployment_settings.get_org_site_label(),
+                          #                label = current.deployment_settings.get_org_site_label(),
                           #                instance_types = auth.org_site_types,
                           #                orderby = "org_site.name",
                           #                realms = auth.permission.permitted_realms("org_site",
@@ -3680,6 +3680,7 @@ class S3SiteLocationModel(S3Model):
     def model(self):
 
         T = current.T
+        auth = current.auth
 
         # ---------------------------------------------------------------------
         # Sites <> Locations Link Table
@@ -3687,9 +3688,21 @@ class S3SiteLocationModel(S3Model):
         tablename = "org_site_location"
         self.define_table(tablename,
                           # Component not instance
-                          self.super_link("site_id", "org_site"),
+                          self.super_link("site_id", "org_site",
+                                          label = current.deployment_settings.get_org_site_label(),
+                                          instance_types = auth.org_site_types,
+                                          orderby = "org_site.name",
+                                          realms = auth.permission.permitted_realms("org_site",
+                                                                                    method="create"),
+                                          not_filterby = "obsolete",
+                                          not_filter_opts = (True,),
+                                          readable = True,
+                                          writable = True,
+                                          represent = self.org_site_represent,
+                                          ),
                           self.gis_location_id(
                             #represent = self.gis_LocationRepresent(sep=", "),
+                            represent = S3Represent(lookup="gis_location"),
                             requires = IS_LOCATION(),
                             widget = S3LocationAutocompleteWidget()
                           ),

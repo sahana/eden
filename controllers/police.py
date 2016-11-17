@@ -44,6 +44,16 @@ def station():
 #    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def site_location():
+    """ RESTful CRUD controller """
+
+    from s3 import FS
+    s3.filter = (FS("site_id$instance_type") == "police_station")
+
+    return s3_rest_controller("org", "site_location",
+                              )
+
+# -----------------------------------------------------------------------------
 def police_rheader(r, tabs=[]):
     """ Resource headers for component views """
 
