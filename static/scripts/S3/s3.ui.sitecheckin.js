@@ -20,13 +20,19 @@
         /**
          * Default options
          *
-         * @todo document options
+         * @prop {string} tablename - the tablename used for the form
+         * @prop {string} ajaxURL - the URL to send Ajax requests to
+         * @prop {string} noPictureAvailable - i18n message when no profile
+         *                                     picture is available
+         * @prop {string} statusCheckedIn - status message for 'checked-in'
+         * @prop {string} statusCheckedOut - status message for 'checked-out'
+         * @prop {string} statusNone - status message for 'unknown'
+         * @prop {string} statusLabel - label for status message
          */
         options: {
 
             tableName: 'site_check_in',
 
-            ajax: true,
             ajaxURL: '',
 
             noPictureAvailable: 'No picture available',
@@ -57,6 +63,8 @@
             // ID prefix for form rows
             this.idPrefix = '#' + this.options.tableName;
 
+            this.personData = $(this.element).find('input[type=hidden][name=data]');
+
             this.refresh();
         },
 
@@ -74,6 +82,11 @@
         refresh: function() {
 
             this._unbindEvents();
+
+            var data = this.personData.val();
+            if (data && data != 'null') {
+                this._showPersonData(JSON.parse(data));
+            }
 
             this._bindEvents();
         },
@@ -247,7 +260,9 @@
         },
 
         /**
-         * @todo: docstring
+         * Render the person data returned from Ajax-lookup
+         *
+         * @param {object} - the person data from Ajax-lookup
          */
         _showPersonData: function(data) {
 
@@ -291,7 +306,11 @@
         },
 
         /**
-         * @todo: docstring
+         * Generate HTML for the current check-in status
+         *
+         * @param {integer} status - 1=checked-in, 2=checked-out, null=unknown
+         *
+         * @returns {jQuery} - a detached DOM node with the status message
          */
         _statusMsg: function(status) {
 
@@ -315,7 +334,10 @@
         },
 
         /**
-         * @todo: docstring
+         * Clear the form
+         *
+         * @param {boolean} keepAlerts - don't clear any page alerts
+         * @param {boolean} keepInput - don't clear the label input
          */
         _clearForm: function(keepAlerts, keepInput) {
 
@@ -330,8 +352,9 @@
             }
 
             // Clear ID label
+            var labelInput = $(prefix + '_label').focus();
             if (!keepInput) {
-                $(prefix + '_label').val('');
+                labelInput.val('');
             }
 
             // Clear details
@@ -356,7 +379,9 @@
         },
 
         /**
-         * @todo: docstring
+         * Show the profile picture (or a message if no picture available)
+         *
+         * @param {string} url - the picture URL
          */
         _showProfilePicture: function(url) {
 
@@ -373,7 +398,7 @@
         },
 
         /**
-         * @todo: docstring
+         * Remove the profile picture
          */
         _hideProfilePicture: function() {
 
@@ -382,11 +407,12 @@
         },
 
         /**
-         * @todo: docstring
+         * Toggle action button status
+         *
+         * @param {string} buttonClass - the button CSS class
+         * @param {string} status - the new status: on|off|deny
          */
         _toggleAction: function(buttonClass, status) {
-
-            // status = 'on', 'off', 'deny'
 
             var button = $('input.' + buttonClass),
                 label = button.val(),
@@ -408,6 +434,7 @@
                 default:
                     button.siblings('.disabled-' + buttonClass).remove();
                     button.prop('disabled', false).show();
+                    break;
             }
         },
 
@@ -421,28 +448,26 @@
                 ns = this.eventNamespace,
                 prefix = this.idPrefix;
 
-            if (this.options.ajax) {
-                // Click-Handler for Check-ID button
-                form.find('.check-btn').bind('click' + ns, function(e) {
-                    e.preventDefault();
-                    self._checkID();
-                });
-                // Click-Handler for Check-in button
-                form.find('.check-in-btn').unbind(ns).bind('click' + ns, function(e) {
-                    e.preventDefault();
-                    self._register('check-in');
-                });
-                // Click-Handler for Check-out button
-                form.find('.check-out-btn').unbind(ns).bind('click' + ns, function(e) {
-                    e.preventDefault();
-                    self._register('check-out');
-                });
-                // Cancel-button to clear the form
-                form.find('a.cancel-action').bind('click' + ns, function(e) {
-                    e.preventDefault();
-                    self._clearForm();
-                });
-            }
+            // Click-Handler for Check-ID button
+            form.find('.check-btn').bind('click' + ns, function(e) {
+                e.preventDefault();
+                self._checkID();
+            });
+            // Click-Handler for Check-in button
+            form.find('.check-in-btn').unbind(ns).bind('click' + ns, function(e) {
+                e.preventDefault();
+                self._register('check-in');
+            });
+            // Click-Handler for Check-out button
+            form.find('.check-out-btn').unbind(ns).bind('click' + ns, function(e) {
+                e.preventDefault();
+                self._register('check-out');
+            });
+            // Cancel-button to clear the form
+            form.find('a.cancel-action, .clear-btn').bind('click' + ns, function(e) {
+                e.preventDefault();
+                self._clearForm();
+            });
 
             // Events for the label input
             var labelInput = $(prefix + '_label');
@@ -481,7 +506,7 @@
             form.find('.check-btn').unbind(ns);
             form.find('.check-in-btn').unbind(ns);
             form.find('.check-out-btn').unbind(ns);
-            form.find('a.cancel-action').unbind(ns);
+            form.find('a.cancel-action, .clear-btn').unbind(ns);
 
             return true;
         }

@@ -5568,13 +5568,13 @@ class org_SiteCheckInMethod(S3Method):
 
         representation = r.representation
         if representation == "html":
-            if r.http in ("GET", "POST"):
+            if r.http == "GET":
                 output = self.check_in_form(r, **attr)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
         elif representation == "json":
             if r.http == "POST":
-                output = self.accept_ajax(r, **attr)
+                output = self.submit_ajax(r, **attr)
             else:
                 r.error(405, current.ERROR.BAD_METHOD)
         else:
@@ -5597,19 +5597,8 @@ class org_SiteCheckInMethod(S3Method):
 
         output = {"title": T("Check-in")}
 
-        check = True
-        label = None
-
         request_vars = r.get_vars
-        if r.http == "POST":
-            # Form submission => switch to POST vars
-            request_vars = r.post_vars
-            if "check" in request_vars:
-                label = request_vars.get("label")
-            else:
-                check = False
-        else:
-            label = request_vars.get("label")
+        label = request_vars.get("label")
 
         # Identify the person
         person = None
@@ -5617,33 +5606,26 @@ class org_SiteCheckInMethod(S3Method):
         if label is not None:
             person = self.get_person(label)
             if person is None:
-                if r.http == "GET":
-                    response.error = T("No person found with this ID number")
-            else:
-                pe_label = person.pe_label
-                request_vars["label"] = pe_label
+                response.error = T("No person found with this ID number")
 
         # Get the person data
+        person_data = None
         if person:
-            person_details = self.person_details(person)
-            profile_picture = self.profile_picture(person)
-
-            # @todo: get status
-            status = ""
-
-            # @todo: get info
-            info = ""
-
-        else:
-            person_details = ""
-            profile_picture = None
-            status = ""
-            info = ""
+            status = self.status(r, person)
+            if not status.get("valid"):
+                person = None
+                response.error = status.get("error",
+                                    T("Person not allowed to check-in/out at this site"))
+            else:
+                pe_label = person.pe_label
+                person_data = self.ajax_data(person, status)
 
         # Standard form fields and data
+        from s3 import S3StringWidget
         formfields = [Field("label",
                             label = T("ID"),
                             requires = IS_NOT_EMPTY(error_message=T("Enter or scan an ID")),
+                            widget = self.label_input,
                             ),
                       Field("person",
                             label = "",
@@ -5662,12 +5644,18 @@ class org_SiteCheckInMethod(S3Method):
                             ),
                       ]
 
+        # Initial data
         data = {"id": "",
                 "label": pe_label,
-                "person": person_details,
-                "status": status,
-                "info": info,
+                "person": "",
+                "status": "",
+                "info": "",
                 }
+
+        # Hidden inputs
+        hidden = {
+            "data": json.dumps(person_data)
+        }
 
         # Form buttons
         check_btn = INPUT(_class = "tiny secondary button check-btn",
@@ -5696,47 +5684,18 @@ class org_SiteCheckInMethod(S3Method):
         formstyle = settings.get_ui_formstyle()
         widget_id = "check-in-form"
         table_name = "site_check_in"
-        form = SQLFORM.factory(record = data if check else None,
+        form = SQLFORM.factory(record = data if person else None,
                                showid = False,
                                formstyle = formstyle,
                                table_name = table_name,
                                buttons = buttons,
+                               hidden = hidden,
                                _id = widget_id,
                                *formfields)
         output["form"] = form
 
-
-        # Process the form
-        formname = "check_in"
-        if form.accepts(r.post_vars,
-                        current.session,
-                        onvalidation = self.validate,
-                        formname = formname,
-                        keepvalues = False,
-                        hideerror = False,
-                        ):
-
-            pass
-            # @todo: implement accept
-            #if not check:
-                #self.accept(r, form, event_type=event_type)
-
-        # Profile picture
-        picture = DIV(_class="panel")
-        if check and form.accepted:
-            if profile_picture:
-                picture.append(IMG(_id="profile-picture",
-                                   _src=profile_picture,
-                                   ))
-            else:
-                picture.append(P(T("No picture available")))
-        else:
-            picture.add_class("hide")
-        output["picture"] = picture
-
         # Inject JS
         options = {"tableName": table_name,
-                   "ajax": True,
                    "ajaxURL": r.url(None,
                                     representation = "json",
                                     ),
@@ -5753,34 +5712,42 @@ class org_SiteCheckInMethod(S3Method):
         return output
 
     # -------------------------------------------------------------------------
-    def validate(self, form):
+    @staticmethod
+    def label_input(field, value, **attributes):
         """
-            Validate the check-in form (non-Ajax)
+            Custom widget for label input, providing a clear-button
+            (for ease of use on mobile devices where no ESC exists)
 
-            @param form: the FORM
+            @param field: the Field
+            @param value: the current value
+            @param attributes: HTML attributes
+
+            NB: expects Foundation theme
         """
 
-        T = current.T
+        from gluon.sqlhtml import StringWidget
 
-        formvars = form.vars
+        default = {"value": (value is not None and str(value)) or ""}
+        attr = StringWidget._attributes(field, default, **attributes)
 
-        label = formvars.get("label").strip()
-        person = self.get_person(label)
-        if person is None:
-            form.errors["label"] = T("No person found with this ID number")
+        placeholder = current.T("Enter or scan ID")
+        attr["_placeholder"] = placeholder
+
+        postfix = ICON("fa fa-close")
+
+        widget = DIV(DIV(INPUT(**attr),
+                         _class="small-11 columns",
+                         ),
+                     DIV(SPAN(postfix, _class="postfix clear-btn"),
+                         _class="small-1 columns",
+                         ),
+                     _class="row collapse",
+                     )
+
+        return widget
 
     # -------------------------------------------------------------------------
-    def accept(r, form):
-        """
-            Accept the check-in form (non-Ajax)
-
-            @todo: implement, enable in check_in_form
-        """
-
-        pass
-
-    # -------------------------------------------------------------------------
-    def accept_ajax(self, r, **attr):
+    def submit_ajax(self, r, **attr):
         """
             Perform ajax actions, accepts a JSON object as input:
                 {m: the method (check|check-in|check-out)
@@ -5817,7 +5784,8 @@ class org_SiteCheckInMethod(S3Method):
             status = self.status(r, person)
             if not status.get("valid"):
                 person = None
-                error = status.get("error", T("Person not allowed to check-in/out at this site"))
+                error = status.get("error",
+                            T("Person not allowed to check-in/out at this site"))
 
         if person:
             method = data.get("m")

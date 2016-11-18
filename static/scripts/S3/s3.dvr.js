@@ -22,8 +22,13 @@
          * Default options
          *
          * @prop {string} tablename - the tablename used for the form
-         * @prop {bool} ajax - data submission using Ajax
+         * @prop {boolean} ajax - data submission using Ajax
          * @prop {string} ajaxURL - the URL to send Ajax requests to
+         *
+         * @prop {boolean} showPicture - true=always show profile picture
+         *                               false=show profile picture on demand
+         * @prop {string} showPictureText - button label for "Show Picture"
+         * @prop {string} hidePictureText - button label for "Hide Picture"
          */
         options: {
 

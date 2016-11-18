@@ -23,6 +23,14 @@ form {
         select {
             min-width: 4rem;
         }
+        .controls span.postfix {
+            height: 1.75rem;
+            line-height: 1.5rem;
+            font-size: 0.8rem;
+            .fa {
+                line-height: inherit;
+            }
+        }
     }
     label.inline {
         padding: 0;
