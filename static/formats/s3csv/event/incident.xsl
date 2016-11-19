@@ -8,8 +8,9 @@
          CSV fields:
          Name.................................event_incident.name
          Type.................................event_incident.incident_type_id
+         Event................................event_incident.event_id
          Exercise.............................event_incident.exercise
-         Zero Hour............................event_incident.zero_hour
+         Date.................................event_incident.date
          Closed...............................event_incident.closed
          Address.................optional.....gis_location.addr_street
          Postcode................optional.....gis_location.addr_postcode
@@ -40,16 +41,24 @@
 
     <!-- ****************************************************************** -->
     <!-- Indexes for faster processing -->
-    <xsl:key name="type" match="row" use="col[@field='Type']"/>
+    <xsl:key name="events" match="row" use="col[@field='Event']"/>
     <xsl:key name="orgs" match="row" use="col[@field='Organisation']"/>
+    <xsl:key name="types" match="row" use="col[@field='Type']"/>
 
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
-            <!-- Type -->
-            <xsl:for-each select="//row[generate-id(.)=generate-id(key('type',
+            <!-- Types -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('types',
                                                                        col[@field='Type'])[1])]">
                 <xsl:call-template name="Type"/>
+            </xsl:for-each>
+
+            <!-- Events -->
+            <xsl:for-each select="//row[generate-id(.)=
+                                        generate-id(key('events',
+                                                        col[@field='Event'])[1])]">
+                <xsl:call-template name="Event"/>
             </xsl:for-each>
 
             <!-- Organisations -->
@@ -85,7 +94,7 @@
         <!-- Incident -->
         <resource name="event_incident">
             <data field="name"><xsl:value-of select="col[@field='Name']"/></data>
-            <data field="zero_hour"><xsl:value-of select="col[@field='Zero Hour']"/></data>
+            <data field="date"><xsl:value-of select="col[@field='Date']"/></data>
             <xsl:choose>
                 <xsl:when test="$Exercise=''">
                     <!-- Use System Default -->
@@ -145,10 +154,20 @@
                 </xsl:when>
             </xsl:choose>
 
+            <!-- Link to Type -->
             <xsl:if test="col[@field='Type']!=''">
                 <reference field="incident_type_id" resource="event_incident_type">
                     <xsl:attribute name="tuid">
                         <xsl:value-of select="concat('Type:', col[@field='Type'])"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+
+            <!-- Link to Event -->
+            <xsl:if test="col[@field='Event']!=''">
+                <reference field="event_id" resource="event_event">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('Event:', col[@field='Event'])"/>
                     </xsl:attribute>
                 </reference>
             </xsl:if>
@@ -164,6 +183,7 @@
                 </xsl:attribute>
             </reference>
 
+            <!-- Link to Organisation -->
             <reference field="organisation_id" resource="org_organisation">
                 <xsl:attribute name="tuid">
                     <xsl:value-of select="col[@field='Lead Organisaton']"/>
@@ -189,7 +209,6 @@
 
     <!-- ****************************************************************** -->
     <xsl:template name="Type">
-
         <xsl:variable name="Type" select="col[@field='Type']"/>
 
         <xsl:if test="$Type!=''">
@@ -198,6 +217,20 @@
                     <xsl:value-of select="concat('Type:', $Type)"/>
                 </xsl:attribute>
                 <data field="name"><xsl:value-of select="$Type"/></data>
+            </resource>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Event">
+        <xsl:variable name="Event" select="col[@field='Event']"/>
+
+        <xsl:if test="$Event!=''">
+            <resource name="event_event">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('Event:', $Event)"/>
+                </xsl:attribute>
+                <data field="name"><xsl:value-of select="$Event"/></data>
             </resource>
         </xsl:if>
     </xsl:template>

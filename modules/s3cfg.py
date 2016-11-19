@@ -2927,6 +2927,17 @@ class S3Config(Storage):
         """
         return self.event.get("label", None)
 
+    def get_event_cascade_delete_incidents(self):
+        """
+            Whether deleting an Event cascades to deleting all Incidents or whether it sets NULL
+            - 'normal' workflow is where an Event is created and within that various Incidents,
+              aso cascading the delete makes sense here ("delete everything associated with this event")
+            - WA COP uses Events to group existing Incidents, so here we don't wish to delete the Incidents if the Event is deleted
+
+            NB Changing this setting requires a DB migration
+        """
+        return self.event.get("cascade_delete_incidents", True)
+
     def get_event_exercise(self):
         """
             Whether Events can be Exercises

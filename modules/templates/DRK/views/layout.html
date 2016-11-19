@@ -25,7 +25,7 @@
 {{for sheet in s3.external_stylesheets:}}
  <link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
 {{pass}}
-<link href="/{{=appname}}/static/styles/foundation/normalize.css" rel="stylesheet" />
+<link href="/{{=appname}}/static/themes/foundation/normalize.css" rel="stylesheet" />
 {{theme=settings.get_theme()}}
 {{if s3.debug:}}
 {{if s3.rtl:}}

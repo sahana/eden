@@ -450,6 +450,12 @@ def group_member_role():
     return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
+def group_status():
+    """ Group Statuses: RESTful CRUD Controller """
+
+    return s3_rest_controller()
+
+# -----------------------------------------------------------------------------
 def image():
     """ RESTful CRUD controller """
 

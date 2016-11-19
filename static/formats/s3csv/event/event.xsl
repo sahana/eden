@@ -206,7 +206,6 @@
         <xsl:variable name="SubSubType">
             <xsl:value-of select="col[@field='SubSubType']"/>
         </xsl:variable>
-        
 
         <!-- Event -->
         <resource name="event_event">
@@ -278,24 +277,26 @@
             </xsl:choose>
 
             <!-- Link to Event Type -->
-            <reference field="event_type_id" resource="event_event_type">
-                <xsl:attribute name="tuid">
-                    <xsl:choose>
-                        <xsl:when test="$SubSubType!=''">
-                            <!-- Hierarchical Type with 3 levels -->
-                            <xsl:value-of select="concat($EventTypePrefix, $Type, '/', $SubType, '/', $SubSubType)"/>
-                        </xsl:when>
-                        <xsl:when test="$SubType!=''">
-                            <!-- Hierarchical Type with 2 levels -->
-                            <xsl:value-of select="concat($EventTypePrefix, $Type, '/', $SubType)"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <!-- Simple Type -->
-                            <xsl:value-of select="concat($EventTypePrefix, $Type)"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:attribute>
-            </reference>
+            <xsl:if test="$Type!=''">
+                <reference field="event_type_id" resource="event_event_type">
+                    <xsl:attribute name="tuid">
+                        <xsl:choose>
+                            <xsl:when test="$SubSubType!=''">
+                                <!-- Hierarchical Type with 3 levels -->
+                                <xsl:value-of select="concat($EventTypePrefix, $Type, '/', $SubType, '/', $SubSubType)"/>
+                            </xsl:when>
+                            <xsl:when test="$SubType!=''">
+                                <!-- Hierarchical Type with 2 levels -->
+                                <xsl:value-of select="concat($EventTypePrefix, $Type, '/', $SubType)"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <!-- Simple Type -->
+                                <xsl:value-of select="concat($EventTypePrefix, $Type)"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
 
             <!-- Link to Location(s) -->
             <xsl:variable name="l0" select="col[@field='Country']/text()"/>

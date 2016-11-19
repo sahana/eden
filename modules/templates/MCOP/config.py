@@ -472,12 +472,11 @@ def config(settings):
         table.organisation_id.readable = table.organisation_id.writable = True
 
         if r.interactive:
-            table.zero_hour.label = T("Date")
             table.comments.label = T("Description")
 
             crud_strings["event_incident"].label_delete_button = T("Delete Incident")
 
-        list_fields = ["zero_hour",
+        list_fields = ["date",
                        "name",
                        "location_id",
                        "comments",
@@ -501,7 +500,7 @@ def config(settings):
         #from gluon.validators import IS_EMPTY_OR
         #table.organisation_id.requires = IS_EMPTY_OR(table.organisation_id.requires)
         from s3 import S3SQLCustomForm, S3SQLInlineComponent
-        crud_fields = ["zero_hour",
+        crud_fields = ["date",
                        "name",
                        "location_id",
                        "comments",

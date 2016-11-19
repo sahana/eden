@@ -141,7 +141,7 @@ def incident():
                 table.scenario_id.writable = False
                 table.exercise.writable = False
                 table.exercise.comment = None
-                table.zero_hour.writable = False
+                table.date.writable = False
 
         return True
     s3.prep = prep
@@ -300,7 +300,7 @@ def team():
 
 # -----------------------------------------------------------------------------
 def team_status():
-    """ Team status taxonomy controller (for Admin and lookups) """
+    """ Team statuses """
 
     return s3_rest_controller()
 

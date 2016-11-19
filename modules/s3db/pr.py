@@ -2015,7 +2015,8 @@ class S3PersonModel(S3Model):
 class S3GroupModel(S3Model):
     """ Groups """
 
-    names = ("pr_group",
+    names = ("pr_group_status",
+             "pr_group",
              "pr_group_id",
              "pr_group_membership",
              "pr_group_member_role",
@@ -2033,6 +2034,67 @@ class S3GroupModel(S3Model):
 
         messages = current.messages
         NONE = messages["NONE"]
+
+        # ---------------------------------------------------------------------
+        # Group Statuses
+        #
+        # @ToDo: May need to categorise these by Group Type &/or Organisation
+        #
+        tablename = "pr_group_status"
+        define_table(tablename,
+                     Field("code", length=16,
+                           label = T("Code"),
+                           # Set in template if-required
+                           #requires = IS_NOT_EMPTY(),
+                           ),
+                     Field("name", length=64,
+                           label = T("Name"),
+                           # Set in template if-required
+                           #requires = IS_NOT_EMPTY(),
+                           ),
+                     s3_comments(),
+                     *s3_meta_fields())
+
+        # CRUD Strings
+        CREATE_STATUS = T("Create Group Status")
+        crud_strings[tablename] = Storage(
+            label_create = CREATE_STATUS,
+            title_display = T("Group Status Details"),
+            title_list = T("Group Statuses"),
+            title_update = T("Edit Group Status"),
+            label_list_button = T("List Group Statuses"),
+            label_delete_button = T("Delete Group Status"),
+            msg_record_created = T("Group Status added"),
+            msg_record_modified = T("Group Status updated"),
+            msg_record_deleted = T("Group Status deleted"),
+            msg_list_empty = T("No Group Statuses currently defined"),
+            )
+
+        # Table configuration
+        configure(tablename,
+                  # WACOP CAD updates come in with just the Code so need to deduplicate on that
+                  # @ToDo: deployment_setting if we need to support other usecases for this model
+                  deduplicate = S3Duplicate(primary = ("code",),
+                                            ),
+                  )
+
+        # Reusable Field
+        represent = S3Represent(lookup=tablename, translate=True)
+        status_id = S3ReusableField("status_id", "reference %s" % tablename,
+                                    comment = S3PopupLink(c = "pr",
+                                                          f = "group_status",
+                                                          label = CREATE_STATUS,
+                                                          title = CREATE_STATUS,
+                                                          vars = {"child": "status_id"},
+                                                          ),
+                                    label = T("Status"),
+                                    ondelete = "SET NULL",
+                                    represent = represent,
+                                    requires = IS_EMPTY_OR(
+                                                IS_ONE_OF(db, "pr_group_status.id",
+                                                          represent,
+                                                          )),
+                                    )
 
         # ---------------------------------------------------------------------
         # Hard Coded Group types. Add/Comment entries, but don't remove!
@@ -2086,6 +2148,10 @@ class S3GroupModel(S3Model):
                      self.gis_location_id(readable = False,
                                           writable = False,
                                           ),
+                     # Enable in templates as-required
+                     status_id(readable = False,
+                               writable = False,
+                               ),
                      s3_comments(),
                      *s3_meta_fields())
 
@@ -2170,10 +2236,9 @@ class S3GroupModel(S3Model):
                                                      # multiple instances for tracking reasons
                                                      "multiple": False,
                                                      },
-                            # Response team status
-                            event_team_status_team = {"joinby": "group_id",
-                                                      "multiple": False,
-                                                      },
+
+                            # Incidents
+                            event_team = "group_id",
                             )
 
         # ---------------------------------------------------------------------
@@ -2182,6 +2247,7 @@ class S3GroupModel(S3Model):
         tablename = "pr_group_member_role"
         define_table(tablename,
                      Field("name", length=64,
+                           label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
                      Field("group_type", "integer",

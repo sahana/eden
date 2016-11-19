@@ -1,0 +1,436 @@
+figure {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+html {
+  color: #212121;
+}
+
+body {
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+a:not(.button) {
+  color: #0071bc;
+}
+
+a:not(.button):focus {
+  color: #3e94cf;
+}
+
+h1,
+h2,
+h3,
+.panel h3 {
+  font-family: 'Merriweather', serif;
+  color: #112e51;
+}
+
+h3.small {
+  font-size: 1em;
+}
+
+h1 .label,
+h2 .label,
+h3 .label,
+h4 .label,
+p .label {
+  vertical-align: middle;
+}
+
+/**
+ * Forms
+ */
+
+fieldset {
+  margin: 0.5625em 0;
+  padding: 0.5625em;
+}
+
+/**
+* Top Bar
+*/
+/*
+.top-bar,
+.top-bar-section li:not(.has-form) a:not(.button) {
+  background-color: #112e51;
+}*/
+
+/* Logo */
+.name h1 {
+  font-family: 'Verdana', sans-serif;
+}
+
+/*
+.logo {
+  height: 2em;
+  width: auto;
+  max-width: 10rem;
+  margin-top: -0.25em;
+}*/
+
+/**
+ * Callout Panel for Wrapping Events
+ */
+
+#content > .callout {
+  margin-top: 1.5rem;
+  background-color: #dce4ef;
+  border-color: #8ba6ca;
+}
+
+#content > .callout hr {
+  border-color: #8ba6ca;
+  margin: 0.5em 0 1em 0;
+}
+
+#content > .callout h3,
+#content > .callout ul li,
+#content > .callout p:not(.callout-intro) {
+  color: #5b616b;
+  transition: color 125ms ease-in-out;
+}
+
+/* Override default theme */
+#content > .callout h3 {
+    font-size: 1.6875rem;
+    padding-bottom: 0;
+}
+
+#content > .callout:hover h3,
+#content > .callout:hover ul li,
+#content > .callout:hover p:not(.callout-intro) {
+  color: #323a45;
+}
+
+#content > .callout ul,
+#content > .callout p {
+  margin-bottom: 0.5em;
+}
+
+#content > .callout a:not(.button),
+#content > .callout a:not(.button):visited {
+  color: #4773aa;
+}
+
+#content > .callout .callout-intro {
+  margin: -1.25em -1.25em 1.25em -1.25em;
+  padding: 0.25em 0.25em 0.25em 1.25em;
+  background-color: #8ba6ca;
+  color: #fff;
+}
+
+#content > .callout .button.button-info {
+  background-color: #4773aa;
+  margin: 0.5em auto 0 0;
+}
+
+/**
+ * Incident
+ */
+
+.incident {
+  padding: 0;
+}
+
+.incident h3 > .button {
+  position: relative;
+  top: -0.5rem;
+  padding-left: 4em;
+}
+
+.incident h3 > .button > [class*='fi-'] {
+  font-size: 2em;
+  position: absolute;
+  margin-top: -0.25em;
+  margin-left: -1.3em;
+}
+
+.incident-header {
+  font-size: 0.8rem;
+  color: #323a45;
+  color: #fff;
+}
+
+.incident-header {
+  margin: 0 !important;
+  padding: 0.5em 0.75em 0.125em 0.75em;
+  background-color: #5b616b;
+}
+
+.incident-header p,
+.incident-header ul {
+  margin-bottom: 0.35em;
+}
+
+.incident-header p,
+.incident-header a {
+  color: #fff;
+}
+
+.incident-header.active {
+  background-color: #43AC6A;
+}
+
+.incident-header.inactive {
+  background-color: #cf2a0e;
+}
+
+.incident-header.pending {
+  background-color: #f08a24;
+}
+
+/* Share Button */
+.incident-control .button.tiny.secondary,
+.inline-list .button.tiny.secondary {
+  margin: 0;
+  background-color: #fff;
+  padding: 0.275rem 1.25rem 0.3275rem 1.25rem;
+}
+
+.incident-content {
+  padding: 1em;
+}
+
+.incident-content-summary {
+  padding-left: 0;
+}
+
+.incident-content .large-8 {
+  padding: 0;
+}
+
+.incident-content .large-4 {
+  padding-right: 0;
+}
+
+.incident-labels {
+  margin-bottom: 0.5rem;
+}
+
+.organization-logo img {
+  max-width: 100%;
+  width: 5rem;
+  height: auto;
+  padding-right: 0;
+}
+
+.incident-description {
+  margin-top: 2em;
+}
+
+/**
+ * Panel Wrap
+ */
+
+.panel-wrap {
+  padding: 1rem;
+  border: 1px solid #d6d7d9;
+}
+
+/**
+ * Panel
+ */
+
+.panel {
+  border: 0;
+  background-color: #f1f1f1;
+}
+
+/**
+ * News
+ */
+
+.news {
+  margin: 5rem auto;
+}
+
+/**
+ * Tables
+ */
+
+table {
+  width: 100%;
+}
+
+table tr td {
+  padding: 0.25rem 0.625rem;
+}
+
+/**
+ * Footer
+ */
+
+.footer {
+  margin: 2rem 0 0 0;
+}
+
+/**
+ * Incident Label Controls
+ */
+
+.incident-labels {
+  display: inline-block;
+}
+
+.label-controls {
+  display: inline-block;
+  margin: 0 0 0 1rem;
+  list-style: none;
+}
+
+.label-controls li {
+  display: inline;
+}
+
+.label-controls a {
+  position: relative;
+  top: 0.125rem;
+  margin-right: 0.5rem;
+  color: #5b616b;
+}
+
+.label-controls a:hover {
+  color: #3e94cf;
+}
+
+
+/**
+ * Tab Navigation
+ */
+
+.tab-navigation {
+  display: inline-block;
+}
+
+.tabs .tab-title > a {
+  background-color: #d6d7d9;
+  color: #5b616b;
+  padding: 1em;
+  border-top: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+}
+
+.tabs .tab-title:first-child > a {
+  border-left: 1px solid #ccc;
+  border-top-left-radius: 3px;
+}
+
+.tabs .tab-title:last-child > a {
+  border-top-right-radius: 3px;
+}
+
+@media (min-width: 768px) {
+  .tabs .tab-title > a {
+    padding: 1em 6em;
+  }
+}
+
+.tabs .tab-title:not(.active) > a:hover {
+  background-color: #ccc;
+  color: #5b616b;
+}
+
+.tabs .tab-title.active > a {
+  background-color: #fff;
+  color: #5b616b;
+  cursor: default;
+}
+
+.tabs-content {
+  margin-top: -0.5em;
+  padding: 1em;
+  border: 1px solid #ccc;
+  background-color: #fff;
+}
+
+/* Side Nav */
+
+.tabs.vertical ~ .tabs-content {
+  width: 75%;
+  margin-bottom: 1em;
+}
+
+.tabs.vertical li {
+  margin: 0;
+}
+
+.tabs.vertical li:not(:first-child) {
+  border-top: 1px solid #aeb0b5;
+}
+
+.tabs.vertical li a:not(.button) {
+  padding: 0.5em 2em;
+  background-color: transparent;
+  border: 0;
+  border-left: 4px solid transparent;
+  transition: all 150ms ease-in-out;
+}
+
+.tabs.vertical li.active > a:first-child:not(.button),
+.tabs.vertical li.active a:not(.button) {
+  background-color: transparent;
+  font-weight: bold;
+  border-left-color: #008CBA;
+  color: #008CBA;
+}
+
+.tabs.vertical li a:first-child:hover:not(.button),
+.tabs.vertical li a:hover:not(.button),
+.tabs.vertical li a:focus:not(.button) {
+  font-weight: bold;
+  background-color: #d6d7d9;
+  border-left-color: #4773aa;
+  color: #4773aa;
+}
+
+
+/* Compose Update */
+
+.compose-update {
+  background-color: #e2f3dc;
+}
+
+/* Updates */
+
+.update-meta-text {
+  font-size: 13px;
+}
+
+
+/**
+ * Timeline Slider
+ */
+
+.tl-storyslider {
+  display: none;
+}
+
+.tl-timenav,
+.tl-timeline {
+  background-color: #fff;
+}
+
+.tl-timeline {
+  border: 1px solid #d6d7d9;
+}
+
+.tl-timemarker .tl-timemarker-content-container {
+  background-color: #f1f1f1;
+  border-color: #d6d7d9;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.tl-timemarker.tl-timemarker-active .tl-timemarker-content-container {
+  background-color: #dce4ef;
+  border-color: #112e51;
+  box-shadow: none;
+}
+
+.tl-timemarker .tl-timemarker-content-container .tl-timemarker-content .tl-timemarker-text h2.tl-headline.tl-headline-fadeout::after,
+.tl-timemarker.tl-timemarker-active .tl-timemarker-content-container .tl-timemarker-content .tl-timemarker-text h2.tl-headline.tl-headline-fadeout::after,
+.tl-timemarker.tl-timemarker-active:hover .tl-timemarker-content-container .tl-timemarker-content .tl-timemarker-text h2.tl-headline.tl-headline-fadeout::after {
+  background: none;
+}

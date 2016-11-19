@@ -92,31 +92,36 @@ $column-gutter: rem-calc(20);
 // $font-family-monospace: Consolas, "Liberation Mono", Courier, monospace;
 
 // We use these to define default font weights
-// $font-weight-normal: normal !default;
-// $font-weight-bold: bold !default;
+$font-weight-normal: normal !default;
+$font-weight-bold: bold !default;
 
 // We use these as default colors throughout
-$primary-color: #006A71;
+$primary-color  : #20579A;
 $secondary-color: #e7e7e7;
-$alert-color: #D92C20;
+$alert-color    : #D92C20;
 // $success-color: #43AC6A;
 // $warning-color: #f08a24;
 // $info-color: #a0d3e8;
 
+$darkblue    : #112E51;
+$lightblue   : #0071bc;
+
 $white       : #FFFFFF;
 $rcred       : #CC0000;
 $brightred   : #EE3224;
-$blood       : #7A1600;
-$darksteel    : #4D4D4D;
+$blood       : #E50000;
+$orange      : #FEB627; //#F79433;
+
+$darksteel   : #4D4D4D;
 
 // $ghost       : #FAFAFA;
 // $snow        : #F9F9F9;
 // $vapor       : #F6F6F6;
 // $white-smoke : #F5F5F5;
 // $silver      : #EFEFEF;
-// $smoke       : #EEEEEE;
+$smoke       : #EEEEEE;
 // $gainsboro   : #DDDDDD;
-// $iron        : #CCCCCC;
+$iron        : #CCCCCC;
 // $base        : #AAAAAA;
 // $aluminum    : #999999;
 // $jumbo       : #888888;
@@ -126,7 +131,7 @@ $steel       : #666666;
 // $tuatara     : #444444;
 // $oil         : #333333;
 // $jet         : #222222;
-// $black       : #000000;
+$black       : #000000;
 
 // We use these to control various global styles
 // $body-bg: $white;
@@ -203,7 +208,7 @@ $steel       : #666666;
 // $header-font-family: $body-font-family;
 // $header-font-weight: $font-weight-normal;
 // $header-font-style: normal;
-$header-font-color: $primary-color;
+$header-font-color: $darkblue;
 // $header-line-height: 1.4;
 // $header-top-margin: .2rem;
 // $header-bottom-margin: .5rem;
@@ -260,8 +265,8 @@ $header-font-color: $primary-color;
 // We use these to style anchors
 // $anchor-text-decoration: none;
 // $anchor-text-decoration-hover: none;
-// $anchor-font-color: $primary-color;
-// $anchor-font-color-hover: scale-color($primary-color, $lightness: -14%);
+// $anchor-font-color: $lightblue;
+// $anchor-font-color-hover: scale-color($lightblue, $lightness: -14%);
 
 // We use these to style the <hr> element
 // $hr-border-width: 1px;
@@ -467,7 +472,7 @@ $header-font-color: $primary-color;
 // $button-round: $global-rounded;
 
 // We use this to set default opacity and cursor for disabled buttons.
-// $button-disabled-opacity: 0.7;
+$button-disabled-opacity: 0.5;
 // $button-disabled-cursor: $cursor-default-value;
 
 // 06. Button Groups
@@ -1366,7 +1371,7 @@ $sub-nav-item-divider: "|";
 // $include-html-top-bar-classes: $include-html-classes;
 
 // Background color for the top bar
-$topbar-bg-color: $darksteel;
+$topbar-bg-color: $darkblue;
 // $topbar-bg: $topbar-bg-color;
 
 // Height and margin
@@ -1378,7 +1383,7 @@ $topbar-height: 40px;
 // $topbar-title-font-size: rem-calc(17);
 
 // Style the top bar dropdown elements
-$topbar-dropdown-bg: $topbar-bg-color;
+$topbar-dropdown-bg: $darksteel;
 $topbar-dropdown-link-color: $white;
 $topbar-dropdown-link-bg: $topbar-dropdown-bg;
 // $topbar-dropdown-link-weight: $font-weight-normal;
@@ -1389,16 +1394,16 @@ $topbar-dropdown-toggle-color: $topbar-dropdown-link-color;
 // Set the link colors and styles for top-level nav
 $topbar-link-color: $topbar-dropdown-link-color;
 $topbar-link-color-hover: $topbar-dropdown-link-color;
-$topbar-link-color-active: $topbar-dropdown-link-color;
-$topbar-link-color-active-hover: $topbar-dropdown-link-color;
-// $topbar-link-weight: $font-weight-normal;
+$topbar-link-color-active: $darkblue;
+$topbar-link-color-active-hover: scale-color($topbar-link-color-active, $lightness: -10%);
+/* $topbar-link-weight: $font-weight-bold; */
 // $topbar-link-font-size: rem-calc(13);
 // $topbar-link-hover-lightness: -10%; // Darken by 10%
-// $topbar-link-bg: $topbar-bg;
+$topbar-link-bg: $topbar-bg-color;
 // $topbar-link-bg-color-hover: scale-color($topbar-bg-color, $lightness: -14%);
-$topbar-link-bg-hover: scale-color($primary-color, $lightness: +20%);
-$topbar-link-bg-active: scale-color($topbar-bg-color, $lightness: +15%);
-$topbar-link-bg-active-hover: scale-color($primary-color, $lightness: +20%);
+$topbar-link-bg-hover: scale-color($topbar-bg-color, $lightness: -10%);
+$topbar-link-bg-active: $orange;
+$topbar-link-bg-active-hover: scale-color($topbar-link-bg-active, $lightness: -10%);
 // $topbar-link-font-family: $body-font-family;
 // $topbar-link-text-transform: none;
 // $topbar-link-padding: $topbar-height / 3;

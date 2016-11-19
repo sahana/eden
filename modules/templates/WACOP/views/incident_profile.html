@@ -1,0 +1,518 @@
+{{extend "layout.html"}}
+{{if event_id:}}
+<div role="complementary" class="row panel callout">
+  <p class="callout-intro">Note: This incident is part of an event.</p>
+  <div class="incident-updates row">
+    <p class="zero-hour large-3 small-6 columns">Zero hour: <i class="fa fa-calendar"></i> {{=event_start_date}}</p>
+    <p class="large-3 small-6 columns">Closed at: {{=event_end_date}}</p>
+    <p class="large-6 small-12 columns text-right">{{=event_location}}</p>
+  </div>
+  <hr>
+  <div class="row">
+    <div class="large-9 small-12 columns">
+      <h3>{{=event_name}} {{if event_active:}}<span class="label success">Active</span>{{else:}}<span class="label alert">Inactive</span>{{pass}}</h3>
+      <p class="callout-description inline">This event has <strong><a href="#">{{=incidents}} incidents</a></strong>, <strong><a href="#">{{=event_resources}} resources</a></strong>, <strong><a href="#">{{=event_posts}} posts</a></strong>.</p>
+    </div>
+    <p class="large-3 small-12 columns text-right"><a href='{{=URL(c="event", f="event", args=[event_id, "profile"])}}' class="button button-info tiny">Go to Event Page</a></p>
+  </div>
+</div>
+{{pass}}
+<div class="row panel">
+      <div class="large-8 columns">
+        <div class="incident panel">
+          <header class="row incident-header active">
+            <div class="incident-control clearfix">
+              <p class="left">
+                {{if active:}}Active{{else:}}Inactive{{pass}} <small>(<a href="#modal-incident-status" data-reveal-id="modal-incident-status">change status</a>)</small>
+              </p>
+
+              <ul class="inline-list right">
+                <li class="item"><a href="#" class="button secondary tiny"><span class="fa fa-share-alt"></span> Share</a></li>
+                <li class="item"><a href="#"><i class="fa fa-flag"></i><span class="show-for-sr">flag this</span></a></li>
+                <li class="item"><a href="#"><i class="fa fa-bookmark"><span class="show-for-sr">bookmark</span></i></a></li>
+                <li class="item"><a href="#"><i class="fa fa-comment"><span class="show-for-sr">comment</span></i></a></li>
+                <li class="item"><a href="#"><i class="fa fa-calendar"><span class="show-for-sr">add to event</span></i></a></li>
+                <li aria-hidden="true">|</li>
+                <li class="item"><a href="#"><i class="fa fa-edit"><span class="show-for-sr">edit</span></i></a></li>
+                <li class="item"><a href="#"><i class="fa fa-trash"><span class="show-for-sr">delete</span></i></a></li>
+              </ul>
+            </div>
+
+            <div id="modal-incident-status" class="reveal-modal" data-reveal aria-labelledby="modalIncidentStatus" aria-hidden="true" role="dialog">
+              <h4 id="modalIncidentStatusTitle">Change Status of Incident</h4>
+              <form>
+                <select name="incident-status">
+                  <option value="active"{{if active:}} "selected"{{pass}}>active</option>
+                  <option value="inactive"{{if not active:}} "selected"{{pass}}>inactive</option>
+                  <!--<option value="pending">pending</option>-->
+                </select>
+                <input class="button" type="submit" name="incident-status-submit" value="Change Status">
+              </form>
+              <a class="close-reveal-modal" aria-label="Close">&#215;</a>
+            </div>
+          </header>
+
+          <div class="row incident-content">
+            <div class="clearfix">
+              <div class="incident-content-summary large-10 columns">
+                <h4>{{=name}}</h4>
+                <p>Last updated on {{=modified_on}}</p>
+
+                <p class="incident-labels">
+                  <span class="label info">Crime / Terrorism</span>
+                  <span class="show-for-sr">Severity: </span><span class="label alert">bad</span>
+                  <span class="label alert">No Exercise</span>
+
+                  <ul class="label-controls">
+                    <li class="item"><a href="#"><i class="fa fa-plus"><span class="show-for-sr">add tag</span></i></a></li>
+                    <li class="item"><a href="#"><i class="fa fa-edit"><span class="show-for-sr">edit tags</span></i></a></li>
+                  </ul>
+                </p>
+              </div>
+
+              <!--
+              <figure class="large-2 columns organization-logo">
+                <img src="img/spd.png" alt="" />
+                <figcaption>Seattle Police Department</figcaption>
+              </figure>-->
+            </div>
+
+            <div class="incident-description">
+              <div class="incident-updates row">
+                <p class="zero-hour small-6 columns">Zero hour: <i class="fa fa-calendar"></i> <input type="date" name="closedat" value="{{=start_date}}" disabled></p>
+                <p class="small-6 columns">Closed at: <input type="date" name="closedat" value="{{=end_date}}"></p>
+              </div>
+
+              <p>
+                <i class="fa fa-marker"></i> Street address: <input type="text" name="incident-street" value="{{=addr_street}}">
+              </p>
+
+              <div class="row">
+                <p class="small-4 columns">
+                  <i class="fa fa-marker"></i> City: <input type="text" name="incident-city" value="{{=L3}}" disabled>
+                </p>
+                <p class="small-4 columns">
+                  <i class="fa fa-marker"></i> State:
+                  <select name="incident-state">
+                    <option>{{=L1}}</option>
+                  </select>
+                </p>
+                <p class="small-4 columns">
+                  <i class="fa fa-marker"></i> ZIP Code: <input type="text" name="incident-zip" value="{{=postcode}}">
+                </p>
+              </div>
+
+              <div class="row">
+                <p class="small-6 columns">Latitude: <i class="fa fa-marker"></i> <input type="text" name="latitude" value="{{=lat}}" disabled></p>
+                <p class="small-6 columns">Longitude: <i class="fa fa-marker"></i> <input type="text" name="longitude" value="{{=lon}}" disabled></p>
+              </div>
+
+              <h5>Incident Description:</h5>
+              <p>{{=description}}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <div class="large-4 columns">
+      <h3 class="show-for-sr">This incident on the map:</h3>
+      <iframe class="large-12" width="425" height="350" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://www.openstreetmap.org/export/embed.html?bbox={{=lon_min}}%2C{{=lat_min}}%2C{{=lon_max}}%2C{{=lat_max}}&amp;layer=mapnik&amp;marker={{=lat}}%2C{{=lon}}"></iframe>
+    </div>
+
+    <div class="large-4 columns">
+      <section>
+        <h3>Resources</h3>
+        <div class="row collapse prefix-radius">
+          <div class="large-3 columns">
+            <label for="task-search" class="prefix">Search:</label>
+          </div>
+          <div class="large-6 columns">
+            <input type="search" name="task-search" placeholder="Enter search term…">
+          </div>
+          <div class="large-3 columns">
+            <a href="#" class="button tiny postfix"><i class="fa fa-plus"></i> Add</a>
+          </div>
+        </div>
+        {{=resources}}
+      </section>
+    </div>
+  </div>
+</div>
+
+<hr>
+<!--
+<div class="row">
+
+  <ul class="tabs tab-navigation" data-tab>
+    <li class="tab-title active"><a href="#panel1">Tasks</a></li>
+    <li class="tab-title"><a href="#panel2">Staff</a></li>
+    <li class="tab-title"><a href="#panel3">Organizations</a></li>
+  </ul>
+
+  <div class="tabs-content panel">
+    <section class="tasks content active" id="panel1">
+      <div class="row collapse prefix-radius">
+        <div class="large-2 columns">
+          <label for="task-search" class="prefix">Search</label>
+        </div>
+        <div class="large-6 columns">
+          <input type="search" name="task-search" placeholder="Enter search term here…">
+        </div>
+
+        <div class="large-4 columns">
+          <a href="#" class="button tiny postfix"><i class="fa fa-plus"></i> Create Task</a>
+        </div>
+
+        <table role="grid">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Description</th>
+              <th>Created</th>
+              <th>Due</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="9"><i>No records found.</i></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="staff content" id="panel2">
+      <div class="row collapse prefix-radius">
+        <div class="large-2 columns">
+          <label for="task-search" class="prefix">Search:</label>
+        </div>
+        <div class="large-6 columns">
+          <input type="search" name="task-search" placeholder="Enter search term here…">
+        </div>
+
+        <div class="large-4 columns">
+          <a href="#" class="button tiny postfix" data-reveal-id="modal1"><i class="fa fa-plus"></i> Assign Staff</a>
+        </div>
+      </div>
+
+      <div id="modal1" class="reveal-modal" data-reveal aria-labelledby="modalTitle" aria-hidden="true" role="dialog">
+        <h4 id="modalTitle">Assign Staff</h4>
+        <form>
+          <fieldset>
+            <legend>Find Staff</legend>
+
+            <div class="row collapse prefix-radius">
+              <div class="large-2 columns">
+                <label for="task-search" class="prefix">Search Staff:</label>
+              </div>
+              <div class="large-10 columns">
+                <input type="search" name="task-search" placeholder="Enter search term here…">
+              </div>
+            </div>
+
+            <div class="row collapse prefix-radius">
+              <div class="large-2 columns">
+                <label for="task-search" class="prefix">Organization:</label>
+              </div>
+              <div class="large-10 columns">
+                <select name="">
+                  <option>Organization Foo</option>
+                  <option>Organization Bar</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row collapse prefix-radius">
+              <div class="large-2 columns">
+                <label for="task-search" class="prefix">Location:</label>
+              </div>
+              <div class="large-10 columns">
+                <select name="">
+                  <option>none</option>
+                  <option>Location Foo</option>
+                  <option>Location Bar</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row collapse prefix-radius">
+              <div class="large-2 columns">
+                <label for="task-search" class="prefix">Facility:</label>
+              </div>
+              <div class="large-10 columns">
+                <select name="">
+                  <option>none</option>
+                  <option>Facility Foo</option>
+                  <option>Facility Bar</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row collapse prefix-radius">
+              <div class="large-2 columns">
+                <label for="task-search" class="prefix">Certificate:</label>
+              </div>
+              <div class="large-10 columns">
+                <select name="">
+                  <option>none</option>
+                  <option>Certificate Foo</option>
+                  <option>Certificate Bar</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row collapse prefix-radius">
+              <div class="large-2 columns">
+                <label for="task-search" class="prefix">Skill:</label>
+              </div>
+              <div class="large-10 columns">
+                <select name="">
+                  <option>none</option>
+                  <option>Skill Foo</option>
+                  <option>Skill Bar</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row collapse prefix-radius">
+              <div class="large-2 columns">
+                <label for="task-search" class="prefix">Training:</label>
+              </div>
+              <div class="large-10 columns">
+                <select name="">
+                  <option>none</option>
+                  <option>Training Foo</option>
+                  <option>Training Bar</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row collapse prefix-radius">
+              <div class="large-2 columns">
+                <label for="task-search" class="prefix">Team:</label>
+              </div>
+              <div class="large-10 columns">
+                <select name="">
+                  <option>none</option>
+                  <option>Team Foo</option>
+                  <option>Team Bar</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="large-6 columns">
+              <input type="submit" name="search" class="button tiny success" value="Search">
+            </div>
+          </fieldset>
+        </form>
+
+        <table role="grid">
+          <thead>
+            <tr>
+              <th><label><input type="checkbox" name="select-all" value=""> Select All</label></th>
+              <th>Person</th>
+              <th>Organization</th>
+              <th>Job Title</th>
+              <th>Certificates</th>
+              <th>Skills</th>
+              <th>Trainings</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7"><i>No records found.</i></td>
+            </tr>
+          </tbody>
+        </table>
+        <a class="close-reveal-modal" aria-label="Close">&#215;</a>
+      </div>
+
+      <table role="grid">
+        <thead>
+          <tr>
+            <th>Staff</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="2"><i>No records found.</i></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="organizations content" id="panel3">
+      <div class="row collapse prefix-radius">
+        <div class="large-2 columns">
+          <label for="task-search" class="prefix">Search:</label>
+        </div>
+        <div class="large-6 columns">
+          <input type="search" name="task-search" placeholder="Enter search term here…">
+        </div>
+
+        <div class="large-4 columns">
+          <a href="#" class="button tiny postfix"><i class="fa fa-plus"></i> Add Organization</a>
+        </div>
+      </div>
+
+      <table role="grid">
+        <thead>
+          <tr>
+            <th>Organization</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="2"><i>No results.</i></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+</div> -->
+
+<!--
+<div class="row">
+  <h3>Updates</h3>
+
+  <div class="row">
+    <div class="large-3 columns">
+      <form class="filter" action="#" method="get">
+        <div class="row collapse prefix-radius">
+          <div class="large-4 columns">
+            <label for="task-search" class="prefix">Search:</label>
+          </div>
+          <div class="large-8 columns">
+            <input type="search" name="task-search" placeholder="Enter search term here…">
+          </div>
+        </div>
+      </form>
+
+      <h4>Filter:</h4>
+      <ul class="no-bullet">
+        <li class="clearfix">
+          <label class="left"><input type="radio" name="filter" value=""> All</label>
+          <label class="right"><input type="radio" name="filter" value=""> My Bookmarks</label>
+        </li>
+        <li>
+          <select class="" name="">
+            <option>Type</option>
+            <option></option>
+          </select>
+        </li>
+        <li>
+          <select class="" name="">
+            <option>Source</option>
+            <option></option>
+          </select>
+        </li>
+        <li>
+          <select class="" name="">
+            <option>Tag</option>
+            <option></option>
+          </select>
+        </li>
+        <li>
+          <label>
+            Start Time/Date:
+            <input type="datetime" name="datetimestart" value="" placeholder="2016/1/1">
+          </label>
+          <label>
+            End Time/Date:
+            <input type="datetime" name="datetimeend" value="" placeholder="2016/20/6">
+          </label>
+        </li>
+      </ul>
+
+      <a href="#" class="button tiny secondary">Clear Filters</a>
+      <a href="#" class="button tiny secondary">Saved Filters</a>
+    </div>
+
+    <div class="large-9 columns">
+      <div class="compose-update panel">
+        <form class="form" action="index.html" method="post">
+          <label for="update-text">Write new Update Post:</label>
+          <textarea name="update-text" placeholder="Write something…" rows="4"></textarea>
+          <div class="row">
+            <div class="large-4 columns">
+              <select>
+                <option disabled>Choose an update type…</option>
+                <option value="post">Post</option>
+                <option value="public-alert">Public Alert</option>
+                <option value="situation-report">Situation Report</option>
+              </select>
+            </div>
+            <div class="large-3 columns">
+              <input type="text" name="tag" value="" placeholder="Add tags here…">
+            </div>
+            <div class="large-5 columns">
+              <input type="submit" name="name" class="button tiny default right" value="Post Update">
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <hr>
+
+      <ul class="no-bullet">
+        <li class="panel">
+          <header class="clearfix">
+            <p class="left update-meta-text"><span class="label info">Updatetype</span> <time>June, 1st 2016 10:41am</time> by admin@example.com</p>
+            <ul class="inline-list right">
+              <li class="item"><a href="#" class="button secondary tiny"><i class="fa fa-share-alt"></i> Share</a></li>
+              <li class="item"><a href="#"><i class="fa fa-flag"></i><span class="show-for-sr">flag this</span></a></li>
+              <li class="item"><a href="#"><i class="fa fa-bookmark"><span class="show-for-sr">bookmark</span></i></a></li>
+              <li aria-hidden="true">|</li>
+              <li class="item"><a href="#"><i class="fa fa-share-alt"></i><span class="show-for-sr">make public</span></a></li>
+              <li class="item"><a href="#"><i class="fa fa-edit"><span class="show-for-sr">edit</span></i></a></li>
+              <li class="item"><a href="#"><i class="fa fa-trash"><span class="show-for-sr">delete</span></i></a></li>
+            </ul>
+          </header>
+          <p>Here can be paragraph text for the update article.</p>
+          <footer class="clearfix">
+            <span class="left">Tags:</span>
+            <ul class="left inline-list">
+              <li><a href="#">TagA</a></li>
+              <li><a href="#">TagB</a></li>
+              <li><a href="#">TagC</a></li>
+            </ul>
+            <p class="right">
+              <a href="#update-1-comments">2 Comments</a>
+            </p>
+          </footer>
+        </li>
+
+        <li class="panel">
+          <header class="clearfix">
+            <p class="left update-meta-text"><span class="label info">Updatetype</span> <time>June, 1st 2016 10:41am</time> by some.person@authority.com</p>
+            <ul class="inline-list right">
+              <li class="item"><a href="#" class="button secondary tiny"><i class="fa fa-share-alt"></i> Share</a></li>
+              <li class="item"><a href="#"><i class="fa fa-flag"></i><span class="show-for-sr">flag this</span></a></li>
+              <li class="item"><a href="#"><i class="fa fa-bookmark"><span class="show-for-sr">bookmark</span></i></a></li>
+              <li aria-hidden="true">|</li>
+              <li class="item"><a href="#"><i class="fa fa-share-alt"></i><span class="show-for-sr">make public</span></a></li>
+              <li class="item"><a href="#"><i class="fa fa-edit"><span class="show-for-sr">edit</span></i></a></li>
+              <li class="item"><a href="#"><i class="fa fa-trash"><span class="show-for-sr">delete</span></i></a></li>
+            </ul>
+          </header>
+          <p>Here can be paragraph text for the update article.</p>
+          <footer class="clearfix">
+            <span class="left">Tags:</span>
+            <ul class="left inline-list">
+              <li><a href="#">TagA</a></li>
+              <li><a href="#">TagB</a></li>
+              <li><a href="#">TagC</a></li>
+            </ul>
+            <p class="right">
+              <a href="#update-1-comments">0 Comments</a>
+            </p>
+          </footer>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div> -->
+{{include "dataTables.html"}}

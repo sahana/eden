@@ -5,6 +5,8 @@ from collections import OrderedDict
 from gluon import current
 from gluon.storage import Storage
 
+from s3 import S3CRUD
+
 def config(settings):
     """
         Template for WA-COP + CAD Cloud Integration
@@ -113,21 +115,6 @@ def config(settings):
     settings.gis.poi_create_resources = None
 
     # -------------------------------------------------------------------------
-    # Event/Incident Management
-    #
-    settings.event.incident_teams_tab = "Units"
-
-    def customise_event_incident_controller(**attr):
-
-        # Custom rheader tabs
-        attr = dict(attr)
-        attr["rheader"] = wacop_event_rheader
-
-        return attr
-
-    settings.customise_event_incident_controller = customise_event_incident_controller
-
-    # -------------------------------------------------------------------------
     # Modules
     #
     settings.modules = OrderedDict([
@@ -234,7 +221,79 @@ def config(settings):
     ])
 
     # -------------------------------------------------------------------------
+    # Event/Incident Management
+    #
+    settings.event.incident_teams_tab = "Units"
+    # Uncomment to preserve linked Incidents when an Event is deleted
+    settings.event.cascade_delete_incidents = False
+
+    # -------------------------------------------------------------------------
+    def customise_event_event_controller(**attr):
+
+        s3db = current.s3db
+
+        # Modify Components
+        s3db.add_components("event_event",
+                            # Events have just a single Location
+                            event_event_location = {"joinby": "event_id",
+                                                    "multiple": False,
+                                                    },
+                            # Incidents are linked to Events, not created from them
+                            # - not a link table though, so can't change the actuation
+                            #event_incident = {"joinby": "event_id",
+                            #                  },
+                            )
+
+        # Custom Profile
+        #s3db.set_method("event", "event",
+        #                method = "custom",
+        #                action = event_Profile)
+
+        # Custom rheader tabs
+        attr = dict(attr)
+        attr["rheader"] = wacop_event_rheader
+
+        return attr
+
+    settings.customise_event_event_controller = customise_event_event_controller
+
+    # -------------------------------------------------------------------------
+    def customise_event_incident_controller(**attr):
+
+        s3db = current.s3db
+
+        # Load normal model to be able to override configuration
+        s3db.event_incident
+
+        # Custom Profile
+        s3db.set_method("event", "incident",
+                        method = "custom",
+                        action = incident_Profile)
+
+        list_fields = ["date",
+                       "name",
+                       "incident_type_id",
+                       "event_id",
+                       "closed",
+                       "comments",
+                       ]
+
+        s3db.configure("event_incident",
+                       list_fields = list_fields,
+                       )
+
+        # Custom rheader tabs
+        attr = dict(attr)
+        attr["rheader"] = wacop_event_rheader
+
+        return attr
+
+    settings.customise_event_incident_controller = customise_event_incident_controller
+
+    # -------------------------------------------------------------------------
     def customise_pr_group_resource(r, tablename):
+
+        s3db = current.s3db
 
         current.response.s3.crud_strings[tablename] = Storage(
             label_create = T("Create Resource"),
@@ -248,12 +307,24 @@ def config(settings):
             msg_record_deleted = T("Resource deleted"),
             msg_list_empty = T("No Resources currently registered"))
 
-        from s3 import S3SQLCustomForm
-        crud_form = S3SQLCustomForm((T("Name"), "name"))
+        field = s3db.pr_group.status_id
+        field.readable = field.writable = True
 
-        current.s3db.configure(tablename,
-                               crud_form = crud_form,
-                               )
+        from s3 import S3SQLCustomForm
+        crud_form = S3SQLCustomForm((T("Name"), "name"),
+                                    "status_id",
+                                    "comments",
+                                    )
+
+        list_fields = [(T("Name"), "name"),
+                       "status_id",
+                       "comments",
+                       ]
+
+        s3db.configure(tablename,
+                       crud_form = crud_form,
+                       list_fields = list_fields,
+                       )
 
     settings.customise_pr_group_resource = customise_pr_group_resource
 
@@ -279,18 +350,36 @@ def wacop_event_rheader(r, tabs=[]):
     if record:
         T = current.T
 
-        if tablename == "event_incident":
+        if tablename == "event_event":
+
+            if not tabs:
+                tabs = [(T("Event Details"), None),
+                        (T("Incidents"), "incident"),
+                        (T("Units"), "group"),
+                        (T("Tasks"), "task"),
+                        (T("Updates"), "post"),
+                        ]
+
+            rheader_fields = [["name",
+                               ],
+                              ["start_date",
+                               ],
+                              ["comments",
+                               ],
+                              ]
+
+        elif tablename == "event_incident":
 
             if not tabs:
                 tabs = [(T("Incident Details"), None),
                         (T("Units"), "group"),
                         (T("Tasks"), "task"),
-                        (T("SitReps"), "sitrep"),
+                        (T("Updates"), "post"),
                         ]
 
             rheader_fields = [["name",
                                ],
-                              ["zero_hour",
+                              ["date",
                                ],
                               ["comments",
                                ],
@@ -301,5 +390,318 @@ def wacop_event_rheader(r, tabs=[]):
                                                          record=record,
                                                          )
     return rheader
+
+# =============================================================================
+class incident_Profile(S3CRUD):
+    """
+        Custom profile page for an Incident
+    """
+
+    # -------------------------------------------------------------------------
+    def apply_method(self, r, **attr):
+        """
+            Entry point for REST API
+
+            @param r: the S3Request
+            @param attr: controller arguments
+        """
+
+        incident_id = r.id
+
+        if incident_id and \
+           r.name == "incident" and \
+           not r.component:
+            representation = r.representation
+            if representation == "html":
+
+                T = current.T
+                db = current.db
+                s3db = current.s3db
+                request = self.request
+                response = current.response
+                s3 = response.s3
+
+                gtable = s3db.gis_location
+                itable = s3db.event_incident
+                #rtable = s3db.pr_group
+                ertable = s3db.event_team
+                #ptable = s3db.cms_post
+                eptable = s3db.event_post
+
+                record = r.record
+
+                from gluon import DIV
+                from s3 import FS, S3DateTime, s3_str
+
+                date_represent = lambda dt: S3DateTime.date_represent(dt,
+                                                                      format = "%b %d %Y %H:%M",
+                                                                      utc = True,
+                                                                      #calendar = calendar,
+                                                                      )
+
+                output = {}
+
+                # Is this Incident part of an Event?
+                event_id = record.event_id
+                output["event_id"] = event_id
+                if event_id:
+                    # Read Event details
+                    etable = s3db.event_event
+                    event = db(etable.id == event_id).select(etable.name,
+                                                             etable.start_date,
+                                                             etable.end_date,
+                                                             limitby = (0, 1),
+                                                             ).first()
+                    output["event_name"] = event.name
+                    output["event_start_date"] = date_represent(event.start_date)
+                    end_date = event.end_date
+                    if end_date:
+                        output["event_active"] = False
+                        output["event_end_date"] = date_represent(end_date)
+                    else:
+                        output["event_active"] = True
+                        output["event_end_date"] = "n/a"
+
+                    eltable = s3db.event_event_location
+                    query = (eltable.event_id == event_id) & \
+                            (eltable.deleted == False)
+                    event_location = db(query).select(eltable.location_id,
+                                                      limitby = (0, 1),
+                                                      ).first()
+                    if event_location:
+                        output["event_location"] = eltable.location_id.represent(event_location.location_id)
+                    else:
+                        output["event_location"] = ""
+
+                    query = (itable.event_id == event_id) & \
+                            (itable.deleted == False)
+                    output["incidents"] = db(query).count()
+
+                    query = (ertable.event_id == event_id) & \
+                            (ertable.deleted == False)
+                    output["event_resources"] = db(query).count()
+
+                    query = (eptable.event_id == event_id) & \
+                            (eptable.deleted == False)
+                    output["event_posts"] = db(query).count()
+
+                # Incident Details
+                output["name"] = record.name
+
+                output["modified_on"] = date_represent(record.modified_on)
+
+                output["start_date"] = date_represent(record.date)
+
+                end_date = record.end_date
+                if end_date:
+                    output["active"] = False
+                    output["end_date"] = date_represent(end_date)
+                else:
+                    output["active"] = True
+                    output["end_date"] = ""
+                
+                output["description"] = record.comments
+
+                location = db(gtable.id == record.location_id).select(gtable.L1,
+                                                                      gtable.L3,
+                                                                      gtable.addr_street,
+                                                                      gtable.addr_postcode,
+                                                                      gtable.lat,
+                                                                      gtable.lon,
+                                                                      limitby = (0, 1),
+                                                                      ).first()
+                if location:
+                    output["L1"] = location.L1 or ""
+                    output["L3"] = location.L3 or ""
+                    output["addr_street"] = location.addr_street or ""
+                    output["postcode"] = location.addr_postcode or ""
+                    output["lat"] = location.lat or ""
+                    output["lon"] = location.lon or ""
+                    # @ToDo: BBOX should include the resources too
+                    bbox = current.gis.get_bounds(features=[location])
+                    output["lat_max"] = bbox["lat_max"]
+                    output["lat_min"] = bbox["lat_min"]
+                    output["lon_max"] = bbox["lon_max"]
+                    output["lon_min"] = bbox["lon_min"]
+                else:
+                    output["L1"] = ""
+                    output["L3"] = ""
+                    output["addr_street"] = ""
+                    output["postcode"] = ""
+                    output["lat"] = ""
+                    output["lon"] = ""
+                    # @ToDo: Defaults for Seattle
+                    output["lat_max"] = ""
+                    output["lat_min"] = ""
+                    output["lon_max"] = ""
+                    output["lon_min"] = ""
+
+                # Resources dataTable
+                tablename = "event_team"
+                resource = s3db.resource(tablename)
+                resource.add_filter(FS("incident_id") == incident_id)
+
+                list_id = "custom-list-%s" % tablename
+
+                get_vars = request.get_vars.get
+                #if representation == "aadata":
+                #    start = get_vars("displayStart", None)
+                #    limit = get_vars("pageLength", 0)
+                #else:
+                start = get_vars("start", None)
+                limit = get_vars("limit", 0)
+                if limit:
+                    if limit.lower() == "none":
+                        limit = None
+                    else:
+                        try:
+                            start = int(start)
+                            limit = int(limit)
+                        except (ValueError, TypeError):
+                            start = None
+                            limit = 0 # use default
+                else:
+                    # Use defaults
+                    start = None
+
+                dtargs = attr.get("dtargs", {})
+
+                # How many records per page?
+                if s3.dataTable_pageLength:
+                    display_length = s3.dataTable_pageLength
+                else:
+                    display_length = 10
+                dtargs["dt_lengthMenu"] = [[10, 25, 50, -1],
+                                           [10, 25, 50, s3_str(T("All"))]
+                                           ]
+
+                list_fields = ["group_id",
+                               "status_id",
+                               ]
+
+                orderby = "pr_group.name"
+
+                # Server-side pagination?
+                if not s3.no_sspag:
+                    dt_pagination = "true"
+                    if not limit and display_length is not None:
+                        limit = 2 * display_length
+                    else:
+                        limit = None
+                else:
+                    dt_pagination = "false"
+
+                # Get the data table
+                dt, totalrows, ids = resource.datatable(fields=list_fields,
+                                                        start=start,
+                                                        limit=limit,
+                                                        orderby=orderby)
+                displayrows = totalrows
+
+                if dt.empty:
+                    empty_str = self.crud_string(tablename,
+                                                 "msg_list_empty")
+                else:
+                    empty_str = self.crud_string(tablename,
+                                                 "msg_no_match")
+                empty = DIV(empty_str, _class="empty")
+
+                dtargs["dt_pagination"] = dt_pagination
+                dtargs["dt_pageLength"] = display_length
+                # @todo: fix base URL (make configurable?) to fix export options
+                s3.no_formats = True
+                dtargs["dt_base_url"] = r.url(method="", vars={})
+                dtargs["dt_ajax_url"] = r.url(#vars={"update": 0}, # If we need to update multiple dataTables
+                                              representation="aadata")
+
+                datatable = dt.html(totalrows,
+                                    displayrows,
+                                    id=list_id,
+                                    **dtargs)
+
+                if dt.data:
+                    empty.update(_style="display:none")
+                else:
+                    datatable.update(_style="display:none")
+                contents = DIV(datatable, empty, _class="dt-contents")
+
+                # Link for create-popup
+                #create_popup = self._create_popup(r,
+                #                                  widget,
+                #                                  list_id,
+                #                                  resource,
+                #                                  context,
+                #                                  totalrows)
+
+                # Render the widget
+                output["resources"] = DIV(contents,
+                                          _class="card-holder",
+                                          )
+
+                import os
+                response.view = os.path.join(request.folder,
+                                             "modules", "templates",
+                                             "WACOP", "views",
+                                             "incident_profile.html")
+                return output
+
+        elif representation == "aadata":
+
+            # Resources dataTable
+            # @ToDo: Complete
+
+            # Parse datatable filter/sort query
+            searchq, orderby, left = resource.datatable_filter(list_fields,
+                                                               get_vars)
+
+            # ORDERBY fallbacks - datatable->widget->resource->default
+            if not orderby:
+                orderby = widget.get("orderby")
+            if not orderby:
+                orderby = resource.get_config("orderby")
+            if not orderby:
+                orderby = default_orderby()
+
+            # DataTable filtering
+            if searchq is not None:
+                totalrows = resource.count()
+                resource.add_filter(searchq)
+            else:
+                totalrows = None
+
+            # Get the data table
+            if totalrows != 0:
+                dt, displayrows, ids = resource.datatable(fields=list_fields,
+                                                          start=start,
+                                                          limit=limit,
+                                                          left=left,
+                                                          orderby=orderby,
+                                                          getids=False)
+            else:
+                dt, displayrows = None, 0
+
+            if totalrows is None:
+                totalrows = displayrows
+
+            # Echo
+            draw = int(get_vars.get("draw") or 0)
+
+            # Representation
+            if dt is not None:
+                data = dt.json(totalrows,
+                               displayrows,
+                               list_id,
+                               draw,
+                               **dtargs)
+            else:
+                data = '{"recordsTotal":%s,' \
+                       '"recordsFiltered":0,' \
+                       '"dataTable_id":"%s",' \
+                       '"draw":%s,' \
+                       '"data":[]}' % (totalrows, list_id, draw)
+
+            return data
+
+        raise HTTP(405, current.ERROR.BAD_METHOD)
 
 # END =========================================================================
