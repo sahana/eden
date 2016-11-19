@@ -181,7 +181,7 @@ select {
 /* line 228, ../../foundation/scss/components/_grid.scss */
 .row {
   margin: 0 auto;
-  max-width: 62.5rem;
+  max-width: 125rem;
   width: 100%;
 }
 /* line 237, ../../foundation/scss/components/_global.scss */
@@ -206,7 +206,7 @@ select {
 }
 /* line 238, ../../foundation/scss/components/_grid.scss */
 .row .row {
-  margin: 0 -0.9375rem;
+  margin: 0 -0.625rem;
   max-width: none;
   width: auto;
 }
@@ -238,8 +238,8 @@ select {
 /* line 243, ../../foundation/scss/components/_grid.scss */
 .column,
 .columns {
-  padding-left: 0.9375rem;
-  padding-right: 0.9375rem;
+  padding-left: 0.625rem;
+  padding-right: 0.625rem;
   width: 100%;
   float: left;
 }
@@ -434,8 +434,8 @@ select {
   .column,
   .columns {
     position: relative;
-    padding-left: 0.9375rem;
-    padding-right: 0.9375rem;
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
     float: left;
   }
 
@@ -616,8 +616,8 @@ select {
   /* line 218, ../../foundation/scss/components/_grid.scss */
   .row.small-uncollapse > .column,
   .row.small-uncollapse > .columns {
-    padding-left: 0.9375rem;
-    padding-right: 0.9375rem;
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
     float: left;
   }
 }
@@ -794,8 +794,8 @@ select {
   .column,
   .columns {
     position: relative;
-    padding-left: 0.9375rem;
-    padding-right: 0.9375rem;
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
     float: left;
   }
 
@@ -976,8 +976,8 @@ select {
   /* line 218, ../../foundation/scss/components/_grid.scss */
   .row.medium-uncollapse > .column,
   .row.medium-uncollapse > .columns {
-    padding-left: 0.9375rem;
-    padding-right: 0.9375rem;
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
     float: left;
   }
 
@@ -1322,8 +1322,8 @@ select {
   .column,
   .columns {
     position: relative;
-    padding-left: 0.9375rem;
-    padding-right: 0.9375rem;
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
     float: left;
   }
 
@@ -1504,8 +1504,8 @@ select {
   /* line 218, ../../foundation/scss/components/_grid.scss */
   .row.large-uncollapse > .column,
   .row.large-uncollapse > .columns {
-    padding-left: 0.9375rem;
-    padding-right: 0.9375rem;
+    padding-left: 0.625rem;
+    padding-right: 0.625rem;
     float: left;
   }
 
@@ -4449,7 +4449,7 @@ label.error {
   display: inline-block;
   font-size: 0;
   width: 100%;
-  background: #333333;
+  background: #FFFFFF;
 }
 /* line 45, ../../foundation/scss/components/_icon-bar.scss */
 .icon-bar > * {
@@ -4555,23 +4555,23 @@ label.error {
 }
 /* line 177, ../../foundation/scss/components/_icon-bar.scss */
 .icon-bar > * label {
-  color: #FFFFFF;
+  color: #333333;
 }
 /* line 179, ../../foundation/scss/components/_icon-bar.scss */
 .icon-bar > * i {
-  color: #FFFFFF;
+  color: #333333;
 }
 /* line 182, ../../foundation/scss/components/_icon-bar.scss */
 .icon-bar > a:hover {
-  background: #008CBA;
+  background: #FAFAFA;
 }
 /* line 186, ../../foundation/scss/components/_icon-bar.scss */
 .icon-bar > a:hover label {
-  color: #FFFFFF;
+  color: #333333;
 }
 /* line 188, ../../foundation/scss/components/_icon-bar.scss */
 .icon-bar > a:hover i {
-  color: #FFFFFF;
+  color: #333333;
 }
 /* line 191, ../../foundation/scss/components/_icon-bar.scss */
 .icon-bar > a.active {
@@ -4579,11 +4579,11 @@ label.error {
 }
 /* line 195, ../../foundation/scss/components/_icon-bar.scss */
 .icon-bar > a.active label {
-  color: #FFFFFF;
+  color: #333333;
 }
 /* line 197, ../../foundation/scss/components/_icon-bar.scss */
 .icon-bar > a.active i {
-  color: #FFFFFF;
+  color: #333333;
 }
 /* line 201, ../../foundation/scss/components/_icon-bar.scss */
 .icon-bar .item.disabled {
@@ -5609,7 +5609,7 @@ table tr td {
 .tabs-content > .content {
   display: none;
   float: left;
-  padding: 0.9375rem 0;
+  padding: 0.625rem 0;
   width: 100%;
 }
 /* line 95, ../../foundation/scss/components/_tabs.scss */
@@ -5619,7 +5619,7 @@ table tr td {
 }
 /* line 99, ../../foundation/scss/components/_tabs.scss */
 .tabs-content > .content.contained {
-  padding: 0.9375rem;
+  padding: 0.625rem;
 }
 /* line 104, ../../foundation/scss/components/_tabs.scss */
 .tabs-content.vertical {
@@ -5627,7 +5627,7 @@ table tr td {
 }
 /* line 107, ../../foundation/scss/components/_tabs.scss */
 .tabs-content.vertical > .content {
-  padding: 0 0.9375rem;
+  padding: 0 0.625rem;
 }
 
 @media only screen and (min-width: 40.0625em) {
@@ -5775,8 +5775,8 @@ table tr td {
 }
 /* line 113, ../../foundation/scss/components/_top-bar.scss */
 meta.foundation-mq-topbar {
-  font-family: "/only screen and (min-width:40.0625em)/";
-  width: 40.0625em;
+  font-family: "/only screen and (min-width: 825px)/";
+  width: 825px;
 }
 
 /* Wrapped around .top-bar to contain to grid width */
@@ -6305,7 +6305,7 @@ meta.foundation-mq-topbar {
   display: block;
 }
 
-@media only screen and (min-width: 40.0625em) {
+@media only screen and (min-width: 825px) {
   /* line 492, ../../foundation/scss/components/_top-bar.scss */
   .top-bar {
     background: #333333;
@@ -6364,7 +6364,7 @@ meta.foundation-mq-topbar {
   .contain-to-grid .top-bar {
     margin: 0 auto;
     margin-bottom: 0;
-    max-width: 62.5rem;
+    max-width: 125rem;
   }
 
   /* line 536, ../../foundation/scss/components/_top-bar.scss */

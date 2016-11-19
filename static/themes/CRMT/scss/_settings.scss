@@ -1443,9 +1443,9 @@ $topbar-link-font-size: rem-calc(15);
 // $topbar-link-bg-active-hover: scale-color($primary-color, $lightness: -14%);
 // $topbar-link-font-family: $body-font-family;
 $topbar-link-text-transform: uppercase;
-$topbar-link-padding: 20px;
+$topbar-link-padding: rem-calc(20);
 $topbar-back-link-size: $h6-font-size;
-$topbar-link-dropdown-padding: 20px;
+$topbar-link-dropdown-padding: rem-calc(20);
 // $topbar-button-font-size: .75rem;
 // $topbar-button-top: 7px;
 
