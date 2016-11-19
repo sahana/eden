@@ -107,14 +107,6 @@ $red: #D41C1C;
 $beige: #F9F6F1;
 $stone: #C7C5C1;
 
-// We use these as default colors throughout
-$primary-color: $teal;
-$secondary-color: $wave;
-$alert-color: $orange;
-$success-color: $teal;
-$warning-color: $red;
-$info-color: $sage;
-
 $white       : #FFFFFF;
 $ghost       : #FAFAFA;
 $snow        : #F9F9F9;
@@ -134,6 +126,14 @@ $tuatara     : #444444;
 $oil         : #333333;
 $jet         : #222222;
 $black       : #000000;
+
+// We use these as default colors throughout
+$primary-color: $teal;
+$secondary-color: $wave;
+$alert-color: $orange;
+$success-color: $teal;
+$warning-color: $red;
+$info-color: $sage;
 
 // We use these to control various global styles
 $body-bg: $stone;
