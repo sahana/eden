@@ -1309,7 +1309,13 @@ class S3SQLCustomForm(S3SQLForm):
         table = component.table
         tablename = component.tablename
         if component._alias != tablename:
-            table = s3db.table(component.tablename)
+            unaliased = s3db.table(component.tablename)
+            # Must retain custom defaults of the aliased component:
+            for field in table:
+                field_ = unaliased[field.name]
+                field_.default = field.default
+                field_.update = field.update
+            table = unaliased
 
         get_config = s3db.get_config
 
@@ -1616,7 +1622,11 @@ class S3SQLField(S3SQLFormElement):
             widget = options.get("widget", DEFAULT)
 
             # Field in the main table
-            if tname == resource.tablename:
+            if resource._alias:
+                tablename = resource._alias
+            else:
+                tablename = resource.tablename
+            if tname == tablename:
                 field = rfield.field
 
                 if label is not DEFAULT:

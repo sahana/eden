@@ -11,14 +11,27 @@
          SubType.....................string..........Sub Type Name
          SubSubType... (indefinite depth)
 
+         Service.....................string..........Service Type Name
          Comments....................string..........Comments
 
     *********************************************************************** -->
     <xsl:output method="xml"/>
 
+    <xsl:key name="services" match="row" use="col[@field='Service']"/>
+
     <!-- ****************************************************************** -->
     <xsl:template match="/">
         <s3xml>
+
+            <!-- Services -->
+            <xsl:for-each select="//row[generate-id(.)=generate-id(key('services',
+                                                                   col[@field='Service'])[1])]">
+                <xsl:call-template name="Service">
+                    <xsl:with-param name="Name">
+                         <xsl:value-of select="col[@field='Service']"/>
+                    </xsl:with-param>
+                </xsl:call-template>
+            </xsl:for-each>
 
             <!-- Need Types -->
             <xsl:apply-templates select="table/row"/>
@@ -138,6 +151,16 @@
             <!-- Name -->
             <data field="name"><xsl:value-of select="$Name"/></data>
 
+            <!-- Link to Service -->
+            <xsl:variable name="Service" select="col[@field='Service']/text()"/>
+            <xsl:if test="$Service!=''">
+                <reference field="service_id" resource="org_service">
+                    <xsl:attribute name="tuid">
+                        <xsl:value-of select="concat('SERVICE:', $Service)"/>
+                    </xsl:attribute>
+                </reference>
+            </xsl:if>
+
             <!-- Comments -->
             <xsl:variable name="Comments" select="col[@field='Comments']/text()"/>
             <xsl:if test="$Comments!=''">
@@ -146,6 +169,24 @@
                 </data>
             </xsl:if>
         </resource>
+    </xsl:template>
+
+    <!-- ****************************************************************** -->
+    <xsl:template name="Service">
+
+        <xsl:param name="Name"/>
+
+        <xsl:if test="$Name!=''">
+            <resource name="org_service">
+                <xsl:attribute name="tuid">
+                    <xsl:value-of select="concat('SERVICE:', $Name)"/>
+                </xsl:attribute>
+                <data field="name">
+                    <xsl:value-of select="$Name"/>
+                </data>
+            </resource>
+        </xsl:if>
+
     </xsl:template>
 
     <!-- ****************************************************************** -->

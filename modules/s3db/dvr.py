@@ -1042,6 +1042,9 @@ class DVRNeedsModel(S3Model):
         define_table = self.define_table
         configure = self.configure
 
+        service_type = settings.get_dvr_needs_use_service_type()
+        service_id = self.org_service_id
+
         hierarchical_needs = settings.get_dvr_needs_hierarchical()
 
         # ---------------------------------------------------------------------
@@ -1053,6 +1056,11 @@ class DVRNeedsModel(S3Model):
                            label = T("Name"),
                            requires = IS_NOT_EMPTY(),
                            ),
+                     service_id(label = T("Service Type"),
+                                ondelete = "SET NULL",
+                                readable = service_type,
+                                writable = service_type,
+                                ),
                      # This form of hierarchy may not work on all Databases:
                      Field("parent", "reference dvr_need",
                            label = T("Subtype of"),

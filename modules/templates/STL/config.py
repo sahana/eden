@@ -110,9 +110,15 @@ def config(settings):
     # =========================================================================
     # DVR Case Management
     #
+    # Case activities use service types
     settings.dvr.activity_use_service_type = True
+
+    # Use hierarchical case activity types
     settings.dvr.activity_types = True
     settings.dvr.activity_types_hierarchical = True
+
+    # Needs differentiated by service type, and hierarchical
+    settings.dvr.needs_use_service_type = True
     settings.dvr.needs_hierarchical = True
 
     # -------------------------------------------------------------------------
@@ -337,6 +343,48 @@ def config(settings):
         s3db = current.s3db
         s3 = current.response.s3
 
+        # Get service type IDs
+        stable = s3db.org_service
+        query = (stable.deleted != True)
+        rows = current.db(query).select(stable.id,
+                                        stable.name,
+                                        cache = s3db.cache,
+                                        )
+        mh_service_id = None
+        is_service_id = None
+        pss_service_ids = set()
+        for row in rows:
+            if row.name == "Mental Health":
+                mh_service_id = row.id
+            elif row.name == "Individual Support":
+                is_service_id = row.id
+            else:
+                pss_service_ids.add(row.id)
+
+        # Custom activity components (differentiated by service type)
+        s3db.add_components("pr_person",
+                            dvr_case_activity = (
+                                {"name": "case_activity",
+                                    "joinby": "person_id",
+                                    "filterby": {
+                                        "service_id": is_service_id,
+                                        },
+                                },
+                                {"name": "mh_activity",
+                                    "joinby": "person_id",
+                                    "filterby": {
+                                        "service_id": mh_service_id,
+                                        },
+                                },
+                                {"name": "pss_activity",
+                                    "joinby": "person_id",
+                                    "filterby": {
+                                        "service_id": list(pss_service_ids),
+                                        },
+                                },
+                               ),
+                            )
+
         # Custom prep
         standard_prep = s3.prep
         def custom_prep(r):
@@ -357,6 +405,7 @@ def config(settings):
             if controller == "dvr" and not r.component:
 
                 table = r.table
+
                 ctable = s3db.dvr_case
 
                 from s3 import IS_ONE_OF, S3HierarchyWidget, S3Represent
@@ -991,7 +1040,9 @@ def stl_dvr_rheader(r, tabs=[]):
                         (T("Contact"), "contacts"),
                         (T("Household"), "household"),
                         (T("Economy"), "economy"),
-                        (T("Activities"), "case_activity"),
+                        (T("Individual Support"), "case_activity"),
+                        (T("PSS"), "pss_activity"),
+                        (T("Mental Health"), "mh_activity"),
                         ]
 
                 case = resource.select(["family_id.value",

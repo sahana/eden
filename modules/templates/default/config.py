@@ -507,6 +507,16 @@ def config(settings):
     #settings.dvr.multiple_case_groups = True
     # Configure a regular expression pattern for ID Codes (QR Codes)
     #settings.dvr.id_code_pattern = "(?P<label>[^,]*),(?P<first_name>[^,]*),(?P<last_name>[^,]*),(?P<date_of_birth>[^,]*)"
+    # Uncomment this to use service types for case activites
+    #settings.dvr.activity_use_service_type = True
+    # Uncomment this to use case activity types
+    #settings.dvr.activity_types = True
+    # Uncomment this to use hierarchical case activity types
+    #settings.dvr.activity_types_hierarchical = True
+    # Uncomment this to use service types for needs
+    #settings.dvr_needs_use_service_type = True
+    # Uncomment this to use hierarchical need types
+    #settings.dvr.needs_hierarchical = True
 
     # -------------------------------------------------------------------------
     # Events
