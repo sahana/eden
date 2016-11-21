@@ -1330,3 +1330,14 @@ body.rtl .username i.icon, body.rtl .username i.fa {
 body.rtl .event-type-header {
   text-align: left;
 }
+
+@media only screen and (min-width: 825px) {
+  /* line 4, ../scss/custom/_topbar.scss */
+  .top-bar select {
+    position: static;
+    top: 0;
+    padding-bottom: 0;
+    padding-right: 0.6rem;
+    padding-top: 0;
+  }
+}

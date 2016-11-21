@@ -39,7 +39,7 @@ from gluon.html import *
 from gluon.storage import Storage
 
 from s3dal import Expression, S3DAL
-from s3utils import s3_orderby_fields, s3_unicode, s3_set_extension
+from s3utils import s3_orderby_fields, s3_str, s3_unicode, s3_set_extension
 
 # =============================================================================
 class S3DataTable(object):
@@ -671,7 +671,7 @@ class S3DataTable(object):
         config.dom = _aget("dt_dom", settings.get_ui_datatables_dom())
         config.lengthMenu = _aget("dt_lengthMenu",
                                   [[25, 50, -1],
-                                   [25, 50, str(current.T("All"))]
+                                   [25, 50, s3_str(current.T("All"))]
                                    ]
                                   )
         config.pageLength = _aget("dt_pageLength", s3.ROWSPERPAGE)
