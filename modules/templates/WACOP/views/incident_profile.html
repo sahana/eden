@@ -1,118 +1,111 @@
 {{extend "layout.html"}}
 {{if event_id:}}
 <div role="complementary" class="row panel callout">
-  <p class="callout-intro">Note: This incident is part of an event.</p>
-  <div class="incident-updates row">
-    <p class="zero-hour large-3 small-6 columns">Zero hour: <i class="fa fa-calendar"></i> {{=event_start_date}}</p>
-    <p class="large-3 small-6 columns">Closed at: {{=event_end_date}}</p>
-    <p class="large-6 small-12 columns text-right">{{=event_location}}</p>
+ <p class="callout-intro">Note: This incident is part of an event.</p>
+ <div class="incident-updates row">
+  <p class="zero-hour large-3 small-6 columns">Zero hour: <i class="fa fa-calendar"></i> {{=event_start_date}}</p>
+  <p class="large-3 small-6 columns">Closed at: {{=event_end_date}}</p>
+  <p class="large-6 small-12 columns text-right">{{=event_location}}</p>
+ </div>
+ <hr>
+ <div class="row">
+  <div class="large-9 small-12 columns">
+   <h3>{{=event_name}} {{if event_active:}}<span class="label success">Active</span>{{else:}}<span class="label alert">Inactive</span>{{pass}}</h3>
+   <p class="callout-description inline">This event has <strong><a href="#">{{=incidents}} incidents</a></strong>, <strong><a href="#">{{=event_resources}} resources</a></strong>, <strong><a href="#">{{=event_posts}} posts</a></strong>.</p>
   </div>
-  <hr>
-  <div class="row">
-    <div class="large-9 small-12 columns">
-      <h3>{{=event_name}} {{if event_active:}}<span class="label success">Active</span>{{else:}}<span class="label alert">Inactive</span>{{pass}}</h3>
-      <p class="callout-description inline">This event has <strong><a href="#">{{=incidents}} incidents</a></strong>, <strong><a href="#">{{=event_resources}} resources</a></strong>, <strong><a href="#">{{=event_posts}} posts</a></strong>.</p>
-    </div>
-    <p class="large-3 small-12 columns text-right"><a href='{{=URL(c="event", f="event", args=[event_id, "profile"])}}' class="button button-info tiny">Go to Event Page</a></p>
-  </div>
+  <p class="large-3 small-12 columns text-right"><a href='{{=URL(c="event", f="event", args=[event_id, "profile"])}}' class="button button-info tiny">Go to Event Page</a></p>
+ </div>
 </div>
 {{pass}}
-<div class="row panel">
-      <div class="large-8 columns">
-        <div class="incident panel">
-          <header class="row incident-header active">
-            <div class="incident-control clearfix">
-              <p class="left">
-                {{if active:}}Active{{else:}}Inactive{{pass}} <small>(<a href="#modal-incident-status" data-reveal-id="modal-incident-status">change status</a>)</small>
-              </p>
-
-              <ul class="inline-list right">
-                <li class="item"><a href="#" class="button secondary tiny"><span class="fa fa-share-alt"></span> Share</a></li>
-                <li class="item"><a href="#"><i class="fa fa-flag"></i><span class="show-for-sr">flag this</span></a></li>
-                <li class="item"><a href="#"><i class="fa fa-bookmark"><span class="show-for-sr">bookmark</span></i></a></li>
-                <li class="item"><a href="#"><i class="fa fa-comment"><span class="show-for-sr">comment</span></i></a></li>
-                <li class="item"><a href="#"><i class="fa fa-calendar"><span class="show-for-sr">add to event</span></i></a></li>
-                <li aria-hidden="true">|</li>
-                <li class="item"><a href="#"><i class="fa fa-edit"><span class="show-for-sr">edit</span></i></a></li>
-                <li class="item"><a href="#"><i class="fa fa-trash"><span class="show-for-sr">delete</span></i></a></li>
-              </ul>
-            </div>
-
-            <div id="modal-incident-status" class="reveal-modal" data-reveal aria-labelledby="modalIncidentStatus" aria-hidden="true" role="dialog">
-              <h4 id="modalIncidentStatusTitle">Change Status of Incident</h4>
-              <form>
-                <select name="incident-status">
-                  <option value="active"{{if active:}} "selected"{{pass}}>active</option>
-                  <option value="inactive"{{if not active:}} "selected"{{pass}}>inactive</option>
-                  <!--<option value="pending">pending</option>-->
-                </select>
-                <input class="button" type="submit" name="incident-status-submit" value="Change Status">
-              </form>
-              <a class="close-reveal-modal" aria-label="Close">&#215;</a>
-            </div>
-          </header>
-
-          <div class="row incident-content">
-            <div class="clearfix">
-              <div class="incident-content-summary large-10 columns">
-                <h4>{{=name}}</h4>
-                <p>Last updated on {{=modified_on}}</p>
-
-                <p class="incident-labels">
-                  <span class="label info">Crime / Terrorism</span>
-                  <span class="show-for-sr">Severity: </span><span class="label alert">bad</span>
-                  <span class="label alert">No Exercise</span>
-
-                  <ul class="label-controls">
-                    <li class="item"><a href="#"><i class="fa fa-plus"><span class="show-for-sr">add tag</span></i></a></li>
-                    <li class="item"><a href="#"><i class="fa fa-edit"><span class="show-for-sr">edit tags</span></i></a></li>
-                  </ul>
-                </p>
-              </div>
-
-              <!--
-              <figure class="large-2 columns organization-logo">
-                <img src="img/spd.png" alt="" />
-                <figcaption>Seattle Police Department</figcaption>
-              </figure>-->
-            </div>
-
-            <div class="incident-description">
-              <div class="incident-updates row">
-                <p class="zero-hour small-6 columns">Zero hour: <i class="fa fa-calendar"></i> <input type="date" name="closedat" value="{{=start_date}}" disabled></p>
-                <p class="small-6 columns">Closed at: <input type="date" name="closedat" value="{{=end_date}}"></p>
-              </div>
-
-              <p>
-                <i class="fa fa-marker"></i> Street address: <input type="text" name="incident-street" value="{{=addr_street}}">
-              </p>
-
-              <div class="row">
-                <p class="small-4 columns">
-                  <i class="fa fa-marker"></i> City: <input type="text" name="incident-city" value="{{=L3}}" disabled>
-                </p>
-                <p class="small-4 columns">
-                  <i class="fa fa-marker"></i> State:
-                  <select name="incident-state">
-                    <option>{{=L1}}</option>
-                  </select>
-                </p>
-                <p class="small-4 columns">
-                  <i class="fa fa-marker"></i> ZIP Code: <input type="text" name="incident-zip" value="{{=postcode}}">
-                </p>
-              </div>
-
-              <div class="row">
-                <p class="small-6 columns">Latitude: <i class="fa fa-marker"></i> <input type="text" name="latitude" value="{{=lat}}" disabled></p>
-                <p class="small-6 columns">Longitude: <i class="fa fa-marker"></i> <input type="text" name="longitude" value="{{=lon}}" disabled></p>
-              </div>
-
-              <h5>Incident Description:</h5>
-              <p>{{=description}}</p>
-            </div>
+<div class="row panel incident-profile">
+ <div class="large-8 columns">
+  <div class="incident panel">
+   <header class="row incident-header active">
+    <div class="incident-control clearfix">
+     <p class="left">
+     {{if active:}}Active{{else:}}Inactive{{pass}} <small>(<a href="#modal-incident-status" data-reveal-id="modal-incident-status">change status</a>)</small>
+     </p>
+     <ul class="inline-list right">
+      <li class="item"><a href="#" class="button secondary tiny"><span class="fa fa-share-alt"></span> Share</a></li>
+      <li class="item"><a href="#"><i class="fa fa-flag"></i><span class="show-for-sr">flag this</span></a></li>
+      <li class="item"><a href="#"><i class="fa fa-bookmark"><span class="show-for-sr">bookmark</span></i></a></li>
+      <li class="item"><a href="#"><i class="fa fa-comment"><span class="show-for-sr">comment</span></i></a></li>
+      <li class="item"><a href="#"><i class="fa fa-calendar"><span class="show-for-sr">add to event</span></i></a></li>
+      <li aria-hidden="true">|</li>
+      <li class="item"><a href="#"><i class="fa fa-edit"><span class="show-for-sr">edit</span></i></a></li>
+      <li class="item"><a href="#"><i class="fa fa-trash"><span class="show-for-sr">delete</span></i></a></li>
+     </ul>
+    </div>
+    <div id="modal-incident-status" class="reveal-modal" data-reveal aria-labelledby="modalIncidentStatus" aria-hidden="true" role="dialog">
+     <h4 id="modalIncidentStatusTitle">Change Status of Incident</h4>
+     <form>
+      <select name="incident-status">
+       <option value="active"{{if active:}} "selected"{{pass}}>active</option>
+       <option value="inactive"{{if not active:}} "selected"{{pass}}>inactive</option>
+       <!--<option value="pending">pending</option>-->
+      </select>
+      <input class="button" type="submit" name="incident-status-submit" value="Change Status">
+     </form>
+     <a class="close-reveal-modal" aria-label="Close">&#215;</a>
+    </div>
+   </header>
+   <div class="row incident-content">
+    <div class="clearfix">
+     <div class="incident-content-summary large-10 columns">
+      <h4>{{=name}}</h4>
+      <p>Last updated on {{=modified_on}}</p>
+      <p class="incident-labels">
+       <span class="label info">Crime / Terrorism</span>
+       <span class="show-for-sr">Severity: </span><span class="label alert">bad</span>
+       <span class="label alert">No Exercise</span>
+       <ul class="label-controls">
+        <li class="item"><a href="#"><i class="fa fa-plus"><span class="show-for-sr">add tag</span></i></a></li>
+        <li class="item"><a href="#"><i class="fa fa-edit"><span class="show-for-sr">edit tags</span></i></a></li>
+       </ul>
+      </p>
+     </div>
+     <!--
+     <figure class="large-2 columns organization-logo">
+      <img src="img/spd.png" alt="" />
+      <figcaption>Seattle Police Department</figcaption>
+     </figure>-->
+    </div>
+    <div class="incident-description">
+     <div class="incident-updates row">
+            <p class="zero-hour small-6 columns">Zero hour: <i class="fa fa-calendar"></i> <input type="date" name="closedat" value="{{=start_date}}" disabled></p>
+            <p class="small-6 columns">Closed at: <input type="date" name="closedat" value="{{=end_date}}"></p>
           </div>
+
+          <p>
+            <i class="fa fa-marker"></i> Street address: <input type="text" name="incident-street" value="{{=addr_street}}">
+          </p>
+
+          <div class="row">
+            <p class="small-4 columns">
+              <i class="fa fa-marker"></i> City: <input type="text" name="incident-city" value="{{=L3}}" disabled>
+            </p>
+            <p class="small-4 columns">
+              <i class="fa fa-marker"></i> State:
+              <select name="incident-state">
+                <option>{{=L1}}</option>
+              </select>
+            </p>
+            <p class="small-4 columns">
+              <i class="fa fa-marker"></i> ZIP Code: <input type="text" name="incident-zip" value="{{=postcode}}">
+            </p>
+          </div>
+
+          <div class="row">
+            <p class="small-6 columns">Latitude: <i class="fa fa-marker"></i> <input type="text" name="latitude" value="{{=lat}}" disabled></p>
+            <p class="small-6 columns">Longitude: <i class="fa fa-marker"></i> <input type="text" name="longitude" value="{{=lon}}" disabled></p>
+          </div>
+
+          <h5>Incident Description:</h5>
+          <p>{{=description}}</p>
         </div>
       </div>
+    </div>
+  </div>
 
     <div class="large-4 columns">
       <h3 class="show-for-sr">This incident on the map:</h3>
@@ -126,17 +119,16 @@
           <div class="large-3 columns">
             <label for="task-search" class="prefix">Search:</label>
           </div>
-          <div class="large-6 columns">
-            <input type="search" name="task-search" placeholder="Enter search term…">
+          <div class="large-6 columns dt-search">
+            
           </div>
           <div class="large-3 columns">
-            <a href="#" class="button tiny postfix"><i class="fa fa-plus"></i> Add</a>
+            {{=create_popup}}
           </div>
         </div>
         {{=resources}}
       </section>
     </div>
-  </div>
 </div>
 
 <hr>

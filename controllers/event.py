@@ -290,13 +290,9 @@ def group():
 
 # -----------------------------------------------------------------------------
 def team():
-    """ Controller for event_team option lookups (popups) """
+    """ Events <> Teams """
 
-    # /options.s3json only
-    s3.prep = lambda r: r.method == "options" and \
-                        r.representation == "s3json"
-
-    return s3_rest_controller("event", "team")
+    return s3_rest_controller()
 
 # -----------------------------------------------------------------------------
 def team_status():
