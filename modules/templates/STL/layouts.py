@@ -189,7 +189,7 @@ class S3AboutMenuLayout(S3NavigationItem):
             # The menu
             items = item.render_components()
             if items:
-                return TAG["ul"](items, _class="sub-nav about-menu left")
+                return TAG["ul"](items, _class="sub-nav about-menu")
             else:
                 return "" # menu is empty
         else:

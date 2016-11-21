@@ -352,9 +352,8 @@
             }
 
             // Clear ID label
-            var labelInput = $(prefix + '_label').focus();
             if (!keepInput) {
-                labelInput.val('');
+                $(prefix + '_label').val('').focus();
             }
 
             // Clear details

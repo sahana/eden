@@ -145,6 +145,10 @@ textarea {
     resize: both;
     max-width: 100%;
 }
+
+select {
+    padding-right: 1rem !important;
+}
 /* Form and Item containers */
 #last_update {
     float: none;

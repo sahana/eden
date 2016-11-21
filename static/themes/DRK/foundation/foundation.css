@@ -2828,9 +2828,9 @@ button::-moz-focus-inner {
 }
 /* line 70, ../../foundation/scss/components/_button-groups.scss */
 .button-group.stack > li > button, .button-group.stack > li .button {
-  border-color: rgba(255, 255, 255, 0.5);
   border-left-width: 0;
   border-top: 1px solid;
+  border-color: rgba(255, 255, 255, 0.5);
   display: block;
   margin: 0;
 }
@@ -2876,9 +2876,9 @@ button::-moz-focus-inner {
   }
   /* line 70, ../../foundation/scss/components/_button-groups.scss */
   .button-group.stack-for-small > li > button, .button-group.stack-for-small > li .button {
-    border-color: rgba(255, 255, 255, 0.5);
     border-left-width: 0;
     border-top: 1px solid;
+    border-color: rgba(255, 255, 255, 0.5);
     display: block;
     margin: 0;
   }
@@ -2944,9 +2944,9 @@ button::-moz-focus-inner {
 }
 /* line 70, ../../foundation/scss/components/_button-groups.scss */
 .button-group.radius.stack > * > button, .button-group.radius.stack > * .button {
-  border-color: rgba(255, 255, 255, 0.5);
   border-left-width: 0;
   border-top: 1px solid;
+  border-color: rgba(255, 255, 255, 0.5);
   display: block;
   margin: 0;
 }
@@ -3035,9 +3035,9 @@ button::-moz-focus-inner {
   }
   /* line 70, ../../foundation/scss/components/_button-groups.scss */
   .button-group.radius.stack-for-small > * > button, .button-group.radius.stack-for-small > * .button {
-    border-color: rgba(255, 255, 255, 0.5);
     border-left-width: 0;
     border-top: 1px solid;
+    border-color: rgba(255, 255, 255, 0.5);
     display: block;
     margin: 0;
   }
@@ -3124,9 +3124,9 @@ button::-moz-focus-inner {
 }
 /* line 70, ../../foundation/scss/components/_button-groups.scss */
 .button-group.round.stack > * > button, .button-group.round.stack > * .button {
-  border-color: rgba(255, 255, 255, 0.5);
   border-left-width: 0;
   border-top: 1px solid;
+  border-color: rgba(255, 255, 255, 0.5);
   display: block;
   margin: 0;
 }
@@ -3215,9 +3215,9 @@ button::-moz-focus-inner {
   }
   /* line 70, ../../foundation/scss/components/_button-groups.scss */
   .button-group.round.stack-for-small > * > button, .button-group.round.stack-for-small > * .button {
-    border-color: rgba(255, 255, 255, 0.5);
     border-left-width: 0;
     border-top: 1px solid;
+    border-color: rgba(255, 255, 255, 0.5);
     display: block;
     margin: 0;
   }
@@ -5412,7 +5412,7 @@ ul.pagination li {
   text-transform: uppercase;
 }
 
-/* line 123, ../../foundation/scss/components/_sub-nav.scss */
+/* line 124, ../../foundation/scss/components/_sub-nav.scss */
 .sub-nav {
   display: block;
   margin: -0.25rem 0 1.125rem;
@@ -5435,9 +5435,10 @@ ul.pagination li {
   font-weight: normal;
   margin-left: 1rem;
   margin-bottom: 0;
+  list-style-type: none;
   margin-left: 0;
 }
-/* line 82, ../../foundation/scss/components/_sub-nav.scss */
+/* line 83, ../../foundation/scss/components/_sub-nav.scss */
 .sub-nav dt a,
 .sub-nav dd a,
 .sub-nav li a {
@@ -5445,13 +5446,13 @@ ul.pagination li {
   padding: 0.125rem 0.375rem;
   text-decoration: none;
 }
-/* line 87, ../../foundation/scss/components/_sub-nav.scss */
+/* line 88, ../../foundation/scss/components/_sub-nav.scss */
 .sub-nav dt a:hover,
 .sub-nav dd a:hover,
 .sub-nav li a:hover {
   color: #737373;
 }
-/* line 92, ../../foundation/scss/components/_sub-nav.scss */
+/* line 93, ../../foundation/scss/components/_sub-nav.scss */
 .sub-nav dt.active a,
 .sub-nav dd.active a,
 .sub-nav li.active a {
@@ -5462,20 +5463,20 @@ ul.pagination li {
   font-weight: normal;
   padding: 0.125rem 0.375rem;
 }
-/* line 100, ../../foundation/scss/components/_sub-nav.scss */
+/* line 101, ../../foundation/scss/components/_sub-nav.scss */
 .sub-nav dt.active a:hover,
 .sub-nav dd.active a:hover,
 .sub-nav li.active a:hover {
   background: #005b61;
 }
-/* line 108, ../../foundation/scss/components/_sub-nav.scss */
+/* line 109, ../../foundation/scss/components/_sub-nav.scss */
 .sub-nav dt:before,
 .sub-nav dd:before,
 .sub-nav li:before {
   content: "|";
   margin: 0 0.375rem;
 }
-/* line 113, ../../foundation/scss/components/_sub-nav.scss */
+/* line 114, ../../foundation/scss/components/_sub-nav.scss */
 .sub-nav dt:first-child:before,
 .sub-nav dd:first-child:before,
 .sub-nav li:first-child:before {

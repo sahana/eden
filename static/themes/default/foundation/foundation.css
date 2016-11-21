@@ -2828,9 +2828,9 @@ button::-moz-focus-inner {
 }
 /* line 70, ../../foundation/scss/components/_button-groups.scss */
 .button-group.stack > li > button, .button-group.stack > li .button {
-  border-color: rgba(255, 255, 255, 0.5);
   border-left-width: 0;
   border-top: 1px solid;
+  border-color: rgba(255, 255, 255, 0.5);
   display: block;
   margin: 0;
 }
@@ -2876,9 +2876,9 @@ button::-moz-focus-inner {
   }
   /* line 70, ../../foundation/scss/components/_button-groups.scss */
   .button-group.stack-for-small > li > button, .button-group.stack-for-small > li .button {
-    border-color: rgba(255, 255, 255, 0.5);
     border-left-width: 0;
     border-top: 1px solid;
+    border-color: rgba(255, 255, 255, 0.5);
     display: block;
     margin: 0;
   }
@@ -2944,9 +2944,9 @@ button::-moz-focus-inner {
 }
 /* line 70, ../../foundation/scss/components/_button-groups.scss */
 .button-group.radius.stack > * > button, .button-group.radius.stack > * .button {
-  border-color: rgba(255, 255, 255, 0.5);
   border-left-width: 0;
   border-top: 1px solid;
+  border-color: rgba(255, 255, 255, 0.5);
   display: block;
   margin: 0;
 }
@@ -3035,9 +3035,9 @@ button::-moz-focus-inner {
   }
   /* line 70, ../../foundation/scss/components/_button-groups.scss */
   .button-group.radius.stack-for-small > * > button, .button-group.radius.stack-for-small > * .button {
-    border-color: rgba(255, 255, 255, 0.5);
     border-left-width: 0;
     border-top: 1px solid;
+    border-color: rgba(255, 255, 255, 0.5);
     display: block;
     margin: 0;
   }
@@ -3124,9 +3124,9 @@ button::-moz-focus-inner {
 }
 /* line 70, ../../foundation/scss/components/_button-groups.scss */
 .button-group.round.stack > * > button, .button-group.round.stack > * .button {
-  border-color: rgba(255, 255, 255, 0.5);
   border-left-width: 0;
   border-top: 1px solid;
+  border-color: rgba(255, 255, 255, 0.5);
   display: block;
   margin: 0;
 }
@@ -3215,9 +3215,9 @@ button::-moz-focus-inner {
   }
   /* line 70, ../../foundation/scss/components/_button-groups.scss */
   .button-group.round.stack-for-small > * > button, .button-group.round.stack-for-small > * .button {
-    border-color: rgba(255, 255, 255, 0.5);
     border-left-width: 0;
     border-top: 1px solid;
+    border-color: rgba(255, 255, 255, 0.5);
     display: block;
     margin: 0;
   }

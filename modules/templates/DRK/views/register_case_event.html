@@ -86,12 +86,12 @@
    </div>
   </div>
  </div>
- <div class='row'>
+ <div class='row event-bottom'>
   <div class='large-3 medium-4 small-6 columns'>
    {{=A(T("Back to %(appname)s") % {"appname": settings.get_system_name_short()}, _href=URL(c="default", f="index"), _class="action-lnk")}}
   </div>
   <div class='large-3 medium-4 small-6 columns end'>
-   <div class="username">{{if auth.is_logged_in():}}{{=auth.user.email}}{{else:}}{{=T("anonymous user")}}{{pass}}<i class='icon icon-user'></i></div>
+   <div class="username right">{{if auth.is_logged_in():}}{{=auth.user.email}}{{else:}}{{=T("anonymous user")}}{{pass}}<i class='fa fa-user'></i></div>
   </div>
  </div>
 {{include "scripts.html"}}

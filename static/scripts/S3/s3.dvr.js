@@ -167,6 +167,9 @@
                 throbber = $('<div class="inline-throbber">').insertAfter(personInfo),
                 self = this;
 
+            // Remove profile picture
+            this._removeProfilePicture();
+
             // Clear action details
             this._clearDetails();
 
