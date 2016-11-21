@@ -76,7 +76,7 @@
                 <xsl:value-of select="translate(data[@field='status']/@value, '&quot;', '')"/>
             </status>
             <msgType>
-                <xsl:value-of select="translate(data[@field='msg_type']/@value, '&quot;', '')"/>
+                <xsl:value-of select="data[@field='msg_type']"/>
             </msgType>
             
             <xsl:if test="data[@field='source']!=''">
@@ -564,7 +564,14 @@
         <xsl:if test="data[@field='mime_type']!=''">
             <resource>
                 <resourceDesc><xsl:value-of select="data[@field='resource_desc']"/></resourceDesc>
-                <mimeType><xsl:value-of select="data[@field='mime_type']"/></mimeType>
+                <xsl:choose>
+                    <xsl:when test="data[@field='mime_type']='cap'">
+                        <mimeType><xsl:text>text/xml</xsl:text></mimeType>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <mimeType><xsl:value-of select="data[@field='mime_type']"/></mimeType>
+                    </xsl:otherwise>
+                </xsl:choose>
                 <xsl:if test="data[@field='size']!=''">
                     <size><xsl:value-of select="data[@field='size']"/></size>
                 </xsl:if>

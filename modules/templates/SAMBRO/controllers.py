@@ -1622,8 +1622,9 @@ class alert_hub_cop(S3CustomController):
         if not logged_in:
             # Only show Public Alerts
             resource.add_filter(FS("scope") == "Public")
-        # Only show Alerts which haven't expired
-        #resource.add_filter(FS("info.expires") >= request.utcnow)
+        # Only show Alerts from the past 30 days
+        last_month = request.utcnow + timedelta(-30)
+        resource.add_filter(FS("info.expires") >= last_month)
         # Show External Alerts
         resource.add_filter(FS("external") == True)
         # Change representation
@@ -1694,7 +1695,7 @@ class alert_hub_cop(S3CustomController):
         # Button to view datalist from map
         datalist_btn = A(T("View Datalist"),
                          _href = URL(c="cap",
-                                     f="alert",
+                                     f=fn,
                                      vars = {"~.external": True}
                                      ),
                          _class = "action-btn button tiny",
