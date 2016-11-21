@@ -28,7 +28,7 @@ def config(settings):
     settings.L10n.languages = languages
 
     # Alert Hub Title
-    settings.cap.alert_hub_title = T("Maldives Alert Hub Common Operating Picture")
+    settings.cap.alert_hub_title = T("Maldives Alert Hub Common Alerting Picture")
 
     # Maldives don't support ack workflow
     settings.cap.use_ack = False

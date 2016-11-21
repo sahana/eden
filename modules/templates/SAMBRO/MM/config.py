@@ -28,7 +28,7 @@ def config(settings):
     settings.L10n.languages = languages
 
     # Alert Hub Title
-    settings.cap.alert_hub_title = T("Myanmar Alert Hub Common Operating Picture")
+    settings.cap.alert_hub_title = T("Myanmar Alert Hub Common Alerting Picture")
 
     # UI Settings
     settings.ui.menu_logo = URL(c = "static",

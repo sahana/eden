@@ -32,7 +32,7 @@ def config(settings):
 
     # Alert Hub Title
     # NB Alert Hub is home page for Philippines
-    settings.cap.alert_hub_title = T("PAGASA Alert Hub Common Operating Picture")
+    settings.cap.alert_hub_title = T("PAGASA Alert Hub Common Alerting Picture")
 
     # UI Settings
     settings.ui.menu_logo = URL(c = "static",

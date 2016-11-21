@@ -2000,7 +2000,7 @@ current.T("This combination of the 'Event Type', 'Urgency', 'Certainty' and 'Sev
                                                limitby=(0, 1)).first()
         alert_id = irow.alert_id
         if alert_id:
-            db(db.cap_info_parameter.id == form_vars.id).update(alert_id = alert_id)
+            db(db.cap_info_parameter.id == form_vars["id"]).update(alert_id = alert_id)
 
     # -------------------------------------------------------------------------
     @staticmethod
