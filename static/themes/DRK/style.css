@@ -324,56 +324,61 @@ textarea {
   max-width: 100%;
 }
 
-/* Form and Item containers */
 /* line 149, ../scss/custom/_forms.scss */
+select {
+  padding-right: 1rem !important;
+}
+
+/* Form and Item containers */
+/* line 153, ../scss/custom/_forms.scss */
 #last_update {
   float: none;
 }
 
-/* line 152, ../scss/custom/_forms.scss */
+/* line 156, ../scss/custom/_forms.scss */
 .form-container,
 .item-container {
   width: auto;
   overflow: inherit;
 }
-/* line 154, ../scss/custom/_forms.scss */
+/* line 158, ../scss/custom/_forms.scss */
 .form-container form,
 .item-container form {
   background: #fefefe;
   padding: 5px 10px;
 }
-/* line 160, ../scss/custom/_forms.scss */
+/* line 164, ../scss/custom/_forms.scss */
 .form-container .controls,
 .item-container .controls {
   display: inline-block;
 }
-/* line 162, ../scss/custom/_forms.scss */
+/* line 166, ../scss/custom/_forms.scss */
 .form-container .controls:not(.columns),
 .item-container .controls:not(.columns) {
   max-width: 100%;
 }
 
-/* line 167, ../scss/custom/_forms.scss */
+/* line 171, ../scss/custom/_forms.scss */
 .form-container {
   margin-top: 0.125rem;
   margin-bottom: 0.875rem;
 }
-/* line 171, ../scss/custom/_forms.scss */
+/* line 175, ../scss/custom/_forms.scss */
 .form-container form select,
 .form-container form input.string:not(.date),
 .form-container form textarea {
   margin: 0;
 }
-/* line 176, ../scss/custom/_forms.scss */
+/* line 180, ../scss/custom/_forms.scss */
 .form-container form .ui-multiselect {
   max-width: 100%;
 }
-/* line 180, ../scss/custom/_forms.scss */
+/* line 184, ../scss/custom/_forms.scss */
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
   width: 20rem !important;
 }
 
-/* line 186, ../scss/custom/_forms.scss */
+/* line 190, ../scss/custom/_forms.scss */
 .item-container .controls {
   background: #fafafa;
   padding: 0.35rem;
@@ -381,22 +386,22 @@ textarea {
 }
 
 /* Filter forms */
-/* line 195, ../scss/custom/_forms.scss */
+/* line 199, ../scss/custom/_forms.scss */
 .filter-form table tr,
 .filter-form .ui-multiselect {
   max-width: 60%;
 }
-/* line 199, ../scss/custom/_forms.scss */
+/* line 203, ../scss/custom/_forms.scss */
 .filter-form table.s3-groupedopts-widget {
   display: inline-block;
 }
-/* line 202, ../scss/custom/_forms.scss */
+/* line 206, ../scss/custom/_forms.scss */
 .filter-form .inline-tooltip {
   padding-top: 0.2rem;
 }
 
 /* Login/Registration box */
-/* line 208, ../scss/custom/_forms.scss */
+/* line 212, ../scss/custom/_forms.scss */
 #login_form,
 #register_form,
 #login_box {
@@ -404,13 +409,13 @@ textarea {
 }
 
 /* Help Popup */
-/* line 215, ../scss/custom/_forms.scss */
+/* line 219, ../scss/custom/_forms.scss */
 .inline-tooltip {
   display: inline-block;
   vertical-align: top;
   padding-left: 0.75rem;
 }
-/* line 219, ../scss/custom/_forms.scss */
+/* line 223, ../scss/custom/_forms.scss */
 .inline-tooltip .tooltip,
 .inline-tooltip .tooltipbody,
 .inline-tooltip .stickytip,
@@ -419,7 +424,7 @@ textarea {
   padding: 0;
   width: 60px;
 }
-/* line 227, ../scss/custom/_forms.scss */
+/* line 231, ../scss/custom/_forms.scss */
 .inline-tooltip .s3_add_resource_link {
   display: inline-block;
   margin: -3px 0 -3px 5px;
@@ -752,9 +757,30 @@ div.tabs span.tab_other a:hover {
   background-color: #E0E0E0;
 }
 
-/* line 48, ../scss/custom/_menus.scss */
+/* Personal Menu */
+/* line 49, ../scss/custom/_menus.scss */
 .personal-menu-area {
   text-align: right;
+}
+
+/* About Menu */
+/* line 54, ../scss/custom/_menus.scss */
+.about-menu {
+  text-align: left;
+}
+
+/* line 57, ../scss/custom/_menus.scss */
+#poweredby {
+  text-align: right;
+}
+
+/* line 61, ../scss/custom/_menus.scss */
+body.rtl .about-menu {
+  text-align: right;
+}
+/* line 64, ../scss/custom/_menus.scss */
+body.rtl #poweredby {
+  text-align: left;
 }
 
 /* Datatables */
@@ -1242,11 +1268,16 @@ h4.profile-sub-header {
 }
 
 /* line 66, ../scss/custom/_misc.scss */
+.event-bottom .username {
+  padding: 0;
+}
+
+/* line 69, ../scss/custom/_misc.scss */
 .overdue {
   color: red;
 }
 
-/* line 69, ../scss/custom/_misc.scss */
+/* line 72, ../scss/custom/_misc.scss */
 .invalid-case {
   border: 1px solid red;
   color: red;
@@ -1258,35 +1289,35 @@ h4.profile-sub-header {
   text-transform: uppercase;
 }
 
-/* line 79, ../scss/custom/_misc.scss */
+/* line 82, ../scss/custom/_misc.scss */
 .checkpoint-advise {
   background: #fff0f0 none repeat scroll 0 0;
   border: 2px solid red;
   margin-bottom: 1rem;
   padding: 0.6rem;
 }
-/* line 84, ../scss/custom/_misc.scss */
+/* line 87, ../scss/custom/_misc.scss */
 .checkpoint-advise p {
   white-space: pre-wrap;
 }
 
-/* line 88, ../scss/custom/_misc.scss */
+/* line 91, ../scss/custom/_misc.scss */
 .checkpoint-person {
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
 
-/* line 92, ../scss/custom/_misc.scss */
+/* line 95, ../scss/custom/_misc.scss */
 .event-top {
   margin-top: 0.3rem !important;
 }
 
-/* line 95, ../scss/custom/_misc.scss */
+/* line 98, ../scss/custom/_misc.scss */
 .event-type-header {
   text-align: right;
 }
 
-/* line 98, ../scss/custom/_misc.scss */
+/* line 101, ../scss/custom/_misc.scss */
 .event-type-setting {
   color: #afafaf;
   font-size: 0.9rem;
@@ -1294,67 +1325,67 @@ h4.profile-sub-header {
   vertical-align: text-top;
 }
 
-/* line 104, ../scss/custom/_misc.scss */
+/* line 107, ../scss/custom/_misc.scss */
 .event-type-toggle {
   cursor: pointer;
 }
 
-/* line 107, ../scss/custom/_misc.scss */
+/* line 110, ../scss/custom/_misc.scss */
 .controls.has-flaginfo,
 .controls.has-details {
   width: 100%;
 }
-/* line 110, ../scss/custom/_misc.scss */
+/* line 113, ../scss/custom/_misc.scss */
 .controls.has-flaginfo table,
 .controls.has-details table {
   width: 100%;
   border: none;
 }
 
-/* line 115, ../scss/custom/_misc.scss */
+/* line 118, ../scss/custom/_misc.scss */
 .payment-amount {
   color: darkgreen;
   font-size: 1.2rem;
   font-weight: bold;
 }
 
-/* line 121, ../scss/custom/_misc.scss */
+/* line 124, ../scss/custom/_misc.scss */
 #payment-form #allowance_date__row,
 #payment-form #allowance_comments__row {
   display: none;
 }
 
-/* line 126, ../scss/custom/_misc.scss */
+/* line 129, ../scss/custom/_misc.scss */
 .dashboard-action {
   margin-bottom: 1.0rem;
 }
 
-/* line 132, ../scss/custom/_misc.scss */
+/* line 135, ../scss/custom/_misc.scss */
 body.rtl .personal-menu {
   clear: left;
   float: left;
 }
-/* line 136, ../scss/custom/_misc.scss */
+/* line 139, ../scss/custom/_misc.scss */
 body.rtl .language-selector {
   float: left;
 }
-/* line 139, ../scss/custom/_misc.scss */
+/* line 142, ../scss/custom/_misc.scss */
 body.rtl .username {
   padding-left: 0.5rem;
   padding-right: 0;
   float: left;
 }
-/* line 142, ../scss/custom/_misc.scss */
+/* line 145, ../scss/custom/_misc.scss */
 body.rtl .username i.icon, body.rtl .username i.fa {
   padding-left: 0;
   padding-right: 0.2rem;
 }
-/* line 148, ../scss/custom/_misc.scss */
+/* line 151, ../scss/custom/_misc.scss */
 body.rtl .event-type-header {
   text-align: left;
 }
 
-/* line 154, ../scss/custom/_misc.scss */
+/* line 157, ../scss/custom/_misc.scss */
 .event-registration-blocked {
   background-color: #FFAAAA;
   color: black;
@@ -1362,56 +1393,56 @@ body.rtl .event-type-header {
   margin: 0.2rem 0.6rem;
 }
 
-/* line 160, ../scss/custom/_misc.scss */
+/* line 163, ../scss/custom/_misc.scss */
 .check-in-warning {
   color: red;
   font-weight: bold;
   margin-left: 0.5rem;
 }
-/* line 164, ../scss/custom/_misc.scss */
+/* line 167, ../scss/custom/_misc.scss */
 .check-in-warning i {
   margin-right: 0.3rem;
 }
 
-/* line 168, ../scss/custom/_misc.scss */
+/* line 171, ../scss/custom/_misc.scss */
 .profile-picture {
   margin-top: 1rem;
 }
-/* line 170, ../scss/custom/_misc.scss */
+/* line 173, ../scss/custom/_misc.scss */
 .profile-picture .image-row {
   margin-bottom: 1rem;
 }
 
-/* line 176, ../scss/custom/_misc.scss */
+/* line 179, ../scss/custom/_misc.scss */
 #site_check_in_info__row .controls {
   width: 100%;
 }
 
-/* line 179, ../scss/custom/_misc.scss */
+/* line 182, ../scss/custom/_misc.scss */
 #site_check_in_status__row .controls {
   padding-top: 0.3rem;
   width: 100%;
 }
 
-/* line 184, ../scss/custom/_misc.scss */
+/* line 187, ../scss/custom/_misc.scss */
 #check-in-form .status-label {
   font-size: 0.9rem;
 }
-/* line 187, ../scss/custom/_misc.scss */
+/* line 190, ../scss/custom/_misc.scss */
 #check-in-form .status-message {
   font-size: 0.9rem;
   font-weight: bold;
 }
-/* line 191, ../scss/custom/_misc.scss */
+/* line 194, ../scss/custom/_misc.scss */
 #check-in-form .person-details {
   font-size: 1rem;
 }
 
-/* line 195, ../scss/custom/_misc.scss */
+/* line 198, ../scss/custom/_misc.scss */
 .clear-btn {
   cursor: pointer;
 }
-/* line 197, ../scss/custom/_misc.scss */
+/* line 200, ../scss/custom/_misc.scss */
 .clear-btn .fa {
   color: #B0B0B0;
 }

@@ -502,6 +502,7 @@
 'Average': 'Durchschnitt',
 'Avoid the subject event as per the <instruction>': 'Vermeiden das Thema Ereignis als je<instruction>',
 'Awards': 'Auszeichnungen',
+'Back': 'Zurück',
 'Background Color for Text blocks': 'Hintergrundfarbe für Textblöcke',
 'Background Color': 'Hintergrundfarbe',
 'Back to Check-in/Check-out': 'Zurück zu Check-in/Check-out',

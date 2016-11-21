@@ -78,6 +78,7 @@ $sub-nav-item-divider-margin: rem-calc(12) !default;
     font-weight: $sub-nav-font-weight;
     margin-#{$default-float}: rem-calc(16);
     margin-bottom: 0;
+    list-style-type: none;
 
     a {
       color: $sub-nav-font-color;
