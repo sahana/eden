@@ -576,13 +576,16 @@ class incident_Profile(S3CRUD):
                     output["lon_max"] = ""
                     output["lon_min"] = ""
 
-                # Resources dataTable
-                tablename = "event_team"
+                messages = current.messages
+                permit = current.auth.s3_has_permission
+                updateable = permit("update", itable, record_id=incident_id, c="event", f="incident")
 
-                resource = s3db.resource(tablename)
-                resource.add_filter(FS("incident_id") == incident_id)
-
-                list_id = "custom-list-%s" % tablename
+                settings = current.deployment_settings
+                # Uncomment to control the dataTables layout: https://datatables.net/reference/option/dom
+                #settings.ui.datatables_dom = "<'data-info row'<'large-4 columns'i><'large-3 columns'l><'large-3 columns search'f><'large-2 columns right'>r><'dataTable_table't><'row'p>"
+                # Uncomment for dataTables to use a different paging style:
+                settings.ui.datatables_pagingType = "bootstrap"
+                dt_init = ['''$('.dataTables_filter label,.dataTables_length,.dataTables_info').hide();''']
 
                 get_vars = request.get_vars.get
                 start = get_vars("start", None)
@@ -601,23 +604,11 @@ class incident_Profile(S3CRUD):
                     # Use defaults
                     start = None
 
-                dtargs = attr.get("dtargs", {})
-
                 # How many records per page?
                 if s3.dataTable_pageLength:
                     display_length = s3.dataTable_pageLength
                 else:
                     display_length = 10
-                #dtargs["dt_lengthMenu"] = [[10, 25, 50, -1],
-                #                           [10, 25, 50, s3_str(T("All"))]
-                #                           ]
-
-                list_fields = ["id", #(T("Actions"), "id"), @ToDo: Label
-                               "group_id",
-                               "status_id",
-                               ]
-
-                orderby = "pr_group.name"
 
                 # Server-side pagination?
                 if not s3.no_sspag:
@@ -629,86 +620,132 @@ class incident_Profile(S3CRUD):
                 else:
                     dt_pagination = "false"
 
-                settings = current.deployment_settings
-                # Uncomment to control the dataTables layout: https://datatables.net/reference/option/dom
-                #settings.ui.datatables_dom = "<'data-info row'<'large-4 columns'i><'large-3 columns'l><'large-3 columns search'f><'large-2 columns right'>r><'dataTable_table't><'row'p>"
-                # Move the search box into the design
-                settings.ui.datatables_initComplete = '''$('.dataTables_filter').prependTo($('.dt-search'));$('.dataTables_filter input').attr('placeholder', 'Enter search term…').prependTo($('.dataTables_filter'));$('.dataTables_filter label, .dataTables_length, #custom-list-event_team_info').hide()'''
-                # Uncomment for dataTables to use a different paging style:
-                #settings.ui.datatables_pagingType = "bootstrap"
-    
-                # Get the data table
-                dt, totalrows, ids = resource.datatable(fields=list_fields,
-                                                        start=start,
-                                                        limit=limit,
-                                                        orderby=orderby)
-                displayrows = totalrows
-
-                if dt.empty:
-                    empty_str = self.crud_string(tablename,
-                                                 "msg_list_empty")
-                else:
-                    empty_str = self.crud_string(tablename,
-                                                 "msg_no_match")
-                empty = DIV(empty_str, _class="empty")
-
-                # @ToDo: Permissions
-                messages = current.messages
-                dtargs["dt_row_actions"] = [{"label": messages.READ,
-                                             "url": URL(c="event", f="team",
-                                                        args="[id].popup"),
-                                             "icon": "fa fa-eye",
-                                             "_class": "s3_modal", #action-btn
-                                             },
-                                            # @ToDo: AJAX delete
-                                            {"label": messages.DELETE,
-                                             "url": URL(c="event", f="team",
-                                                        args=["[id]", "delete"]),
-                                             "icon": "fa fa-trash",
-                                             #"_class": "action-btn",
-                                             },
-                                            ]
-                dtargs["dt_action_col"] = 2
-
-                dtargs["dt_pagination"] = dt_pagination
-                dtargs["dt_pageLength"] = display_length
-                # @todo: fix base URL (make configurable?) to fix export options
                 s3.no_formats = True
-                dtargs["dt_base_url"] = r.url(method="", vars={})
-                dtargs["dt_ajax_url"] = r.url(#vars={"update": 0}, # If we need to update multiple dataTables
-                                              representation="aadata")
 
-                datatable = dt.html(totalrows,
-                                    displayrows,
-                                    id=list_id,
-                                    **dtargs)
+                def _datatable(tablename, list_fields, orderby):
 
-                if dt.data:
-                    empty.update(_style="display:none")
-                else:
-                    datatable.update(_style="display:none")
-                contents = DIV(datatable, empty, _class="dt-contents")
+                    c, f = tablename.split("_", 1)
 
-                # Link for create-popup
-                permit = current.auth.s3_has_permission
-                if permit("create", "event_team") and \
-                   permit("update", itable, record_id=incident_id, c="event", f="incident"):
-                    output["create_popup"] = A(TAG[""](I(_class="fa fa-plus"),
-                                                       T("Add"),
-                                                       ),
-                                               _href = URL(c="event", f="incident",
-                                                           args=[incident_id, "team", "create.popup"],
-                                                           vars={"refresh": list_id},
-                                                           ),
-                                               _class = "button tiny postfix s3_modal", 
-                                               )
-                else:
-                    output["create_popup"] = ""
+                    resource = s3db.resource(tablename)
+                    resource.add_filter(FS("event_%s.incident_id" % f) == incident_id)
 
-                # Render the widget
-                output["resources"] = DIV(contents,
-                                          _class="card-holder",
-                                          )
+                    list_id = "custom-list-%s" % tablename
+
+                    dtargs = attr.get("dtargs", {})
+
+                    # Update the datatables init
+                    dt_init.append('''$('#dt-%(tablename)s .dataTables_filter').prependTo($('#dt-search-%(tablename)s'));$('#dt-search-%(tablename)s .dataTables_filter input').attr('placeholder','Enter search term…').attr('name','%(tablename)s-search').prependTo($('#dt-search-%(tablename)s .dataTables_filter'));$('.custom-list-%(tablename)s_length').hide();''' % \
+                        dict(tablename = tablename))
+
+                    # Move the search boxes into the design
+                    settings.ui.datatables_initComplete = "".join(dt_init)
+
+                    # Get the data table
+                    dt, totalrows, ids = resource.datatable(fields=list_fields,
+                                                            start=start,
+                                                            limit=limit,
+                                                            orderby=orderby)
+                    displayrows = totalrows
+
+                    if dt.empty:
+                        empty_str = self.crud_string(tablename,
+                                                     "msg_list_empty")
+                    else:
+                        empty_str = self.crud_string(tablename,
+                                                     "msg_no_match")
+                    empty = DIV(empty_str, _class="empty")
+
+                    if tablename == "event_team":
+                        # @ToDo: Permissions
+                        dtargs["dt_row_actions"] = [{"label": messages.READ,
+                                                     "url": URL(c="event", f="incident",
+                                                                args=[incident_id, f, "[id].popup"]),
+                                                     "icon": "fa fa-eye",
+                                                     "_class": "s3_modal",
+                                                     },
+                                                    # @ToDo: AJAX delete
+                                                    {"label": messages.DELETE,
+                                                     "url": URL(c="event", f="incident",
+                                                                args=[incident_id, f, "[id]", "delete"]),
+                                                     "icon": "fa fa-trash",
+                                                     },
+                                                    ]
+                        dtargs["dt_action_col"] = 2
+                    else:
+                        dtargs["dt_row_actions"] = None
+
+                    dtargs["dt_pagination"] = dt_pagination
+                    dtargs["dt_pageLength"] = display_length
+                    dtargs["dt_base_url"] = r.url(method="", vars={})
+                    dtargs["dt_ajax_url"] = r.url(vars={"update": tablename},
+                                                  representation="aadata")
+
+                    datatable = dt.html(totalrows,
+                                        displayrows,
+                                        id=list_id,
+                                        **dtargs)
+
+                    if dt.data:
+                        empty.update(_style="display:none")
+                    else:
+                        datatable.update(_style="display:none")
+                    contents = DIV(datatable, empty, _class="dt-contents")
+
+                    # Link for create-popup
+                    if updateable and permit("create", tablename):
+                        output["create_%s_popup" % tablename] = \
+                            A(TAG[""](I(_class="fa fa-plus"),
+                                      T("Add"),
+                                      ),
+                              _href = URL(c="event", f="incident",
+                                          args=[incident_id, f, "create.popup"],
+                                          vars={"refresh": list_id},
+                                          ),
+                              _class = "button tiny postfix s3_modal", 
+                              )
+                    else:
+                        output["create_%s_popup" % tablename] = ""
+
+                    # Render the widget
+                    output["%s_datatable" % tablename] = DIV(contents,
+                                                             _class="card-holder",
+                                                             )
+
+                # Resources dataTable
+                tablename = "event_team"
+                list_fields = ["id", #(T("Actions"), "id"), @ToDo: Label
+                               "group_id",
+                               "status_id",
+                               ]
+                orderby = "pr_group.name"
+                _datatable(tablename, list_fields, orderby)
+
+
+                # Tasks dataTable
+                tablename = "project_task"
+                list_fields = ["status",
+                               (T("Description"), "name"),
+                               (T("Created"), "created_on"),
+                               (T("Due"), "date_due"),
+                               ]
+                orderby = "project_task.date_due"
+                _datatable(tablename, list_fields, orderby)
+
+                # Staff dataTable
+                tablename = "event_human_resource"
+                list_fields = ["human_resource_id",
+                               "status",
+                               ]
+                orderby = "event_human_resource.human_resource_id"
+                _datatable(tablename, list_fields, orderby)
+
+                # Organisations dataTable
+                tablename = "event_organisation"
+                list_fields = ["organisation_id",
+                               "status",
+                               ]
+                orderby = "event_organisation.organisation_id"
+                _datatable(tablename, list_fields, orderby)
 
                 import os
                 response.view = os.path.join(request.folder,
@@ -720,33 +757,53 @@ class incident_Profile(S3CRUD):
 
             elif representation == "aadata":
     
-                # Resources dataTable
-                # @ToDo: Complete
-    
                 from s3 import FS
     
                 response = current.response
                 s3 = response.s3
-
-                tablename = "event_team"
+                
+                get_vars = self.request.get_vars
+                tablename = get_vars.get("update")
+                c, f = tablename.split("_", 1)
 
                 resource = current.s3db.resource(tablename)
-                resource.add_filter(FS("incident_id") == incident_id)
+                resource.add_filter(FS("event_%s.incident_id" % f) == incident_id)
     
                 list_id = "custom-list-%s" % tablename
 
-                get_vars = self.request.get_vars
+                dtargs = attr.get("dtargs", {})
+
+                if tablename == "event_team":
+                    list_fields = ["id", #(T("Actions"), "id"), @ToDo: Label
+                                   "group_id",
+                                   "status_id",
+                                   ]
+                    orderby = "pr_group.name"
+                    dtargs["dt_action_col"] = 2
+
+                elif tablename == "project_task":
+                    list_fields = ["status",
+                                   "name",
+                                   "created_on",
+                                   "date_due",
+                                   ]
+                    orderby = "project_task.date_due"
     
-                list_fields = ["id",
-                               "group_id",
-                               "status_id",
-                               ]
-    
+                elif tablename == "event_human_resource":
+                    list_fields = ["human_resource_id",
+                                   "status",
+                                   ]
+                    orderby = "event_human_resource.human_resource_id"
+
+                elif tablename == "event_organisation":
+                    list_fields = ["organisation_id",
+                                   "status",
+                                   ]
+                    orderby = "event_organisation.organisation_id"
+
                 # Parse datatable filter/sort query
-                searchq, orderby, left = resource.datatable_filter(list_fields,
-                                                                   get_vars)
-    
-                orderby = "pr_group.name"
+                searchq, orderby_not, left = resource.datatable_filter(list_fields,
+                                                                       get_vars)
     
                 # DataTable filtering
                 if searchq is not None:
@@ -774,16 +831,11 @@ class incident_Profile(S3CRUD):
                 # Echo
                 draw = int(get_vars.get("draw") or 0)
     
-                dtargs = attr.get("dtargs", {})
-
                 # How many records per page?
                 if s3.dataTable_pageLength:
                     display_length = s3.dataTable_pageLength
                 else:
                     display_length = 10
-                #dtargs["dt_lengthMenu"] = [[10, 25, 50, -1],
-                #                           [10, 25, 50, s3_str(T("All"))]
-                #                           ]
 
                 # Server-side pagination?
                 if not s3.no_sspag:
@@ -795,12 +847,11 @@ class incident_Profile(S3CRUD):
                 else:
                     dt_pagination = "false"
 
-                dtargs["dt_action_col"] = 2
                 dtargs["dt_pagination"] = dt_pagination
                 dtargs["dt_pageLength"] = display_length
-                dtargs["dt_base_url"] = r.url(method="", vars={})
-                dtargs["dt_ajax_url"] = r.url(#vars={"update": 0}, # If we need to update multiple dataTables
-                                              representation="aadata")
+                #dtargs["dt_base_url"] = r.url(method="", vars={})
+                #dtargs["dt_ajax_url"] = r.url(#vars={"update": 0}, # If we need to update multiple dataTables
+                #                              representation="aadata")
 
                 # Representation
                 if dt is not None:
