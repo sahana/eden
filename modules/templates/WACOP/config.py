@@ -732,7 +732,7 @@ class incident_Profile(S3CRUD):
                                (T("Title"), "human_resource_id$job_title_id"),
                                "human_resource_id$organisation_id",
                                 (T("Email"), "human_resource_id$person_id$email.value"),
-                                (T("Phone"), "human_resource_id$person_id$mobile_phone.value"),
+                                (T("Phone"), "human_resource_id$person_id$phone.value"),
                                "status",
                                (T("Notes"), "comments"),
                                ]
@@ -823,7 +823,7 @@ class incident_Profile(S3CRUD):
                                    "human_resource_id$job_title_id",
                                    "human_resource_id$organisation_id",
                                    "human_resource_id$person_id$email.value",
-                                   "human_resource_id$person_id$mobile_phone.value",
+                                   "human_resource_id$person_id$phone.value",
                                    "status",
                                    "comments",
                                    ]
