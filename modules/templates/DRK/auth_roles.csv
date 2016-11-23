@@ -109,12 +109,14 @@ QUARTIER,Quartiermanager,,dvr,person,,READ,,,,,
 QUARTIER,Quartiermanager,,,,cr_shelter_registration,READ|UPDATE,,,,,Closed cases have their registration deleted & these shouldn't be permitted to have a registration created for them
 QUARTIER,Quartiermanager,,,,dvr_case_event,CREATE,READ,,,,Quartiermanager can register case events and read those they created
 QUARTIER,Quartiermanager,,,,pr_person,READ,,,,,Quartiermanager can look up persons
+SCAN,Scan,,dvr,case_appointment,,NONE,,,,,Scan role can not access the list of appointments
 SCAN,Scan,,dvr,case_event,,CREATE|READ,,,,,Scan role can access the case event controller
 SCAN,Scan,,dvr,group_membership,,READ,,,,,Scan role can read family members
-SCAN,Scan,,dvr,index,,READ,,,,,Scan role can access DVR index controller
-SCAN,Scan,,dvr,person,,READ,,,,,Scan role can read cases
+SCAN,Scan,,dvr,index,,NONE,,,,,Scan role can not access DVR index controller
+SCAN,Scan,,dvr,person,,NONE,,,,,Scan role can not access case list
 SCAN,Scan,,,,cr_shelter_registration,READ,,,,,Scan role can read shelter registration info
 SCAN,Scan,,,,dvr_case_event,CREATE,READ,,,,Scan role can create case events and read those they created
+SCAN,Scan,,,,dvr_case_appointment,CREATE|UPDATE,,,,,Scan role can create or update appointments
 SCAN,Scan,,,,pr_image,READ,,,,,Scan role can see profile images
 SCAN,Scan,,,,pr_person,READ,,,,,Scan role can lookup persons
 SECURITY,Security,,cr,shelter,,READ,,,,,

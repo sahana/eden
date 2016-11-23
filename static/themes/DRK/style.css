@@ -463,84 +463,80 @@ select {
 /* line 29, ../scss/custom/_rheader.scss */
 div.tabs {
   display: block;
-  border-bottom: 1px solid #006A71;
-  clear: left;
-  height: 2.15em;
-  margin: 5px 0 0;
-  padding: 0.5em 0;
-  text-align: left;
+  clear: none;
+  height: 1.9rem;
   width: 100%;
-  line-height: 0.975rem;
+  margin: 0.5rem 0;
+  padding: 0;
+  line-height: 1.3rem;
+  text-align: left;
+  border-bottom: 1px solid #006A71;
 }
-/* line 41, ../scss/custom/_rheader.scss */
+/* line 45, ../scss/custom/_rheader.scss */
 div.tabs span {
   float: left;
+  display: inline;
+  position: relative;
+  margin: 0.2rem 0.2rem 0 0;
+  padding: 0.1rem 0.3rem 0.1rem;
   border-radius: 3px 3px 0 0;
-  padding: 0.15em 6px 0.25em 5px;
 }
-/* line 46, ../scss/custom/_rheader.scss */
+/* line 56, ../scss/custom/_rheader.scss */
 div.tabs span a {
   color: #ffffff !important;
   text-decoration: none !important;
   background: transparent !important;
 }
-/* line 51, ../scss/custom/_rheader.scss */
+/* line 60, ../scss/custom/_rheader.scss */
 div.tabs span a:hover {
   background: transparent !important;
 }
-/* line 55, ../scss/custom/_rheader.scss */
+/* line 66, ../scss/custom/_rheader.scss */
 div.tabs span.tab_here {
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0.2rem 0.35rem 0 0;
+  padding: 0.1rem 0.4rem 0.1rem;
   background: #ffffff;
   border-color: #006A71;
   border-style: solid;
-  border-width: 2px 2px 0 3px;
-  border-bottom-width: 1px;
+  border-width: 0.125rem 2px 0.0625rem 3px;
   border-bottom-style: solid;
   border-bottom-color: #ffffff;
-  bottom: 0;
-  display: inline;
-  font-weight: bold;
-  margin-right: 5px;
-  padding: 0.25em 6px 0.25em 5px;
-  position: relative;
 }
-/* line 74, ../scss/custom/_rheader.scss */
+/* line 84, ../scss/custom/_rheader.scss */
 div.tabs span.tab_here:hover {
-  background: #f1edec;
+  background-color: #f1edec;
 }
-/* line 77, ../scss/custom/_rheader.scss */
+/* line 87, ../scss/custom/_rheader.scss */
 div.tabs span.tab_here a {
   color: #666666 !important;
 }
-/* line 80, ../scss/custom/_rheader.scss */
+/* line 89, ../scss/custom/_rheader.scss */
 div.tabs span.tab_here a:hover {
   color: #666666 !important;
 }
-/* line 84, ../scss/custom/_rheader.scss */
-div.tabs span.tab_last,
-div.tabs span.tab_other {
-  font-size: 90%;
-  background: #006A71;
-  border-color: #006A71;
-  border-width: 1px 1px 0 2px;
-  border-style: solid;
-  margin-right: 3px;
-  margin-top: 0.25em;
-}
 /* line 96, ../scss/custom/_rheader.scss */
-div.tabs span.tab_last:hover,
-div.tabs span.tab_other:hover {
-  background: #00555a;
+div.tabs span.tab_last, div.tabs span.tab_other {
+  font-size: 0.9rem;
+  margin: 0.35rem 0.2rem 0 0;
+  padding: 0.1rem 0.3rem 0;
+  background-color: #006A71;
+  border-color: #006A71;
+  border-width: 0.0625rem 1px 0.0625rem 2px;
+  border-style: solid;
+}
+/* line 110, ../scss/custom/_rheader.scss */
+div.tabs span.tab_last:hover, div.tabs span.tab_other:hover {
+  background-color: #00555a;
   border-color: #00555a;
 }
-/* line 101, ../scss/custom/_rheader.scss */
-div.tabs span.tab_last a,
-div.tabs span.tab_other a {
+/* line 114, ../scss/custom/_rheader.scss */
+div.tabs span.tab_last a, div.tabs span.tab_other a {
   color: #ffffff !important;
 }
-/* line 105, ../scss/custom/_rheader.scss */
-div.tabs span.tab_last a:hover,
-div.tabs span.tab_other a:hover {
+/* line 116, ../scss/custom/_rheader.scss */
+div.tabs span.tab_last a:hover, div.tabs span.tab_other a:hover {
   color: #ffffff !important;
 }
 
