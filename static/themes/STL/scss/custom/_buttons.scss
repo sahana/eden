@@ -35,11 +35,14 @@
 
 /* Cancel button */
 .cancel-form-btn {
-    padding: 0.9375rem;
+    border: solid 2px white;
+    box-sizing: border-box;
+    padding: 0.825rem;
 }
 .cancel-form-btn:hover {
-    color: white;
-    background-color: $primary-color;
+    border: solid 2px $primary-color;
+/*     color: white; */
+/*     background-color: $primary-color; */
 }
 
 /* Full screen map button */

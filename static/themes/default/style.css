@@ -79,6 +79,10 @@
   font-size: 1.1em;
   padding-bottom: 5px;
 }
+#component {
+    float: none;
+    width: auto;
+}
 
 /* General forms */
 form {
@@ -229,6 +233,9 @@ textarea {
 }
 .form-container form:not(.filter-form):not(.auth_login):not(.auth_register) input[type="text"]:not(.double):not(.datetimepicker):not(.date):not(.dms-input) {
   width: 20rem !important;
+}
+.req_key {
+    font-size: 0.9rem;
 }
 
 .item-container .controls {
@@ -696,12 +703,12 @@ body.rtl .list_formats div {
 
 #list-btn-add {
   float: right;
-  margin-right: 1.0rem;
+  margin-right: 0.7rem;
 }
 
 body.rtl #list-btn-add {
   float: left;
-  margin-left: 1.0rem;
+  margin-left: 0.7rem;
   margin-right: 0;
 }
 

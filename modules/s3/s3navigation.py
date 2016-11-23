@@ -1730,7 +1730,7 @@ class S3ResourceHeader:
         self.tabs = tabs
 
     # -------------------------------------------------------------------------
-    def __call__(self, r, tabs=None, table=None, record=None, as_div = True):
+    def __call__(self, r, tabs=None, table=None, record=None, as_div=True):
         """
             Return the HTML representation of this rheader
 
