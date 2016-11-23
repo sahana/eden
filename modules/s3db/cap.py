@@ -4761,6 +4761,7 @@ def clone(r, record=None, **attr):
             update_super = s3db.update_super
             for resource_row in resource_rows:
                 resource_row_clone = resource_row.as_dict()
+                mime_type = resource_row_clone["mime_type"]
                 if record:
                     # History Table use-case
                     resource_row_clone["alert_history_id"] = new_alert_id
@@ -4769,7 +4770,7 @@ def clone(r, record=None, **attr):
                     # Post-process create
                     audit("create", "cap", "resource_history", record=rid)
                     set_record_owner(resource_history_table, rid)
-                else:
+                elif mime_type and mime_type != "cap":
                     # Update/Error/Relay/All Clear use-case
                     resource_row_clone["alert_id"] = new_alert_id
                     rid = resource_table_insert(**resource_row_clone)
@@ -4938,7 +4939,7 @@ class cap_AlertProfileWidget(object):
             @param strong: whether to display with strong color
             @param hide_empty: whether to hide empty records
             @param headline: is headline?
-            @param resource_segment: beongs to resource segment
+            @param resource_segment: belongs to resource segment?
         """
 
         if not value and hide_empty:
@@ -4948,10 +4949,13 @@ class cap_AlertProfileWidget(object):
                 nvalue = []
                 for value_ in value:
                     if value_:
-                        if represent:
+                        if resource_segment and represent:
                             nvalue.append(represent(value_))
-                        else:
-                            nvalue.append(value_)
+                        elif not resource_segment:
+                            if represent:
+                                nvalue.append(s3_str(represent(value_)))
+                            else:
+                                nvalue.append(s3_str(value_))
                 if not resource_segment:
                     if len(nvalue):
                         nvalue = ", ".join(nvalue)

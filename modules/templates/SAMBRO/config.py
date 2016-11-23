@@ -1011,7 +1011,8 @@ def config(settings):
         status = row["cap_alert.status"]
 
         if event_type_id and event_type_id != current.messages["NONE"]:
-            if not isinstance(event_type_id, lazyT):
+            if not isinstance(event_type_id, lazyT) and \
+               not isinstance(event_type_id, DIV):
                 event_type = itable.event_type_id.represent(event_type_id)
             else:
                 event_type = event_type_id
@@ -1019,7 +1020,8 @@ def config(settings):
             event_type = T("None")
 
         if priority_id and priority_id != current.messages["NONE"]:
-            if not isinstance(priority_id, lazyT):
+            if not isinstance(priority_id, lazyT) and \
+               not isinstance(priority_id, DIV):
                 priority = itable.priority.represent(priority_id)
             else:
                 priority = priority_id
@@ -1135,7 +1137,8 @@ def config(settings):
         msg_type = T(row["cap_alert.msg_type"])
 
         if event_type_id and event_type_id != current.messages["NONE"]:
-            if not isinstance(event_type_id, lazyT):
+            if not isinstance(event_type_id, lazyT) and \
+               not isinstance(event_type_id, DIV):
                 event_type = itable.event_type_id.represent(event_type_id)
             else:
                 event_type = event_type_id
@@ -1166,13 +1169,15 @@ def config(settings):
         event_type_id = row["cap_info.event_type_id"]
         priority_id = row["cap_info.priority"]
 
-        if not isinstance(event_type_id, lazyT):
+        if not isinstance(event_type_id, lazyT) and \
+           not isinstance(event_type_id, DIV):
             event_type = itable.event_type_id.represent(event_type_id)
         else:
             event_type = event_type_id
 
-        if priority_id and priority_id != "-":
-            if not isinstance(priority_id, lazyT):
+        if priority_id and priority_id != current.messages["NONE"]:
+            if not isinstance(priority_id, lazyT) and \
+               not isinstance(priority_id, DIV):
                 priority = itable.priority.represent(priority_id)
             else:
                 priority = priority_id
